@@ -10,6 +10,7 @@ import '../utils/poker_positions.dart';
 import '../widgets/loading_screen.dart';
 import '../widgets/global_bottom_nav_bar.dart';
 import '../design_system/components/cards/error_state_card.dart';
+import '../design_system/components/headers/top_nav_bar.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/typography.dart';
 import '../services/app_data_cache.dart';
@@ -166,50 +167,70 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
 
   Widget _buildFreeTierStatusIndicator() {
     final l10n = AppLocalizations.of(context);
+    const redColor = Color(0xFFFF3B30);
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: GestureDetector(
         onTap: () async {
           await PaywallScreen.show(
             context,
             featureName: l10n.sessionHistoryFullHistory,
           );
-          if (mounted) {
-            setState(() {});
-          }
+          if (mounted) setState(() {});
         },
+        behavior: HitTestBehavior.opaque,
         child: Container(
-          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          width: double.infinity,
+          padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: AppColors.bgSurface.withOpacity(0.6),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: AppColors.buttonPrimary.withOpacity(0.3),
-              width: 1,
-            ),
+            color: const Color(0xFFFF3B30).withValues(alpha: 0.06),
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(color: redColor, width: 1),
           ),
           child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                Icons.info_outline,
-                size: 16,
-                color: AppColors.buttonPrimary,
+              // Left group: icon + label
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SvgPicture.asset(
+                    'assets/icons/Info.svg',
+                    width: 16,
+                    height: 16,
+                    colorFilter: const ColorFilter.mode(redColor, BlendMode.srcIn),
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    l10n.sessionLast30Days,
+                    style: GoogleFonts.ibmPlexSans(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w400,
+                      color: redColor,
+                    ),
+                  ),
+                ],
               ),
-              SizedBox(width: 8),
-              Text(
-                '${l10n.sessionLast30Days} • ',
-                style: AppTypography.bodySmall(
-                  color: AppColors.textMint,
-                ).copyWith(fontSize: 13),
+              const SizedBox(width: 10),
+              // Dot separator
+              Container(
+                width: 5,
+                height: 5,
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                ),
               ),
+              const SizedBox(width: 10),
+              // Upgrade link
               Text(
                 l10n.sessionUpgradeForFullHistory,
-                style: AppTypography.bodySmall(
-                  color: AppColors.buttonPrimary,
-                ).copyWith(
-                  fontSize: 13,
+                style: GoogleFonts.ibmPlexSans(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
                   decoration: TextDecoration.underline,
-                  decorationColor: AppColors.buttonPrimary,
+                  decorationColor: Colors.white,
                 ),
               ),
             ],
@@ -222,189 +243,104 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: const Color(0xFF0C0C0C),
       extendBody: true,
-      body: Stack(
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Subtle teal gradient at top (same as home/opponents screens)
-          Positioned(
-            top: -screenWidth * 0.3,
-            right: -screenWidth * 0.25,
-            child: Transform.scale(
-              scaleX: 1.0,
-              scaleY: 0.7,
-              child: Container(
-                width: screenWidth * 1.5,
-                height: screenWidth * 1.2,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(
-                    center: Alignment.center,
-                    radius: 0.5,
-                    colors: [
-                      Color(0xFF1A4A4A),
-                      Color(0xFF133538).withOpacity(0.7),
-                      Color(0xFF133538).withOpacity(0.3),
-                      Colors.transparent,
-                    ],
-                    stops: [0.0, 0.3, 0.6, 1.0],
-                  ),
-                ),
-              ),
-            ),
+          TopNavBar(
+            title: l10n.sessionHistoryTitle,
+            onBack: () => Navigator.pop(context),
           ),
-          SafeArea(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Header Section with back arrow + title
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+          const SizedBox(height: 16),
+          if (!SubscriptionService.isPremium) ...[
+            _buildFreeTierStatusIndicator(),
+            const SizedBox(height: 16),
+          ],
+          // Tab switcher — white pill outer, dark active indicator
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: AnimatedBuilder(
+              animation: _tabController.animation!,
+              builder: (context, _) {
+                final t = _tabController.animation!.value;
+                return Container(
+                  padding: const EdgeInsets.all(2),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
                   child: Row(
                     children: [
-                      // Back button
-                      GestureDetector(
-                        onTap: () => Navigator.pop(context),
-                        child: Container(
-                          width: 44,
-                          height: 44,
-                          decoration: BoxDecoration(
-                            color: Color(0xFF3C3C43).withOpacity(0.3),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.arrow_back,
-                            color: Colors.white,
-                            size: 22,
-                          ),
-                        ),
-                      ),
-                      SizedBox(width: 12),
-                      // Title
-                      Text(
-                        l10n.sessionHistoryTitle,
-                        style: GoogleFonts.ibmPlexSans(
-                          fontSize: 24,
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: -0.5,
-                          height: 1.2,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                // Free-tier status indicator
-                if (!SubscriptionService.isPremium)
-                  _buildFreeTierStatusIndicator(),
-                // Tab Bar - Unified container with both tabs (Figma node 136:1342)
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      final tabWidth = constraints.maxWidth / 2;
-                      return AnimatedBuilder(
-                        animation: _tabController.animation!,
-                        builder: (context, child) {
-                          // Get animation value (0.0 = Cash, 1.0 = Tournament)
-                          final animValue = _tabController.animation!.value;
-
-                          return Container(
-                            height: 40,
+                      // Cash tab
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => _tabController.animateTo(0),
+                          behavior: HitTestBehavior.opaque,
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            padding: const EdgeInsets.symmetric(vertical: 10),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF1B1E24), // neutrals/800
-                              borderRadius: BorderRadius.circular(150),
+                              color: Color.lerp(const Color(0xFF161719), Colors.transparent, t),
+                              borderRadius: BorderRadius.circular(999),
                             ),
-                            child: Stack(
-                              children: [
-                                // Active tab indicator (slides smoothly with swipe)
-                                Positioned(
-                                  left: animValue * tabWidth,
-                                  top: 0,
-                                  bottom: 0,
-                                  child: Container(
-                                    width: tabWidth,
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFF02050B), // neutrals/900
-                                      borderRadius: BorderRadius.circular(160),
-                                      border: Border.all(
-                                        color: const Color(0xFF73D4CF), // mint/400
-                                        width: 1,
-                                      ),
-                                    ),
-                                  ),
+                            child: Center(
+                              child: Text(
+                                l10n.sessionHistoryCash,
+                                style: GoogleFonts.ibmPlexSans(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w500,
+                                  letterSpacing: -0.5,
+                                  color: Color.lerp(Colors.white, const Color(0xFF0C0C0C), t),
+                                  height: 24 / 15,
                                 ),
-                                // Tab buttons row
-                                Row(
-                                  children: [
-                                    // Cash tab
-                                    Expanded(
-                                      child: GestureDetector(
-                                        onTap: () => _tabController.animateTo(0),
-                                        behavior: HitTestBehavior.opaque,
-                                        child: Center(
-                                          child: Text(
-                                            l10n.sessionHistoryCash,
-                                            style: GoogleFonts.ibmPlexSans(
-                                              fontSize: 15,
-                                              fontWeight: FontWeight.w500,
-                                              color: Color.lerp(
-                                                Colors.white,
-                                                const Color(0xFF8C8C8C),
-                                                animValue,
-                                              ),
-                                              height: 1.44,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    // Tournament tab
-                                    Expanded(
-                                      child: GestureDetector(
-                                        onTap: () => _tabController.animateTo(1),
-                                        behavior: HitTestBehavior.opaque,
-                                        child: Center(
-                                          child: Text(
-                                            l10n.sessionHistoryTournament,
-                                            style: GoogleFonts.ibmPlexSans(
-                                              fontSize: 15,
-                                              fontWeight: FontWeight.w500,
-                                              color: Color.lerp(
-                                                const Color(0xFF8C8C8C),
-                                                Colors.white,
-                                                animValue,
-                                              ),
-                                              height: 1.44,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
+                              ),
                             ),
-                          );
-                        },
-                      );
-                    },
-                  ),
-                ),
-                SizedBox(height: 24),
-                // Content
-                Expanded(
-                  child: TabBarView(
-                    controller: _tabController,
-                    children: [
-                      _buildSessionsList(cashSessions, l10n.sessionHistoryCash),
-                      _buildSessionsList(tournamentSessions, l10n.sessionHistoryTournament),
+                          ),
+                        ),
+                      ),
+                      // Tournament tab
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => _tabController.animateTo(1),
+                          behavior: HitTestBehavior.opaque,
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            decoration: BoxDecoration(
+                              color: Color.lerp(Colors.transparent, const Color(0xFF161719), t),
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                            child: Center(
+                              child: Text(
+                                l10n.sessionHistoryTournament,
+                                style: GoogleFonts.ibmPlexSans(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w500,
+                                  letterSpacing: -0.5,
+                                  color: Color.lerp(const Color(0xFF0C0C0C), Colors.white, t),
+                                  height: 24 / 15,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
                     ],
                   ),
-                ),
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: 16),
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                _buildSessionsList(cashSessions, l10n.sessionHistoryCash),
+                _buildSessionsList(tournamentSessions, l10n.sessionHistoryTournament),
               ],
             ),
           ),
@@ -425,56 +361,46 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
     }
 
     if (sessionList.isEmpty) {
-      return Align(
-        alignment: Alignment.topCenter,
-        child: Padding(
-          padding: EdgeInsets.fromLTRB(16, 8, 16, 0),
-          child: Container(
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: Color(0xFF101115),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.black),
+      final isCash = gameType == l10n.sessionHistoryCash;
+      return Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).padding.bottom + 52,
+        ),
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              isCash
+                  ? _buildIcon('icons/figma_icons/dollar.svg', 32, AppColors.accentPrimary)
+                  : SvgPicture.asset(
+                      'assets/icons/Trophy_green.svg',
+                      width: 32,
+                      height: 32,
+                    ),
+            const SizedBox(height: 4),
+            Text(
+              l10n.sessionNoSessions(gameType),
+              style: GoogleFonts.ibmPlexSans(
+                color: Colors.white,
+                fontSize: 17,
+                fontWeight: FontWeight.w600,
+                height: 20 / 17,
+              ),
+              textAlign: TextAlign.center,
             ),
-            padding: EdgeInsets.fromLTRB(24, 28, 24, 20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Icon - dollar for Cash, clubs for Tournament
-                _buildIcon(
-                  gameType == l10n.sessionHistoryCash
-                      ? 'icons/figma_icons/dollar.svg'
-                      : 'icons/figma_icons/clubs.svg',
-                  24,
-                  Colors.white,
-                ),
-                SizedBox(height: 6),
-                // Title
-                Text(
-                  l10n.sessionNoSessions(gameType),
-                  style: GoogleFonts.ibmPlexSans(
-                    color: Colors.white,
-                    fontSize: 17,
-                    fontWeight: FontWeight.w400,
-                    height: 1.44,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: 4),
-                // Description
-                Text(
-                  l10n.sessionPlayToSee(gameType),
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.ibmPlexSans(
-                    color: Color(0xFFB3B4B6),
-                    fontSize: 17,
-                    fontWeight: FontWeight.w400,
-                    height: 1.44,
-                  ),
-                ),
-              ],
+            const SizedBox(height: 4),
+            Text(
+              l10n.sessionPlayToSee(gameType),
+              textAlign: TextAlign.center,
+              style: GoogleFonts.ibmPlexSans(
+                color: const Color(0xFFB9B9B9),
+                fontSize: 15,
+                fontWeight: FontWeight.w400,
+                height: 22 / 15,
+              ),
             ),
-          ),
+          ],
+        ),
         ),
       );
     }
@@ -493,16 +419,50 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
   Widget _buildSessionCard(Map<String, dynamic> session) {
     final l10n = AppLocalizations.of(context);
     final startTime = DateTime.parse(session['startTime']);
-    final isDealerSession = session['isDealerSession'] == true;
-    final playerCount = session['playerCount'] ?? 0;
     final isTournament = (session['gameType'] ?? 'cash').toLowerCase() == 'tournament';
-    final secondPillText = isTournament
-        ? CurrencyService.formatCash((session['buyInAmount'] ?? session['totalBuyIn'] ?? 0).toDouble())
-        : _formatBlinds(session);
 
     final sessionName = session['sessionName'] != null && session['sessionName'].isNotEmpty
         ? session['sessionName']
-        : AppLocalizations.of(context).sessionHistorySessionId(session['id'].substring(0, 8));
+        : l10n.sessionHistorySessionId(session['id'].substring(0, 8));
+
+    // P/L calculation
+    final totalBuyIn = (session['totalBuyIn'] ?? session['buyInAmount'] ?? 0).toDouble();
+    final double profitLoss;
+    if (isTournament) {
+      final prizeWon = (session['prizeWon'] ?? 0).toDouble();
+      profitLoss = prizeWon > 0
+          ? prizeWon - totalBuyIn
+          : (session['currentStack'] != null
+              ? (session['currentStack'] as num).toDouble() - totalBuyIn
+              : 0.0);
+    } else {
+      final finalStack = (session['currentStack'] ?? session['finalStack'] ?? 0).toDouble();
+      profitLoss = finalStack - totalBuyIn;
+    }
+
+    // Duration
+    String duration = '—';
+    final endTimeRaw = session['endTime'];
+    if (endTimeRaw != null) {
+      try {
+        final end = DateTime.parse(endTimeRaw);
+        final diff = end.difference(startTime);
+        final hours = diff.inHours;
+        final minutes = diff.inMinutes % 60;
+        duration = hours > 0 ? '${hours}h ${minutes}m' : '${minutes}m';
+      } catch (_) {}
+    }
+
+    final dateText = DateFormat('MMM d, yyyy').format(startTime);
+
+    final plColor = profitLoss > 0
+        ? const Color(0xFFA3FF78)
+        : profitLoss < 0
+            ? const Color(0xFFFF3B30)
+            : const Color(0xFFFF8A54);
+    final plText = profitLoss > 0
+        ? '+${CurrencyService.formatCash(profitLoss)}'
+        : CurrencyService.formatCash(profitLoss);
 
     return GestureDetector(
       onTap: () async {
@@ -519,61 +479,82 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
           _loadSessions();
         }
       },
+      behavior: HitTestBehavior.opaque,
       child: Container(
-        margin: const EdgeInsets.only(bottom: 16),
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          color: AppColors.bgSurface,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.black),
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: const BoxDecoration(
+          border: Border(
+            bottom: BorderSide(color: Color(0xFF161719), width: 1),
+          ),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
           children: [
-            // Row 1: Session name + pills
-            Row(
-              children: [
-                Expanded(
-                  child: Row(
+            // Icon box
+            Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: const Color(0xFFA3FF78),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Center(
+                child: SvgPicture.asset(
+                  isTournament ? 'assets/icons/Trophy.svg' : 'assets/icons/Coin.svg',
+                  width: 20,
+                  height: 20,
+                  colorFilter: const ColorFilter.mode(Colors.black, BlendMode.srcIn),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            // Content
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
                     children: [
-                      Flexible(
+                      Expanded(
                         child: Text(
                           sessionName,
-                          style: AppTypography.infoCardText(),
+                          style: GoogleFonts.ibmPlexSans(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                            height: 22 / 17,
+                          ),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      if (isDealerSession) ...[
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF4CAF50).withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            l10n.sessionLive,
-                            style: GoogleFonts.ibmPlexSans(
-                              color: const Color(0xFF4CAF50),
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
+                      const SizedBox(width: 8),
+                      Text(
+                        plText,
+                        style: GoogleFonts.ibmPlexSans(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: plColor,
+                          height: 22 / 15,
                         ),
-                      ],
+                      ),
                     ],
                   ),
-                ),
-                const SizedBox(width: 6),
-                _buildInfoPill(l10n.sessionPlayersCount(playerCount)),
-                const SizedBox(width: 4),
-                _buildInfoPill(secondPillText),
-              ],
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      _buildChip('icons/figma_icons/clock.svg', duration),
+                      const SizedBox(width: 6),
+                      _buildChip('icons/figma_icons/calendar.svg', dateText),
+                    ],
+                  ),
+                ],
+              ),
             ),
-            // Row 2: Date
-            Text(
-              DateFormat('MMM dd, h:mm a').format(startTime),
-              style: AppTypography.infoCardDate(),
+            const SizedBox(width: 12),
+            SvgPicture.asset(
+              'assets/icons/CaretRight.svg',
+              width: 16,
+              height: 16,
+              colorFilter: const ColorFilter.mode(Color(0xFFB9B9B9), BlendMode.srcIn),
             ),
           ],
         ),
@@ -581,16 +562,33 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
     );
   }
 
-  Widget _buildInfoPill(String text) {
+  Widget _buildChip(String iconPath, String text) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: AppColors.neutral800,
-        borderRadius: BorderRadius.circular(100),
+        color: const Color(0xFF2C2C2E),
+        borderRadius: BorderRadius.circular(999),
       ),
-      child: Text(
-        text,
-        style: AppTypography.infoCardPill(),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SvgPicture.asset(
+            iconPath,
+            width: 12,
+            height: 12,
+            colorFilter: const ColorFilter.mode(Color(0xFFB9B9B9), BlendMode.srcIn),
+          ),
+          const SizedBox(width: 4),
+          Text(
+            text,
+            style: GoogleFonts.ibmPlexSans(
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+              color: const Color(0xFFB9B9B9),
+              height: 16 / 11,
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/components/backgrounds/gradient_background.dart';
+import '../design_system/components/headers/top_nav_bar.dart';
 import '../services/support_request_service.dart';
 import '../l10n/app_localizations.dart';
 
@@ -94,48 +95,15 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
       body: Stack(
         children: [
           const GradientBackground(),
-          SafeArea(
-            child: Column(
-              children: [
-                // Header
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                  child: Row(
-                    children: [
-                      GestureDetector(
-                        onTap: () => Navigator.pop(context),
-                        child: Container(
-                          width: 44,
-                          height: 44,
-                          decoration: const BoxDecoration(
-                            color: Color(0xFF101115),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.arrow_back,
-                            color: Colors.white,
-                            size: 22,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        l10n.supportTitle,
-                        style: GoogleFonts.ibmPlexSans(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                          letterSpacing: -0.5,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 28),
-
-                // Form
-                Expanded(
+          Column(
+            children: [
+              TopNavBar(
+                title: l10n.supportTitle,
+                onBack: () => Navigator.pop(context),
+                backgroundColor: Colors.transparent,
+              ),
+              // Form
+              Expanded(
                   child: SingleChildScrollView(
                     padding: const EdgeInsets.fromLTRB(20, 0, 20, 40),
                     child: Column(
@@ -242,9 +210,8 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                       ],
                     ),
                   ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ],
       ),

@@ -368,51 +368,19 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
     final l10n = AppLocalizations.of(context);
 
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: const Color(0xFF0C0C0C),
       extendBody: true,
-      body: Stack(
-        children: [
-          // Teal radial gradient at top (matches opponent detail / home screens)
-          Positioned(
-            top: -screenWidth * 0.5,
-            right: -screenWidth * 0.25,
-            child: Transform.scale(
-              scaleX: 1.0,
-              scaleY: 0.7,
-              child: Container(
-                width: screenWidth * 1.5,
-                height: screenWidth * 1.2,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(
-                    center: Alignment.center,
-                    radius: 0.5,
-                    colors: [
-                      const Color(0xFF1A4A4A),
-                      const Color(0xFF133538).withOpacity(0.7),
-                      const Color(0xFF133538).withOpacity(0.3),
-                      Colors.transparent,
-                    ],
-                    stops: const [0.0, 0.3, 0.6, 1.0],
-                  ),
-                ),
+      body: SafeArea(
+        child: error != null
+            ? ErrorStateCard(onRetry: () => _loadStatistics(forceRefresh: true))
+            : LoadingWrapper(
+                isLoading: isLoading,
+                loadingMessage: _getLoadingMessage(l10n),
+                child: _buildContent(),
               ),
-            ),
-          ),
-          SafeArea(
-            child: error != null
-                ? ErrorStateCard(onRetry: () => _loadStatistics(forceRefresh: true))
-                : LoadingWrapper(
-                    isLoading: isLoading,
-                    loadingMessage: _getLoadingMessage(l10n),
-                    child: _buildContent(),
-                  ),
-          ),
-        ],
       ),
       bottomNavigationBar: GlobalBottomNavBar(currentScreen: 'statistics'),
     );
@@ -420,89 +388,117 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
 
   Widget _buildContent() {
     final l10n = AppLocalizations.of(context);
+    final na = l10n.commonNotAvailable;
+    String fmt(double value, int opportunity) =>
+        opportunity == 0 ? na : '${value.toStringAsFixed(1)}%';
+
     return Column(
       children: [
-        // Header with back button on left, refresh on right
+        // Top actions row
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
           child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // Back button (left side)
-              GestureDetector(
-                onTap: () => Navigator.pop(context),
-                child: Container(
-                  width: 44,
-                  height: 44,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFF101115),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.arrow_back,
-                    color: Colors.white,
-                    size: 22,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              // Title + subtitle
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      l10n.statsTitle,
-                      style: GoogleFonts.ibmPlexSans(
-                        fontSize: 24,
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: -0.5,
-                        height: 1.2,
-                      ),
+              if (Navigator.canPop(context))
+                GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: Container(
+                    width: 38,
+                    height: 38,
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      l10n.statsSubtitle,
-                      style: GoogleFonts.ibmPlexSans(
-                        fontSize: 15,
-                        color: Colors.white.withOpacity(0.6),
-                        fontWeight: FontWeight.w400,
-                        height: 1.2,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              // Refresh button (right side)
+                    child: const Icon(Icons.chevron_left, color: Colors.black, size: 22),
+                  ),
+                )
+              else
+                const SizedBox(width: 38),
               GestureDetector(
                 onTap: () => _loadStatistics(forceRefresh: true),
                 child: Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF3C3C43).withOpacity(0.3),
+                  width: 38,
+                  height: 38,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF161719),
                     shape: BoxShape.circle,
                   ),
-                  child: const Center(
-                    child: Icon(
-                      Icons.refresh_rounded,
-                      color: Colors.white,
-                      size: 24,
-                    ),
-                  ),
+                  child: const Icon(Icons.refresh_rounded, color: Colors.white, size: 20),
                 ),
               ),
             ],
           ),
         ),
-        // Scrollable content
+
+        // Scrollable body
         Expanded(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.fromLTRB(16, 24, 16, 0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildOverallStats(),
+                // Page header
+                _buildPageHeader(l10n),
+                const SizedBox(height: 24),
+
+                // 7 core metric cards
+                _buildMetricCard(
+                  chipLabel: 'VPIP',
+                  title: 'Voluntarily Put in Pot',
+                  description: 'How often you voluntarily put money in the pot preflop. High VPIP means you play many hands; low VPIP means you play tight.',
+                  value: totalHands > 0 ? '${vpip.toStringAsFixed(1)}%' : na,
+                ),
+                const SizedBox(height: 16),
+                _buildMetricCard(
+                  chipLabel: 'PFR',
+                  title: 'Pre-Flop Raise',
+                  description: 'How often you raise preflop. Measures your aggression before the flop. Should track close to VPIP for aggressive players.',
+                  value: totalHands > 0 ? '${pfr.toStringAsFixed(1)}%' : na,
+                ),
+                const SizedBox(height: 16),
+                _buildMetricCard(
+                  chipLabel: '3-Bet',
+                  title: 'Three-Bet',
+                  description: 'How often you make the 3rd raise preflop. A powerful move showing hand strength or as a bluff to take the pot preflop.',
+                  value: fmt(threeBet, threeBetOpportunity),
+                ),
+                const SizedBox(height: 16),
+                _buildMetricCard(
+                  chipLabel: 'Fold to 3-Bet',
+                  title: 'Fold to Three-Bet',
+                  description: 'How often you fold after raising and facing a 3-bet. If too high, opponents can exploit you by 3-betting tight.',
+                  value: fmt(fold3Bet, facing3BetCount),
+                ),
+                const SizedBox(height: 16),
+                _buildMetricCard(
+                  chipLabel: 'C-Bet',
+                  title: 'Continuation Bet',
+                  description: 'How often you bet on the flop after being the last preflop aggressor. A standard play showing strength.',
+                  value: fmt(cbet, cbetOpportunity),
+                ),
+                const SizedBox(height: 16),
+                _buildMetricCard(
+                  chipLabel: 'Steal',
+                  title: 'Blind Steal Attempt',
+                  description: 'How often you open-raise from late position (CO, BTN, SB) when the pot is unopened aiming to take the blinds.',
+                  value: fmt(steal, stealOpportunity),
+                ),
+                const SizedBox(height: 16),
+                _buildMetricCard(
+                  chipLabel: 'Check-Raise',
+                  title: 'Flop Check-Raise',
+                  description: 'How often you check, then raise on the flop. A deceptive move that can trap aggressive opponents.',
+                  value: fmt(checkRaise, checkRaiseFlopOpportunity),
+                ),
+                const SizedBox(height: 16),
+                _buildMetricCard(
+                  chipLabel: 'Win Rate',
+                  title: 'Hand Win Rate',
+                  description: 'Percentage of hands where you won the pot. Includes all showdowns and uncalled bets.',
+                  value: handsPlayed > 0 ? '${winRate.toStringAsFixed(1)}%' : na,
+                ),
+
                 const SizedBox(height: 32),
                 _buildSectionHeader(l10n.statsGeneral),
                 const SizedBox(height: 12),
@@ -524,50 +520,126 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     );
   }
 
-  Widget _buildOverallStats() {
-    final l10n = AppLocalizations.of(context);
-    final na = l10n.commonNotAvailable;
-    String formatStat(double value, int opportunity) {
-      if (opportunity == 0) return na;
-      return '${value.toStringAsFixed(1)}%';
-    }
+  Widget _buildPageHeader(AppLocalizations l10n) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Icon(Icons.bar_chart_rounded, color: Color(0xFF4879FF), size: 24),
+        const SizedBox(height: 12),
+        Text(
+          l10n.statsTitle,
+          style: GoogleFonts.ibmPlexSans(
+            fontSize: 17,
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          l10n.statsSubtitle,
+          style: GoogleFonts.ibmPlexSans(
+            fontSize: 15,
+            fontWeight: FontWeight.w400,
+            color: const Color(0xFFB9B9B9),
+            height: 22 / 15,
+          ),
+        ),
+        if (totalHands > 0) ...[
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            decoration: BoxDecoration(
+              color: const Color(0xFF161719),
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Text(
+              '${handsPlayed.toString()} hands logged',
+              style: GoogleFonts.ibmPlexSans(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: const Color(0xFFB9B9B9),
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
 
+  Widget _buildMetricCard({
+    required String chipLabel,
+    required String title,
+    required String description,
+    required String value,
+  }) {
+    final isNA = !value.contains('%');
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF131616),
-        borderRadius: BorderRadius.circular(18),
+        color: const Color(0xFF161719),
+        borderRadius: BorderRadius.circular(16),
       ),
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // Chip
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF2C2C2E),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.people_outline, size: 12, color: Color(0xFFB9B9B9)),
+                    const SizedBox(width: 4),
+                    Text(
+                      chipLabel,
+                      style: GoogleFonts.ibmPlexSans(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                        color: const Color(0xFFB9B9B9),
+                        height: 16 / 11,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Value
+              Text(
+                value,
+                style: GoogleFonts.ibmPlexSans(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w600,
+                  color: isNA ? const Color(0xFF4E4E4E) : const Color(0xFF89F1EC),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
           Text(
-            l10n.statsTitle,
+            title,
             style: GoogleFonts.ibmPlexSans(
               fontSize: 17,
               fontWeight: FontWeight.w600,
               color: Colors.white,
-              height: 1.2,
             ),
           ),
-          const SizedBox(height: 16),
-          _buildStatListItem(l10n.statsHandsPlayed, handsPlayed.toString()),
-          _buildDivider(),
-          _buildStatListItem('VPIP', totalHands > 0 ? '${vpip.toStringAsFixed(1)}%' : na),
-          _buildDivider(),
-          _buildStatListItem('PFR', totalHands > 0 ? '${pfr.toStringAsFixed(1)}%' : na),
-          _buildDivider(),
-          _buildStatListItem('3-Bet', formatStat(threeBet, threeBetOpportunity)),
-          _buildDivider(),
-          _buildStatListItem(l10n.statsFoldTo3Bet, formatStat(fold3Bet, facing3BetCount)),
-          _buildDivider(),
-          _buildStatListItem('C-Bet', formatStat(cbet, cbetOpportunity)),
-          _buildDivider(),
-          _buildStatListItem('Steal', formatStat(steal, stealOpportunity)),
-          _buildDivider(),
-          _buildStatListItem('Check/Raise', formatStat(checkRaise, checkRaiseFlopOpportunity)),
-          _buildDivider(),
-          _buildStatListItem(l10n.statsWinRate, handsPlayed > 0 ? '${winRate.toStringAsFixed(1)}%' : na),
+          const SizedBox(height: 8),
+          Text(
+            description,
+            style: GoogleFonts.ibmPlexSans(
+              fontSize: 15,
+              fontWeight: FontWeight.w400,
+              color: const Color(0xFFB9B9B9),
+              height: 22 / 15,
+            ),
+          ),
         ],
       ),
     );
@@ -603,10 +675,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
   }
 
   Widget _buildDivider() {
-    return Container(
-      height: 1,
-      color: Colors.white.withOpacity(0.1),
-    );
+    return Container(height: 1, color: Colors.white.withOpacity(0.1));
   }
 
   Widget _buildSectionHeader(String title) {
@@ -624,10 +693,10 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
   Widget _buildStatsCard({required List<Widget> children}) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF131616),
-        borderRadius: BorderRadius.circular(18),
+        color: const Color(0xFF161719),
+        borderRadius: BorderRadius.circular(16),
       ),
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: children,

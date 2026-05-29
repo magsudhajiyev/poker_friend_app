@@ -6,10 +6,8 @@ import '../screens/home_screen.dart';
 import '../screens/my_opponents_screen.dart';
 import '../screens/session_history_screen.dart';
 import '../screens/logging_mode_selection_screen.dart';
-import '../screens/club/club_dashboard_screen.dart';
 import '../screens/player/qr_scan_screen.dart' show QRScanScreen;
 import '../design_system/constants/colors.dart';
-import '../services/club_service.dart';
 
 /// Nav bar — Figma node 139:1186
 /// Layout: [Home | Clubs | Opponents | Statistics | Scan] ··· [+ FAB]
@@ -59,13 +57,6 @@ class _GlobalBottomNavBarState extends State<GlobalBottomNavBar> {
                 isSvg: true,
                 isActive: _isActive('home'),
                 onTap: () => _navigateTo(context, 'home'),
-              ),
-              const SizedBox(width: 28),
-              _NavIcon(
-                path: 'icons/figma_icons/club_suit.svg',
-                isSvg: true,
-                isActive: _isActive('clubs'),
-                onTap: () => _navigateToClubs(context),
               ),
               const SizedBox(width: 28),
               _NavIcon(
@@ -204,64 +195,6 @@ class _GlobalBottomNavBarState extends State<GlobalBottomNavBar> {
     if (mounted) setState(() => _pendingScreen = null);
   }
 
-  Future<void> _navigateToClubs(BuildContext context) async {
-    if (widget.currentScreen == 'clubs') return;
-    if (widget.onNavigationAttempt != null) {
-      final ok = await widget.onNavigationAttempt!();
-      if (!ok) return;
-    }
-    if (!context.mounted) return;
-
-    setState(() => _pendingScreen = 'clubs');
-    final clubs = await ClubService.getClubs();
-    if (!context.mounted) return;
-    if (clubs.isNotEmpty) {
-      await Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => ClubDashboardScreen(club: clubs.first)),
-      );
-    } else {
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          SnackBar(
-            content: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SvgPicture.asset(
-                  'assets/icons/Info.svg',
-                  width: 12,
-                  height: 12,
-                  colorFilter: const ColorFilter.mode(
-                    Color(0xFF9A9B9E),
-                    BlendMode.srcIn,
-                  ),
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  "You're not a member of any clubs yet",
-                  style: GoogleFonts.ibmPlexSans(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w500,
-                    color: const Color(0xFFB9B9B9),
-                    height: 16 / 11,
-                  ),
-                ),
-              ],
-            ),
-            backgroundColor: const Color(0xFF2C2C2E),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            behavior: SnackBarBehavior.floating,
-            elevation: 0,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            duration: const Duration(seconds: 3),
-          ),
-        );
-    }
-    if (mounted) setState(() => _pendingScreen = null);
-  }
 }
 
 /// Single nav icon button — 28×28 touch target.

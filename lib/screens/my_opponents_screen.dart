@@ -12,6 +12,7 @@ import '../widgets/global_loading_spinner.dart';
 import 'opponent_detail_screen.dart';
 import 'opponent_hands_screen.dart';
 import '../design_system/components/cards/error_state_card.dart';
+import '../design_system/components/headers/top_nav_bar.dart';
 import '../services/app_data_cache.dart';
 import '../l10n/app_localizations.dart';
 
@@ -208,8 +209,14 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> with SingleTicker
             child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildTopHeader(l10n),
-              const SizedBox(height: 16),
+              TopNavBar(
+                title: l10n.opponentsTitle,
+                subtitle: !SubscriptionService.isPremium
+                    ? l10n.opponentsCountFree(opponents.length, FreeTierLimits.maxOpponentProfiles)
+                    : l10n.opponentsCountPremium(opponents.length),
+                onBack: () => Navigator.pop(context),
+              ),
+              const SizedBox(height: 18),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: _buildSearchField(l10n),
@@ -272,62 +279,6 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> with SingleTicker
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildTopHeader(AppLocalizations l10n) {
-    return Container(
-      color: const Color(0xFF161719),
-      child: SafeArea(
-        bottom: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-          child: Row(
-            children: [
-              GestureDetector(
-                onTap: () => Navigator.pop(context),
-                child: const Icon(
-                  Icons.arrow_back_ios_new,
-                  color: Colors.white,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      l10n.opponentsTitle,
-                      style: GoogleFonts.ibmPlexSans(
-                        fontSize: 17,
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                        height: 22 / 17,
-                      ),
-                    ),
-                    Builder(builder: (context) {
-                      final showFreeCounter = !SubscriptionService.isPremium;
-                      final subtitle = showFreeCounter
-                          ? l10n.opponentsCountFree(opponents.length, FreeTierLimits.maxOpponentProfiles)
-                          : l10n.opponentsCountPremium(opponents.length);
-                      return Text(
-                        subtitle,
-                        style: GoogleFonts.ibmPlexSans(
-                          fontSize: 15,
-                          color: const Color(0xFFB9B9B9),
-                          fontWeight: FontWeight.w400,
-                          height: 22 / 15,
-                        ),
-                      );
-                    }),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }

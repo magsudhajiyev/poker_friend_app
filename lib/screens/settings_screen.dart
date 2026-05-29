@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import '../design_system/components/headers/top_nav_bar.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../design_system/constants/colors.dart';
 import '../l10n/app_localizations.dart';
@@ -148,151 +149,434 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   // ── Pickers ────────────────────────────────────────────────────────────────
 
+  static const _languageOptions = [
+    (code: null,  label: 'System Default', flagAsset: null),
+    (code: 'en',  label: 'English',        flagAsset: 'assets/icons/Property 1=United States of America (US).svg'),
+    (code: 'de',  label: 'Deutsch',        flagAsset: 'assets/icons/Property 1=Germany (DE).svg'),
+    (code: 'es',  label: 'Español',        flagAsset: 'assets/icons/Property 1=Spain (ES).svg'),
+    (code: 'fr',  label: 'Français',       flagAsset: 'assets/icons/Property 1=France (FR).svg'),
+    (code: 'pl',  label: 'Polski',         flagAsset: 'assets/icons/Property 1=Poland (PL).svg'),
+    (code: 'pt',  label: 'Português',      flagAsset: 'assets/icons/Property 1=Portugal (PT).svg'),
+    (code: 'ru',  label: 'Русский',        flagAsset: 'assets/icons/Property 1=Russia (RU).svg'),
+  ];
+
   void _showLanguagePicker() {
     final l10n = AppLocalizations.of(context);
-    final currentCode = LocaleService.currentLocaleCode;
+    String? selectedCode = LocaleService.currentLocaleCode;
+
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF101115),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
       isScrollControlled: true,
-      builder: (context) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(l10n.settingsLanguage,
-                  style: GoogleFonts.ibmPlexSans(fontSize: 20, fontWeight: FontWeight.w600, color: Colors.white)),
-              const SizedBox(height: 20),
-              _buildLanguageOption(l10n.settingsLanguageSystem, null, currentCode, flag: '🌐'),
-              _buildLanguageOption('English', 'en', currentCode, flag: '🇺🇸'),
-              _buildLanguageOption('Deutsch', 'de', currentCode, flag: '🇩🇪'),
-              _buildLanguageOption('Español', 'es', currentCode, flag: '🇪🇸'),
-              _buildLanguageOption('Français', 'fr', currentCode, flag: '🇫🇷'),
-              _buildLanguageOption('Polski', 'pl', currentCode, flag: '🇵🇱'),
-              _buildLanguageOption('Português', 'pt', currentCode, flag: '🇧🇷'),
-              _buildLanguageOption('Русский', 'ru', currentCode, flag: '🇷🇺'),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLanguageOption(String label, String? code, String? currentCode, {String? flag}) {
-    final isSelected = code == currentCode;
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: () {
-        LocaleService.setLocale(code != null ? Locale(code) : null);
-        Navigator.pop(context);
-        setState(() {});
-      },
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 14),
-        child: Row(
-          children: [
-            if (flag != null) ...[Text(flag, style: const TextStyle(fontSize: 22)), const SizedBox(width: 12)],
-            Expanded(
-              child: Text(label,
-                  style: GoogleFonts.ibmPlexSans(
-                    fontSize: 16,
-                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                    color: isSelected ? const Color(0xFF89F1EC) : Colors.white,
-                  )),
-            ),
-            if (isSelected) const Icon(Icons.check_rounded, color: Color(0xFF89F1EC), size: 22),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showCurrencyPicker() {
-    final l10n = AppLocalizations.of(context);
-    final currentCode = CurrencyService.code;
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: const Color(0xFF101115),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      isScrollControlled: true,
-      builder: (context) {
-        final maxHeight = MediaQuery.of(context).size.height * 0.7;
-        return SafeArea(
-          child: ConstrainedBox(
-            constraints: BoxConstraints(maxHeight: maxHeight),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(l10n.settingsCurrency,
-                      style: GoogleFonts.ibmPlexSans(fontSize: 20, fontWeight: FontWeight.w600, color: Colors.white)),
-                  const SizedBox(height: 20),
-                  Flexible(
-                    child: ListView(
-                      shrinkWrap: true,
-                      children: Currency.all.map((c) => _buildCurrencyOption(c, currentCode)).toList(),
-                    ),
-                  ),
-                ],
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+            final maxHeight = MediaQuery.of(context).size.height * 0.85;
+            return Container(
+              constraints: BoxConstraints(maxHeight: maxHeight),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(24),
+                  topRight: Radius.circular(24),
+                ),
               ),
-            ),
-          ),
+              padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + bottomInset),
+              child: SafeArea(
+                top: false,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Header
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Choose Language',
+                            style: GoogleFonts.ibmPlexSans(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFF0C0C0C),
+                              height: 20 / 15,
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: () => Navigator.pop(context),
+                            child: const Icon(Icons.close, size: 18, color: Color(0xFFB9B9B9)),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+                      // Bordered language list
+                      Container(
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          border: Border.all(color: const Color(0xFFEFEFEF)),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          children: _languageOptions.asMap().entries.map((entry) {
+                            final idx = entry.key;
+                            final opt = entry.value;
+                            final isSelected = opt.code == selectedCode;
+                            return Column(
+                              children: [
+                                GestureDetector(
+                                  behavior: HitTestBehavior.opaque,
+                                  onTap: () => setSheetState(() => selectedCode = opt.code),
+                                  child: Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: isSelected ? const Color(0xFFEFEFEF) : Colors.transparent,
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        // Icon: globe for system default, flag for others
+                                        if (opt.flagAsset == null)
+                                          const Icon(Icons.public, size: 24, color: Color(0xFF0C0C0C))
+                                        else
+                                          ClipRRect(
+                                            borderRadius: BorderRadius.circular(2),
+                                            child: SvgPicture.asset(
+                                              opt.flagAsset!,
+                                              width: 24,
+                                              height: 18,
+                                              fit: BoxFit.cover,
+                                            ),
+                                          ),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: Text(
+                                            opt.label,
+                                            style: GoogleFonts.ibmPlexSans(
+                                              fontSize: 15,
+                                              fontWeight: FontWeight.w400,
+                                              color: const Color(0xFF0C0C0C),
+                                              height: 22 / 15,
+                                            ),
+                                          ),
+                                        ),
+                                        if (isSelected)
+                                          const Icon(Icons.check, size: 18, color: Color(0xFFB9B9B9)),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                if (idx < _languageOptions.length - 1)
+                                  const SizedBox(height: 16),
+                              ],
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      // Info row
+                      Row(
+                        children: [
+                          const Icon(Icons.public, size: 13, color: Color(0xFFB9B9B9)),
+                          const SizedBox(width: 4),
+                          Text(
+                            'More languages will be announced later',
+                            style: GoogleFonts.ibmPlexSans(
+                              fontSize: 11,
+                              color: const Color(0xFFB9B9B9),
+                              height: 16 / 11,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      // Cancel + Choose buttons
+                      Row(
+                        children: [
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () => Navigator.pop(context),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(999),
+                                  border: Border.all(color: const Color(0xFFB9B9B9)),
+                                ),
+                                child: Text(
+                                  l10n.commonCancel,
+                                  textAlign: TextAlign.center,
+                                  style: GoogleFonts.ibmPlexSans(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w600,
+                                    color: const Color(0xFF0C0C0C),
+                                    height: 20 / 15,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () {
+                                LocaleService.setLocale(
+                                  selectedCode != null ? Locale(selectedCode!) : null,
+                                );
+                                Navigator.pop(context);
+                                setState(() {});
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF0C0C0C),
+                                  borderRadius: BorderRadius.circular(999),
+                                ),
+                                child: Text(
+                                  'Choose',
+                                  textAlign: TextAlign.center,
+                                  style: GoogleFonts.ibmPlexSans(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white,
+                                    height: 20 / 15,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
         );
       },
     );
   }
 
-  Widget _buildCurrencyOption(Currency currency, String currentCode) {
-    final isSelected = currency.code == currentCode;
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: () {
-        CurrencyService.setCurrency(currency.code);
-        Navigator.pop(context);
-        setState(() {});
-      },
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 14),
-        child: Row(
-          children: [
-            SizedBox(
-              width: 40,
-              child: Text(currency.symbol,
-                  style: GoogleFonts.robotoMono(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w500,
-                    color: isSelected ? const Color(0xFF89F1EC) : Colors.white.withOpacity(0.6),
-                  )),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text('${currency.name} (${currency.code})',
-                  style: GoogleFonts.ibmPlexSans(
-                    fontSize: 16,
-                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                    color: isSelected ? const Color(0xFF89F1EC) : Colors.white,
-                  )),
-            ),
-            if (isSelected)
-              const Padding(
-                padding: EdgeInsets.only(right: 8),
-                child: Icon(Icons.check_rounded, color: Color(0xFF89F1EC), size: 22),
+  static const _currencyFlagAssets = {
+    'USD': 'assets/icons/Property 1=United States of America (US).svg',
+    'EUR': 'assets/icons/Property 1=Europe.svg',
+    'GBP': 'assets/icons/Property 1=United Kingdom.svg',
+    'CAD': 'assets/icons/Property 1=Canada.svg',
+    'AUD': 'assets/icons/Property 1=Australia.svg',
+    'BRL': 'assets/icons/Property 1=Brasil.svg',
+    'PLN': 'assets/icons/Property 1=Poland (PL).svg',
+    'RUB': 'assets/icons/Property 1=Russia (RU).svg',
+    'INR': 'assets/icons/Property 1=India.svg',
+    'JPY': 'assets/icons/Property 1=Japan.svg',
+    'CNY': 'assets/icons/Property 1=China.svg',
+    'KRW': 'assets/icons/Property 1=Korea.svg',
+    'SEK': 'assets/icons/Property 1=Sweden.svg',
+    'MXN': 'assets/icons/Property 1=Mexico.svg',
+    'TRY': 'assets/icons/Property 1=Turkey.svg',
+    'CZK': 'assets/icons/Property 1=Czech Republic.svg',
+    'NOK': 'assets/icons/Property 1=Norway.svg',
+    'DKK': 'assets/icons/Property 1=Denmark.svg',
+    'CHF': 'assets/icons/Property 1=Switzerland.svg',
+    'ILS': 'assets/icons/Property 1=Israli.svg',
+    'UAH': 'assets/icons/Property 1=ukraine.svg',
+    'ARS': 'assets/icons/Property 1=Argentina.svg',
+  };
+
+  void _showCurrencyPicker() {
+    final l10n = AppLocalizations.of(context);
+    String selectedCode = CurrencyService.code;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+            final maxHeight = MediaQuery.of(context).size.height * 0.78;
+            return Container(
+              constraints: BoxConstraints(maxHeight: maxHeight),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(24),
+                  topRight: Radius.circular(24),
+                ),
               ),
-            Text(currency.flag, style: const TextStyle(fontSize: 20)),
-          ],
-        ),
-      ),
-    );
-  }
+              padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + bottomInset),
+              child: SafeArea(
+                top: false,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Header
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Choose Currency',
+                          style: GoogleFonts.ibmPlexSans(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF0C0C0C),
+                            height: 20 / 15,
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () => Navigator.pop(context),
+                          child: const Icon(Icons.close, size: 18, color: Color(0xFFB9B9B9)),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    // Scrollable currency list — no dividers, 4px gap, selected = grey pill
+                    Flexible(
+                      child: ListView.builder(
+                        shrinkWrap: true,
+                        itemCount: Currency.all.length,
+                        itemBuilder: (context, index) {
+                          final currency = Currency.all[index];
+                          final isSelected = currency.code == selectedCode;
+                          final flagPath = _currencyFlagAssets[currency.code];
+                          const noCodeSet = {'EUR', 'GBP', 'CAD', 'AUD'};
+                          final displayName = noCodeSet.contains(currency.code)
+                              ? currency.name
+                              : '${currency.name} (${currency.code})';
+                          return Padding(
+                            padding: EdgeInsets.only(bottom: index < Currency.all.length - 1 ? 4 : 0),
+                            child: GestureDetector(
+                              behavior: HitTestBehavior.opaque,
+                              onTap: () => setSheetState(() => selectedCode = currency.code),
+                              child: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: isSelected ? const Color(0xFFF5F5F5) : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Row(
+                                  children: [
+                                    SizedBox(
+                                      width: 32,
+                                      child: Text(
+                                        currency.symbol,
+                                        style: GoogleFonts.ibmPlexSans(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w500,
+                                          color: const Color(0xFF0C0C0C),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Expanded(
+                                      child: Text(
+                                        displayName,
+                                        style: GoogleFonts.ibmPlexSans(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w400,
+                                          color: isSelected
+                                              ? const Color(0xFF0C0C0C)
+                                              : const Color(0xFFB9B9B9),
+                                        ),
+                                      ),
+                                    ),
+                                    if (flagPath != null)
+                                      ClipRRect(
+                                        borderRadius: BorderRadius.circular(2),
+                                        child: SvgPicture.asset(flagPath, width: 24, height: 18, fit: BoxFit.cover),
+                                      )
+                                    else
+                                      Text(currency.flag, style: const TextStyle(fontSize: 18)),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                            const SizedBox(height: 8),
+                            // Info row
+                            Row(
+                              children: [
+                                const Icon(Icons.public, size: 13, color: Color(0xFFB9B9B9)),
+                                const SizedBox(width: 4),
+                                Text(
+                                  'More currencies will be announced later',
+                                  style: GoogleFonts.ibmPlexSans(
+                                    fontSize: 11,
+                                    color: const Color(0xFFB9B9B9),
+                                    height: 16 / 11,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            // Cancel + Choose buttons
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: GestureDetector(
+                                    onTap: () => Navigator.pop(context),
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(vertical: 12),
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(999),
+                                        border: Border.all(color: const Color(0xFFB9B9B9)),
+                                      ),
+                                      child: Text(
+                                        l10n.commonCancel,
+                                        textAlign: TextAlign.center,
+                                        style: GoogleFonts.ibmPlexSans(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w600,
+                                          color: const Color(0xFF0C0C0C),
+                                          height: 20 / 15,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      CurrencyService.setCurrency(selectedCode);
+                                      Navigator.pop(context);
+                                      setState(() {});
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(vertical: 12),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF0C0C0C),
+                                        borderRadius: BorderRadius.circular(999),
+                                      ),
+                                      child: Text(
+                                        'Choose',
+                                        textAlign: TextAlign.center,
+                                        style: GoogleFonts.ibmPlexSans(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.white,
+                                          height: 20 / 15,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                );
+              },
+            );
+          }
 
   // ── Bankroll navigation ────────────────────────────────────────────────────
 
@@ -571,7 +855,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final safeTop = MediaQuery.of(context).padding.top;
     final screenWidth = MediaQuery.of(context).size.width;
     final hPad = screenWidth * 0.044; // ≈16px at 375pt
 
@@ -579,8 +862,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
       backgroundColor: _bg,
       body: Column(
         children: [
-          SizedBox(height: safeTop),
-          _buildTopNav(hPad),
+          TopNavBar(
+            title: 'Settings',
+            onBack: () => Navigator.pop(context),
+            backgroundColor: _bg,
+          ),
           Expanded(
             child: SingleChildScrollView(
               padding: EdgeInsets.fromLTRB(hPad, 24, hPad, 40),
@@ -723,34 +1009,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   // ── Sub-widgets ─────────────────────────────────────────────────────────────
-
-  Widget _buildTopNav(double hPad) {
-    return SizedBox(
-      height: 44,
-      child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: hPad),
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            Align(
-              alignment: Alignment.centerLeft,
-              child: GestureDetector(
-                onTap: () => Navigator.pop(context),
-                child: Container(
-                  width: 38, height: 38,
-                  decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-                  child: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.black, size: 18),
-                ),
-              ),
-            ),
-            Text('Settings',
-                style: GoogleFonts.ibmPlexSans(
-                    fontSize: 17, fontWeight: FontWeight.w600, color: Colors.white, letterSpacing: 0)),
-          ],
-        ),
-      ),
-    );
-  }
 
   Widget _buildSubscriptionBanner() {
     return GestureDetector(

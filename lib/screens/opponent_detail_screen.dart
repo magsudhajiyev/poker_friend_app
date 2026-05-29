@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -11,7 +12,6 @@ import '../services/opponent_stats_service.dart';
 import 'opponent_hands_screen.dart';
 import '../widgets/global_bottom_nav_bar.dart';
 import '../design_system/components/drawer_dots.dart';
-import '../design_system/components/form_drawer.dart';
 import '../l10n/app_localizations.dart';
 
 class OpponentDetailScreen extends StatefulWidget {
@@ -452,120 +452,101 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final screenWidth = MediaQuery.of(context).size.width;
-
+    final bottomPad = MediaQuery.of(context).padding.bottom;
     return Scaffold(
-      backgroundColor: Colors.black,
-      extendBody: true,
+      backgroundColor: const Color(0xFF0C0C0C),
       body: Stack(
         children: [
-          // Subtle teal gradient at top (same as home/opponents/session screens)
-          Positioned(
-            top: -screenWidth * 0.3,
-            right: -screenWidth * 0.25,
-            child: Transform.scale(
-              scaleX: 1.0,
-              scaleY: 0.7,
-              child: Container(
-                width: screenWidth * 1.5,
-                height: screenWidth * 1.2,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(
-                    center: Alignment.center,
-                    radius: 0.5,
-                    colors: [
-                      Color(0xFF1A4A4A),
-                      Color(0xFF133538).withOpacity(0.7),
-                      Color(0xFF133538).withOpacity(0.3),
-                      Colors.transparent,
+          Column(
+            children: [
+              _buildHeader(),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.fromLTRB(16, 24, 16, 100 + bottomPad),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildStatisticsSection(),
+                      const SizedBox(height: 64),
+                      _buildViewHandHistoryButton(),
                     ],
-                    stops: [0.0, 0.3, 0.6, 1.0],
                   ),
                 ),
               ),
+            ],
+          ),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: _buildBottomBar(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _getInitials(String name) {
+    final parts = name.trim().split(RegExp(r'\s+'));
+    final initials = parts.take(2).map((p) => p.isNotEmpty ? p[0].toUpperCase() : '').join();
+    return initials;
+  }
+
+  Widget _buildHeader() {
+    final l10n = AppLocalizations.of(context);
+    final topPad = MediaQuery.of(context).padding.top;
+    final handsCount = _opponentStats?.handsPlayed ?? (_statistics?['totalHands'] as int? ?? 0);
+    final handsText = handsCount > 0
+        ? l10n.opponentDetailHandsTracked(handsCount)
+        : l10n.opponentDetailNoDataYet;
+
+    return Container(
+      color: const Color(0xFF161719),
+      padding: EdgeInsets.fromLTRB(16, topPad + 16, 16, 16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // Avatar
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: const Color(0xFF763EED),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              _getInitials(_opponent.name),
+              style: GoogleFonts.ibmPlexSans(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
             ),
           ),
-          SafeArea(
+          const SizedBox(width: 12),
+          // Name + hand count
+          Expanded(
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                // Header Section with back button + opponent name
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-                  child: Row(
-                    children: [
-                      // Back button
-                      GestureDetector(
-                        onTap: () => Navigator.pop(context),
-                        child: Container(
-                          width: 44,
-                          height: 44,
-                          decoration: const BoxDecoration(
-                            color: Color(0xFF101115),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.arrow_back,
-                            color: Colors.white,
-                            size: 22,
-                          ),
-                        ),
-                      ),
-                      SizedBox(width: 12),
-                      // Opponent name + playing style
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              _opponent.name,
-                              style: GoogleFonts.ibmPlexSans(
-                                fontSize: 24,
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: -0.5,
-                                height: 1.2,
-                              ),
-                            ),
-                            SizedBox(height: 2),
-                            Text(
-                              _opponentStats != null && _opponentStats!.handsPlayed > 0
-                                  ? l10n.opponentDetailHandsTracked(_opponentStats!.handsPlayed)
-                                  : l10n.opponentDetailNoDataYet,
-                              style: GoogleFonts.ibmPlexSans(
-                                fontSize: 15,
-                                color: Colors.grey,
-                                fontWeight: FontWeight.w400,
-                                height: 1.2,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                Text(
+                  _opponent.name,
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                    height: 20 / 17,
                   ),
                 ),
-
-                // Content
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildBasicInfoCard(),
-                        if (_opponent.notes != null && _opponent.notes!.isNotEmpty) ...[
-                          const SizedBox(height: 16),
-                          _buildNotesSection(),
-                        ],
-                        const SizedBox(height: 32),
-                        _buildStatisticsSection(),
-                        const SizedBox(height: 32),
-                        _buildHandHistorySection(),
-                        const SizedBox(height: 100), // Bottom padding for nav bar
-                      ],
-                    ),
+                Text(
+                  handsText,
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w400,
+                    color: const Color(0xFFA3FF78),
+                    height: 22 / 15,
                   ),
                 ),
               ],
@@ -573,7 +554,146 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
           ),
         ],
       ),
-      bottomNavigationBar: GlobalBottomNavBar(currentScreen: 'opponent_detail'),
+    );
+  }
+
+  Widget _buildBottomBar() {
+    final bottomPad = MediaQuery.of(context).padding.bottom;
+    return Container(
+      color: Colors.transparent,
+      padding: EdgeInsets.fromLTRB(16, 16, 16, 16 + bottomPad),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          // Back button
+          GestureDetector(
+            onTap: () => Navigator.pop(context),
+            child: Container(
+              width: 38,
+              height: 38,
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+              ),
+              alignment: Alignment.center,
+              child: SvgPicture.asset(
+                'assets/icons/CaretLeft.svg',
+                width: 20,
+                height: 20,
+                colorFilter: const ColorFilter.mode(Colors.black, BlendMode.srcIn),
+              ),
+            ),
+          ),
+          // Action pill (Edit + Delete)
+          Container(
+            decoration: BoxDecoration(
+              color: const Color(0xFF161719),
+              border: Border.all(color: const Color(0xFF3A3A3C)),
+              borderRadius: BorderRadius.circular(999),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Edit group
+                GestureDetector(
+                  onTap: _showEditOpponentDialog,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 24,
+                        height: 24,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFFF8A54),
+                          shape: BoxShape.circle,
+                        ),
+                        alignment: Alignment.center,
+                        child: _buildIcon('icons/figma_icons/edit.svg', 16, Colors.white),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Edit',
+                        style: GoogleFonts.ibmPlexSans(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w400,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 16),
+                // Delete group
+                GestureDetector(
+                  onTap: _showDeleteConfirmation,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 24,
+                        height: 24,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFFF3B30),
+                          shape: BoxShape.circle,
+                        ),
+                        alignment: Alignment.center,
+                        child: _buildIcon('icons/figma_icons/delete.svg', 16, Colors.white),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Delete',
+                        style: GoogleFonts.ibmPlexSans(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w400,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildViewHandHistoryButton() {
+    final l10n = AppLocalizations.of(context);
+    return Center(
+      child: GestureDetector(
+        onTap: () {
+          final totalHands = OpponentHandsScreen.filteredHandCounts[_opponent.id]
+              ?? _statistics?['totalHands'] ?? 0;
+          if (totalHands == 0) {
+            _showNoHandsFoundDialog();
+          } else {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => OpponentHandsScreen(opponent: _opponent),
+              ),
+            );
+          }
+        },
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(999),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          child: Text(
+            l10n.opponentDetailViewHandHistory,
+            style: GoogleFonts.ibmPlexSans(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFF0C0C0C),
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -898,7 +1018,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
   Widget _buildStatisticsSection() {
     final l10n = AppLocalizations.of(context);
     if (_isLoadingStats) {
-      return Center(
+      return const Center(
         child: CircularProgressIndicator(
           color: Color(0xFF89F1EC),
         ),
@@ -906,68 +1026,60 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
     }
 
     if (_statistics == null) {
-      return Container(
-        padding: EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: Color(0xFF131616),
-          borderRadius: BorderRadius.circular(8),
-        ),
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 20),
         child: Text(
           l10n.opponentDetailNoStatisticsAvailable,
           style: GoogleFonts.ibmPlexSans(
-            color: Colors.white.withOpacity(0.6),
-            fontSize: 14,
+            color: const Color(0xFFB9B9B9),
+            fontSize: 15,
           ),
         ),
       );
     }
 
-    return Container(
-      decoration: BoxDecoration(
-        color: Color(0xFF131616),
-        borderRadius: BorderRadius.circular(18),
-      ),
-      padding: EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Section header
-          Text(
-            l10n.opponentDetailStatistics,
-            style: GoogleFonts.ibmPlexSans(
-              fontSize: 17,
-              fontWeight: FontWeight.w600,
-              color: Colors.white,
-              height: 1.2,
-            ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Section title
+        Text(
+          l10n.opponentDetailStatistics,
+          style: GoogleFonts.ibmPlexSans(
+            fontSize: 17,
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+            height: 20 / 17,
           ),
-          SizedBox(height: 8),
-          Text(
-            l10n.opponentDetailStatsDisclaimer,
-            style: GoogleFonts.ibmPlexSans(
-              fontSize: 12,
-              fontWeight: FontWeight.w400,
-              color: Colors.white.withValues(alpha: 0.45),
-              height: 1.4,
-            ),
+        ),
+        const SizedBox(height: 8),
+        // Disclaimer
+        Text(
+          l10n.opponentDetailStatsDisclaimer,
+          style: GoogleFonts.ibmPlexSans(
+            fontSize: 15,
+            fontWeight: FontWeight.w400,
+            color: const Color(0xFFB9B9B9),
+            height: 22 / 15,
           ),
-          SizedBox(height: 16),
-          // List items with dividers - 7 poker stats
-          _buildStatListItem(l10n.opponentDetailAggressionFreq, _formatStatWithOpportunity(_statistics!['aggressionFreq'], _statistics!['aggressionTotal'])),
-          _buildDivider(),
-          _buildStatListItem(l10n.opponentDetailShowdownPercent, _formatStatWithOpportunity(_statistics!['showdown'], _statistics!['showdownHands'])),
-          _buildDivider(),
-          _buildStatListItem('3-Bet', _formatStatWithOpportunity(_statistics!['threeBet'], _statistics!['threeBetOpportunity'])),
-          _buildDivider(),
-          _buildStatListItem('Fold to 3-Bet', _formatStatWithOpportunity(_statistics!['fold3Bet'], _statistics!['facing3BetCount'])),
-          _buildDivider(),
-          _buildStatListItem('C-Bet', _formatStatWithOpportunity(_statistics!['cbet'], _statistics!['cbetOpportunity'])),
-          _buildDivider(),
-          _buildStatListItem('Steal', _formatStatWithOpportunity(_statistics!['steal'], _statistics!['stealOpportunity'])),
-          _buildDivider(),
-          _buildStatListItem('Check/Raise', _formatStatWithOpportunity(_statistics!['checkRaise'], _statistics!['checkRaiseFlopOpportunity'])),
-        ],
-      ),
+        ),
+        const SizedBox(height: 24),
+        // 7 stat rows with dividers, 8px padding top and bottom of the list
+        const SizedBox(height: 8),
+        _buildStatListItem(l10n.opponentDetailAggressionFreq, _formatStatWithOpportunity(_statistics!['aggressionFreq'], _statistics!['aggressionTotal'])),
+        _buildDivider(),
+        _buildStatListItem(l10n.opponentDetailShowdownPercent, _formatStatWithOpportunity(_statistics!['showdown'], _statistics!['showdownHands'])),
+        _buildDivider(),
+        _buildStatListItem('3-Bet', _formatStatWithOpportunity(_statistics!['threeBet'], _statistics!['threeBetOpportunity'])),
+        _buildDivider(),
+        _buildStatListItem('Fold to 3-Bet', _formatStatWithOpportunity(_statistics!['fold3Bet'], _statistics!['facing3BetCount'])),
+        _buildDivider(),
+        _buildStatListItem('C-Bet', _formatStatWithOpportunity(_statistics!['cbet'], _statistics!['cbetOpportunity'])),
+        _buildDivider(),
+        _buildStatListItem('Steal', _formatStatWithOpportunity(_statistics!['steal'], _statistics!['stealOpportunity'])),
+        _buildDivider(),
+        _buildStatListItem('Check/Raise', _formatStatWithOpportunity(_statistics!['checkRaise'], _statistics!['checkRaiseFlopOpportunity'])),
+        const SizedBox(height: 8),
+      ],
     );
   }
 
@@ -984,7 +1096,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
 
   Widget _buildStatListItem(String label, String value) {
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: 12),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -993,17 +1105,15 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
             style: GoogleFonts.ibmPlexSans(
               fontSize: 15,
               fontWeight: FontWeight.w400,
-              color: Colors.white.withOpacity(0.8),
-              height: 1.0,
+              color: const Color(0xFFB9B9B9),
             ),
           ),
           Text(
             value,
             style: GoogleFonts.ibmPlexSans(
               fontSize: 15,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF89F1EC),
-              height: 1.0,
+              fontWeight: FontWeight.w500,
+              color: const Color(0xFFA3FF78),
             ),
           ),
         ],
@@ -1014,7 +1124,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
   Widget _buildDivider() {
     return Container(
       height: 1,
-      color: Colors.white.withOpacity(0.1),
+      color: const Color(0xFF2C2C2E),
     );
   }
 
@@ -1101,57 +1211,75 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
 
   void _showNoHandsFoundDialog() {
     final l10n = AppLocalizations.of(context);
-    showModalBottomSheet(
+    showDialog(
       context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        decoration: BoxDecoration(
-          color: const Color(0xFF101115),
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(16),
-            topRight: Radius.circular(16),
+      barrierColor: Colors.black.withValues(alpha: 0.5),
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
           ),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Close button at top right
-              Align(
-                alignment: Alignment.topRight,
-                child: GestureDetector(
-                  onTap: () => Navigator.pop(context),
-                  child: SizedBox(
+              // Header row: spacer + X close
+              Row(
+                children: [
+                  const Expanded(child: SizedBox()),
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    behavior: HitTestBehavior.opaque,
+                    child: SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: SvgPicture.asset(
+                        'assets/icons/X.svg',
+                        width: 18,
+                        height: 18,
+                        colorFilter: const ColorFilter.mode(
+                          Color(0xFFB9B9B9),
+                          BlendMode.srcIn,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              // Icon holder
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEFEFEF),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Center(
+                  child: SvgPicture.asset(
+                    'icons/figma_icons/search.svg',
                     width: 24,
                     height: 24,
-                    child: Center(
-                      child: _buildIcon(
-                        'icons/figma_icons/close.svg',
-                        15,
-                        Colors.white,
-                      ),
+                    colorFilter: const ColorFilter.mode(
+                      Color(0xFF0C0C0C),
+                      BlendMode.srcIn,
                     ),
                   ),
                 ),
               ),
-              const SizedBox(height: 34),
-              // Ghost icon
-              _buildIcon(
-                'icons/figma_icons/ghost.svg',
-                24,
-                const Color(0xFFB3B4B6),
-              ),
-              const SizedBox(height: 18),
+              const SizedBox(height: 16),
               // Title
               Text(
                 l10n.opponentDetailNoHandsFound,
                 textAlign: TextAlign.center,
                 style: GoogleFonts.ibmPlexSans(
                   fontSize: 17,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.white,
-                  height: 1.44,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF0C0C0C),
+                  height: 20 / 17,
                 ),
               ),
               const SizedBox(height: 7),
@@ -1161,34 +1289,29 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                 textAlign: TextAlign.center,
                 style: GoogleFonts.ibmPlexSans(
                   fontSize: 15,
-                  fontWeight: FontWeight.w500,
-                  color: const Color(0xFFCCCDCE),
-                  height: 1.44,
+                  fontWeight: FontWeight.w400,
+                  color: const Color(0xFFB9B9B9),
+                  height: 22 / 15,
                 ),
               ),
-              const SizedBox(height: 34),
+              const SizedBox(height: 24),
               // Close button
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () => Navigator.pop(context),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF4B9A96),
-                    foregroundColor: Colors.black,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(110),
-                    ),
-                    padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 32),
-                    elevation: 0,
+              GestureDetector(
+                onTap: () => Navigator.pop(context),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF0C0C0C),
+                    borderRadius: BorderRadius.circular(999),
                   ),
                   child: Text(
                     l10n.commonClose,
+                    textAlign: TextAlign.center,
                     style: GoogleFonts.ibmPlexSans(
-                      fontSize: 17,
+                      fontSize: 15,
                       fontWeight: FontWeight.w600,
-                      color: Colors.black,
-                      letterSpacing: -0.5,
-                      height: 24 / 17,
+                      color: Colors.white,
                     ),
                   ),
                 ),
@@ -1212,150 +1335,36 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
     final l10n = AppLocalizations.of(context);
     final nameController = TextEditingController(text: _opponent.name);
     final notesController = TextEditingController(text: _opponent.notes ?? '');
+    final nameFocusNode = FocusNode();
+    final notesFocusNode = FocusNode();
     OpponentColor selectedColor = _opponent.color;
-    final colorPickerKey = GlobalKey();
     String? nameError;
-    StateSetter? _setSheetState;
+    StateSetter? sheetSetState;
 
-    // Color name mapping
-    String getColorName(OpponentColor color) {
-      switch (color) {
-        case OpponentColor.red: return l10n.opponentDetailColorRed;
-        case OpponentColor.blue: return l10n.opponentDetailColorLightBlue;
-        case OpponentColor.green: return l10n.opponentDetailColorGreen;
-        case OpponentColor.orange: return l10n.opponentDetailColorOrange;
-        case OpponentColor.purple: return l10n.opponentDetailColorPurple;
-        case OpponentColor.teal: return l10n.opponentDetailColorTeal;
-        case OpponentColor.pink: return l10n.opponentDetailColorPink;
-        case OpponentColor.indigo: return l10n.opponentDetailColorIndigo;
-      }
-    }
+    const colorSwatches = [
+      (OpponentColor.green,  Color(0xFF39FF14)),
+      (OpponentColor.orange, Color(0xFFFF8A54)),
+      (OpponentColor.red,    Color(0xFFFF3B30)),
+      (OpponentColor.blue,   Color(0xFF007AFF)),
+      (OpponentColor.purple, Color(0xFFBF5AF2)),
+      (OpponentColor.teal,   Color(0xFFFFD60A)),
+    ];
 
-    void showColorPicker(StateSetter setSheetState) {
-      final colors = OpponentColor.values;
-
-      // Get the position of the color picker row
-      final RenderBox renderBox = colorPickerKey.currentContext!.findRenderObject() as RenderBox;
-      final Offset offset = renderBox.localToGlobal(Offset.zero);
-
-      showDialog(
-        context: context,
-        barrierColor: Colors.transparent,
-        builder: (context) {
-          return Stack(
-            children: [
-              // Dismiss on tap outside
-              Positioned.fill(
-                child: GestureDetector(
-                  onTap: () => Navigator.pop(context),
-                  child: Container(color: Colors.transparent),
-                ),
-              ),
-              // Positioned dropdown
-              Positioned(
-                right: 32,
-                top: offset.dy,
-                child: Material(
-                  color: Colors.transparent,
-                  child: Container(
-                    width: 184,
-                    decoration: BoxDecoration(
-                      color: Color(0xFF161619),
-                      borderRadius: BorderRadius.circular(18),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.45),
-                          blurRadius: 34,
-                          offset: Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    padding: EdgeInsets.all(16),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        ...colors.asMap().entries.map((entry) {
-                          final index = entry.key;
-                          final color = entry.value;
-                          final isSelected = color == selectedColor;
-
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              GestureDetector(
-                                onTap: () {
-                                  Navigator.pop(context);
-                                  setSheetState(() {
-                                    selectedColor = color;
-                                  });
-                                },
-                                behavior: HitTestBehavior.opaque,
-                                child: Padding(
-                                  padding: EdgeInsets.symmetric(vertical: 4),
-                                  child: Row(
-                                    children: [
-                                      if (isSelected) ...[
-                                        Icon(
-                                          Icons.check,
-                                          color: Colors.white,
-                                          size: 18,
-                                        ),
-                                        SizedBox(width: 8),
-                                      ],
-                                      Container(
-                                        width: 16,
-                                        height: 16,
-                                        margin: EdgeInsets.only(right: 8),
-                                        decoration: BoxDecoration(
-                                          color: _getColorForOpponent(color),
-                                          shape: BoxShape.circle,
-                                        ),
-                                      ),
-                                      Text(
-                                        getColorName(color),
-                                        style: GoogleFonts.ibmPlexSans(
-                                          color: Colors.white,
-                                          fontSize: 17,
-                                          fontWeight: FontWeight.w400,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              if (index < colors.length - 1)
-                                Padding(
-                                  padding: EdgeInsets.symmetric(vertical: 8),
-                                  child: Container(
-                                    height: 1,
-                                    color: Colors.white.withOpacity(0.1),
-                                  ),
-                                ),
-                            ],
-                          );
-                        }),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          );
-        },
-      );
-    }
+    void refreshSheet() => sheetSetState?.call(() {});
+    nameFocusNode.addListener(refreshSheet);
+    notesFocusNode.addListener(refreshSheet);
+    nameController.addListener(refreshSheet);
+    notesController.addListener(refreshSheet);
 
     Future<void> saveOpponent() async {
       final name = nameController.text.trim();
       if (name.isEmpty) return;
 
-      // Block rename to an existing opponent's name
       if (name.toLowerCase() != _opponent.name.toLowerCase()) {
         final existing = await OpponentService.findOpponentByName(name);
         if (existing != null && existing.id != _opponent.id) {
           nameError = l10n.opponentAlreadyExists(name);
-          _setSheetState?.call(() {});
+          sheetSetState?.call(() {});
           return;
         }
       }
@@ -1370,303 +1379,459 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
           clearNotes: notesController.text.trim().isEmpty,
           color: selectedColor,
         );
-
         await OpponentService.saveOpponent(updatedOpponent);
-        Navigator.pop(context);
-
-        setState(() {
-          _opponent = updatedOpponent;
-        });
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+        if (context.mounted) Navigator.pop(context);
+        setState(() { _opponent = updatedOpponent; });
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             content: Text(l10n.opponentDetailUpdatedSuccessfully),
-            backgroundColor: Color(0xFF44D69B),
-          ),
-        );
+            backgroundColor: const Color(0xFF44D69B),
+          ));
+        }
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             content: Text(l10n.commonErrorGeneric(e.toString())),
             backgroundColor: Colors.red,
-          ),
-        );
+          ));
+        }
       }
     }
 
-    FormDrawer.show(
+    showModalBottomSheet(
       context: context,
-      title: l10n.opponentDetailEditOpponent,
-      onSave: saveOpponent,
-      body: StatefulBuilder(
-        builder: (context, setSheetState) {
-          _setSheetState = setSheetState;
-          return Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16),
-            child: Container(
-              decoration: BoxDecoration(
-                color: Color(0xFF131616),
-                borderRadius: BorderRadius.circular(18),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            sheetSetState = setSheetState;
+            final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+            return Container(
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(24),
+                  topRight: Radius.circular(24),
+                ),
               ),
-              padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              child: Column(
-                children: [
-                  // Opponent Name field
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(10, 10, 8, 10),
-                    child: TextField(
-                      controller: nameController,
-                      style: GoogleFonts.ibmPlexSans(
-                        fontSize: 17,
-                        color: Colors.white,
-                        fontWeight: FontWeight.w400,
-                        height: 1.44,
-                      ),
-                      decoration: InputDecoration(
-                        hintText: l10n.opponentDetailOpponentName,
-                        hintStyle: GoogleFonts.ibmPlexSans(
-                          fontSize: 17,
-                          color: Colors.white,
-                          fontWeight: FontWeight.w400,
-                          height: 1.44,
-                        ),
-                        border: InputBorder.none,
-                        enabledBorder: InputBorder.none,
-                        focusedBorder: InputBorder.none,
-                        filled: false,
-                        contentPadding: EdgeInsets.zero,
-                        isDense: true,
-                      ),
-                    ),
-                  ),
-                  if (nameError != null)
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(10, 0, 10, 4),
-                      child: Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          nameError!,
-                          style: GoogleFonts.ibmPlexSans(
-                            fontSize: 12,
-                            color: const Color(0xFFE85A5A),
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
-                      ),
-                    ),
-                  // Separator
-                  Container(
-                    height: 21,
-                    padding: EdgeInsets.symmetric(horizontal: 8),
-                    alignment: Alignment.center,
-                    child: Container(height: 1, color: Color(0xFF3A3A3C)),
-                  ),
-                  // Notes field
-                  Padding(
-                    padding: EdgeInsets.all(10),
-                    child: TextField(
-                      controller: notesController,
-                      style: GoogleFonts.ibmPlexSans(
-                        fontSize: 17,
-                        color: Colors.white,
-                        fontWeight: FontWeight.w400,
-                        height: 1.44,
-                      ),
-                      decoration: InputDecoration(
-                        hintText: l10n.opponentDetailNotesOptional,
-                        hintStyle: GoogleFonts.ibmPlexSans(
-                          fontSize: 17,
-                          color: Colors.white.withOpacity(0.5),
-                          fontWeight: FontWeight.w400,
-                          height: 1.44,
-                        ),
-                        border: InputBorder.none,
-                        enabledBorder: InputBorder.none,
-                        focusedBorder: InputBorder.none,
-                        filled: false,
-                        contentPadding: EdgeInsets.zero,
-                        isDense: true,
-                      ),
-                      maxLines: 4,
-                      minLines: 4,
-                    ),
-                  ),
-                  // Separator
-                  Container(
-                    height: 21,
-                    padding: EdgeInsets.symmetric(horizontal: 8),
-                    alignment: Alignment.center,
-                    child: Container(height: 1, color: Color(0xFF3A3A3C)),
-                  ),
-                  // Pick a color row
-                  GestureDetector(
-                    key: colorPickerKey,
-                    onTap: () => showColorPicker(setSheetState),
-                    child: Padding(
-                      padding: EdgeInsets.all(10),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + bottomInset),
+              child: SafeArea(
+                top: false,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Header
+                    SizedBox(
+                      height: 20,
+                      child: Stack(
+                        alignment: Alignment.center,
                         children: [
                           Text(
-                            l10n.opponentDetailPickColor,
+                            l10n.opponentDetailEditOpponent,
                             style: GoogleFonts.ibmPlexSans(
-                              fontSize: 17,
-                              color: Color(0xFFB9B9B9),
-                              fontWeight: FontWeight.w400,
-                              height: 1.44,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFF0C0C0C),
+                              height: 20 / 15,
                             ),
                           ),
-                          Row(
-                            children: [
-                              Text(
-                                getColorName(selectedColor),
-                                style: GoogleFonts.ibmPlexSans(
-                                  fontSize: 17,
-                                  color: Color(0xFFB9B9B9),
-                                  fontWeight: FontWeight.w400,
-                                  height: 1.44,
-                                ),
-                              ),
-                              SizedBox(width: 10),
-                              _buildIcon(
-                                'icons/figma_icons/up_and_down.svg',
-                                20,
-                                Color(0xFFB9B9B9),
-                              ),
-                            ],
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: GestureDetector(
+                              onTap: () => Navigator.pop(context),
+                              child: const Icon(Icons.close, color: Color(0xFFB9B9B9), size: 18),
+                            ),
                           ),
                         ],
                       ),
                     ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  void _showDeleteConfirmation() {
-    final l10n = AppLocalizations.of(context);
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) => SafeArea(
-        child: Padding(
-          padding: EdgeInsets.fromLTRB(16, 0, 16, 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Main card with title, description, and delete button
-              Container(
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: Color(0xFF131613), // --background
-                  borderRadius: BorderRadius.circular(18),
-                ),
-                child: Column(
-                  children: [
-                    SizedBox(height: 24),
-                    // Title
+                    const SizedBox(height: 16),
+                    // Name label
                     Text(
-                      l10n.opponentDetailDeleteConfirmTitle,
+                      l10n.opponentsNameHint,
                       style: GoogleFonts.ibmPlexSans(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                        height: 1.2,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: nameFocusNode.hasFocus
+                            ? const Color(0xFF0C0C0C)
+                            : const Color(0xFFB9B9B9),
                       ),
                     ),
-                    SizedBox(height: 24),
-                    // Description
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 24),
-                      child: Text(
-                        l10n.opponentDetailDeleteConfirmMessage(_opponent.name),
-                        textAlign: TextAlign.center,
+                    const SizedBox(height: 4),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFDFDFD),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: nameFocusNode.hasFocus
+                              ? const Color(0xFF4CDE78)
+                              : const Color(0xFFEFEFEF),
+                          width: nameFocusNode.hasFocus ? 1.5 : 1.0,
+                        ),
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: nameController,
+                              focusNode: nameFocusNode,
+                              textInputAction: TextInputAction.next,
+                              style: GoogleFonts.ibmPlexSans(
+                                fontSize: 15,
+                                color: const Color(0xFF0C0C0C),
+                              ),
+                              decoration: InputDecoration(
+                                hintText: 'Enter name',
+                                hintStyle: GoogleFonts.ibmPlexSans(
+                                  fontSize: 15,
+                                  color: const Color(0xFFB9B9B9),
+                                ),
+                                filled: true,
+                                fillColor: Colors.transparent,
+                                border: InputBorder.none,
+                                enabledBorder: InputBorder.none,
+                                focusedBorder: InputBorder.none,
+                                isDense: true,
+                                contentPadding: EdgeInsets.zero,
+                              ),
+                            ),
+                          ),
+                          if (nameController.text.isNotEmpty)
+                            GestureDetector(
+                              onTap: () => nameController.clear(),
+                              child: const Icon(Icons.cancel, color: Color(0xFFB9B9B9), size: 16),
+                            ),
+                        ],
+                      ),
+                    ),
+                    if (nameError != null) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        nameError!,
                         style: GoogleFonts.ibmPlexSans(
                           fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.white,
-                          letterSpacing: 0.24,
-                          height: 1.7,
+                          color: const Color(0xFFE85A5A),
                         ),
                       ),
+                    ],
+                    const SizedBox(height: 12),
+                    // Notes label
+                    Text(
+                      'Notes (Optional)',
+                      style: GoogleFonts.ibmPlexSans(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: notesFocusNode.hasFocus
+                            ? const Color(0xFF0C0C0C)
+                            : const Color(0xFFB9B9B9),
+                      ),
                     ),
-                    SizedBox(height: 16),
-                    // Divider line
+                    const SizedBox(height: 4),
                     Container(
-                      height: 1,
-                      color: Colors.white.withOpacity(0.1),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFDFDFD),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: notesFocusNode.hasFocus
+                              ? const Color(0xFF4CDE78)
+                              : const Color(0xFFEFEFEF),
+                          width: notesFocusNode.hasFocus ? 1.5 : 1.0,
+                        ),
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: notesController,
+                              focusNode: notesFocusNode,
+                              style: GoogleFonts.ibmPlexSans(
+                                fontSize: 15,
+                                color: const Color(0xFF0C0C0C),
+                              ),
+                              decoration: InputDecoration(
+                                hintText: 'Add notes',
+                                hintStyle: GoogleFonts.ibmPlexSans(
+                                  fontSize: 15,
+                                  color: const Color(0xFFB9B9B9),
+                                ),
+                                filled: true,
+                                fillColor: Colors.transparent,
+                                border: InputBorder.none,
+                                enabledBorder: InputBorder.none,
+                                focusedBorder: InputBorder.none,
+                                isDense: true,
+                                contentPadding: EdgeInsets.zero,
+                              ),
+                              maxLines: 2,
+                              minLines: 1,
+                            ),
+                          ),
+                          if (notesController.text.isNotEmpty)
+                            GestureDetector(
+                              onTap: () => notesController.clear(),
+                              child: const Icon(Icons.cancel, color: Color(0xFFB9B9B9), size: 16),
+                            ),
+                        ],
+                      ),
                     ),
-                    // Delete button
-                    GestureDetector(
-                      onTap: () async {
-                        try {
-                          await OpponentService.deleteOpponent(_opponent.id);
-                          Navigator.pop(context); // Close dialog
-                          Navigator.pop(context, true); // Go back with result
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(l10n.opponentDetailDeletedSuccessfully),
-                              backgroundColor: Colors.orange,
+                    const SizedBox(height: 12),
+                    // Color picker label
+                    Text(
+                      l10n.opponentsPickColor,
+                      style: GoogleFonts.ibmPlexSans(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: const Color(0xFFB9B9B9),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    // Color swatches
+                    Row(
+                      children: colorSwatches.map((entry) {
+                        final (color, swatchColor) = entry;
+                        final isSelected = color == selectedColor;
+                        return GestureDetector(
+                          onTap: () => setSheetState(() => selectedColor = color),
+                          child: Container(
+                            width: 36,
+                            height: 36,
+                            margin: const EdgeInsets.only(right: 8),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: isSelected
+                                  ? Border.all(color: const Color(0xFF0C0C0C), width: 2)
+                                  : null,
                             ),
-                          );
-                        } catch (e) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(l10n.opponentDetailErrorDeleting(e.toString())),
-                              backgroundColor: Colors.red,
+                            child: Center(
+                              child: Container(
+                                width: 26,
+                                height: 26,
+                                decoration: BoxDecoration(
+                                  color: swatchColor,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
                             ),
-                          );
-                        }
-                      },
-                      child: Container(
-                        width: double.infinity,
-                        padding: EdgeInsets.symmetric(vertical: 16, horizontal: 10),
-                        child: Text(
-                          l10n.commonDelete,
-                          textAlign: TextAlign.center,
-                          style: GoogleFonts.ibmPlexSans(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFFD55A41), // --error
-                            height: 1.2,
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 32),
+                    // Back + Save buttons
+                    Row(
+                      children: [
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () => Navigator.pop(context),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(999),
+                                border: Border.all(color: const Color(0xFFB9B9B9)),
+                              ),
+                              child: Text(
+                                'Back',
+                                textAlign: TextAlign.center,
+                                style: GoogleFonts.ibmPlexSans(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                  color: const Color(0xFF0C0C0C),
+                                ),
+                              ),
+                            ),
                           ),
                         ),
-                      ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: saveOpponent,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF0C0C0C),
+                                borderRadius: BorderRadius.circular(999),
+                              ),
+                              child: Text(
+                                'Save',
+                                textAlign: TextAlign.center,
+                                style: GoogleFonts.ibmPlexSans(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
               ),
-              SizedBox(height: 8),
-              // Cancel button (separate card)
-              GestureDetector(
-                onTap: () => Navigator.pop(context),
-                child: Container(
-                  width: double.infinity,
-                  padding: EdgeInsets.symmetric(vertical: 12, horizontal: 10),
-                  decoration: BoxDecoration(
-                    color: Color(0xFF131613), // --background
-                    borderRadius: BorderRadius.circular(18),
-                  ),
-                  child: Text(
-                    l10n.commonCancel,
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.ibmPlexSans(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
+            );
+          },
+        );
+      },
+    ).then((_) {
+      nameFocusNode.dispose();
+      notesFocusNode.dispose();
+      nameController.dispose();
+      notesController.dispose();
+    });
+  }
+
+  void _showDeleteConfirmation() {
+    final l10n = AppLocalizations.of(context);
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: 'Delete opponent',
+      barrierColor: Colors.transparent,
+      transitionDuration: const Duration(milliseconds: 200),
+      transitionBuilder: (context, animation, _, child) => FadeTransition(
+        opacity: animation,
+        child: child,
+      ),
+      pageBuilder: (context, _, __) => Stack(
+        children: [
+          // Blurred barrier — tap to dismiss
+          Positioned.fill(
+            child: GestureDetector(
+              onTap: () => Navigator.pop(context),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                child: Container(color: Colors.black.withValues(alpha: 0.45)),
+              ),
+            ),
+          ),
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Dialog(
+                backgroundColor: Colors.transparent,
+                insetPadding: EdgeInsets.zero,
+                child: SizedBox(
+                  width: 370,
+                  child: Container(
+                    decoration: BoxDecoration(
                       color: Colors.white,
-                      height: 1.2,
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Header: title + X
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              l10n.opponentDetailDeleteConfirmTitle,
+                              style: GoogleFonts.ibmPlexSans(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                color: const Color(0xFF0C0C0C),
+                                height: 20 / 15,
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: () => Navigator.pop(context),
+                              child: const Icon(Icons.close, size: 18, color: Color(0xFFB9B9B9)),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        // Body text
+                        Text(
+                          l10n.opponentDetailDeleteConfirmMessage(_opponent.name),
+                          style: GoogleFonts.ibmPlexSans(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w400,
+                            color: const Color(0xFFB9B9B9),
+                            height: 22 / 15,
+                          ),
+                        ),
+                        const SizedBox(height: 32),
+                        // Buttons row
+                        Row(
+                          children: [
+                            // Cancel
+                            Expanded(
+                              child: GestureDetector(
+                                onTap: () => Navigator.pop(context),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                                  decoration: BoxDecoration(
+                                    color: Colors.transparent,
+                                    borderRadius: BorderRadius.circular(999),
+                                    border: Border.all(color: const Color(0xFFB9B9B9)),
+                                  ),
+                                  child: Text(
+                                    l10n.commonCancel,
+                                    textAlign: TextAlign.center,
+                                    style: GoogleFonts.ibmPlexSans(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w600,
+                                      color: const Color(0xFF0C0C0C),
+                                      height: 20 / 15,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            // Confirm (delete)
+                            Expanded(
+                              child: GestureDetector(
+                                onTap: () async {
+                                  try {
+                                    await OpponentService.deleteOpponent(_opponent.id);
+                                    if (context.mounted) Navigator.pop(context);
+                                    if (context.mounted) Navigator.pop(context, true);
+                                  } catch (e) {
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                        content: Text(l10n.opponentDetailErrorDeleting(e.toString())),
+                                        backgroundColor: Colors.red,
+                                      ));
+                                    }
+                                  }
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFFF3B30),
+                                    borderRadius: BorderRadius.circular(999),
+                                  ),
+                                  child: Text(
+                                    'Confirm',
+                                    textAlign: TextAlign.center,
+                                    style: GoogleFonts.ibmPlexSans(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.white,
+                                      height: 20 / 15,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
                 ),
               ),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }

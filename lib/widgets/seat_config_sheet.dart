@@ -457,7 +457,14 @@ class _SeatConfigSheetState extends State<SeatConfigSheet> {
               if (widget.showSaveAsOpponent) ...[
                 const SizedBox(height: 8),
                 GestureDetector(
-                onTap: () => setState(() => _saveAsOpponent = !_saveAsOpponent),
+                onTap: () => setState(() {
+                  _saveAsOpponent = !_saveAsOpponent;
+                  if (_saveAsOpponent) {
+                    _isHero = false;
+                  } else {
+                    _isHero = true;
+                  }
+                }),
                 child: Container(
                   width: double.infinity,
                   padding:

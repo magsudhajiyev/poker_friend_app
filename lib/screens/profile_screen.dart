@@ -6,6 +6,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../design_system/constants/colors.dart';
+import '../design_system/components/headers/top_nav_bar.dart';
 import '../services/auth_service.dart';
 import '../services/username_service.dart';
 import '../services/display_identity_service.dart';
@@ -34,6 +35,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   late TextEditingController _nameCtrl;
   late TextEditingController _emailCtrl;
   late TextEditingController _usernameCtrl;
+  late FocusNode _nameFocus;
+  late FocusNode _usernameFocus;
   bool _useNicknameInGame = false;
   bool _emailUpdates = false;
 
@@ -57,6 +60,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _nameCtrl = TextEditingController();
     _emailCtrl = TextEditingController();
     _usernameCtrl = TextEditingController();
+    _nameFocus = FocusNode()..addListener(() => setState(() {}));
+    _usernameFocus = FocusNode()..addListener(() => setState(() {}));
     _loadData();
   }
 
@@ -65,6 +70,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _nameCtrl.dispose();
     _emailCtrl.dispose();
     _usernameCtrl.dispose();
+    _nameFocus.dispose();
+    _usernameFocus.dispose();
     _usernameDebounce?.cancel();
     super.dispose();
   }
@@ -326,7 +333,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       );
     }
 
-    final safeTop = MediaQuery.of(context).padding.top;
     final hPad = MediaQuery.of(context).size.width * 0.044;
 
     return Scaffold(
@@ -334,58 +340,40 @@ class _ProfileScreenState extends State<ProfileScreen> {
       resizeToAvoidBottomInset: true,
       body: Column(
         children: [
-          // Top nav (surface bg)
-          Container(
-            color: _surface,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SizedBox(height: safeTop),
-                SizedBox(
-                  height: 44,
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: hPad),
-                    child: Row(
-                      children: [
-                        // Back
-                        GestureDetector(
-                          onTap: () => Navigator.pop(context),
-                          child: const SizedBox(
-                            width: 39,
-                            child: Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 18),
+          TopNavBar(
+            title: 'Settings',
+            onBack: () => Navigator.pop(context),
+            backgroundColor: _surface,
+            rightAction: GestureDetector(
+              onTap: _isSaving ? null : _save,
+              behavior: HitTestBehavior.opaque,
+              child: SizedBox(
+                width: 44,
+                height: 44,
+                child: _isSaving
+                    ? Center(
+                        child: SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation(_saveGreen),
                           ),
                         ),
-                        // Title centered
-                        Expanded(
-                          child: Text('Settings',
-                              textAlign: TextAlign.center,
-                              style: GoogleFonts.ibmPlexSans(
-                                  fontSize: 17, fontWeight: FontWeight.w600, color: Colors.white)),
+                      )
+                    : Align(
+                        alignment: Alignment.centerRight,
+                        child: Text(
+                          'Save',
+                          style: GoogleFonts.ibmPlexSans(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w600,
+                            color: _saveGreen,
+                            height: 20 / 17,
+                          ),
                         ),
-                        // Save
-                        GestureDetector(
-                          onTap: _isSaving ? null : _save,
-                          child: _isSaving
-                              ? const SizedBox(
-                                  width: 39,
-                                  child: Center(
-                                    child: SizedBox(width: 16, height: 16,
-                                        child: CircularProgressIndicator(strokeWidth: 2,
-                                            valueColor: AlwaysStoppedAnimation(_saveGreen))),
-                                  ))
-                              : SizedBox(
-                                  width: 39,
-                                  child: Text('Save',
-                                      textAlign: TextAlign.right,
-                                      style: GoogleFonts.ibmPlexSans(
-                                          fontSize: 17, fontWeight: FontWeight.w600, color: _saveGreen)),
-                                ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
+                      ),
+              ),
             ),
           ),
 
@@ -462,6 +450,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   _buildInputField(
                     label: 'Edit Name',
                     controller: _nameCtrl,
+                    focusNode: _nameFocus,
                     placeholder: 'Your name',
                   ),
                   const SizedBox(height: 16),
@@ -540,30 +529,46 @@ class _ProfileScreenState extends State<ProfileScreen> {
     required String label,
     required TextEditingController controller,
     required String placeholder,
+    FocusNode? focusNode,
     bool readOnly = false,
     VoidCallback? onTap,
     TextInputType? keyboardType,
   }) {
+    final isFocused = focusNode?.hasFocus ?? false;
     final isFilled = controller.text.isNotEmpty;
+    final borderColor = isFocused
+        ? const Color(0xFF4CDE78)
+        : Colors.transparent;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label,
             style: GoogleFonts.ibmPlexSans(fontSize: 13, fontWeight: FontWeight.w500, color: _secondary)),
-        const SizedBox(height: 4),
+        const SizedBox(height: 8),
         Container(
-          decoration: BoxDecoration(color: _surface, borderRadius: BorderRadius.circular(12)),
+          decoration: BoxDecoration(
+            color: _surface,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: borderColor, width: 1.5),
+          ),
           child: TextField(
             controller: controller,
+            focusNode: focusNode,
             readOnly: readOnly,
             onTap: onTap,
             keyboardType: keyboardType,
-            style: GoogleFonts.ibmPlexSans(fontSize: 15, color: Colors.white),
+            style: GoogleFonts.ibmPlexSans(
+              fontSize: 15,
+              color: readOnly ? _secondary : Colors.white,
+            ),
             decoration: InputDecoration(
               hintText: placeholder,
               hintStyle: GoogleFonts.ibmPlexSans(fontSize: 15, color: _secondary),
               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               border: InputBorder.none,
+              enabledBorder: InputBorder.none,
+              focusedBorder: InputBorder.none,
               suffixIcon: isFilled && !readOnly
                   ? GestureDetector(
                       onTap: () => setState(() => controller.clear()),
@@ -581,22 +586,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildUsernameField() {
     final value = _usernameCtrl.text.replaceAll('@', '');
     final isFilled = value.isNotEmpty;
+    final isFocused = _usernameFocus.hasFocus;
+    final hasError = _usernameError != null;
+    final borderColor = hasError
+        ? _danger
+        : isFocused
+            ? const Color(0xFF4CDE78)
+            : Colors.transparent;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text('Edit username',
             style: GoogleFonts.ibmPlexSans(fontSize: 13, fontWeight: FontWeight.w500, color: _secondary)),
-        const SizedBox(height: 4),
+        const SizedBox(height: 8),
         Container(
           decoration: BoxDecoration(
             color: _surface,
             borderRadius: BorderRadius.circular(12),
-            border: _usernameError != null
-                ? Border.all(color: _danger.withValues(alpha: 0.6), width: 1)
-                : null,
+            border: Border.all(color: borderColor, width: 1.5),
           ),
           child: TextField(
             controller: _usernameCtrl,
+            focusNode: _usernameFocus,
             style: GoogleFonts.ibmPlexSans(fontSize: 15, color: Colors.white),
             decoration: InputDecoration(
               hintText: 'username',
@@ -605,12 +617,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
               prefixStyle: GoogleFonts.ibmPlexSans(fontSize: 15, color: Colors.white),
               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               border: InputBorder.none,
+              enabledBorder: InputBorder.none,
+              focusedBorder: InputBorder.none,
               suffixIcon: _isCheckingUsername
                   ? const Padding(
                       padding: EdgeInsets.all(12),
-                      child: SizedBox(width: 16, height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation(AppColors.contentInactive))),
+                      child: SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation(AppColors.contentInactive),
+                        ),
+                      ),
                     )
                   : isFilled
                       ? GestureDetector(
@@ -622,9 +641,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             onChanged: _onUsernameChanged,
           ),
         ),
-        if (_usernameError != null)
+        if (hasError)
           Padding(
-            padding: const EdgeInsets.only(top: 4, left: 4),
+            padding: const EdgeInsets.only(top: 6, left: 4),
             child: Text(_usernameError!,
                 style: GoogleFonts.ibmPlexSans(fontSize: 11, color: _danger)),
           ),

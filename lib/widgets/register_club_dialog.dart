@@ -1,63 +1,39 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../design_system/constants/colors.dart';
-import '../design_system/poker_friend_theme.dart';
+import '../design_system/components/app_text_field.dart';
 import '../l10n/app_localizations.dart';
 import '../services/club_request_service.dart';
 
-/// Show the Register Club dialog with blurred background
+/// Show the Register Club bottom sheet
 Future<void> showRegisterClubDialog(BuildContext context) {
-  return showGeneralDialog(
+  return showModalBottomSheet(
     context: context,
-    barrierDismissible: true,
-    barrierLabel: 'Register Club',
-    barrierColor: Colors.transparent,
-    transitionDuration: const Duration(milliseconds: 200),
-    pageBuilder: (context, animation, secondaryAnimation) {
-      return BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 7, sigmaY: 7),
-        child: Container(
-          color: Colors.black.withValues(alpha: 0.3),
-          child: const Center(
-            child: RegisterClubDialog(),
-          ),
-        ),
-      );
-    },
-    transitionBuilder: (context, animation, secondaryAnimation, child) {
-      return FadeTransition(
-        opacity: animation,
-        child: child,
-      );
-    },
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (context) => const _RegisterClubSheet(),
   );
 }
 
-/// Dialog for submitting a club registration request
-/// Matches Figma design node 324:3492
-class RegisterClubDialog extends StatefulWidget {
-  const RegisterClubDialog({Key? key}) : super(key: key);
+class _RegisterClubSheet extends StatefulWidget {
+  const _RegisterClubSheet();
 
   @override
-  State<RegisterClubDialog> createState() => _RegisterClubDialogState();
+  State<_RegisterClubSheet> createState() => _RegisterClubSheetState();
 }
 
-class _RegisterClubDialogState extends State<RegisterClubDialog> {
-  final _formKey = GlobalKey<FormState>();
+class _RegisterClubSheetState extends State<_RegisterClubSheet> {
   final _clubNameController = TextEditingController();
   final _addressController = TextEditingController();
   final _phoneController = TextEditingController();
   final _adminEmailController = TextEditingController();
 
-  bool _isSubmitting = false;
+  String? _clubNameError;
+  String? _addressError;
+  String? _phoneError;
+  String? _adminEmailError;
 
-  bool get _isFormValid =>
-      _clubNameController.text.trim().isNotEmpty &&
-      _addressController.text.trim().isNotEmpty &&
-      _phoneController.text.trim().isNotEmpty &&
-      _adminEmailController.text.trim().isNotEmpty;
+  bool _isSubmitting = false;
 
   @override
   void dispose() {
@@ -68,8 +44,41 @@ class _RegisterClubDialogState extends State<RegisterClubDialog> {
     super.dispose();
   }
 
-  Future<void> _submitRequest() async {
-    if (!_formKey.currentState!.validate()) return;
+  bool _validate(AppLocalizations l10n) {
+    String? nameErr;
+    String? addrErr;
+    String? phoneErr;
+    String? emailErr;
+
+    if (_clubNameController.text.trim().isEmpty) {
+      nameErr = l10n.registerClubNameRequired;
+    }
+    if (_addressController.text.trim().isEmpty) {
+      addrErr = l10n.registerClubAddressRequired;
+    }
+    if (_phoneController.text.trim().isEmpty) {
+      phoneErr = l10n.registerClubPhoneRequired;
+    }
+    final email = _adminEmailController.text.trim();
+    if (email.isEmpty) {
+      emailErr = l10n.registerClubAdminEmailRequired;
+    } else if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email)) {
+      emailErr = l10n.registerClubAdminEmailInvalid;
+    }
+
+    setState(() {
+      _clubNameError = nameErr;
+      _addressError = addrErr;
+      _phoneError = phoneErr;
+      _adminEmailError = emailErr;
+    });
+
+    return nameErr == null && addrErr == null && phoneErr == null && emailErr == null;
+  }
+
+  Future<void> _submit() async {
+    final l10n = AppLocalizations.of(context);
+    if (!_validate(l10n)) return;
 
     setState(() => _isSubmitting = true);
 
@@ -82,555 +91,309 @@ class _RegisterClubDialogState extends State<RegisterClubDialog> {
       );
 
       if (mounted) {
+        final email = _adminEmailController.text.trim();
         Navigator.pop(context);
-        _showSuccessDialog();
+        _showSuccessDialog(context, email);
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(AppLocalizations.of(context).registerClubFailedToSubmit(e.toString())),
-            backgroundColor: PokerFriendColors.red,
+            content: Text(l10n.registerClubFailedToSubmit(e.toString())),
+            backgroundColor: const Color(0xFFFF3B30),
           ),
         );
       }
     } finally {
-      if (mounted) {
-        setState(() => _isSubmitting = false);
-      }
+      if (mounted) setState(() => _isSubmitting = false);
     }
   }
 
-  void _showSuccessDialog() {
-    final email = _adminEmailController.text.trim();
-
-    // Show success dialog with blur background
+  void _showSuccessDialog(BuildContext rootContext, String email) {
     showGeneralDialog(
-      context: context,
+      context: rootContext,
       barrierDismissible: true,
       barrierLabel: 'Success',
       barrierColor: Colors.transparent,
       transitionDuration: const Duration(milliseconds: 200),
-      pageBuilder: (context, animation, secondaryAnimation) {
-        return BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 7, sigmaY: 7),
-          child: Container(
-            color: Colors.black.withValues(alpha: 0.3),
-            child: Center(
+      pageBuilder: (context, _, __) => BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 7, sigmaY: 7),
+        child: Container(
+          color: Colors.black.withValues(alpha: 0.3),
+          child: Center(
+            child: Material(
+              color: Colors.transparent,
               child: _SuccessDialogContent(
                 email: email,
                 onDismiss: () => Navigator.pop(context),
               ),
             ),
           ),
-        );
-      },
-      transitionBuilder: (context, animation, secondaryAnimation, child) {
-        return FadeTransition(
-          opacity: animation,
-          child: child,
-        );
-      },
+        ),
+      ),
+      transitionBuilder: (context, animation, _, child) =>
+          FadeTransition(opacity: animation, child: child),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      backgroundColor: Colors.transparent,
-      insetPadding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Container(
-        width: 370,
-        decoration: BoxDecoration(
-          color: AppColors.bgSurface, // #101115
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: const Color(0xFF1B1E24), // neutrals/800
-            width: 1,
-          ),
-          boxShadow: const [
-            BoxShadow(
-              color: Colors.black,
-              offset: Offset(20, 4),
-              blurRadius: 114,
-              spreadRadius: 0,
-            ),
-          ],
-        ),
-        child: SingleChildScrollView(
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Header
-                _buildHeader(),
-
-                const SizedBox(height: 35),
-
-                // Form fields
-                _buildFormFields(),
-
-                // Info message
-                _buildInfoMessage(),
-
-                const SizedBox(height: 44),
-
-                // Submit button
-                _buildSubmitButton(),
-
-                const SizedBox(height: 16),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// Header with close button, title, and submit checkmark
-  /// Figma node 324:3732
-  Widget _buildHeader() {
     final l10n = AppLocalizations.of(context);
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-      child: Row(
-        children: [
-          // Close button (X) - gray background
-          // Figma: 38x38 button, p:9.68, 24x24 icon container, X at inset 18.75% (=15x15)
-          GestureDetector(
-            onTap: () => Navigator.pop(context),
-            child: Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                color: const Color(0xFF35373C), // neutrals/700
-                borderRadius: BorderRadius.circular(88.733),
-              ),
-              child: Center(
-                child: SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: Center(
-                    // X vector is 18.75% inset = 15x15 inside 24x24 container
-                    child: SvgPicture.asset(
-                      'icons/figma_icons/close.svg',
-                      width: 15,
-                      height: 15,
-                      colorFilter: const ColorFilter.mode(
-                        Colors.white,
-                        BlendMode.srcIn,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
-          // Title - centered
-          Expanded(
-            child: Center(
-              child: Text(
-                l10n.registerClubTitle,
-                style: GoogleFonts.ibmPlexSans(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                  letterSpacing: -0.43,
-                  height: 22 / 17,
-                ),
-              ),
-            ),
-          ),
-
-          // Submit checkmark button - green background, black icon
-          // Figma: 38x38 button, p:9.68, 24x24 icon (fills container)
-          GestureDetector(
-            onTap: (_isFormValid && !_isSubmitting) ? _submitRequest : null,
-            child: Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                color: AppColors.accentGreenBright, // #54E98A
-                borderRadius: BorderRadius.circular(88.733),
-              ),
-              child: Center(
-                child: _isSubmitting
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(
-                          color: Colors.black,
-                          strokeWidth: 2,
-                        ),
-                      )
-                    : SvgPicture.asset(
-                        'icons/figma_icons/check.svg',
-                        width: 24,
-                        height: 24,
-                        colorFilter: const ColorFilter.mode(
-                          Colors.black, // Black checkmark per Figma
-                          BlendMode.srcIn,
-                        ),
-                      ),
-              ),
-            ),
-          ),
-        ],
+    return Container(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-    );
-  }
-
-  /// Form fields section
-  Widget _buildFormFields() {
-    final l10n = AppLocalizations.of(context);
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildInputField(
-            label: l10n.registerClubNameLabel,
-            placeholder: l10n.registerClubNamePlaceholder,
-            controller: _clubNameController,
-            validator: (value) {
-              if (value == null || value.trim().isEmpty) {
-                return l10n.registerClubNameRequired;
-              }
-              return null;
-            },
-          ),
-          const SizedBox(height: 18),
-          _buildInputField(
-            label: l10n.registerClubAddressLabel,
-            placeholder: l10n.registerClubAddressPlaceholder,
-            controller: _addressController,
-            validator: (value) {
-              if (value == null || value.trim().isEmpty) {
-                return l10n.registerClubAddressRequired;
-              }
-              return null;
-            },
-          ),
-          const SizedBox(height: 18),
-          _buildInputField(
-            label: l10n.registerClubPhoneLabel,
-            placeholder: l10n.registerClubPhonePlaceholder,
-            controller: _phoneController,
-            keyboardType: TextInputType.phone,
-            validator: (value) {
-              if (value == null || value.trim().isEmpty) {
-                return l10n.registerClubPhoneRequired;
-              }
-              return null;
-            },
-          ),
-          const SizedBox(height: 18),
-          _buildInputField(
-            label: l10n.registerClubAdminEmailLabel,
-            placeholder: l10n.registerClubAdminEmailPlaceholder,
-            controller: _adminEmailController,
-            keyboardType: TextInputType.emailAddress,
-            validator: (value) {
-              if (value == null || value.trim().isEmpty) {
-                return l10n.registerClubAdminEmailRequired;
-              }
-              if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-                return l10n.registerClubAdminEmailInvalid;
-              }
-              return null;
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// Single input field with label
-  /// Figma node 324:3736
-  Widget _buildInputField({
-    required String label,
-    required String placeholder,
-    required TextEditingController controller,
-    TextInputType keyboardType = TextInputType.text,
-    String? Function(String?)? validator,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Label
-        Text(
-          label,
-          style: GoogleFonts.ibmPlexSans(
-            fontSize: 15,
-            fontWeight: FontWeight.w500,
-            color: Colors.white,
-            height: 1.44,
-          ),
-        ),
-        const SizedBox(height: 4),
-        // Input field
-        TextFormField(
-          controller: controller,
-          keyboardType: keyboardType,
-          validator: validator,
-          style: GoogleFonts.ibmPlexSans(
-            fontSize: 17,
-            fontWeight: FontWeight.w500,
-            color: Colors.white,
-            height: 1.44,
-          ),
-          decoration: InputDecoration(
-            hintText: placeholder,
-            hintStyle: GoogleFonts.ibmPlexSans(
-              fontSize: 17,
-              fontWeight: FontWeight.w500,
-              color: const Color(0xFF8C8C8C), // textDisabled
-              height: 1.44,
-            ),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 12,
-            ),
-            filled: false,
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(
-                color: Color(0xFF4E5054), // neutrals/600
-                width: 1,
-              ),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(
-                color: Color(0xFF73D4CF), // Border/Active
-                width: 1,
-              ),
-            ),
-            errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(
-                color: PokerFriendColors.red,
-                width: 1,
-              ),
-            ),
-            focusedErrorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(
-                color: PokerFriendColors.red,
-                width: 1,
-              ),
-            ),
-            errorStyle: GoogleFonts.ibmPlexSans(
-              fontSize: 12,
-              color: PokerFriendColors.red,
-            ),
-          ),
-          onChanged: (_) => setState(() {}),
-        ),
-      ],
-    );
-  }
-
-  /// Info message about club admin notification
-  /// Figma node 324:3740
-  Widget _buildInfoMessage() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Info icon (Figma node 324:3743) - teal colored
-          SvgPicture.asset(
-            'icons/figma_icons/info.svg',
-            width: 24,
-            height: 24,
-            colorFilter: const ColorFilter.mode(
-              Color(0xFF73D4CF), // Border/Active teal
-              BlendMode.srcIn,
-            ),
-          ),
-          const SizedBox(width: 8),
-          // Info text
-          Expanded(
-            child: Text(
-              AppLocalizations.of(context).registerClubInfoMessage,
-              style: GoogleFonts.ibmPlexSans(
-                fontSize: 14,
-                fontWeight: FontWeight.w400,
-                color: Colors.white,
-                height: 1.4,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// Submit request button
-  /// Figma node 324:3746
-  Widget _buildSubmitButton() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: GestureDetector(
-        onTap: (_isFormValid && !_isSubmitting) ? _submitRequest : null,
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          decoration: BoxDecoration(
-            color: (_isFormValid && !_isSubmitting)
-                ? AppColors.buttonPrimary // #89F1EC
-                : const Color(0xFF4B9A96), // buttonDisabled
-            borderRadius: BorderRadius.circular(110),
-          ),
-          child: Center(
-            child: _isSubmitting
-                ? const SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: CircularProgressIndicator(
-                      color: Colors.black,
-                      strokeWidth: 2,
-                    ),
-                  )
-                : Text(
-                    AppLocalizations.of(context).registerClubSubmitRequest,
-                    style: GoogleFonts.ibmPlexSans(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black,
-                      letterSpacing: -0.5,
-                      height: 24 / 17,
-                    ),
-                  ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Success dialog content matching Figma node 324:4369
-class _SuccessDialogContent extends StatelessWidget {
-  final String email;
-  final VoidCallback onDismiss;
-
-  const _SuccessDialogContent({
-    required this.email,
-    required this.onDismiss,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    return Material(
-      color: Colors.transparent,
-      child: Container(
-        width: 370,
-        decoration: BoxDecoration(
-          color: AppColors.bgSurface, // #101115
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: const Color(0xFF1B1E24), // neutrals/800
-            width: 1,
-          ),
-          boxShadow: const [
-            BoxShadow(
-              color: Colors.black,
-              offset: Offset(20, 4),
-              blurRadius: 114,
-              spreadRadius: 0,
-            ),
-          ],
-        ),
+      padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + bottomInset),
+      child: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Content section with icon and text
-            Padding(
-              padding: const EdgeInsets.only(top: 24),
-              child: Column(
+            // Header
+            SizedBox(
+              height: 20,
+              child: Stack(
+                alignment: Alignment.center,
                 children: [
-                  // Success badge icon (32x32)
-                  SvgPicture.asset(
-                    'icons/figma_icons/success_badge.svg',
-                    width: 32,
-                    height: 32,
+                  Text(
+                    l10n.registerClubTitle,
+                    style: GoogleFonts.ibmPlexSans(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF0C0C0C),
+                    ),
                   ),
-
-                  const SizedBox(height: 24),
-
-                  // Text content
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: Column(
-                      children: [
-                        // Title
-                        Text(
-                          l10n.registerClubSuccessTitle,
-                          style: GoogleFonts.ibmPlexSans(
-                            fontSize: 27,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                            letterSpacing: -0.5,
-                            height: 1.0,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-
-                        const SizedBox(height: 12),
-
-                        // Description
-                        Text(
-                          l10n.registerClubSuccessMessage(email),
-                          style: GoogleFonts.ibmPlexSans(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w400,
-                            color: Colors.white,
-                            height: 1.44,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: const Icon(Icons.close, size: 18, color: Color(0xFFB9B9B9)),
                     ),
                   ),
                 ],
               ),
             ),
 
-            const SizedBox(height: 18),
+            const SizedBox(height: 20),
 
-            // Button section
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 10, 16, 24),
-              child: GestureDetector(
-                onTap: onDismiss,
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF89F1B1), // Success green
-                    borderRadius: BorderRadius.circular(110),
+            // Fields
+            AppTextField(
+              label: l10n.registerClubNameLabel,
+              hint: l10n.registerClubNamePlaceholder,
+              controller: _clubNameController,
+              textInputAction: TextInputAction.next,
+              errorText: _clubNameError,
+              onChanged: (_) => setState(() => _clubNameError = null),
+            ),
+            const SizedBox(height: 8),
+            AppTextField(
+              label: l10n.registerClubAddressLabel,
+              hint: l10n.registerClubAddressPlaceholder,
+              controller: _addressController,
+              textInputAction: TextInputAction.next,
+              errorText: _addressError,
+              onChanged: (_) => setState(() => _addressError = null),
+            ),
+            const SizedBox(height: 8),
+            AppTextField(
+              label: l10n.registerClubPhoneLabel,
+              hint: l10n.registerClubPhonePlaceholder,
+              controller: _phoneController,
+              keyboardType: TextInputType.phone,
+              textInputAction: TextInputAction.next,
+              errorText: _phoneError,
+              onChanged: (_) => setState(() => _phoneError = null),
+            ),
+            const SizedBox(height: 8),
+            AppTextField(
+              label: l10n.registerClubAdminEmailLabel,
+              hint: l10n.registerClubAdminEmailPlaceholder,
+              controller: _adminEmailController,
+              keyboardType: TextInputType.emailAddress,
+              textInputAction: TextInputAction.done,
+              errorText: _adminEmailError,
+              onChanged: (_) => setState(() => _adminEmailError = null),
+            ),
+
+            const SizedBox(height: 4),
+
+            // Info note
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(Icons.info_outline, size: 12, color: Color(0xFFB9B9B9)),
+                const SizedBox(width: 4),
+                Expanded(
+                  child: Text(
+                    l10n.registerClubInfoMessage,
+                    style: GoogleFonts.ibmPlexSans(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w400,
+                      color: const Color(0xFF0C0C0C),
+                    ),
                   ),
-                  child: Center(
-                    child: Text(
-                      l10n.registerClubGotIt,
-                      style: GoogleFonts.ibmPlexSans(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black,
-                        letterSpacing: -0.5,
-                        height: 24 / 17,
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 32),
+
+            // Buttons
+            Row(
+              children: [
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.transparent,
+                        borderRadius: BorderRadius.circular(60),
+                        border: Border.all(color: const Color(0xFFB9B9B9), width: 1),
+                      ),
+                      child: Center(
+                        child: Text(
+                          l10n.commonCancel,
+                          style: GoogleFonts.ibmPlexSans(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500,
+                            color: const Color(0xFF0C0C0C),
+                          ),
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: _isSubmitting ? null : _submit,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF0C0C0C),
+                        borderRadius: BorderRadius.circular(60),
+                      ),
+                      child: Center(
+                        child: _isSubmitting
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : Text(
+                                l10n.registerClubSubmitRequest,
+                                style: GoogleFonts.ibmPlexSans(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.white,
+                                ),
+                              ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _SuccessDialogContent extends StatelessWidget {
+  const _SuccessDialogContent({
+    required this.email,
+    required this.onDismiss,
+  });
+
+  final String email;
+  final VoidCallback onDismiss;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+      ),
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              color: const Color(0xFFEEFBF3),
+              borderRadius: BorderRadius.circular(28),
+            ),
+            child: const Icon(
+              Icons.check_circle_outline,
+              size: 28,
+              color: Color(0xFF4CDE78),
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          Text(
+            l10n.registerClubSuccessTitle,
+            style: GoogleFonts.ibmPlexSans(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFF0C0C0C),
+              letterSpacing: -0.5,
+            ),
+            textAlign: TextAlign.center,
+          ),
+
+          const SizedBox(height: 8),
+
+          Text(
+            l10n.registerClubSuccessMessage(email),
+            style: GoogleFonts.ibmPlexSans(
+              fontSize: 14,
+              fontWeight: FontWeight.w400,
+              color: const Color(0xFFB9B9B9),
+              height: 1.44,
+            ),
+            textAlign: TextAlign.center,
+          ),
+
+          const SizedBox(height: 24),
+
+          GestureDetector(
+            onTap: onDismiss,
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              decoration: BoxDecoration(
+                color: const Color(0xFF0C0C0C),
+                borderRadius: BorderRadius.circular(60),
+              ),
+              child: Center(
+                child: Text(
+                  l10n.registerClubGotIt,
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
