@@ -150,8 +150,8 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> {
       final status = handData['status'] as String?;
       final handNumber = handData['handNumber'] as int? ?? 0;
       final buttonPos = handData['buttonPosition'] as int? ?? _buttonPosition;
-      final smallBlind = (handData['smallBlind'] as num?)?.toDouble() ?? 1;
-      final bigBlind = (handData['bigBlind'] as num?)?.toDouble() ?? 2;
+      final smallBlind = (handData['smallBlind'] as num?)?.toDouble() ?? 1.0;
+      final bigBlind = (handData['bigBlind'] as num?)?.toDouble() ?? 2.0;
       final hasBBante = handData['hasBBante'] as bool? ?? false;
 
       // Calculate pot from actions + blinds

@@ -6101,8 +6101,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get pokerHandYouLabel => 'Vous';
 
   @override
-  String pokerHandMovingToTable(int table, String stack) {
-    return 'Déplacement vers la table $table. Votre Stack ($stack) sera transféré. Les autres joueurs seront supprimés.';
+  String pokerHandMovingToTable(String stack) {
+    return 'Déplacement vers une autre table. Votre Stack ($stack) sera transféré. Les autres joueurs seront supprimés.';
   }
 
   @override

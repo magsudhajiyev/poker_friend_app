@@ -6051,8 +6051,8 @@ class AppLocalizationsPl extends AppLocalizations {
   String get pokerHandYouLabel => 'Ty';
 
   @override
-  String pokerHandMovingToTable(int table, String stack) {
-    return 'Przechodzisz do stołu $table. Twój Stack ($stack) zostanie przeniesiony. Pozostali gracze zostaną usunięci.';
+  String pokerHandMovingToTable(String stack) {
+    return 'Przechodzisz do innego stołu. Twój Stack ($stack) zostanie przeniesiony. Pozostali gracze zostaną usunięci.';
   }
 
   @override

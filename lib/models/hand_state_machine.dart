@@ -413,7 +413,7 @@ class PokerSessionManager {
 
   // Biggest pot tracking
   double biggestPot = 0.0;
-  double biggestPotBB = 0; // BB level when biggest pot occurred
+  double biggestPotBB = 0.0; // BB level when biggest pot occurred
   // Best/worst hand tracking — uses pot-to-stack ratio for meaningful comparison
   double _bestHandRatio = 0.0;  // potWon / heroPreHandStack
   String? biggestPotWonCards; // e.g. "A♠ K♥"

@@ -3994,12 +3994,9 @@
     }
   },
   "pokerHandYouLabel": "Vous",
-  "pokerHandMovingToTable": "Déplacement vers la table {table}. Votre Stack ({stack}) sera transféré. Les autres joueurs seront supprimés.",
+  "pokerHandMovingToTable": "Déplacement vers une autre table. Votre Stack ({stack}) sera transféré. Les autres joueurs seront supprimés.",
   "@pokerHandMovingToTable": {
     "placeholders": {
-      "table": {
-        "type": "int"
-      },
       "stack": {
         "type": "String"
       }

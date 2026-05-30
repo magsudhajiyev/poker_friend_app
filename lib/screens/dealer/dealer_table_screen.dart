@@ -108,8 +108,8 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
   double _rebuyStack = 0;
 
   // Local blind state (can be changed during session)
-  double _smallBlind = 0;
-  double _bigBlind = 0;
+  double _smallBlind = 0.0;
+  double _bigBlind = 0.0;
 
   // Dealer-player tracking: seat number if dealer is also playing, null otherwise
   int? _dealerPlayingSeat;

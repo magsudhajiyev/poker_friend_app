@@ -3823,12 +3823,9 @@
     }
   },
   "pokerHandYouLabel": "Вы",
-  "pokerHandMovingToTable": "Переход к столу {table}. Ваш Stack ({stack}) будет перенесён. Остальные игроки будут удалены.",
+  "pokerHandMovingToTable": "Переход к другому столу. Ваш Stack ({stack}) будет перенесён. Остальные игроки будут удалены.",
   "@pokerHandMovingToTable": {
     "placeholders": {
-      "table": {
-        "type": "int"
-      },
       "stack": {
         "type": "String"
       }

@@ -70,6 +70,10 @@ class PokerTableWidget extends StatelessWidget {
   /// Use to counter-rotate when the whole widget is rotated.
   final int dealerButtonQuarterTurns;
 
+  /// Optional per-seat nudge for the dealer button position (in widget coords).
+  /// Called with the seat number the button is on. Return Offset.zero for no nudge.
+  final Offset Function(int seatNumber)? dealerButtonNudge;
+
   const PokerTableWidget({
     Key? key,
     required this.activeSeatMap,
@@ -88,6 +92,7 @@ class PokerTableWidget extends StatelessWidget {
     this.showLogo = true,
     this.dealerButtonSize = 32,
     this.dealerButtonQuarterTurns = 0,
+    this.dealerButtonNudge,
   }) : super(key: key);
 
   // ─── SEAT POSITION MATH ─────────────────────────────────────────
@@ -399,8 +404,9 @@ class PokerTableWidget extends StatelessWidget {
 
     // Offset button toward center
     final buttonOffset = dealerButtonSize * 1.5;
-    final buttonOffsetX = -buttonOffset * math.cos(seatAngle);
-    final buttonOffsetY = -buttonOffset * math.sin(seatAngle);
+    final nudge = dealerButtonNudge?.call(buttonPosition!) ?? Offset.zero;
+    final buttonOffsetX = -buttonOffset * math.cos(seatAngle) + nudge.dx;
+    final buttonOffsetY = -buttonOffset * math.sin(seatAngle) + nudge.dy;
     final half = dealerButtonSize / 2;
 
     Widget makeButtonImage(double size) {

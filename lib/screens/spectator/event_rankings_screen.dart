@@ -30,7 +30,7 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
   String? _error;
   Timer? _refreshTimer;
   Map<String, String> _tableNames = {};
-  double _bigBlind = 0;
+  double _bigBlind = 0.0;
 
   @override
   void initState() {

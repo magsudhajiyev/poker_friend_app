@@ -45,8 +45,8 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
 
   // ─── Session settings ────────────────────────────────────────────
   GameType _gameType = GameType.cash;
-  double _smallBlind = 1;
-  double _bigBlind = 2;
+  double _smallBlind = 1.0;
+  double _bigBlind = 2.0;
   bool _hasBBante = false;
 
   // ─── Table state ─────────────────────────────────────────────────
@@ -104,8 +104,8 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
   Future<void> _loadDefaults() async {
     final prefs = await SharedPreferences.getInstance();
     final savedGameType = prefs.getString(_kLastGameType);
-    final savedSB = prefs.getDouble(_kLastSmallBlind);
-    final savedBB = prefs.getDouble(_kLastBigBlind);
+    final savedSB = prefs.getDouble(_kLastSmallBlind) ?? prefs.getInt(_kLastSmallBlind)?.toDouble();
+    final savedBB = prefs.getDouble(_kLastBigBlind) ?? prefs.getInt(_kLastBigBlind)?.toDouble();
     final savedBuyIn = prefs.getDouble(_kLastBuyIn);
     final savedBBante = prefs.getBool(_kLastHasBBante);
 
@@ -113,12 +113,12 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
     setState(() {
       if (savedGameType == 'tournament') {
         _gameType = GameType.tournament;
-        _smallBlind = savedSB ?? 100;
-        _bigBlind = savedBB ?? 200;
+        _smallBlind = savedSB ?? 100.0;
+        _bigBlind = savedBB ?? 200.0;
       } else {
         _gameType = GameType.cash;
-        _smallBlind = savedSB ?? 1;
-        _bigBlind = savedBB ?? 2;
+        _smallBlind = savedSB ?? 1.0;
+        _bigBlind = savedBB ?? 2.0;
       }
       if (savedBuyIn != null) {
         _buyInController.text = savedBuyIn.toStringAsFixed(
@@ -336,11 +336,11 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
 
   void _updateBlindsForGameType() {
     if (_gameType == GameType.cash) {
-      _smallBlind = 1;
-      _bigBlind = 2;
+      _smallBlind = 1.0;
+      _bigBlind = 2.0;
     } else {
-      _smallBlind = 100;
-      _bigBlind = 200;
+      _smallBlind = 100.0;
+      _bigBlind = 200.0;
     }
     _sbController.text = formatBlindValue(_smallBlind);
     _bbController.text = formatBlindValue(_bigBlind);

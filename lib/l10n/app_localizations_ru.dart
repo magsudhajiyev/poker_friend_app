@@ -6044,8 +6044,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get pokerHandYouLabel => 'Вы';
 
   @override
-  String pokerHandMovingToTable(int table, String stack) {
-    return 'Переход к столу $table. Ваш Stack ($stack) будет перенесён. Остальные игроки будут удалены.';
+  String pokerHandMovingToTable(String stack) {
+    return 'Переход к другому столу. Ваш Stack ($stack) будет перенесён. Остальные игроки будут удалены.';
   }
 
   @override

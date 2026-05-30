@@ -98,8 +98,8 @@ class _DealerHomeScreenState extends State<DealerHomeScreen> {
       final session = await DealerService.startSession(
         clubId: club.id,
         tableId: table.id,
-        smallBlind: settings['smallBlind'] ?? 1,
-        bigBlind: settings['bigBlind'] ?? 2,
+        smallBlind: (settings['smallBlind'] as num?)?.toDouble() ?? 1.0,
+        bigBlind: (settings['bigBlind'] as num?)?.toDouble() ?? 2.0,
         hasBBante: settings['hasBBante'] ?? false,
         gameType: settings['gameType'] ?? 'cash',
         buttonPosition: settings['buttonPosition'] ?? 1,

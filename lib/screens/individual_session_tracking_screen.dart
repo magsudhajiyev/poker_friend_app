@@ -91,8 +91,8 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
   double _previousStack = 0.0;
 
   // Current blinds (can be updated during session)
-  double _currentSmallBlind = 0;
-  double _currentBigBlind = 0;
+  double _currentSmallBlind = 0.0;
+  double _currentBigBlind = 0.0;
   bool _currentHasBBante = false;
 
   // Track if blinds were explicitly changed by user

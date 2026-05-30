@@ -10584,8 +10584,8 @@ abstract class AppLocalizations {
   /// No description provided for @pokerHandMovingToTable.
   ///
   /// In en, this message translates to:
-  /// **'Moving to Table {table}. Your stack ({stack}) will carry over. Other players will be cleared.'**
-  String pokerHandMovingToTable(int table, String stack);
+  /// **'Moving to a different table. Your stack ({stack}) will carry over. Other players will be cleared.'**
+  String pokerHandMovingToTable(String stack);
 
   /// No description provided for @pokerHandActiveSessionMsg.
   ///

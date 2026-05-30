@@ -19,8 +19,8 @@ class IntroductionScreen extends StatefulWidget {
 }
 
 class _IntroductionScreenState extends State<IntroductionScreen> {
-  double smallBlind = 1;
-  double bigBlind = 2;
+  double smallBlind = 1.0;
+  double bigBlind = 2.0;
   int numberOfPlayers = 6;
   GameType gameType = GameType.cash;
   bool bbAnteEnabled = false;

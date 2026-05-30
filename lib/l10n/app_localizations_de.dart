@@ -6083,8 +6083,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get pokerHandYouLabel => 'Du';
 
   @override
-  String pokerHandMovingToTable(int table, String stack) {
-    return 'Wechsel zu Tisch $table. Dein Stack ($stack) wird übertragen. Andere Spieler werden entfernt.';
+  String pokerHandMovingToTable(String stack) {
+    return 'Wechsel zu einem anderen Tisch. Dein Stack ($stack) wird übertragen. Andere Spieler werden entfernt.';
   }
 
   @override

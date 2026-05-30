@@ -14,8 +14,8 @@ class IndividualHandSetupScreen extends StatefulWidget {
 }
 
 class _IndividualHandSetupScreenState extends State<IndividualHandSetupScreen> {
-  double smallBlind = 1;
-  double bigBlind = 2;
+  double smallBlind = 1.0;
+  double bigBlind = 2.0;
   int numberOfPlayers = 6;
   GameType gameType = GameType.cash;
   String handName = '';

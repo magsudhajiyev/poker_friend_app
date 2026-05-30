@@ -271,8 +271,8 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
 
   double _calculatePotFromActions(Map<String, dynamic> handData) {
     final actions = (handData['actions'] as List<dynamic>?) ?? [];
-    final smallBlind = (handData['smallBlind'] as num?)?.toDouble() ?? 1;
-    final bigBlind = (handData['bigBlind'] as num?)?.toDouble() ?? 2;
+    final smallBlind = (handData['smallBlind'] as num?)?.toDouble() ?? 1.0;
+    final bigBlind = (handData['bigBlind'] as num?)?.toDouble() ?? 2.0;
     final hasBBante = handData['hasBBante'] as bool? ?? false;
 
     double pot = smallBlind + bigBlind;

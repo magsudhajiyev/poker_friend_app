@@ -3449,10 +3449,9 @@
   },
 
   "pokerHandYouLabel": "You",
-  "pokerHandMovingToTable": "Moving to Table {table}. Your stack ({stack}) will carry over. Other players will be cleared.",
+  "pokerHandMovingToTable": "Moving to a different table. Your stack ({stack}) will carry over. Other players will be cleared.",
   "@pokerHandMovingToTable": {
     "placeholders": {
-      "table": { "type": "int" },
       "stack": { "type": "String" }
     }
   },

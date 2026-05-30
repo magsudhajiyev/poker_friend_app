@@ -166,8 +166,8 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
 
   void _showSessionSettingsDialog(dynamic table) {
     final isTournament = widget.event.gameType == 'tournament';
-    double smallBlind = isTournament ? 100 : 1;
-    double bigBlind = isTournament ? 200 : 2;
+    double smallBlind = isTournament ? 100.0 : 1.0;
+    double bigBlind = isTournament ? 200.0 : 2.0;
     bool hasBBante = isTournament;
     String gameType = widget.event.gameType;
     int buttonPosition = 1;

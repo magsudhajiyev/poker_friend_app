@@ -32,8 +32,8 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
 
   // Game settings
   GameType gameType = GameType.cash;
-  double smallBlind = 1;
-  double bigBlind = 2;
+  double smallBlind = 1.0;
+  double bigBlind = 2.0;
   bool hasBBante = false;
 
   // Form validation
@@ -851,14 +851,14 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
         _startingStackController.text = buyInText;
       }
       // Set default cash game blinds
-      smallBlind = 1;
-      bigBlind = 2;
+      smallBlind = 1.0;
+      bigBlind = 2.0;
       _smallBlindController.text = formatBlindValue(smallBlind);
       _bigBlindController.text = formatBlindValue(bigBlind);
     } else {
       // For MTT, set default tournament blinds
-      smallBlind = 100;
-      bigBlind = 200;
+      smallBlind = 100.0;
+      bigBlind = 200.0;
       _smallBlindController.text = formatBlindValue(smallBlind);
       _bigBlindController.text = formatBlindValue(bigBlind);
     }

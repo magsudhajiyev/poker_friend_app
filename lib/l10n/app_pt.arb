@@ -4008,12 +4008,9 @@
     }
   },
   "pokerHandYouLabel": "Você",
-  "pokerHandMovingToTable": "Indo para a mesa {table}. Seu Stack ({stack}) será transferido. Os outros jogadores serão removidos.",
+  "pokerHandMovingToTable": "Indo para outra mesa. Seu Stack ({stack}) será transferido. Os outros jogadores serão removidos.",
   "@pokerHandMovingToTable": {
     "placeholders": {
-      "table": {
-        "type": "int"
-      },
       "stack": {
         "type": "String"
       }

@@ -33,7 +33,7 @@ class SessionSummaryData {
     required this.totalBuyIn,
     required this.handsPlayed,
     required this.biggestPot,
-    this.biggestPotBB = 0,
+    this.biggestPotBB = 0.0,
     required this.durationMinutes,
     this.finishedPlace,
     this.fieldSize,

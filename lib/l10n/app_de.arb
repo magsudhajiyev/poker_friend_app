@@ -4008,12 +4008,9 @@
     }
   },
   "pokerHandYouLabel": "Du",
-  "pokerHandMovingToTable": "Wechsel zu Tisch {table}. Dein Stack ({stack}) wird übertragen. Andere Spieler werden entfernt.",
+  "pokerHandMovingToTable": "Wechsel zu einem anderen Tisch. Dein Stack ({stack}) wird übertragen. Andere Spieler werden entfernt.",
   "@pokerHandMovingToTable": {
     "placeholders": {
-      "table": {
-        "type": "int"
-      },
       "stack": {
         "type": "String"
       }

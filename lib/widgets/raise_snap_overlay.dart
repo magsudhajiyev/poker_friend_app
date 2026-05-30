@@ -282,8 +282,8 @@ class RaiseSnapOverlay extends StatelessWidget {
     required double potAmount,
     required double maxBet,
     required bool isCashGame,
-    double bigBlind = 0,
-    double lastBet = 0,
+    double bigBlind = 0.0,
+    double lastBet = 0.0,
   }) {
     final points = <SnapPoint>[];
 
