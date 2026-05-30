@@ -157,8 +157,8 @@ class LocalStorageService {
   // Save session locally
   static Future<void> saveSession({
     required String sessionId,
-    required int smallBlind,
-    required int bigBlind,
+    required double smallBlind,
+    required double bigBlind,
     required int playerCount,
     required String startTime,
     String? endTime,
@@ -236,8 +236,8 @@ class LocalStorageService {
     int? winnerId,
     int? heroPosition,
     Map<int, String>? playerNames,
-    int? smallBlind,
-    int? bigBlind,
+    double? smallBlind,
+    double? bigBlind,
     String? gameType,
     // Chopped pot fields
     bool? isChoppedPot,

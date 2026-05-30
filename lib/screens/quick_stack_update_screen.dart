@@ -14,8 +14,8 @@ import '../onboarding/onboarding_tour.dart';
 import '../onboarding/onboarding_progress_bar.dart';
 
 class QuickStackUpdateScreen extends StatefulWidget {
-  final int smallBlind;
-  final int bigBlind;
+  final double smallBlind;
+  final double bigBlind;
   final int numberOfPlayers;
   final GameType gameType;
   final Map<int, String>? playerNames;
@@ -862,7 +862,7 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
                                 Text(
                                   l10n.quickStackBlinds(
                                     widget.gameType == GameType.cash
-                                        ? '${CurrencyService.formatCash(widget.smallBlind.toDouble())}/${CurrencyService.formatCash(widget.bigBlind.toDouble())}'
+                                        ? '${CurrencyService.formatCash(widget.smallBlind)}/${CurrencyService.formatCash(widget.bigBlind)}'
                                         : '${widget.smallBlind}/${widget.bigBlind}',
                                   ),
                                   style: GoogleFonts.ibmPlexSans(

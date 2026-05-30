@@ -166,8 +166,8 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
 
   void _showSessionSettingsDialog(dynamic table) {
     final isTournament = widget.event.gameType == 'tournament';
-    int smallBlind = isTournament ? 100 : 1;
-    int bigBlind = isTournament ? 200 : 2;
+    double smallBlind = isTournament ? 100 : 1;
+    double bigBlind = isTournament ? 200 : 2;
     bool hasBBante = isTournament;
     String gameType = widget.event.gameType;
     int buttonPosition = 1;
@@ -314,8 +314,8 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
                       GestureDetector(
                         onTap: () async {
                           // Parse final values from controllers
-                          smallBlind = int.tryParse(sbController.text) ?? smallBlind;
-                          bigBlind = int.tryParse(bbController.text) ?? bigBlind;
+                          smallBlind = double.tryParse(sbController.text) ?? smallBlind;
+                          bigBlind = double.tryParse(bbController.text) ?? bigBlind;
                           Navigator.pop(context);
                           await _startSession(
                             table: table,
@@ -358,7 +358,7 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
   Widget _buildBlindCard({
     required String label,
     required TextEditingController controller,
-    required Function(int) onChanged,
+    required Function(double) onChanged,
     bool showDollarSign = true,
   }) {
     return Container(
@@ -422,7 +422,7 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
               ),
             ),
             onChanged: (v) {
-              final parsed = int.tryParse(v);
+              final parsed = double.tryParse(v);
               if (parsed != null) onChanged(parsed);
             },
           ),
@@ -433,8 +433,8 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
 
   Future<void> _startSession({
     required dynamic table,
-    required int smallBlind,
-    required int bigBlind,
+    required double smallBlind,
+    required double bigBlind,
     required bool hasBBante,
     required String gameType,
     required int buttonPosition,

@@ -50,12 +50,12 @@ import '../onboarding/guided_hand_overlay.dart';
 import 'session_history_screen.dart';
 
 class PokerHandScreen extends StatefulWidget {
-  final int smallBlind;
-  final int bigBlind;
+  final double smallBlind;
+  final double bigBlind;
   final int numberOfPlayers;
   final GameType gameType;
   final bool hasBBante;
-  final int ante;
+  final double ante;
 
   // Individual session parameters
   final bool isIndividualSession;
@@ -104,6 +104,8 @@ class PokerHandScreen extends StatefulWidget {
   @override
   State<PokerHandScreen> createState() => _PokerHandScreenState();
 }
+
+enum _ChipDirection { up, down, left, right }
 
 class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderStateMixin {
   late PokerGameState gameState;
@@ -533,7 +535,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
           style: GoogleFonts.ibmPlexSans(color: Colors.white, fontWeight: FontWeight.w600),
         ),
         content: Text(
-          l10n.pokerHandMovingToTable(sessionManager.currentTableNumber + 1, gameState.formatCurrency(heroStack)),
+          l10n.pokerHandMovingToTable(gameState.formatCurrency(heroStack)),
           style: GoogleFonts.ibmPlexSans(color: const Color(0xFF8C8C8C), fontSize: 14),
         ),
         actions: [
@@ -788,183 +790,12 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     }
   }
 
-
-  Future<void> _managePlayersDialog() async {
-    final result = await Navigator.push<Map<String, dynamic>?>(
-      context,
-      MaterialPageRoute(
-        builder: (context) => SeatSetupScreen(
-          playerCount: widget.numberOfPlayers,
-          buttonPosition: gameState.buttonPosition,
-          currentSeat: sessionManager.ourSeatNumber,
-          sessionManager: sessionManager,
-          isInitialSetup: false,
-          isCashGame: widget.gameType == GameType.cash,
-          gameState: gameState,
-          isIndividualSession: widget.isIndividualSession,
-          individualCurrentStack: widget.individualCurrentStack,
-        ),
-      ),
-    );
-
-    // Sync gameState with sessionManager's active seats
-    setState(() {
-      // Store the current player and button before changes
-      final previousCurrentPlayer = gameState.currentPlayer;
-      final previousButton = gameState.buttonPosition;
-
-      // Store previous active player count BEFORE making changes
-      final previousActiveCount = gameState.getActivePlayers().length;
-
-      // Update hero seat if it was changed in Manage Players screen.
-      // SeatSetupScreen already updated activeSeats/playerNames/playerStacks
-      // on sessionManager directly, but never sets ourSeatNumber.
-      if (result != null && result['seat'] != null) {
-        final newHeroSeat = result['seat'] as int;
-        if (newHeroSeat != sessionManager.ourSeatNumber) {
-          sessionManager.ourSeatNumber = newHeroSeat;
-        }
-      }
-
-      // Update button position if it was changed
-      if (result != null && result['buttonPosition'] != null) {
-        final newButtonPosition = result['buttonPosition'] as int;
-        if (newButtonPosition != previousButton) {
-          gameState.buttonPosition = newButtonPosition;
-          sessionManager.buttonPosition = newButtonPosition;
-          // Button moved to Player $newButtonPosition
-        }
-      }
-
-      for (int seat = 1; seat <= widget.numberOfPlayers; seat++) {
-        final isActive = sessionManager.activeSeats.contains(seat);
-        gameState.setPlayerActive(seat, isActive);
-
-        // Sync player stack from sessionManager to gameState
-        if (isActive && sessionManager.playerStacks.containsKey(seat)) {
-          final stackSize = sessionManager.playerStacks[seat]!;
-          gameState.players[seat - 1].currentStack = stackSize;
-          gameState.players[seat - 1].startingStack = stackSize;
-        }
-      }
-
-      // Get active players for position calculations
-      List<int> activePlayers = gameState.getActivePlayers();
-      final activeCountChanged = activePlayers.length != previousActiveCount;
-
-      // Recalculate blind positions based on new button position
-      if (activePlayers.length >= 2) {
-        if (activePlayers.length == 2) {
-          // Heads-up: button is SB, other player is BB
-          if (activePlayers.contains(gameState.buttonPosition)) {
-            sessionManager.actualSBSeat = gameState.buttonPosition;
-            // Find the other active player for BB
-            sessionManager.actualBBSeat = activePlayers.firstWhere((p) => p != gameState.buttonPosition);
-          }
-        } else {
-          // Multi-way: find SB and BB positions among active players
-          int sbPosition = gameState.buttonPosition;
-          int attempts = 0;
-          // Find first active player after button for SB
-          do {
-            sbPosition = (sbPosition % gameState.numberOfPlayers) + 1;
-            attempts++;
-            if (activePlayers.contains(sbPosition)) {
-              break;
-            }
-          } while (attempts < gameState.numberOfPlayers);
-          sessionManager.actualSBSeat = sbPosition;
-
-          // Find next active player after SB for BB
-          int bbPosition = sbPosition;
-          attempts = 0;
-          do {
-            bbPosition = (bbPosition % gameState.numberOfPlayers) + 1;
-            attempts++;
-            if (activePlayers.contains(bbPosition)) {
-              break;
-            }
-          } while (attempts < gameState.numberOfPlayers);
-          sessionManager.actualBBSeat = bbPosition;
-        }
-      }
-
-      // Check if the current player was deactivated or if button/positions changed
-      final currentPlayerStillActive = sessionManager.activeSeats.contains(previousCurrentPlayer);
-      final buttonChanged = gameState.buttonPosition != previousButton;
-
-      if (!currentPlayerStillActive && !gameState.bettingRoundComplete) {
-        // Current player was deactivated, advance to next active player
-        int nextPlayer = previousCurrentPlayer;
-        int attempts = 0;
-        do {
-          nextPlayer = (nextPlayer % gameState.numberOfPlayers) + 1;
-          attempts++;
-
-          if (attempts > gameState.numberOfPlayers) {
-            break;
-          }
-
-          final playerState = gameState.players[nextPlayer - 1];
-          if (playerState.isActive && !playerState.hasFolded) {
-            break;
-          }
-        } while (nextPlayer != previousCurrentPlayer);
-
-        gameState.currentPlayer = nextPlayer;
-        // addAction removed
-      } else if ((buttonChanged || activeCountChanged) && !gameState.bettingRoundComplete) {
-        // Button or active players changed, recalculate who should act
-        if (activePlayers.length >= 2) {
-          if (gameState.currentRound == BettingRound.preflop) {
-            // For preflop: UTG is first active player after BB
-            // We already calculated actualBBSeat above
-            int bbPosition = sessionManager.actualBBSeat ?? gameState.buttonPosition;
-            int utgPosition = gameState.currentPlayer;
-            int nextPlayer = bbPosition;
-            int attempts = 0;
-            do {
-              nextPlayer = (nextPlayer % gameState.numberOfPlayers) + 1;
-              attempts++;
-              if (activePlayers.contains(nextPlayer) && !gameState.players[nextPlayer - 1].hasFolded) {
-                utgPosition = nextPlayer;
-                break;
-              }
-            } while (attempts < gameState.numberOfPlayers);
-            gameState.currentPlayer = utgPosition;
-
-            // Log with position name
-            final playerName = sessionManager.getPlayerNameWithPosition(utgPosition);
-            // addAction removed
-          } else {
-            // Postflop: first active player after button who hasn't folded
-            int nextPlayer = gameState.buttonPosition;
-            int attempts = 0;
-            do {
-              nextPlayer = (nextPlayer % gameState.numberOfPlayers) + 1;
-              attempts++;
-              if (activePlayers.contains(nextPlayer) && !gameState.players[nextPlayer - 1].hasFolded) {
-                gameState.currentPlayer = nextPlayer;
-                break;
-              }
-            } while (attempts < gameState.numberOfPlayers);
-
-            final playerName = sessionManager.getPlayerNameWithPosition(gameState.currentPlayer);
-            // addAction removed
-          }
-        }
-      } else if (currentPlayerStillActive && !buttonChanged) {
-        // addAction removed
-      }
-    });
-  }
-
   Future<void> _showBlindsEditDialog() async {
     final l10n = AppLocalizations.of(context);
-    final sbController = TextEditingController(text: gameState.smallBlind.toString());
-    final bbController = TextEditingController(text: gameState.bigBlind.toString());
+    final sbController = TextEditingController(text: formatBlindValue(gameState.smallBlind));
+    final bbController = TextEditingController(text: formatBlindValue(gameState.bigBlind));
 
-    final result = await showDialog<Map<String, int>>(
+    final result = await showDialog<Map<String, double>>(
       context: context,
       barrierDismissible: true,
       barrierColor: Colors.black54,
@@ -989,7 +820,8 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
               TextField(
                 controller: ctrl,
                 autofocus: autofocus,
-                keyboardType: TextInputType.number,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[\d.]'))],
                 style: GoogleFonts.ibmPlexSans(
                   fontSize: 15,
                   color: const Color(0xFF0C0C0C),
@@ -1125,9 +957,9 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                     Expanded(
                       child: GestureDetector(
                         onTap: () {
-                          final sb = int.tryParse(sbController.text) ??
+                          final sb = double.tryParse(sbController.text) ??
                               gameState.smallBlind;
-                          final bb = int.tryParse(bbController.text) ??
+                          final bb = double.tryParse(bbController.text) ??
                               gameState.bigBlind;
                           Navigator.pop(
                               ctx, {'sb': sb, 'bb': bb >= sb ? bb : sb});
@@ -1172,8 +1004,8 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       });
 
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setInt('small_blind', sb);
-      await prefs.setInt('big_blind', bb);
+      await prefs.setDouble('small_blind', sb);
+      await prefs.setDouble('big_blind', bb);
 
       if (widget.isIndividualSession && sessionManager.sessionId != null) {
         await FirebaseService.updateIndividualSession(
@@ -1653,27 +1485,12 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                   padding: const EdgeInsets.fromLTRB(16, 18, 16, 7),
                   child: Column(
                     children: [
-                      // TOP — Live poker table (compact)
+                      // TOP — Live poker table (compact, no background container)
                       Expanded(
                         flex: 2,
-                        child: Container(
-                          decoration: const BoxDecoration(
-                            color: Color(0xFF161719),
-                            borderRadius: BorderRadius.only(
-                              topLeft: Radius.circular(24),
-                              topRight: Radius.circular(24),
-                            ),
-                          ),
-                          child: ClipRRect(
-                            borderRadius: const BorderRadius.only(
-                              topLeft: Radius.circular(24),
-                              topRight: Radius.circular(24),
-                            ),
-                            child: _buildHandTable(),
-                          ),
-                        ),
+                        child: _buildHandTable(),
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 28),
                       // BOTTOM — Gesture input area (larger)
                       Expanded(
                         flex: 3,
@@ -1792,10 +1609,10 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  const Icon(Icons.people_outline, color: Color(0xFFB9B9B9), size: 12),
+                                  Text('BB', style: GoogleFonts.ibmPlexSans(fontSize: 10, fontWeight: FontWeight.w700, color: const Color(0xFFB9B9B9))),
                                   const SizedBox(width: 4),
                                   Text(
-                                    '${gameState.smallBlind}/${gameState.bigBlind}',
+                                    '${formatBlindValue(gameState.smallBlind)}/${formatBlindValue(gameState.bigBlind)}',
                                     style: GoogleFonts.ibmPlexSans(
                                       fontSize: 11,
                                       fontWeight: FontWeight.w500,
@@ -2236,8 +2053,17 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                 buttonPosition: widgetButton,
                 showDealerButton: true,
                 showLogo: false,
-                dealerButtonSize: 22,
-                dealerButtonQuarterTurns: 1, // counter-rotate spade upright
+                tableWidthFraction: 0.92,  // visual height after rotation
+                tableHeightFraction: 0.88, // visual width after rotation
+                dealerButtonSize: 26,
+                dealerButtonQuarterTurns: 1,
+                dealerButtonNudge: (widgetSeat) {
+                  // Logical seat 5 (widget seat 3) is at top center —
+                  // nudge button right so it doesn't cover stack text.
+                  // Pre-rotation +Y → visually right after 90° CW rotation.
+                  if (widgetSeat == 3) return const Offset(0, 20);
+                  return Offset.zero;
+                },
                 isDealerButtonDraggable: !handInProgress,
                 onDealerButtonMoved: (widgetSeat) {
                   final logicalSeat = _widgetSeatToLogical(widgetSeat);
@@ -2251,9 +2077,12 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                   final logicalSeat = _widgetSeatToLogical(widgetSeat);
                   return GestureDetector(
                     onTap: () => _onSeatTapped(logicalSeat),
-                    onLongPress: isActive
-                        ? () => _onSeatLongPressed(logicalSeat)
+                    onLongPressStart: isActive
+                        ? (details) => _onSeatLongPressStart(logicalSeat, details.globalPosition)
                         : null,
+                    onLongPressMoveUpdate: (details) => _onSeatLongPressMove(details.globalPosition),
+                    onLongPressEnd: (_) => _onSeatLongPressEnd(logicalSeat),
+                    onLongPressCancel: _onSeatLongPressCancel,
                     child: RotatedBox(
                       quarterTurns: 1,
                       child: _buildHandSeat(logicalSeat, isActive, seatLabels[widgetSeat] ?? ''),
@@ -2266,6 +2095,29 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         );
       },
     );
+  }
+
+  /// Returns the direction the chip pill should be offset from the seat
+  /// to appear "in front of" the player on the table felt.
+  /// After 270° CCW rotation of the vertical widget:
+  ///   Logical 1,9 → bottom of horizontal table → chips go UP
+  ///   Logical 2,3 → right side → chips go LEFT
+  ///   Logical 4,5 → top-right/top → chips go DOWN
+  ///   Logical 6,7 → top-left/left → chips go DOWN
+  ///   Logical 8   → left side → chips go RIGHT
+  _ChipDirection _chipDirection(int logicalSeat) {
+    switch (logicalSeat) {
+      case 1: return _ChipDirection.up;       // bottom center → chips up
+      case 2: return _ChipDirection.right;     // bottom-left → chips right toward center
+      case 3: return _ChipDirection.right;     // left side → chips right toward center
+      case 4: return _ChipDirection.down;      // top-left → chips down
+      case 5: return _ChipDirection.down;      // top center → chips down
+      case 6: return _ChipDirection.down;      // top-right → chips down
+      case 7: return _ChipDirection.left;      // right side → chips left toward center
+      case 8: return _ChipDirection.left;      // bottom-right → chips left toward center
+      case 9: return _ChipDirection.up;        // bottom center → chips up
+      default: return _ChipDirection.up;
+    }
   }
 
   /// Builds a compact seat widget showing player state (name, stack, bet, fold/all-in).
@@ -2293,22 +2145,22 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       borderColor = const Color(0xFFA3FF78);
     }
 
-    // Seat number pill — compact
+    // Seat number pill
     final circle = Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
       decoration: BoxDecoration(
         color: const Color(0xFF161719),
         borderRadius: BorderRadius.circular(35),
-        border: Border.all(color: borderColor, width: 1.5),
+        border: Border.all(color: borderColor, width: 2),
         boxShadow: isCurrentPlayer
-            ? [BoxShadow(color: Colors.amber.withValues(alpha: 0.4), blurRadius: 6)]
+            ? [BoxShadow(color: Colors.amber.withValues(alpha: 0.4), blurRadius: 8)]
             : null,
       ),
       child: Text(
         '$seatNumber',
         style: GoogleFonts.ibmPlexMono(
           color: isActive ? const Color(0xFFA3FF78) : const Color(0xFF67696D),
-          fontSize: 11,
+          fontSize: 13,
           fontWeight: FontWeight.w500,
         ),
       ),
@@ -2325,7 +2177,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
             AppLocalizations.of(context).pokerTablePlayerFallback,
             style: GoogleFonts.ibmPlexSans(
               color: Colors.white.withValues(alpha: 0.4),
-              fontSize: 8,
+              fontSize: 10,
               fontWeight: FontWeight.w500,
             ),
             maxLines: 1,
@@ -2341,15 +2193,15 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     Widget nameWidget;
     if (label.isNotEmpty && !RegExp(r'^Player\s*\d*$').hasMatch(label)) {
       nameWidget = Container(
-        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
         decoration: BoxDecoration(
           color: const Color(0xFF0097D2),
-          borderRadius: BorderRadius.circular(6),
+          borderRadius: BorderRadius.circular(7),
         ),
         child: Text(
           displayName,
           style: GoogleFonts.ibmPlexSans(
-            fontSize: 8,
+            fontSize: 10,
             fontWeight: FontWeight.w500,
             color: isFolded ? Colors.white60 : Colors.white,
           ),
@@ -2361,7 +2213,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         displayName,
         style: GoogleFonts.ibmPlexSans(
           color: isFolded ? Colors.white38 : Colors.white,
-          fontSize: 8,
+          fontSize: 10,
           fontWeight: FontWeight.w500,
         ),
         maxLines: 1,
@@ -2373,7 +2225,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       _formatCompactAmount(stack),
       style: GoogleFonts.ibmPlexSans(
         color: isFolded ? Colors.white38 : const Color(0xFF89F1EC),
-        fontSize: 9,
+        fontSize: 11,
         fontWeight: FontWeight.w500,
       ),
     );
@@ -2381,83 +2233,71 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     // Bet/status pill
     Widget? statusPill;
     if (isFolded) {
-      statusPill = Container(
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.15),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Text(
-          'FOLD',
-          style: GoogleFonts.ibmPlexSans(
-            color: Colors.white38,
-            fontSize: 7,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      );
+      statusPill = _buildStatusPill('FOLD', Colors.white.withValues(alpha: 0.15), Colors.white38);
     } else if (isAllIn) {
-      statusPill = Container(
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
-        decoration: BoxDecoration(
-          color: const Color(0xFFE53935),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Text(
-          'ALL-IN',
-          style: GoogleFonts.ibmPlexSans(
-            color: Colors.white,
-            fontSize: 7,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      );
+      statusPill = _buildStatusPill('ALL-IN', const Color(0xFFE53935), Colors.white);
     } else if (bet > 0) {
-      statusPill = Container(
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
-        decoration: BoxDecoration(
-          color: const Color(0xFF4C94FF),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Text(
-          _formatCompactAmount(bet),
-          style: GoogleFonts.ibmPlexSans(
-            color: Colors.white,
-            fontSize: 7,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      );
+      statusPill = _buildStatusPill(_formatCompactAmount(bet), const Color(0xFF4C94FF), Colors.white, isBold: false);
     } else if (hasChecked) {
-      statusPill = Container(
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
-        decoration: BoxDecoration(
-          color: const Color(0xFF3BA55D),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Text(
-          'CHECK',
-          style: GoogleFonts.ibmPlexSans(
-            color: Colors.white,
-            fontSize: 7,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      );
+      statusPill = _buildStatusPill('CHECK', const Color(0xFF3BA55D), Colors.white);
     }
 
-    return Column(
+    // Player info column (circle + name + stack)
+    final playerInfo = Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         circle,
-        const SizedBox(height: 1),
+        const SizedBox(height: 2),
         nameWidget,
         stackWidget,
-        if (statusPill != null) ...[
-          const SizedBox(height: 1),
-          statusPill,
-        ],
       ],
+    );
+
+    if (statusPill == null) return playerInfo;
+
+    // Position chip pill toward table center based on seat position
+    final dir = _chipDirection(seatNumber);
+    switch (dir) {
+      case _ChipDirection.up:
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [statusPill, const SizedBox(height: 4), playerInfo],
+        );
+      case _ChipDirection.down:
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [playerInfo, const SizedBox(height: 4), statusPill],
+        );
+      case _ChipDirection.left:
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [statusPill, const SizedBox(width: 4), playerInfo],
+        );
+      case _ChipDirection.right:
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [playerInfo, const SizedBox(width: 4), statusPill],
+        );
+    }
+  }
+
+  Widget _buildStatusPill(String text, Color bgColor, Color textColor, {bool isBold = true}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        text,
+        style: GoogleFonts.ibmPlexSans(
+          color: textColor,
+          fontSize: 9,
+          fontWeight: isBold ? FontWeight.w600 : FontWeight.w500,
+        ),
+      ),
     );
   }
 
@@ -2508,7 +2348,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     final isHero = seatNumber == (sessionManager.ourSeatNumber ?? -1);
 
     final defaultStack = sessionManager.bigBlind > 0
-        ? (sessionManager.bigBlind * 100).toDouble()
+        ? sessionManager.bigBlind * 100
         : 0.0;
     final heroName = sessionManager.playerNames[sessionManager.ourSeatNumber ?? -1] ?? '';
 
@@ -2586,42 +2426,91 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     );
   }
 
-  void _onSeatLongPressed(int seatNumber) {
+  // ─── SEAT LONG-PRESS STACK RING ────────────────────────────────
+  OverlayEntry? _stackRingOverlay;
+  Offset _stackRingCenter = Offset.zero;
+  final ValueNotifier<StackRange> _stackRingHovered = ValueNotifier(StackRange.average);
+  StackRange _stackRingCurrent = StackRange.average;
+  StackConfidence _stackRingConfidence = StackConfidence.medium;
+
+  static const double _ringSize = 160.0;
+  static const int _ringSegments = 7;
+  static const double _ringGapDeg = 3.0;
+  static const double _ringSegmentDeg = (360.0 - _ringGapDeg * _ringSegments) / _ringSegments;
+  static final double _ringSegmentRad = _ringSegmentDeg * math.pi / 180;
+  static final double _ringGapRad = _ringGapDeg * math.pi / 180;
+  static const double _ringStartAngle = -math.pi / 2;
+
+  void _onSeatLongPressStart(int seatNumber, Offset globalPosition) {
     final playerState = gameState.players[seatNumber - 1];
     if (!playerState.isActive) return;
-
     final isHero = seatNumber == (sessionManager.ourSeatNumber ?? -1);
-    if (isHero) return; // Hero stack is known exactly
+    if (isHero) return;
 
-    final confidence = playerState.stackConfidence;
+    _stackRingConfidence = playerState.stackConfidence;
+    final bbCount = sessionManager.bigBlind > 0
+        ? playerState.currentStack / sessionManager.bigBlind
+        : 0.0;
+    _stackRingCurrent = StackBucketHelper.getRangeForBB(bbCount);
+    _stackRingHovered.value = _stackRingCurrent;
 
-    // Show the StackRangeCircle overlay via a dialog
-    showDialog(
-      context: context,
-      barrierColor: Colors.black54,
-      builder: (ctx) => Center(
-        child: Material(
-          color: Colors.transparent,
-          child: StackRangeCircle(
-            currentStack: gameState.getPlayerStack(seatNumber),
-            bigBlind: sessionManager.bigBlind,
-            confidence: confidence,
-            isHero: false,
-            isInteractive: true,
-            formatCurrency: gameState.formatCurrency,
-            onRangeSelected: (StackRange range) {
-              final newStack = StackBucketHelper.midpointBB(range) * sessionManager.bigBlind;
-              setState(() {
-                gameState.setPlayerStack(seatNumber, newStack);
-                gameState.players[seatNumber - 1].stackConfidence = StackConfidence.medium;
-                gameState.players[seatNumber - 1].handsSinceLastObservation = 0;
-              });
-              Navigator.of(ctx).pop();
-            },
-          ),
-        ),
+    // Clamp ring center to screen bounds
+    final screenSize = MediaQuery.of(context).size;
+    const half = _ringSize / 2;
+    _stackRingCenter = Offset(
+      globalPosition.dx.clamp(8 + half, screenSize.width - half - 8),
+      globalPosition.dy.clamp(8 + half, screenSize.height - half - 8),
+    );
+
+    HapticFeedback.mediumImpact();
+
+    _stackRingOverlay = OverlayEntry(
+      builder: (_) => _StackRingOverlayWidget(
+        center: _stackRingCenter,
+        size: _ringSize,
+        currentRange: _stackRingCurrent,
+        hoveredNotifier: _stackRingHovered,
+        confidence: _stackRingConfidence,
       ),
     );
+    Overlay.of(context).insert(_stackRingOverlay!);
+  }
+
+  void _onSeatLongPressMove(Offset globalPosition) {
+    if (_stackRingOverlay == null) return;
+    final dx = globalPosition.dx - _stackRingCenter.dx;
+    final dy = globalPosition.dy - _stackRingCenter.dy;
+    if (dx * dx + dy * dy < 20 * 20) return; // dead zone
+
+    final angle = math.atan2(dy, dx);
+    final normalized = (angle - _ringStartAngle + 2 * math.pi) % (2 * math.pi);
+    final stepSize = _ringSegmentRad + _ringGapRad;
+    final index = (normalized / stepSize).floor().clamp(0, _ringSegments - 1);
+    final newSegment = StackRange.values[index];
+
+    if (newSegment != _stackRingHovered.value) {
+      _stackRingHovered.value = newSegment;
+      HapticFeedback.selectionClick();
+    }
+  }
+
+  void _onSeatLongPressEnd(int seatNumber) {
+    if (_stackRingOverlay == null) return;
+    final selected = _stackRingHovered.value;
+    _stackRingOverlay?.remove();
+    _stackRingOverlay = null;
+
+    final newStack = StackBucketHelper.midpointBB(selected) * sessionManager.bigBlind;
+    setState(() {
+      gameState.setPlayerStack(seatNumber, newStack);
+      gameState.players[seatNumber - 1].stackConfidence = StackConfidence.medium;
+      gameState.players[seatNumber - 1].handsSinceLastObservation = 0;
+    });
+  }
+
+  void _onSeatLongPressCancel() {
+    _stackRingOverlay?.remove();
+    _stackRingOverlay = null;
   }
 
   Widget _buildTableCenterContent() {
@@ -2635,13 +2524,13 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       children: [
         if (hasBoardCards) ...[
           _buildCompactBoardCards(boardCards!),
-          const SizedBox(height: 2),
+          const SizedBox(height: 3),
         ],
         Text(
           gameState.formatCurrency(gameState.currentPot),
           style: GoogleFonts.ibmPlexSans(
             color: const Color(0xFFD3FFFD),
-            fontSize: 14,
+            fontSize: 17,
             fontWeight: FontWeight.w600,
             letterSpacing: -0.5,
             height: 1.0,
@@ -2651,7 +2540,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
           'POT',
           style: GoogleFonts.ibmPlexSans(
             color: const Color(0xFF5EB7B3),
-            fontSize: 9,
+            fontSize: 11,
             fontWeight: FontWeight.w400,
             height: 1.3,
           ),
@@ -2671,16 +2560,16 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       children: cards.map((card) {
         final isRed = card.contains('♥') || card.contains('♦');
         return Container(
-          width: 18,
-          height: 24,
-          margin: const EdgeInsets.symmetric(horizontal: 1),
+          width: 30,
+          height: 40,
+          margin: const EdgeInsets.symmetric(horizontal: 2),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(2),
+            borderRadius: BorderRadius.circular(3),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.3),
-                blurRadius: 1,
+                blurRadius: 2,
                 offset: const Offset(0, 1),
               ),
             ],
@@ -2690,7 +2579,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
               card,
               style: TextStyle(
                 fontFamily: 'IBM Plex Mono',
-                fontSize: 7,
+                fontSize: 12,
                 fontWeight: FontWeight.w600,
                 color: isRed ? Colors.red : Colors.black,
                 height: 1.0,
@@ -2780,17 +2669,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     final buttonSize = renderBox.size;
 
     final List<Widget> items = [];
-
-    items.add(_buildMenuItem(
-      icon: 'assets/icons/Users.svg',
-      label: l10n.handManagePlayers,
-      onTap: () {
-        setState(() => _showMenuOverlay = false);
-        _managePlayersDialog();
-      },
-    ));
-
-    items.add(_buildMenuSeparator());
 
     items.add(_buildMenuItem(
       icon: 'assets/icons/PicnicTable.svg',
@@ -3312,7 +3190,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         : gameState.getMinimumBet();
     final maxBet = currentPlayer.currentStack + currentPlayer.betThisRound;
     final potAmount = gameState.currentPot;
-    final bigBlind = gameState.bigBlind.toDouble();
+    final bigBlind = gameState.bigBlind;
     final isCash = gameState.isCashGame;
     final lastBet = gameState.getCurrentBet();
 
@@ -3478,7 +3356,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     final bool isPreflop = gameState.currentRound == BettingRound.preflop;
     final bool hasVoluntaryBet = gameState.hasBetThisRound; // True if someone voluntarily bet/raised (not just blinds)
     final double currentPot = gameState.currentPot;
-    final double bigBlind = gameState.bigBlind.toDouble();
+    final double bigBlind = gameState.bigBlind;
 
     final TextEditingController amountController = TextEditingController();
 
@@ -4101,11 +3979,11 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       double heroBlindDeduction = 0.0;
       if (ourSeat != null) {
         if (ourSeat == gameState.effectiveSBPosition) {
-          heroBlindDeduction = gameState.smallBlind.toDouble();
+          heroBlindDeduction = gameState.smallBlind;
         } else if (ourSeat == gameState.effectiveBBPosition) {
-          heroBlindDeduction = gameState.bigBlind.toDouble();
+          heroBlindDeduction = gameState.bigBlind;
           if (gameState.hasBBante) {
-            heroBlindDeduction += gameState.bigBlind.toDouble();
+            heroBlindDeduction += gameState.bigBlind;
           }
         }
       }
@@ -5001,8 +4879,8 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
 
       // Update blinds if they were changed
       if (result['smallBlind'] != null && result['bigBlind'] != null) {
-        final newSmallBlind = result['smallBlind'] as int;
-        final newBigBlind = result['bigBlind'] as int;
+        final newSmallBlind = (result['smallBlind'] as num).toDouble();
+        final newBigBlind = (result['bigBlind'] as num).toDouble();
 
         setState(() {
           // Update sessionManager blinds
@@ -5017,8 +4895,8 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
 
         // Save blinds to preferences for persistence
         final prefs = await SharedPreferences.getInstance();
-        await prefs.setInt('small_blind', newSmallBlind);
-        await prefs.setInt('big_blind', newBigBlind);
+        await prefs.setDouble('small_blind', newSmallBlind);
+        await prefs.setDouble('big_blind', newBigBlind);
       }
     }
   }
@@ -5458,9 +5336,9 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     // posted a blind which isn't recorded in the action list.
     if (totalBet == 0.0 && undoingStreet == BettingRound.preflop) {
       if (playerId == gameState.effectiveSBPosition) {
-        totalBet = gameState.smallBlind.toDouble();
+        totalBet = gameState.smallBlind;
       } else if (playerId == gameState.effectiveBBPosition) {
-        totalBet = gameState.bigBlind.toDouble();
+        totalBet = gameState.bigBlind;
       }
     }
 
@@ -7263,4 +7141,144 @@ class _CardScatterPainter extends CustomPainter {
   @override
   bool shouldRepaint(_CardScatterPainter oldDelegate) =>
       oldDelegate.progress != progress || oldDelegate.seed != seed;
+}
+
+/// Overlay widget for the stack range ring shown on long-press of a seat.
+class _StackRingOverlayWidget extends StatefulWidget {
+  final Offset center;
+  final double size;
+  final StackRange currentRange;
+  final ValueNotifier<StackRange> hoveredNotifier;
+  final StackConfidence confidence;
+
+  const _StackRingOverlayWidget({
+    required this.center,
+    required this.size,
+    required this.currentRange,
+    required this.hoveredNotifier,
+    required this.confidence,
+  });
+
+  @override
+  State<_StackRingOverlayWidget> createState() => _StackRingOverlayWidgetState();
+}
+
+class _StackRingOverlayWidgetState extends State<_StackRingOverlayWidget>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _anim;
+  late Animation<double> _scale;
+
+  @override
+  void initState() {
+    super.initState();
+    _anim = AnimationController(vsync: this, duration: const Duration(milliseconds: 200));
+    _scale = CurvedAnimation(parent: _anim, curve: Curves.easeOutBack);
+    _anim.forward();
+    widget.hoveredNotifier.addListener(_rebuild);
+  }
+
+  void _rebuild() { if (mounted) setState(() {}); }
+
+  @override
+  void dispose() {
+    widget.hoveredNotifier.removeListener(_rebuild);
+    _anim.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final half = widget.size / 2;
+    final hovered = widget.hoveredNotifier.value;
+
+    return IgnorePointer(
+      child: Material(
+        color: Colors.transparent,
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: Container(color: Colors.black.withValues(alpha: 0.85)),
+            ),
+            Positioned(
+              left: widget.center.dx - half,
+              top: widget.center.dy - half,
+              child: AnimatedBuilder(
+                animation: _scale,
+                builder: (_, __) => Transform.scale(
+                  scale: _scale.value,
+                  child: SizedBox(
+                    width: widget.size,
+                    height: widget.size,
+                    child: CustomPaint(
+                      painter: _StackRingPainter(
+                        currentRange: widget.currentRange,
+                        hoveredRange: hovered,
+                      ),
+                      child: Center(
+                        child: Text(
+                          StackBucketHelper.rangeLabel(hovered),
+                          style: GoogleFonts.ibmPlexSans(
+                            fontSize: 16,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                            decoration: TextDecoration.none,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _StackRingPainter extends CustomPainter {
+  final StackRange currentRange;
+  final StackRange hoveredRange;
+
+  static const int _segmentCount = 7;
+  static const double _gapDeg = 3.0;
+  static const double _segmentDeg = (360.0 - _gapDeg * _segmentCount) / _segmentCount;
+  static final double _segmentRad = _segmentDeg * math.pi / 180;
+  static final double _gapRad = _gapDeg * math.pi / 180;
+  static const double _startAngle = -math.pi / 2;
+
+  static const Color _activeLilac = Color(0xFFD4A5F0);
+  static const List<Color> _inactiveShades = [
+    Color(0xFF3D3548), Color(0xFF4A4255), Color(0xFF3A3345),
+    Color(0xFF484058), Color(0xFF3D3548), Color(0xFF4A4255),
+    Color(0xFF3A3345),
+  ];
+
+  _StackRingPainter({required this.currentRange, required this.hoveredRange});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    const strokeWidth = 24.0;
+    final radius = (size.width / 2) - strokeWidth / 2 - 4;
+    final rect = Rect.fromCircle(center: center, radius: radius);
+
+    for (int i = 0; i < _segmentCount; i++) {
+      final range = StackRange.values[i];
+      final startAngle = _startAngle + i * (_segmentRad + _gapRad);
+      final isHovered = range == hoveredRange;
+      final paint = Paint()
+        ..color = isHovered ? _activeLilac : _inactiveShades[i]
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = isHovered ? 28.0 : strokeWidth
+        ..strokeCap = StrokeCap.butt;
+      canvas.drawArc(rect, startAngle, _segmentRad, false, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(_StackRingPainter old) =>
+      old.currentRange != currentRange || old.hoveredRange != hoveredRange;
 }

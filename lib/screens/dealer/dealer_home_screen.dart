@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/club.dart';
+import '../../models/poker_game_state.dart' show formatBlindValue;
 import '../../models/poker_table.dart';
 import '../../models/dealer_session.dart';
 import '../../services/club_service.dart';
@@ -782,8 +783,8 @@ class _SessionSettingsDialog extends StatefulWidget {
 }
 
 class _SessionSettingsDialogState extends State<_SessionSettingsDialog> {
-  late int _smallBlind;
-  late int _bigBlind;
+  late double _smallBlind;
+  late double _bigBlind;
   late bool _hasBBante;
   late String _gameType;
   late int _buttonPosition;
@@ -823,7 +824,7 @@ class _SessionSettingsDialogState extends State<_SessionSettingsDialog> {
                       ),
                       const SizedBox(height: 4),
                       TextFormField(
-                        initialValue: _smallBlind.toString(),
+                        initialValue: formatBlindValue(_smallBlind),
                         keyboardType: TextInputType.number,
                         style: const TextStyle(color: Colors.white),
                         decoration: InputDecoration(
@@ -835,7 +836,7 @@ class _SessionSettingsDialogState extends State<_SessionSettingsDialog> {
                           ),
                         ),
                         onChanged: (v) {
-                          _smallBlind = int.tryParse(v) ?? _smallBlind;
+                          _smallBlind = double.tryParse(v) ?? _smallBlind;
                         },
                       ),
                     ],
@@ -852,7 +853,7 @@ class _SessionSettingsDialogState extends State<_SessionSettingsDialog> {
                       ),
                       const SizedBox(height: 4),
                       TextFormField(
-                        initialValue: _bigBlind.toString(),
+                        initialValue: formatBlindValue(_bigBlind),
                         keyboardType: TextInputType.number,
                         style: const TextStyle(color: Colors.white),
                         decoration: InputDecoration(
@@ -864,7 +865,7 @@ class _SessionSettingsDialogState extends State<_SessionSettingsDialog> {
                           ),
                         ),
                         onChanged: (v) {
-                          _bigBlind = int.tryParse(v) ?? _bigBlind;
+                          _bigBlind = double.tryParse(v) ?? _bigBlind;
                         },
                       ),
                     ],

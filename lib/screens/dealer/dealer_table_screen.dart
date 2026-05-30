@@ -108,8 +108,8 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
   double _rebuyStack = 0;
 
   // Local blind state (can be changed during session)
-  int _smallBlind = 0;
-  int _bigBlind = 0;
+  double _smallBlind = 0;
+  double _bigBlind = 0;
 
   // Dealer-player tracking: seat number if dealer is also playing, null otherwise
   int? _dealerPlayingSeat;
@@ -3079,10 +3079,10 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
   }
 
   Future<void> _showChangeBlindsDialog() async {
-    final smallBlindController = TextEditingController(text: _smallBlind.toString());
-    final bigBlindController = TextEditingController(text: _bigBlind.toString());
+    final smallBlindController = TextEditingController(text: formatBlindValue(_smallBlind));
+    final bigBlindController = TextEditingController(text: formatBlindValue(_bigBlind));
 
-    final result = await showDialog<Map<String, int>>(
+    final result = await showDialog<Map<String, double>>(
       context: context,
       builder: (context) => Dialog(
         backgroundColor: const Color(0xFF101115),
@@ -3187,8 +3187,8 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                   const SizedBox(width: 11),
                   GestureDetector(
                     onTap: () {
-                      final newSmallBlind = int.tryParse(smallBlindController.text) ?? _smallBlind;
-                      final newBigBlind = int.tryParse(bigBlindController.text) ?? _bigBlind;
+                      final newSmallBlind = double.tryParse(smallBlindController.text) ?? _smallBlind;
+                      final newBigBlind = double.tryParse(bigBlindController.text) ?? _bigBlind;
 
                       if (newSmallBlind >= newBigBlind) {
                         ScaffoldMessenger.of(context).showSnackBar(
@@ -4844,11 +4844,11 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
     if (_gameState == null) return 0;
 
     if (seatNumber == _gameState!.effectiveSBPosition) {
-      return _dealerSession.smallBlind.toDouble();
+      return _dealerSession.smallBlind;
     } else if (seatNumber == _gameState!.effectiveBBPosition) {
-      double bbAmount = _dealerSession.bigBlind.toDouble();
+      double bbAmount = _dealerSession.bigBlind;
       if (_dealerSession.hasBBante) {
-        bbAmount += _dealerSession.bigBlind.toDouble(); // BB + ante
+        bbAmount += _dealerSession.bigBlind; // BB + ante
       }
       return bbAmount;
     }
@@ -4872,7 +4872,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
 
     // On preflop, minimum bet is the big blind (blinds are already posted)
     if (currentStreet == BettingRound.preflop && maxBet == 0) {
-      maxBet = _dealerSession.bigBlind.toDouble();
+      maxBet = _dealerSession.bigBlind;
     }
 
     _gameState!.currentBet = maxBet;

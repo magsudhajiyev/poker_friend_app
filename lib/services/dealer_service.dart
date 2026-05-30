@@ -19,8 +19,8 @@ class DealerService {
   static Future<DealerSession> startSession({
     required String clubId,
     required String tableId,
-    int smallBlind = 1,
-    int bigBlind = 2,
+    double smallBlind = 1.0,
+    double bigBlind = 2.0,
     bool hasBBante = false,
     String gameType = 'cash',
     int buttonPosition = 1,
@@ -902,8 +902,8 @@ class DealerService {
   /// Update session blinds (for mid-session blind changes)
   static Future<void> updateSessionBlinds({
     required String sessionId,
-    required int smallBlind,
-    required int bigBlind,
+    required double smallBlind,
+    required double bigBlind,
   }) async {
     await _firestore
         .collection(_dealerSessionsCollection)

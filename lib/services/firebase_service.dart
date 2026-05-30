@@ -21,8 +21,8 @@ class FirebaseService {
 
   // Create a new poker session
   static Future<String> createSession({
-    required int smallBlind,
-    required int bigBlind,
+    required double smallBlind,
+    required double bigBlind,
     required int playerCount,
     int? ourSeatNumber,
     GameType gameType = GameType.cash,
@@ -154,8 +154,8 @@ class FirebaseService {
     String? heroPositionName,
     int? heroSeatNumber, // Seat number for stats comparison
     Map<int, String>? playerNames,
-    int? smallBlind,
-    int? bigBlind,
+    double? smallBlind,
+    double? bigBlind,
     String? gameType,
     // Chopped pot fields
     bool? isChoppedPot,
@@ -906,8 +906,8 @@ class FirebaseService {
     int? handsLogged,
     double? biggestPot,
     String? sessionStatus,
-    int? smallBlind,
-    int? bigBlind,
+    double? smallBlind,
+    double? bigBlind,
     bool? hasBBante,
     List<Map<String, dynamic>>? rebuys,
     double? totalBuyIn,

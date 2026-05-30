@@ -849,7 +849,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         totalBuyIn: 600.0,
         handsPlayed: 47,
         biggestPot: 95000,
-        biggestPotBB: 1000,
+        biggestPotBB: 1000.0,
         durationMinutes: 185,
         finishedPlace: 11,
         fieldSize: 28,

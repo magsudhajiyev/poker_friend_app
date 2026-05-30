@@ -8,7 +8,7 @@ import '../models/stack_bucket.dart';
 /// Long-press and drag to select a range without lifting finger.
 class StackRangeCircle extends StatefulWidget {
   final double currentStack;
-  final int bigBlind;
+  final double bigBlind;
   final StackConfidence confidence;
   final bool isHero;
   final bool isInteractive;

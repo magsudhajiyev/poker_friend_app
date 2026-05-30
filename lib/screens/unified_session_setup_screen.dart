@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../l10n/app_localizations.dart';
 import '../models/game_types.dart';
 import '../models/hand_state_machine.dart';
+import '../models/poker_game_state.dart' show formatBlindValue;
 import '../services/display_identity_service.dart';
 import '../widgets/poker_table_widget.dart';
 import '../widgets/seat_config_sheet.dart';
@@ -44,8 +45,8 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
 
   // ─── Session settings ────────────────────────────────────────────
   GameType _gameType = GameType.cash;
-  int _smallBlind = 1;
-  int _bigBlind = 2;
+  double _smallBlind = 1;
+  double _bigBlind = 2;
   bool _hasBBante = false;
 
   // ─── Table state ─────────────────────────────────────────────────
@@ -65,8 +66,8 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
 
   // ─── Validation ──────────────────────────────────────────────────
   bool get _isFormValid {
-    final sb = int.tryParse(_sbController.text);
-    final bb = int.tryParse(_bbController.text);
+    final sb = double.tryParse(_sbController.text);
+    final bb = double.tryParse(_bbController.text);
     final hasBlinds = (sb != null && sb > 0) && (bb != null && bb > 0);
     final hasBuyIn = _buyInController.text.isNotEmpty &&
         double.tryParse(_buyInController.text) != null;
@@ -103,8 +104,8 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
   Future<void> _loadDefaults() async {
     final prefs = await SharedPreferences.getInstance();
     final savedGameType = prefs.getString(_kLastGameType);
-    final savedSB = prefs.getInt(_kLastSmallBlind);
-    final savedBB = prefs.getInt(_kLastBigBlind);
+    final savedSB = prefs.getDouble(_kLastSmallBlind);
+    final savedBB = prefs.getDouble(_kLastBigBlind);
     final savedBuyIn = prefs.getDouble(_kLastBuyIn);
     final savedBBante = prefs.getBool(_kLastHasBBante);
 
@@ -125,8 +126,8 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
       }
       if (savedBBante != null) _hasBBante = savedBBante;
     });
-    _sbController.text = _smallBlind.toString();
-    _bbController.text = _bigBlind.toString();
+    _sbController.text = formatBlindValue(_smallBlind);
+    _bbController.text = formatBlindValue(_bigBlind);
   }
 
   Future<void> _loadHeroName() async {
@@ -170,8 +171,8 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(
         _kLastGameType, _gameType == GameType.tournament ? 'tournament' : 'cash');
-    await prefs.setInt(_kLastSmallBlind, _smallBlind);
-    await prefs.setInt(_kLastBigBlind, _bigBlind);
+    await prefs.setDouble(_kLastSmallBlind, _smallBlind);
+    await prefs.setDouble(_kLastBigBlind, _bigBlind);
     final buyIn = double.tryParse(_buyInController.text);
     if (buyIn != null) await prefs.setDouble(_kLastBuyIn, buyIn);
     await prefs.setBool(_kLastHasBBante, _hasBBante);
@@ -341,8 +342,8 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
       _smallBlind = 100;
       _bigBlind = 200;
     }
-    _sbController.text = _smallBlind.toString();
-    _bbController.text = _bigBlind.toString();
+    _sbController.text = formatBlindValue(_smallBlind);
+    _bbController.text = formatBlindValue(_bigBlind);
   }
 
   // ─── BUILD ───────────────────────────────────────────────────────
@@ -579,6 +580,7 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
                   _isSBFocused,
                   true,
                   (v) => setState(() => _smallBlind = v),
+                  allowDecimal: _gameType == GameType.cash,
                 ),
               ),
               const SizedBox(width: 8),
@@ -590,6 +592,7 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
                   _isBBFocused,
                   true,
                   (v) => setState(() => _bigBlind = v),
+                  allowDecimal: _gameType == GameType.cash,
                 ),
               ),
             ],
@@ -875,8 +878,9 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
     FocusNode focusNode,
     bool isFocused,
     bool showCurrencyPrefix,
-    ValueChanged<int> onChanged,
-  ) {
+    ValueChanged<double> onChanged, {
+    bool allowDecimal = false,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -917,9 +921,15 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
                 child: TextField(
                   controller: controller,
                   focusNode: focusNode,
-                  keyboardType: TextInputType.number,
+                  keyboardType: allowDecimal
+                      ? const TextInputType.numberWithOptions(decimal: true)
+                      : TextInputType.number,
                   textInputAction: TextInputAction.done,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  inputFormatters: [
+                    allowDecimal
+                        ? FilteringTextInputFormatter.allow(RegExp(r'[\d.]'))
+                        : FilteringTextInputFormatter.digitsOnly,
+                  ],
                   style: GoogleFonts.ibmPlexSans(
                     color: Colors.white,
                     fontSize: 15,
@@ -943,7 +953,7 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
                     isDense: true,
                   ),
                   onChanged: (value) {
-                    final v = int.tryParse(value);
+                    final v = double.tryParse(value);
                     if (v != null && v > 0) onChanged(v);
                     setState(() {});
                   },

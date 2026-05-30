@@ -38,8 +38,8 @@ class SeatSetupScreen extends StatefulWidget {
   final double? buyInAmount;
   final double? startingStack;
   final GameType? gameType;
-  final int? smallBlind;
-  final int? bigBlind;
+  final double? smallBlind;
+  final double? bigBlind;
   final bool? hasBBante;
 
   const SeatSetupScreen({

@@ -3,6 +3,7 @@ import '../l10n/app_localizations.dart';
 import '../services/currency_service.dart';
 import '../widgets/modern_setting_row.dart';
 import '../models/game_types.dart';
+import '../models/poker_game_state.dart' show formatBlindValue;
 import 'poker_hand_screen.dart';
 import '../widgets/loading_screen.dart';
 import 'logging_mode_selection_screen.dart';
@@ -18,8 +19,8 @@ class IntroductionScreen extends StatefulWidget {
 }
 
 class _IntroductionScreenState extends State<IntroductionScreen> {
-  int smallBlind = 1;
-  int bigBlind = 2;
+  double smallBlind = 1;
+  double bigBlind = 2;
   int numberOfPlayers = 6;
   GameType gameType = GameType.cash;
   bool bbAnteEnabled = false;
@@ -103,7 +104,7 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
                   children: [
                     _buildSettingCard(
                       title: l10n.introSmallBlind,
-                      value: gameType == GameType.cash ? CurrencyService.formatCash(smallBlind.toDouble()) : '$smallBlind',
+                      value: gameType == GameType.cash ? CurrencyService.formatCash(smallBlind) : formatBlindValue(smallBlind),
                       iconPath: 'icons/small_blind.png',
                       onDecrement: () {
                         if (smallBlind > 1) {
@@ -121,7 +122,7 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
                     ),
                     _buildSettingCard(
                       title: l10n.introBigBlind,
-                      value: gameType == GameType.cash ? CurrencyService.formatCash(bigBlind.toDouble()) : '$bigBlind',
+                      value: gameType == GameType.cash ? CurrencyService.formatCash(bigBlind) : formatBlindValue(bigBlind),
                       iconPath: 'icons/big_blind.png',
                       onDecrement: () {
                         if (bigBlind > 1) {
@@ -350,9 +351,9 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
     );
   }
 
-  Future<void> _showBlindInputDialog(String title, int currentValue, Function(int) onChanged) async {
+  Future<void> _showBlindInputDialog(String title, double currentValue, Function(double) onChanged) async {
     final l10n = AppLocalizations.of(context);
-    final TextEditingController controller = TextEditingController(text: currentValue.toString());
+    final TextEditingController controller = TextEditingController(text: formatBlindValue(currentValue));
 
     return showDialog<void>(
       context: context,
@@ -386,7 +387,7 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
             ),
             TextButton(
               onPressed: () {
-                final value = int.tryParse(controller.text);
+                final value = double.tryParse(controller.text);
                 if (value != null && value > 0) {
                   onChanged(value);
                   Navigator.of(context).pop();

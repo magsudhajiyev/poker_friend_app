@@ -158,8 +158,8 @@ class _StreetSnapshot {
 
 class PokerGameState {
   final int numberOfPlayers;
-  int smallBlind;
-  int bigBlind;
+  double smallBlind;
+  double bigBlind;
   final bool isCashGame;
   bool hasBBante = false;
   
@@ -1317,7 +1317,7 @@ class PokerGameState {
 
   double getMinimumBet() {
     // For betting (not raising), minimum is always 1 big blind
-    return bigBlind.toDouble();
+    return bigBlind;
   }
 
   double getMinimumRaise() {
@@ -1326,9 +1326,9 @@ class PokerGameState {
     // If someone raises to 300 (increment=200), next min = 300 + 200 = 500
     // Postflop: bet 20, raise min = 20 + 20 = 40. Next min = 40 + 20 = 60.
     if (currentBet == 0) {
-      return bigBlind.toDouble();
+      return bigBlind;
     }
-    final raiseSize = _lastRaiseSize > 0 ? _lastRaiseSize : bigBlind.toDouble();
+    final raiseSize = _lastRaiseSize > 0 ? _lastRaiseSize : bigBlind;
     return currentBet + raiseSize;
   }
 
@@ -1364,8 +1364,8 @@ class PokerGameState {
     }
 
     currentPot = 0.0;
-    currentBet = bigBlind.toDouble();
-    _lastRaiseSize = bigBlind.toDouble(); // BB is the initial raise size
+    currentBet = bigBlind;
+    _lastRaiseSize = bigBlind; // BB is the initial raise size
     _effectiveBBPosition = _determineEffectiveBBPosition(); // Set before posting
 
     // Post blinds
@@ -1381,7 +1381,7 @@ class PokerGameState {
       // Check if SB seat is active and has chips to post blind
       if (sbPlayer.isActive && sbPlayer.currentStack > 0) {
         // Small blind posts
-        double sbAmount = smallBlind.toDouble();
+        double sbAmount = smallBlind;
         if (sbPlayer.currentStack < sbAmount) {
           sbAmount = sbPlayer.currentStack; // All-in for less
         }
@@ -1397,7 +1397,7 @@ class PokerGameState {
 
         if (nextSBPlayer.isActive && nextSBPlayer.currentStack > 0 && nextSBPosition != sbPosition) {
           // Post the SB with the active player
-          double sbAmount = smallBlind.toDouble();
+          double sbAmount = smallBlind;
           if (nextSBPlayer.currentStack < sbAmount) {
             sbAmount = nextSBPlayer.currentStack; // All-in for less
           }
@@ -1412,12 +1412,12 @@ class PokerGameState {
       // Check if BB seat is active and has chips to post blind
       if (bbPlayer.isActive && bbPlayer.currentStack > 0) {
         // Big blind posts
-        double bbAmount = bigBlind.toDouble();
+        double bbAmount = bigBlind;
         double anteAmount = 0.0;
 
         // If BB ante is enabled, BB posts an additional ante equal to BB amount
         if (hasBBante) {
-          anteAmount = bigBlind.toDouble();
+          anteAmount = bigBlind;
         }
 
         double totalBBPost = bbAmount + anteAmount;
@@ -1452,12 +1452,12 @@ class PokerGameState {
 
         if (nextBBPlayer.isActive && nextBBPlayer.currentStack > 0 && nextBBPosition != bbPosition) {
           // Post the BB with the active player
-          double bbAmount = bigBlind.toDouble();
+          double bbAmount = bigBlind;
           double anteAmount = 0.0;
 
           // If BB ante is enabled, BB posts an additional ante equal to BB amount
           if (hasBBante) {
-            anteAmount = bigBlind.toDouble();
+            anteAmount = bigBlind;
           }
 
           double totalBBPost = bbAmount + anteAmount;
@@ -1489,8 +1489,8 @@ class PokerGameState {
           // If BB seat is empty, adjust current bet based on what's actually in the pot
           if (sbPlayer.isActive && sbPlayer.currentStack > 0) {
             // Only SB posted, so minimum bet should be SB amount
-            currentBet = smallBlind.toDouble();
-            _lastRaiseSize = smallBlind.toDouble();
+            currentBet = smallBlind;
+            _lastRaiseSize = smallBlind;
           } else {
             // Both SB and BB empty - no mandatory betting
             currentBet = 0.0;
@@ -1509,7 +1509,7 @@ class PokerGameState {
 
       // Post SB if player is active
       if (sbPlayer.isActive && sbPlayer.currentStack > 0) {
-        double sbAmount = smallBlind.toDouble();
+        double sbAmount = smallBlind;
         if (sbPlayer.currentStack < sbAmount) {
           sbAmount = sbPlayer.currentStack;
         }
@@ -1522,12 +1522,12 @@ class PokerGameState {
 
       // Post BB if player is active
       if (bbPlayer.isActive && bbPlayer.currentStack > 0) {
-        double bbAmount = bigBlind.toDouble();
+        double bbAmount = bigBlind;
         double anteAmount = 0.0;
 
         // If BB ante is enabled, BB posts an additional ante equal to BB amount
         if (hasBBante) {
-          anteAmount = bigBlind.toDouble();
+          anteAmount = bigBlind;
         }
 
         double totalBBPost = bbAmount + anteAmount;
@@ -1859,4 +1859,11 @@ class SidePotCalculator {
 
     return descriptions.join('\n');
   }
+}
+
+/// Formats a blind value for display: whole numbers show without decimals,
+/// fractional values show minimal decimal places (e.g. 0.25, 0.5, 2).
+String formatBlindValue(double v) {
+  if (v == v.roundToDouble()) return v.toInt().toString();
+  return v.toStringAsFixed(2).replaceAll(RegExp(r'0+$'), '').replaceAll(RegExp(r'\.$'), '');
 }

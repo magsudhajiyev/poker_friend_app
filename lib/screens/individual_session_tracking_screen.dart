@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/game_types.dart';
+import '../models/poker_game_state.dart' show formatBlindValue;
 import '../services/firebase_service.dart';
 import '../services/local_storage_service.dart';
 import '../services/auth_service.dart';
@@ -30,8 +31,8 @@ class IndividualSessionTrackingScreen extends StatefulWidget {
   final double buyInAmount;
   final double startingStack;
   final GameType gameType;
-  final int smallBlind;
-  final int bigBlind;
+  final double smallBlind;
+  final double bigBlind;
   final bool hasBBante;
 
   // Optional parameters for when returning from hand tracking
@@ -90,8 +91,8 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
   double _previousStack = 0.0;
 
   // Current blinds (can be updated during session)
-  int _currentSmallBlind = 0;
-  int _currentBigBlind = 0;
+  double _currentSmallBlind = 0;
+  double _currentBigBlind = 0;
   bool _currentHasBBante = false;
 
   // Track if blinds were explicitly changed by user
@@ -394,8 +395,8 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
             _biggestPot = sessionData['biggestPot']?.toDouble() ?? 0.0;
 
             if (!widget.isFromActiveSession) {
-              _currentSmallBlind = sessionData['smallBlind'] ?? _currentSmallBlind;
-              _currentBigBlind = sessionData['bigBlind'] ?? _currentBigBlind;
+              _currentSmallBlind = (sessionData['smallBlind'] as num?)?.toDouble() ?? _currentSmallBlind;
+              _currentBigBlind = (sessionData['bigBlind'] as num?)?.toDouble() ?? _currentBigBlind;
               _currentHasBBante = sessionData['hasBBante'] ?? _currentHasBBante;
             }
 
@@ -777,8 +778,8 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
 
   Future<void> _showUpdateBlindsDialog() async {
     final l10n = AppLocalizations.of(context);
-    final smallBlindController = TextEditingController(text: _currentSmallBlind.toString());
-    final bigBlindController = TextEditingController(text: _currentBigBlind.toString());
+    final smallBlindController = TextEditingController(text: formatBlindValue(_currentSmallBlind));
+    final bigBlindController = TextEditingController(text: formatBlindValue(_currentBigBlind));
 
     final result = await showDialog<Map<String, dynamic>>(
       context: context,
@@ -844,8 +845,8 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
             ),
             TextButton(
               onPressed: () {
-                final smallBlind = int.tryParse(smallBlindController.text);
-                final bigBlind = int.tryParse(bigBlindController.text);
+                final smallBlind = double.tryParse(smallBlindController.text);
+                final bigBlind = double.tryParse(bigBlindController.text);
 
                 if (smallBlind != null && bigBlind != null &&
                     smallBlind > 0 && bigBlind > smallBlind) {
@@ -870,8 +871,8 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
 
     if (result != null) {
       setState(() {
-        _currentSmallBlind = result['smallBlind']!;
-        _currentBigBlind = result['bigBlind']!;
+        _currentSmallBlind = (result['smallBlind'] as num).toDouble();
+        _currentBigBlind = (result['bigBlind'] as num).toDouble();
         _blindsWereChanged = true;
       });
 
@@ -999,10 +1000,10 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
           }
 
           if (result['smallBlind'] != null) {
-            _currentSmallBlind = result['smallBlind'] as int;
+            _currentSmallBlind = (result['smallBlind'] as num).toDouble();
           }
           if (result['bigBlind'] != null) {
-            _currentBigBlind = result['bigBlind'] as int;
+            _currentBigBlind = (result['bigBlind'] as num).toDouble();
           }
           if (result['hasBBante'] != null) {
             _currentHasBBante = result['hasBBante'] as bool;
@@ -2271,7 +2272,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                                     _buildDivider(),
                                     _buildStatRow(l10n.individualTotalInvested, CurrencyService.formatCash(_totalBuyIn)),
                                     _buildDivider(),
-                                    _buildClickableStatRow(l10n.individualBlindsLabel, '$_currentSmallBlind/$_currentBigBlind', _showUpdateBlindsDialog),
+                                    _buildClickableStatRow(l10n.individualBlindsLabel, '${formatBlindValue(_currentSmallBlind)}/${formatBlindValue(_currentBigBlind)}', _showUpdateBlindsDialog),
                                     _buildDivider(),
                                     _buildStatRow(l10n.individualHandsLogged, '$_handsLogged'),
                                   ],

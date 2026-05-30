@@ -275,7 +275,7 @@ Classifies based on VPIP, PFR, 3-bet%, AF thresholds:
   'heroSeatNumber': int,
   'playerNames': { '1': String, '2': String, ... },  // seat → name
   'playerIds': { '1': String, ... },                  // seat → userId (for dealer mode)
-  'smallBlind': int, 'bigBlind': int,
+  'smallBlind': double, 'bigBlind': double,
   'gameType': String,  // 'cash' or 'tournament'
   'isChoppedPot': bool?, 'choppedWinners': List<int>?,
   'individualShares': Map<int, double>?, 'sharePerWinner': double?,
@@ -534,6 +534,9 @@ user_notifications/{notificationId}/
 
 ### Blinds
 - SB and BB always set together
+- Stored as `double` throughout — supports decimal values for small-stakes cash games (e.g. $0.25/$0.50)
+- Cash game input allows decimals; tournament input restricted to whole numbers
+- Display uses `formatBlindValue()` helper (in `poker_game_state.dart`) — shows `0.25` not `0.25000`
 - Can increase during tournament (level changes)
 - On preflop: BET is always invalid, RAISE is always valid
 

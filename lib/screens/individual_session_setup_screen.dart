@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../l10n/app_localizations.dart';
 import '../models/game_types.dart';
+import '../models/poker_game_state.dart' show formatBlindValue;
 import 'individual_session_tracking_screen.dart';
 import 'logging_mode_selection_screen.dart';
 import 'seat_setup_screen.dart';
@@ -31,8 +32,8 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
 
   // Game settings
   GameType gameType = GameType.cash;
-  int smallBlind = 1;
-  int bigBlind = 2;
+  double smallBlind = 1;
+  double bigBlind = 2;
   bool hasBBante = false;
 
   // Form validation
@@ -55,8 +56,8 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
   void initState() {
     super.initState();
     // Initialize blind controllers with default values
-    _smallBlindController.text = smallBlind.toString();
-    _bigBlindController.text = bigBlind.toString();
+    _smallBlindController.text = formatBlindValue(smallBlind);
+    _bigBlindController.text = formatBlindValue(bigBlind);
     _scheduleOnboardingTour();
   }
 
@@ -522,7 +523,7 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
                                     if (hasStackError) ...[
                                       SizedBox(height: 8),
                                       Text(
-                                        AppLocalizations.of(context).individualSetupStackValidation(bigBlind),
+                                        AppLocalizations.of(context).individualSetupStackValidation(bigBlind.toInt()),
                                         style: GoogleFonts.ibmPlexSans(
                                           fontSize: 12,
                                           color: errorBorderColor,
@@ -543,11 +544,11 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
                               Expanded(
                                 child: _buildBlindCard(
                                   title: AppLocalizations.of(context).individualSetupSmallBlind,
-                                  value: gameType == GameType.cash ? '${CurrencyService.symbol}$smallBlind' : '$smallBlind',
+                                  value: gameType == GameType.cash ? '${CurrencyService.symbol}${formatBlindValue(smallBlind)}' : formatBlindValue(smallBlind),
                                   onTap: () => _showBlindInputDialog(AppLocalizations.of(context).individualSetupSmallBlind, smallBlind, (value) {
                                     setState(() {
                                       smallBlind = value;
-                                      _smallBlindController.text = smallBlind.toString();
+                                      _smallBlindController.text = formatBlindValue(smallBlind);
                                     });
                                   }),
                                 ),
@@ -556,11 +557,11 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
                               Expanded(
                                 child: _buildBlindCard(
                                   title: AppLocalizations.of(context).individualSetupBigBlind,
-                                  value: gameType == GameType.cash ? '${CurrencyService.symbol}$bigBlind' : '$bigBlind',
+                                  value: gameType == GameType.cash ? '${CurrencyService.symbol}${formatBlindValue(bigBlind)}' : formatBlindValue(bigBlind),
                                   onTap: () => _showBlindInputDialog(AppLocalizations.of(context).individualSetupBigBlind, bigBlind, (value) {
                                     setState(() {
                                       bigBlind = value;
-                                      _bigBlindController.text = bigBlind.toString();
+                                      _bigBlindController.text = formatBlindValue(bigBlind);
                                     });
                                   }),
                                 ),
@@ -757,8 +758,8 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
     );
   }
 
-  void _showBlindInputDialog(String title, int currentValue, Function(int) onConfirm) {
-    final controller = TextEditingController(text: currentValue.toString());
+  void _showBlindInputDialog(String title, double currentValue, Function(double) onConfirm) {
+    final controller = TextEditingController(text: formatBlindValue(currentValue));
 
     showDialog(
       context: context,
@@ -822,7 +823,7 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
             ),
             TextButton(
               onPressed: () {
-                final value = int.tryParse(controller.text);
+                final value = double.tryParse(controller.text);
                 if (value != null && value > 0) {
                   onConfirm(value);
                   Navigator.pop(context);
@@ -852,14 +853,14 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
       // Set default cash game blinds
       smallBlind = 1;
       bigBlind = 2;
-      _smallBlindController.text = smallBlind.toString();
-      _bigBlindController.text = bigBlind.toString();
+      _smallBlindController.text = formatBlindValue(smallBlind);
+      _bigBlindController.text = formatBlindValue(bigBlind);
     } else {
       // For MTT, set default tournament blinds
       smallBlind = 100;
       bigBlind = 200;
-      _smallBlindController.text = smallBlind.toString();
-      _bigBlindController.text = bigBlind.toString();
+      _smallBlindController.text = formatBlindValue(smallBlind);
+      _bigBlindController.text = formatBlindValue(bigBlind);
     }
   }
 

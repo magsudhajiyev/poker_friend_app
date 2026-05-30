@@ -18,7 +18,7 @@ class SessionSummaryData {
   final double totalBuyIn;
   final int handsPlayed;
   final double biggestPot;
-  final int? biggestPotBB; // BB level when biggest pot occurred
+  final double? biggestPotBB; // BB level when biggest pot occurred
   final int durationMinutes;
   final int? finishedPlace; // tournament only
   final int? fieldSize; // tournament only

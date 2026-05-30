@@ -125,15 +125,15 @@ class Club {
 
 /// Settings for a club
 class ClubSettings {
-  final int defaultSmallBlind;
-  final int defaultBigBlind;
+  final double defaultSmallBlind;
+  final double defaultBigBlind;
   final int defaultPlayerCount;
   final bool defaultHasBBante;
   final String defaultGameType; // 'cash' or 'tournament'
 
   ClubSettings({
-    this.defaultSmallBlind = 1,
-    this.defaultBigBlind = 2,
+    this.defaultSmallBlind = 1.0,
+    this.defaultBigBlind = 2.0,
     this.defaultPlayerCount = 9,
     this.defaultHasBBante = false,
     this.defaultGameType = 'cash',
@@ -141,8 +141,8 @@ class ClubSettings {
 
   factory ClubSettings.fromMap(Map<String, dynamic> map) {
     return ClubSettings(
-      defaultSmallBlind: map['defaultSmallBlind'] ?? 1,
-      defaultBigBlind: map['defaultBigBlind'] ?? 2,
+      defaultSmallBlind: (map['defaultSmallBlind'] as num?)?.toDouble() ?? 1.0,
+      defaultBigBlind: (map['defaultBigBlind'] as num?)?.toDouble() ?? 2.0,
       defaultPlayerCount: map['defaultPlayerCount'] ?? 9,
       defaultHasBBante: map['defaultHasBBante'] ?? false,
       defaultGameType: map['defaultGameType'] ?? 'cash',
@@ -160,8 +160,8 @@ class ClubSettings {
   }
 
   ClubSettings copyWith({
-    int? defaultSmallBlind,
-    int? defaultBigBlind,
+    double? defaultSmallBlind,
+    double? defaultBigBlind,
     int? defaultPlayerCount,
     bool? defaultHasBBante,
     String? defaultGameType,

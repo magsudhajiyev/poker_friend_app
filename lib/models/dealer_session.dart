@@ -139,8 +139,8 @@ class DealerSession {
   final int currentHandNumber;
   final String? currentHandId;
   final int buttonPosition;
-  final int smallBlind;
-  final int bigBlind;
+  final double smallBlind;
+  final double bigBlind;
   final bool hasBBante;
   final String gameType;
   final DateTime startTime;
@@ -158,8 +158,8 @@ class DealerSession {
     this.currentHandNumber = 0,
     this.currentHandId,
     this.buttonPosition = 1,
-    this.smallBlind = 1,
-    this.bigBlind = 2,
+    this.smallBlind = 1.0,
+    this.bigBlind = 2.0,
     this.hasBBante = false,
     this.gameType = 'cash',
     required this.startTime,
@@ -191,8 +191,8 @@ class DealerSession {
       currentHandNumber: data['currentHandNumber'] ?? 0,
       currentHandId: data['currentHandId'],
       buttonPosition: data['buttonPosition'] ?? 1,
-      smallBlind: data['smallBlind'] ?? 1,
-      bigBlind: data['bigBlind'] ?? 2,
+      smallBlind: (data['smallBlind'] as num?)?.toDouble() ?? 1,
+      bigBlind: (data['bigBlind'] as num?)?.toDouble() ?? 2,
       hasBBante: data['hasBBante'] ?? false,
       gameType: data['gameType'] ?? 'cash',
       startTime: (data['startTime'] as Timestamp?)?.toDate() ?? DateTime.now(),
@@ -214,8 +214,8 @@ class DealerSession {
       currentHandNumber: map['currentHandNumber'] ?? 0,
       currentHandId: map['currentHandId'],
       buttonPosition: map['buttonPosition'] ?? 1,
-      smallBlind: map['smallBlind'] ?? 1,
-      bigBlind: map['bigBlind'] ?? 2,
+      smallBlind: (map['smallBlind'] as num?)?.toDouble() ?? 1,
+      bigBlind: (map['bigBlind'] as num?)?.toDouble() ?? 2,
       hasBBante: map['hasBBante'] ?? false,
       gameType: map['gameType'] ?? 'cash',
       startTime: DateTime.tryParse(map['startTime'] ?? '') ?? DateTime.now(),

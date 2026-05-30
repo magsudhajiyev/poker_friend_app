@@ -59,7 +59,7 @@ class StackBucketHelper {
   /// Hero always gets exact amount; opponents get range label.
   static String displayForPlayer({
     required double stack,
-    required int bigBlind,
+    required double bigBlind,
     required bool isHero,
     required String Function(double) formatCurrency,
   }) {
@@ -72,7 +72,7 @@ class StackBucketHelper {
   }
 
   /// Returns approximate BB label like "~85bb".
-  static String bbLabel(double stack, int bigBlind) {
+  static String bbLabel(double stack, double bigBlind) {
     if (bigBlind <= 0) return stack.toStringAsFixed(0);
     final bb = stack / bigBlind;
     return '~${bb.round()} BB';
