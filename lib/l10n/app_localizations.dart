@@ -11556,19 +11556,19 @@ abstract class AppLocalizations {
   /// No description provided for @supportCategoryLabel.
   ///
   /// In en, this message translates to:
-  /// **'CATEGORY'**
+  /// **'Category'**
   String get supportCategoryLabel;
 
   /// No description provided for @supportSubjectLabel.
   ///
   /// In en, this message translates to:
-  /// **'SUBJECT'**
+  /// **'Subject'**
   String get supportSubjectLabel;
 
   /// No description provided for @supportDescriptionLabel.
   ///
   /// In en, this message translates to:
-  /// **'DESCRIPTION'**
+  /// **'Description'**
   String get supportDescriptionLabel;
 
   /// No description provided for @supportSubjectHint.

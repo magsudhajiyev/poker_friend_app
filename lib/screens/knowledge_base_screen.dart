@@ -14,23 +14,45 @@ class KnowledgeBaseScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+
+    if (section == KnowledgeBaseSection.clubs) {
+      return _buildClubsScreen(context, l10n);
+    }
+
     return Scaffold(
       backgroundColor: AppColors.bgPrimary,
       body: Column(
         children: [
           TopNavBar(
-            title: section == KnowledgeBaseSection.stats
-                ? l10n.kbStatsTitle
-                : l10n.kbClubsTitle,
+            title: l10n.kbStatsTitle,
             onBack: () => Navigator.pop(context),
             backgroundColor: AppColors.bgPrimary,
           ),
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 40),
-              child: section == KnowledgeBaseSection.stats
-                  ? _buildStatsContent(l10n)
-                  : _buildClubsContent(l10n),
+              child: _buildStatsContent(l10n),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildClubsScreen(BuildContext context, AppLocalizations l10n) {
+    return Scaffold(
+      backgroundColor: AppColors.bgPrimary,
+      body: Column(
+        children: [
+          TopNavBar(
+            title: l10n.kbClubsTitle,
+            onBack: () => Navigator.pop(context),
+            backgroundColor: AppColors.bgPrimary,
+          ),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 40),
+              child: _buildClubsContent(l10n),
             ),
           ),
         ],
@@ -42,7 +64,6 @@ class KnowledgeBaseScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Header section
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -79,7 +100,6 @@ class KnowledgeBaseScreen extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 24),
-        // Stat cards
         _buildStatCard(l10n.kbVpipName, l10n.kbVpipFullName, l10n.kbVpipDescription),
         const SizedBox(height: 16),
         _buildStatCard(l10n.kbPfrName, l10n.kbPfrFullName, l10n.kbPfrDescription),
@@ -108,7 +128,6 @@ class KnowledgeBaseScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Dark pill chip
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
@@ -137,7 +156,6 @@ class KnowledgeBaseScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          // Title
           Text(
             title,
             style: GoogleFonts.ibmPlexSans(
@@ -148,7 +166,6 @@ class KnowledgeBaseScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          // Description
           Text(
             description,
             style: GoogleFonts.ibmPlexSans(
@@ -167,98 +184,99 @@ class KnowledgeBaseScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildInfoText(l10n.kbClubsIntro),
+        // Header section
+        SizedBox(
+          height: 110,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Icon(
+                Icons.calendar_month_rounded,
+                color: Color(0xFF4879FF),
+                size: 24,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                l10n.kbClubsTitle,
+                style: GoogleFonts.ibmPlexSans(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                  height: 20 / 17,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                l10n.kbClubsIntro,
+                style: GoogleFonts.ibmPlexSans(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w400,
+                  color: AppColors.textSecondary,
+                  height: 22 / 15,
+                ),
+              ),
+            ],
+          ),
+        ),
         const SizedBox(height: 24),
-        _buildFeatureItem(
-          Icons.event_rounded,
-          l10n.kbLiveEventsTitle,
-          l10n.kbLiveEventsDescription,
-        ),
-        _buildFeatureItem(
-          Icons.leaderboard_rounded,
-          l10n.kbLiveRankingsTitle,
-          l10n.kbLiveRankingsDescription,
-        ),
-        _buildFeatureItem(
-          Icons.people_rounded,
-          l10n.kbOpponentTrackingTitle,
-          l10n.kbOpponentTrackingDescription,
-        ),
-        _buildFeatureItem(
-          Icons.qr_code_scanner_rounded,
-          l10n.kbQrSeatTitle,
-          l10n.kbQrSeatDescription,
-        ),
-        _buildFeatureItem(
-          Icons.record_voice_over_rounded,
-          l10n.kbDealerLoggingTitle,
-          l10n.kbDealerLoggingDescription,
-        ),
-        _buildFeatureItem(
-          Icons.bar_chart_rounded,
-          l10n.kbSessionStatsTitle,
-          l10n.kbSessionStatsDescription,
-        ),
+        // Feature cards
+        _buildClubCard(l10n.kbLiveEventsTitle, l10n.kbLiveEventsDescription),
+        const SizedBox(height: 16),
+        _buildClubCard(l10n.kbLiveRankingsTitle, l10n.kbLiveRankingsDescription),
+        const SizedBox(height: 16),
+        _buildClubCard(l10n.kbOpponentTrackingTitle, l10n.kbOpponentTrackingDescription),
+        const SizedBox(height: 16),
+        _buildClubCard(l10n.kbQrSeatTitle, l10n.kbQrSeatDescription),
+        const SizedBox(height: 16),
+        _buildClubCard(l10n.kbDealerLoggingTitle, l10n.kbDealerLoggingDescription),
+        const SizedBox(height: 16),
+        _buildClubCard(l10n.kbSessionStatsTitle, l10n.kbSessionStatsDescription),
       ],
     );
   }
 
-  Widget _buildInfoText(String text) {
-    return Text(
-      text,
-      style: GoogleFonts.ibmPlexSans(
-        fontSize: 16,
-        color: const Color(0xFF8C8C8C),
-        height: 1.5,
-      ),
-    );
-  }
-
-  Widget _buildFeatureItem(IconData icon, String title, String description) {
+  Widget _buildClubCard(String title, String description) {
     return Container(
       width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.bgSurface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFF1C1F21)),
+        borderRadius: BorderRadius.circular(16),
       ),
-      child: Row(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 40,
-            height: 40,
+            width: 28,
+            height: 28,
             decoration: BoxDecoration(
-              color: const Color(0xFF87ED81).withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(12),
+              color: const Color(0xFF4879FF),
+              borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(icon, color: const Color(0xFF87ED81), size: 20),
+            child: const Icon(
+              Icons.videogame_asset_rounded,
+              color: Colors.white,
+              size: 16,
+            ),
           ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: GoogleFonts.ibmPlexSans(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  description,
-                  style: GoogleFonts.ibmPlexSans(
-                    fontSize: 14,
-                    color: const Color(0xFF8C8C8C),
-                    height: 1.5,
-                  ),
-                ),
-              ],
+          const SizedBox(height: 16),
+          Text(
+            title,
+            style: GoogleFonts.ibmPlexSans(
+              fontSize: 17,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+              height: 20 / 17,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            description,
+            style: GoogleFonts.ibmPlexSans(
+              fontSize: 15,
+              fontWeight: FontWeight.w400,
+              color: AppColors.textSecondary,
+              height: 22 / 15,
             ),
           ),
         ],

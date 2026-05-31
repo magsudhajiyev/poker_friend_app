@@ -201,16 +201,8 @@ class _AuthWrapperState extends State<AuthWrapper> {
   }
 
   Widget _buildLoadingScreen(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF02050B),
-      body: Center(
-        child: Image.asset(
-          'assets/logo.png',
-          width: 140,
-          height: 140,
-          fit: BoxFit.contain,
-        ),
-      ),
+    return const Scaffold(
+      backgroundColor: Color(0xFF02050B),
     );
   }
 

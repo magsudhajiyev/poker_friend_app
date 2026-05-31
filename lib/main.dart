@@ -6,6 +6,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'firebase_options.dart';
 import 'theme/app_theme.dart';
 import 'screens/auth_wrapper.dart';
+import 'screens/splash_screen.dart';
 import 'screens/player/player_session_screen.dart';
 import 'services/notification_service.dart';
 import 'services/fcm_service.dart';
@@ -335,7 +336,7 @@ class PokerTrackerApp extends StatelessWidget {
           supportedLocales: AppLocalizations.supportedLocales,
           initialRoute: '/',
           routes: {
-            '/': (context) => const AuthWrapper(),
+            '/': (context) => const SplashScreen(),
           },
           onGenerateRoute: (settings) {
             // Handle player session route with arguments

@@ -6631,13 +6631,13 @@ class AppLocalizationsEs extends AppLocalizations {
   String get supportSubmitButton => 'Enviar';
 
   @override
-  String get supportCategoryLabel => 'CATEGORÍA';
+  String get supportCategoryLabel => 'Categoría';
 
   @override
-  String get supportSubjectLabel => 'ASUNTO';
+  String get supportSubjectLabel => 'Asunto';
 
   @override
-  String get supportDescriptionLabel => 'DESCRIPCIÓN';
+  String get supportDescriptionLabel => 'Descripción';
 
   @override
   String get supportSubjectHint => 'Breve resumen del problema';

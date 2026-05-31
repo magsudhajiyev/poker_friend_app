@@ -6656,13 +6656,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String get supportSubmitButton => 'Envoyer';
 
   @override
-  String get supportCategoryLabel => 'CATÉGORIE';
+  String get supportCategoryLabel => 'Catégorie';
 
   @override
-  String get supportSubjectLabel => 'SUJET';
+  String get supportSubjectLabel => 'Sujet';
 
   @override
-  String get supportDescriptionLabel => 'DESCRIPTION';
+  String get supportDescriptionLabel => 'Description';
 
   @override
   String get supportSubjectHint => 'Bref résumé du problème';

@@ -3771,9 +3771,9 @@
   },
   "supportTitle": "Help & Support",
   "supportSubmitButton": "Submit",
-  "supportCategoryLabel": "CATEGORY",
-  "supportSubjectLabel": "SUBJECT",
-  "supportDescriptionLabel": "DESCRIPTION",
+  "supportCategoryLabel": "Category",
+  "supportSubjectLabel": "Subject",
+  "supportDescriptionLabel": "Description",
   "supportSubjectHint": "Brief summary of the issue",
   "supportDescriptionHint": "Describe the issue in detail...",
 

@@ -7,6 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/components/headers/top_nav_bar.dart';
+import '../design_system/components/modals/confirm_dialog.dart';
 import '../services/auth_service.dart';
 import '../services/username_service.dart';
 import '../services/display_identity_service.dart';
@@ -226,30 +227,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _showDeleteConfirmation() {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1A1A1E),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text('Delete Account', style: GoogleFonts.ibmPlexSans(color: _danger, fontWeight: FontWeight.w600)),
-        content: Text(
+    ConfirmDialog.show(
+      context,
+      title: 'Delete Account',
+      message:
           'This will permanently delete your account and all associated data. This action cannot be undone.\n\nIf you have an active subscription, please cancel it first in your device settings.',
-          style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 14, height: 1.5),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text('Cancel', style: GoogleFonts.ibmPlexSans(color: _secondary, fontWeight: FontWeight.w500)),
-          ),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(ctx);
-              await _deleteAccount();
-            },
-            child: Text('Delete', style: GoogleFonts.ibmPlexSans(color: _danger, fontWeight: FontWeight.w600)),
-          ),
-        ],
-      ),
+      confirmLabel: 'Delete',
+      onConfirm: _deleteAccount,
     );
   }
 
@@ -341,7 +325,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       body: Column(
         children: [
           TopNavBar(
-            title: 'Settings',
+            title: 'Profile Settings',
             onBack: () => Navigator.pop(context),
             backgroundColor: _surface,
             rightAction: GestureDetector(
@@ -502,7 +486,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     onTap: _showSignOutConfirmation,
                   ),
                   _buildRow(
-                    icon: const SizedBox(width: 24),
                     title: 'Delete Account',
                     titleColor: _grey,
                     onTap: _showDeleteConfirmation,
@@ -681,7 +664,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildRow({
-    required Widget icon,
+    Widget? icon,
     required String title,
     Color? titleColor,
     VoidCallback? onTap,
@@ -696,8 +679,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
         padding: const EdgeInsets.symmetric(vertical: 12),
         child: Row(
           children: [
-            SizedBox(width: 24, height: 24, child: icon),
-            const SizedBox(width: 16),
+            if (icon != null) ...[
+              SizedBox(width: 24, height: 24, child: icon),
+              const SizedBox(width: 16),
+            ],
             Expanded(
               child: Text(title,
                   style: GoogleFonts.ibmPlexSans(

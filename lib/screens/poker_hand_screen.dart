@@ -1479,36 +1479,25 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                   );
                 }),
 
-              // Main Gesture Area + Live Table
+              // Table area — no background container
               Expanded(
+                flex: 2,
+                child: _buildHandTable(),
+              ),
+              // Gesture input area — 16px h-margin, all corners rounded
+              Expanded(
+                flex: 3,
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 18, 16, 7),
-                  child: Column(
-                    children: [
-                      // TOP — Live poker table (compact, no background container)
-                      Expanded(
-                        flex: 2,
-                        child: _buildHandTable(),
-                      ),
-                      const SizedBox(height: 28),
-                      // BOTTOM — Gesture input area (larger)
-                      Expanded(
-                        flex: 3,
-                        child: Container(
-                          key: _drawingAreaKey,
-                          decoration: const BoxDecoration(
-                            color: Color(0xFF161719),
-                            borderRadius: BorderRadius.only(
-                              bottomLeft: Radius.circular(24),
-                              bottomRight: Radius.circular(24),
-                            ),
-                          ),
-                          child: ClipRRect(
-                            borderRadius: const BorderRadius.only(
-                              bottomLeft: Radius.circular(24),
-                              bottomRight: Radius.circular(24),
-                            ),
-                            child: Stack(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Container(
+                    key: _drawingAreaKey,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF161719),
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(24),
+                      child: Stack(
                   children: [
                     // Table background image
                     Positioned.fill(
@@ -1851,10 +1840,10 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                         child: _buildGestureTooltip(),
                       ),
 
-                    // Folded to me chip — white pill centered at bottom of canvas
+                    // Folded to me chip — white pill centered at bottom of canvas, above nav bar overlay
                     if (_canShowFoldedToMe())
                       Positioned(
-                        bottom: 16,
+                        bottom: MediaQuery.of(context).padding.bottom + 74,
                         left: 0,
                         right: 0,
                         child: Center(
@@ -1886,86 +1875,69 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
               ),
             ),
           ),
-                      // (table is now above the gesture area)
-                    ],
+              ),
+            ],
+          ),
+        Positioned(
+          bottom: MediaQuery.of(context).padding.bottom + 12,
+          left: 16,
+          right: 16,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Back circle
+              GestureDetector(
+                onTap: () => _handleNavigationAttempt(isBackButton: true),
+                child: Container(
+                  width: 38,
+                  height: 38,
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: _buildIcon('assets/icons/back icon.svg', 24, Colors.black),
                   ),
                 ),
               ),
-
-          // Next Hand button below canvas — REMOVED (top-right button sufficient)
-
-          // Game Info Row (Pot, Stack, To Act) — REMOVED (info shown on table now)
-          // Container(
-          //   key: _statsRowKey,
-          //   margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-          //   child: gameState.areAllPlayersAllIn()
-          //     ? ...
-          //     : IntrinsicHeight(...)
-          // ),
-
-          // Bottom action row — always visible
-          Container(
-            margin: const EdgeInsets.fromLTRB(16, 24, 16, 0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // Back circle
-                GestureDetector(
-                  onTap: () => _handleNavigationAttempt(isBackButton: true),
+              // Undo pill — always visible, dimmed when nothing to undo
+              Opacity(
+                opacity: _canUndoLastAction() ? 1.0 : 0.35,
+                child: GestureDetector(
+                  onTap: _canUndoLastAction() ? _undoLastAction : null,
                   child: Container(
-                    width: 38,
-                    height: 38,
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF161719),
+                      borderRadius: BorderRadius.circular(999),
+                      border: Border.all(color: const Color(0xFF3A3A3C)),
                     ),
-                    child: Center(
-                      child: _buildIcon('assets/icons/back icon.svg', 24, Colors.black),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SvgPicture.asset(
+                          'assets/icons/undo.svg',
+                          width: 24,
+                          height: 24,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          l10n.handUndoLastAction,
+                          style: GoogleFonts.ibmPlexSans(
+                            fontSize: 15,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w500,
+                            height: 22 / 15,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
-                // Undo pill — always visible, dimmed when nothing to undo
-                Opacity(
-                  opacity: _canUndoLastAction() ? 1.0 : 0.35,
-                  child: GestureDetector(
-                    onTap: _canUndoLastAction() ? _undoLastAction : null,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF161719),
-                        borderRadius: BorderRadius.circular(999),
-                        border: Border.all(color: const Color(0xFF3A3A3C)),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          SvgPicture.asset(
-                            'assets/icons/undo.svg',
-                            width: 24,
-                            height: 24,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            l10n.handUndoLastAction,
-                            style: GoogleFonts.ibmPlexSans(
-                              fontSize: 15,
-                              color: Colors.white,
-                              fontWeight: FontWeight.w500,
-                              height: 22 / 15,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          SizedBox(height: MediaQuery.of(context).padding.bottom + 8),
+              ),
             ],
           ),
+        ),
         // Guided hand overlay (onboarding phase 4)
         GuidedHandOverlay(
           key: _guidedOverlayKey,

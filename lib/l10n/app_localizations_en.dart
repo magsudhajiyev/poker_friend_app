@@ -6575,13 +6575,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get supportSubmitButton => 'Submit';
 
   @override
-  String get supportCategoryLabel => 'CATEGORY';
+  String get supportCategoryLabel => 'Category';
 
   @override
-  String get supportSubjectLabel => 'SUBJECT';
+  String get supportSubjectLabel => 'Subject';
 
   @override
-  String get supportDescriptionLabel => 'DESCRIPTION';
+  String get supportDescriptionLabel => 'Description';
 
   @override
   String get supportSubjectHint => 'Brief summary of the issue';

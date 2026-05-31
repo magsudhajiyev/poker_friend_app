@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../design_system/constants/colors.dart';
-import '../design_system/components/backgrounds/gradient_background.dart';
 import '../design_system/components/headers/top_nav_bar.dart';
 import '../services/support_request_service.dart';
 import '../l10n/app_localizations.dart';
@@ -16,13 +15,28 @@ class HelpSupportScreen extends StatefulWidget {
 class _HelpSupportScreenState extends State<HelpSupportScreen> {
   final _subjectController = TextEditingController();
   final _descriptionController = TextEditingController();
+  final _subjectFocus = FocusNode();
+  final _descriptionFocus = FocusNode();
   String _selectedCategoryKey = 'Bug Report';
   bool _isSubmitting = false;
+
+  static const _surface = Color(0xFF161719);
+  static const _secondary = Color(0xFFB9B9B9);
+  static const _focusBorder = Color(0xFF4CDE78);
+
+  @override
+  void initState() {
+    super.initState();
+    _subjectFocus.addListener(() => setState(() {}));
+    _descriptionFocus.addListener(() => setState(() {}));
+  }
 
   @override
   void dispose() {
     _subjectController.dispose();
     _descriptionController.dispose();
+    _subjectFocus.dispose();
+    _descriptionFocus.dispose();
     super.dispose();
   }
 
@@ -34,10 +48,8 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
     if (subject.isEmpty || description.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            l10n.supportFillAllFields,
-            style: GoogleFonts.ibmPlexSans(color: Colors.white),
-          ),
+          content: Text(l10n.supportFillAllFields,
+              style: GoogleFonts.ibmPlexSans(color: Colors.white)),
           backgroundColor: const Color(0xFFD55A41),
         ),
       );
@@ -57,10 +69,8 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            l10n.supportSubmitted,
-            style: GoogleFonts.ibmPlexSans(color: Colors.white),
-          ),
+          content: Text(l10n.supportSubmitted,
+              style: GoogleFonts.ibmPlexSans(color: Colors.white)),
           backgroundColor: const Color(0xFF87ED81),
         ),
       );
@@ -71,10 +81,8 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
       setState(() => _isSubmitting = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            l10n.supportFailedSubmit(e.toString()),
-            style: GoogleFonts.ibmPlexSans(color: Colors.white),
-          ),
+          content: Text(l10n.supportFailedSubmit(e.toString()),
+              style: GoogleFonts.ibmPlexSans(color: Colors.white)),
           backgroundColor: const Color(0xFFD55A41),
         ),
       );
@@ -90,183 +98,200 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
       (key: 'Account Issue', label: l10n.supportAccountIssue),
       (key: 'Other', label: l10n.supportOther),
     ];
+
     return Scaffold(
       backgroundColor: AppColors.bgPrimary,
-      body: Stack(
+      body: Column(
         children: [
-          const GradientBackground(),
-          Column(
-            children: [
-              TopNavBar(
-                title: l10n.supportTitle,
-                onBack: () => Navigator.pop(context),
-                backgroundColor: Colors.transparent,
-              ),
-              // Form
-              Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 40),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Category
-                        _buildSectionHeader(l10n.supportCategoryLabel),
-                        const SizedBox(height: 12),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: categories.map((cat) {
-                            final isSelected = _selectedCategoryKey == cat.key;
-                            return GestureDetector(
-                              onTap: () => setState(() => _selectedCategoryKey = cat.key),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                                decoration: BoxDecoration(
-                                  color: isSelected
-                                      ? const Color(0xFF89F1EC).withValues(alpha: 0.15)
-                                      : AppColors.bgSurface,
-                                  borderRadius: BorderRadius.circular(40),
-                                  border: Border.all(
-                                    color: isSelected
-                                        ? const Color(0xFF89F1EC)
-                                        : const Color(0xFF1C1F21),
-                                    width: 1,
-                                  ),
-                                ),
-                                child: Text(
-                                  cat.label,
-                                  style: GoogleFonts.ibmPlexSans(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w500,
-                                    color: isSelected
-                                        ? const Color(0xFF89F1EC)
-                                        : const Color(0xFF8C8C8C),
-                                  ),
-                                ),
-                              ),
-                            );
-                          }).toList(),
-                        ),
-
-                        const SizedBox(height: 28),
-
-                        // Subject
-                        _buildSectionHeader(l10n.supportSubjectLabel),
-                        const SizedBox(height: 12),
-                        _buildTextField(
-                          controller: _subjectController,
-                          hint: l10n.supportSubjectHint,
-                        ),
-
-                        const SizedBox(height: 28),
-
-                        // Description
-                        _buildSectionHeader(l10n.supportDescriptionLabel),
-                        const SizedBox(height: 12),
-                        _buildTextField(
-                          controller: _descriptionController,
-                          hint: l10n.supportDescriptionHint,
-                          maxLines: 6,
-                        ),
-
-                        const SizedBox(height: 36),
-
-                        // Submit button
-                        SizedBox(
-                          width: double.infinity,
-                          child: GestureDetector(
-                            onTap: _isSubmitting ? null : _submit,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              decoration: BoxDecoration(
-                                color: _isSubmitting
-                                    ? Colors.white.withValues(alpha: 0.5)
-                                    : Colors.white,
-                                borderRadius: BorderRadius.circular(60),
-                              ),
-                              child: Center(
-                                child: _isSubmitting
-                                    ? const SizedBox(
-                                        width: 20,
-                                        height: 20,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          color: Colors.black,
-                                        ),
-                                      )
-                                    : Text(
-                                        l10n.supportSubmitButton,
-                                        style: GoogleFonts.ibmPlexSans(
-                                          fontSize: 17,
-                                          fontWeight: FontWeight.w600,
-                                          color: Colors.black,
-                                          letterSpacing: -0.43,
-                                        ),
-                                      ),
-                              ),
+          TopNavBar(
+            title: l10n.supportTitle,
+            onBack: () => Navigator.pop(context),
+            backgroundColor: _surface,
+          ),
+          Expanded(
+            child: GestureDetector(
+              onTap: () => FocusScope.of(context).unfocus(),
+              behavior: HitTestBehavior.opaque,
+              child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(16, 24, 16, 40),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // ── Category ─────────────────────────────────────────────
+                  Text(
+                    l10n.supportCategoryLabel,
+                    style: GoogleFonts.ibmPlexSans(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFFA3FF78),
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  Wrap(
+                    spacing: 9,
+                    runSpacing: 9,
+                    children: categories.map((cat) {
+                      final isSelected = _selectedCategoryKey == cat.key;
+                      return GestureDetector(
+                        onTap: () => setState(() => _selectedCategoryKey = cat.key),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF2C2C2E),
+                            borderRadius: BorderRadius.circular(999),
+                            border: Border.all(
+                              color: isSelected ? const Color(0xFFA3FF78) : const Color(0xFF2C2C2E),
+                              width: 1.5,
+                            ),
+                          ),
+                          child: Text(
+                            cat.label,
+                            style: GoogleFonts.ibmPlexSans(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.white,
+                              height: 22 / 15,
                             ),
                           ),
                         ),
-                      ],
+                      );
+                    }).toList(),
+                  ),
+
+                  const SizedBox(height: 40),
+
+                  // ── Subject ───────────────────────────────────────────────
+                  _buildInputField(
+                    label: l10n.supportSubjectLabel,
+                    controller: _subjectController,
+                    focusNode: _subjectFocus,
+                    hint: l10n.supportSubjectHint,
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // ── Description ───────────────────────────────────────────
+                  _buildInputField(
+                    label: l10n.supportDescriptionLabel,
+                    controller: _descriptionController,
+                    focusNode: _descriptionFocus,
+                    hint: l10n.supportDescriptionHint,
+                    maxLines: 8,
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // ── Submit ────────────────────────────────────────────────
+                  GestureDetector(
+                    onTap: _isSubmitting ? null : _submit,
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                      decoration: BoxDecoration(
+                        color: _isSubmitting ? Colors.white.withValues(alpha: 0.5) : Colors.white,
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Center(
+                        child: _isSubmitting
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
+                              )
+                            : Text(
+                                l10n.supportSubmitButton,
+                                style: GoogleFonts.ibmPlexSans(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                  color: const Color(0xFF0C0C0C),
+                                  height: 20 / 15,
+                                ),
+                              ),
+                      ),
                     ),
                   ),
+                ],
               ),
-            ],
+            ),
           ),
+        ),
         ],
       ),
     );
   }
 
-  Widget _buildSectionHeader(String title) {
-    return Text(
-      title,
-      style: GoogleFonts.ibmPlexSans(
-        fontSize: 12,
-        fontWeight: FontWeight.w600,
-        color: const Color(0xFF87ED81),
-        letterSpacing: 1.0,
-      ),
-    );
-  }
 
-  Widget _buildTextField({
+  Widget _buildInputField({
+    required String label,
     required TextEditingController controller,
+    required FocusNode focusNode,
     required String hint,
     int maxLines = 1,
   }) {
-    return TextField(
-      controller: controller,
-      maxLines: maxLines,
-      style: GoogleFonts.ibmPlexSans(
-        fontSize: 17,
-        fontWeight: FontWeight.w500,
-        color: Colors.white,
-        height: 1.44,
-      ),
-      decoration: InputDecoration(
-        hintText: hint,
-        hintStyle: GoogleFonts.ibmPlexSans(
-          fontSize: 17,
-          fontWeight: FontWeight.w500,
-          color: const Color(0xFF8C8C8C),
-          height: 1.44,
+    final isFocused = focusNode.hasFocus;
+    final isFilled = controller.text.isNotEmpty;
+    final isMultiline = maxLines > 1;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: GoogleFonts.ibmPlexSans(
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+            color: _secondary,
+          ),
         ),
-        filled: false,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: Color(0xFF4E5054), width: 1),
+        const SizedBox(height: 8),
+        Stack(
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                color: _surface,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: isFocused ? _focusBorder : Colors.transparent,
+                  width: 1.5,
+                ),
+              ),
+              child: TextField(
+                controller: controller,
+                focusNode: focusNode,
+                maxLines: maxLines,
+                style: GoogleFonts.ibmPlexSans(fontSize: 15, color: Colors.white),
+                decoration: InputDecoration(
+                  hintText: hint,
+                  hintStyle: GoogleFonts.ibmPlexSans(fontSize: 15, color: _secondary),
+                  contentPadding: EdgeInsets.fromLTRB(
+                    16, 12,
+                    isFilled && !isMultiline ? 4 : 16,
+                    12,
+                  ),
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  suffixIcon: isFilled && !isMultiline
+                      ? GestureDetector(
+                          onTap: () => setState(() => controller.clear()),
+                          child: const Icon(
+                            Icons.cancel_rounded,
+                            color: AppColors.contentInactive,
+                            size: 18,
+                          ),
+                        )
+                      : null,
+                  suffixIconConstraints: const BoxConstraints(
+                    minWidth: 36,
+                    minHeight: 36,
+                  ),
+                ),
+                onChanged: (_) => setState(() {}),
+              ),
+            ),
+          ],
         ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: Color(0xFF4E5054), width: 1),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: Color(0xFF89F1EC), width: 1),
-        ),
-      ),
+      ],
     );
   }
 }

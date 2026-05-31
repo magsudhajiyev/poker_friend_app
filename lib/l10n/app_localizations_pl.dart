@@ -6604,13 +6604,13 @@ class AppLocalizationsPl extends AppLocalizations {
   String get supportSubmitButton => 'Prześlij';
 
   @override
-  String get supportCategoryLabel => 'KATEGORIA';
+  String get supportCategoryLabel => 'Kategoria';
 
   @override
-  String get supportSubjectLabel => 'TEMAT';
+  String get supportSubjectLabel => 'Temat';
 
   @override
-  String get supportDescriptionLabel => 'OPIS';
+  String get supportDescriptionLabel => 'Opis';
 
   @override
   String get supportSubjectHint => 'Krótkie podsumowanie problemu';

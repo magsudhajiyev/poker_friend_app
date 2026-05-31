@@ -6637,13 +6637,13 @@ class AppLocalizationsDe extends AppLocalizations {
   String get supportSubmitButton => 'Einreichen';
 
   @override
-  String get supportCategoryLabel => 'KATEGORIE';
+  String get supportCategoryLabel => 'Kategorie';
 
   @override
-  String get supportSubjectLabel => 'BETREFF';
+  String get supportSubjectLabel => 'Betreff';
 
   @override
-  String get supportDescriptionLabel => 'BESCHREIBUNG';
+  String get supportDescriptionLabel => 'Beschreibung';
 
   @override
   String get supportSubjectHint => 'Kurze Zusammenfassung des Problems';

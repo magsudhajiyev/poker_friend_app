@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -12,6 +11,7 @@ import '../services/opponent_stats_service.dart';
 import 'opponent_hands_screen.dart';
 import '../widgets/global_bottom_nav_bar.dart';
 import '../design_system/components/drawer_dots.dart';
+import '../design_system/components/modals/confirm_dialog.dart';
 import '../l10n/app_localizations.dart';
 
 class OpponentDetailScreen extends StatefulWidget {
@@ -1687,152 +1687,24 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
 
   void _showDeleteConfirmation() {
     final l10n = AppLocalizations.of(context);
-    showGeneralDialog(
-      context: context,
-      barrierDismissible: true,
-      barrierLabel: 'Delete opponent',
-      barrierColor: Colors.transparent,
-      transitionDuration: const Duration(milliseconds: 200),
-      transitionBuilder: (context, animation, _, child) => FadeTransition(
-        opacity: animation,
-        child: child,
-      ),
-      pageBuilder: (context, _, __) => Stack(
-        children: [
-          // Blurred barrier — tap to dismiss
-          Positioned.fill(
-            child: GestureDetector(
-              onTap: () => Navigator.pop(context),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-                child: Container(color: Colors.black.withValues(alpha: 0.45)),
-              ),
-            ),
-          ),
-          Center(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Dialog(
-                backgroundColor: Colors.transparent,
-                insetPadding: EdgeInsets.zero,
-                child: SizedBox(
-                  width: 370,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Header: title + X
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              l10n.opponentDetailDeleteConfirmTitle,
-                              style: GoogleFonts.ibmPlexSans(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w600,
-                                color: const Color(0xFF0C0C0C),
-                                height: 20 / 15,
-                              ),
-                            ),
-                            GestureDetector(
-                              onTap: () => Navigator.pop(context),
-                              child: const Icon(Icons.close, size: 18, color: Color(0xFFB9B9B9)),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        // Body text
-                        Text(
-                          l10n.opponentDetailDeleteConfirmMessage(_opponent.name),
-                          style: GoogleFonts.ibmPlexSans(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w400,
-                            color: const Color(0xFFB9B9B9),
-                            height: 22 / 15,
-                          ),
-                        ),
-                        const SizedBox(height: 32),
-                        // Buttons row
-                        Row(
-                          children: [
-                            // Cancel
-                            Expanded(
-                              child: GestureDetector(
-                                onTap: () => Navigator.pop(context),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                                  decoration: BoxDecoration(
-                                    color: Colors.transparent,
-                                    borderRadius: BorderRadius.circular(999),
-                                    border: Border.all(color: const Color(0xFFB9B9B9)),
-                                  ),
-                                  child: Text(
-                                    l10n.commonCancel,
-                                    textAlign: TextAlign.center,
-                                    style: GoogleFonts.ibmPlexSans(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w600,
-                                      color: const Color(0xFF0C0C0C),
-                                      height: 20 / 15,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            // Confirm (delete)
-                            Expanded(
-                              child: GestureDetector(
-                                onTap: () async {
-                                  try {
-                                    await OpponentService.deleteOpponent(_opponent.id);
-                                    if (context.mounted) Navigator.pop(context);
-                                    if (context.mounted) Navigator.pop(context, true);
-                                  } catch (e) {
-                                    if (context.mounted) {
-                                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                                        content: Text(l10n.opponentDetailErrorDeleting(e.toString())),
-                                        backgroundColor: Colors.red,
-                                      ));
-                                    }
-                                  }
-                                },
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFFF3B30),
-                                    borderRadius: BorderRadius.circular(999),
-                                  ),
-                                  child: Text(
-                                    'Confirm',
-                                    textAlign: TextAlign.center,
-                                    style: GoogleFonts.ibmPlexSans(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.white,
-                                      height: 20 / 15,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
+    ConfirmDialog.show(
+      context,
+      title: l10n.opponentDetailDeleteConfirmTitle,
+      message: l10n.opponentDetailDeleteConfirmMessage(_opponent.name),
+      confirmLabel: 'Confirm',
+      onConfirm: () async {
+        try {
+          await OpponentService.deleteOpponent(_opponent.id);
+          if (context.mounted) Navigator.pop(context, true);
+        } catch (e) {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text(l10n.opponentDetailErrorDeleting(e.toString())),
+              backgroundColor: Colors.red,
+            ));
+          }
+        }
+      },
     );
   }
 }

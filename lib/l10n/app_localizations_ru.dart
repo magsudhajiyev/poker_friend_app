@@ -6597,13 +6597,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get supportSubmitButton => 'Отправить';
 
   @override
-  String get supportCategoryLabel => 'КАТЕГОРИЯ';
+  String get supportCategoryLabel => 'Категория';
 
   @override
-  String get supportSubjectLabel => 'ТЕМА';
+  String get supportSubjectLabel => 'Тема';
 
   @override
-  String get supportDescriptionLabel => 'ОПИСАНИЕ';
+  String get supportDescriptionLabel => 'Описание';
 
   @override
   String get supportSubjectHint => 'Краткое описание проблемы';

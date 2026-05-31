@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -638,40 +639,119 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   void _showClubs() {
     if (_clubs.isEmpty) {
-      showModalBottomSheet(
+      final bottomInset = MediaQuery.of(context).padding.bottom;
+      showGeneralDialog(
         context: context,
-        backgroundColor: const Color(0xFF161719),
-        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-        builder: (context) => Padding(
-          padding: const EdgeInsets.fromLTRB(24, 24, 24, 40),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SvgPicture.asset('assets/icons/Club.svg', width: 48, height: 48, colorFilter: const ColorFilter.mode(Color(0xFF89F1EC), BlendMode.srcIn)),
-              const SizedBox(height: 16),
-              Text('No Clubs Yet',
-                  style: GoogleFonts.ibmPlexSans(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white)),
-              const SizedBox(height: 8),
-              Text('Register or join a club to see them here.',
-                  style: GoogleFonts.ibmPlexSans(fontSize: 14, color: _secondary), textAlign: TextAlign.center),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                child: TextButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    showRegisterClubDialog(context);
-                  },
-                  style: TextButton.styleFrom(
-                    backgroundColor: const Color(0xFF1C1F21),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(60)),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                  ),
-                  child: Text('Register a Club',
-                      style: GoogleFonts.ibmPlexSans(fontSize: 17, fontWeight: FontWeight.w600, color: Colors.white)),
-                ),
+        barrierDismissible: true,
+        barrierLabel: 'No clubs',
+        barrierColor: Colors.black.withValues(alpha: 0.45),
+        transitionDuration: const Duration(milliseconds: 300),
+        transitionBuilder: (_, animation, __, child) => SlideTransition(
+          position: Tween<Offset>(
+            begin: const Offset(0, 1),
+            end: Offset.zero,
+          ).animate(CurvedAnimation(parent: animation, curve: Curves.easeInOut)),
+          child: child,
+        ),
+        pageBuilder: (dialogContext, _, __) => Material(
+          color: Colors.transparent,
+          child: Align(
+          alignment: Alignment.bottomCenter,
+          child: Container(
+              width: double.infinity,
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
               ),
-            ],
+              padding: EdgeInsets.fromLTRB(24, 24, 24, bottomInset + 32),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // Content block (gap 24 between header row and icon+text)
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      // Header row: empty flex spacer + X close
+                      Row(
+                        children: [
+                          const Expanded(child: SizedBox()),
+                          GestureDetector(
+                            onTap: () => Navigator.pop(dialogContext),
+                            child: const Icon(Icons.close, size: 18, color: Color(0xFFB9B9B9)),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+                      // Icon + text block
+                      Column(
+                        children: [
+                          SvgPicture.asset(
+                            'assets/icons/Club.svg',
+                            width: 38,
+                            height: 38,
+                            colorFilter: const ColorFilter.mode(Color(0xFF0C0C0C), BlendMode.srcIn),
+                          ),
+                          const SizedBox(height: 16),
+                          // Title + body
+                          Column(
+                            children: [
+                              Text(
+                                'No Clubs Yet',
+                                textAlign: TextAlign.center,
+                                style: GoogleFonts.ibmPlexSans(
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w600,
+                                  color: const Color(0xFF0C0C0C),
+                                  height: 20 / 17,
+                                ),
+                              ),
+                              const SizedBox(height: 7),
+                              Text(
+                                'Register or join a club to see them here.',
+                                textAlign: TextAlign.center,
+                                style: GoogleFonts.ibmPlexSans(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w400,
+                                  color: const Color(0xFFB9B9B9),
+                                  height: 22 / 15,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  // Full-width black pill button
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.pop(dialogContext);
+                      showRegisterClubDialog(context);
+                    },
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF0C0C0C),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        'Register a Club',
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.ibmPlexSans(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                          height: 20 / 15,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
       );

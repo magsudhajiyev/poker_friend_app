@@ -132,6 +132,7 @@ The app has two themes. **Modern Dark (AppTheme)** is used in all newer screens.
 - **ListSeparator** — 1px #1C1F21
 - **GradientDivider** — 1px white opacity gradient [10%,30%,10%]
 - **CalendarPicker** — glassy card with day cells, green accent
+- **ConfirmDialog** (`modals/confirm_dialog.dart`) — **MANDATORY for ALL delete/destructive confirmation modals**. Style: blurred backdrop (sigmaX/Y 8, black 45% overlay), white card radius 24, padding 24, header row [title 15px w600 black | grey X close], body 15px w400 #B9B9B9, two pill buttons (outlined Cancel + solid-colour action). Use via `ConfirmDialog.show(context, title:, message:, confirmLabel:, onConfirm:)`. Never use `AlertDialog` or custom inline implementations for delete confirmations.
 
 ### Legacy Theme (PokerFriendTheme) — Being Phased Out
 - Purple `#AB9FF2` based, Material 3 enabled, Roboto font

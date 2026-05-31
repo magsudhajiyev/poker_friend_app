@@ -54,6 +54,7 @@ dependencies:
   flutter_svg: ^2.0.10+1  # SVG icon rendering
   tutorial_coach_mark: ^1.2.11  # Onboarding tour
   url_launcher: ^6.2.5  # Open URLs in browser (T&C, privacy policy)
+  video_player: ^2.9.3  # Loading screen video animation
 
 dependency_overrides:
   # Fix Linux plugin incompatibility (not needed for iOS/Android/macOS development)
@@ -67,6 +68,7 @@ flutter:
     - assets/
     - assets/icons/
     - assets/play_style/
+    - "assets/loading screen.aep_AME/"
     - icons/
     - icons/flat_icons/
     - icons/figma_icons/
