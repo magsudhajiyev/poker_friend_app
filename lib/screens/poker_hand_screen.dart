@@ -2490,6 +2490,8 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     final hasBoardCards = boardCards != null &&
         (boardCards.flop.isNotEmpty || boardCards.turn != null || boardCards.river != null);
 
+    final showSidePotPills = gameState.activeSidePots.length > 1;
+
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       mainAxisSize: MainAxisSize.min,
@@ -2498,26 +2500,121 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
           _buildCompactBoardCards(boardCards!),
           const SizedBox(height: 3),
         ],
-        Text(
-          gameState.formatCurrency(gameState.currentPot),
-          style: GoogleFonts.ibmPlexSans(
-            color: const Color(0xFFD3FFFD),
-            fontSize: 17,
-            fontWeight: FontWeight.w600,
-            letterSpacing: -0.5,
-            height: 1.0,
+        if (showSidePotPills)
+          _buildSidePotPills()
+        else ...[
+          Text(
+            gameState.formatCurrency(gameState.currentPot),
+            style: GoogleFonts.ibmPlexSans(
+              color: const Color(0xFFD3FFFD),
+              fontSize: 17,
+              fontWeight: FontWeight.w600,
+              letterSpacing: -0.5,
+              height: 1.0,
+            ),
           ),
-        ),
-        Text(
-          'POT',
-          style: GoogleFonts.ibmPlexSans(
-            color: const Color(0xFF5EB7B3),
-            fontSize: 11,
-            fontWeight: FontWeight.w400,
-            height: 1.3,
+          Text(
+            'POT',
+            style: GoogleFonts.ibmPlexSans(
+              color: const Color(0xFF5EB7B3),
+              fontSize: 11,
+              fontWeight: FontWeight.w400,
+              height: 1.3,
+            ),
           ),
-        ),
+        ],
       ],
+    );
+  }
+
+  Widget _buildSidePotPills() {
+    final pots = gameState.activeSidePots;
+    final maxDisplay = 3;
+    final displayPots = pots.length <= maxDisplay ? pots : pots.sublist(0, maxDisplay);
+    final overflowCount = pots.length - maxDisplay;
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (int i = 0; i < displayPots.length; i++) ...[
+          if (i > 0) const SizedBox(width: 4),
+          _buildSinglePotPill(
+            i == 0 ? 'Main' : 'Side',
+            displayPots[i].amount,
+            i == 0,
+          ),
+        ],
+        if (overflowCount > 0) ...[
+          const SizedBox(width: 4),
+          _buildOverflowPill(overflowCount),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildSinglePotPill(String label, double amount, bool isMain) {
+    final opacity = isMain ? 1.0 : 0.6;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: Color.lerp(
+          const Color(0xFF1A3D3A),
+          Colors.transparent,
+          isMain ? 0.0 : 0.3,
+        ),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: const Color(0xFF5EB7B3).withOpacity(isMain ? 0.5 : 0.25),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label,
+            style: GoogleFonts.ibmPlexSans(
+              color: const Color(0xFF5EB7B3).withOpacity(opacity),
+              fontSize: 8,
+              fontWeight: FontWeight.w500,
+              height: 1.0,
+            ),
+          ),
+          const SizedBox(width: 3),
+          Text(
+            gameState.formatCurrency(amount),
+            style: GoogleFonts.ibmPlexSans(
+              color: const Color(0xFFD3FFFD).withOpacity(opacity),
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              height: 1.0,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOverflowPill(int count) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1A3D3A).withOpacity(0.5),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: const Color(0xFF5EB7B3).withOpacity(0.15),
+          width: 1,
+        ),
+      ),
+      child: Text(
+        '+$count more',
+        style: GoogleFonts.ibmPlexSans(
+          color: const Color(0xFF5EB7B3).withOpacity(0.5),
+          fontSize: 8,
+          fontWeight: FontWeight.w500,
+          height: 1.0,
+        ),
+      ),
     );
   }
 
@@ -5262,6 +5359,9 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
 
       // Reset betting round complete flag
       gameState.bettingRoundComplete = false;
+
+      // Recalculate side pot pills after undo
+      gameState.recalculateActiveSidePots();
 
       // Log the undo
       final playerName = sessionManager.getPlayerNameWithPosition(playerId);

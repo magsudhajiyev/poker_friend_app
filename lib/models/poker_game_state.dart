@@ -170,6 +170,7 @@ class PokerGameState {
   double currentBet = 0.0;
   double _lastRaiseSize = 0.0; // The increment of the most recent bet/raise
   Map<BettingRound, double> streetPots = {};
+  List<SidePot> activeSidePots = []; // Display-only side pot breakdown for UI pills
   int _effectiveBBPosition = 1; // Track who actually posted BB
   int _effectiveSBPosition = 1; // Track who actually posted SB
   bool _isInitializing = true; // CRITICAL: Flag to prevent premature action order calculation
@@ -625,6 +626,11 @@ class PokerGameState {
 
     player.hasActed = true;
 
+    // Recalculate side pot pills when betting round completes
+    if (bettingRoundComplete) {
+      recalculateActiveSidePots();
+    }
+
     // Infer stack confidence from observed actions
     if (action == PlayerAction.call || action == PlayerAction.bet || action == PlayerAction.raise) {
       if (player.isAllIn) {
@@ -772,6 +778,11 @@ class PokerGameState {
 
     player.hasActed = true;
 
+    // Recalculate side pot pills when betting round completes
+    if (bettingRoundComplete) {
+      recalculateActiveSidePots();
+    }
+
     // Infer stack confidence from observed actions
     if (action == PlayerAction.call || action == PlayerAction.bet || action == PlayerAction.raise) {
       if (player.isAllIn) {
@@ -875,6 +886,7 @@ class PokerGameState {
       if (bbPlayer.hasFolded) {
         // BB folded, check if all other active players have acted and called current bet
         for (PlayerState player in activePlayers) {
+          if (player.isAllIn) continue;
           if (!player.hasActed || (!player.hasCalledCurrentBet && hasBetThisRound)) {
             return false;
           }
@@ -907,7 +919,10 @@ class PokerGameState {
       }
 
       // There was betting - check if everyone has called current bet
+      // Skip all-in players — they can't act and their hasCalledCurrentBet
+      // was reset by _resetCallStatusExcept() when someone raised after them.
       for (PlayerState player in activePlayers) {
+        if (player.isAllIn) continue;
         if (!player.hasCalledCurrentBet) {
           return false;
         }
@@ -915,8 +930,11 @@ class PokerGameState {
       return true;
     }
 
-    // Post-flop: all active players must have called current bet
+    // Post-flop: all active players who can still act must have called current bet
+    // Skip all-in players — they can't act and their hasCalledCurrentBet is stale
+    // after resetForNewStreet().
     for (PlayerState player in activePlayers) {
+      if (player.isAllIn) continue;
       if (!player.hasCalledCurrentBet) {
         return false;
       }
@@ -976,6 +994,7 @@ class PokerGameState {
     }
 
     _preStreetSnapshot = null;
+    recalculateActiveSidePots();
     return true;
   }
 
@@ -1066,6 +1085,10 @@ class PokerGameState {
           // Hand is complete
           break;
       }
+
+      // Recalculate side pot pills with clean contribution data
+      // after street transition (betThisRound moved to totalContribution)
+      recalculateActiveSidePots();
     }
     return result;
   }
@@ -1247,6 +1270,9 @@ class PokerGameState {
       advances.add("All betting complete - ready for showdown");
     }
 
+    // Recalculate side pot pills after auto-advance
+    recalculateActiveSidePots();
+
     return advances.join('\n');
   }
 
@@ -1364,6 +1390,7 @@ class PokerGameState {
     }
 
     currentPot = 0.0;
+    activeSidePots = [];
     currentBet = bigBlind;
     _lastRaiseSize = bigBlind; // BB is the initial raise size
     _effectiveBBPosition = _determineEffectiveBBPosition(); // Set before posting
@@ -1621,8 +1648,17 @@ class PokerGameState {
 
     if (activePlayers.length <= 1) return "";
 
-    // Find the maximum bet that can be called by all players
-    double maxCallableAmount = activePlayers
+    // Find the maximum bet that can be called by all players.
+    // Exclude all-in players who have betThisRound=0 — these went all-in
+    // on a previous street and their chips were moved to totalContribution.
+    // Including them would incorrectly force maxCallableAmount to 0 and
+    // return all postflop bets.
+    // All-in players who DID bet this round (went all-in THIS street) are
+    // still included — their betThisRound defines the callable cap.
+    final relevantPlayers = activePlayers.where((p) => !p.isAllIn || p.betThisRound > 0).toList();
+    if (relevantPlayers.isEmpty) return "";
+
+    double maxCallableAmount = relevantPlayers
         .map((p) => p.betThisRound)
         .reduce((a, b) => a < b ? a : b);
 
@@ -1710,6 +1746,100 @@ class PokerGameState {
   String getSidePotInfo() {
     List<SidePot> sidePots = calculateSidePots();
     return SidePotCalculator.formatSidePots(sidePots);
+  }
+
+  /// Recalculate the display-only side pot breakdown for UI pills.
+  /// Uses SidePotCalculator directly (like the winner dialog) to avoid the
+  /// double-counting bug in calculateSidePots() which adds betThisRound
+  /// to totalContribution before passing to the calculator.
+  /// Once side pots are established they persist until the hand ends
+  /// (cleared by initializePot).
+  void recalculateActiveSidePots() {
+    print('=== SIDE POT RECALC ===');
+    print('  Street: $currentRound | CurrentPot: $currentPot');
+    for (final p in players) {
+      if (!p.isActive) continue;
+      print('  P${p.playerId}: stack=${p.currentStack} totalContrib=${p.totalContribution} betThisRound=${p.betThisRound} folded=${p.hasFolded} allIn=${p.isAllIn} hasActed=${p.hasActed}');
+    }
+
+    // Early exit: no all-in players → no side pots possible
+    final allInPlayers = players.where((p) => p.isActive && !p.hasFolded && p.isAllIn).toList();
+    if (allInPlayers.isEmpty) {
+      print('  → No all-in players, clearing pills');
+      activeSidePots = [];
+      return;
+    }
+
+    final activePlayers = players.where((p) => p.isActive && !p.hasFolded).toList();
+    if (activePlayers.length <= 1) {
+      print('  → ≤1 active player, clearing pills');
+      activeSidePots = [];
+      return;
+    }
+
+    // Check if any non-all-in player has matched or exceeded an all-in
+    // player's total contribution. If nobody has called yet, the all-in
+    // is still pending and showing side pots would be premature/noisy.
+    final allInContribs = allInPlayers.map((p) => p.totalContribution + p.betThisRound).toList();
+    final minAllInContrib = allInContribs.reduce((a, b) => a < b ? a : b);
+    final nonAllInPlayers = activePlayers.where((p) => !p.isAllIn).toList();
+    final anyCallerMatchedAllIn = nonAllInPlayers.any(
+      (p) => (p.totalContribution + p.betThisRound) >= minAllInContrib,
+    );
+
+    if (!anyCallerMatchedAllIn && activeSidePots.isEmpty) {
+      print('  → No caller has matched all-in yet, skipping');
+      return;
+    }
+
+    final contributions = activePlayers.map((p) => p.totalContribution + p.betThisRound).toList();
+    print('  Active player contributions: $contributions');
+
+    // Call SidePotCalculator directly on real players — it already does
+    // totalContribution + betThisRound internally, so no temp copies needed.
+    final rawPots = SidePotCalculator.calculateSidePots(players);
+
+    // Filter out pots with only 1 eligible player — those represent
+    // uncalled bets mid-round, not real side pots.
+    final meaningfulPots = rawPots.where((p) => p.eligiblePlayers.length >= 2).toList();
+    print('  Raw pots from calculator: ${rawPots.length}, meaningful (≥2 eligible): ${meaningfulPots.length}');
+    for (int i = 0; i < meaningfulPots.length; i++) {
+      print('    Pot $i: amount=${meaningfulPots[i].amount} eligible=${meaningfulPots[i].eligiblePlayers} maxContrib=${meaningfulPots[i].maxContribution}');
+    }
+
+    // If multiple meaningful pots exist, update the pills
+    if (meaningfulPots.length > 1) {
+      // Calculate dead money from folded players
+      double foldedContributions = 0.0;
+      for (final p in players) {
+        if (p.isActive && p.hasFolded) {
+          foldedContributions += p.totalContribution + p.betThisRound;
+        }
+      }
+      print('  Folded contributions (dead money): $foldedContributions');
+
+      // Add dead money to the main pot (first pot — everyone was eligible)
+      if (foldedContributions > 0) {
+        activeSidePots = [
+          SidePot(
+            amount: meaningfulPots[0].amount + foldedContributions,
+            eligiblePlayers: meaningfulPots[0].eligiblePlayers,
+            maxContribution: meaningfulPots[0].maxContribution,
+          ),
+          ...meaningfulPots.skip(1),
+        ];
+      } else {
+        activeSidePots = List.from(meaningfulPots);
+      }
+      print('  → SET ${activeSidePots.length} pills');
+      for (int i = 0; i < activeSidePots.length; i++) {
+        print('    Pill $i: amount=${activeSidePots[i].amount} eligible=${activeSidePots[i].eligiblePlayers}');
+      }
+      return;
+    }
+
+    // ≤1 meaningful pot — preserve existing pills if any (sticky behavior)
+    print('  → ≤1 meaningful pot, preserving existing ${activeSidePots.length} pills (sticky)');
   }
 
   String getMostActivePosition() {
