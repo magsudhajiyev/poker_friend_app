@@ -139,7 +139,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
     await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => const PaywallScreen(),
+        builder: (context) => const PaywallScreen(showSkip: true),
       ),
     );
 

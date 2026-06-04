@@ -1,8 +1,12 @@
 import 'package:flutter/foundation.dart';
 import 'dart:async';
+import 'dart:convert';
+import 'dart:math';
+import 'package:crypto/crypto.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/account_type.dart';
 import 'app_data_cache.dart';
@@ -20,6 +24,17 @@ class GoogleSignInAccountLinkException implements Exception {
   const GoogleSignInAccountLinkException({
     required this.email,
     required this.googleCredential,
+  });
+}
+
+/// Thrown when Apple sign-in detects an existing email/password account.
+/// The UI should catch this and show a password dialog to link accounts.
+class AppleSignInAccountLinkException implements Exception {
+  final String email;
+  final AuthCredential appleCredential;
+  const AppleSignInAccountLinkException({
+    required this.email,
+    required this.appleCredential,
   });
 }
 
@@ -84,12 +99,15 @@ class AuthService {
     } on FirebaseAuthException catch (e) {
       await LoggerService.error('Sign in error', e);
 
-      // If sign-in fails, check if this email uses Google-only sign-in
+      // If sign-in fails, check if this email uses Google-only or Apple-only sign-in
       if (e.code == 'wrong-password' || e.code == 'invalid-credential') {
         try {
           final methods = await _auth.fetchSignInMethodsForEmail(email);
           if (methods.contains('google.com') && !methods.contains('password')) {
             throw 'This account uses Google Sign-In. Please sign in with Google, or use "Forgot Password" to set a password for email login.';
+          }
+          if (methods.contains('apple.com') && !methods.contains('password')) {
+            throw 'This account uses Apple Sign-In. Please sign in with Apple, or use "Forgot Password" to set a password for email login.';
           }
         } catch (fetchError) {
           if (fetchError is String) rethrow;
@@ -381,6 +399,161 @@ class AuthService {
       }, SetOptions(merge: true));
     } catch (e) {
       // Non-fatal: photo sync failure should not block sign-in
+    }
+  }
+
+  // ==================== Apple Sign-In ====================
+
+  /// Generate a cryptographically secure random nonce for Apple Sign-In.
+  static String _generateNonce([int length = 32]) {
+    const charset = '0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._';
+    final random = Random.secure();
+    return List.generate(length, (_) => charset[random.nextInt(charset.length)]).join();
+  }
+
+  /// SHA-256 hash of input string, returned as hex.
+  static String _sha256ofString(String input) {
+    final bytes = utf8.encode(input);
+    final digest = sha256.convert(bytes);
+    return digest.toString();
+  }
+
+  /// Sign in (or register) with Apple.
+  /// Returns null if user cancels the Apple dialog.
+  /// Throws [AppleSignInAccountLinkException] if the email is already
+  /// registered with email/password — the UI should catch this and show
+  /// a password dialog to link accounts.
+  static Future<UserCredential?> signInWithApple() async {
+    try {
+      final rawNonce = _generateNonce();
+      final nonce = _sha256ofString(rawNonce);
+
+      final appleCredential = await SignInWithApple.getAppleIDCredential(
+        scopes: [
+          AppleIDAuthorizationScopes.email,
+          AppleIDAuthorizationScopes.fullName,
+        ],
+        nonce: nonce,
+      );
+
+      final oauthCredential = OAuthProvider('apple.com').credential(
+        idToken: appleCredential.identityToken,
+        rawNonce: rawNonce,
+      );
+
+      UserCredential userCredential;
+
+      try {
+        userCredential = await _auth.signInWithCredential(oauthCredential);
+      } on FirebaseAuthException catch (e) {
+        if (e.code == 'account-exists-with-different-credential') {
+          final email = e.email ?? appleCredential.email ?? '';
+          throw AppleSignInAccountLinkException(
+            email: email,
+            appleCredential: oauthCredential,
+          );
+        }
+        rethrow;
+      }
+
+      if (userCredential.user != null) {
+        await _syncAppleProfileData(userCredential.user!, appleCredential);
+        await ensureUserDocument();
+        clearExplicitLogoutFlag();
+        unawaited(LoggerService.setUserId(userCredential.user!.uid));
+        unawaited(LoggerService.logEvent('login', parameters: {'method': 'apple'}));
+        unawaited(SubscriptionService.loginUser(userCredential.user!.uid));
+        unawaited(_setupFcmInBackground());
+      }
+
+      return userCredential;
+    } on AppleSignInAccountLinkException {
+      rethrow; // Let UI handle this
+    } on SignInWithAppleAuthorizationException catch (e) {
+      if (e.code == AuthorizationErrorCode.canceled) {
+        return null; // User cancelled
+      }
+      throw 'Apple sign-in failed. Please try again.';
+    } on FirebaseAuthException catch (e) {
+      throw _getAuthException(e);
+    } catch (e) {
+      if (e.toString().contains('AuthorizationErrorCode.canceled')) {
+        return null;
+      }
+      throw 'Apple sign-in failed. Please try again.';
+    }
+  }
+
+  /// Sync Apple profile data to Firebase Auth and Firestore.
+  /// CRITICAL: Apple only returns the user's name on the FIRST sign-in.
+  /// On subsequent sign-ins, givenName/familyName will be null.
+  static Future<void> _syncAppleProfileData(
+    User firebaseUser,
+    AuthorizationCredentialAppleID appleCredential,
+  ) async {
+    try {
+      final givenName = appleCredential.givenName;
+      final familyName = appleCredential.familyName;
+
+      // Only update name if Apple provided it (first sign-in only)
+      if (givenName != null || familyName != null) {
+        final displayName = [givenName, familyName]
+            .where((n) => n != null && n.isNotEmpty)
+            .join(' ');
+
+        if (displayName.isNotEmpty) {
+          await firebaseUser.updateDisplayName(displayName);
+          await firebaseUser.reload();
+
+          await _firestore.collection('users').doc(firebaseUser.uid).set({
+            'displayName': displayName,
+            'displayNameLower': displayName.toLowerCase(),
+            'updatedAt': FieldValue.serverTimestamp(),
+          }, SetOptions(merge: true));
+        }
+      }
+
+      // Store Apple's relay email if provided
+      final email = appleCredential.email;
+      if (email != null && email.isNotEmpty) {
+        await _firestore.collection('users').doc(firebaseUser.uid).set({
+          'email': email,
+          'updatedAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
+      }
+    } catch (e) {
+      // Non-fatal: profile sync failure should not block sign-in
+    }
+  }
+
+  /// Link an Apple credential to an existing email/password account.
+  /// Called from the UI after the user enters their password.
+  static Future<UserCredential> linkAppleToExistingAccount({
+    required String email,
+    required String password,
+    required AuthCredential appleCredential,
+  }) async {
+    try {
+      // Sign in with existing email/password
+      final emailCredential = await _auth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      // Link the Apple credential to this account
+      final linked = await emailCredential.user!
+          .linkWithCredential(appleCredential);
+
+      await ensureUserDocument();
+      clearExplicitLogoutFlag();
+      unawaited(LoggerService.setUserId(linked.user!.uid));
+      unawaited(LoggerService.logEvent('login', parameters: {'method': 'apple_link'}));
+      unawaited(SubscriptionService.loginUser(linked.user!.uid));
+      unawaited(_setupFcmInBackground());
+
+      return linked;
+    } on FirebaseAuthException catch (e) {
+      throw _getAuthException(e);
     }
   }
 

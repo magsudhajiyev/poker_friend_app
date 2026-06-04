@@ -764,6 +764,7 @@
   "authSendResetLink": "Enviar enlace de restablecimiento",
   "authPasswordResetSent": "¡Correo de restablecimiento de contraseña enviado!",
   "paywallRestore": "Restaurar",
+  "paywallNotNow": "Ahora no",
   "paywallTitle": "FINAL TABLE PREMIUM",
   "paywallAvailablePlans": "Planes disponibles",
   "paywallStepLabel": "Paso 1 de 2",
@@ -4687,5 +4688,10 @@
   "profileTierFree": "gratuito",
   "profileTierPro": "Pro",
   "profileTierElite": "Elite",
-  "profileTierClub": "Club"
+  "profileTierClub": "Club",
+
+  "authExpContinueApple": "Continuar con Apple",
+  "authExpLinkAppleTitle": "Vincular cuenta de Apple",
+  "authExpLinkAppleMessage": "Ya existe una cuenta con {email}. Ingresa tu contraseña para vincular tu cuenta de Apple.",
+  "@authExpLinkAppleMessage": { "placeholders": { "email": { "type": "String" } } }
 }

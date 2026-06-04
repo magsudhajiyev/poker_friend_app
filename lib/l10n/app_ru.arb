@@ -580,6 +580,7 @@
   "authSendResetLink": "Отправить ссылку",
   "authPasswordResetSent": "Письмо для сброса пароля отправлено!",
   "paywallRestore": "Восстановить",
+  "paywallNotNow": "Не сейчас",
   "paywallTitle": "FINAL TABLE PREMIUM",
   "paywallAvailablePlans": "Доступные планы",
   "paywallStepLabel": "Шаг 1 из 2",
@@ -4517,5 +4518,10 @@
   "profileTierFree": "бесплатно",
   "profileTierPro": "Pro",
   "profileTierElite": "Elite",
-  "profileTierClub": "Club"
+  "profileTierClub": "Club",
+
+  "authExpContinueApple": "Продолжить с Apple",
+  "authExpLinkAppleTitle": "Привязать аккаунт Apple",
+  "authExpLinkAppleMessage": "Аккаунт с {email} уже существует. Введите пароль, чтобы привязать ваш аккаунт Apple.",
+  "@authExpLinkAppleMessage": { "placeholders": { "email": { "type": "String" } } }
 }

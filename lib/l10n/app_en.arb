@@ -693,6 +693,7 @@
   "authPasswordResetSent": "Password reset email sent!",
 
   "paywallRestore": "Restore",
+  "paywallNotNow": "Not now",
   "paywallTitle": "FINAL TABLE PREMIUM",
   "paywallAvailablePlans": "Available plans",
   "paywallStepLabel": "Step 1 of 2",
@@ -4282,5 +4283,14 @@
   "profileTierFree": "free",
   "profileTierPro": "Pro",
   "profileTierElite": "Elite",
-  "profileTierClub": "Club"
+  "profileTierClub": "Club",
+
+  "authExpContinueApple": "Continue with Apple",
+  "authExpLinkAppleTitle": "Link Apple Account",
+  "authExpLinkAppleMessage": "An account with {email} already exists. Enter your password to link your Apple account.",
+  "@authExpLinkAppleMessage": {
+    "placeholders": {
+      "email": { "type": "String" }
+    }
+  }
 }

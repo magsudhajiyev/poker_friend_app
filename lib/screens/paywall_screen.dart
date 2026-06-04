@@ -16,14 +16,17 @@ class PaywallScreen extends StatefulWidget {
   final String? featureName;
   /// Optional tier index to pre-select (0=Pro, 1=Elite, 2=Club).
   final int? preselectedTier;
+  /// When true, shows a "Not now" link below the CTA button to dismiss without purchasing.
+  /// Used during onboarding so new users can continue with the free plan.
+  final bool showSkip;
 
-  const PaywallScreen({super.key, this.featureName, this.preselectedTier});
+  const PaywallScreen({super.key, this.featureName, this.preselectedTier, this.showSkip = false});
 
-  static Future<bool?> show(BuildContext context, {String? featureName, int? preselectedTier}) {
+  static Future<bool?> show(BuildContext context, {String? featureName, int? preselectedTier, bool showSkip = false}) {
     return Navigator.of(context).push<bool>(
       MaterialPageRoute(
         fullscreenDialog: true,
-        builder: (context) => PaywallScreen(featureName: featureName, preselectedTier: preselectedTier),
+        builder: (context) => PaywallScreen(featureName: featureName, preselectedTier: preselectedTier, showSkip: showSkip),
       ),
     );
   }
@@ -580,39 +583,62 @@ class _PaywallScreenState extends State<PaywallScreen> {
         top: 24,
         bottom: bottomPadding > 0 ? bottomPadding : 24,
       ),
-      child: Center(
-        child: GestureDetector(
-          onTap: isDisabled ? null : _onContinue,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            width: screenWidth * 0.85,
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-            decoration: BoxDecoration(
-              color: isDisabled ? Colors.white.withValues(alpha: 0.4) : Colors.white,
-              borderRadius: BorderRadius.circular(999),
-            ),
-            child: Center(
-              child: _isPurchasing
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF0C0C0C)),
-                    )
-                  : Text(
-                      label,
-                      style: TextStyle(
-                        fontFamily: 'IBM Plex Sans',
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        height: 20 / 15,
-                        color: isCurrentPlan
-                            ? const Color(0xFF0C0C0C).withValues(alpha: 0.5)
-                            : const Color(0xFF0C0C0C),
-                      ),
-                    ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Center(
+            child: GestureDetector(
+              onTap: isDisabled ? null : _onContinue,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                width: screenWidth * 0.85,
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                decoration: BoxDecoration(
+                  color: isDisabled ? Colors.white.withValues(alpha: 0.4) : Colors.white,
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Center(
+                  child: _isPurchasing
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF0C0C0C)),
+                        )
+                      : Text(
+                          label,
+                          style: TextStyle(
+                            fontFamily: 'IBM Plex Sans',
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            height: 20 / 15,
+                            color: isCurrentPlan
+                                ? const Color(0xFF0C0C0C).withValues(alpha: 0.5)
+                                : const Color(0xFF0C0C0C),
+                          ),
+                        ),
+                ),
+              ),
             ),
           ),
-        ),
+          if (widget.showSkip) ...[
+            const SizedBox(height: 12),
+            GestureDetector(
+              onTap: () => Navigator.of(context).pop(),
+              child: Text(
+                l10n.paywallNotNow,
+                style: const TextStyle(
+                  fontFamily: 'IBM Plex Sans',
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                  height: 20 / 15,
+                  color: Color(0xFFB9B9B9),
+                  decoration: TextDecoration.underline,
+                  decorationColor: Color(0xFFB9B9B9),
+                ),
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }

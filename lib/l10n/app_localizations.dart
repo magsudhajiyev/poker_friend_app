@@ -2790,6 +2790,12 @@ abstract class AppLocalizations {
   /// **'Restore'**
   String get paywallRestore;
 
+  /// No description provided for @paywallNotNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get paywallNotNow;
+
   /// No description provided for @paywallTitle.
   ///
   /// In en, this message translates to:
@@ -13490,6 +13496,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Club'**
   String get profileTierClub;
+
+  /// No description provided for @authExpContinueApple.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with Apple'**
+  String get authExpContinueApple;
+
+  /// No description provided for @authExpLinkAppleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Link Apple Account'**
+  String get authExpLinkAppleTitle;
+
+  /// No description provided for @authExpLinkAppleMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'An account with {email} already exists. Enter your password to link your Apple account.'**
+  String authExpLinkAppleMessage(String email);
 }
 
 class _AppLocalizationsDelegate

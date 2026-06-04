@@ -1495,6 +1495,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get paywallRestore => 'Wiederherstellen';
 
   @override
+  String get paywallNotNow => 'Nicht jetzt';
+
+  @override
   String get paywallTitle => 'FINAL TABLE PREMIUM';
 
   @override
@@ -7729,4 +7732,15 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get profileTierClub => 'Club';
+
+  @override
+  String get authExpContinueApple => 'Weiter mit Apple';
+
+  @override
+  String get authExpLinkAppleTitle => 'Apple-Konto verknüpfen';
+
+  @override
+  String authExpLinkAppleMessage(String email) {
+    return 'Ein Konto mit $email existiert bereits. Geben Sie Ihr Passwort ein, um Ihr Apple-Konto zu verknüpfen.';
+  }
 }

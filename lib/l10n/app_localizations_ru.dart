@@ -1479,6 +1479,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get paywallRestore => 'Восстановить';
 
   @override
+  String get paywallNotNow => 'Не сейчас';
+
+  @override
   String get paywallTitle => 'FINAL TABLE PREMIUM';
 
   @override
@@ -7691,4 +7694,15 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get profileTierClub => 'Club';
+
+  @override
+  String get authExpContinueApple => 'Продолжить с Apple';
+
+  @override
+  String get authExpLinkAppleTitle => 'Привязать аккаунт Apple';
+
+  @override
+  String authExpLinkAppleMessage(String email) {
+    return 'Аккаунт с $email уже существует. Введите пароль, чтобы привязать ваш аккаунт Apple.';
+  }
 }

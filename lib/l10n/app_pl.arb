@@ -580,6 +580,7 @@
   "authSendResetLink": "Wyslij link resetujacy",
   "authPasswordResetSent": "Email z resetowaniem hasla wyslany!",
   "paywallRestore": "Przywroc",
+  "paywallNotNow": "Nie teraz",
   "paywallTitle": "FINAL TABLE PREMIUM",
   "paywallAvailablePlans": "Dostępne plany",
   "paywallStepLabel": "Krok 1 z 2",
@@ -4517,5 +4518,10 @@
   "profileTierFree": "darmowy",
   "profileTierPro": "Pro",
   "profileTierElite": "Elite",
-  "profileTierClub": "Club"
+  "profileTierClub": "Club",
+
+  "authExpContinueApple": "Kontynuuj z Apple",
+  "authExpLinkAppleTitle": "Połącz konto Apple",
+  "authExpLinkAppleMessage": "Konto z adresem {email} już istnieje. Wprowadź hasło, aby połączyć swoje konto Apple.",
+  "@authExpLinkAppleMessage": { "placeholders": { "email": { "type": "String" } } }
 }
