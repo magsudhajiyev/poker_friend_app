@@ -160,7 +160,35 @@ class LocalStorageService {
           await _createRangeGridTable(db);
         }
       },
+      onOpen: (db) async {
+        // Self-healing: the range grid table is derived data and test
+        // devices hop across branches that reuse schema version numbers,
+        // so the version counter alone can't guarantee it exists. The
+        // statements are IF NOT EXISTS — a no-op when already present.
+        try {
+          await _ensureRangeGridColumns(db);
+        } catch (e) {
+          debugPrint('Error ensuring range_grid_index: $e');
+        }
+      },
     );
+  }
+
+  /// Creates the range grid table when missing, and recreates it when an
+  /// older incompatible shape (pre-handKey) is found.
+  static Future<void> _ensureRangeGridColumns(Database db) async {
+    final columns = await db.rawQuery('PRAGMA table_info(range_grid_index)');
+    if (columns.isEmpty) {
+      // Table missing entirely
+      await _createRangeGridTable(db);
+      return;
+    }
+    final hasHandKey = columns.any((c) => c['name'] == 'handKey');
+    if (!hasHandKey) {
+      // Old v1 shape from an earlier branch — derived data, rebuild
+      await db.execute('DROP TABLE IF EXISTS range_grid_index');
+      await _createRangeGridTable(db);
+    }
   }
 
   static Future<void> _createRangeGridTable(Database db) async {
@@ -195,7 +223,9 @@ class LocalStorageService {
   /// Insert or merge one range grid entry (idempotent by handKey). When the
   /// same hand arrives from both the local DB and Firestore, the two source
   /// ids are merged instead of one overwriting the other.
-  static Future<void> saveRangeEntry(Map<String, dynamic> entry) async {
+  /// Returns true on success so backfills only mark themselves complete
+  /// when every entry actually landed.
+  static Future<bool> saveRangeEntry(Map<String, dynamic> entry) async {
     try {
       final db = await database;
       final columns = entry.keys.toList();
@@ -218,8 +248,10 @@ class LocalStorageService {
           potBB = excluded.potBB,
           won = excluded.won
       ''', columns.map((c) => entry[c]).toList());
+      return true;
     } catch (e) {
       debugPrint('Error saving range grid entry: $e');
+      return false;
     }
   }
 

@@ -17,7 +17,7 @@ import 'range_grid_service.dart';
 /// local save path and local backfill use, so a hand present both locally
 /// and in the cloud lands on a single row (the merge upsert keeps both ids).
 class RangeGridCloudBackfill {
-  static const _flagKeyPrefix = 'range_grid_cloud_backfilled_v2_';
+  static const _flagKeyPrefix = 'range_grid_cloud_backfilled_v3_';
   static Future<bool>? _inFlight;
 
   /// True while a cloud sync is currently running (for UI indicators).
@@ -45,6 +45,7 @@ class RangeGridCloudBackfill {
 
       final sessions = await FirebaseService.getAllSessions();
       int indexed = 0;
+      bool anySaveFailed = false;
 
       for (final session in sessions) {
         final sessionId = session['id'] as String?;
@@ -72,8 +73,13 @@ class RangeGridCloudBackfill {
               sessionHeroSeat: sessionHeroSeat,
             );
             if (entry != null) {
-              await LocalStorageService.saveRangeEntry(entry.toDbMap());
-              indexed++;
+              final saved =
+                  await LocalStorageService.saveRangeEntry(entry.toDbMap());
+              if (saved) {
+                indexed++;
+              } else {
+                anySaveFailed = true;
+              }
             }
           } catch (_) {
             // Skip malformed hands
@@ -81,8 +87,13 @@ class RangeGridCloudBackfill {
         }
       }
 
-      await prefs.setBool(flagKey, true);
-      debugPrint('RangeGridCloudBackfill: indexed $indexed cloud hands');
+      // Only mark complete when every entry landed — otherwise retry on a
+      // later call (e.g. the table wasn't available yet)
+      if (!anySaveFailed) {
+        await prefs.setBool(flagKey, true);
+      }
+      debugPrint('RangeGridCloudBackfill: indexed $indexed cloud hands'
+          '${anySaveFailed ? ' (some saves failed — will retry)' : ''}');
       return indexed > 0;
     } catch (e) {
       debugPrint('RangeGridCloudBackfill error: $e');

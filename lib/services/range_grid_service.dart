@@ -122,7 +122,7 @@ class RangeCellAggregate {
 /// Pure canonicalization/derivation logic lives in static functions (tested
 /// without a database); persistence goes through LocalStorageService.
 class RangeGridService {
-  static const _backfillFlagKey = 'range_grid_backfilled_v2';
+  static const _backfillFlagKey = 'range_grid_backfilled_v3';
   static Future<void>? _backfillFuture;
 
   // ── Canonicalization ────────────────────────────────────────────────
@@ -431,6 +431,7 @@ class RangeGridService {
       if (prefs.getBool(_backfillFlagKey) ?? false) return;
 
       final rows = await LocalStorageService.getHandsForRangeBackfill();
+      bool anySaveFailed = false;
       for (final row in rows) {
         try {
           // Rows without an owning user can never be queried — skip them
@@ -490,14 +491,22 @@ class RangeGridService {
             choppedWinners: chopped,
           );
           if (entry != null) {
-            await LocalStorageService.saveRangeEntry(entry.toDbMap());
+            final saved =
+                await LocalStorageService.saveRangeEntry(entry.toDbMap());
+            if (!saved) anySaveFailed = true;
           }
         } catch (_) {
           // Skip malformed historical hands
         }
       }
 
-      await prefs.setBool(_backfillFlagKey, true);
+      // Only mark complete when every entry landed — otherwise retry on a
+      // later call (e.g. the table wasn't available yet)
+      if (!anySaveFailed) {
+        await prefs.setBool(_backfillFlagKey, true);
+      } else {
+        _backfillFuture = null;
+      }
     } catch (_) {
       // Retry on next ensureBackfilled() call in a future app session
       _backfillFuture = null;
