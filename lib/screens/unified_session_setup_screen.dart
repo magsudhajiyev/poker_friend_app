@@ -578,7 +578,7 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
                   _sbController,
                   _sbFocusNode,
                   _isSBFocused,
-                  true,
+                  _gameType == GameType.cash,
                   (v) => setState(() => _smallBlind = v),
                   allowDecimal: _gameType == GameType.cash,
                 ),
@@ -590,7 +590,7 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
                   _bbController,
                   _bbFocusNode,
                   _isBBFocused,
-                  true,
+                  _gameType == GameType.cash,
                   (v) => setState(() => _bigBlind = v),
                   allowDecimal: _gameType == GameType.cash,
                 ),
@@ -625,67 +625,37 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
                         width: (hasError || _isStartingStackFocused) ? 1.5 : 1.0,
                       ),
                     ),
-                    child: Row(
-                      children: [
-                        if (CurrencyService.prefixText != null) ...[
-                          Text(
-                            CurrencyService.prefixText!,
-                            style: GoogleFonts.ibmPlexSans(
-                              color: _isStartingStackFocused ? Colors.white : const Color(0xFFB9B9B9),
-                              fontSize: 15,
-                              fontWeight: FontWeight.w400,
-                              height: 22 / 15,
-                            ),
-                          ),
-                          const SizedBox(width: 4),
-                        ],
-                        Expanded(
-                          child: TextField(
-                            controller: _startingStackController,
-                            focusNode: _startingStackFocusNode,
-                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                            textInputAction: TextInputAction.done,
-                            inputFormatters: [
-                              FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
-                            ],
-                            style: GoogleFonts.ibmPlexSans(
-                              color: Colors.white,
-                              fontSize: 15,
-                              fontWeight: FontWeight.w400,
-                              height: 22 / 15,
-                            ),
-                            decoration: InputDecoration(
-                              hintText: l10n.setupEnterChipStack,
-                              hintStyle: GoogleFonts.ibmPlexSans(
-                                color: const Color(0xFFB9B9B9),
-                                fontSize: 15,
-                                fontWeight: FontWeight.w400,
-                                height: 22 / 15,
-                              ),
-                              border: InputBorder.none,
-                              enabledBorder: InputBorder.none,
-                              focusedBorder: InputBorder.none,
-                              filled: true,
-                              fillColor: Colors.transparent,
-                              contentPadding: EdgeInsets.zero,
-                              isDense: true,
-                            ),
-                            onChanged: (_) => setState(() {}),
-                          ),
-                        ),
-                        if (CurrencyService.suffixText != null) ...[
-                          const SizedBox(width: 4),
-                          Text(
-                            CurrencyService.suffixText!,
-                            style: GoogleFonts.ibmPlexSans(
-                              color: _isStartingStackFocused ? Colors.white : const Color(0xFFB9B9B9),
-                              fontSize: 15,
-                              fontWeight: FontWeight.w400,
-                              height: 22 / 15,
-                            ),
-                          ),
-                        ],
+                    child: TextField(
+                      controller: _startingStackController,
+                      focusNode: _startingStackFocusNode,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      textInputAction: TextInputAction.done,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
                       ],
+                      style: GoogleFonts.ibmPlexSans(
+                        color: Colors.white,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w400,
+                        height: 22 / 15,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: l10n.setupEnterChipStack,
+                        hintStyle: GoogleFonts.ibmPlexSans(
+                          color: const Color(0xFFB9B9B9),
+                          fontSize: 15,
+                          fontWeight: FontWeight.w400,
+                          height: 22 / 15,
+                        ),
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        filled: true,
+                        fillColor: Colors.transparent,
+                        contentPadding: EdgeInsets.zero,
+                        isDense: true,
+                      ),
+                      onChanged: (_) => setState(() {}),
                     ),
                   ),
                   if (hasError) ...[
