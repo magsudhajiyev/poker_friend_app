@@ -1,18 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../models/stack_bucket.dart';
 import '../../screens/hand_actions_screen.dart';
+import '../../services/range_grid_cloud_backfill.dart';
 import '../../services/range_grid_service.dart';
 import 'range_frequency_bar.dart';
 import 'range_hand_row.dart';
 
-/// The hero's range chart, built purely from logged hands.
+/// The hero's PREFLOP range chart, built purely from logged hands.
 ///
 /// Renders the full 13×13 starting-hand grid: cells start empty and fill
-/// with the hero's actual action frequencies as hands with hole cards are
-/// logged, sliced by game type, position group and stack range. Over time
-/// this becomes the player's own data-driven range chart.
+/// with the hero's actual preflop action frequencies as hands with hole
+/// cards are logged, sliced by game type, position and stack range. Only
+/// preflop decisions are considered — postflop play never affects a cell.
 class RangeGridView extends StatefulWidget {
   const RangeGridView({super.key});
 
@@ -23,6 +25,7 @@ class RangeGridView extends StatefulWidget {
 class _RangeGridViewState extends State<RangeGridView>
     with AutomaticKeepAliveClientMixin {
   static const _ranks = 'AKQJT98765432';
+  static const _posGroups = ['EP', 'MP', 'CO', 'BTN', 'SB', 'BB'];
 
   String _gameType = 'cash';
   String? _posGroup; // null = all positions
@@ -30,6 +33,7 @@ class _RangeGridViewState extends State<RangeGridView>
 
   Map<String, RangeCellAggregate> _aggregates = {};
   bool _loading = true;
+  bool _syncingCloud = false;
 
   @override
   bool get wantKeepAlive => true;
@@ -38,6 +42,7 @@ class _RangeGridViewState extends State<RangeGridView>
   void initState() {
     super.initState();
     _load();
+    _syncCloudHistory();
   }
 
   Future<void> _load() async {
@@ -52,6 +57,23 @@ class _RangeGridViewState extends State<RangeGridView>
       _aggregates = aggregates;
       _loading = false;
     });
+  }
+
+  /// Pull the full hand history from Firestore once and refresh the grid
+  /// when it lands, so prior hands show up without any new logging.
+  Future<void> _syncCloudHistory({bool force = false}) async {
+    setState(() => _syncingCloud = true);
+    final indexedNew =
+        await RangeGridCloudBackfill.ensureCloudBackfilled(force: force);
+    if (!mounted) return;
+    setState(() => _syncingCloud = false);
+    if (indexedNew) _load();
+  }
+
+  void _setFilter(VoidCallback apply) {
+    HapticFeedback.selectionClick();
+    setState(apply);
+    _load();
   }
 
   /// Hand class for grid cell (row, col): pairs on the diagonal, suited
@@ -77,96 +99,262 @@ class _RangeGridViewState extends State<RangeGridView>
       _aggregates.values.where((a) => a.total > 0).length;
 
   // ── Filters ─────────────────────────────────────────────────────────
+  //
+  // Compact, no horizontal scrolling:
+  //  Row 1: Cash|Tournament mini segmented toggle + stack depth selector
+  //  Row 2: full-width position segmented bar (All/EP/MP/CO/BTN/SB/BB)
 
-  Widget _filterPill(String label, bool selected, VoidCallback onTap) {
+  Widget _buildGameTypeToggle() {
+    Widget segment(String label, String value) {
+      final selected = _gameType == value;
+      return GestureDetector(
+        onTap: selected ? null : () => _setFilter(() => _gameType = value),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+          decoration: BoxDecoration(
+            color: selected ? const Color(0xFF62E3BC) : Colors.transparent,
+            borderRadius: BorderRadius.circular(999),
+          ),
+          child: Text(
+            label,
+            style: GoogleFonts.ibmPlexSans(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: selected
+                  ? Colors.black
+                  : Colors.white.withValues(alpha: 0.65),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(2),
+      decoration: BoxDecoration(
+        color: const Color(0xFF161719),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          segment('Cash', 'cash'),
+          segment('Tourney', 'tournament'),
+        ],
+      ),
+    );
+  }
+
+  String get _stackLabel => _stackBucket == null
+      ? 'All stacks'
+      : StackBucketHelper.rangeLabel(
+          StackRange.values.firstWhere(
+            (r) => r.name == _stackBucket,
+            orElse: () => StackRange.average,
+          ),
+        );
+
+  Widget _buildStackSelector() {
+    final active = _stackBucket != null;
     return GestureDetector(
-      onTap: onTap,
+      onTap: _showStackPicker,
       child: Container(
-        margin: const EdgeInsets.only(right: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: selected ? const Color(0xFF62E3BC) : const Color(0xFF161719),
+          color: active ? const Color(0xFF62E3BC) : const Color(0xFF161719),
           borderRadius: BorderRadius.circular(999),
           border: Border.all(
-            color: selected
+            color: active
                 ? const Color(0xFF62E3BC)
                 : Colors.white.withValues(alpha: 0.08),
           ),
         ),
-        child: Text(
-          label,
-          style: GoogleFonts.ibmPlexSans(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color:
-                selected ? Colors.black : Colors.white.withValues(alpha: 0.75),
-          ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.layers_outlined,
+              size: 14,
+              color: active ? Colors.black : Colors.white.withValues(alpha: 0.6),
+            ),
+            const SizedBox(width: 6),
+            Text(
+              _stackLabel,
+              style: GoogleFonts.ibmPlexSans(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: active
+                    ? Colors.black
+                    : Colors.white.withValues(alpha: 0.75),
+              ),
+            ),
+            const SizedBox(width: 3),
+            Icon(
+              Icons.keyboard_arrow_down_rounded,
+              size: 16,
+              color: active ? Colors.black : Colors.white.withValues(alpha: 0.5),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildFilters() {
-    const posGroups = ['EP', 'MP', 'CO', 'BTN', 'SB', 'BB'];
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Game type + position group
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Row(
-            children: [
-              _filterPill('Cash', _gameType == 'cash', () {
-                setState(() => _gameType = 'cash');
-                _load();
-              }),
-              _filterPill('Tournament', _gameType == 'tournament', () {
-                setState(() => _gameType = 'tournament');
-                _load();
-              }),
-              Container(
-                width: 1,
-                height: 20,
-                margin: const EdgeInsets.only(right: 8),
-                color: Colors.white.withValues(alpha: 0.1),
+  void _showStackPicker() {
+    HapticFeedback.selectionClick();
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        Widget option(String label, String? value) {
+          final selected = _stackBucket == value;
+          return GestureDetector(
+            onTap: () {
+              Navigator.pop(sheetContext);
+              if (_stackBucket != value) {
+                _setFilter(() => _stackBucket = value);
+              }
+            },
+            behavior: HitTestBehavior.opaque,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 11),
+              child: Row(
+                children: [
+                  Icon(
+                    selected
+                        ? Icons.radio_button_checked
+                        : Icons.radio_button_off,
+                    size: 18,
+                    color: selected
+                        ? const Color(0xFF62E3BC)
+                        : Colors.white.withValues(alpha: 0.3),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    label,
+                    style: GoogleFonts.ibmPlexSans(
+                      fontSize: 15,
+                      fontWeight:
+                          selected ? FontWeight.w600 : FontWeight.w400,
+                      color: selected ? Colors.white : Colors.white70,
+                    ),
+                  ),
+                ],
               ),
-              _filterPill('All pos.', _posGroup == null, () {
-                setState(() => _posGroup = null);
-                _load();
-              }),
-              for (final group in posGroups)
-                _filterPill(group, _posGroup == group, () {
-                  setState(() => _posGroup = group);
-                  _load();
-                }),
-            ],
+            ),
+          );
+        }
+
+        return Container(
+          decoration: const BoxDecoration(
+            color: Color(0xFF161719),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
           ),
-        ),
-        const SizedBox(height: 8),
-        // Stack depth
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Row(
+          padding: EdgeInsets.fromLTRB(
+              24, 14, 24, 16 + MediaQuery.of(sheetContext).padding.bottom),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _filterPill('All stacks', _stackBucket == null, () {
-                setState(() => _stackBucket = null);
-                _load();
-              }),
-              for (final range in StackRange.values)
-                _filterPill(
-                  StackBucketHelper.rangeLabel(range),
-                  _stackBucket == range.name,
-                  () {
-                    setState(() => _stackBucket = range.name);
-                    _load();
-                  },
+              Center(
+                child: Container(
+                  width: 36,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
                 ),
+              ),
+              const SizedBox(height: 14),
+              Text(
+                'Stack depth',
+                style: GoogleFonts.ibmPlexSans(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 6),
+              option('All stacks', null),
+              for (final range in StackRange.values)
+                option(StackBucketHelper.rangeLabel(range), range.name),
             ],
           ),
+        );
+      },
+    );
+  }
+
+  Widget _buildPositionBar() {
+    Widget segment(String label, String? value) {
+      final selected = _posGroup == value;
+      return Expanded(
+        child: GestureDetector(
+          onTap: selected ? null : () => _setFilter(() => _posGroup = value),
+          behavior: HitTestBehavior.opaque,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            decoration: BoxDecoration(
+              color: selected ? const Color(0xFF62E3BC) : Colors.transparent,
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Center(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  label,
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: selected
+                        ? Colors.black
+                        : Colors.white.withValues(alpha: 0.65),
+                  ),
+                ),
+              ),
+            ),
+          ),
         ),
-      ],
+      );
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(2),
+      decoration: BoxDecoration(
+        color: const Color(0xFF161719),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+      ),
+      child: Row(
+        children: [
+          segment('All', null),
+          for (final group in _posGroups) segment(group, group),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFilters() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              _buildGameTypeToggle(),
+              const Spacer(),
+              _buildStackSelector(),
+            ],
+          ),
+          const SizedBox(height: 8),
+          _buildPositionBar(),
+        ],
+      ),
     );
   }
 
@@ -309,12 +497,37 @@ class _RangeGridViewState extends State<RangeGridView>
     );
   }
 
+  Widget _buildSyncRow() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+      child: Row(
+        children: [
+          const SizedBox(
+            width: 12,
+            height: 12,
+            child: CircularProgressIndicator(
+                strokeWidth: 1.5, color: Color(0xFF62E3BC)),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            'Syncing your hand history…',
+            style: GoogleFonts.ibmPlexSans(
+              fontSize: 12,
+              color: Colors.white.withValues(alpha: 0.5),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   // ── Cell detail sheet ───────────────────────────────────────────────
 
   void _showCellDetail(String handClass) {
     final agg = _aggregates[handClass];
     if (agg == null || agg.total == 0) return;
 
+    HapticFeedback.selectionClick();
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -335,13 +548,36 @@ class _RangeGridViewState extends State<RangeGridView>
   Widget build(BuildContext context) {
     super.build(context); // AutomaticKeepAliveClientMixin
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.only(top: 4, bottom: 120),
-      child: Column(
+    return RefreshIndicator(
+      onRefresh: () async {
+        await _syncCloudHistory(force: true);
+        await _load();
+      },
+      color: const Color(0xFF62E3BC),
+      backgroundColor: const Color(0xFF161719),
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.only(top: 4, bottom: 120),
+        child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildFilters(),
-          const SizedBox(height: 16),
+          if (_syncingCloud) _buildSyncRow(),
+          const SizedBox(height: 14),
+          // Preflop-only scope, stated explicitly
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Text(
+              'PREFLOP RANGE — BUILT FROM YOUR LOGGED HANDS',
+              style: GoogleFonts.ibmPlexSans(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 1.0,
+                color: const Color(0xFF87ED81),
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
           if (_loading)
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 120),
@@ -360,14 +596,14 @@ class _RangeGridViewState extends State<RangeGridView>
             _buildCoverage(),
             const SizedBox(height: 12),
             _buildLegend(),
-            if (_loggedClassCount == 0) ...[
+            if (_loggedClassCount == 0 && !_syncingCloud) ...[
               const SizedBox(height: 24),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 32),
                 child: Text(
-                  'Your range chart builds itself: log hands and enter your '
+                  'Your preflop chart builds itself: log hands and enter your '
                   'hole cards, and each starting hand fills in with how you '
-                  'actually played it.',
+                  'actually played it before the flop.',
                   textAlign: TextAlign.center,
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: 13,
@@ -379,12 +615,13 @@ class _RangeGridViewState extends State<RangeGridView>
             ],
           ],
         ],
+        ),
       ),
     );
   }
 }
 
-/// Bottom sheet with the frequency split and recent hands for one cell.
+/// Bottom sheet with the preflop frequency split and recent hands for one cell.
 class _CellDetailSheet extends StatefulWidget {
   final String handClass;
   final String gameType;
@@ -419,7 +656,7 @@ class _CellDetailSheetState extends State<_CellDetailSheet> {
   }
 
   Future<void> _openHand(RangeGridEntry entry) async {
-    final hand = await RangeGridService.loadHand(entry.handId);
+    final hand = await RangeGridService.loadHand(entry);
     if (hand == null || !mounted) return;
     Navigator.push(
       context,
@@ -467,7 +704,7 @@ class _CellDetailSheetState extends State<_CellDetailSheet> {
               ),
               const SizedBox(width: 10),
               Text(
-                '${agg.total} ${agg.total == 1 ? 'hand' : 'hands'}'
+                '${agg.total} preflop ${agg.total == 1 ? 'spot' : 'spots'}'
                 '${widget.posGroup != null ? ' · ${widget.posGroup}' : ''}',
                 style: GoogleFonts.ibmPlexSans(
                   fontSize: 13,

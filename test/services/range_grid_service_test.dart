@@ -161,6 +161,21 @@ void main() {
       expect(RangeGridService.heroStackBB(actions, 3, 2.0), 100.0);
     });
 
+    test('prefers the preflop stack, falls back to any hero stack', () {
+      // Older hands may only carry a stack on a postflop action — usable
+      // as a fallback, but a preflop stack always wins.
+      final onlyFlop = [
+        _action(3, 'bet', street: 'flop', stack: 180, amount: 20, isHero: true),
+      ];
+      expect(RangeGridService.heroStackBB(onlyFlop, 3, 2.0), 90.0);
+
+      final both = [
+        _action(3, 'call', stack: 200, amount: 6, isHero: true),
+        _action(3, 'bet', street: 'flop', stack: 180, amount: 20, isHero: true),
+      ];
+      expect(RangeGridService.heroStackBB(both, 3, 2.0), 100.0);
+    });
+
     test('null when big blind or stack unknown', () {
       expect(RangeGridService.heroStackBB([], 3, 2.0), null);
       expect(
@@ -177,7 +192,8 @@ void main() {
 
     test('builds a complete entry', () {
       final entry = RangeGridService.buildEntry(
-        handId: 'h1',
+        handKey: 's1:1',
+        localHandId: 'h1',
         sessionId: 's1',
         userId: 'u1',
         timestamp: DateTime(2026, 6, 1),
@@ -205,7 +221,8 @@ void main() {
 
     test('won via chopped pot', () {
       final entry = RangeGridService.buildEntry(
-        handId: 'h1',
+        handKey: 's1:1',
+        localHandId: 'h1',
         sessionId: 's1',
         userId: 'u1',
         timestamp: DateTime(2026, 6, 1),
@@ -229,7 +246,7 @@ void main() {
         int? seat,
       }) =>
           RangeGridService.buildEntry(
-            handId: 'h1',
+            handKey: 's1:1',
             sessionId: 's1',
             userId: 'u1',
             timestamp: DateTime(2026, 6, 1),
@@ -268,7 +285,9 @@ void main() {
   group('RangeGridEntry serialization', () {
     test('round-trips through the DB map', () {
       const entry = RangeGridEntry(
-        handId: 'h1',
+        handKey: 's1:7',
+        localHandId: 'h-local',
+        cloudHandId: 'h-cloud',
         sessionId: 's1',
         userId: 'u1',
         timestamp: 1234567890,
@@ -284,7 +303,9 @@ void main() {
         won: false,
       );
       final restored = RangeGridEntry.fromDbMap(entry.toDbMap());
-      expect(restored.handId, entry.handId);
+      expect(restored.handKey, entry.handKey);
+      expect(restored.localHandId, 'h-local');
+      expect(restored.cloudHandId, 'h-cloud');
       expect(restored.timestamp, entry.timestamp);
       expect(restored.handClass, entry.handClass);
       expect(restored.stackBB, entry.stackBB);

@@ -21,7 +21,7 @@ class LocalStorageService {
     
     return await openDatabase(
       dbPath,
-      version: 14,
+      version: 15,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE sessions(
@@ -152,8 +152,11 @@ class LocalStorageService {
           await db.execute('ALTER TABLE sessions ADD COLUMN handsLogged INTEGER DEFAULT 0');
           await db.execute('ALTER TABLE sessions ADD COLUMN biggestPot REAL DEFAULT 0');
         }
-        if (oldVersion < 14) {
-          // Range grid index — hero hands by (hand class, position, stack)
+        if (oldVersion < 15) {
+          // Range grid index v2 — keyed by (sessionId, handNumber) so the
+          // same hand from the local DB and Firestore dedupes to one row.
+          // Derived data: safe to drop and rebuild via backfill.
+          await db.execute('DROP TABLE IF EXISTS range_grid_index');
           await _createRangeGridTable(db);
         }
       },
@@ -163,7 +166,9 @@ class LocalStorageService {
   static Future<void> _createRangeGridTable(Database db) async {
     await db.execute('''
       CREATE TABLE IF NOT EXISTS range_grid_index(
-        handId TEXT PRIMARY KEY,
+        handKey TEXT PRIMARY KEY,
+        localHandId TEXT,
+        cloudHandId TEXT,
         sessionId TEXT,
         userId TEXT NOT NULL,
         timestamp INTEGER NOT NULL,
@@ -187,12 +192,32 @@ class LocalStorageService {
 
   // ── Range grid index CRUD ──────────────────────────────────────────
 
-  /// Insert or replace one range grid entry (idempotent by handId).
+  /// Insert or merge one range grid entry (idempotent by handKey). When the
+  /// same hand arrives from both the local DB and Firestore, the two source
+  /// ids are merged instead of one overwriting the other.
   static Future<void> saveRangeEntry(Map<String, dynamic> entry) async {
     try {
       final db = await database;
-      await db.insert('range_grid_index', entry,
-          conflictAlgorithm: ConflictAlgorithm.replace);
+      final columns = entry.keys.toList();
+      final placeholders = List.filled(columns.length, '?').join(', ');
+      await db.rawInsert('''
+        INSERT INTO range_grid_index (${columns.join(', ')})
+        VALUES ($placeholders)
+        ON CONFLICT(handKey) DO UPDATE SET
+          localHandId = COALESCE(excluded.localHandId, range_grid_index.localHandId),
+          cloudHandId = COALESCE(excluded.cloudHandId, range_grid_index.cloudHandId),
+          timestamp = excluded.timestamp,
+          gameType = excluded.gameType,
+          handClass = excluded.handClass,
+          position = excluded.position,
+          posGroup = excluded.posGroup,
+          stackBB = excluded.stackBB,
+          stackBucket = excluded.stackBucket,
+          primaryAction = excluded.primaryAction,
+          preflopLine = excluded.preflopLine,
+          potBB = excluded.potBB,
+          won = excluded.won
+      ''', columns.map((c) => entry[c]).toList());
     } catch (e) {
       debugPrint('Error saving range grid entry: $e');
     }
@@ -273,9 +298,9 @@ class LocalStorageService {
     try {
       final db = await database;
       final rows = await db.rawQuery('''
-        SELECT h.id, h.sessionId, h.actions, h.ourHoleCards, h.winnerId,
-               h.choppedWinners, h.potAmount, h.handBigBlind, h.handGameType,
-               h.startTime, h.endTime,
+        SELECT h.id, h.sessionId, h.handNumber, h.actions, h.ourHoleCards,
+               h.winnerId, h.choppedWinners, h.potAmount, h.handBigBlind,
+               h.handGameType, h.startTime, h.endTime,
                s.userId, s.gameType, s.bigBlind
         FROM hands h
         LEFT JOIN sessions s ON s.id = h.sessionId

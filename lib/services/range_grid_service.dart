@@ -4,10 +4,17 @@ import '../models/hand_state_machine.dart';
 import '../models/stack_bucket.dart';
 import 'auth_service.dart';
 import 'local_storage_service.dart';
+import 'range_grid_cloud_backfill.dart';
 
 /// One indexed hero hand in the range grid data.
+///
+/// [handKey] is the dedupe key '{sessionId}:{handNumber}' — the same hand
+/// reached via the local database and via Firestore maps to one row.
+/// [localHandId]/[cloudHandId] locate the full hand for navigation.
 class RangeGridEntry {
-  final String handId;
+  final String handKey;
+  final String? localHandId;
+  final String? cloudHandId;
   final String sessionId;
   final String userId;
   final int timestamp; // millisecondsSinceEpoch
@@ -23,7 +30,9 @@ class RangeGridEntry {
   final bool won;
 
   const RangeGridEntry({
-    required this.handId,
+    required this.handKey,
+    this.localHandId,
+    this.cloudHandId,
     required this.sessionId,
     required this.userId,
     required this.timestamp,
@@ -40,7 +49,9 @@ class RangeGridEntry {
   });
 
   Map<String, dynamic> toDbMap() => {
-        'handId': handId,
+        'handKey': handKey,
+        'localHandId': localHandId,
+        'cloudHandId': cloudHandId,
         'sessionId': sessionId,
         'userId': userId,
         'timestamp': timestamp,
@@ -57,7 +68,9 @@ class RangeGridEntry {
       };
 
   factory RangeGridEntry.fromDbMap(Map<String, dynamic> map) => RangeGridEntry(
-        handId: map['handId'] as String,
+        handKey: map['handKey'] as String,
+        localHandId: map['localHandId'] as String?,
+        cloudHandId: map['cloudHandId'] as String?,
         sessionId: map['sessionId'] as String? ?? '',
         userId: map['userId'] as String? ?? '',
         timestamp: map['timestamp'] as int? ?? 0,
@@ -109,7 +122,7 @@ class RangeCellAggregate {
 /// Pure canonicalization/derivation logic lives in static functions (tested
 /// without a database); persistence goes through LocalStorageService.
 class RangeGridService {
-  static const _backfillFlagKey = 'range_grid_backfilled_v1';
+  static const _backfillFlagKey = 'range_grid_backfilled_v2';
   static Future<void>? _backfillFuture;
 
   // ── Canonicalization ────────────────────────────────────────────────
@@ -229,16 +242,21 @@ class RangeGridService {
     return (primary, line);
   }
 
-  /// Hero's stack in BB at their first recorded preflop action, if known.
+  /// Hero's stack in BB for the preflop decision. Prefers the stack on the
+  /// hero's first PREFLOP action; falls back to their first recorded action
+  /// anywhere (older hands), which is close enough for depth bucketing.
   static double? heroStackBB(
       List<Map<String, dynamic>> actions, int heroSeat, double bigBlind) {
     if (bigBlind <= 0) return null;
+    double? fallback;
     for (final action in actions) {
       if (action['player'] != heroSeat) continue;
       final stack = (action['playerStack'] as num?)?.toDouble();
-      if (stack != null && stack > 0) return stack / bigBlind;
+      if (stack == null || stack <= 0) continue;
+      if (action['street'] == 'preflop') return stack / bigBlind;
+      fallback ??= stack / bigBlind;
     }
-    return null;
+    return fallback;
   }
 
   // ── Entry building ──────────────────────────────────────────────────
@@ -246,7 +264,9 @@ class RangeGridService {
   /// Builds the index entry for a completed hand, or null when the hand
   /// can't be indexed (no hero hole cards / unknown position or seat).
   static RangeGridEntry? buildEntry({
-    required String handId,
+    required String handKey,
+    String? localHandId,
+    String? cloudHandId,
     required String sessionId,
     required String userId,
     required DateTime timestamp,
@@ -272,7 +292,9 @@ class RangeGridService {
         winnerId == heroSeat || (choppedWinners?.contains(heroSeat) ?? false);
 
     return RangeGridEntry(
-      handId: handId,
+      handKey: handKey,
+      localHandId: localHandId,
+      cloudHandId: cloudHandId,
       sessionId: sessionId,
       userId: userId,
       timestamp: timestamp.millisecondsSinceEpoch,
@@ -304,7 +326,8 @@ class RangeGridService {
       final userId = AuthService.userId;
       if (userId == null) return;
       final entry = buildEntry(
-        handId: handId,
+        handKey: '$sessionId:${hand.handNumber}',
+        localHandId: handId,
         sessionId: sessionId,
         userId: userId,
         timestamp: hand.endTime ?? hand.startTime,
@@ -379,10 +402,19 @@ class RangeGridService {
     return rows.map(RangeGridEntry.fromDbMap).toList();
   }
 
-  /// Loads the full decoded hand map for an entry (for opening that hand's
-  /// details from a cell's recent-hands list).
-  static Future<Map<String, dynamic>?> loadHand(String handId) {
-    return LocalStorageService.getHandById(handId);
+  /// Loads the full decoded hand map for an entry: local database first,
+  /// falling back to Firestore for hands that only exist in the cloud
+  /// (e.g. logged on another device).
+  static Future<Map<String, dynamic>?> loadHand(RangeGridEntry entry) async {
+    if (entry.localHandId != null) {
+      final hand = await LocalStorageService.getHandById(entry.localHandId!);
+      if (hand != null) return hand;
+    }
+    if (entry.cloudHandId != null && entry.sessionId.isNotEmpty) {
+      return RangeGridCloudBackfill.fetchHand(
+          entry.sessionId, entry.cloudHandId!);
+    }
+    return null;
   }
 
   // ── Backfill ────────────────────────────────────────────────────────
@@ -433,9 +465,12 @@ class RangeGridService {
           final chopped =
               choppedRaw is List ? choppedRaw.whereType<int>().toList() : null;
 
+          final sessionId = row['sessionId'] as String? ?? '';
+          final handNumber = row['handNumber'];
           final entry = buildEntry(
-            handId: row['id'] as String,
-            sessionId: row['sessionId'] as String? ?? '',
+            handKey: '$sessionId:$handNumber',
+            localHandId: row['id'] as String,
+            sessionId: sessionId,
             userId: rowUserId,
             timestamp: DateTime.tryParse(
                     (row['endTime'] ?? row['startTime'] ?? '') as String) ??
