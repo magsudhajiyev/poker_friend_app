@@ -110,9 +110,13 @@ class _MultiPotWinnerDialogState extends State<MultiPotWinnerDialog> {
   Map<int, double> _calculateIndividualShares(int potIndex, double potAmount, Set<int> winners) {
     if (winners.isEmpty) return {};
 
+    // Tournaments chop to whole chips, cash games to cents — otherwise
+    // cash chops silently lose the cent remainder.
     final numWinners = winners.length;
-    final baseShare = (potAmount / numWinners).floor().toDouble();
-    final extraChips = (potAmount % numWinners).toInt();
+    final unit = widget.gameType == GameType.cash ? 0.01 : 1.0;
+    final totalUnits = (potAmount / unit).round();
+    final baseUnits = totalUnits ~/ numWinners;
+    final extraUnits = totalUnits % numWinners;
 
     final sortedWinners = winners.toList()..sort((a, b) {
       final positionA = _getPositionOrder(a);
@@ -123,8 +127,8 @@ class _MultiPotWinnerDialogState extends State<MultiPotWinnerDialog> {
     Map<int, double> shares = {};
     for (int i = 0; i < sortedWinners.length; i++) {
       final winnerId = sortedWinners[i];
-      final extraChip = i < extraChips ? 1.0 : 0.0;
-      shares[winnerId] = baseShare + extraChip;
+      final units = baseUnits + (i < extraUnits ? 1 : 0);
+      shares[winnerId] = units * unit;
     }
 
     return shares;

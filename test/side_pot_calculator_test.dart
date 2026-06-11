@@ -152,7 +152,7 @@ void main() {
       expect(sidePots[1].eligiblePlayers, [4]);
     });
 
-    test('Folded players excluded from side pots', () {
+    test('Folded players: chips stay in pots as dead money, but not eligible', () {
       List<PlayerState> players = [
         PlayerState(playerId: 1, isActive: true, hasFolded: true, currentStack: 0, totalContribution: 500), // FOLDED
         PlayerState(playerId: 2, isActive: true, hasFolded: false, currentStack: 0, totalContribution: 1000),
@@ -161,17 +161,66 @@ void main() {
 
       final sidePots = SidePotCalculator.calculateSidePots(players);
 
-      // Only P2 and P3 should be in pots, P1 folded
       expect(sidePots.length, 2);
 
-      // Main pot: 1000 × 2 = 2000 (P2 and P3 only)
-      expect(sidePots[0].amount, 2000);
+      // Main pot: 1000 (P2) + 1000 (P3) + 500 dead money from P1 = 2500
+      expect(sidePots[0].amount, 2500);
       expect(sidePots[0].eligiblePlayers, [2, 3]);
       expect(sidePots[0].eligiblePlayers.contains(1), false, reason: 'Folded player should not be eligible');
 
       // Side pot: (1500 - 1000) × 1 = 500
       expect(sidePots[1].amount, 500);
       expect(sidePots[1].eligiblePlayers, [3]);
+
+      // Chip conservation: pots must sum to ALL contributions incl. folded
+      final totalFromPots = sidePots.fold<double>(0, (sum, pot) => sum + pot.amount);
+      expect(totalFromPots, 3000);
+    });
+
+    test('Dead money is distributed into pots by contribution level', () {
+      // A all-in 100, B and C continue to 500, D folded after committing 300.
+      // Real rule: 100 of D's chips belong to the main pot (A's level),
+      // the remaining 200 to the side pot — NOT all of it to the main pot.
+      List<PlayerState> players = [
+        PlayerState(playerId: 1, isActive: true, hasFolded: false, currentStack: 0, totalContribution: 100), // A all-in
+        PlayerState(playerId: 2, isActive: true, hasFolded: false, currentStack: 0, totalContribution: 500), // B
+        PlayerState(playerId: 3, isActive: true, hasFolded: false, currentStack: 0, totalContribution: 500), // C
+        PlayerState(playerId: 4, isActive: true, hasFolded: true, currentStack: 0, totalContribution: 300), // D folded
+      ];
+
+      final sidePots = SidePotCalculator.calculateSidePots(players);
+
+      expect(sidePots.length, 2);
+
+      // Main pot: 100 × 3 live + min(300, 100) dead = 400
+      expect(sidePots[0].amount, 400);
+      expect(sidePots[0].eligiblePlayers, [1, 2, 3]);
+
+      // Side pot: 400 (B) + 400 (C) + 200 dead from D = 1000
+      expect(sidePots[1].amount, 1000);
+      expect(sidePots[1].eligiblePlayers, [2, 3]);
+
+      final totalFromPots = sidePots.fold<double>(0, (sum, pot) => sum + pot.amount);
+      expect(totalFromPots, 1400, reason: 'All committed chips stay in the pots');
+    });
+
+    test('Folded contribution above the top live level goes into the top pot', () {
+      List<PlayerState> players = [
+        PlayerState(playerId: 1, isActive: true, hasFolded: false, currentStack: 0, totalContribution: 100),
+        PlayerState(playerId: 2, isActive: true, hasFolded: false, currentStack: 0, totalContribution: 500),
+        PlayerState(playerId: 3, isActive: true, hasFolded: true, currentStack: 0, totalContribution: 600), // folded over top
+      ];
+
+      final sidePots = SidePotCalculator.calculateSidePots(players);
+
+      expect(sidePots.length, 2);
+      // Main pot: 100 × 2 live + 100 dead = 300
+      expect(sidePots[0].amount, 300);
+      // Side pot: 400 (P2) + 400 dead + 100 dead excess = 900
+      expect(sidePots[1].amount, 900);
+
+      final totalFromPots = sidePots.fold<double>(0, (sum, pot) => sum + pot.amount);
+      expect(totalFromPots, 1200, reason: 'No chips may vanish');
     });
 
     test('Inactive players excluded from side pots', () {
@@ -205,6 +254,91 @@ void main() {
       final sidePots = SidePotCalculator.calculateSidePots(players);
 
       expect(sidePots.length, 0);
+    });
+
+    test('Bets matched by another player are NOT refunded (3-way short all-in)', () {
+      // A bets 100, C calls all-in for 60, B calls 100.
+      // The 40+40 above C's level is a legitimate side pot between A and B —
+      // nothing may be refunded.
+      final gameState = PokerGameState(
+        numberOfPlayers: 3,
+        smallBlind: 1,
+        bigBlind: 2,
+        isCashGame: true,
+      );
+      for (int i = 1; i <= 3; i++) {
+        gameState.setPlayerActive(i, true);
+      }
+      gameState.players[0].betThisRound = 100; // A
+      gameState.players[1].betThisRound = 100; // B
+      gameState.players[2].betThisRound = 60; // C all-in
+      gameState.players[2].isAllIn = true;
+      gameState.currentPot = 260;
+      gameState.currentBet = 100;
+
+      final result = gameState.processUncalledBetReturns();
+
+      expect(result, '', reason: 'Top bet was matched by B — no refund');
+      expect(gameState.currentPot, 260);
+      expect(gameState.players[0].betThisRound, 100);
+      expect(gameState.players[1].betThisRound, 100);
+    });
+
+    test('Only the single highest bettor gets the uncalled overage back', () {
+      // A bets 100, C calls all-in for 60, B folds.
+      // A's 40 above C's level is uncalled and returns to A only.
+      final gameState = PokerGameState(
+        numberOfPlayers: 3,
+        smallBlind: 1,
+        bigBlind: 2,
+        isCashGame: true,
+      );
+      for (int i = 1; i <= 3; i++) {
+        gameState.setPlayerActive(i, true);
+      }
+      gameState.players[0].betThisRound = 100; // A
+      gameState.players[0].currentStack = 400;
+      gameState.players[1].hasFolded = true; // B folded
+      gameState.players[2].betThisRound = 60; // C all-in
+      gameState.players[2].isAllIn = true;
+      gameState.currentPot = 160;
+      gameState.currentBet = 100;
+
+      final result = gameState.processUncalledBetReturns();
+
+      expect(result.isNotEmpty, true);
+      expect(gameState.players[0].betThisRound, 60);
+      expect(gameState.players[0].currentStack, 440);
+      expect(gameState.currentPot, 120);
+      expect(gameState.currentBet, 60);
+    });
+
+    test('Heads-up all-in over-shove refunds the difference', () {
+      final gameState = PokerGameState(
+        numberOfPlayers: 2,
+        smallBlind: 1,
+        bigBlind: 2,
+        isCashGame: true,
+      );
+      for (int i = 1; i <= 2; i++) {
+        gameState.setPlayerActive(i, true);
+      }
+      gameState.players[0].betThisRound = 500; // A shoves
+      gameState.players[0].currentStack = 0;
+      gameState.players[0].isAllIn = true;
+      gameState.players[1].betThisRound = 200; // B calls all-in for less
+      gameState.players[1].isAllIn = true;
+      gameState.currentPot = 700;
+      gameState.currentBet = 500;
+
+      final result = gameState.processUncalledBetReturns();
+
+      expect(result.isNotEmpty, true);
+      expect(gameState.players[0].betThisRound, 200);
+      expect(gameState.players[0].currentStack, 300);
+      expect(gameState.players[0].isAllIn, false,
+          reason: 'Refund puts chips behind — no longer all-in');
+      expect(gameState.currentPot, 400);
     });
 
     test('Verify pot amounts sum to total contributions', () {

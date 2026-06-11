@@ -2616,9 +2616,24 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
           _buildCompactBoardCards(boardCards!),
           const SizedBox(height: 3),
         ],
-        if (showSidePotPills)
-          _buildSidePotPills()
-        else ...[
+        if (showSidePotPills) ...[
+          // Total pot stays visible above the per-pot breakdown so the
+          // pills always reconcile against one number
+          AnimatedAmountText(
+            value: gameState.currentPot,
+            formatter: gameState.formatCurrency,
+            pulseOnIncrease: true,
+            style: GoogleFonts.ibmPlexSans(
+              color: const Color(0xFFD3FFFD),
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              letterSpacing: -0.3,
+              height: 1.0,
+            ),
+          ),
+          const SizedBox(height: 3),
+          _buildSidePotPills(),
+        ] else ...[
           AnimatedAmountText(
             value: gameState.currentPot,
             formatter: gameState.formatCurrency,
@@ -2657,7 +2672,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         for (int i = 0; i < displayPots.length; i++) ...[
           if (i > 0) const SizedBox(width: 4),
           _buildSinglePotPill(
-            i == 0 ? 'Main' : 'Side',
+            i == 0 ? 'Main' : 'Side $i',
             displayPots[i].amount,
             i == 0,
           ),
@@ -4733,6 +4748,14 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       playerNames.add(playerName);
     }
 
+    // Return any uncalled overage to its bettor BEFORE pots are formed —
+    // an unmatched bet is never part of the pot in real poker.
+    final uncalledReturns = gameState.processUncalledBetReturns();
+    if (uncalledReturns.isNotEmpty) {
+      gameState.recalculateActiveSidePots();
+      if (mounted) setState(() {});
+    }
+
     final potAmount = gameState.currentPot;
 
     // Check if we need side pot calculation
@@ -4903,6 +4926,15 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
             potLogs.add("🏆 $potName: $winnerName wins ${_formatCurrency(potAmount)}");
           }
         }
+
+        // Chip conservation: everything in the pot must reach a winner.
+        // The calculator includes folded players' dead money and refunds
+        // run before pots are formed, so these must match.
+        assert(
+          (totalDistributed - gameState.currentPot).abs() < 0.01,
+          'Pot distribution mismatch: distributed $totalDistributed '
+          'of ${gameState.currentPot}',
+        );
 
         // Reset the pot after distributing all pots
         gameState.currentPot = 0.0;
@@ -6062,6 +6094,15 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     final l10n = AppLocalizations.of(context);
     await LoggerService.info('═══ _showWinnerSelectionAndComplete() called ═══');
 
+    // Return any uncalled overage to its bettor BEFORE pots are formed —
+    // a bet nobody matched is never part of the pot in real poker. This
+    // also covers river all-ins, which never hit a street transition.
+    final uncalledReturns = gameState.processUncalledBetReturns();
+    if (uncalledReturns.isNotEmpty) {
+      gameState.recalculateActiveSidePots();
+      if (mounted) setState(() {});
+    }
+
     // Save the pot amount BEFORE showing any dialogs
     final potAmount = gameState.currentPot;
     await LoggerService.debug('  Pot amount: ${CurrencyService.formatCash(potAmount)}');
@@ -6241,6 +6282,13 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
               potLogs.add("🏆 $potName: $winnerName wins ${_formatCurrency(potAmount)}");
             }
           }
+
+          // Chip conservation: everything in the pot must reach a winner.
+          assert(
+            (totalDistributed - gameState.currentPot).abs() < 0.01,
+            'Pot distribution mismatch: distributed $totalDistributed '
+            'of ${gameState.currentPot}',
+          );
 
           // Reset the pot after distributing all pots
           gameState.currentPot = 0.0;

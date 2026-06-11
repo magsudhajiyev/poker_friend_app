@@ -54,9 +54,13 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
       return {};
     }
 
+    // Tournaments chop to whole chips, cash games to cents — otherwise
+    // cash chops silently lose the cent remainder.
     final numWinners = selectedWinners.length;
-    final baseShare = (widget.potAmount / numWinners).floor().toDouble();
-    final extraChips = (widget.potAmount % numWinners).toInt();
+    final unit = widget.gameType == GameType.cash ? 0.01 : 1.0;
+    final totalUnits = (widget.potAmount / unit).round();
+    final baseUnits = totalUnits ~/ numWinners;
+    final extraUnits = totalUnits % numWinners;
 
     final sortedWinners = selectedWinners.toList()
       ..sort((a, b) {
@@ -68,8 +72,8 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
     Map<int, double> shares = {};
     for (int i = 0; i < sortedWinners.length; i++) {
       final winnerId = sortedWinners[i];
-      final extraChip = i < extraChips ? 1.0 : 0.0;
-      shares[winnerId] = baseShare + extraChip;
+      final units = baseUnits + (i < extraUnits ? 1 : 0);
+      shares[winnerId] = units * unit;
     }
 
     return shares;

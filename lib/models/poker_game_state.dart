@@ -626,10 +626,8 @@ class PokerGameState {
 
     player.hasActed = true;
 
-    // Recalculate side pot pills when betting round completes
-    if (bettingRoundComplete) {
-      recalculateActiveSidePots();
-    }
+    // Keep side pot pills in sync after every action
+    recalculateActiveSidePots();
 
     // Infer stack confidence from observed actions
     if (action == PlayerAction.call || action == PlayerAction.bet || action == PlayerAction.raise) {
@@ -778,10 +776,8 @@ class PokerGameState {
 
     player.hasActed = true;
 
-    // Recalculate side pot pills when betting round completes
-    if (bettingRoundComplete) {
-      recalculateActiveSidePots();
-    }
+    // Keep side pot pills in sync after every action
+    recalculateActiveSidePots();
 
     // Infer stack confidence from observed actions
     if (action == PlayerAction.call || action == PlayerAction.bet || action == PlayerAction.raise) {
@@ -1642,47 +1638,36 @@ class PokerGameState {
     }
   }
 
-  // Handle uncalled bet returns when all-in player can't cover larger bets
+  // Return the uncalled portion of the highest bet to its bettor.
+  //
+  // Real poker rule: a bet is only live up to the SECOND-highest amount
+  // committed this round by the other players — nobody can call beyond
+  // their all-in, so only the single highest bettor's excess over the
+  // second-highest commitment is returned. Bets matched by another player
+  // stay in the pot (they form a side pot above any shorter all-in).
   String processUncalledBetReturns() {
-    List<PlayerState> activePlayers = players.where((p) => p.isActive && !p.hasFolded).toList();
+    List<PlayerState> activePlayers =
+        players.where((p) => p.isActive && !p.hasFolded).toList();
 
     if (activePlayers.length <= 1) return "";
 
-    // Find the maximum bet that can be called by all players.
-    // Exclude all-in players who have betThisRound=0 — these went all-in
-    // on a previous street and their chips were moved to totalContribution.
-    // Including them would incorrectly force maxCallableAmount to 0 and
-    // return all postflop bets.
-    // All-in players who DID bet this round (went all-in THIS street) are
-    // still included — their betThisRound defines the callable cap.
-    final relevantPlayers = activePlayers.where((p) => !p.isAllIn || p.betThisRound > 0).toList();
-    if (relevantPlayers.isEmpty) return "";
+    final bets = activePlayers.map((p) => p.betThisRound).toList()..sort();
+    final top = bets[bets.length - 1];
+    final secondTop = bets[bets.length - 2];
+    if (top <= secondTop) return ""; // Highest bet was matched — nothing to return
 
-    double maxCallableAmount = relevantPlayers
-        .map((p) => p.betThisRound)
-        .reduce((a, b) => a < b ? a : b);
+    // top > secondTop guarantees a unique highest bettor
+    final topPlayer = activePlayers.firstWhere((p) => p.betThisRound == top);
+    final returnAmount = top - secondTop;
 
-    List<String> returns = [];
-    double totalReturned = 0;
+    topPlayer.betThisRound = secondTop;
+    topPlayer.currentStack += returnAmount;
+    // A refund can take a player off all-in (they have chips behind again)
+    if (topPlayer.currentStack > 0) topPlayer.isAllIn = false;
+    currentPot -= returnAmount;
+    currentBet = secondTop;
 
-    for (PlayerState player in activePlayers) {
-      if (player.betThisRound > maxCallableAmount) {
-        double returnAmount = player.betThisRound - maxCallableAmount;
-        player.betThisRound = maxCallableAmount;
-        player.currentStack += returnAmount;
-        currentPot -= returnAmount;
-        totalReturned += returnAmount;
-        returns.add("${formatCurrency(returnAmount)} returned to Player ${player.playerId}");
-      }
-    }
-
-    // Update current bet to the maximum callable amount
-    if (totalReturned > 0) {
-      currentBet = maxCallableAmount;
-      returns.insert(0, "💰 Uncalled bet returns:");
-    }
-
-    return returns.join('\n');
+    return "💰 Uncalled bet returns:\n${formatCurrency(returnAmount)} returned to Player ${topPlayer.playerId}";
   }
 
   String getPotInfo() {
@@ -1719,27 +1704,10 @@ class PokerGameState {
     }
   }
 
-  // Calculate side pots for the current hand
+  // Calculate side pots for the current hand. The calculator already
+  // includes betThisRound on top of totalContribution — no copies needed.
   List<SidePot> calculateSidePots() {
-    // Add current round contributions to total contributions for calculation
-    List<PlayerState> playersForCalculation = players.map((p) {
-      PlayerState tempPlayer = PlayerState(
-        playerId: p.playerId,
-        isActive: p.isActive,
-        hasFolded: p.hasFolded,
-        hasActed: p.hasActed,
-        hasCalledCurrentBet: p.hasCalledCurrentBet,
-        isAllIn: p.isAllIn,
-        lastAction: p.lastAction,
-        startingStack: p.startingStack,
-        currentStack: p.currentStack,
-        betThisRound: p.betThisRound,
-        totalContribution: p.totalContribution + p.betThisRound,
-      );
-      return tempPlayer;
-    }).toList();
-
-    return SidePotCalculator.calculateSidePots(playersForCalculation);
+    return SidePotCalculator.calculateSidePots(players);
   }
 
   // Get formatted side pot information
@@ -1749,97 +1717,26 @@ class PokerGameState {
   }
 
   /// Recalculate the display-only side pot breakdown for UI pills.
-  /// Uses SidePotCalculator directly (like the winner dialog) to avoid the
-  /// double-counting bug in calculateSidePots() which adds betThisRound
-  /// to totalContribution before passing to the calculator.
-  /// Once side pots are established they persist until the hand ends
-  /// (cleared by initializePot).
+  ///
+  /// Pills are shown when the hand has formed 2+ contested pots. The
+  /// calculator already distributes folded players' dead money into the
+  /// pots by level, so the pills reconcile with the total pot. A trailing
+  /// pot with a single eligible player is an uncalled bet still in flight
+  /// (it will either be matched or returned), so it is not shown as a pill.
   void recalculateActiveSidePots() {
-    print('=== SIDE POT RECALC ===');
-    print('  Street: $currentRound | CurrentPot: $currentPot');
-    for (final p in players) {
-      if (!p.isActive) continue;
-      print('  P${p.playerId}: stack=${p.currentStack} totalContrib=${p.totalContribution} betThisRound=${p.betThisRound} folded=${p.hasFolded} allIn=${p.isAllIn} hasActed=${p.hasActed}');
-    }
-
-    // Early exit: no all-in players → no side pots possible
-    final allInPlayers = players.where((p) => p.isActive && !p.hasFolded && p.isAllIn).toList();
-    if (allInPlayers.isEmpty) {
-      print('  → No all-in players, clearing pills');
+    // No all-in players → no side pots possible
+    final hasAllIn =
+        players.any((p) => p.isActive && !p.hasFolded && p.isAllIn);
+    if (!hasAllIn) {
       activeSidePots = [];
       return;
     }
 
-    final activePlayers = players.where((p) => p.isActive && !p.hasFolded).toList();
-    if (activePlayers.length <= 1) {
-      print('  → ≤1 active player, clearing pills');
-      activeSidePots = [];
-      return;
-    }
-
-    // Check if any non-all-in player has matched or exceeded an all-in
-    // player's total contribution. If nobody has called yet, the all-in
-    // is still pending and showing side pots would be premature/noisy.
-    final allInContribs = allInPlayers.map((p) => p.totalContribution + p.betThisRound).toList();
-    final minAllInContrib = allInContribs.reduce((a, b) => a < b ? a : b);
-    final nonAllInPlayers = activePlayers.where((p) => !p.isAllIn).toList();
-    final anyCallerMatchedAllIn = nonAllInPlayers.any(
-      (p) => (p.totalContribution + p.betThisRound) >= minAllInContrib,
-    );
-
-    if (!anyCallerMatchedAllIn && activeSidePots.isEmpty) {
-      print('  → No caller has matched all-in yet, skipping');
-      return;
-    }
-
-    final contributions = activePlayers.map((p) => p.totalContribution + p.betThisRound).toList();
-    print('  Active player contributions: $contributions');
-
-    // Call SidePotCalculator directly on real players — it already does
-    // totalContribution + betThisRound internally, so no temp copies needed.
     final rawPots = SidePotCalculator.calculateSidePots(players);
+    final meaningfulPots =
+        rawPots.where((p) => p.eligiblePlayers.length >= 2).toList();
 
-    // Filter out pots with only 1 eligible player — those represent
-    // uncalled bets mid-round, not real side pots.
-    final meaningfulPots = rawPots.where((p) => p.eligiblePlayers.length >= 2).toList();
-    print('  Raw pots from calculator: ${rawPots.length}, meaningful (≥2 eligible): ${meaningfulPots.length}');
-    for (int i = 0; i < meaningfulPots.length; i++) {
-      print('    Pot $i: amount=${meaningfulPots[i].amount} eligible=${meaningfulPots[i].eligiblePlayers} maxContrib=${meaningfulPots[i].maxContribution}');
-    }
-
-    // If multiple meaningful pots exist, update the pills
-    if (meaningfulPots.length > 1) {
-      // Calculate dead money from folded players
-      double foldedContributions = 0.0;
-      for (final p in players) {
-        if (p.isActive && p.hasFolded) {
-          foldedContributions += p.totalContribution + p.betThisRound;
-        }
-      }
-      print('  Folded contributions (dead money): $foldedContributions');
-
-      // Add dead money to the main pot (first pot — everyone was eligible)
-      if (foldedContributions > 0) {
-        activeSidePots = [
-          SidePot(
-            amount: meaningfulPots[0].amount + foldedContributions,
-            eligiblePlayers: meaningfulPots[0].eligiblePlayers,
-            maxContribution: meaningfulPots[0].maxContribution,
-          ),
-          ...meaningfulPots.skip(1),
-        ];
-      } else {
-        activeSidePots = List.from(meaningfulPots);
-      }
-      print('  → SET ${activeSidePots.length} pills');
-      for (int i = 0; i < activeSidePots.length; i++) {
-        print('    Pill $i: amount=${activeSidePots[i].amount} eligible=${activeSidePots[i].eligiblePlayers}');
-      }
-      return;
-    }
-
-    // ≤1 meaningful pot — preserve existing pills if any (sticky behavior)
-    print('  → ≤1 meaningful pot, preserving existing ${activeSidePots.length} pills (sticky)');
+    activeSidePots = meaningfulPots.length > 1 ? meaningfulPots : [];
   }
 
   String getMostActivePosition() {
@@ -1932,46 +1829,76 @@ class SidePot {
 }
 
 class SidePotCalculator {
+  /// Calculate side pots from player contributions, following real poker
+  /// rules:
+  /// - Pot layers are defined by the distinct contribution levels of the
+  ///   players still in the hand (non-folded).
+  /// - ALL committed chips stay in the pots: folded players' chips are dead
+  ///   money that fills each layer up to the amount they contributed, but
+  ///   folded players are never eligible to win.
+  /// - The sum of all pots always equals the total committed chips, so the
+  ///   pots reconcile with the displayed pot.
+  /// - Callers must return any uncalled overage to its bettor BEFORE pots
+  ///   are awarded (see PokerGameState.processUncalledBetReturns); an
+  ///   unreturned overage shows up as a trailing pot with a single eligible
+  ///   player.
   static List<SidePot> calculateSidePots(List<PlayerState> players) {
-    // Filter to only active players (not folded)
-    List<PlayerState> activePlayers = players.where((p) => p.isActive && !p.hasFolded).toList();
+    double contributionOf(PlayerState p) => p.totalContribution + p.betThisRound;
 
-    if (activePlayers.length <= 1) {
-      return []; // No side pots needed with 0 or 1 players
+    // Everyone with chips in the pot, folded or not
+    final contributors =
+        players.where((p) => p.isActive && contributionOf(p) > 0).toList();
+    // Players still in the hand — they define pot levels and eligibility
+    final livePlayers = contributors.where((p) => !p.hasFolded).toList();
+
+    if (livePlayers.length <= 1) {
+      return []; // No pots to contest with 0 or 1 live players
     }
 
-    // Create a list of player contributions with their IDs
-    // IMPORTANT: Include both totalContribution AND betThisRound to get full hand contribution
-    List<MapEntry<int, double>> contributions = activePlayers
-        .map((p) => MapEntry(p.playerId, p.totalContribution + p.betThisRound))
-        .toList();
-
-    // Sort by contribution amount (lowest first)
-    contributions.sort((a, b) => a.value.compareTo(b.value));
+    // Distinct live contribution levels, ascending
+    final levels = livePlayers.map(contributionOf).toSet().toList()..sort();
 
     List<SidePot> sidePots = [];
     double previousLevel = 0.0;
 
-    for (int i = 0; i < contributions.length; i++) {
-      double currentLevel = contributions[i].value;
+    for (final level in levels) {
+      // Every contributor (including folded players' dead money) fills
+      // this layer up to its cap
+      double potAmount = 0.0;
+      for (final p in contributors) {
+        final double inLayer = (contributionOf(p) - previousLevel)
+            .clamp(0.0, level - previousLevel)
+            .toDouble();
+        potAmount += inLayer;
+      }
 
-      if (currentLevel > previousLevel) {
-        double potAmount = (currentLevel - previousLevel) * (contributions.length - i);
+      // Folded chips above the top live level have no higher layer to go
+      // to — fold them into the top pot. (Only folded players can exceed
+      // the top level, since it IS the max live contribution.)
+      if (level == levels.last) {
+        for (final p in contributors) {
+          if (p.hasFolded && contributionOf(p) > level) {
+            potAmount += contributionOf(p) - level;
+          }
+        }
+      }
 
-        // Players eligible for this side pot (those who contributed at least this much)
-        List<int> eligiblePlayers = contributions
-            .skip(i)
-            .map((entry) => entry.key)
-            .toList();
+      if (potAmount > 0) {
+        // Players eligible for this pot: live players who covered the level
+        final eligiblePlayers = livePlayers
+            .where((p) => contributionOf(p) >= level)
+            .map((p) => p.playerId)
+            .toList()
+          ..sort();
 
         sidePots.add(SidePot(
           amount: potAmount,
           eligiblePlayers: eligiblePlayers,
-          maxContribution: currentLevel,
+          maxContribution: level,
         ));
-
-        previousLevel = currentLevel;
       }
+
+      previousLevel = level;
     }
 
     return sidePots;
