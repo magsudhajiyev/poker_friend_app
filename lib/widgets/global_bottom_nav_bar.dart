@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../screens/home_screen.dart';
 import '../screens/my_opponents_screen.dart';
 import '../screens/session_history_screen.dart';
+import '../screens/statistics_screen.dart';
 import '../screens/logging_mode_selection_screen.dart';
 import '../screens/player/qr_scan_screen.dart' show QRScanScreen;
 import '../design_system/constants/colors.dart';
@@ -68,7 +69,14 @@ class _GlobalBottomNavBarState extends State<GlobalBottomNavBar> {
               ),
               const SizedBox(width: 28),
               _NavIcon(
-                path: 'icons/figma_icons/chart_regular.svg',
+                path: 'icons/figma_icons/stats.svg',
+                isSvg: true,
+                isActive: _isActive('statistics'),
+                onTap: () => _navigateTo(context, 'statistics'),
+              ),
+              const SizedBox(width: 28),
+              _NavIcon(
+                path: 'icons/figma_icons/clock.svg',
                 isSvg: true,
                 isActive: _isActive('sessions'),
                 itemKey: widget.sessionsKey,
@@ -176,6 +184,12 @@ class _GlobalBottomNavBarState extends State<GlobalBottomNavBar> {
         await Navigator.push(
           context,
           MaterialPageRoute(builder: (_) => MyOpponentsScreen()),
+        );
+        break;
+      case 'statistics':
+        await Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => StatisticsScreen()),
         );
         break;
       case 'sessions':

@@ -445,57 +445,41 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                 // 7 core metric cards
                 _buildMetricCard(
                   chipLabel: 'VPIP',
-                  title: 'Voluntarily Put in Pot',
-                  description: 'How often you voluntarily put money in the pot preflop. High VPIP means you play many hands; low VPIP means you play tight.',
                   value: totalHands > 0 ? '${vpip.toStringAsFixed(1)}%' : na,
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 8),
                 _buildMetricCard(
                   chipLabel: 'PFR',
-                  title: 'Pre-Flop Raise',
-                  description: 'How often you raise preflop. Measures your aggression before the flop. Should track close to VPIP for aggressive players.',
                   value: totalHands > 0 ? '${pfr.toStringAsFixed(1)}%' : na,
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 8),
                 _buildMetricCard(
                   chipLabel: '3-Bet',
-                  title: 'Three-Bet',
-                  description: 'How often you make the 3rd raise preflop. A powerful move showing hand strength or as a bluff to take the pot preflop.',
                   value: fmt(threeBet, threeBetOpportunity),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 8),
                 _buildMetricCard(
                   chipLabel: 'Fold to 3-Bet',
-                  title: 'Fold to Three-Bet',
-                  description: 'How often you fold after raising and facing a 3-bet. If too high, opponents can exploit you by 3-betting tight.',
                   value: fmt(fold3Bet, facing3BetCount),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 8),
                 _buildMetricCard(
                   chipLabel: 'C-Bet',
-                  title: 'Continuation Bet',
-                  description: 'How often you bet on the flop after being the last preflop aggressor. A standard play showing strength.',
                   value: fmt(cbet, cbetOpportunity),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 8),
                 _buildMetricCard(
                   chipLabel: 'Steal',
-                  title: 'Blind Steal Attempt',
-                  description: 'How often you open-raise from late position (CO, BTN, SB) when the pot is unopened aiming to take the blinds.',
                   value: fmt(steal, stealOpportunity),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 8),
                 _buildMetricCard(
                   chipLabel: 'Check-Raise',
-                  title: 'Flop Check-Raise',
-                  description: 'How often you check, then raise on the flop. A deceptive move that can trap aggressive opponents.',
                   value: fmt(checkRaise, checkRaiseFlopOpportunity),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 8),
                 _buildMetricCard(
                   chipLabel: 'Win Rate',
-                  title: 'Hand Win Rate',
-                  description: 'Percentage of hands where you won the pot. Includes all showdowns and uncalled bets.',
                   value: handsPlayed > 0 ? '${winRate.toStringAsFixed(1)}%' : na,
                 ),
 
@@ -568,8 +552,6 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
 
   Widget _buildMetricCard({
     required String chipLabel,
-    required String title,
-    required String description,
     required String value,
   }) {
     final isNA = !value.contains('%');
@@ -578,66 +560,34 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
         color: const Color(0xFF161719),
         borderRadius: BorderRadius.circular(16),
       ),
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              // Chip
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF2C2C2E),
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.people_outline, size: 12, color: Color(0xFFB9B9B9)),
-                    const SizedBox(width: 4),
-                    Text(
-                      chipLabel,
-                      style: GoogleFonts.ibmPlexSans(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w500,
-                        color: const Color(0xFFB9B9B9),
-                        height: 16 / 11,
-                      ),
-                    ),
-                  ],
-                ),
+          // Chip
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: const Color(0xFF2C2C2E),
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Text(
+              chipLabel,
+              style: GoogleFonts.ibmPlexSans(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: const Color(0xFFB9B9B9),
               ),
-              // Value
-              Text(
-                value,
-                style: GoogleFonts.ibmPlexSans(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w600,
-                  color: isNA ? const Color(0xFF4E4E4E) : const Color(0xFF89F1EC),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Text(
-            title,
-            style: GoogleFonts.ibmPlexSans(
-              fontSize: 17,
-              fontWeight: FontWeight.w600,
-              color: Colors.white,
             ),
           ),
-          const SizedBox(height: 8),
+          // Value
           Text(
-            description,
+            value,
             style: GoogleFonts.ibmPlexSans(
-              fontSize: 15,
-              fontWeight: FontWeight.w400,
-              color: const Color(0xFFB9B9B9),
-              height: 22 / 15,
+              fontSize: 22,
+              fontWeight: FontWeight.w600,
+              color: isNA ? const Color(0xFF4E4E4E) : const Color(0xFF89F1EC),
             ),
           ),
         ],
