@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/poker_game_state.dart';
@@ -8,6 +10,7 @@ import '../services/opponent_service.dart';
 import '../services/opponent_stats_service.dart';
 import '../services/user_stats_service.dart';
 import '../services/logger_service.dart';
+import '../services/range_grid_service.dart';
 import '../utils/poker_positions.dart';
 
 enum HandState {
@@ -834,7 +837,7 @@ class PokerSessionManager {
     if (sessionId == null) return;
 
     // Always save to local storage first
-    await LocalStorageService.saveHand(
+    final localHandId = await LocalStorageService.saveHand(
       sessionId: sessionId!,
       handNumber: hand.handNumber,
       buttonPosition: hand.buttonPosition,
@@ -869,6 +872,18 @@ class PokerSessionManager {
       notes: hand.notes,
     );
 
+    // Index for the range grid — local derived data, fire-and-forget so it
+    // can never block or break the save path.
+    if (localHandId != null) {
+      unawaited(RangeGridService.indexHand(
+        hand: hand,
+        handId: localHandId,
+        sessionId: sessionId!,
+        heroSeat: ourSeatNumber,
+        bigBlind: bigBlind,
+        gameType: gameType.name,
+      ));
+    }
 
     try {
       // Try to save to Firebase as well

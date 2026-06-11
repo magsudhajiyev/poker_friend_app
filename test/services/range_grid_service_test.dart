@@ -1,0 +1,296 @@
+import 'package:flutter_test/flutter_test.dart';
+import '../../lib/models/hand_state_machine.dart';
+import '../../lib/services/range_grid_service.dart';
+
+Map<String, dynamic> _action(
+  int player,
+  String action, {
+  String street = 'preflop',
+  double? stack,
+  double? amount,
+  bool isHero = false,
+}) {
+  return {
+    'player': player,
+    'action': action,
+    'street': street,
+    'playerStack': stack,
+    'amount': amount,
+    'isCurrentUser': isHero,
+  };
+}
+
+void main() {
+  group('canonicalHandClass', () {
+    test('suited and offsuit combos, high rank first', () {
+      expect(RangeGridService.canonicalHandClass(HoleCards(card1: 'A♠', card2: 'K♠')), 'AKs');
+      expect(RangeGridService.canonicalHandClass(HoleCards(card1: 'A♠', card2: 'K♥')), 'AKo');
+      expect(RangeGridService.canonicalHandClass(HoleCards(card1: 'K♥', card2: 'A♠')), 'AKo',
+          reason: 'Order of entry must not matter');
+      expect(RangeGridService.canonicalHandClass(HoleCards(card1: '2♦', card2: '7♣')), '72o');
+    });
+
+    test('pairs', () {
+      expect(RangeGridService.canonicalHandClass(HoleCards(card1: '7♦', card2: '7♣')), '77');
+      expect(RangeGridService.canonicalHandClass(HoleCards(card1: 'A♦', card2: 'A♣')), 'AA');
+    });
+
+    test('ten rank in both T and 10 notations', () {
+      expect(RangeGridService.canonicalHandClass(HoleCards(card1: 'T♠', card2: '9♠')), 'T9s');
+      expect(RangeGridService.canonicalHandClass(HoleCards(card1: '10♠', card2: '9♠')), 'T9s');
+    });
+
+    test('missing or malformed cards return null', () {
+      expect(RangeGridService.canonicalHandClass(null), null);
+      expect(RangeGridService.canonicalHandClass(HoleCards(card1: 'A♠')), null);
+      expect(RangeGridService.canonicalHandClass(HoleCards(card1: 'X♠', card2: 'K♠')), null);
+      expect(RangeGridService.canonicalHandClass(HoleCards(card1: '', card2: 'K♠')), null);
+    });
+  });
+
+  group('positionGroup', () {
+    test('maps exact positions to coarse groups', () {
+      expect(RangeGridService.positionGroup('UTG'), 'EP');
+      expect(RangeGridService.positionGroup('UTG+1'), 'EP');
+      expect(RangeGridService.positionGroup('UTG+2'), 'EP');
+      expect(RangeGridService.positionGroup('LJ'), 'MP');
+      expect(RangeGridService.positionGroup('HJ'), 'MP');
+      expect(RangeGridService.positionGroup('P5'), 'MP');
+      expect(RangeGridService.positionGroup('CO'), 'CO');
+      expect(RangeGridService.positionGroup('BTN'), 'BTN');
+      expect(RangeGridService.positionGroup('BTN/SB'), 'BTN');
+      expect(RangeGridService.positionGroup('SB'), 'SB');
+      expect(RangeGridService.positionGroup('BB'), 'BB');
+    });
+  });
+
+  group('derivePreflopLine', () {
+    test('open raise', () {
+      final actions = [
+        _action(2, 'fold'),
+        _action(3, 'raise', amount: 6, isHero: true),
+        _action(5, 'call', amount: 6),
+      ];
+      final (primary, line) = RangeGridService.derivePreflopLine(actions, 3);
+      expect(primary, 'raise');
+      expect(line, 'Open-raised');
+    });
+
+    test('3-bet (third raise, app convention)', () {
+      final actions = [
+        _action(2, 'raise', amount: 6),
+        _action(4, 'raise', amount: 18),
+        _action(3, 'raise', amount: 50, isHero: true),
+      ];
+      final (primary, line) = RangeGridService.derivePreflopLine(actions, 3);
+      expect(primary, 'raise');
+      expect(line, '3-bet');
+    });
+
+    test('limp and call', () {
+      final limp = [_action(3, 'call', amount: 2, isHero: true)];
+      expect(RangeGridService.derivePreflopLine(limp, 3).$2, 'Limped');
+
+      final call = [
+        _action(2, 'raise', amount: 6),
+        _action(3, 'call', amount: 6, isHero: true),
+      ];
+      final (primary, line) = RangeGridService.derivePreflopLine(call, 3);
+      expect(primary, 'call');
+      expect(line, 'Called raise');
+    });
+
+    test('folds, open and facing a raise', () {
+      final openFold = [_action(3, 'fold', isHero: true)];
+      expect(RangeGridService.derivePreflopLine(openFold, 3).$2, 'Folded');
+
+      final foldToRaise = [
+        _action(2, 'raise', amount: 6),
+        _action(3, 'fold', isHero: true),
+      ];
+      final (primary, line) =
+          RangeGridService.derivePreflopLine(foldToRaise, 3);
+      expect(primary, 'fold');
+      expect(line, 'Folded to raise');
+    });
+
+    test('raised then folded to a re-raise', () {
+      final actions = [
+        _action(3, 'raise', amount: 6, isHero: true),
+        _action(5, 'raise', amount: 20),
+        _action(3, 'fold', isHero: true),
+      ];
+      final (primary, line) = RangeGridService.derivePreflopLine(actions, 3);
+      expect(primary, 'raise',
+          reason: 'Cell frequencies use the first voluntary action');
+      expect(line, 'Open-raised → folded');
+    });
+
+    test('all-in counts as a raise', () {
+      final actions = [
+        _action(2, 'raise', amount: 6),
+        _action(3, 'all-in', amount: 200, isHero: true),
+      ];
+      final (primary, line) = RangeGridService.derivePreflopLine(actions, 3);
+      expect(primary, 'raise');
+      expect(line, 'Re-raised');
+    });
+
+    test('walk: hero has no recorded actions', () {
+      final (primary, line) = RangeGridService.derivePreflopLine([], 3);
+      expect(primary, 'check');
+      expect(line, 'No action (walk)');
+    });
+
+    test('only preflop actions are considered', () {
+      final actions = [
+        _action(3, 'call', amount: 2, isHero: true),
+        _action(3, 'bet', street: 'flop', amount: 10, isHero: true),
+      ];
+      expect(RangeGridService.derivePreflopLine(actions, 3).$2, 'Limped');
+    });
+  });
+
+  group('heroStackBB', () {
+    test('uses the hero\'s first recorded stack', () {
+      final actions = [
+        _action(2, 'raise', stack: 1000, amount: 6),
+        _action(3, 'call', stack: 200, amount: 6, isHero: true),
+        _action(3, 'bet', street: 'flop', stack: 150, amount: 20, isHero: true),
+      ];
+      expect(RangeGridService.heroStackBB(actions, 3, 2.0), 100.0);
+    });
+
+    test('null when big blind or stack unknown', () {
+      expect(RangeGridService.heroStackBB([], 3, 2.0), null);
+      expect(
+          RangeGridService.heroStackBB(
+              [_action(3, 'call', isHero: true)], 3, 0.0),
+          null);
+    });
+  });
+
+  group('buildEntry', () {
+    final actions = [
+      _action(3, 'raise', stack: 200, amount: 6, isHero: true),
+    ];
+
+    test('builds a complete entry', () {
+      final entry = RangeGridService.buildEntry(
+        handId: 'h1',
+        sessionId: 's1',
+        userId: 'u1',
+        timestamp: DateTime(2026, 6, 1),
+        gameType: 'cash',
+        holeCards: HoleCards(card1: 'A♠', card2: 'K♥'),
+        heroPositionName: 'BTN',
+        heroSeat: 3,
+        actions: actions,
+        bigBlind: 2.0,
+        potAmount: 24.0,
+        winnerId: 3,
+        choppedWinners: null,
+      );
+      expect(entry, isNotNull);
+      expect(entry!.handClass, 'AKo');
+      expect(entry.position, 'BTN');
+      expect(entry.posGroup, 'BTN');
+      expect(entry.stackBB, 100.0);
+      expect(entry.stackBucket, 'veryDeep');
+      expect(entry.primaryAction, 'raise');
+      expect(entry.preflopLine, 'Open-raised');
+      expect(entry.potBB, 12.0);
+      expect(entry.won, true);
+    });
+
+    test('won via chopped pot', () {
+      final entry = RangeGridService.buildEntry(
+        handId: 'h1',
+        sessionId: 's1',
+        userId: 'u1',
+        timestamp: DateTime(2026, 6, 1),
+        gameType: 'cash',
+        holeCards: HoleCards(card1: 'A♠', card2: 'K♥'),
+        heroPositionName: 'BB',
+        heroSeat: 3,
+        actions: actions,
+        bigBlind: 2.0,
+        potAmount: 24.0,
+        winnerId: 5,
+        choppedWinners: [3, 5],
+      );
+      expect(entry!.won, true);
+    });
+
+    test('null without hole cards, position or seat', () {
+      RangeGridEntry? build({
+        HoleCards? cards,
+        String? position,
+        int? seat,
+      }) =>
+          RangeGridService.buildEntry(
+            handId: 'h1',
+            sessionId: 's1',
+            userId: 'u1',
+            timestamp: DateTime(2026, 6, 1),
+            gameType: 'cash',
+            holeCards: cards,
+            heroPositionName: position,
+            heroSeat: seat,
+            actions: actions,
+            bigBlind: 2.0,
+            potAmount: 24.0,
+            winnerId: null,
+            choppedWinners: null,
+          );
+
+      expect(build(position: 'BTN', seat: 3), null);
+      expect(build(cards: HoleCards(card1: 'A♠', card2: 'K♥'), seat: 3), null);
+      expect(
+          build(cards: HoleCards(card1: 'A♠', card2: 'K♥'), position: 'BTN'),
+          null);
+    });
+  });
+
+  group('RangeCellAggregate', () {
+    test('accumulates action counts', () {
+      var agg = const RangeCellAggregate(handClass: 'AKs');
+      agg = agg.addingAction('raise', 3);
+      agg = agg.addingAction('call', 1);
+      agg = agg.addingAction('fold', 2);
+      expect(agg.raiseCount, 3);
+      expect(agg.callCount, 1);
+      expect(agg.foldCount, 2);
+      expect(agg.total, 6);
+    });
+  });
+
+  group('RangeGridEntry serialization', () {
+    test('round-trips through the DB map', () {
+      const entry = RangeGridEntry(
+        handId: 'h1',
+        sessionId: 's1',
+        userId: 'u1',
+        timestamp: 1234567890,
+        gameType: 'tournament',
+        handClass: 'QJs',
+        position: 'CO',
+        posGroup: 'CO',
+        stackBB: 35.5,
+        stackBucket: 'average',
+        primaryAction: 'call',
+        preflopLine: 'Called raise',
+        potBB: 18.0,
+        won: false,
+      );
+      final restored = RangeGridEntry.fromDbMap(entry.toDbMap());
+      expect(restored.handId, entry.handId);
+      expect(restored.timestamp, entry.timestamp);
+      expect(restored.handClass, entry.handClass);
+      expect(restored.stackBB, entry.stackBB);
+      expect(restored.stackBucket, entry.stackBucket);
+      expect(restored.primaryAction, entry.primaryAction);
+      expect(restored.won, false);
+    });
+  });
+}

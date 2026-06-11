@@ -1,0 +1,114 @@
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+
+/// Stacked raise/call/check/fold frequency bar with a legend.
+/// Colors follow the action-flash palette used during hand logging.
+class RangeFrequencyBar extends StatelessWidget {
+  final int raiseCount;
+  final int callCount;
+  final int foldCount;
+  final int checkCount;
+
+  const RangeFrequencyBar({
+    super.key,
+    required this.raiseCount,
+    required this.callCount,
+    required this.foldCount,
+    required this.checkCount,
+  });
+
+  static const raiseColor = Color(0xFFFFC857);
+  static const callColor = Color(0xFF89F1EC);
+  static const checkColor = Color(0xFF3BA55D);
+  static const foldColor = Color(0xFFE85D5D);
+
+  int get _total => raiseCount + callCount + foldCount + checkCount;
+
+  @override
+  Widget build(BuildContext context) {
+    if (_total == 0) return const SizedBox.shrink();
+
+    final segments = <(int, Color)>[
+      (raiseCount, raiseColor),
+      (callCount, callColor),
+      (checkCount, checkColor),
+      (foldCount, foldColor),
+    ].where((s) => s.$1 > 0).toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Animated bar fill
+        TweenAnimationBuilder<double>(
+          tween: Tween(begin: 0.0, end: 1.0),
+          duration: const Duration(milliseconds: 600),
+          curve: Curves.easeOutCubic,
+          builder: (context, t, _) {
+            return ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final fullWidth = constraints.maxWidth;
+                  return SizedBox(
+                    height: 8,
+                    width: fullWidth,
+                    child: Stack(
+                      children: [
+                        Container(color: Colors.white.withValues(alpha: 0.06)),
+                        Row(
+                          children: [
+                            for (int i = 0; i < segments.length; i++)
+                              Container(
+                                width: fullWidth * t * segments[i].$1 / _total,
+                                margin: EdgeInsets.only(
+                                    right: i < segments.length - 1 ? 2 : 0),
+                                color: segments[i].$2,
+                              ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            );
+          },
+        ),
+        const SizedBox(height: 8),
+        // Legend
+        Wrap(
+          spacing: 14,
+          runSpacing: 4,
+          children: [
+            if (raiseCount > 0) _legendItem('Raised', raiseCount, raiseColor),
+            if (callCount > 0) _legendItem('Called', callCount, callColor),
+            if (checkCount > 0) _legendItem('Checked', checkCount, checkColor),
+            if (foldCount > 0) _legendItem('Folded', foldCount, foldColor),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _legendItem(String label, int count, Color color) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
+        const SizedBox(width: 5),
+        Text(
+          '$label $count',
+          style: GoogleFonts.ibmPlexSans(
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            color: Colors.white.withValues(alpha: 0.7),
+          ),
+        ),
+      ],
+    );
+  }
+}

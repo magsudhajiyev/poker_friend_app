@@ -11,13 +11,17 @@ import '../widgets/global_loading_spinner.dart';
 import '../widgets/global_bottom_nav_bar.dart';
 import '../design_system/design_system.dart';
 import '../design_system/components/cards/error_state_card.dart';
+import '../widgets/range_grid/range_grid_view.dart';
 
 class StatisticsScreen extends StatefulWidget {
   @override
   _StatisticsScreenState createState() => _StatisticsScreenState();
 }
 
-class _StatisticsScreenState extends State<StatisticsScreen> {
+class _StatisticsScreenState extends State<StatisticsScreen>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+
   bool isLoading = true;
   String? error;
 
@@ -79,7 +83,14 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 2, vsync: this);
     _loadStatistics();
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadStatistics({bool forceRefresh = false}) async {
@@ -431,9 +442,15 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
           ),
         ),
 
-        // Scrollable body
+        const SizedBox(height: 16),
+        _buildTabSwitcher(),
+
+        // Tab views: classic stats | range grid
         Expanded(
-          child: SingleChildScrollView(
+          child: TabBarView(
+            controller: _tabController,
+            children: [
+              SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(16, 24, 16, 0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -515,8 +532,90 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
               ],
             ),
           ),
+              const RangeGridView(),
+            ],
+          ),
         ),
       ],
+    );
+  }
+
+  /// Stats | Ranges segmented toggle — same pattern as Session History's
+  /// cash/tournament tab switcher (white pill outer, dark active segment).
+  Widget _buildTabSwitcher() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: AnimatedBuilder(
+        animation: _tabController.animation!,
+        builder: (context, _) {
+          final t = _tabController.animation!.value;
+          return Container(
+            padding: const EdgeInsets.all(2),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Row(
+              children: [
+                // Stats tab
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => _tabController.animateTo(0),
+                    behavior: HitTestBehavior.opaque,
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      decoration: BoxDecoration(
+                        color: Color.lerp(const Color(0xFF161719), Colors.transparent, t),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Center(
+                        child: Text(
+                          'Stats',
+                          style: GoogleFonts.ibmPlexSans(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500,
+                            letterSpacing: -0.5,
+                            color: Color.lerp(Colors.white, const Color(0xFF0C0C0C), t),
+                            height: 24 / 15,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                // Ranges tab
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => _tabController.animateTo(1),
+                    behavior: HitTestBehavior.opaque,
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      decoration: BoxDecoration(
+                        color: Color.lerp(Colors.transparent, const Color(0xFF161719), t),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Center(
+                        child: Text(
+                          'Ranges',
+                          style: GoogleFonts.ibmPlexSans(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500,
+                            letterSpacing: -0.5,
+                            color: Color.lerp(const Color(0xFF0C0C0C), Colors.white, t),
+                            height: 24 / 15,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
 

@@ -21,7 +21,7 @@ class LocalStorageService {
     
     return await openDatabase(
       dbPath,
-      version: 13,
+      version: 14,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE sessions(
@@ -82,6 +82,8 @@ class LocalStorageService {
             FOREIGN KEY (sessionId) REFERENCES sessions (id)
           )
         ''');
+
+        await _createRangeGridTable(db);
       },
       onUpgrade: (db, oldVersion, newVersion) async {
         if (oldVersion < 2) {
@@ -150,8 +152,158 @@ class LocalStorageService {
           await db.execute('ALTER TABLE sessions ADD COLUMN handsLogged INTEGER DEFAULT 0');
           await db.execute('ALTER TABLE sessions ADD COLUMN biggestPot REAL DEFAULT 0');
         }
+        if (oldVersion < 14) {
+          // Range grid index — hero hands by (hand class, position, stack)
+          await _createRangeGridTable(db);
+        }
       },
     );
+  }
+
+  static Future<void> _createRangeGridTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS range_grid_index(
+        handId TEXT PRIMARY KEY,
+        sessionId TEXT,
+        userId TEXT NOT NULL,
+        timestamp INTEGER NOT NULL,
+        gameType TEXT NOT NULL,
+        handClass TEXT NOT NULL,
+        position TEXT NOT NULL,
+        posGroup TEXT NOT NULL,
+        stackBB REAL,
+        stackBucket TEXT,
+        primaryAction TEXT NOT NULL,
+        preflopLine TEXT,
+        potBB REAL DEFAULT 0,
+        won INTEGER DEFAULT 0
+      )
+    ''');
+    await db.execute('''
+      CREATE INDEX IF NOT EXISTS idx_range_grid_lookup
+      ON range_grid_index(userId, gameType, handClass, posGroup, timestamp DESC)
+    ''');
+  }
+
+  // ── Range grid index CRUD ──────────────────────────────────────────
+
+  /// Insert or replace one range grid entry (idempotent by handId).
+  static Future<void> saveRangeEntry(Map<String, dynamic> entry) async {
+    try {
+      final db = await database;
+      await db.insert('range_grid_index', entry,
+          conflictAlgorithm: ConflictAlgorithm.replace);
+    } catch (e) {
+      debugPrint('Error saving range grid entry: $e');
+    }
+  }
+
+  /// Query range grid entries for one hand class, newest first.
+  static Future<List<Map<String, dynamic>>> queryRangeEntries({
+    required String userId,
+    required String gameType,
+    required String handClass,
+    String? posGroup,
+    String? stackBucket,
+    int limit = 50,
+  }) async {
+    try {
+      final db = await database;
+      final where =
+          StringBuffer('userId = ? AND gameType = ? AND handClass = ?');
+      final args = <Object?>[userId, gameType, handClass];
+
+      if (posGroup != null) {
+        where.write(' AND posGroup = ?');
+        args.add(posGroup);
+      }
+      if (stackBucket != null) {
+        where.write(' AND stackBucket = ?');
+        args.add(stackBucket);
+      }
+
+      return await db.query(
+        'range_grid_index',
+        where: where.toString(),
+        whereArgs: args,
+        orderBy: 'timestamp DESC',
+        limit: limit,
+      );
+    } catch (e) {
+      debugPrint('Error querying range grid entries: $e');
+      return [];
+    }
+  }
+
+  /// Grouped counts per (handClass, primaryAction) for the range grid.
+  static Future<List<Map<String, dynamic>>> aggregateRangeByHandClass({
+    required String userId,
+    required String gameType,
+    String? posGroup,
+    String? stackBucket,
+  }) async {
+    try {
+      final db = await database;
+      final where = StringBuffer('userId = ? AND gameType = ?');
+      final args = <Object?>[userId, gameType];
+      if (posGroup != null) {
+        where.write(' AND posGroup = ?');
+        args.add(posGroup);
+      }
+      if (stackBucket != null) {
+        where.write(' AND stackBucket = ?');
+        args.add(stackBucket);
+      }
+      return await db.rawQuery('''
+        SELECT handClass, primaryAction, COUNT(*) as n
+        FROM range_grid_index
+        WHERE $where
+        GROUP BY handClass, primaryAction
+      ''', args);
+    } catch (e) {
+      debugPrint('Error aggregating range grid: $e');
+      return [];
+    }
+  }
+
+  /// All locally stored hands with the fields needed to backfill the range
+  /// grid, joined with their session for userId/gameType fallbacks.
+  /// JSON columns are decoded.
+  static Future<List<Map<String, dynamic>>> getHandsForRangeBackfill() async {
+    try {
+      final db = await database;
+      final rows = await db.rawQuery('''
+        SELECT h.id, h.sessionId, h.actions, h.ourHoleCards, h.winnerId,
+               h.choppedWinners, h.potAmount, h.handBigBlind, h.handGameType,
+               h.startTime, h.endTime,
+               s.userId, s.gameType, s.bigBlind
+        FROM hands h
+        LEFT JOIN sessions s ON s.id = h.sessionId
+      ''');
+
+      return rows.map((row) {
+        final result = Map<String, dynamic>.from(row);
+        try {
+          if (result['actions'] != null) {
+            result['actions'] = jsonDecode(result['actions'] as String);
+          }
+          if (result['ourHoleCards'] != null) {
+            result['ourHoleCards'] =
+                jsonDecode(result['ourHoleCards'] as String);
+          }
+          if (result['choppedWinners'] != null) {
+            result['choppedWinners'] =
+                jsonDecode(result['choppedWinners'] as String);
+          }
+        } catch (_) {
+          // Leave undecodable fields as-is; the backfill skips bad rows
+        }
+        return result;
+      }).toList();
+    } catch (e) {
+      debugPrint('Error loading hands for range backfill: $e');
+      return [];
+    }
   }
   
   // Save session locally
@@ -216,7 +368,8 @@ class LocalStorageService {
   }
 
   // Save hand locally
-  static Future<void> saveHand({
+  /// Saves a hand locally and returns the generated hand id (null on error).
+  static Future<String?> saveHand({
     required String sessionId,
     required int handNumber,
     required int buttonPosition,
@@ -302,8 +455,10 @@ class LocalStorageService {
       );
       
       debugPrint('Hand saved locally: $handId with potAmount: ${potAmount ?? 0}');
+      return handId;
     } catch (e) {
       debugPrint('Error saving hand locally: $e');
+      return null;
     }
   }
   
@@ -383,67 +538,114 @@ class LocalStorageService {
       );
       
       
-      return hands.map((hand) {
-        final result = Map<String, dynamic>.from(hand);
-        
-        
-        // Parse JSON fields
-        if (result['actions'] != null) {
-          result['actions'] = jsonDecode(result['actions']);
-        }
-        if (result['boardCards'] != null) {
-          result['boardCards'] = jsonDecode(result['boardCards']);
-        }
-        if (result['ourHoleCards'] != null) {
-          result['ourHoleCards'] = jsonDecode(result['ourHoleCards']);
-        }
-        if (result['showdownData'] != null) {
-          result['showdownData'] = jsonDecode(result['showdownData']);
-        }
-        if (result['playerNames'] != null) {
-          result['playerNames'] = jsonDecode(result['playerNames']);
-        }
-        
-        // Convert reachedShowdown from int to bool
-        result['reachedShowdown'] = (result['reachedShowdown'] as int?) == 1;
-        
-        // Include pot amount, winner, and hero position
-        result['potAmount'] = result['potAmount'] ?? 0;
-        result['preflopPot'] = result['preflopPot'] ?? 0;
-        result['flopPot'] = result['flopPot'] ?? 0;
-        result['turnPot'] = result['turnPot'] ?? 0;
-        result['riverPot'] = result['riverPot'] ?? 0;
-        result['winnerId'] = result['winnerId'];
-        result['heroPosition'] = result['heroPosition'];
-        
-        // Use hand-level session data (preferred) or fall back to session-level data
-        result['smallBlind'] = result['handSmallBlind'] ?? sessionDefaults['smallBlind'];
-        result['bigBlind'] = result['handBigBlind'] ?? sessionDefaults['bigBlind'];
-        result['gameType'] = result['handGameType'] ?? sessionDefaults['gameType'];
-
-        // Parse chopped pot fields
-        result['isChoppedPot'] = (result['isChoppedPot'] == 1);
-        if (result['choppedWinners'] != null && result['choppedWinners'].isNotEmpty) {
-          try {
-            result['choppedWinners'] = jsonDecode(result['choppedWinners']);
-          } catch (e) {
-            result['choppedWinners'] = null;
-          }
-        }
-        if (result['individualShares'] != null && result['individualShares'].isNotEmpty) {
-          try {
-            final sharesMap = jsonDecode(result['individualShares']) as Map<String, dynamic>;
-            result['individualShares'] = sharesMap;
-          } catch (e) {
-            result['individualShares'] = null;
-          }
-        }
-
-        return result;
-      }).toList();
+      return hands.map((hand) => _decodeHandRow(hand, sessionDefaults)).toList();
     } catch (e) {
       debugPrint('Error getting session hands: $e');
       return [];
+    }
+  }
+
+  /// Decode a raw `hands` table row into the map shape used across the app
+  /// (JSON fields parsed, ints converted to bools, session fallbacks applied).
+  static Map<String, dynamic> _decodeHandRow(
+      Map<String, dynamic> hand, Map<String, dynamic> sessionDefaults) {
+    final result = Map<String, dynamic>.from(hand);
+
+    // Parse JSON fields
+    if (result['actions'] != null) {
+      result['actions'] = jsonDecode(result['actions']);
+    }
+    if (result['boardCards'] != null) {
+      result['boardCards'] = jsonDecode(result['boardCards']);
+    }
+    if (result['ourHoleCards'] != null) {
+      result['ourHoleCards'] = jsonDecode(result['ourHoleCards']);
+    }
+    if (result['showdownData'] != null) {
+      result['showdownData'] = jsonDecode(result['showdownData']);
+    }
+    if (result['playerNames'] != null) {
+      result['playerNames'] = jsonDecode(result['playerNames']);
+    }
+
+    // Convert reachedShowdown from int to bool
+    result['reachedShowdown'] = (result['reachedShowdown'] as int?) == 1;
+
+    // Include pot amount, winner, and hero position
+    result['potAmount'] = result['potAmount'] ?? 0;
+    result['preflopPot'] = result['preflopPot'] ?? 0;
+    result['flopPot'] = result['flopPot'] ?? 0;
+    result['turnPot'] = result['turnPot'] ?? 0;
+    result['riverPot'] = result['riverPot'] ?? 0;
+    result['winnerId'] = result['winnerId'];
+    result['heroPosition'] = result['heroPosition'];
+
+    // Use hand-level session data (preferred) or fall back to session-level data
+    result['smallBlind'] = result['handSmallBlind'] ?? sessionDefaults['smallBlind'];
+    result['bigBlind'] = result['handBigBlind'] ?? sessionDefaults['bigBlind'];
+    result['gameType'] = result['handGameType'] ?? sessionDefaults['gameType'];
+
+    // Parse chopped pot fields
+    result['isChoppedPot'] = (result['isChoppedPot'] == 1);
+    if (result['choppedWinners'] != null && result['choppedWinners'].isNotEmpty) {
+      try {
+        result['choppedWinners'] = jsonDecode(result['choppedWinners']);
+      } catch (e) {
+        result['choppedWinners'] = null;
+      }
+    }
+    if (result['individualShares'] != null && result['individualShares'].isNotEmpty) {
+      try {
+        final sharesMap = jsonDecode(result['individualShares']) as Map<String, dynamic>;
+        result['individualShares'] = sharesMap;
+      } catch (e) {
+        result['individualShares'] = null;
+      }
+    }
+
+    return result;
+  }
+
+  /// Load a single decoded hand by its local id (used by the range grid to
+  /// open a prior hand's details).
+  static Future<Map<String, dynamic>?> getHandById(String handId) async {
+    try {
+      final db = await database;
+      final rows = await db.query(
+        'hands',
+        where: 'id = ?',
+        whereArgs: [handId],
+        limit: 1,
+      );
+      if (rows.isEmpty) return null;
+
+      final hand = rows.first;
+      Map<String, dynamic> sessionDefaults = {
+        'smallBlind': 1,
+        'bigBlind': 2,
+        'gameType': 'cash',
+      };
+      final sessionId = hand['sessionId'] as String?;
+      if (sessionId != null) {
+        final sessionData = await db.query(
+          'sessions',
+          where: 'id = ?',
+          whereArgs: [sessionId],
+          limit: 1,
+        );
+        if (sessionData.isNotEmpty) {
+          final session = sessionData.first;
+          sessionDefaults = {
+            'smallBlind': session['smallBlind'] ?? 1,
+            'bigBlind': session['bigBlind'] ?? 2,
+            'gameType': session['gameType'] ?? 'cash',
+          };
+        }
+      }
+      return _decodeHandRow(Map<String, dynamic>.from(hand), sessionDefaults);
+    } catch (e) {
+      debugPrint('Error getting hand by id: $e');
+      return null;
     }
   }
   
