@@ -5623,11 +5623,13 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
   void _recalculatePlayerCallStatus(int playerId, int upToIndex) {
     final player = gameState.players[playerId - 1];
     final actions = sessionManager.currentHand!.actions;
+    final currentStreet = gameState.currentRound;
 
     // Check if this player has called/raised/checked after the last bet/raise
     bool hasCalledAfterLastBet = false;
     for (int i = 0; i < upToIndex; i++) {
       final action = actions[i];
+      if (action.street != currentStreet) continue;
       if (action.player == playerId) {
         if (action.action == PlayerAction.call ||
             action.action == PlayerAction.raise ||
@@ -5644,7 +5646,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
   /// Recalculate currentBet based on remaining bets/raises (current street only)
   void _recalculateCurrentBet(int upToIndex) {
     final actions = sessionManager.currentHand!.actions;
-    final currentStreet = gameState.currentRound.name;  // 'preflop', 'flop', 'turn', 'river'
+    final currentStreet = gameState.currentRound;
     double maxBet = 0;
 
     for (int i = 0; i < upToIndex; i++) {
@@ -5658,13 +5660,24 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       }
     }
 
+    // Preflop: blind posts aren't in the action list, so the bet to match
+    // never drops below the posted blind level even when all raises are undone.
+    if (currentStreet == BettingRound.preflop) {
+      final bbPlayer = gameState.players[gameState.effectiveBBPosition - 1];
+      final sbPlayer = gameState.players[gameState.effectiveSBPosition - 1];
+      final blindLevel = bbPlayer.isActive
+          ? gameState.bigBlind
+          : (sbPlayer.isActive ? gameState.smallBlind : 0.0);
+      if (maxBet < blindLevel) maxBet = blindLevel;
+    }
+
     gameState.currentBet = maxBet;
   }
 
   /// Recalculate hasBetThisRound based on remaining actions (current street only)
   void _recalculateHasBetThisRound(int upToIndex) {
     final actions = sessionManager.currentHand!.actions;
-    final currentStreet = gameState.currentRound.name;  // 'preflop', 'flop', 'turn', 'river'
+    final currentStreet = gameState.currentRound;
     bool hasBet = false;
 
     for (int i = 0; i < upToIndex; i++) {
@@ -5680,9 +5693,10 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     gameState.hasBetThisRound = hasBet;
   }
 
-  /// Recalculate all players' hasCalledCurrentBet status
+  /// Recalculate all players' hasCalledCurrentBet status (current street only)
   void _recalculateAllPlayersCallStatus(int upToIndex) {
     final actions = sessionManager.currentHand!.actions;
+    final currentStreet = gameState.currentRound;
 
     // Reset all players first
     for (var player in gameState.players) {
@@ -5691,10 +5705,11 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       }
     }
 
-    // Find the last bet/raise before upToIndex
+    // Find the last bet/raise on the current street before upToIndex
     int lastBetIndex = -1;
     for (int i = upToIndex - 1; i >= 0; i--) {
       final action = actions[i];
+      if (action.street != currentStreet) continue;
       if (action.action == PlayerAction.bet || action.action == PlayerAction.raise) {
         lastBetIndex = i;
         break;
@@ -5709,6 +5724,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
 
       for (int i = lastBetIndex + 1; i < upToIndex; i++) {
         final action = actions[i];
+        if (action.street != currentStreet) continue;
         if (action.action == PlayerAction.call ||
             action.action == PlayerAction.raise ||
             action.action == PlayerAction.bet) {
@@ -5720,6 +5736,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       // No bet this round - check if players have checked
       for (int i = 0; i < upToIndex; i++) {
         final action = actions[i];
+        if (action.street != currentStreet) continue;
         if (action.action == PlayerAction.check) {
           final player = gameState.players[action.player - 1];
           player.hasCalledCurrentBet = true;
