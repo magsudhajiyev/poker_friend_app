@@ -1831,8 +1831,12 @@ class SidePot {
 class SidePotCalculator {
   /// Calculate side pots from player contributions, following real poker
   /// rules:
-  /// - Pot layers are defined by the distinct contribution levels of the
-  ///   players still in the hand (non-folded).
+  /// - A pot layer is only LOCKED by an all-in commitment. Partial
+  ///   in-progress contributions (blinds, pending callers) never define
+  ///   levels — that money sits in the topmost (active) pot until betting
+  ///   closes. Layers are therefore the distinct commitments of live
+  ///   all-in players, plus one top layer for everything above the
+  ///   highest all-in.
   /// - ALL committed chips stay in the pots: folded players' chips are dead
   ///   money that fills each layer up to the amount they contributed, but
   ///   folded players are never eligible to win.
@@ -1848,15 +1852,27 @@ class SidePotCalculator {
     // Everyone with chips in the pot, folded or not
     final contributors =
         players.where((p) => p.isActive && contributionOf(p) > 0).toList();
-    // Players still in the hand — they define pot levels and eligibility
+    // Players still in the hand — they define eligibility
     final livePlayers = contributors.where((p) => !p.hasFolded).toList();
 
     if (livePlayers.length <= 1) {
       return []; // No pots to contest with 0 or 1 live players
     }
 
-    // Distinct live contribution levels, ascending
-    final levels = livePlayers.map(contributionOf).toSet().toList()..sort();
+    // Layers: distinct all-in commitments (ascending), then one top layer
+    // capped at the highest live contribution for the still-active money.
+    final levels = livePlayers
+        .where((p) => p.isAllIn)
+        .map(contributionOf)
+        .toSet()
+        .toList()
+      ..sort();
+    final maxLiveContribution = livePlayers
+        .map(contributionOf)
+        .reduce((a, b) => a > b ? a : b);
+    if (levels.isEmpty || maxLiveContribution > levels.last) {
+      levels.add(maxLiveContribution);
+    }
 
     List<SidePot> sidePots = [];
     double previousLevel = 0.0;
@@ -1872,9 +1888,9 @@ class SidePotCalculator {
         potAmount += inLayer;
       }
 
-      // Folded chips above the top live level have no higher layer to go
-      // to — fold them into the top pot. (Only folded players can exceed
-      // the top level, since it IS the max live contribution.)
+      // Folded chips above the top level have no higher layer to go to —
+      // fold them into the top pot. (Only folded players can exceed the
+      // top level, since it caps at the max live contribution.)
       if (level == levels.last) {
         for (final p in contributors) {
           if (p.hasFolded && contributionOf(p) > level) {
