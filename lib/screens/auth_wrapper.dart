@@ -8,6 +8,7 @@ import '../services/subscription_service.dart';
 import '../services/username_service.dart';
 import '../services/onboarding_service.dart';
 import '../l10n/app_localizations.dart';
+import '../widgets/looping_splash_logo.dart';
 import 'intro_screen.dart';
 import 'home_screen.dart';
 import 'onboarding/onboarding_flow.dart';
@@ -201,8 +202,11 @@ class _AuthWrapperState extends State<AuthWrapper> {
   }
 
   Widget _buildLoadingScreen(BuildContext context) {
+    // Keep the logo animation looping while auth/user data loads, instead
+    // of cutting to a blank screen after the splash plays once.
     return const Scaffold(
       backgroundColor: Color(0xFF02050B),
+      body: LoopingSplashLogo(),
     );
   }
 

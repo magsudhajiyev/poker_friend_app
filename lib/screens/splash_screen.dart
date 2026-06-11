@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:video_player/video_player.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../widgets/looping_splash_logo.dart';
 import 'auth_wrapper.dart';
 
+/// Launch screen: loops the logo animation until the app is ready.
+///
+/// "Ready" means Firebase Auth has resolved its initial state (so
+/// AuthWrapper can route immediately) AND at least one full loop of the
+/// animation has played. If auth takes longer, the logo keeps looping
+/// instead of cutting to a blank screen.
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -10,48 +17,40 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
-  VideoPlayerController? _controller;
-  bool _initialized = false;
+  bool _authResolved = false;
+  bool _loopCompleted = false;
   bool _navigated = false;
 
   @override
   void initState() {
     super.initState();
-    _start();
+
+    // Wait for the first auth state event — after this, AuthWrapper can
+    // render the correct screen without showing its own loading state.
+    FirebaseAuth.instance.authStateChanges().first.then((_) {
+      _authResolved = true;
+      _maybeNavigate();
+    }).catchError((_) {
+      _authResolved = true;
+      _maybeNavigate();
+    });
+
+    // Safety net: never hold the user hostage if something hangs.
+    Future.delayed(const Duration(seconds: 10), () {
+      _authResolved = true;
+      _loopCompleted = true;
+      _maybeNavigate();
+    });
   }
 
-  Future<void> _start() async {
-    final controller = VideoPlayerController.asset('assets/splash.mp4');
-    _controller = controller;
-
-    try {
-      await controller.initialize();
-      await controller.setVolume(0);
-
-      if (mounted) setState(() => _initialized = true);
-
-      controller.addListener(_onVideoProgress);
-      await controller.play();
-    } catch (e) {
-      debugPrint('SplashScreen video error: $e');
-      await Future.delayed(const Duration(seconds: 2));
-      _navigate();
-    }
+  void _onLoopCompleted() {
+    _loopCompleted = true;
+    _maybeNavigate();
   }
 
-  void _onVideoProgress() {
-    final c = _controller;
-    if (c == null || _navigated) return;
-    final duration = c.value.duration.inMilliseconds;
-    final position = c.value.position.inMilliseconds;
-    // Navigate when video is within 150ms of its end
-    if (duration > 0 && position >= duration - 150) {
-      _navigate();
-    }
-  }
-
-  void _navigate() {
+  void _maybeNavigate() {
     if (_navigated || !mounted) return;
+    if (!_authResolved || !_loopCompleted) return;
     _navigated = true;
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(builder: (_) => const AuthWrapper()),
@@ -59,29 +58,10 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   @override
-  void dispose() {
-    _controller?.removeListener(_onVideoProgress);
-    _controller?.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final c = _controller;
-    final screenWidth = MediaQuery.of(context).size.width;
     return Scaffold(
       backgroundColor: const Color(0xFF02050B),
-      body: (_initialized && c != null)
-          ? Center(
-              child: SizedBox(
-                width: screenWidth * 0.5,
-                child: AspectRatio(
-                  aspectRatio: c.value.aspectRatio,
-                  child: VideoPlayer(c),
-                ),
-              ),
-            )
-          : const SizedBox.shrink(),
+      body: LoopingSplashLogo(onLoopCompleted: _onLoopCompleted),
     );
   }
 }

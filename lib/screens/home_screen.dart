@@ -1580,6 +1580,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         // Earnings Chart
                         _buildEarningsCard(),
 
+                        const SizedBox(height: 8),
+
+                        // Recent Sessions
+                        _buildRecentSessionsCard(),
+
                       const SizedBox(height: 100),
                     ],
                   ),
@@ -2937,45 +2942,68 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildRecentSessionsCard() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Header row with title and view all
-        SectionHeadline(
-          title: AppLocalizations.of(context).homeRecentSessions,
-          actionText: AppLocalizations.of(context).homeViewAll,
-          onActionPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => SessionHistoryScreen()),
-            );
-          },
-        ),
-        const SizedBox(height: 8),
-        // Content
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: recentSessions.isEmpty
-              ? _buildEmptyInfoCard(
-                  title: AppLocalizations.of(context).homeNoRecentSessions,
-                  subtitle: AppLocalizations.of(context).homeStartFirstSession,
-                  onAddTap: () {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header row — "Recent Sessions" + "View all"
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  AppLocalizations.of(context).homeRecentSessions,
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.white,
+                    height: 20 / 17,
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => LoggingModeSelectionScreen()),
+                      MaterialPageRoute(builder: (context) => SessionHistoryScreen()),
                     );
                   },
-                )
-              : Column(
-                  children: recentSessions.take(3).map((session) {
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: _buildSessionCard(session),
-                    );
-                  }).toList(),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    child: Text(
+                      AppLocalizations.of(context).homeViewAll,
+                      style: GoogleFonts.ibmPlexSans(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF4CDE78),
+                      ),
+                    ),
+                  ),
                 ),
-        ),
-      ],
+              ],
+            ),
+          ),
+          // Content
+          if (recentSessions.isEmpty)
+            _buildEmptyInfoCard(
+              title: AppLocalizations.of(context).homeNoRecentSessions,
+              subtitle: AppLocalizations.of(context).homeStartFirstSession,
+              onAddTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => LoggingModeSelectionScreen()),
+                );
+              },
+            )
+          else
+            Column(
+              children: recentSessions.take(3).map((session) {
+                return _buildSessionRow(session);
+              }).toList(),
+            ),
+        ],
+      ),
     );
   }
 
@@ -3104,7 +3132,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildSessionCard(Map<String, dynamic> session) {
+  Widget _buildSessionRow(Map<String, dynamic> session) {
     String sessionName = session['sessionName'] ?? '';
     if (sessionName.isEmpty) {
       final createdAt = _parseSessionDate(session);
@@ -3114,12 +3142,31 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     }
 
     final createdAt = _parseSessionDate(session);
-    final formattedDate = DateFormat('MMM dd, h:mm a').format(createdAt);
-    final playerCount = session['playerCount'] ?? 0;
+    final formattedDate = DateFormat('MMM d').format(createdAt);
     final isTournament = (session['gameType'] ?? 'cash').toLowerCase() == 'tournament';
-    final blindsText = isTournament
-        ? CurrencyService.formatCash((session['buyInAmount'] ?? session['totalBuyIn'] ?? 0).toDouble())
-        : '${CurrencyService.formatCash((session['smallBlind'] ?? 0).toDouble())}/${CurrencyService.formatCash((session['bigBlind'] ?? 0).toDouble())}';
+
+    // Calculate duration
+    String durationText = '';
+    try {
+      final start = _parseSessionDate(session);
+      final endRaw = session['endTime'];
+      if (endRaw != null) {
+        DateTime end;
+        if (endRaw is Timestamp) {
+          end = endRaw.toDate();
+        } else if (endRaw is String) {
+          end = DateTime.parse(endRaw);
+        } else {
+          end = start;
+        }
+        final diff = end.difference(start);
+        if (diff.inHours > 0) {
+          durationText = '${diff.inHours}h ${diff.inMinutes % 60}m';
+        } else {
+          durationText = '${diff.inMinutes}m';
+        }
+      }
+    } catch (_) {}
 
     return GestureDetector(
       onTap: () => Navigator.push(
@@ -3132,53 +3179,84 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         ),
       ),
       child: Container(
-        width: double.infinity,
-        decoration: BoxDecoration(
-          color: AppColors.bgSurface,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.black),
+        decoration: const BoxDecoration(
+          border: Border(
+            bottom: BorderSide(color: Color(0xFF161719), width: 1),
+          ),
         ),
-        padding: const EdgeInsets.all(18),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        child: Row(
           children: [
-            // Row 1: Session name + pills
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
+            // Session type icon
+            Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: const Color(0xFFA3FF78),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Center(
+                child: SvgPicture.asset(
+                  isTournament ? 'assets/icons/Trophy.svg' : 'assets/icons/Coin.svg',
+                  width: 20,
+                  height: 20,
+                  colorFilter: const ColorFilter.mode(Colors.black, BlendMode.srcIn),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            // Name + profit + chips
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
                     sessionName,
-                    style: AppTypography.infoCardText(),
+                    style: GoogleFonts.ibmPlexSans(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                      height: 20 / 17,
+                    ),
                     overflow: TextOverflow.ellipsis,
                   ),
-                ),
-                const SizedBox(width: 6),
-                _buildSessionPill(AppLocalizations.of(context).homePlayersCount(playerCount)),
-                const SizedBox(width: 4),
-                _buildSessionPill(blindsText),
-              ],
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      if (durationText.isNotEmpty)
+                        _buildInfoChip(durationText),
+                      if (durationText.isNotEmpty)
+                        const SizedBox(width: 4),
+                      _buildInfoChip(formattedDate),
+                    ],
+                  ),
+                ],
+              ),
             ),
-            // Row 2: Date
-            Text(
-              formattedDate,
-              style: AppTypography.infoCardDate(),
-            ),
+            const SizedBox(width: 8),
+            // Caret right
+            const Icon(Icons.chevron_right, color: Color(0xFF808285), size: 16),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildSessionPill(String text) {
+  Widget _buildInfoChip(String text) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: AppColors.neutral800,
-        borderRadius: BorderRadius.circular(100),
+        color: const Color(0xFF2C2C2E),
+        borderRadius: BorderRadius.circular(999),
       ),
       child: Text(
         text,
-        style: AppTypography.infoCardPill(color: AppColors.infoCardPillTextNeutral),
+        style: GoogleFonts.ibmPlexSans(
+          fontSize: 11,
+          fontWeight: FontWeight.w500,
+          color: const Color(0xFFB9B9B9),
+          height: 16 / 11,
+        ),
       ),
     );
   }

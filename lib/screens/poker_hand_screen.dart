@@ -35,6 +35,7 @@ import '../models/hand_state_machine.dart';
 import '../models/game_types.dart';
 import '../models/stack_bucket.dart';
 import '../widgets/stack_range_circle.dart';
+import '../widgets/hand_micro_animations.dart';
 import '../services/firebase_service.dart';
 import '../services/local_storage_service.dart';
 import '../services/auth_service.dart';
@@ -107,6 +108,25 @@ class PokerHandScreen extends StatefulWidget {
 
 enum _ChipDirection { up, down, left, right }
 
+/// One in-flight chip animation, in the table overlay's coordinate space.
+class _ChipFlightEntry {
+  final AnimationController controller;
+  final Offset start;
+  final Offset end;
+  final Color color;
+  final int seed;
+  final int chipCount;
+
+  _ChipFlightEntry({
+    required this.controller,
+    required this.start,
+    required this.end,
+    required this.color,
+    required this.seed,
+    required this.chipCount,
+  });
+}
+
 class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderStateMixin {
   late PokerGameState gameState;
   late PokerSessionManager sessionManager;
@@ -144,6 +164,13 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
   AnimationController? _nextHandSweepController;
   Animation<double>? _nextHandSweepProgress;
   int _scatterSeed = 0;
+  // Breathing glow on the current player's seat indicator
+  AnimationController? _turnPulseController;
+  // Chip flight overlay (bets flying to pot, pot flying to winner)
+  final List<GlobalKey> _seatAnchorKeys =
+      List.generate(9, (_) => GlobalKey(debugLabel: 'seatAnchor'));
+  final GlobalKey _chipOverlayKey = GlobalKey(debugLabel: 'chipOverlay');
+  final List<_ChipFlightEntry> _chipFlights = [];
   // Set to true once the free-tier hand gate has fired for this session.
   bool _freeTierLocked = false;
 
@@ -201,6 +228,12 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     // Load button mode setting
     _loadButtonModeSetting();
     _scheduleOnboardingTour();
+
+    // Slow breathing pulse for the current player's seat glow
+    _turnPulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1100),
+    )..repeat(reverse: true);
 
     // Start session and first hand
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -557,20 +590,25 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       // Increment table number
       sessionManager.currentTableNumber++;
 
-      // Clear all seats except hero
-      final allSeats = Set<int>.from(sessionManager.activeSeats);
-      for (final seat in allSeats) {
-        if (seat != heroSeat) {
-          sessionManager.activeSeats.remove(seat);
-          sessionManager.playerNames.remove(seat);
-          sessionManager.playerStacks.remove(seat);
-          sessionManager.playerIds.remove(seat);
-          gameState.setPlayerActive(seat, false);
-        }
+      // Clear all seats except hero. Iterate every seat (not just
+      // sessionManager.activeSeats) so the table is guaranteed to clear
+      // even if sessionManager and gameState ever get out of sync.
+      for (int seat = 1; seat <= 9; seat++) {
+        if (seat == heroSeat) continue;
+        sessionManager.activeSeats.remove(seat);
+        sessionManager.playerNames.remove(seat);
+        sessionManager.playerStacks.remove(seat);
+        sessionManager.playerIds.remove(seat);
+        gameState.setPlayerActive(seat, false);
       }
 
-      // Reset hero confidence to high (known stack at table change)
       if (heroSeat != null) {
+        // Make sure the hero's seat is still registered as active
+        sessionManager.activeSeats.add(heroSeat);
+        if (!gameState.players[heroSeat - 1].isActive) {
+          gameState.setPlayerActive(heroSeat, true);
+        }
+        // Reset hero confidence to high (known stack at table change)
         gameState.setPlayerStack(heroSeat, heroStack);
       }
     });
@@ -1026,6 +1064,11 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     _actionFlashController?.dispose();
     _tapFlashController?.dispose();
     _nextHandSweepController?.dispose();
+    _turnPulseController?.dispose();
+    for (final flight in _chipFlights) {
+      flight.controller.dispose();
+    }
+    _chipFlights.clear();
 
     // End session when leaving, but only if there's actual data to save
     if (sessionManager.sessionState == SessionState.active) {
@@ -1771,14 +1814,23 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                         onTapAmount: _openNumpadFromSnap,
                       ),
 
-                    // Settling overlay between hands
+                    // Settling overlay between hands — backdrop fades in,
+                    // winner info pops in
                     if (_isSettlingBetweenHands)
                       GestureDetector(
                         onTap: _skipSettling,
-                        child: Container(
-                          color: Colors.black.withValues(alpha: 0.6),
+                        child: TweenAnimationBuilder<double>(
+                          tween: Tween(begin: 0.0, end: 1.0),
+                          duration: const Duration(milliseconds: 250),
+                          curve: Curves.easeOut,
+                          builder: (context, t, child) => Container(
+                            color: Colors.black.withValues(alpha: 0.6 * t),
+                            child: Opacity(opacity: t, child: child),
+                          ),
                           child: Center(
-                            child: Column(
+                            child: PopIn(
+                              duration: const Duration(milliseconds: 320),
+                              child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 if (_settlingWinnerName != null) ...[
@@ -1819,6 +1871,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                                   ),
                                 ),
                               ],
+                              ),
                             ),
                           ),
                         ),
@@ -2019,7 +2072,9 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
             child: SizedBox(
               width: availableH,
               height: availableW,
-              child: PokerTableWidget(
+              child: Stack(
+                children: [
+                  PokerTableWidget(
                 activeSeatMap: seatActive,
                 seatLabels: seatLabels,
                 buttonPosition: widgetButton,
@@ -2056,11 +2111,35 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                     onLongPressEnd: (_) => _onSeatLongPressEnd(logicalSeat),
                     onLongPressCancel: _onSeatLongPressCancel,
                     child: RotatedBox(
+                      key: _seatAnchorKeys[logicalSeat - 1],
                       quarterTurns: 1,
                       child: _buildHandSeat(logicalSeat, isActive, seatLabels[widgetSeat] ?? ''),
                     ),
                   );
                 },
+                  ),
+                  // Chip flight overlay — bets flying to the pot, pot to winner
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: CustomPaint(
+                        key: _chipOverlayKey,
+                        painter: ChipFlightPainter(
+                          flights: [
+                            for (final flight in _chipFlights)
+                              ChipFlightFrame(
+                                start: flight.start,
+                                end: flight.end,
+                                color: flight.color,
+                                progress: flight.controller.value,
+                                seed: flight.seed,
+                                chipCount: flight.chipCount,
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -2117,26 +2196,39 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       borderColor = const Color(0xFFA3FF78);
     }
 
-    // Seat number pill
-    final circle = Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
-      decoration: BoxDecoration(
-        color: const Color(0xFF161719),
-        borderRadius: BorderRadius.circular(35),
-        border: Border.all(color: borderColor, width: 2),
-        boxShadow: isCurrentPlayer
-            ? [BoxShadow(color: Colors.amber.withValues(alpha: 0.4), blurRadius: 8)]
-            : null,
-      ),
-      child: Text(
-        '$seatNumber',
-        style: GoogleFonts.ibmPlexMono(
-          color: isActive ? const Color(0xFFA3FF78) : const Color(0xFF67696D),
-          fontSize: 13,
-          fontWeight: FontWeight.w500,
-        ),
-      ),
-    );
+    // Seat number pill — current player's glow "breathes" via the pulse
+    // controller; other states render statically.
+    Widget buildCircle(double glow) => Container(
+          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+          decoration: BoxDecoration(
+            color: const Color(0xFF161719),
+            borderRadius: BorderRadius.circular(35),
+            border: Border.all(color: borderColor, width: 2),
+            boxShadow: isCurrentPlayer
+                ? [
+                    BoxShadow(
+                      color: Colors.amber.withValues(alpha: 0.25 + 0.3 * glow),
+                      blurRadius: 6 + 6 * glow,
+                    ),
+                  ]
+                : null,
+          ),
+          child: Text(
+            '$seatNumber',
+            style: GoogleFonts.ibmPlexMono(
+              color: isActive ? const Color(0xFFA3FF78) : const Color(0xFF67696D),
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        );
+
+    final circle = isCurrentPlayer && _turnPulseController != null
+        ? AnimatedBuilder(
+            animation: _turnPulseController!,
+            builder: (context, _) => buildCircle(_turnPulseController!.value),
+          )
+        : buildCircle(0.0);
 
     if (!isActive) {
       // Empty seat — just the pill and "Player" label
@@ -2192,9 +2284,11 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       );
     }
 
-    // Stack amount
-    final stackWidget = Text(
-      _formatCompactAmount(stack),
+    // Stack amount — rolls smoothly when chips leave/enter the stack
+    final stackWidget = AnimatedAmountText(
+      value: stack,
+      formatter: _formatCompactAmount,
+      duration: const Duration(milliseconds: 350),
       style: GoogleFonts.ibmPlexSans(
         color: isFolded ? Colors.white38 : const Color(0xFF89F1EC),
         fontSize: 11,
@@ -2202,7 +2296,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       ),
     );
 
-    // Bet/status pill
+    // Bet/status pill — pops in when it appears or its content changes
     Widget? statusPill;
     if (isFolded) {
       statusPill = _buildStatusPill('FOLD', Colors.white.withValues(alpha: 0.15), Colors.white38);
@@ -2213,16 +2307,31 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     } else if (hasChecked) {
       statusPill = _buildStatusPill('CHECK', const Color(0xFF3BA55D), Colors.white);
     }
+    if (statusPill != null) {
+      final pillTrigger = isFolded
+          ? 'fold'
+          : isAllIn
+              ? 'allin'
+              : bet > 0
+                  ? 'bet:${_formatCompactAmount(bet)}'
+                  : 'check';
+      statusPill = PopIn(triggerKey: pillTrigger, child: statusPill);
+    }
 
-    // Player info column (circle + name + stack)
-    final playerInfo = Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        circle,
-        const SizedBox(height: 2),
-        nameWidget,
-        stackWidget,
-      ],
+    // Player info column (circle + name + stack) — dims smoothly on fold
+    final playerInfo = AnimatedOpacity(
+      opacity: isFolded ? 0.55 : 1.0,
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeOut,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          circle,
+          const SizedBox(height: 2),
+          nameWidget,
+          stackWidget,
+        ],
+      ),
     );
 
     if (statusPill == null) return playerInfo;
@@ -2366,7 +2475,8 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
           return;
         }
 
-        if (isHero) {
+        if (isHero && sessionManager.ourSeatNumber != seatNumber) {
+          // Hero moving to a different seat — carry over current stack
           final heroStack = gameState.getPlayerStack(sessionManager.ourSeatNumber ?? seatNumber);
           sessionManager.reseatHero(
             newSeat: seatNumber,
@@ -2375,8 +2485,9 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
             heroStack: heroStack > 0 ? heroStack : stack,
           );
         } else {
+          // Editing hero's own seat, or adding/editing a regular player.
           // Move player if already seated elsewhere (only for named players)
-          if (name.isNotEmpty) {
+          if (!isHero && name.isNotEmpty) {
             final lower = name.toLowerCase();
             final existingSeat = seatedPlayers[lower];
             if (existingSeat != null && existingSeat != seatNumber) {
@@ -2390,7 +2501,12 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
           sessionManager.playerNames[seatNumber] = name;
           sessionManager.playerStacks[seatNumber] = stack;
           sessionManager.activeSeats.add(seatNumber);
-          gameState.setPlayerActive(seatNumber, true);
+          // Activating an already-active player would reset their betting
+          // state mid-hand (betThisRound/totalContribution) — only activate
+          // seats that are currently inactive.
+          if (!gameState.players[seatNumber - 1].isActive) {
+            gameState.setPlayerActive(seatNumber, true);
+          }
           gameState.setPlayerStack(seatNumber, stack);
         }
         setState(() {});
@@ -2500,11 +2616,28 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
           _buildCompactBoardCards(boardCards!),
           const SizedBox(height: 3),
         ],
-        if (showSidePotPills)
-          _buildSidePotPills()
-        else ...[
-          Text(
-            gameState.formatCurrency(gameState.currentPot),
+        if (showSidePotPills) ...[
+          // Total pot stays visible above the per-pot breakdown so the
+          // pills always reconcile against one number
+          AnimatedAmountText(
+            value: gameState.currentPot,
+            formatter: gameState.formatCurrency,
+            pulseOnIncrease: true,
+            style: GoogleFonts.ibmPlexSans(
+              color: const Color(0xFFD3FFFD),
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              letterSpacing: -0.3,
+              height: 1.0,
+            ),
+          ),
+          const SizedBox(height: 3),
+          _buildSidePotPills(),
+        ] else ...[
+          AnimatedAmountText(
+            value: gameState.currentPot,
+            formatter: gameState.formatCurrency,
+            pulseOnIncrease: true,
             style: GoogleFonts.ibmPlexSans(
               color: const Color(0xFFD3FFFD),
               fontSize: 17,
@@ -2539,7 +2672,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         for (int i = 0; i < displayPots.length; i++) ...[
           if (i > 0) const SizedBox(width: 4),
           _buildSinglePotPill(
-            i == 0 ? 'Main' : 'Side',
+            i == 0 ? 'Main' : 'Side $i',
             displayPots[i].amount,
             i == 0,
           ),
@@ -4031,7 +4164,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     _nextHandSweepController?.dispose();
     final sweepController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 400),
+      duration: const Duration(milliseconds: 550),
     );
     _nextHandSweepController = sweepController;
     _nextHandSweepProgress = Tween<double>(begin: 0.0, end: 1.0).animate(
@@ -4171,6 +4304,20 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     _actionFlashColor = colors?.text ?? Colors.white;
     _actionFlashBgColor = colors?.bg ?? Colors.black;
 
+    // Chips fly from the acting seat to the pot for chip-committing actions.
+    // gameState.currentPlayer is still the actor at this point — the flash
+    // fires before the action is performed.
+    if (action == PlayerAction.call ||
+        action == PlayerAction.bet ||
+        action == PlayerAction.raise) {
+      _spawnChipFlight(
+        fromSeat: gameState.currentPlayer,
+        color: action == PlayerAction.call
+            ? const Color(0xFF89F1EC)
+            : const Color(0xFFFFC857),
+      );
+    }
+
     final controller = AnimationController(
       duration: const Duration(milliseconds: 500),
       vsync: this,
@@ -4188,7 +4335,18 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     ]).animate(controller);
 
     setState(() => _actionFlashText = text);
-    HapticFeedback.mediumImpact();
+    // Haptic hierarchy: folds feel light, calls medium, aggression heavy
+    switch (action) {
+      case PlayerAction.fold:
+        HapticFeedback.lightImpact();
+        break;
+      case PlayerAction.bet:
+      case PlayerAction.raise:
+        HapticFeedback.heavyImpact();
+        break;
+      default:
+        HapticFeedback.mediumImpact();
+    }
 
     controller.addListener(() {
       if (mounted) setState(() {});
@@ -4228,6 +4386,65 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       if (mounted) setState(() {});
     });
     controller.forward();
+  }
+
+  /// Spawn a chip flight on the table overlay. Chips fly from [fromSeat]
+  /// to the pot when [toSeat] is null, or from the pot to [toSeat] when
+  /// [fromSeat] is null (winner award). Seats are logical seat numbers 1-9.
+  void _spawnChipFlight({
+    int? fromSeat,
+    int? toSeat,
+    required Color color,
+    int chipCount = 4,
+  }) {
+    // Resolve coordinates after the current frame so layout is settled.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+
+      final overlayBox =
+          _chipOverlayKey.currentContext?.findRenderObject() as RenderBox?;
+      if (overlayBox == null || !overlayBox.hasSize) return;
+
+      Offset? seatCenter(int? seat) {
+        if (seat == null || seat < 1 || seat > 9) return null;
+        final box = _seatAnchorKeys[seat - 1].currentContext?.findRenderObject()
+            as RenderBox?;
+        if (box == null || !box.hasSize) return null;
+        return overlayBox
+            .globalToLocal(box.localToGlobal(box.size.center(Offset.zero)));
+      }
+
+      final potCenter = overlayBox.size.center(Offset.zero);
+      final start = fromSeat != null ? seatCenter(fromSeat) : potCenter;
+      final end = toSeat != null ? seatCenter(toSeat) : potCenter;
+      if (start == null || end == null || (start - end).distance < 1) return;
+
+      final controller = AnimationController(
+        vsync: this,
+        duration: const Duration(milliseconds: 650),
+      );
+      final entry = _ChipFlightEntry(
+        controller: controller,
+        start: start,
+        end: end,
+        color: color,
+        seed: DateTime.now().microsecondsSinceEpoch & 0xFFFF,
+        chipCount: chipCount,
+      );
+      _chipFlights.add(entry);
+
+      controller.addListener(() {
+        if (mounted) setState(() {});
+      });
+      controller.addStatusListener((status) {
+        if (status == AnimationStatus.completed) {
+          _chipFlights.remove(entry);
+          controller.dispose();
+          if (mounted) setState(() {});
+        }
+      });
+      controller.forward();
+    });
   }
 
   String _actionFlashLabel(PlayerAction action, [double? amount]) {
@@ -4531,6 +4748,14 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       playerNames.add(playerName);
     }
 
+    // Return any uncalled overage to its bettor BEFORE pots are formed —
+    // an unmatched bet is never part of the pot in real poker.
+    final uncalledReturns = gameState.processUncalledBetReturns();
+    if (uncalledReturns.isNotEmpty) {
+      gameState.recalculateActiveSidePots();
+      if (mounted) setState(() {});
+    }
+
     final potAmount = gameState.currentPot;
 
     // Check if we need side pot calculation
@@ -4701,6 +4926,15 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
             potLogs.add("🏆 $potName: $winnerName wins ${_formatCurrency(potAmount)}");
           }
         }
+
+        // Chip conservation: everything in the pot must reach a winner.
+        // The calculator includes folded players' dead money and refunds
+        // run before pots are formed, so these must match.
+        assert(
+          (totalDistributed - gameState.currentPot).abs() < 0.01,
+          'Pot distribution mismatch: distributed $totalDistributed '
+          'of ${gameState.currentPot}',
+        );
 
         // Reset the pot after distributing all pots
         gameState.currentPot = 0.0;
@@ -5421,11 +5655,13 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
   void _recalculatePlayerCallStatus(int playerId, int upToIndex) {
     final player = gameState.players[playerId - 1];
     final actions = sessionManager.currentHand!.actions;
+    final currentStreet = gameState.currentRound;
 
     // Check if this player has called/raised/checked after the last bet/raise
     bool hasCalledAfterLastBet = false;
     for (int i = 0; i < upToIndex; i++) {
       final action = actions[i];
+      if (action.street != currentStreet) continue;
       if (action.player == playerId) {
         if (action.action == PlayerAction.call ||
             action.action == PlayerAction.raise ||
@@ -5442,7 +5678,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
   /// Recalculate currentBet based on remaining bets/raises (current street only)
   void _recalculateCurrentBet(int upToIndex) {
     final actions = sessionManager.currentHand!.actions;
-    final currentStreet = gameState.currentRound.name;  // 'preflop', 'flop', 'turn', 'river'
+    final currentStreet = gameState.currentRound;
     double maxBet = 0;
 
     for (int i = 0; i < upToIndex; i++) {
@@ -5456,13 +5692,24 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       }
     }
 
+    // Preflop: blind posts aren't in the action list, so the bet to match
+    // never drops below the posted blind level even when all raises are undone.
+    if (currentStreet == BettingRound.preflop) {
+      final bbPlayer = gameState.players[gameState.effectiveBBPosition - 1];
+      final sbPlayer = gameState.players[gameState.effectiveSBPosition - 1];
+      final blindLevel = bbPlayer.isActive
+          ? gameState.bigBlind
+          : (sbPlayer.isActive ? gameState.smallBlind : 0.0);
+      if (maxBet < blindLevel) maxBet = blindLevel;
+    }
+
     gameState.currentBet = maxBet;
   }
 
   /// Recalculate hasBetThisRound based on remaining actions (current street only)
   void _recalculateHasBetThisRound(int upToIndex) {
     final actions = sessionManager.currentHand!.actions;
-    final currentStreet = gameState.currentRound.name;  // 'preflop', 'flop', 'turn', 'river'
+    final currentStreet = gameState.currentRound;
     bool hasBet = false;
 
     for (int i = 0; i < upToIndex; i++) {
@@ -5478,9 +5725,10 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     gameState.hasBetThisRound = hasBet;
   }
 
-  /// Recalculate all players' hasCalledCurrentBet status
+  /// Recalculate all players' hasCalledCurrentBet status (current street only)
   void _recalculateAllPlayersCallStatus(int upToIndex) {
     final actions = sessionManager.currentHand!.actions;
+    final currentStreet = gameState.currentRound;
 
     // Reset all players first
     for (var player in gameState.players) {
@@ -5489,10 +5737,11 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       }
     }
 
-    // Find the last bet/raise before upToIndex
+    // Find the last bet/raise on the current street before upToIndex
     int lastBetIndex = -1;
     for (int i = upToIndex - 1; i >= 0; i--) {
       final action = actions[i];
+      if (action.street != currentStreet) continue;
       if (action.action == PlayerAction.bet || action.action == PlayerAction.raise) {
         lastBetIndex = i;
         break;
@@ -5507,6 +5756,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
 
       for (int i = lastBetIndex + 1; i < upToIndex; i++) {
         final action = actions[i];
+        if (action.street != currentStreet) continue;
         if (action.action == PlayerAction.call ||
             action.action == PlayerAction.raise ||
             action.action == PlayerAction.bet) {
@@ -5518,6 +5768,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       // No bet this round - check if players have checked
       for (int i = 0; i < upToIndex; i++) {
         final action = actions[i];
+        if (action.street != currentStreet) continue;
         if (action.action == PlayerAction.check) {
           final player = gameState.players[action.player - 1];
           player.hasCalledCurrentBet = true;
@@ -5659,6 +5910,15 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         ? sessionManager.getPlayerName(lastHand!.winnerId!)
         : null;
     final potAmount = lastHand?.potAmount;
+
+    // Pot chips fly to the winner's seat as the settling overlay appears
+    if (lastHand?.winnerId != null) {
+      _spawnChipFlight(
+        toSeat: lastHand!.winnerId,
+        color: const Color(0xFF62E3BC),
+        chipCount: 6,
+      );
+    }
 
     // Show settling overlay
     setState(() {
@@ -5833,6 +6093,15 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
   void _showWinnerSelectionAndComplete() async {
     final l10n = AppLocalizations.of(context);
     await LoggerService.info('═══ _showWinnerSelectionAndComplete() called ═══');
+
+    // Return any uncalled overage to its bettor BEFORE pots are formed —
+    // a bet nobody matched is never part of the pot in real poker. This
+    // also covers river all-ins, which never hit a street transition.
+    final uncalledReturns = gameState.processUncalledBetReturns();
+    if (uncalledReturns.isNotEmpty) {
+      gameState.recalculateActiveSidePots();
+      if (mounted) setState(() {});
+    }
 
     // Save the pot amount BEFORE showing any dialogs
     final potAmount = gameState.currentPot;
@@ -6013,6 +6282,13 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
               potLogs.add("🏆 $potName: $winnerName wins ${_formatCurrency(potAmount)}");
             }
           }
+
+          // Chip conservation: everything in the pot must reach a winner.
+          assert(
+            (totalDistributed - gameState.currentPot).abs() < 0.01,
+            'Pot distribution mismatch: distributed $totalDistributed '
+            'of ${gameState.currentPot}',
+          );
 
           // Reset the pot after distributing all pots
           gameState.currentPot = 0.0;
@@ -7127,41 +7403,42 @@ class _CardScatterPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     if (progress <= 0) return;
 
+    final rnd = math.Random(seed);
     final centerX = size.width / 2;
     final centerY = size.height * 0.4;
-    const cardWidth = 56.0;
-    const cardHeight = 78.0;
+    const cardWidth = 52.0;
+    const cardHeight = 72.0;
+    const cardCount = 5;
+    const stagger = 0.08;
 
-    // Both cards fall downward — depth = shrink + move down
-    final fallDistance = size.height * 0.35 * progress;
-    // Scale shrinks to simulate depth (falling away from viewer)
-    final scale = 1.0 - progress * 0.45;
-    // Opacity fades as cards fall away
-    final opacity = (1.0 - progress * 1.3).clamp(0.0, 1.0);
+    for (int i = 0; i < cardCount; i++) {
+      // Deterministic per-card randomness from the seed
+      final drift = (rnd.nextDouble() - 0.5) * 90;
+      final tilt = (rnd.nextBool() ? 1.0 : -1.0) *
+          (0.10 + rnd.nextDouble() * 0.25);
+      final fallDepth = 0.32 + rnd.nextDouble() * 0.12;
 
-    // Left card — slight left drift + counter-clockwise tilt
-    _drawCard(
-      canvas,
-      centerX: centerX - 14 - 12 * progress,
-      centerY: centerY + fallDistance,
-      width: cardWidth,
-      height: cardHeight,
-      rotation: -progress * 0.2,
-      scale: scale,
-      opacity: opacity,
-    );
+      // Stagger each card's launch so the muck reads as a sweep
+      final t = ((progress - i * stagger) / (1 - stagger * (cardCount - 1)))
+          .clamp(0.0, 1.0);
+      if (t <= 0) continue;
 
-    // Right card — slight right drift + clockwise tilt (overlapping)
-    _drawCard(
-      canvas,
-      centerX: centerX + 14 + 12 * progress,
-      centerY: centerY + fallDistance * 0.9,
-      width: cardWidth,
-      height: cardHeight,
-      rotation: progress * 0.15,
-      scale: scale * 0.97,
-      opacity: opacity,
-    );
+      // Cards accelerate as they fall away from the viewer
+      final fall = size.height * fallDepth * Curves.easeIn.transform(t);
+      final scale = 1.0 - t * 0.45;
+      final opacity = (1.0 - t * 1.25).clamp(0.0, 1.0);
+
+      _drawCard(
+        canvas,
+        centerX: centerX + (i - (cardCount - 1) / 2) * 11 + drift * t,
+        centerY: centerY + fall,
+        width: cardWidth,
+        height: cardHeight,
+        rotation: tilt * t,
+        scale: scale,
+        opacity: opacity,
+      );
+    }
   }
 
   void _drawCard(
