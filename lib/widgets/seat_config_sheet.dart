@@ -280,7 +280,12 @@ class _SeatConfigSheetState extends State<SeatConfigSheet> {
 
               // ─── THIS IS MY SEAT ─────────────────────────────────
               GestureDetector(
-                onTap: () => setState(() => _isHero = !_isHero),
+                onTap: () => setState(() {
+                  _isHero = !_isHero;
+                  // Hero is never saved as an opponent
+                  if (_isHero) _saveAsOpponent = false;
+                }),
+                behavior: HitTestBehavior.opaque,
                 child: Row(
                   children: [
                     Container(
@@ -459,11 +464,9 @@ class _SeatConfigSheetState extends State<SeatConfigSheet> {
                 GestureDetector(
                 onTap: () => setState(() {
                   _saveAsOpponent = !_saveAsOpponent;
-                  if (_saveAsOpponent) {
-                    _isHero = false;
-                  } else {
-                    _isHero = true;
-                  }
+                  // Hero is never saved as an opponent; turning the toggle
+                  // off must NOT touch the hero selection
+                  if (_saveAsOpponent) _isHero = false;
                 }),
                 child: Container(
                   width: double.infinity,
@@ -579,8 +582,10 @@ class _SeatConfigSheetState extends State<SeatConfigSheet> {
                 ),
               ),
 
-              // Remove player link (only for already-active seats)
-              if (_isActive) ...[
+              // Remove player link (only for already-active seats).
+              // The hero's seat can't be removed — that would leave the
+              // session without an owner seat (ourSeatNumber would dangle).
+              if (_isActive && !widget.isHero) ...[
                 const SizedBox(height: 16),
                 Center(
                   child: GestureDetector(

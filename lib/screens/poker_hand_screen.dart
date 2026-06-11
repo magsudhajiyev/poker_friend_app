@@ -557,20 +557,25 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       // Increment table number
       sessionManager.currentTableNumber++;
 
-      // Clear all seats except hero
-      final allSeats = Set<int>.from(sessionManager.activeSeats);
-      for (final seat in allSeats) {
-        if (seat != heroSeat) {
-          sessionManager.activeSeats.remove(seat);
-          sessionManager.playerNames.remove(seat);
-          sessionManager.playerStacks.remove(seat);
-          sessionManager.playerIds.remove(seat);
-          gameState.setPlayerActive(seat, false);
-        }
+      // Clear all seats except hero. Iterate every seat (not just
+      // sessionManager.activeSeats) so the table is guaranteed to clear
+      // even if sessionManager and gameState ever get out of sync.
+      for (int seat = 1; seat <= 9; seat++) {
+        if (seat == heroSeat) continue;
+        sessionManager.activeSeats.remove(seat);
+        sessionManager.playerNames.remove(seat);
+        sessionManager.playerStacks.remove(seat);
+        sessionManager.playerIds.remove(seat);
+        gameState.setPlayerActive(seat, false);
       }
 
-      // Reset hero confidence to high (known stack at table change)
       if (heroSeat != null) {
+        // Make sure the hero's seat is still registered as active
+        sessionManager.activeSeats.add(heroSeat);
+        if (!gameState.players[heroSeat - 1].isActive) {
+          gameState.setPlayerActive(heroSeat, true);
+        }
+        // Reset hero confidence to high (known stack at table change)
         gameState.setPlayerStack(heroSeat, heroStack);
       }
     });
@@ -2366,7 +2371,8 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
           return;
         }
 
-        if (isHero) {
+        if (isHero && sessionManager.ourSeatNumber != seatNumber) {
+          // Hero moving to a different seat — carry over current stack
           final heroStack = gameState.getPlayerStack(sessionManager.ourSeatNumber ?? seatNumber);
           sessionManager.reseatHero(
             newSeat: seatNumber,
@@ -2375,8 +2381,9 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
             heroStack: heroStack > 0 ? heroStack : stack,
           );
         } else {
+          // Editing hero's own seat, or adding/editing a regular player.
           // Move player if already seated elsewhere (only for named players)
-          if (name.isNotEmpty) {
+          if (!isHero && name.isNotEmpty) {
             final lower = name.toLowerCase();
             final existingSeat = seatedPlayers[lower];
             if (existingSeat != null && existingSeat != seatNumber) {
@@ -2390,7 +2397,12 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
           sessionManager.playerNames[seatNumber] = name;
           sessionManager.playerStacks[seatNumber] = stack;
           sessionManager.activeSeats.add(seatNumber);
-          gameState.setPlayerActive(seatNumber, true);
+          // Activating an already-active player would reset their betting
+          // state mid-hand (betThisRound/totalContribution) — only activate
+          // seats that are currently inactive.
+          if (!gameState.players[seatNumber - 1].isActive) {
+            gameState.setPlayerActive(seatNumber, true);
+          }
           gameState.setPlayerStack(seatNumber, stack);
         }
         setState(() {});

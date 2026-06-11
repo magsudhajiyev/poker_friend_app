@@ -183,7 +183,8 @@ class _TableManagementModalState extends State<_TableManagementModal> {
           return;
         }
 
-        if (isHero) {
+        if (isHero && widget.sessionManager.ourSeatNumber != seat) {
+          // Hero moving to a different seat — carry over current stack
           final heroStack = widget.gameState.getPlayerStack(_heroSeat);
           widget.sessionManager.reseatHero(
             newSeat: seat,
@@ -192,20 +193,28 @@ class _TableManagementModalState extends State<_TableManagementModal> {
             heroStack: heroStack > 0 ? heroStack : stack,
           );
         } else {
+          // Editing hero's own seat, or adding/editing a regular player.
           // Move player if already seated elsewhere
-          final lower = name.toLowerCase();
-          final existingSeat = seatedPlayers[lower];
-          if (existingSeat != null && existingSeat != seat) {
-            widget.sessionManager.activeSeats.remove(existingSeat);
-            widget.sessionManager.playerNames.remove(existingSeat);
-            widget.sessionManager.playerStacks.remove(existingSeat);
-            widget.sessionManager.playerIds.remove(existingSeat);
-            widget.gameState.setPlayerActive(existingSeat, false);
+          if (!isHero && name.isNotEmpty) {
+            final lower = name.toLowerCase();
+            final existingSeat = seatedPlayers[lower];
+            if (existingSeat != null && existingSeat != seat) {
+              widget.sessionManager.activeSeats.remove(existingSeat);
+              widget.sessionManager.playerNames.remove(existingSeat);
+              widget.sessionManager.playerStacks.remove(existingSeat);
+              widget.sessionManager.playerIds.remove(existingSeat);
+              widget.gameState.setPlayerActive(existingSeat, false);
+            }
           }
           widget.sessionManager.playerNames[seat] = name;
           widget.sessionManager.playerStacks[seat] = stack;
           widget.sessionManager.activeSeats.add(seat);
-          widget.gameState.setPlayerActive(seat, true);
+          // Activating an already-active player would reset their betting
+          // state mid-hand (betThisRound/totalContribution) — only activate
+          // seats that are currently inactive.
+          if (!widget.gameState.players[seat - 1].isActive) {
+            widget.gameState.setPlayerActive(seat, true);
+          }
           widget.gameState.setPlayerStack(seat, stack);
         }
         widget.onChanged();

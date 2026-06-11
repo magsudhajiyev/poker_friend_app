@@ -403,6 +403,7 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                           }
                         });
                       },
+                      behavior: HitTestBehavior.opaque,
                       child: Row(
                         children: [
                           Container(
