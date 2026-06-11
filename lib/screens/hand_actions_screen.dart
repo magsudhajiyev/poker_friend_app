@@ -46,7 +46,8 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
   void initState() {
     super.initState();
     _isStarred = widget.hand['isStarred'] == true;
-    _tags = (widget.hand['tags'] as List<dynamic>?)?.cast<String>() ?? [];
+    final rawTags = widget.hand['tags'];
+    _tags = rawTags is List ? rawTags.cast<String>() : [];
     _notes = widget.hand['notes'] as String?;
     _loadExistingAnalysis();
   }
