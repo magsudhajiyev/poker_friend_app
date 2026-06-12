@@ -184,8 +184,9 @@ class LocalStorageService {
       return;
     }
     final hasHandKey = columns.any((c) => c['name'] == 'handKey');
-    if (!hasHandKey) {
-      // Old v1 shape from an earlier branch — derived data, rebuild
+    final hasScenario = columns.any((c) => c['name'] == 'scenario');
+    if (!hasHandKey || !hasScenario) {
+      // Older shape from an earlier branch — derived data, rebuild
       await db.execute('DROP TABLE IF EXISTS range_grid_index');
       await _createRangeGridTable(db);
     }
@@ -207,6 +208,7 @@ class LocalStorageService {
         stackBB REAL,
         stackBucket TEXT,
         primaryAction TEXT NOT NULL,
+        scenario TEXT NOT NULL DEFAULT 'rfi',
         preflopLine TEXT,
         potBB REAL DEFAULT 0,
         won INTEGER DEFAULT 0
@@ -244,6 +246,7 @@ class LocalStorageService {
           stackBB = excluded.stackBB,
           stackBucket = excluded.stackBucket,
           primaryAction = excluded.primaryAction,
+          scenario = excluded.scenario,
           preflopLine = excluded.preflopLine,
           potBB = excluded.potBB,
           won = excluded.won
@@ -262,6 +265,7 @@ class LocalStorageService {
     required String handClass,
     String? posGroup,
     String? stackBucket,
+    String? scenario,
     int limit = 50,
   }) async {
     try {
@@ -277,6 +281,10 @@ class LocalStorageService {
       if (stackBucket != null) {
         where.write(' AND stackBucket = ?');
         args.add(stackBucket);
+      }
+      if (scenario != null) {
+        where.write(' AND scenario = ?');
+        args.add(scenario);
       }
 
       return await db.query(
@@ -298,6 +306,7 @@ class LocalStorageService {
     required String gameType,
     String? posGroup,
     String? stackBucket,
+    String? scenario,
   }) async {
     try {
       final db = await database;
@@ -310,6 +319,10 @@ class LocalStorageService {
       if (stackBucket != null) {
         where.write(' AND stackBucket = ?');
         args.add(stackBucket);
+      }
+      if (scenario != null) {
+        where.write(' AND scenario = ?');
+        args.add(scenario);
       }
       return await db.rawQuery('''
         SELECT handClass, primaryAction, COUNT(*) as n

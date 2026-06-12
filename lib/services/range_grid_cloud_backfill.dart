@@ -17,7 +17,7 @@ import 'range_grid_service.dart';
 /// local save path and local backfill use, so a hand present both locally
 /// and in the cloud lands on a single row (the merge upsert keeps both ids).
 class RangeGridCloudBackfill {
-  static const _flagKeyPrefix = 'range_grid_cloud_backfilled_v3_';
+  static const _flagKeyPrefix = 'range_grid_cloud_backfilled_v4_';
   static Future<bool>? _inFlight;
 
   /// True while a cloud sync is currently running (for UI indicators).

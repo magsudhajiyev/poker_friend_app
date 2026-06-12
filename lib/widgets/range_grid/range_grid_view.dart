@@ -30,6 +30,10 @@ class _RangeGridViewState extends State<RangeGridView>
   String _gameType = 'cash';
   String? _posGroup; // null = all positions
   String? _stackBucket; // null = all stacks
+  String? _scenario; // null = all spots | 'rfi' | 'vs_raise'
+  // Actions included in cell coloring/frequencies (raise/fold is the
+  // classic GTO chart view)
+  Set<String> _visibleActions = {'raise', 'call', 'check', 'fold'};
 
   Map<String, RangeCellAggregate> _aggregates = {};
   bool _loading = true;
@@ -51,6 +55,7 @@ class _RangeGridViewState extends State<RangeGridView>
       gameType: _gameType,
       posGroup: _posGroup,
       stackBucket: _stackBucket,
+      scenario: _scenario,
     );
     if (!mounted) return;
     setState(() {
@@ -84,19 +89,26 @@ class _RangeGridViewState extends State<RangeGridView>
     return '${_ranks[col]}${_ranks[row]}o';
   }
 
-  Color? _dominantColor(RangeCellAggregate agg) {
-    if (agg.total == 0) return null;
-    final entries = <(int, Color)>[
-      (agg.raiseCount, RangeFrequencyBar.raiseColor),
-      (agg.callCount, RangeFrequencyBar.callColor),
-      (agg.checkCount, RangeFrequencyBar.checkColor),
-      (agg.foldCount, RangeFrequencyBar.foldColor),
-    ]..sort((a, b) => b.$1.compareTo(a.$1));
-    return entries.first.$2;
+  /// (count, color) per action, restricted to the enabled action filters.
+  /// Order is fixed (raise, call, check, fold) so cell splits read
+  /// consistently across the grid.
+  List<(int, Color)> _visibleSegments(RangeCellAggregate agg) {
+    return <(String, int, Color)>[
+      ('raise', agg.raiseCount, RangeFrequencyBar.raiseColor),
+      ('call', agg.callCount, RangeFrequencyBar.callColor),
+      ('check', agg.checkCount, RangeFrequencyBar.checkColor),
+      ('fold', agg.foldCount, RangeFrequencyBar.foldColor),
+    ]
+        .where((s) => _visibleActions.contains(s.$1) && s.$2 > 0)
+        .map((s) => (s.$2, s.$3))
+        .toList();
   }
 
+  int _visibleTotal(RangeCellAggregate agg) =>
+      _visibleSegments(agg).fold(0, (sum, s) => sum + s.$1);
+
   int get _loggedClassCount =>
-      _aggregates.values.where((a) => a.total > 0).length;
+      _aggregates.values.where((a) => _visibleTotal(a) > 0).length;
 
   // ── Filters ─────────────────────────────────────────────────────────
   //
@@ -353,8 +365,140 @@ class _RangeGridViewState extends State<RangeGridView>
           ),
           const SizedBox(height: 8),
           _buildPositionBar(),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              _buildScenarioBar(),
+              const Spacer(),
+              _buildActionChips(),
+            ],
+          ),
         ],
       ),
+    );
+  }
+
+  /// Spot scenario: all spots / RFI (unopened pot) / facing a raise.
+  /// Selecting RFI presets the action filters to raise+fold — the classic
+  /// open/fold chart view (re-enable call/check via the chips if wanted).
+  Widget _buildScenarioBar() {
+    Widget segment(String label, String? value) {
+      final selected = _scenario == value;
+      return GestureDetector(
+        onTap: selected
+            ? null
+            : () => _setFilter(() {
+                  _scenario = value;
+                  if (value == 'rfi') {
+                    _visibleActions = {'raise', 'fold'};
+                  } else {
+                    _visibleActions = {'raise', 'call', 'check', 'fold'};
+                  }
+                }),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
+          decoration: BoxDecoration(
+            color: selected ? const Color(0xFF62E3BC) : Colors.transparent,
+            borderRadius: BorderRadius.circular(999),
+          ),
+          child: Text(
+            label,
+            style: GoogleFonts.ibmPlexSans(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: selected
+                  ? Colors.black
+                  : Colors.white.withValues(alpha: 0.65),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(2),
+      decoration: BoxDecoration(
+        color: const Color(0xFF161719),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          segment('All spots', null),
+          segment('RFI', 'rfi'),
+          segment('vs Raise', 'vs_raise'),
+        ],
+      ),
+    );
+  }
+
+  /// Toggleable action visibility chips — doubles as the grid legend.
+  Widget _buildActionChips() {
+    Widget chip(String action, String label, Color color) {
+      final enabled = _visibleActions.contains(action);
+      return GestureDetector(
+        onTap: () {
+          // Keep at least one action visible
+          if (enabled && _visibleActions.length == 1) return;
+          _setFilter(() {
+            final next = Set<String>.from(_visibleActions);
+            enabled ? next.remove(action) : next.add(action);
+            _visibleActions = next;
+          });
+        },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          margin: const EdgeInsets.only(left: 6),
+          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+          decoration: BoxDecoration(
+            color: enabled
+                ? color.withValues(alpha: 0.18)
+                : const Color(0xFF161719),
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(
+              color: enabled
+                  ? color.withValues(alpha: 0.7)
+                  : Colors.white.withValues(alpha: 0.08),
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 7,
+                height: 7,
+                decoration: BoxDecoration(
+                  color: enabled ? color : Colors.white.withValues(alpha: 0.25),
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 5),
+              Text(
+                label,
+                style: GoogleFonts.ibmPlexSans(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: enabled
+                      ? Colors.white
+                      : Colors.white.withValues(alpha: 0.35),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        chip('raise', 'R', RangeFrequencyBar.raiseColor),
+        chip('call', 'C', RangeFrequencyBar.callColor),
+        chip('check', 'X', RangeFrequencyBar.checkColor),
+        chip('fold', 'F', RangeFrequencyBar.foldColor),
+      ],
     );
   }
 
@@ -385,42 +529,63 @@ class _RangeGridViewState extends State<RangeGridView>
   Widget _buildCell(int row, int col) {
     final handClass = _classFor(row, col);
     final agg = _aggregates[handClass];
-    final color = agg != null ? _dominantColor(agg) : null;
-    final hasData = color != null;
+    final segments = agg != null ? _visibleSegments(agg) : const <(int, Color)>[];
+    final total = segments.fold(0, (sum, s) => sum + s.$1);
+    final hasData = total > 0;
 
     // More samples → stronger tint (caps at 6 samples)
     final intensity =
-        hasData ? (0.25 + 0.6 * (agg!.total / 6).clamp(0.0, 1.0)) : 0.0;
+        hasData ? (0.35 + 0.55 * (total / 6).clamp(0.0, 1.0)) : 0.0;
 
     return GestureDetector(
       onTap: hasData ? () => _showCellDetail(handClass) : null,
-      child: Container(
-        decoration: BoxDecoration(
-          color: hasData
-              ? color.withValues(alpha: intensity)
-              : const Color(0xFF161719),
-          borderRadius: BorderRadius.circular(3),
-          border: row == col
-              ? Border.all(color: Colors.white.withValues(alpha: 0.07))
-              : null,
-        ),
-        child: Center(
-          child: FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Padding(
-              padding: const EdgeInsets.all(1),
-              child: Text(
-                handClass,
-                style: GoogleFonts.robotoMono(
-                  fontSize: 8,
-                  fontWeight: FontWeight.w600,
-                  color: hasData
-                      ? Colors.white
-                      : Colors.white.withValues(alpha: 0.25),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(3),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            Container(color: const Color(0xFF161719)),
+            // Mixed-frequency fill: cell split proportionally by action,
+            // exactly like a solver chart (e.g. 70% raise / 30% fold)
+            if (hasData)
+              Row(
+                children: [
+                  for (final (count, color) in segments)
+                    Expanded(
+                      flex: count,
+                      child: Container(
+                        color: color.withValues(alpha: intensity),
+                      ),
+                    ),
+                ],
+              ),
+            if (row == col)
+              Container(
+                decoration: BoxDecoration(
+                  border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.07)),
+                  borderRadius: BorderRadius.circular(3),
+                ),
+              ),
+            Center(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Padding(
+                  padding: const EdgeInsets.all(1),
+                  child: Text(
+                    handClass,
+                    style: GoogleFonts.robotoMono(
+                      fontSize: 8,
+                      fontWeight: FontWeight.w600,
+                      color: hasData
+                          ? Colors.white
+                          : Colors.white.withValues(alpha: 0.25),
+                    ),
+                  ),
                 ),
               ),
             ),
-          ),
+          ],
         ),
       ),
     );
@@ -458,40 +623,6 @@ class _RangeGridViewState extends State<RangeGridView>
               color: Colors.white.withValues(alpha: 0.55),
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildLegend() {
-    Widget item(String label, Color color) => Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 8,
-              height: 8,
-              decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-            ),
-            const SizedBox(width: 5),
-            Text(
-              label,
-              style: GoogleFonts.ibmPlexSans(
-                fontSize: 12,
-                color: Colors.white.withValues(alpha: 0.6),
-              ),
-            ),
-          ],
-        );
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Wrap(
-        spacing: 16,
-        children: [
-          item('Raise', RangeFrequencyBar.raiseColor),
-          item('Call', RangeFrequencyBar.callColor),
-          item('Check', RangeFrequencyBar.checkColor),
-          item('Fold', RangeFrequencyBar.foldColor),
         ],
       ),
     );
@@ -537,6 +668,7 @@ class _RangeGridViewState extends State<RangeGridView>
         gameType: _gameType,
         posGroup: _posGroup,
         stackBucket: _stackBucket,
+        scenario: _scenario,
         aggregate: agg,
       ),
     );
@@ -594,8 +726,6 @@ class _RangeGridViewState extends State<RangeGridView>
             _buildGrid(),
             const SizedBox(height: 12),
             _buildCoverage(),
-            const SizedBox(height: 12),
-            _buildLegend(),
             if (_loggedClassCount == 0 && !_syncingCloud) ...[
               const SizedBox(height: 24),
               Padding(
@@ -627,6 +757,7 @@ class _CellDetailSheet extends StatefulWidget {
   final String gameType;
   final String? posGroup;
   final String? stackBucket;
+  final String? scenario;
   final RangeCellAggregate aggregate;
 
   const _CellDetailSheet({
@@ -634,6 +765,7 @@ class _CellDetailSheet extends StatefulWidget {
     required this.gameType,
     required this.posGroup,
     required this.stackBucket,
+    required this.scenario,
     required this.aggregate,
   });
 
@@ -652,6 +784,7 @@ class _CellDetailSheetState extends State<_CellDetailSheet> {
       handClass: widget.handClass,
       posGroup: widget.posGroup,
       stackBucket: widget.stackBucket,
+      scenario: widget.scenario,
     );
   }
 
@@ -705,6 +838,7 @@ class _CellDetailSheetState extends State<_CellDetailSheet> {
               const SizedBox(width: 10),
               Text(
                 '${agg.total} preflop ${agg.total == 1 ? 'spot' : 'spots'}'
+                '${widget.scenario == 'rfi' ? ' · RFI' : widget.scenario == 'vs_raise' ? ' · vs raise' : ''}'
                 '${widget.posGroup != null ? ' · ${widget.posGroup}' : ''}',
                 style: GoogleFonts.ibmPlexSans(
                   fontSize: 13,

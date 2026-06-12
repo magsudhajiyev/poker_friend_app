@@ -25,6 +25,7 @@ class RangeGridEntry {
   final double? stackBB; // hero stack depth at first action, in BB
   final String? stackBucket; // StackRange.name, null when stack unknown
   final String primaryAction; // 'raise' | 'call' | 'fold' | 'check'
+  final String scenario; // 'rfi' (unopened pot) | 'vs_raise'
   final String preflopLine; // human-readable summary
   final double potBB; // final pot in BB
   final bool won;
@@ -43,6 +44,7 @@ class RangeGridEntry {
     required this.stackBB,
     required this.stackBucket,
     required this.primaryAction,
+    required this.scenario,
     required this.preflopLine,
     required this.potBB,
     required this.won,
@@ -62,6 +64,7 @@ class RangeGridEntry {
         'stackBB': stackBB,
         'stackBucket': stackBucket,
         'primaryAction': primaryAction,
+        'scenario': scenario,
         'preflopLine': preflopLine,
         'potBB': potBB,
         'won': won ? 1 : 0,
@@ -81,6 +84,7 @@ class RangeGridEntry {
         stackBB: (map['stackBB'] as num?)?.toDouble(),
         stackBucket: map['stackBucket'] as String?,
         primaryAction: map['primaryAction'] as String? ?? 'fold',
+        scenario: map['scenario'] as String? ?? 'rfi',
         preflopLine: map['preflopLine'] as String? ?? '',
         potBB: (map['potBB'] as num?)?.toDouble() ?? 0.0,
         won: (map['won'] as int? ?? 0) == 1,
@@ -122,7 +126,7 @@ class RangeCellAggregate {
 /// Pure canonicalization/derivation logic lives in static functions (tested
 /// without a database); persistence goes through LocalStorageService.
 class RangeGridService {
-  static const _backfillFlagKey = 'range_grid_backfilled_v3';
+  static const _backfillFlagKey = 'range_grid_backfilled_v4';
   static Future<void>? _backfillFuture;
 
   // ── Canonicalization ────────────────────────────────────────────────
@@ -178,12 +182,15 @@ class RangeGridService {
   /// Classifies the hero's preflop play from raw action maps (same format
   /// as ActionRecord.toMap / the stored hand JSON).
   ///
-  /// Returns (primaryAction, line):
+  /// Returns (primaryAction, line, scenario):
   /// - primaryAction: hero's first VOLUNTARY preflop action —
   ///   'raise' | 'call' | 'fold' | 'check' — used for cell frequencies.
   /// - line: short human-readable summary, e.g. "3-bet",
   ///   "Open-raised → folded".
-  static (String, String) derivePreflopLine(
+  /// - scenario: 'rfi' when the pot was UNOPENED at hero's first decision
+  ///   (open-raise / open-fold / limp / BB check — the classic RFI chart
+  ///   spot), 'vs_raise' when hero was already facing a raise.
+  static (String, String, String) derivePreflopLine(
       List<Map<String, dynamic>> actions, int heroSeat) {
     int raisesBeforeHero = 0;
     String? primary;
@@ -232,14 +239,17 @@ class RangeGridService {
       }
     }
 
-    if (primary == null) return ('check', 'No action (walk)');
+    // A walk is an unopened pot the hero never had to act in
+    if (primary == null) return ('check', 'No action (walk)', 'rfi');
+
+    final scenario = raisesBeforeHero == 0 ? 'rfi' : 'vs_raise';
 
     // Hero acted again and ended up folding (e.g., raised then folded to 3-bet)
     var line = firstLabel;
     if (heroActionCount > 1 && heroLastAction == 'fold' && primary != 'fold') {
       line = '$firstLabel → folded';
     }
-    return (primary, line);
+    return (primary, line, scenario);
   }
 
   /// Hero's stack in BB for the preflop decision. Prefers the stack on the
@@ -287,7 +297,8 @@ class RangeGridService {
     if (position == null || position.isEmpty) return null;
 
     final stackBB = heroStackBB(actions, heroSeat, bigBlind);
-    final (primaryAction, line) = derivePreflopLine(actions, heroSeat);
+    final (primaryAction, line, scenario) =
+        derivePreflopLine(actions, heroSeat);
     final won =
         winnerId == heroSeat || (choppedWinners?.contains(heroSeat) ?? false);
 
@@ -307,6 +318,7 @@ class RangeGridService {
           ? StackBucketHelper.getRangeForBB(stackBB).name
           : null,
       primaryAction: primaryAction,
+      scenario: scenario,
       preflopLine: line,
       potBB: bigBlind > 0 ? potAmount / bigBlind : 0.0,
       won: won,
@@ -356,6 +368,7 @@ class RangeGridService {
     required String gameType,
     String? posGroup,
     String? stackBucket,
+    String? scenario, // 'rfi' | 'vs_raise' | null = all spots
   }) async {
     await ensureBackfilled();
     final userId = AuthService.userId;
@@ -366,6 +379,7 @@ class RangeGridService {
       gameType: gameType,
       posGroup: posGroup,
       stackBucket: stackBucket,
+      scenario: scenario,
     );
 
     final result = <String, RangeCellAggregate>{};
@@ -386,6 +400,7 @@ class RangeGridService {
     required String handClass,
     String? posGroup,
     String? stackBucket,
+    String? scenario,
     int limit = 20,
   }) async {
     await ensureBackfilled();
@@ -397,6 +412,7 @@ class RangeGridService {
       handClass: handClass,
       posGroup: posGroup,
       stackBucket: stackBucket,
+      scenario: scenario,
       limit: limit,
     );
     return rows.map(RangeGridEntry.fromDbMap).toList();

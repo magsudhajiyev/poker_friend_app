@@ -71,9 +71,11 @@ void main() {
         _action(3, 'raise', amount: 6, isHero: true),
         _action(5, 'call', amount: 6),
       ];
-      final (primary, line) = RangeGridService.derivePreflopLine(actions, 3);
+      final (primary, line, scenario) =
+          RangeGridService.derivePreflopLine(actions, 3);
       expect(primary, 'raise');
       expect(line, 'Open-raised');
+      expect(scenario, 'rfi', reason: 'Unopened pot — classic RFI spot');
     });
 
     test('3-bet (third raise, app convention)', () {
@@ -82,36 +84,44 @@ void main() {
         _action(4, 'raise', amount: 18),
         _action(3, 'raise', amount: 50, isHero: true),
       ];
-      final (primary, line) = RangeGridService.derivePreflopLine(actions, 3);
+      final (primary, line, scenario) =
+          RangeGridService.derivePreflopLine(actions, 3);
       expect(primary, 'raise');
       expect(line, '3-bet');
+      expect(scenario, 'vs_raise');
     });
 
     test('limp and call', () {
       final limp = [_action(3, 'call', amount: 2, isHero: true)];
       expect(RangeGridService.derivePreflopLine(limp, 3).$2, 'Limped');
+      expect(RangeGridService.derivePreflopLine(limp, 3).$3, 'rfi');
 
       final call = [
         _action(2, 'raise', amount: 6),
         _action(3, 'call', amount: 6, isHero: true),
       ];
-      final (primary, line) = RangeGridService.derivePreflopLine(call, 3);
+      final (primary, line, scenario) =
+          RangeGridService.derivePreflopLine(call, 3);
       expect(primary, 'call');
       expect(line, 'Called raise');
+      expect(scenario, 'vs_raise');
     });
 
     test('folds, open and facing a raise', () {
       final openFold = [_action(3, 'fold', isHero: true)];
       expect(RangeGridService.derivePreflopLine(openFold, 3).$2, 'Folded');
+      expect(RangeGridService.derivePreflopLine(openFold, 3).$3, 'rfi',
+          reason: 'Open-fold belongs to the RFI chart');
 
       final foldToRaise = [
         _action(2, 'raise', amount: 6),
         _action(3, 'fold', isHero: true),
       ];
-      final (primary, line) =
+      final (primary, line, scenario) =
           RangeGridService.derivePreflopLine(foldToRaise, 3);
       expect(primary, 'fold');
       expect(line, 'Folded to raise');
+      expect(scenario, 'vs_raise');
     });
 
     test('raised then folded to a re-raise', () {
@@ -120,10 +130,13 @@ void main() {
         _action(5, 'raise', amount: 20),
         _action(3, 'fold', isHero: true),
       ];
-      final (primary, line) = RangeGridService.derivePreflopLine(actions, 3);
+      final (primary, line, scenario) =
+          RangeGridService.derivePreflopLine(actions, 3);
       expect(primary, 'raise',
           reason: 'Cell frequencies use the first voluntary action');
       expect(line, 'Open-raised → folded');
+      expect(scenario, 'rfi',
+          reason: 'The pot was unopened when hero first acted');
     });
 
     test('all-in counts as a raise', () {
@@ -131,15 +144,19 @@ void main() {
         _action(2, 'raise', amount: 6),
         _action(3, 'all-in', amount: 200, isHero: true),
       ];
-      final (primary, line) = RangeGridService.derivePreflopLine(actions, 3);
+      final (primary, line, scenario) =
+          RangeGridService.derivePreflopLine(actions, 3);
       expect(primary, 'raise');
       expect(line, 'Re-raised');
+      expect(scenario, 'vs_raise');
     });
 
     test('walk: hero has no recorded actions', () {
-      final (primary, line) = RangeGridService.derivePreflopLine([], 3);
+      final (primary, line, scenario) =
+          RangeGridService.derivePreflopLine([], 3);
       expect(primary, 'check');
       expect(line, 'No action (walk)');
+      expect(scenario, 'rfi');
     });
 
     test('only preflop actions are considered', () {
@@ -214,6 +231,7 @@ void main() {
       expect(entry.stackBB, 100.0);
       expect(entry.stackBucket, 'veryDeep');
       expect(entry.primaryAction, 'raise');
+      expect(entry.scenario, 'rfi');
       expect(entry.preflopLine, 'Open-raised');
       expect(entry.potBB, 12.0);
       expect(entry.won, true);
@@ -298,6 +316,7 @@ void main() {
         stackBB: 35.5,
         stackBucket: 'average',
         primaryAction: 'call',
+        scenario: 'vs_raise',
         preflopLine: 'Called raise',
         potBB: 18.0,
         won: false,
@@ -311,6 +330,7 @@ void main() {
       expect(restored.stackBB, entry.stackBB);
       expect(restored.stackBucket, entry.stackBucket);
       expect(restored.primaryAction, entry.primaryAction);
+      expect(restored.scenario, 'vs_raise');
       expect(restored.won, false);
     });
   });
