@@ -5,6 +5,7 @@ import '../onboarding/onboarding_state.dart';
 import '../onboarding/onboarding_tour.dart';
 import '../onboarding/onboarding_progress_bar.dart';
 import 'individual_session_setup_screen.dart';
+import 'training/drill_setup_screen.dart';
 import 'unified_session_setup_screen.dart';
 
 class LoggingModeSelectionScreen extends StatefulWidget {
@@ -130,6 +131,11 @@ class _LoggingModeSelectionScreenState
                       ],
                       onChoose: () => _navigateToMode(context, LoggingMode.individual),
                     ),
+
+                    const SizedBox(height: 16),
+
+                    // Training Drills entry (premium)
+                    _buildTrainingRow(context),
                   ],
                 ),
               ),
@@ -212,6 +218,78 @@ class _LoggingModeSelectionScreenState
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildTrainingRow(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const DrillSetupScreen()),
+        );
+      },
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFDFDFD),
+          border: Border.all(color: const Color(0xFFEFEFEF)),
+          borderRadius: BorderRadius.circular(24),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Training Drills',
+                    style: GoogleFonts.ibmPlexSans(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF0C0C0C),
+                      height: 22 / 17,
+                    ),
+                  ),
+                  Text(
+                    'Practice preflop spots against your real opponents',
+                    style: GoogleFonts.ibmPlexSans(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w400,
+                      color: const Color(0xFF6B6B6B),
+                      height: 18 / 13,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: const Color(0xFF0C0C0C),
+                borderRadius: BorderRadius.circular(40),
+              ),
+              child: Text(
+                'PRO',
+                style: GoogleFonts.ibmPlexSans(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.0,
+                  color: const Color(0xFF89F1EC),
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            const Icon(
+              Icons.chevron_right,
+              size: 20,
+              color: Color(0xFFB9B9B9),
+            ),
+          ],
+        ),
       ),
     );
   }
