@@ -101,7 +101,8 @@ class DrillEngine {
   }
 
   String get heroPosition => _positions[heroSeat] ?? 'UNK';
-  String get buttonName => 'Seat $_buttonSeat';
+  int get buttonSeat => _buttonSeat;
+  String positionOf(int seat) => _positions[seat] ?? '';
   double get potBB =>
       _players.fold(0.0, (sum, p) => sum + p.committedBB);
 

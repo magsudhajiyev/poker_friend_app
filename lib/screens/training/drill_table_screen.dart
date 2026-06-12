@@ -3,10 +3,13 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../models/drill_models.dart';
 import '../../services/drill_engine.dart';
+import '../../widgets/poker_table_widget.dart';
 
 /// The drill loop: one preflop hand at a time against bots that play like
 /// the user's real opponents, with instant exploit-based grading.
-/// Nothing here persists — training is fully isolated from real data.
+/// Rendered on the app's shared oval table (PokerTableWidget) so drills
+/// look and feel like a real logged hand. Nothing here persists — training
+/// is fully isolated from real data.
 class DrillTableScreen extends StatefulWidget {
   final List<DrillSeat> seats;
   final double stackBB;
@@ -30,10 +33,10 @@ class _DrillTableScreenState extends State<DrillTableScreen> {
   static const _green = Color(0xFF54E98A);
 
   late final DrillEngine _engine;
-  final List<DrillEvent> _feed = [];
   final Set<int> _foldedSeats = {};
+  final Map<int, String> _lastAction = {}; // seat -> compact action label
+  final List<String> _recentLines = []; // newest last, capped
   final List<DrillDecisionRecord> _records = [];
-  final ScrollController _feedScroll = ScrollController();
 
   _Phase _phase = _Phase.handOver;
   DrillHeroTurn? _heroTurn;
@@ -52,18 +55,13 @@ class _DrillTableScreenState extends State<DrillTableScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) => _nextHand());
   }
 
-  @override
-  void dispose() {
-    _feedScroll.dispose();
-    super.dispose();
-  }
-
   // ── Drill flow ──────────────────────────────────────────────────────
 
   void _nextHand() {
     setState(() {
-      _feed.clear();
       _foldedSeats.clear();
+      _lastAction.clear();
+      _recentLines.clear();
       _lastGrade = null;
       _showRaiseSizes = false;
       _handOverNote = '';
@@ -81,9 +79,16 @@ class _DrillTableScreenState extends State<DrillTableScreen> {
 
   void _consume(DrillHandUpdate update) {
     _lastUpdate = update;
-    _feed.addAll(update.newEvents);
     for (final e in update.newEvents) {
       if (e.action == 'folds') _foldedSeats.add(e.seat);
+      _lastAction[e.seat] = _actionLabel(e);
+      if (!e.action.startsWith('posts')) {
+        final amount = e.toAmountBB != null
+            ? ' to ${e.toAmountBB!.toStringAsFixed(1)}BB'
+            : '';
+        _recentLines.add('${e.name} (${e.position}) ${e.action}$amount');
+        if (_recentLines.length > 3) _recentLines.removeAt(0);
+      }
     }
 
     if (update.grade != null) {
@@ -114,16 +119,34 @@ class _DrillTableScreenState extends State<DrillTableScreen> {
         });
       }
     }
+  }
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_feedScroll.hasClients) {
-        _feedScroll.animateTo(
-          _feedScroll.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 250),
-          curve: Curves.easeOut,
-        );
-      }
-    });
+  String _actionLabel(DrillEvent e) {
+    final amount = e.toAmountBB?.toStringAsFixed(1) ?? '';
+    switch (e.action) {
+      case 'posts SB':
+        return 'SB 0.5';
+      case 'posts BB':
+        return 'BB 1';
+      case 'folds':
+        return 'FOLD';
+      case 'checks':
+        return 'CHECK';
+      case 'limps':
+        return 'LIMP';
+      case 'calls':
+        return 'CALL $amount';
+      case 'raises':
+        return 'RAISE $amount';
+      case '3-bets':
+        return '3-BET $amount';
+      case '4-bets':
+        return '4-BET $amount';
+      case 'jams':
+        return 'JAM $amount';
+      default:
+        return e.action.toUpperCase();
+    }
   }
 
   void _dismissFeedback() {
@@ -182,11 +205,9 @@ class _DrillTableScreenState extends State<DrillTableScreen> {
           child: Column(
             children: [
               _buildHeader(),
-              _buildSeatStrip(),
-              const SizedBox(height: 8),
-              _buildHeroCards(),
-              const SizedBox(height: 8),
-              Expanded(child: _buildFeed()),
+              Expanded(child: _buildTable()),
+              _buildHeroRow(),
+              _buildRecentLines(),
               _buildBottomPanel(),
             ],
           ),
@@ -198,7 +219,7 @@ class _DrillTableScreenState extends State<DrillTableScreen> {
   Widget _buildHeader() {
     final total = _records.length;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
       child: Row(
         children: [
           GestureDetector(
@@ -255,88 +276,174 @@ class _DrillTableScreenState extends State<DrillTableScreen> {
     );
   }
 
-  Widget _buildSeatStrip() {
-    return SizedBox(
-      height: 58,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        itemCount: widget.seats.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
-        itemBuilder: (context, i) {
-          final seat = widget.seats[i];
-          final folded = _foldedSeats.contains(seat.seatNumber);
-          final position = _positionOf(seat.seatNumber);
-          return Opacity(
-            opacity: folded ? 0.3 : 1,
-            child: Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: seat.isHero
-                    ? _accent.withOpacity(0.15)
-                    : Colors.white.withOpacity(0.06),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: seat.isHero
-                      ? _accent.withOpacity(0.5)
-                      : Colors.white.withOpacity(0.08),
-                ),
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    seat.displayName,
-                    style: GoogleFonts.ibmPlexSans(
-                        color: seat.isHero ? _accent : Colors.white,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500),
-                  ),
-                  Text(
-                    position,
-                    style: GoogleFonts.robotoMono(
-                        color: Colors.white.withOpacity(0.4), fontSize: 11),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
+  // ── Table ───────────────────────────────────────────────────────────
+
+  Widget _buildTable() {
+    final activeSeatMap = {
+      for (final s in widget.seats) s.seatNumber: true,
+    };
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      child: PokerTableWidget(
+        activeSeatMap: activeSeatMap,
+        buttonPosition: _engine.handNumber > 0 ? _engine.buttonSeat : null,
+        showDealerButton: _engine.handNumber > 0,
+        showLogo: false,
+        seatWidthFraction: 1.02,
+        seatHeightFraction: 0.86,
+        seatBuilder: (seatNumber, isActive) =>
+            isActive ? _buildSeat(seatNumber) : const SizedBox.shrink(),
+        centerContent: _buildPot(),
       ),
     );
   }
 
-  String _positionOf(int seatNumber) {
-    for (final e in _feed) {
-      if (e.seat == seatNumber) return e.position;
-    }
-    return seatNumber == _engine.heroSeat ? _engine.heroPosition : '·';
-  }
-
-  Widget _buildHeroCards() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
+  Widget _buildPot() {
+    if (_engine.handNumber == 0) return const SizedBox.shrink();
+    return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        for (final card in _engine.heroCards) ...[
-          _buildCard(card),
-          const SizedBox(width: 8),
-        ],
-        const SizedBox(width: 8),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(_engine.heroHandClass,
-                style: GoogleFonts.robotoMono(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600)),
-            Text(_engine.heroPosition,
-                style: GoogleFonts.ibmPlexSans(
-                    color: Colors.white.withOpacity(0.4), fontSize: 13)),
-          ],
+        Text('POT',
+            style: GoogleFonts.ibmPlexSans(
+                color: Colors.white.withOpacity(0.45),
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 1.2)),
+        Text(
+          '${(_lastUpdate?.potBB ?? _engine.potBB).toStringAsFixed(1)}BB',
+          style: GoogleFonts.robotoMono(
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.w700),
         ),
       ],
+    );
+  }
+
+  Widget _buildSeat(int seatNumber) {
+    final seat =
+        widget.seats.firstWhere((s) => s.seatNumber == seatNumber);
+    final folded = _foldedSeats.contains(seatNumber);
+    final action = _lastAction[seatNumber];
+    final position = _engine.positionOf(seatNumber);
+    final heroActing = seat.isHero && _phase == _Phase.acting;
+
+    final name = seat.displayName.length > 8
+        ? '${seat.displayName.substring(0, 7)}…'
+        : seat.displayName;
+
+    return Opacity(
+      opacity: folded ? 0.35 : 1.0,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: const Color(0xFF161719),
+              borderRadius: BorderRadius.circular(35),
+              border: Border.all(
+                color: heroActing
+                    ? _accent
+                    : seat.isHero
+                        ? _accent.withOpacity(0.55)
+                        : const Color(0xFF2C2C2E),
+                width: heroActing ? 2 : 1.5,
+              ),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  name,
+                  maxLines: 1,
+                  style: GoogleFonts.ibmPlexSans(
+                    color: seat.isHero ? _accent : Colors.white,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    height: 1.2,
+                  ),
+                ),
+                if (position.isNotEmpty)
+                  Text(
+                    position,
+                    style: GoogleFonts.robotoMono(
+                      color: Colors.white.withOpacity(0.45),
+                      fontSize: 9,
+                      height: 1.2,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 3),
+          // Last action chip — keeps height stable so seats don't jump
+          SizedBox(
+            height: 16,
+            child: action == null
+                ? null
+                : Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6),
+                    decoration: BoxDecoration(
+                      color: _actionColor(action).withOpacity(0.18),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Center(
+                      child: Text(
+                        action,
+                        style: GoogleFonts.robotoMono(
+                          color: _actionColor(action),
+                          fontSize: 9,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Color _actionColor(String label) {
+    if (label.startsWith('FOLD')) return Colors.white60;
+    if (label.startsWith('RAISE') ||
+        label.startsWith('3-BET') ||
+        label.startsWith('4-BET') ||
+        label.startsWith('JAM')) {
+      return _gold;
+    }
+    if (label.startsWith('SB') || label.startsWith('BB')) {
+      return Colors.white70;
+    }
+    return _accent; // call / limp / check
+  }
+
+  // ── Hero strip / recent lines ───────────────────────────────────────
+
+  Widget _buildHeroRow() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          for (final card in _engine.heroCards) ...[
+            _buildCard(card),
+            const SizedBox(width: 6),
+          ],
+          const SizedBox(width: 8),
+          Text(_engine.heroHandClass,
+              style: GoogleFonts.robotoMono(
+                  color: Colors.white,
+                  fontSize: 17,
+                  fontWeight: FontWeight.w600)),
+          const SizedBox(width: 8),
+          Text(_engine.heroPosition,
+              style: GoogleFonts.ibmPlexSans(
+                  color: Colors.white.withOpacity(0.4), fontSize: 13)),
+        ],
+      ),
     );
   }
 
@@ -344,100 +451,57 @@ class _DrillTableScreenState extends State<DrillTableScreen> {
     final suit = card.substring(card.length - 1);
     final rank = card.substring(0, card.length - 1);
     final isRed = suit == '♥' || suit == '♦';
+    final color = isRed ? const Color(0xFFD32F2F) : Colors.black;
     return Container(
-      width: 46,
-      height: 62,
+      width: 34,
+      height: 46,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(6),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(rank,
               style: GoogleFonts.robotoMono(
-                  color: isRed ? const Color(0xFFD32F2F) : Colors.black,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700)),
-          Text(suit,
-              style: TextStyle(
-                  color: isRed ? const Color(0xFFD32F2F) : Colors.black,
-                  fontSize: 16)),
+                  color: color, fontSize: 15, fontWeight: FontWeight.w700)),
+          Text(suit, style: TextStyle(color: color, fontSize: 12)),
         ],
       ),
     );
   }
 
-  Widget _buildFeed() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: const Color(0xFF101115),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: ListView.builder(
-        controller: _feedScroll,
-        itemCount: _feed.length + (_handOverNote.isNotEmpty ? 1 : 0),
-        itemBuilder: (context, i) {
-          if (i == _feed.length) {
-            return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Text(
-                _handOverNote,
-                style: GoogleFonts.ibmPlexSans(
-                    color: _accent.withOpacity(0.8),
-                    fontSize: 14,
-                    fontStyle: FontStyle.italic),
-              ),
-            );
-          }
-          final e = _feed[i];
-          final isHero = e.seat == _engine.heroSeat;
-          final amount = e.toAmountBB != null
-              ? ' to ${e.toAmountBB!.toStringAsFixed(1)}BB'
-              : '';
-          final isAggressive = e.action.contains('raise') ||
-              e.action.contains('bet') ||
-              e.action == 'jams';
-          return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4),
-            child: Row(
-              children: [
-                SizedBox(
-                  width: 44,
-                  child: Text(e.position,
-                      style: GoogleFonts.robotoMono(
-                          color: Colors.white.withOpacity(0.35),
-                          fontSize: 12)),
-                ),
-                Expanded(
-                  child: Text(
-                    '${e.name} ${e.action}$amount',
-                    style: GoogleFonts.ibmPlexSans(
-                      color: isHero
-                          ? _accent
-                          : isAggressive
-                              ? _gold
-                              : Colors.white.withOpacity(
-                                  e.action == 'folds' ? 0.35 : 0.8),
-                      fontSize: 14,
-                      fontWeight:
-                          isAggressive ? FontWeight.w600 : FontWeight.w400,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
+  Widget _buildRecentLines() {
+    final text = _handOverNote.isNotEmpty
+        ? _handOverNote
+        : _recentLines.isNotEmpty
+            ? _recentLines.last
+            : '';
+    return SizedBox(
+      height: 22,
+      child: Center(
+        child: Text(
+          text,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: GoogleFonts.ibmPlexSans(
+            color: _handOverNote.isNotEmpty
+                ? _accent.withOpacity(0.85)
+                : Colors.white.withOpacity(0.55),
+            fontSize: 13,
+            fontStyle:
+                _handOverNote.isNotEmpty ? FontStyle.italic : FontStyle.normal,
+          ),
+        ),
       ),
     );
   }
 
+  // ── Bottom panel ────────────────────────────────────────────────────
+
   Widget _buildBottomPanel() {
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
       child: switch (_phase) {
         _Phase.feedback => _buildFeedback(),
         _Phase.acting => _buildActions(),
@@ -455,7 +519,7 @@ class _DrillTableScreenState extends State<DrillTableScreen> {
     };
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(16),
@@ -463,6 +527,7 @@ class _DrillTableScreenState extends State<DrillTableScreen> {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Text(label,
               style: GoogleFonts.ibmPlexSans(
@@ -471,12 +536,18 @@ class _DrillTableScreenState extends State<DrillTableScreen> {
                   fontWeight: FontWeight.w700,
                   letterSpacing: 1.0)),
           const SizedBox(height: 6),
-          Text(
-            grade.explanation,
-            style: GoogleFonts.ibmPlexSans(
-                color: Colors.white, fontSize: 14, height: 1.4),
+          ConstrainedBox(
+            constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.18),
+            child: SingleChildScrollView(
+              child: Text(
+                grade.explanation,
+                style: GoogleFonts.ibmPlexSans(
+                    color: Colors.white, fontSize: 14, height: 1.4),
+              ),
+            ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           GestureDetector(
             onTap: _dismissFeedback,
             child: Container(
@@ -550,16 +621,11 @@ class _DrillTableScreenState extends State<DrillTableScreen> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'Pot ${turn.potBB.toStringAsFixed(1)}BB'
-              '${turn.toCallBB > 0 ? ' · ${turn.toCallBB.toStringAsFixed(1)}BB to call' : ''}',
-              style: GoogleFonts.robotoMono(
-                  color: Colors.white.withOpacity(0.5), fontSize: 13),
-            ),
-          ],
+        Text(
+          'Pot ${turn.potBB.toStringAsFixed(1)}BB'
+          '${turn.toCallBB > 0 ? ' · ${turn.toCallBB.toStringAsFixed(1)}BB to call' : ''}',
+          style: GoogleFonts.robotoMono(
+              color: Colors.white.withOpacity(0.5), fontSize: 13),
         ),
         const SizedBox(height: 10),
         Row(

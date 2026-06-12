@@ -8,6 +8,7 @@ import '../../services/drill_lineup_store.dart';
 import '../../services/drill_opponent_profiler.dart';
 import '../../services/opponent_service.dart';
 import '../../services/subscription_service.dart';
+import '../../widgets/poker_table_widget.dart';
 import '../paywall_screen.dart';
 import 'drill_table_screen.dart';
 
@@ -152,7 +153,9 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
     );
   }
 
-  Future<void> _pickOpponent(int seat) async {
+  Future<void> _tapSeat(int seat) async {
+    // Move yourself by tapping another seat and choosing "This is me"
+    if (seat == _heroSeat) return;
     final pick = await showModalBottomSheet<_SeatPick?>(
       context: context,
       backgroundColor: const Color(0xFF131616),
@@ -160,13 +163,20 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       isScrollControlled: true,
-      builder: (context) => _OpponentPickerSheet(opponents: _opponents),
+      builder: (context) => _OpponentPickerSheet(
+        opponents: _opponents,
+        showHeroOption: seat != _heroSeat,
+      ),
     );
     if (pick == null || !mounted) return;
     setState(() {
-      if (pick.opponentId == '__clear__') {
+      if (pick.opponentId == '__hero__') {
         _picks.remove(seat);
-      } else {
+        _picks.remove(_heroSeat);
+        _heroSeat = seat;
+      } else if (pick.opponentId == '__clear__') {
+        _picks.remove(seat);
+      } else if (seat != _heroSeat) {
         _picks[seat] = pick;
       }
     });
@@ -231,9 +241,15 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
                   _buildCard(child: _buildTableConfig()),
                   const SizedBox(height: 20),
                   _sectionLabel('SEATS'),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Tap a seat to assign an opponent or move yourself.',
+                    style: GoogleFonts.ibmPlexSans(
+                        color: Colors.white.withOpacity(0.4), fontSize: 12),
+                  ),
+                  const SizedBox(height: 4),
+                  _buildSeatTable(),
                   const SizedBox(height: 8),
-                  _buildCard(child: _buildSeatList()),
-                  const SizedBox(height: 16),
                   GestureDetector(
                     onTap: _saveLineup,
                     child: Container(
@@ -437,84 +453,70 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
     );
   }
 
-  Widget _buildSeatList() {
-    return Column(
-      children: [
-        for (int s = 1; s <= _playerCount; s++) ...[
-          if (s > 1)
-            Container(
-                height: 1,
-                color: const Color(0xFF1C1F21),
-                margin: const EdgeInsets.symmetric(vertical: 4)),
-          _buildSeatRow(s),
-        ],
-      ],
+  Widget _buildSeatTable() {
+    return SizedBox(
+      height: MediaQuery.of(context).size.height * 0.46,
+      child: PokerTableWidget(
+        activeSeatMap: {for (int i = 1; i <= 9; i++) i: i <= _playerCount},
+        showDealerButton: false,
+        showLogo: false,
+        seatWidthFraction: 1.02,
+        seatHeightFraction: 0.86,
+        seatBuilder: (seatNumber, isActive) =>
+            isActive ? _buildTableSeat(seatNumber) : const SizedBox.shrink(),
+      ),
     );
   }
 
-  Widget _buildSeatRow(int seat) {
+  Widget _buildTableSeat(int seat) {
     final isHero = seat == _heroSeat;
     final pick = _picks[seat];
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
+    final label = isHero ? 'You' : (pick?.name ?? 'Bot');
+    final display =
+        label.length > 8 ? '${label.substring(0, 7)}…' : label;
+    return GestureDetector(
+      onTap: () => _tapSeat(seat),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          SizedBox(
-            width: 56,
-            child: Text('Seat $seat',
-                style: GoogleFonts.ibmPlexSans(
-                    color: Colors.white.withOpacity(0.5), fontSize: 13)),
-          ),
-          Expanded(
-            child: isHero
-                ? Text('You',
-                    style: GoogleFonts.ibmPlexSans(
-                        color: _accent,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600))
-                : GestureDetector(
-                    onTap: () => _pickOpponent(seat),
-                    child: Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            pick?.name ?? 'Generic bot',
-                            overflow: TextOverflow.ellipsis,
-                            style: GoogleFonts.ibmPlexSans(
-                              color: pick != null
-                                  ? Colors.white
-                                  : Colors.white.withOpacity(0.4),
-                              fontSize: 15,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        Icon(Icons.edit,
-                            size: 14, color: Colors.white.withOpacity(0.3)),
-                      ],
-                    ),
-                  ),
-          ),
-          if (!isHero)
-            GestureDetector(
-              onTap: () => setState(() {
-                _picks.remove(_heroSeat);
-                _heroSeat = seat;
-              }),
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                decoration: BoxDecoration(
-                  border:
-                      Border.all(color: Colors.white.withOpacity(0.2)),
-                  borderRadius: BorderRadius.circular(40),
-                ),
-                child: Text('This is me',
-                    style: GoogleFonts.ibmPlexSans(
-                        color: Colors.white.withOpacity(0.7),
-                        fontSize: 12)),
+          Container(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+            decoration: BoxDecoration(
+              color: const Color(0xFF161719),
+              borderRadius: BorderRadius.circular(35),
+              border: Border.all(
+                color: isHero
+                    ? _accent
+                    : pick != null
+                        ? const Color(0xFFA3FF78)
+                        : const Color(0xFF2C2C2E),
+                width: isHero ? 2 : 1.5,
               ),
             ),
+            child: Text(
+              display,
+              maxLines: 1,
+              style: GoogleFonts.ibmPlexSans(
+                color: isHero
+                    ? _accent
+                    : pick != null
+                        ? Colors.white
+                        : Colors.white.withOpacity(0.45),
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                height: 1.2,
+              ),
+            ),
+          ),
+          const SizedBox(height: 3),
+          Text(
+            'Seat $seat',
+            style: GoogleFonts.robotoMono(
+              color: Colors.white.withOpacity(0.35),
+              fontSize: 9,
+            ),
+          ),
         ],
       ),
     );
@@ -589,7 +591,11 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
 
 class _OpponentPickerSheet extends StatefulWidget {
   final List<Opponent> opponents;
-  const _OpponentPickerSheet({required this.opponents});
+  final bool showHeroOption;
+  const _OpponentPickerSheet({
+    required this.opponents,
+    this.showHeroOption = false,
+  });
 
   @override
   State<_OpponentPickerSheet> createState() => _OpponentPickerSheetState();
@@ -644,6 +650,21 @@ class _OpponentPickerSheetState extends State<_OpponentPickerSheet> {
             Expanded(
               child: ListView(
                 children: [
+                  if (widget.showHeroOption)
+                    ListTile(
+                      leading: const Icon(Icons.person,
+                          color: Color(0xFF89F1EC)),
+                      title: Text('This is me',
+                          style: GoogleFonts.ibmPlexSans(
+                              color: const Color(0xFF89F1EC),
+                              fontWeight: FontWeight.w600)),
+                      subtitle: Text('Move your seat here',
+                          style: GoogleFonts.ibmPlexSans(
+                              color: Colors.white.withOpacity(0.4),
+                              fontSize: 13)),
+                      onTap: () => Navigator.pop(
+                          context, const _SeatPick('__hero__', 'You')),
+                    ),
                   ListTile(
                     leading: Icon(Icons.smart_toy,
                         color: Colors.white.withOpacity(0.5)),
