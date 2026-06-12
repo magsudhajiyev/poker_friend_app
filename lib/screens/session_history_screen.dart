@@ -425,19 +425,24 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
         ? session['sessionName']
         : l10n.sessionHistorySessionId(session['id'].substring(0, 8));
 
-    // P/L calculation
+    // P/L calculation.
+    // Tournament rule (see diary 2026-05-15): chips are NOT money — never
+    // subtract a money buy-in from a chip stack. P/L is only known when
+    // prizeWon was recorded (0 prize = busted = -totalBuyIn). Without it,
+    // show no P/L rather than a nonsense chips-minus-money number.
     final totalBuyIn = (session['totalBuyIn'] ?? session['buyInAmount'] ?? 0).toDouble();
-    final double profitLoss;
+    final double? profitLoss;
     if (isTournament) {
-      final prizeWon = (session['prizeWon'] ?? 0).toDouble();
-      profitLoss = prizeWon > 0
-          ? prizeWon - totalBuyIn
-          : (session['currentStack'] != null
-              ? (session['currentStack'] as num).toDouble() - totalBuyIn
-              : 0.0);
+      final prizeRaw = session['prizeWon'];
+      profitLoss =
+          prizeRaw != null ? (prizeRaw as num).toDouble() - totalBuyIn : null;
     } else {
-      final finalStack = (session['currentStack'] ?? session['finalStack'] ?? 0).toDouble();
-      profitLoss = finalStack - totalBuyIn;
+      // Cash: stacks are money, so final stack - total buy-in is real P/L.
+      // Old records without buy-in data can't produce a meaningful number.
+      final stackRaw = session['currentStack'] ?? session['finalStack'];
+      profitLoss = (totalBuyIn > 0 && stackRaw != null)
+          ? (stackRaw as num).toDouble() - totalBuyIn
+          : null;
     }
 
     // Duration
@@ -455,14 +460,18 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
 
     final dateText = DateFormat('MMM d, yyyy').format(startTime);
 
-    final plColor = profitLoss > 0
-        ? const Color(0xFFA3FF78)
-        : profitLoss < 0
-            ? const Color(0xFFFF3B30)
-            : const Color(0xFFFF8A54);
-    final plText = profitLoss > 0
-        ? '+${CurrencyService.formatCash(profitLoss)}'
-        : CurrencyService.formatCash(profitLoss);
+    final plColor = profitLoss == null
+        ? const Color(0xFF8C8C8C)
+        : profitLoss > 0
+            ? const Color(0xFFA3FF78)
+            : profitLoss < 0
+                ? const Color(0xFFFF3B30)
+                : const Color(0xFFFF8A54);
+    final plText = profitLoss == null
+        ? '—'
+        : profitLoss > 0
+            ? '+${CurrencyService.formatCash(profitLoss)}'
+            : CurrencyService.formatCash(profitLoss);
 
     return GestureDetector(
       onTap: () async {

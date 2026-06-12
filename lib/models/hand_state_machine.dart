@@ -12,6 +12,7 @@ import '../services/user_stats_service.dart';
 import '../services/logger_service.dart';
 import '../services/range_grid_service.dart';
 import '../utils/poker_positions.dart';
+import '../onboarding/onboarding_state.dart';
 
 enum HandState {
   notStarted,
@@ -835,6 +836,8 @@ class PokerSessionManager {
   // Save a completed hand to both Firebase and local storage
   Future<void> _saveHandToFirebase(HandRecord hand) async {
     if (sessionId == null) return;
+    // Tour hands are never persisted — they don't affect stats or hand counts
+    if (OnboardingState.isGuidedHandActive) return;
 
     // Always save to local storage first
     final localHandId = await LocalStorageService.saveHand(
