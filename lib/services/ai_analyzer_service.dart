@@ -71,8 +71,9 @@ class AIAnalyzerService {
       if (card2 != null) heroCards.add(_convertCardFormat(card2));
     }
 
-    final smallBlind = (hand['smallBlind'] ?? 1) as int;
-    final bigBlind = (hand['bigBlind'] ?? 2) as int;
+    // Blinds are stored as double on newer sessions (decimal stakes support)
+    final smallBlind = ((hand['smallBlind'] ?? 1) as num).toDouble();
+    final bigBlind = ((hand['bigBlind'] ?? 2) as num).toDouble();
     final heroSeatNumber = hand['heroSeatNumber'] as int?;
     final heroPosition = hand['heroPositionName'] as String? ?? 'UNK';
     final buttonPosition = hand['buttonPosition'] ?? 1;
@@ -299,9 +300,9 @@ class AIAnalyzerService {
       if (card2 != null) heroCards.add(_convertCardFormat(card2));
     }
 
-    // Get blinds
-    final smallBlind = (hand['smallBlind'] ?? 1) as int;
-    final bigBlind = (hand['bigBlind'] ?? 2) as int;
+    // Get blinds (stored as double on newer sessions — decimal stakes support)
+    final smallBlind = ((hand['smallBlind'] ?? 1) as num).toDouble();
+    final bigBlind = ((hand['bigBlind'] ?? 2) as num).toDouble();
 
     // Get hero seat number and position
     final heroSeatNumber = hand['heroSeatNumber'] as int?;

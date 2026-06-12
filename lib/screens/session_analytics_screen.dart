@@ -278,9 +278,24 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
         hands = await LocalStorageService.getSessionHands(widget.sessionId);
       }
 
+      final stackHistory = List<Map<String, dynamic>>.from(sessionDetails?['stackHistory'] ?? []);
+      var rebuys = List<Map<String, dynamic>>.from(sessionDetails?['rebuys'] ?? []);
+      if (rebuys.isEmpty) {
+        // Full hand-logging sessions don't persist a 'rebuys' array, but every
+        // rebuy is recorded in stackHistory — derive them (same as DealerService)
+        rebuys = stackHistory
+            .where((entry) => entry['changeType'] == 'rebuy')
+            .map((entry) => {
+                  'amount': entry['changeAmount'],
+                  'stackSize': entry['stackSize'],
+                  'timestamp': entry['timestamp'],
+                })
+            .toList();
+      }
+
       setState(() {
-        _stackHistory = List<Map<String, dynamic>>.from(sessionDetails?['stackHistory'] ?? []);
-        _rebuys = List<Map<String, dynamic>>.from(sessionDetails?['rebuys'] ?? []);
+        _stackHistory = stackHistory;
+        _rebuys = rebuys;
         _hands = hands;
         _calculateSessionAnalytics();
         _isLoading = false;
@@ -410,9 +425,10 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
   }
 
   double? _getTournamentCashout() {
+    // prizeWon == 0 is a valid recorded cashout (busted out of the money).
+    // Only null (never recorded) means we can't show it — chips ≠ money.
     final prize = widget.sessionData['prizeWon']?.toDouble();
-    if (prize != null && prize > 0) return prize;
-    return null; // No prize data — can't mix chips with money
+    return prize;
   }
 
   @override
