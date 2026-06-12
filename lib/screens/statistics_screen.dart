@@ -455,11 +455,13 @@ class _StatisticsScreenState extends State<StatisticsScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Page header
-                _buildPageHeader(l10n),
-                const SizedBox(height: 24),
-
-                // 7 core metric cards
+                // Hands logged + 7 core metric cards
+                _buildMetricCard(
+                  chipLabel: 'Hands Logged',
+                  value: totalHands.toString(),
+                  forceActive: true,
+                ),
+                const SizedBox(height: 8),
                 _buildMetricCard(
                   chipLabel: 'VPIP',
                   value: totalHands > 0 ? '${vpip.toStringAsFixed(1)}%' : na,
@@ -603,57 +605,12 @@ class _StatisticsScreenState extends State<StatisticsScreen>
     );
   }
 
-  Widget _buildPageHeader(AppLocalizations l10n) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Icon(Icons.bar_chart_rounded, color: Color(0xFF4879FF), size: 24),
-        const SizedBox(height: 12),
-        Text(
-          l10n.statsTitle,
-          style: GoogleFonts.ibmPlexSans(
-            fontSize: 17,
-            fontWeight: FontWeight.w600,
-            color: Colors.white,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          l10n.statsSubtitle,
-          style: GoogleFonts.ibmPlexSans(
-            fontSize: 15,
-            fontWeight: FontWeight.w400,
-            color: const Color(0xFFB9B9B9),
-            height: 22 / 15,
-          ),
-        ),
-        if (totalHands > 0) ...[
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            decoration: BoxDecoration(
-              color: const Color(0xFF161719),
-              borderRadius: BorderRadius.circular(999),
-            ),
-            child: Text(
-              '${handsPlayed.toString()} hands logged',
-              style: GoogleFonts.ibmPlexSans(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                color: const Color(0xFFB9B9B9),
-              ),
-            ),
-          ),
-        ],
-      ],
-    );
-  }
-
   Widget _buildMetricCard({
     required String chipLabel,
     required String value,
+    bool forceActive = false,
   }) {
-    final isNA = !value.contains('%');
+    final isNA = !forceActive && !value.contains('%');
     return Container(
       decoration: BoxDecoration(
         color: const Color(0xFF161719),

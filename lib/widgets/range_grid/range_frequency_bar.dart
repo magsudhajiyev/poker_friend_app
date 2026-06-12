@@ -57,13 +57,16 @@ class RangeFrequencyBar extends StatelessWidget {
                         Container(color: Colors.white.withValues(alpha: 0.06)),
                         Row(
                           children: [
-                            for (int i = 0; i < segments.length; i++)
+                            for (int i = 0; i < segments.length; i++) ...[
+                              if (i > 0) const SizedBox(width: 2),
                               Container(
-                                width: fullWidth * t * segments[i].$1 / _total,
-                                margin: EdgeInsets.only(
-                                    right: i < segments.length - 1 ? 2 : 0),
+                                width: (fullWidth - (segments.length - 1) * 2) *
+                                    t *
+                                    segments[i].$1 /
+                                    _total,
                                 color: segments[i].$2,
                               ),
+                            ],
                           ],
                         ),
                       ],
