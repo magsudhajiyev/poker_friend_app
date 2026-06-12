@@ -29,9 +29,8 @@ import '../services/local_storage_service.dart';
 import '../services/session_result_service.dart';
 import '../services/play_style_detector.dart';
 import '../services/currency_service.dart';
-import '../services/stats_verification_service.dart';
 import '../screens/auth_screen.dart';
-import '../widgets/loading_screen.dart';
+import '../widgets/looping_splash_logo.dart';
 import '../services/calendar_event_service.dart';
 import '../widgets/global_bottom_nav_bar.dart';
 import '../onboarding/onboarding_tour.dart';
@@ -1204,28 +1203,40 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         _loadError = null;
       });
 
-      StatsVerificationService.verifyAllStats();
-
       // Pull bankroll from Firestore into SharedPreferences (handles reinstall)
       await BankrollService.syncFromFirestore();
 
-      final bankroll = await BankrollService.getCurrentBankroll()
-          .timeout(const Duration(seconds: 10), onTimeout: () => 0.0);
-      final goal = await BankrollService.getBankrollGoal()
-          .timeout(const Duration(seconds: 10), onTimeout: () => 0.0);
-      final progress = await BankrollService.getBankrollProgress()
-          .timeout(const Duration(seconds: 10), onTimeout: () => 0.0);
-      final stats = await BankrollService.getPlayerStatistics()
-          .timeout(const Duration(seconds: 10), onTimeout: () => {});
-      final sessions = await _getRecentSessions()
-          .timeout(const Duration(seconds: 10), onTimeout: () => []);
-      final earningsData = await _getEarningsData()
-          .timeout(const Duration(seconds: 10), onTimeout: () => {'chartData': null, 'avgEarnings': 0.0});
-      final events = await _loadCalendarEvents()
-          .timeout(const Duration(seconds: 10), onTimeout: () => []);
+      // All remaining reads are independent — fetch them in parallel
+      // instead of serially awaiting each one (was the bulk of the
+      // cold-start time alongside the removed stats verification dump)
+      final results = await Future.wait<dynamic>([
+        BankrollService.getCurrentBankroll()
+            .timeout(const Duration(seconds: 10), onTimeout: () => 0.0),
+        BankrollService.getBankrollGoal()
+            .timeout(const Duration(seconds: 10), onTimeout: () => 0.0),
+        BankrollService.getBankrollProgress()
+            .timeout(const Duration(seconds: 10), onTimeout: () => 0.0),
+        BankrollService.getPlayerStatistics()
+            .timeout(const Duration(seconds: 10), onTimeout: () => {}),
+        _getRecentSessions()
+            .timeout(const Duration(seconds: 10), onTimeout: () => []),
+        _getEarningsData().timeout(const Duration(seconds: 10),
+            onTimeout: () => {'chartData': null, 'avgEarnings': 0.0}),
+        _loadCalendarEvents()
+            .timeout(const Duration(seconds: 10), onTimeout: () => []),
+        // Pre-load display identity cache (respects useNicknameInGame toggle)
+        DisplayIdentityService.getDisplayIdentity(),
+      ]);
 
-      // Pre-load display identity cache (respects useNicknameInGame toggle)
-      await DisplayIdentityService.getDisplayIdentity();
+      final bankroll = results[0] as double;
+      final goal = results[1] as double;
+      final progress = results[2] as double;
+      final stats = Map<String, dynamic>.from(results[3] as Map);
+      final sessions = List<Map<String, dynamic>>.from(
+          (results[4] as List).whereType<Map<String, dynamic>>());
+      final earningsData = Map<String, dynamic>.from(results[5] as Map);
+      final events = List<Map<String, dynamic>>.from(
+          (results[6] as List).whereType<Map<String, dynamic>>());
       final displayName = DisplayIdentityService.cachedDisplayIdentity;
 
       if (mounted) {
@@ -1521,7 +1532,26 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     if (isLoadingData && currentBankroll == 0.0 && recentSessions.isEmpty) {
-      return LoadingScreen(message: AppLocalizations.of(context).homeLoadingPokerData);
+      // Keep the logo animation looping through the whole loading course
+      // instead of cutting to a static loader after the splash.
+      return Scaffold(
+        backgroundColor: const Color(0xFF02050B),
+        body: Column(
+          children: [
+            const Expanded(child: LoopingSplashLogo()),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 64),
+              child: Text(
+                AppLocalizations.of(context).homeLoadingPokerData,
+                style: GoogleFonts.ibmPlexSans(
+                  fontSize: 13,
+                  color: Colors.white.withValues(alpha: 0.45),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
     }
 
     if (_loadError != null && currentBankroll == 0.0 && recentSessions.isEmpty) {
