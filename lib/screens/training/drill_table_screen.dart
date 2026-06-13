@@ -27,6 +27,9 @@ class DrillTableScreen extends StatefulWidget {
 
 enum _Phase { acting, feedback, handOver }
 
+/// Direction to offset the action pill from the seat toward the table center.
+enum _ChipDir { up, down, left, right }
+
 class _DrillTableScreenState extends State<DrillTableScreen>
     with TickerProviderStateMixin {
   static const _accent = Color(0xFF89F1EC);
@@ -46,6 +49,10 @@ class _DrillTableScreenState extends State<DrillTableScreen>
   final GlobalKey _tableAreaKey = GlobalKey();
   int _chipSeed = 0;
 
+  // Maps actual seat number → visual position on the 9-seat oval.
+  // Hero is always placed at visual position 5 (bottom center).
+  late final Map<int, int> _visualSeatMap;
+
   _Phase _phase = _Phase.handOver;
   DrillHeroTurn? _heroTurn;
   DrillGradeResult? _lastGrade;
@@ -60,7 +67,50 @@ class _DrillTableScreenState extends State<DrillTableScreen>
   void initState() {
     super.initState();
     _engine = DrillEngine(seats: widget.seats, stackBB: widget.stackBB);
+    _visualSeatMap = _buildVisualSeatMap();
     WidgetsBinding.instance.addPostFrameCallback((_) => _nextHand());
+  }
+
+  /// Reverse lookup: visual position → actual seat number.
+  int _actualSeat(int visualSeat) {
+    return _visualSeatMap.entries
+        .firstWhere((e) => e.value == visualSeat)
+        .key;
+  }
+
+  /// Builds a mapping from actual seat numbers to visual positions (1-9)
+  /// so that the hero always sits at position 5 (bottom center of the oval).
+  /// Other seats are evenly distributed around the remaining positions.
+  Map<int, int> _buildVisualSeatMap() {
+    final sorted = widget.seats.map((s) => s.seatNumber).toList()..sort();
+    final heroActual =
+        widget.seats.firstWhere((s) => s.isHero).seatNumber;
+    final n = sorted.length;
+    final heroIdx = sorted.indexOf(heroActual);
+
+    // Visual positions to use: evenly spaced around 9 slots.
+    // For n players we pick n positions centered on slot 5.
+    // E.g. 6 players → [1, 2, 3, 5, 7, 8] (skip 4, 6, 9)
+    // Simpler: just space them evenly across 1..9.
+    final visualSlots = <int>[];
+    if (n >= 9) {
+      visualSlots.addAll([1, 2, 3, 4, 5, 6, 7, 8, 9]);
+    } else {
+      // Place hero at 5, distribute others evenly
+      for (int i = 0; i < n; i++) {
+        // Offset from hero in the seat order
+        final offset = (i - heroIdx + n) % n;
+        // Map to visual position: hero=5, each step = 9/n slots clockwise
+        final visual = ((5 - 1 + (offset * 9 / n).round()) % 9) + 1;
+        visualSlots.add(visual);
+      }
+    }
+
+    final map = <int, int>{};
+    for (int i = 0; i < n; i++) {
+      map[sorted[i]] = visualSlots[i];
+    }
+    return map;
   }
 
   @override
@@ -232,8 +282,16 @@ class _DrillTableScreenState extends State<DrillTableScreen>
 
   // ── Build ───────────────────────────────────────────────────────────
 
+  /// Scale factor relative to iPhone 13 (812 logical height).
+  /// Keeps the UI proportional on iPhone 11, 16 Pro, SE, etc.
+  double _s(BuildContext context) {
+    final h = MediaQuery.of(context).size.height;
+    return (h / 812).clamp(0.8, 1.25);
+  }
+
   @override
   Widget build(BuildContext context) {
+    final s = _s(context);
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
@@ -244,11 +302,11 @@ class _DrillTableScreenState extends State<DrillTableScreen>
         body: SafeArea(
           child: Column(
             children: [
-              _buildHeader(),
-              Expanded(child: _buildTable()),
-              _buildHeroRow(),
-              _buildRecentLines(),
-              _buildBottomPanel(),
+              _buildHeader(s),
+              Expanded(child: _buildTable(s)),
+              _buildHeroRow(s),
+              _buildRecentLines(s),
+              _buildBottomPanel(s),
             ],
           ),
         ),
@@ -256,25 +314,25 @@ class _DrillTableScreenState extends State<DrillTableScreen>
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(double s) {
     final total = _records.length;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+      padding: EdgeInsets.fromLTRB(16 * s, 10 * s, 16 * s, 4 * s),
       child: Row(
         children: [
           GestureDetector(
             onTap: _confirmExit,
             child: Container(
-              width: 38,
-              height: 38,
+              width: 36 * s,
+              height: 36 * s,
               decoration: BoxDecoration(
                 color: Colors.white.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.close, color: Colors.white, size: 20),
+              child: Icon(Icons.close, color: Colors.white, size: 20 * s),
             ),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: 12 * s),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -282,12 +340,13 @@ class _DrillTableScreenState extends State<DrillTableScreen>
                 Text('Hand #${_engine.handNumber}',
                     style: GoogleFonts.ibmPlexSans(
                         color: Colors.white,
-                        fontSize: 16,
+                        fontSize: 16 * s,
                         fontWeight: FontWeight.w600)),
                 Text(
                   '${widget.stackBB.toInt()}BB · ${widget.seats.length}-handed',
                   style: GoogleFonts.ibmPlexSans(
-                      color: Colors.white.withOpacity(0.4), fontSize: 12),
+                      color: Colors.white.withOpacity(0.4),
+                      fontSize: 12 * s),
                 ),
               ],
             ),
@@ -296,8 +355,8 @@ class _DrillTableScreenState extends State<DrillTableScreen>
             GestureDetector(
               onTap: _showSummary,
               child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: EdgeInsets.symmetric(
+                    horizontal: 12 * s, vertical: 6 * s),
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.08),
                   borderRadius: BorderRadius.circular(40),
@@ -306,7 +365,7 @@ class _DrillTableScreenState extends State<DrillTableScreen>
                   '$_correct/$total',
                   style: GoogleFonts.robotoMono(
                       color: _green,
-                      fontSize: 14,
+                      fontSize: 14 * s,
                       fontWeight: FontWeight.w600),
                 ),
               ),
@@ -318,25 +377,36 @@ class _DrillTableScreenState extends State<DrillTableScreen>
 
   // ── Table ───────────────────────────────────────────────────────────
 
-  Widget _buildTable() {
+  // Seat fractions matching the table surface so seats land on the rim.
+  static const _seatW = 0.92;
+  static const _seatH = 0.82;
+
+  Widget _buildTable(double s) {
+    // Build active seat map using visual positions
     final activeSeatMap = {
-      for (final s in widget.seats) s.seatNumber: true,
+      for (final seat in widget.seats) _visualSeatMap[seat.seatNumber]!: true,
     };
+    // Map dealer button to its visual position
+    final visualButton = _engine.handNumber > 0
+        ? _visualSeatMap[_engine.buttonSeat]
+        : null;
+
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: EdgeInsets.symmetric(horizontal: 12 * s, vertical: 4 * s),
       child: Stack(
         key: _tableAreaKey,
+        clipBehavior: Clip.none,
         children: [
           PokerTableWidget(
             activeSeatMap: activeSeatMap,
-            buttonPosition: _engine.handNumber > 0 ? _engine.buttonSeat : null,
+            buttonPosition: visualButton,
             showDealerButton: _engine.handNumber > 0,
             showLogo: false,
-            seatWidthFraction: 1.02,
-            seatHeightFraction: 0.86,
-            seatBuilder: (seatNumber, isActive) =>
-                isActive ? _buildSeat(seatNumber) : const SizedBox.shrink(),
-            centerContent: _buildPot(),
+            seatWidthFraction: _seatW,
+            seatHeightFraction: _seatH,
+            seatBuilder: (visualSeat, isActive) =>
+                isActive ? _buildSeat(_actualSeat(visualSeat), s) : const SizedBox.shrink(),
+            centerContent: _buildPot(s),
           ),
           // Chip flight overlay — painted above the table
           if (_chipFlights.isNotEmpty)
@@ -363,7 +433,7 @@ class _DrillTableScreenState extends State<DrillTableScreen>
     );
   }
 
-  Widget _buildPot() {
+  Widget _buildPot(double s) {
     if (_engine.handNumber == 0) return const SizedBox.shrink();
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -371,21 +441,23 @@ class _DrillTableScreenState extends State<DrillTableScreen>
         Text('POT',
             style: GoogleFonts.ibmPlexSans(
                 color: Colors.white.withOpacity(0.45),
-                fontSize: 11,
+                fontSize: 11 * s,
                 fontWeight: FontWeight.w600,
                 letterSpacing: 1.2)),
         Text(
           '${(_lastUpdate?.potBB ?? _engine.potBB).toStringAsFixed(1)}BB',
           style: GoogleFonts.robotoMono(
               color: Colors.white,
-              fontSize: 20,
+              fontSize: 20 * s,
               fontWeight: FontWeight.w700),
         ),
       ],
     );
   }
 
-  Widget _buildSeat(int seatNumber) {
+  Widget _buildSeat(int actualSeatNumber, double s) {
+    final seatNumber = actualSeatNumber;
+    final visualSeat = _visualSeatMap[seatNumber]!;
     final seat =
         widget.seats.firstWhere((s) => s.seatNumber == seatNumber);
     final folded = _foldedSeats.contains(seatNumber);
@@ -397,93 +469,153 @@ class _DrillTableScreenState extends State<DrillTableScreen>
         ? '${seat.displayName.substring(0, 7)}…'
         : seat.displayName;
 
-    return Opacity(
-      opacity: folded ? 0.35 : 1.0,
+    // Player info pill
+    final playerInfo = Container(
+      padding: EdgeInsets.symmetric(horizontal: 8 * s, vertical: 4 * s),
+      decoration: BoxDecoration(
+        color: const Color(0xFF161719),
+        borderRadius: BorderRadius.circular(35),
+        border: Border.all(
+          color: heroActing
+              ? _accent
+              : seat.isHero
+                  ? _accent.withOpacity(0.55)
+                  : const Color(0xFF2C2C2E),
+          width: heroActing ? 2 : 1.5,
+        ),
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: const Color(0xFF161719),
-              borderRadius: BorderRadius.circular(35),
-              border: Border.all(
-                color: heroActing
-                    ? _accent
-                    : seat.isHero
-                        ? _accent.withOpacity(0.55)
-                        : const Color(0xFF2C2C2E),
-                width: heroActing ? 2 : 1.5,
+          Text(
+            name,
+            maxLines: 1,
+            style: GoogleFonts.ibmPlexSans(
+              color: seat.isHero ? _accent : Colors.white,
+              fontSize: 13 * s,
+              fontWeight: FontWeight.w600,
+              height: 1.2,
+            ),
+          ),
+          if (position.isNotEmpty)
+            Text(
+              position,
+              style: GoogleFonts.robotoMono(
+                color: Colors.white.withOpacity(0.45),
+                fontSize: 10 * s,
+                height: 1.2,
               ),
             ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  name,
-                  maxLines: 1,
-                  style: GoogleFonts.ibmPlexSans(
-                    color: seat.isHero ? _accent : Colors.white,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    height: 1.2,
-                  ),
-                ),
-                if (position.isNotEmpty)
-                  Text(
-                    position,
-                    style: GoogleFonts.robotoMono(
-                      color: Colors.white.withOpacity(0.45),
-                      fontSize: 9,
-                      height: 1.2,
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 3),
-          // Last action chip — keeps height stable so seats don't jump
-          SizedBox(
-            height: 16,
-            child: action == null
-                ? null
-                : Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6),
-                    decoration: BoxDecoration(
-                      color: _actionColor(action).withOpacity(0.18),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Center(
-                      child: Text(
-                        action,
-                        style: GoogleFonts.robotoMono(
-                          color: _actionColor(action),
-                          fontSize: 9,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-          ),
         ],
       ),
     );
+
+    // Action/bet pill — placed toward the table center
+    Widget? statusPill;
+    if (action != null) {
+      final pillColor = _actionColor(action);
+      final pillTrigger = action;
+      statusPill = PopIn(
+        triggerKey: pillTrigger,
+        child: Container(
+          padding: EdgeInsets.symmetric(
+              horizontal: 5 * s, vertical: 1 * s),
+          decoration: BoxDecoration(
+            color: pillColor.withOpacity(0.2),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Text(
+            action,
+            style: GoogleFonts.robotoMono(
+              color: pillColor,
+              fontSize: 9 * s,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      );
+    }
+
+    Widget content;
+    if (statusPill == null) {
+      content = playerInfo;
+    } else {
+      final gap = 3 * s;
+      final dir = _chipDirection(visualSeat);
+      switch (dir) {
+        case _ChipDir.up:
+          content = Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [statusPill, SizedBox(height: gap), playerInfo],
+          );
+        case _ChipDir.down:
+          content = Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [playerInfo, SizedBox(height: gap), statusPill],
+          );
+        case _ChipDir.left:
+          content = Row(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [statusPill, SizedBox(width: gap), playerInfo],
+          );
+        case _ChipDir.right:
+          content = Row(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [playerInfo, SizedBox(width: gap), statusPill],
+          );
+      }
+    }
+
+    return Opacity(
+      opacity: folded ? 0.35 : 1.0,
+      child: content,
+    );
+  }
+
+  /// Returns the direction the action pill should be placed relative to
+  /// the seat so it appears "in front of" the player on the table felt.
+  /// Vertical table layout — seats around an oval.
+  _ChipDir _chipDirection(int seatNumber) {
+    switch (seatNumber) {
+      case 1:
+        return _ChipDir.down; // top of table → pill down toward center
+      case 9:
+        return _ChipDir.down; // top of table → pill down toward center
+      case 2:
+        return _ChipDir.left; // right side → pill left toward center
+      case 3:
+        return _ChipDir.left; // right side → pill left toward center
+      case 4:
+        return _ChipDir.up; // bottom-right → pill up toward center
+      case 5:
+        return _ChipDir.up; // bottom → pill up toward center
+      case 6:
+        return _ChipDir.up; // bottom-left → pill up toward center
+      case 7:
+        return _ChipDir.right; // left side → pill right toward center
+      case 8:
+        return _ChipDir.right; // left side → pill right toward center
+      default:
+        return _ChipDir.down;
+    }
   }
 
   // ── Chip flight animations ─────────────────────────────────────────
 
-  void _fireChipFlight(int fromSeat, String action) {
+  void _fireChipFlight(int fromActualSeat, String action) {
     final renderBox =
         _tableAreaKey.currentContext?.findRenderObject() as RenderBox?;
     if (renderBox == null) return;
 
+    final visualSeat = _visualSeatMap[fromActualSeat] ?? fromActualSeat;
     final areaSize = renderBox.size;
     final seatPos = PokerTableWidget.getSeatPosition(
-      fromSeat,
+      visualSeat,
       areaSize,
-      widthFraction: 1.02,
-      heightFraction: 0.86,
+      widthFraction: _seatW,
+      heightFraction: _seatH,
     );
     final potPos = Offset(areaSize.width / 2, areaSize.height / 2);
 
@@ -572,63 +704,65 @@ class _DrillTableScreenState extends State<DrillTableScreen>
 
   // ── Hero strip / recent lines ───────────────────────────────────────
 
-  Widget _buildHeroRow() {
+  Widget _buildHeroRow(double s) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      padding: EdgeInsets.symmetric(horizontal: 16 * s, vertical: 4 * s),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           for (final card in _engine.heroCards) ...[
-            _buildCard(card),
-            const SizedBox(width: 6),
+            _buildCard(card, s),
+            SizedBox(width: 6 * s),
           ],
-          const SizedBox(width: 8),
+          SizedBox(width: 8 * s),
           Text(_engine.heroHandClass,
               style: GoogleFonts.robotoMono(
                   color: Colors.white,
-                  fontSize: 17,
+                  fontSize: 17 * s,
                   fontWeight: FontWeight.w600)),
-          const SizedBox(width: 8),
+          SizedBox(width: 8 * s),
           Text(_engine.heroPosition,
               style: GoogleFonts.ibmPlexSans(
-                  color: Colors.white.withOpacity(0.4), fontSize: 13)),
+                  color: Colors.white.withOpacity(0.4), fontSize: 13 * s)),
         ],
       ),
     );
   }
 
-  Widget _buildCard(String card) {
+  Widget _buildCard(String card, double s) {
     final suit = card.substring(card.length - 1);
     final rank = card.substring(0, card.length - 1);
     final isRed = suit == '♥' || suit == '♦';
     final color = isRed ? const Color(0xFFD32F2F) : Colors.black;
     return Container(
-      width: 34,
-      height: 46,
+      width: 34 * s,
+      height: 46 * s,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(6 * s),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(rank,
               style: GoogleFonts.robotoMono(
-                  color: color, fontSize: 15, fontWeight: FontWeight.w700)),
-          Text(suit, style: TextStyle(color: color, fontSize: 12)),
+                  color: color,
+                  fontSize: 15 * s,
+                  fontWeight: FontWeight.w700)),
+          Text(suit, style: TextStyle(color: color, fontSize: 12 * s)),
         ],
       ),
     );
   }
 
-  Widget _buildRecentLines() {
+  Widget _buildRecentLines(double s) {
     final text = _handOverNote.isNotEmpty
         ? _handOverNote
         : _recentLines.isNotEmpty
             ? _recentLines.last
             : '';
     return SizedBox(
-      height: 22,
+      height: 22 * s,
       child: Center(
         child: Text(
           text,
@@ -638,7 +772,7 @@ class _DrillTableScreenState extends State<DrillTableScreen>
             color: _handOverNote.isNotEmpty
                 ? _accent.withOpacity(0.85)
                 : Colors.white.withOpacity(0.55),
-            fontSize: 13,
+            fontSize: 13 * s,
             fontStyle:
                 _handOverNote.isNotEmpty ? FontStyle.italic : FontStyle.normal,
           ),
@@ -649,18 +783,18 @@ class _DrillTableScreenState extends State<DrillTableScreen>
 
   // ── Bottom panel ────────────────────────────────────────────────────
 
-  Widget _buildBottomPanel() {
+  Widget _buildBottomPanel(double s) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+      padding: EdgeInsets.fromLTRB(16 * s, 8 * s, 16 * s, 16 * s),
       child: switch (_phase) {
-        _Phase.feedback => _buildFeedback(),
-        _Phase.acting => _buildActions(),
-        _Phase.handOver => _buildHandOver(),
+        _Phase.feedback => _buildFeedback(s),
+        _Phase.acting => _buildActions(s),
+        _Phase.handOver => _buildHandOver(s),
       },
     );
   }
 
-  Widget _buildFeedback() {
+  Widget _buildFeedback(double s) {
     final grade = _lastGrade!;
     final (color, label) = switch (grade.grade) {
       DrillGrade.correct => (_green, 'CORRECT'),
@@ -670,10 +804,10 @@ class _DrillTableScreenState extends State<DrillTableScreen>
     final diverge = !grade.linesAgree;
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(14),
+      padding: EdgeInsets.all(14 * s),
       decoration: BoxDecoration(
         color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(16 * s),
         border: Border.all(color: color.withOpacity(0.4)),
       ),
       child: Column(
@@ -685,37 +819,41 @@ class _DrillTableScreenState extends State<DrillTableScreen>
               Text(label,
                   style: GoogleFonts.ibmPlexSans(
                       color: color,
-                      fontSize: 13,
+                      fontSize: 13 * s,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 1.0)),
-              const SizedBox(width: 8),
+              SizedBox(width: 8 * s),
               Text('· you chose ${grade.heroAction}',
                   style: GoogleFonts.ibmPlexSans(
-                      color: Colors.white.withOpacity(0.45), fontSize: 12)),
+                      color: Colors.white.withOpacity(0.45),
+                      fontSize: 12 * s)),
               const Spacer(),
               Text(
                 '${_engine.heroHandClass} = top ${grade.handTopPercent.round()}%',
                 style: GoogleFonts.robotoMono(
-                    color: Colors.white.withOpacity(0.5), fontSize: 11),
+                    color: Colors.white.withOpacity(0.5), fontSize: 11 * s),
               ),
             ],
           ),
           if (diverge) ...[
-            const SizedBox(height: 8),
+            SizedBox(height: 8 * s),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              padding: EdgeInsets.symmetric(
+                  horizontal: 8 * s, vertical: 4 * s),
               decoration: BoxDecoration(
                 color: _accent.withOpacity(0.12),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(8 * s),
               ),
               child: Text(
                 'This lineup changes the play: GTO ${grade.gtoAction}s, exploit ${grade.exploitAction}s',
                 style: GoogleFonts.ibmPlexSans(
-                    color: _accent, fontSize: 12, fontWeight: FontWeight.w600),
+                    color: _accent,
+                    fontSize: 12 * s,
+                    fontWeight: FontWeight.w600),
               ),
             ),
           ],
-          const SizedBox(height: 10),
+          SizedBox(height: 10 * s),
           ConstrainedBox(
             constraints: BoxConstraints(
                 maxHeight: MediaQuery.of(context).size.height * 0.26),
@@ -730,8 +868,9 @@ class _DrillTableScreenState extends State<DrillTableScreen>
                     grade.gtoRangePercent,
                     grade.gtoReason,
                     highlight: false,
+                    s: s,
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8 * s),
                   _evalRow(
                     'EXPLOIT',
                     _accent,
@@ -739,17 +878,18 @@ class _DrillTableScreenState extends State<DrillTableScreen>
                     grade.exploitRangePercent,
                     grade.exploitReason,
                     highlight: diverge,
+                    s: s,
                   ),
                 ],
               ),
             ),
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: 10 * s),
           GestureDetector(
             onTap: _dismissFeedback,
             child: Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 12),
+              padding: EdgeInsets.symmetric(vertical: 12 * s),
               decoration: BoxDecoration(
                 color: color,
                 borderRadius: BorderRadius.circular(60),
@@ -761,7 +901,7 @@ class _DrillTableScreenState extends State<DrillTableScreen>
                       : 'Got it',
                   style: GoogleFonts.ibmPlexSans(
                       color: Colors.black,
-                      fontSize: 15,
+                      fontSize: 15 * s,
                       fontWeight: FontWeight.w600),
                 ),
               ),
@@ -776,17 +916,17 @@ class _DrillTableScreenState extends State<DrillTableScreen>
   /// action coloured by type, the range cutoff, and the reasoning.
   Widget _evalRow(String tag, Color tagColor, String action,
       double rangePercent, String reason,
-      {required bool highlight}) {
+      {required bool highlight, required double s}) {
     final actionColor = switch (action) {
       'raise' => _gold,
       'call' || 'check' => _accent,
       _ => _red,
     };
     return Container(
-      padding: const EdgeInsets.all(8),
+      padding: EdgeInsets.all(8 * s),
       decoration: BoxDecoration(
         color: highlight ? _accent.withOpacity(0.07) : Colors.transparent,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(10 * s),
         border: highlight
             ? Border.all(color: _accent.withOpacity(0.3))
             : null,
@@ -797,32 +937,33 @@ class _DrillTableScreenState extends State<DrillTableScreen>
           Row(
             children: [
               SizedBox(
-                width: 64,
+                width: 64 * s,
                 child: Text(tag,
                     style: GoogleFonts.ibmPlexSans(
                         color: tagColor,
-                        fontSize: 11,
+                        fontSize: 11 * s,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 0.8)),
               ),
               Text(action.toUpperCase(),
                   style: GoogleFonts.ibmPlexSans(
                       color: actionColor,
-                      fontSize: 13,
+                      fontSize: 13 * s,
                       fontWeight: FontWeight.w700)),
               const Spacer(),
               if (rangePercent > 0 && rangePercent < 100)
                 Text('top ${rangePercent.round()}%',
                     style: GoogleFonts.robotoMono(
-                        color: Colors.white.withOpacity(0.4), fontSize: 10)),
+                        color: Colors.white.withOpacity(0.4),
+                        fontSize: 10 * s)),
             ],
           ),
           if (reason.isNotEmpty) ...[
-            const SizedBox(height: 3),
+            SizedBox(height: 3 * s),
             Text(reason,
                 style: GoogleFonts.ibmPlexSans(
                     color: Colors.white.withOpacity(0.7),
-                    fontSize: 12,
+                    fontSize: 12 * s,
                     height: 1.35)),
           ],
         ],
@@ -830,7 +971,7 @@ class _DrillTableScreenState extends State<DrillTableScreen>
     );
   }
 
-  Widget _buildActions() {
+  Widget _buildActions(double s) {
     final turn = _heroTurn;
     if (turn == null) return const SizedBox.shrink();
 
@@ -842,16 +983,17 @@ class _DrillTableScreenState extends State<DrillTableScreen>
             children: [
               Text('Raise to:',
                   style: GoogleFonts.ibmPlexSans(
-                      color: Colors.white.withOpacity(0.6), fontSize: 13)),
+                      color: Colors.white.withOpacity(0.6),
+                      fontSize: 13 * s)),
               const Spacer(),
               GestureDetector(
                 onTap: () => setState(() => _showRaiseSizes = false),
                 child: Icon(Icons.close,
-                    size: 18, color: Colors.white.withOpacity(0.5)),
+                    size: 18 * s, color: Colors.white.withOpacity(0.5)),
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8 * s),
           Row(
             children: [
               for (final size in turn.suggestedRaiseToBB) ...[
@@ -862,10 +1004,11 @@ class _DrillTableScreenState extends State<DrillTableScreen>
                         : '${size.toStringAsFixed(1)}BB',
                     _gold,
                     () => _act('raise', raiseToBB: size),
+                    s,
                   ),
                 ),
                 if (size != turn.suggestedRaiseToBB.last)
-                  const SizedBox(width: 8),
+                  SizedBox(width: 8 * s),
               ],
             ],
           ),
@@ -880,24 +1023,27 @@ class _DrillTableScreenState extends State<DrillTableScreen>
           'Pot ${turn.potBB.toStringAsFixed(1)}BB'
           '${turn.toCallBB > 0 ? ' · ${turn.toCallBB.toStringAsFixed(1)}BB to call' : ''}',
           style: GoogleFonts.robotoMono(
-              color: Colors.white.withOpacity(0.5), fontSize: 13),
+              color: Colors.white.withOpacity(0.5), fontSize: 13 * s),
         ),
-        const SizedBox(height: 10),
+        SizedBox(height: 10 * s),
         Row(
           children: [
             Expanded(
-                child: _actionButton('FOLD', _red, () => _act('fold'))),
-            const SizedBox(width: 8),
+                child:
+                    _actionButton('FOLD', _red, () => _act('fold'), s)),
+            SizedBox(width: 8 * s),
             Expanded(
               child: turn.canCheck
-                  ? _actionButton('CHECK', _accent, () => _act('check'))
-                  : _actionButton('CALL', _accent, () => _act('call')),
+                  ? _actionButton(
+                      'CHECK', _accent, () => _act('check'), s)
+                  : _actionButton(
+                      'CALL', _accent, () => _act('call'), s),
             ),
             if (turn.canRaise) ...[
-              const SizedBox(width: 8),
+              SizedBox(width: 8 * s),
               Expanded(
                 child: _actionButton('RAISE', _gold,
-                    () => setState(() => _showRaiseSizes = true)),
+                    () => setState(() => _showRaiseSizes = true), s),
               ),
             ],
           ],
@@ -906,21 +1052,22 @@ class _DrillTableScreenState extends State<DrillTableScreen>
     );
   }
 
-  Widget _actionButton(String label, Color color, VoidCallback onTap) {
+  Widget _actionButton(
+      String label, Color color, VoidCallback onTap, double s) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 14),
+        padding: EdgeInsets.symmetric(vertical: 14 * s),
         decoration: BoxDecoration(
           color: color.withOpacity(0.15),
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(14 * s),
           border: Border.all(color: color.withOpacity(0.5)),
         ),
         child: Center(
           child: Text(label,
               style: GoogleFonts.ibmPlexSans(
                   color: color,
-                  fontSize: 15,
+                  fontSize: 15 * s,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 0.5)),
         ),
@@ -928,12 +1075,12 @@ class _DrillTableScreenState extends State<DrillTableScreen>
     );
   }
 
-  Widget _buildHandOver() {
+  Widget _buildHandOver(double s) {
     return GestureDetector(
       onTap: _nextHand,
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 14),
+        padding: EdgeInsets.symmetric(vertical: 14 * s),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(60),
@@ -942,7 +1089,7 @@ class _DrillTableScreenState extends State<DrillTableScreen>
           child: Text('Next Hand',
               style: GoogleFonts.ibmPlexSans(
                   color: Colors.black,
-                  fontSize: 17,
+                  fontSize: 17 * s,
                   fontWeight: FontWeight.w600)),
         ),
       ),
