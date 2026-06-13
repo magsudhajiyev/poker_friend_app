@@ -6,8 +6,11 @@ import '../../models/drill_models.dart';
 import '../../models/opponent.dart';
 import '../../services/drill_lineup_store.dart';
 import '../../services/drill_opponent_profiler.dart';
+import '../../models/observed_range.dart';
+import '../../services/opponent_range_service.dart';
 import '../../services/opponent_service.dart';
 import '../../services/subscription_service.dart';
+import '../../widgets/drill/observed_range_grid.dart';
 import '../../widgets/poker_table_widget.dart';
 import '../paywall_screen.dart';
 import 'drill_table_screen.dart';
@@ -249,6 +252,7 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
                   ),
                   const SizedBox(height: 4),
                   _buildSeatTable(),
+                  _buildScoutingRow(),
                   const SizedBox(height: 8),
                   GestureDetector(
                     onTap: _saveLineup,
@@ -451,6 +455,84 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
         ),
       ),
     );
+  }
+
+  /// Tappable chips for each assigned opponent → opens their scouting report
+  /// (observed showdown range). Lets you validate how much real data exists
+  /// before relying on it.
+  Widget _buildScoutingRow() {
+    final assigned = <String, String>{}; // id -> name
+    for (final pick in _picks.values) {
+      if (pick.opponentId.isNotEmpty) assigned[pick.opponentId] = pick.name;
+    }
+    if (assigned.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('SCOUTING',
+              style: GoogleFonts.ibmPlexSans(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 1.0,
+                  color: const Color(0xFF87ED81))),
+          const SizedBox(height: 6),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final e in assigned.entries)
+                GestureDetector(
+                  onTap: () => _showScouting(e.key, e.value),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(40),
+                      border:
+                          Border.all(color: Colors.white.withOpacity(0.1)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.query_stats,
+                            size: 14, color: Color(0xFF89F1EC)),
+                        const SizedBox(width: 6),
+                        Text(e.value,
+                            style: GoogleFonts.ibmPlexSans(
+                                color: Colors.white, fontSize: 13)),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _showScouting(String opponentId, String name) async {
+    // Lightweight loading dialog while the showdown scan runs
+    showDialog(
+      context: context,
+      barrierColor: Colors.black54,
+      builder: (_) => const Center(
+        child: CircularProgressIndicator(color: Color(0xFF89F1EC)),
+      ),
+    );
+    ObservedRange range;
+    try {
+      range = await OpponentRangeService.forOpponent(opponentId, name);
+    } catch (_) {
+      range = ObservedRange.empty;
+    }
+    if (!mounted) return;
+    Navigator.pop(context); // dismiss loader
+    await ObservedRangeSheet.show(context, range);
   }
 
   Widget _buildSeatTable() {
