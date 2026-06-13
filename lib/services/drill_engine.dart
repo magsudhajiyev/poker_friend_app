@@ -413,10 +413,30 @@ class DrillEngine {
         .where((p) => p.limped && !p.folded && !p.isHero)
         .map((p) => p.profile)
         .toList();
-    final behind = _players
+    // Players still to act after the hero this round, ordered by how soon
+    // they act (nearest first = direct left).
+    final n = _orderedSeats.length;
+    final heroIdx = _orderedSeats.indexOf(hero.seat);
+    final behindPlayers = _players
         .where((p) => !p.folded && !p.isHero && !p.hasActed)
-        .map((p) => p.profile)
-        .toList();
+        .toList()
+      ..sort((a, b) {
+        final da = (_orderedSeats.indexOf(a.seat) - heroIdx + n) % n;
+        final db = (_orderedSeats.indexOf(b.seat) - heroIdx + n) % n;
+        return da.compareTo(db);
+      });
+    final sbSeat = _smallBlindSeat();
+    final bbSeat = _bigBlindSeat();
+    final behindDetail = <DrillSeatRef>[
+      for (int k = 0; k < behindPlayers.length; k++)
+        DrillSeatRef(
+          profile: behindPlayers[k].profile,
+          positionGroup: positionGroup(_positions[behindPlayers[k].seat] ?? ''),
+          isBlind: behindPlayers[k].seat == sbSeat ||
+              behindPlayers[k].seat == bbSeat,
+          isDirectLeft: k == 0,
+        ),
+    ];
     return DrillDecisionContext(
       handClass: heroHandClass,
       positionGroup: positionGroup(heroPosition),
@@ -424,7 +444,8 @@ class DrillEngine {
       scenario: _scenarioFor(hero),
       opener: _raises > 0 ? opener : null,
       limpers: limpers,
-      playersBehind: behind,
+      playersBehind: behindPlayers.map((p) => p.profile).toList(),
+      behindDetail: behindDetail,
       toCallBB: max(0.0, _currentBetBB - hero.committedBB),
       currentBetBB: _currentBetBB,
       potBB: potBB,

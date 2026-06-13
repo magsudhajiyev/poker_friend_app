@@ -529,12 +529,24 @@ class _DrillTableScreenState extends State<DrillTableScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(label,
-              style: GoogleFonts.ibmPlexSans(
-                  color: color,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 1.0)),
+          Row(
+            children: [
+              Text(label,
+                  style: GoogleFonts.ibmPlexSans(
+                      color: color,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 1.0)),
+              const Spacer(),
+              if (grade.rangePercent > 0)
+                Text(
+                  '${_engine.heroHandClass} top ${grade.handTopPercent.round()}% · range top ${grade.rangePercent.round()}%',
+                  style: GoogleFonts.robotoMono(
+                      color: Colors.white.withOpacity(0.45),
+                      fontSize: 10),
+                ),
+            ],
+          ),
           const SizedBox(height: 6),
           ConstrainedBox(
             constraints: BoxConstraints(

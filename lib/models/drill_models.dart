@@ -172,6 +172,24 @@ enum DrillScenario {
   vs3betCold, // facing 2+ raises without having raised
 }
 
+/// A still-live opponent yet to act after the hero, tagged with their seat
+/// position so the grader can reason about WHERE they sit (e.g. an aggressive
+/// 3-bettor on the direct left, or a passive player in the blinds behind a
+/// steal attempt).
+class DrillSeatRef {
+  final DrillVillainProfile profile;
+  final String positionGroup; // EP/MP/CO/BTN/SB/BB
+  final bool isBlind; // SB or BB
+  final bool isDirectLeft; // acts immediately after the hero
+
+  const DrillSeatRef({
+    required this.profile,
+    required this.positionGroup,
+    required this.isBlind,
+    required this.isDirectLeft,
+  });
+}
+
 /// Everything the grader needs about one hero decision point.
 class DrillDecisionContext {
   final String handClass;
@@ -181,6 +199,7 @@ class DrillDecisionContext {
   final DrillVillainProfile? opener; // last aggressor before hero, if any
   final List<DrillVillainProfile> limpers;
   final List<DrillVillainProfile> playersBehind; // not folded, act after hero
+  final List<DrillSeatRef> behindDetail; // same players, position-tagged
   final double toCallBB;
   final double currentBetBB; // total to-amount of the live bet (1 = blinds)
   final double potBB;
@@ -194,11 +213,17 @@ class DrillDecisionContext {
     required this.opener,
     required this.limpers,
     required this.playersBehind,
+    this.behindDetail = const [],
     required this.toCallBB,
     required this.currentBetBB,
     required this.potBB,
     required this.raisesBeforeHero,
   });
+
+  /// Live opponents in the blinds who still get to act after the hero —
+  /// the steal targets when the hero opens from a late seat.
+  List<DrillSeatRef> get blindsBehind =>
+      behindDetail.where((r) => r.isBlind).toList();
 }
 
 enum DrillGrade { correct, ok, mistake }
@@ -210,11 +235,20 @@ class DrillGradeResult {
   final String recommendedAction;
   final String explanation;
 
+  /// Transparency: where the dealt hand ranks among all 169 combos
+  /// (0 = AA, 100 = worst) and the top-% range boundary the decision was
+  /// graded against, after opponent/position adjustments. Lets the UI show
+  /// the actual math behind a verdict.
+  final double handTopPercent;
+  final double rangePercent;
+
   const DrillGradeResult({
     required this.grade,
     required this.heroAction,
     required this.recommendedAction,
     required this.explanation,
+    this.handTopPercent = 0,
+    this.rangePercent = 0,
   });
 }
 

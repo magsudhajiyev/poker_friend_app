@@ -13,8 +13,11 @@ class DrillOpponentProfiler {
 
   /// Shrinkage constant: observed data and prior carry equal weight at K
   /// samples. Per-stat sample counts are used (e.g. 3-bet uses opportunities,
-  /// not hands).
-  static const double _k = 25;
+  /// not hands). Kept low so real reads visibly change bot behaviour —
+  /// fold-to-3-bet and 3-bet samples are small even for well-logged
+  /// opponents, and a drill against clones that all play like the prior
+  /// defeats the purpose.
+  static const double _k = 12;
 
   static double _blend(double observed, double prior, int n) {
     if (n <= 0) return prior;

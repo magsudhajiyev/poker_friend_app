@@ -49,6 +49,19 @@ List<DrillSeat> buildSeats(int count, int heroSeat,
   ];
 }
 
+DrillSeatRef seatRef(
+  DrillVillainProfile p, {
+  String pos = 'BB',
+  bool blind = true,
+  bool directLeft = false,
+}) =>
+    DrillSeatRef(
+      profile: p,
+      positionGroup: pos,
+      isBlind: blind,
+      isDirectLeft: directLeft,
+    );
+
 DrillDecisionContext ctx({
   required String handClass,
   required String positionGroup,
@@ -57,6 +70,7 @@ DrillDecisionContext ctx({
   DrillVillainProfile? opener,
   List<DrillVillainProfile> limpers = const [],
   List<DrillVillainProfile> playersBehind = const [],
+  List<DrillSeatRef> behindDetail = const [],
   double toCallBB = 0,
   double currentBetBB = 1,
   double potBB = 1.5,
@@ -70,6 +84,7 @@ DrillDecisionContext ctx({
     opener: opener,
     limpers: limpers,
     playersBehind: playersBehind,
+    behindDetail: behindDetail,
     toCallBB: toCallBB,
     currentBetBB: currentBetBB,
     potBB: potBB,
@@ -492,6 +507,106 @@ void main() {
       );
       expect(r.grade, DrillGrade.correct);
       expect(r.explanation, contains('AggroAnna'));
+    });
+
+    test('grade result exposes the hand percentile and range boundary', () {
+      final r = DrillGrader.grade(
+          ctx(handClass: 'AA', positionGroup: 'BTN'), 'raise',
+          raiseToBB: 2.5);
+      expect(r.handTopPercent, lessThan(1.0)); // AA is the top combo
+      expect(r.rangePercent, greaterThan(0));
+    });
+  });
+
+  group('DrillGrader position-aware exploits', () {
+    test('tight players in the blinds widen the BTN steal range and are named',
+        () {
+      final nit = profile(name: 'NittyTom', vpip: 12, pfr: 9, hands: 220);
+      final r = DrillGrader.grade(
+        ctx(
+          handClass: 'AA',
+          positionGroup: 'BTN',
+          behindDetail: [
+            seatRef(nit, pos: 'SB'),
+            seatRef(nit, pos: 'BB'),
+          ],
+        ),
+        'raise',
+        raiseToBB: 2.5,
+      );
+      // Default BTN open is top 42%; tight blinds must widen it well past that
+      expect(r.rangePercent, greaterThan(50));
+      expect(r.explanation, contains('NittyTom'));
+      expect(r.explanation.toLowerCase(), contains('steal'));
+    });
+
+    test('a marginal BTN hand becomes an open vs passive blinds', () {
+      // Find a hand outside a default BTN range but inside a widened one.
+      final marginal = DrillHandStrength.allHandClasses.firstWhere((h) {
+        final t = DrillHandStrength.topPercent(h);
+        return t > 45 && t < 53;
+      });
+      final nit = profile(name: 'Nit', vpip: 10, pfr: 8, hands: 300);
+      final passive = ctx(
+        handClass: marginal,
+        positionGroup: 'BTN',
+        behindDetail: [seatRef(nit, pos: 'SB'), seatRef(nit, pos: 'BB')],
+      );
+      expect(DrillGrader.grade(passive, 'raise', raiseToBB: 2.5).grade,
+          DrillGrade.correct);
+      // The same hand vs a default (generic) table should be a fold
+      final neutral = ctx(handClass: marginal, positionGroup: 'BTN');
+      expect(DrillGrader.grade(neutral, 'fold').recommendedAction, 'fold');
+    });
+
+    test('aggressive 3-bettor on the direct left tightens opens and is named',
+        () {
+      final anna = profile(name: 'AggroAnna', threeBet: 16, hands: 240);
+      final r = DrillGrader.grade(
+        ctx(
+          handClass: 'A5s',
+          positionGroup: 'CO',
+          behindDetail: [
+            seatRef(anna, pos: 'BTN', blind: false, directLeft: true),
+          ],
+        ),
+        'raise',
+        raiseToBB: 2.5,
+      );
+      // CO default is top 26%; a 16% 3-bettor on the direct left cuts it
+      expect(r.rangePercent, lessThan(24));
+      expect(r.explanation, contains('AggroAnna'));
+      expect(r.explanation, contains('direct left'));
+    });
+
+    test('a wide-defending blind tightens the steal toward value', () {
+      final station = profile(name: 'CallingCal', vpip: 45, pfr: 8, hands: 260);
+      final r = DrillGrader.grade(
+        ctx(
+          handClass: 'AA',
+          positionGroup: 'BTN',
+          behindDetail: [seatRef(station, pos: 'BB')],
+        ),
+        'raise',
+        raiseToBB: 2.5,
+      );
+      expect(r.explanation, contains('CallingCal'));
+      expect(r.explanation.toLowerCase(), contains('defend'));
+    });
+
+    test('unopened feedback always references the lineup, never bare GTO', () {
+      // Middling blinds (no exploit rule fires) still get a lineup note.
+      final reg = profile(name: 'SteadyEddie', vpip: 28, pfr: 20, hands: 300);
+      final r = DrillGrader.grade(
+        ctx(
+          handClass: 'AA',
+          positionGroup: 'BTN',
+          behindDetail: [seatRef(reg, pos: 'BB')],
+        ),
+        'raise',
+        raiseToBB: 2.5,
+      );
+      expect(r.explanation, contains('SteadyEddie'));
     });
   });
 }

@@ -47,24 +47,92 @@ class DrillGrader {
       DrillDecisionContext ctx, String action, double? raiseToBB) {
     final notes = <String>[];
     double openThresh = _openThreshold[ctx.positionGroup] ?? 20;
+    final isStealSeat = ctx.positionGroup == 'CO' ||
+        ctx.positionGroup == 'BTN' ||
+        ctx.positionGroup == 'SB';
 
-    final aggro3bettor = _strongest(ctx.playersBehind,
-        (p) => p.threeBet >= 10 && !p.isGenericBot, (p) => p.threeBet);
-    if (aggro3bettor != null) {
-      openThresh -= 4;
-      notes.add(
-          '${aggro3bettor.name} 3-bets ${_pct(aggro3bettor.threeBet)} behind you '
-          '(${aggro3bettor.confidenceLabel}) — tighten your opens and be ready to play back.');
+    // ── Steal adjustment based on who actually sits in the blinds ──
+    // This is the core live exploit: a tight/passive player in the BB while
+    // you're on the BTN means you can open almost anything; a wide-defending
+    // or 3-bet-happy blind means tighten.
+    final blinds =
+        ctx.blindsBehind.where((b) => !b.profile.isGenericBot).toList();
+    if (isStealSeat && blinds.isNotEmpty) {
+      final avgVpip =
+          blinds.map((b) => b.profile.vpip).reduce((a, b) => a + b) /
+              blinds.length;
+      final maxThreeBet =
+          blinds.map((b) => b.profile.threeBet).reduce((a, b) => a > b ? a : b);
+      final names = _nameList(blinds.map((b) => b.profile.name).toList());
+      final plural = blinds.length > 1;
+
+      if (avgVpip <= 24) {
+        final bonus = ((24 - avgVpip) * 1.1).clamp(0.0, 22.0).toDouble();
+        openThresh += bonus;
+        notes.add('$names ${plural ? 'fold' : 'folds'} the blinds a lot '
+            '(VPIP ${_pct(avgVpip)}) — steal relentlessly from ${_posName(ctx.positionGroup)}, '
+            'open any halfway-playable hand.');
+      } else if (avgVpip >= 34) {
+        openThresh -= 3;
+        notes.add('$names ${plural ? 'defend' : 'defends'} the blinds wide '
+            '(VPIP ${_pct(avgVpip)}) — your steals get called, so open hands that '
+            'flop well and drop the offsuit junk.');
+      }
+      if (maxThreeBet >= 11) {
+        openThresh -= 5;
+        notes.add('Careful — a blind 3-bets ${_pct(maxThreeBet)}, so the very '
+            'bottom of your steal range just gets blown off the pot.');
+      }
     }
 
-    final stationBehind = _strongest(ctx.playersBehind,
-        (p) => p.vpip >= 40 && p.pfr < 15 && !p.isGenericBot, (p) => p.vpip);
-    if (stationBehind != null) {
+    // ── Aggressive player still to act (much worse on your direct left) ──
+    // Prefer the position-tagged list; fall back to untagged playersBehind.
+    final behind = ctx.behindDetail.isNotEmpty
+        ? ctx.behindDetail
+        : ctx.playersBehind
+            .map((p) => DrillSeatRef(
+                profile: p,
+                positionGroup: '',
+                isBlind: false,
+                isDirectLeft: false))
+            .toList();
+    DrillSeatRef? aggro;
+    for (final r in behind) {
+      if (r.profile.isGenericBot || r.profile.threeBet < 10 || r.isBlind) {
+        continue; // blinds handled above
+      }
+      if (aggro == null || r.profile.threeBet > aggro.profile.threeBet) {
+        aggro = r;
+      }
+    }
+    if (aggro != null) {
+      final penalty = aggro.isDirectLeft ? 6.0 : 3.0;
+      openThresh -= penalty;
+      final where =
+          aggro.isDirectLeft ? 'on your direct left' : 'still to act behind you';
+      notes.add('${aggro.profile.name} 3-bets ${_pct(aggro.profile.threeBet)} '
+          '$where (${aggro.profile.confidenceLabel}) — tighten your opens and '
+          'be ready to 4-bet or fold, don\'t open-fold the bottom of your range.');
+    }
+
+    // ── Loose-passive caller behind: value over thin steals ──
+    final station = _strongest(
+        ctx.playersBehind,
+        (p) => p.vpip >= 42 && p.pfr < 15 && !p.isGenericBot,
+        (p) => p.vpip);
+    if (station != null && (aggro == null)) {
       openThresh -= 2;
-      notes.add('${stationBehind.name} plays ${_pct(stationBehind.vpip)} of '
-          'hands and rarely folds preflop — open hands that flop well, skip thin steals.');
+      notes.add('${station.name} calls far too much (VPIP ${_pct(station.vpip)}) '
+          '— favour hands that flop strong top pairs over pure steal trash.');
     }
-    openThresh = openThresh.clamp(8.0, 60.0).toDouble();
+
+    openThresh = openThresh.clamp(7.0, 70.0).toDouble();
+
+    // Always say something about the actual lineup, so feedback never reads
+    // like a bare GTO chart.
+    if (notes.isEmpty) {
+      notes.add(_lineupFallbackNote(ctx, isStealSeat));
+    }
 
     final inRange = DrillHandStrength.inTopPercent(ctx.handClass, openThresh);
     final recommended = inRange ? 'raise' : 'fold';
@@ -82,6 +150,37 @@ class DrillGrader {
     );
     return _withSizingNote(result, action, raiseToBB,
         idealTo: 2.5, label: 'open', stackBB: ctx.stackBB);
+  }
+
+  /// A lineup-aware sentence for when no specific exploit rule fired, so the
+  /// open feedback still references the real table rather than pure theory.
+  static String _lineupFallbackNote(
+      DrillDecisionContext ctx, bool isStealSeat) {
+    final blinds =
+        ctx.blindsBehind.where((b) => !b.profile.isGenericBot).toList();
+    if (isStealSeat && blinds.isNotEmpty) {
+      final avgVpip =
+          blinds.map((b) => b.profile.vpip).reduce((a, b) => a + b) /
+              blinds.length;
+      final names = _nameList(blinds.map((b) => b.profile.name).toList());
+      return '$names in the blinds play a fairly standard VPIP ${_pct(avgVpip)} '
+          '— no glaring leak to attack, so open a solid ${_posName(ctx.positionGroup)} range.';
+    }
+    final reads =
+        ctx.playersBehind.where((p) => !p.isGenericBot).toList();
+    if (reads.isNotEmpty) {
+      final avgVpip =
+          reads.map((p) => p.vpip).reduce((a, b) => a + b) / reads.length;
+      final tone = avgVpip <= 22
+          ? 'tight'
+          : avgVpip >= 32
+              ? 'loose'
+              : 'fairly standard';
+      return 'The players behind you are $tone (avg VPIP ${_pct(avgVpip)}) — '
+          'stick to a disciplined ${_posName(ctx.positionGroup)} opening range.';
+    }
+    return 'No reads yet on the players behind you — play a solid default '
+        '${_posName(ctx.positionGroup)} range until they show tendencies.';
   }
 
   // ── Limped pot ──────────────────────────────────────────────────────
@@ -380,6 +479,8 @@ class DrillGrader {
       heroAction: action,
       recommendedAction: recommended,
       explanation: '$lead ${detail.join(' ')}',
+      handTopPercent: top,
+      rangePercent: boundary,
     );
   }
 
@@ -407,7 +508,17 @@ class DrillGrader {
       heroAction: result.heroAction,
       recommendedAction: result.recommendedAction,
       explanation: '${result.explanation} $note',
+      handTopPercent: result.handTopPercent,
+      rangePercent: result.rangePercent,
     );
+  }
+
+  /// Joins names like "Tom", "Tom & Dave", "Tom, Dave & Sue".
+  static String _nameList(List<String> names) {
+    if (names.isEmpty) return 'They';
+    if (names.length == 1) return names.first;
+    if (names.length == 2) return '${names[0]} & ${names[1]}';
+    return '${names.sublist(0, names.length - 1).join(', ')} & ${names.last}';
   }
 
   static DrillVillainProfile? _strongest(
