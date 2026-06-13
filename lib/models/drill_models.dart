@@ -240,19 +240,31 @@ class DrillDecisionContext {
 
 enum DrillGrade { correct, ok, mistake }
 
-/// Grader verdict for one hero decision.
+/// Grader verdict for one hero decision, evaluated two ways:
+/// a baseline **GTO** line (opponent-agnostic, driven only by position and
+/// stack depth) and an **exploit** line (the GTO baseline adjusted for the
+/// actual opponents at the table and their tendencies). The hero's action is
+/// graded against the exploit line — that's the point of the trainer — but
+/// both are shown so the divergence is the teaching moment.
 class DrillGradeResult {
   final DrillGrade grade;
   final String heroAction; // 'fold' | 'check' | 'call' | 'raise'
-  final String recommendedAction;
-  final String explanation;
+  final String recommendedAction; // = exploitAction (primary target)
+  final String explanation; // verdict lead + exploit reason (for summaries)
 
-  /// Transparency: where the dealt hand ranks among all 169 combos
-  /// (0 = AA, 100 = worst) and the top-% range boundary the decision was
-  /// graded against, after opponent/position adjustments. Lets the UI show
-  /// the actual math behind a verdict.
+  /// Where the dealt hand ranks among all 169 combos (0 = AA, 100 = worst).
   final double handTopPercent;
+
+  /// Kept for back-compat: equals [exploitRangePercent].
   final double rangePercent;
+
+  // ── Dual evaluation ──
+  final String gtoAction;
+  final double gtoRangePercent;
+  final String gtoReason;
+  final String exploitAction;
+  final double exploitRangePercent;
+  final String exploitReason;
 
   const DrillGradeResult({
     required this.grade,
@@ -261,7 +273,37 @@ class DrillGradeResult {
     required this.explanation,
     this.handTopPercent = 0,
     this.rangePercent = 0,
+    this.gtoAction = 'fold',
+    this.gtoRangePercent = 0,
+    this.gtoReason = '',
+    this.exploitAction = 'fold',
+    this.exploitRangePercent = 0,
+    this.exploitReason = '',
   });
+
+  /// True when the exploitative line matches the GTO baseline.
+  bool get linesAgree => gtoAction == exploitAction;
+
+  DrillGradeResult copyWith({
+    DrillGrade? grade,
+    String? explanation,
+    String? exploitReason,
+  }) {
+    return DrillGradeResult(
+      grade: grade ?? this.grade,
+      heroAction: heroAction,
+      recommendedAction: recommendedAction,
+      explanation: explanation ?? this.explanation,
+      handTopPercent: handTopPercent,
+      rangePercent: rangePercent,
+      gtoAction: gtoAction,
+      gtoRangePercent: gtoRangePercent,
+      gtoReason: gtoReason,
+      exploitAction: exploitAction,
+      exploitRangePercent: exploitRangePercent,
+      exploitReason: exploitReason ?? this.exploitReason,
+    );
+  }
 }
 
 /// One graded hero decision, kept for the session summary.

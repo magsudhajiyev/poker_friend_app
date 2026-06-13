@@ -1,14 +1,26 @@
 import '../models/drill_models.dart';
 import 'drill_hand_strength.dart';
 
-/// Grades hero decisions in training drills against simple, explainable
-/// exploit heuristics.
+/// One recommended line (GTO baseline or exploit-adjusted) for a decision.
+class _Line {
+  final String action; // 'raise' | 'call' | 'check' | 'fold'
+  final double boundary; // primary range % boundary (for the percentile UI)
+  final String reason;
+  const _Line(this.action, this.boundary, this.reason);
+}
+
+/// Grades hero decisions in training drills two ways and shows both:
 ///
-/// Ranges are expressed as "top X% of combos" cutoffs (via
-/// DrillHandStrength). A small set of deterministic rules shifts those
-/// cutoffs based on the measured tendencies of the opponents in the pot, and
-/// every fired rule contributes a human-readable note that names the player
-/// and the stat — that explanation IS the product.
+/// 1. **GTO** — an opponent-agnostic baseline driven only by position and
+///    stack depth (the "what a solver-ish default would do here" line).
+/// 2. **Exploit** — that baseline shifted by the measured tendencies of the
+///    actual opponents at the table, with a human note naming the player and
+///    the stat.
+///
+/// The verdict (Correct/Close/Mistake) is graded against the **exploit** line,
+/// since exploitation is the whole point of the trainer — but both lines are
+/// returned so the divergence is visible and teachable. Ranges are "top X% of
+/// combos" cutoffs via [DrillHandStrength].
 class DrillGrader {
   DrillGrader._();
 
@@ -41,20 +53,49 @@ class DrillGrader {
     }
   }
 
+  // ── Decision helpers (thresholds → action) ──────────────────────────
+
+  static _Line _openLine(String hand, double thresh, String reason) {
+    final inRange = DrillHandStrength.inTopPercent(hand, thresh);
+    return _Line(inRange ? 'raise' : 'fold', thresh, reason);
+  }
+
+  static _Line _limpLine(
+      String hand, double isoThresh, bool canCheck, String reason) {
+    final overlimp = isoThresh + 12;
+    if (DrillHandStrength.inTopPercent(hand, isoThresh)) {
+      return _Line('raise', isoThresh, reason);
+    }
+    if (canCheck) return _Line('check', isoThresh, reason);
+    if (DrillHandStrength.inTopPercent(hand, overlimp)) {
+      return _Line('call', overlimp, reason);
+    }
+    return _Line('fold', overlimp, reason);
+  }
+
+  /// Tiered raise/call/fold spot (facing a raise, or a 3-bet).
+  static _Line _tieredLine(
+      String hand, double raiseThresh, double callThresh, String reason) {
+    final top = DrillHandStrength.topPercent(hand);
+    if (top <= raiseThresh) return _Line('raise', raiseThresh, reason);
+    if (top <= callThresh) return _Line('call', callThresh, reason);
+    return _Line('fold', callThresh, reason);
+  }
+
   // ── Unopened pot ────────────────────────────────────────────────────
 
   static DrillGradeResult _gradeUnopened(
       DrillDecisionContext ctx, String action, double? raiseToBB) {
-    final notes = <String>[];
-    double openThresh = _openThreshold[ctx.positionGroup] ?? 20;
-    final isStealSeat = ctx.positionGroup == 'CO' ||
-        ctx.positionGroup == 'BTN' ||
-        ctx.positionGroup == 'SB';
+    final pos = ctx.positionGroup;
+    final gtoThresh = _openThreshold[pos] ?? 20;
+    final gto = _openLine(ctx.handClass, gtoThresh,
+        'GTO opens roughly the top ${_pct(gtoThresh)} from ${_posName(pos)}.');
 
-    // ── Steal adjustment based on who actually sits in the blinds ──
-    // This is the core live exploit: a tight/passive player in the BB while
-    // you're on the BTN means you can open almost anything; a wide-defending
-    // or 3-bet-happy blind means tighten.
+    // ── Exploit: shift the open range for the actual lineup ──
+    final notes = <String>[];
+    double openThresh = gtoThresh;
+    final isStealSeat = pos == 'CO' || pos == 'BTN' || pos == 'SB';
+
     final blinds =
         ctx.blindsBehind.where((b) => !b.profile.isGenericBot).toList();
     if (isStealSeat && blinds.isNotEmpty) {
@@ -67,10 +108,9 @@ class DrillGrader {
       final plural = blinds.length > 1;
 
       if (avgVpip <= 24) {
-        final bonus = ((24 - avgVpip) * 1.1).clamp(0.0, 22.0).toDouble();
-        openThresh += bonus;
+        openThresh += ((24 - avgVpip) * 1.1).clamp(0.0, 22.0).toDouble();
         notes.add('$names ${plural ? 'fold' : 'folds'} the blinds a lot '
-            '(VPIP ${_pct(avgVpip)}) — steal relentlessly from ${_posName(ctx.positionGroup)}, '
+            '(VPIP ${_pct(avgVpip)}) — steal relentlessly from ${_posName(pos)}, '
             'open any halfway-playable hand.');
       } else if (avgVpip >= 34) {
         openThresh -= 3;
@@ -85,8 +125,6 @@ class DrillGrader {
       }
     }
 
-    // ── Aggressive player still to act (much worse on your direct left) ──
-    // Prefer the position-tagged list; fall back to untagged playersBehind.
     final behind = ctx.behindDetail.isNotEmpty
         ? ctx.behindDetail
         : ctx.playersBehind
@@ -99,15 +137,14 @@ class DrillGrader {
     DrillSeatRef? aggro;
     for (final r in behind) {
       if (r.profile.isGenericBot || r.profile.threeBet < 10 || r.isBlind) {
-        continue; // blinds handled above
+        continue;
       }
       if (aggro == null || r.profile.threeBet > aggro.profile.threeBet) {
         aggro = r;
       }
     }
     if (aggro != null) {
-      final penalty = aggro.isDirectLeft ? 6.0 : 3.0;
-      openThresh -= penalty;
+      openThresh -= aggro.isDirectLeft ? 6.0 : 3.0;
       final where =
           aggro.isDirectLeft ? 'on your direct left' : 'still to act behind you';
       notes.add('${aggro.profile.name} 3-bets ${_pct(aggro.profile.threeBet)} '
@@ -115,45 +152,25 @@ class DrillGrader {
           'be ready to 4-bet or fold, don\'t open-fold the bottom of your range.');
     }
 
-    // ── Loose-passive caller behind: value over thin steals ──
     final station = _strongest(
         ctx.playersBehind,
         (p) => p.vpip >= 42 && p.pfr < 15 && !p.isGenericBot,
         (p) => p.vpip);
-    if (station != null && (aggro == null)) {
+    if (station != null && aggro == null) {
       openThresh -= 2;
       notes.add('${station.name} calls far too much (VPIP ${_pct(station.vpip)}) '
           '— favour hands that flop strong top pairs over pure steal trash.');
     }
 
     openThresh = openThresh.clamp(7.0, 70.0).toDouble();
+    final exploitReason =
+        notes.isEmpty ? _lineupFallbackNote(ctx, isStealSeat) : notes.join(' ');
+    final exploit = _openLine(ctx.handClass, openThresh, exploitReason);
 
-    // Always say something about the actual lineup, so feedback never reads
-    // like a bare GTO chart.
-    if (notes.isEmpty) {
-      notes.add(_lineupFallbackNote(ctx, isStealSeat));
-    }
-
-    final inRange = DrillHandStrength.inTopPercent(ctx.handClass, openThresh);
-    final recommended = inRange ? 'raise' : 'fold';
-    final baseReason = inRange
-        ? '${ctx.handClass} is inside the top ${_pct(openThresh)} you should open from ${_posName(ctx.positionGroup)}.'
-        : '${ctx.handClass} is outside a ${_posName(ctx.positionGroup)} opening range (top ${_pct(openThresh)}).';
-
-    var result = _compare(
-      ctx: ctx,
-      action: action,
-      recommended: recommended,
-      boundary: openThresh,
-      baseReason: baseReason,
-      notes: notes,
-    );
-    return _withSizingNote(result, action, raiseToBB,
-        idealTo: 2.5, label: 'open', stackBB: ctx.stackBB);
+    return _finalize(ctx, action, raiseToBB,
+        gto: gto, exploit: exploit, sizingIdealTo: 2.5, sizingLabel: 'open');
   }
 
-  /// A lineup-aware sentence for when no specific exploit rule fired, so the
-  /// open feedback still references the real table rather than pure theory.
   static String _lineupFallbackNote(
       DrillDecisionContext ctx, bool isStealSeat) {
     final blinds =
@@ -164,10 +181,9 @@ class DrillGrader {
               blinds.length;
       final names = _nameList(blinds.map((b) => b.profile.name).toList());
       return '$names in the blinds play a fairly standard VPIP ${_pct(avgVpip)} '
-          '— no glaring leak to attack, so open a solid ${_posName(ctx.positionGroup)} range.';
+          '— no glaring leak to attack, so the exploit matches the GTO open.';
     }
-    final reads =
-        ctx.playersBehind.where((p) => !p.isGenericBot).toList();
+    final reads = ctx.playersBehind.where((p) => !p.isGenericBot).toList();
     if (reads.isNotEmpty) {
       final avgVpip =
           reads.map((p) => p.vpip).reduce((a, b) => a + b) / reads.length;
@@ -177,81 +193,88 @@ class DrillGrader {
               ? 'loose'
               : 'fairly standard';
       return 'The players behind you are $tone (avg VPIP ${_pct(avgVpip)}) — '
-          'stick to a disciplined ${_posName(ctx.positionGroup)} opening range.';
+          'no big deviation from the GTO open is warranted.';
     }
-    return 'No reads yet on the players behind you — play a solid default '
-        '${_posName(ctx.positionGroup)} range until they show tendencies.';
+    return 'No reads yet on the players behind you — the exploit matches the '
+        'GTO baseline until they show tendencies.';
   }
 
   // ── Limped pot ──────────────────────────────────────────────────────
 
   static DrillGradeResult _gradeVsLimpers(
       DrillDecisionContext ctx, String action, double? raiseToBB) {
-    final notes = <String>[];
+    final pos = ctx.positionGroup;
     final limperCount = ctx.limpers.length;
-    double isoThresh =
-        (_openThreshold[ctx.positionGroup] ?? 20) + 4 + 2.0 * limperCount;
-    if (ctx.positionGroup == 'BB') isoThresh = 16 + 2.0 * limperCount;
+    final canCheck = ctx.toCallBB <= 0;
+    final plural = limperCount > 1;
 
+    double baseIso = (_openThreshold[pos] ?? 20) + 4 + 2.0 * limperCount;
+    if (pos == 'BB') baseIso = 16 + 2.0 * limperCount;
+    baseIso = baseIso.clamp(10.0, 65.0).toDouble();
+    final gto = _limpLine(
+        ctx.handClass,
+        baseIso,
+        canCheck,
+        'GTO iso-raises about the top ${_pct(baseIso)} over '
+        '$limperCount limper${plural ? 's' : ''} and takes a free flop with the rest.');
+
+    // Exploit
+    final notes = <String>[];
+    double isoThresh = baseIso;
     final loosePassive = _strongest(ctx.limpers,
         (p) => p.vpip >= 38 && p.pfr <= 15 && !p.isGenericBot, (p) => p.vpip);
     if (loosePassive != null) {
       isoThresh += 4;
       notes.add('${loosePassive.name} limps into most pots '
           '(VPIP ${_pct(loosePassive.vpip)}, ${loosePassive.confidenceLabel}) — '
-          'isolate him wide and take the betting lead.');
+          'isolate wide and take the betting lead.');
     }
     isoThresh = isoThresh.clamp(10.0, 65.0).toDouble();
+    final exploitReason = notes.isEmpty
+        ? 'The limper${plural ? 's are' : ' is'} nothing special — iso a standard '
+            'value range and check back the rest.'
+        : notes.join(' ');
+    final exploit = _limpLine(ctx.handClass, isoThresh, canCheck, exploitReason);
 
-    final overlimpCeiling = isoThresh + 12;
-    final inIso = DrillHandStrength.inTopPercent(ctx.handClass, isoThresh);
-    final canCheck = ctx.toCallBB <= 0;
-
-    final String recommended;
-    if (inIso) {
-      recommended = 'raise';
-    } else if (canCheck) {
-      recommended = 'check';
-    } else if (DrillHandStrength.inTopPercent(
-        ctx.handClass, overlimpCeiling)) {
-      recommended = 'call';
-    } else {
-      recommended = 'fold';
-    }
-
-    final baseReason = inIso
-        ? 'With $limperCount limper${limperCount > 1 ? 's' : ''} in, ${ctx.handClass} is a clear isolation raise — punish the dead money.'
-        : canCheck
-            ? 'Take the free flop — ${ctx.handClass} isn\'t strong enough to bloat a limped pot.'
-            : DrillHandStrength.inTopPercent(ctx.handClass, overlimpCeiling)
-                ? '${ctx.handClass} plays fine as an overlimp, but isn\'t strong enough to iso-raise.'
-                : '${ctx.handClass} isn\'t worth a big blind even in a limped pot.';
-
-    var result = _compare(
-      ctx: ctx,
-      action: action,
-      recommended: recommended,
-      boundary: isoThresh,
-      baseReason: baseReason,
-      notes: notes,
-    );
-    return _withSizingNote(result, action, raiseToBB,
-        idealTo: 3.0 + limperCount, label: 'iso-raise', stackBB: ctx.stackBB);
+    return _finalize(ctx, action, raiseToBB,
+        gto: gto,
+        exploit: exploit,
+        sizingIdealTo: 3.0 + limperCount,
+        sizingLabel: 'iso-raise');
   }
 
   // ── Facing a single raise ───────────────────────────────────────────
 
   static DrillGradeResult _gradeVsRaise(
       DrillDecisionContext ctx, String action, double? raiseToBB) {
-    final notes = <String>[];
+    final pos = ctx.positionGroup;
     final opener = ctx.opener;
-    double threeBetThresh = 5;
-    double callThresh = switch (ctx.positionGroup) {
+
+    // Structural baseline (position + stack) = GTO
+    double baseThreeBet = 5;
+    double baseCall = switch (pos) {
       'BB' => 28,
       'SB' => 10,
       _ => 14,
     };
+    String? stackNote;
+    if (ctx.stackBB <= 25) {
+      baseThreeBet += 2;
+      baseCall = pos == 'BB' ? 18 : 6;
+      stackNote = 'At ${ctx.stackBB.toStringAsFixed(0)}BB this is '
+          '3-bet-jam-or-fold territory — flatting burns your stack.';
+    }
+    baseThreeBet = baseThreeBet.clamp(2.0, 30.0).toDouble();
+    baseCall = baseCall.clamp(baseThreeBet, 45.0).toDouble();
+    final gtoReason =
+        'GTO defends about the top ${_pct(baseCall)} versus an open, '
+        '3-betting the top ${_pct(baseThreeBet)}.${stackNote != null ? ' $stackNote' : ''}';
+    final gto = _tieredLine(ctx.handClass, baseThreeBet, baseCall, gtoReason);
 
+    // Exploit: opponent reads on top of the structural baseline
+    final notes = <String>[];
+    double threeBetThresh = baseThreeBet;
+    double callThresh = baseCall;
     if (opener != null && !opener.isGenericBot) {
       if (opener.fold3bet >= 60) {
         threeBetThresh += 6;
@@ -276,216 +299,174 @@ class DrillGrader {
             'his range is wide, so play back with hands you\'d normally fold.');
       }
     }
-
-    final shortStacked = ctx.stackBB <= 25;
-    if (shortStacked) {
-      threeBetThresh += 2;
-      callThresh = ctx.positionGroup == 'BB' ? 18 : 6;
-      notes.add('At ${ctx.stackBB.toStringAsFixed(0)}BB this is '
-          '3-bet-jam-or-fold territory — flatting burns your stack.');
-    }
     threeBetThresh = threeBetThresh.clamp(2.0, 30.0).toDouble();
-    callThresh =
-        callThresh.clamp(threeBetThresh, 45.0).toDouble();
+    callThresh = callThresh.clamp(threeBetThresh, 45.0).toDouble();
+    final exploitReason = notes.isNotEmpty
+        ? notes.join(' ')
+        : (stackNote ??
+            'No strong read on the opener — defend a solid default range.');
+    final exploit =
+        _tieredLine(ctx.handClass, threeBetThresh, callThresh, exploitReason);
 
-    final top = DrillHandStrength.topPercent(ctx.handClass);
-    final String recommended;
-    if (top <= threeBetThresh) {
-      recommended = 'raise';
-    } else if (top <= callThresh) {
-      recommended = 'call';
-    } else {
-      recommended = 'fold';
-    }
-
-    final baseReason = switch (recommended) {
-      'raise' =>
-        '${ctx.handClass} is in your 3-bet range here (top ${_pct(threeBetThresh)}).',
-      'call' =>
-        '${ctx.handClass} is strong enough to continue but not to re-raise — flat and play a pot in position when you can.',
-      _ =>
-        '${ctx.handClass} doesn\'t make the cut against a raise (continue with roughly the top ${_pct(callThresh)}).',
-    };
-
-    final boundary =
-        recommended == 'raise' ? threeBetThresh : callThresh;
-    var result = _compare(
-      ctx: ctx,
-      action: action,
-      recommended: recommended,
-      boundary: boundary,
-      baseReason: baseReason,
-      notes: notes,
-      secondaryBoundary:
-          recommended == 'fold' ? threeBetThresh : null,
-    );
-    return _withSizingNote(result, action, raiseToBB,
-        idealTo: ctx.currentBetBB * 3, label: '3-bet', stackBB: ctx.stackBB);
+    return _finalize(ctx, action, raiseToBB,
+        gto: gto,
+        exploit: exploit,
+        secondaryBoundary: threeBetThresh,
+        sizingIdealTo: ctx.currentBetBB * 3,
+        sizingLabel: '3-bet');
   }
 
   // ── Hero opened, now facing a re-raise ──────────────────────────────
 
   static DrillGradeResult _gradeVs3betAsAggressor(
       DrillDecisionContext ctx, String action) {
-    final notes = <String>[];
     final threeBettor = ctx.opener;
-    double fourBetThresh = 2.5;
-    double continueThresh = 9;
 
+    double baseFourBet = 2.5;
+    double baseContinue = 9;
+    String? stackNote;
+    if (ctx.stackBB <= 25) {
+      stackNote =
+          'Short-stacked: continuing means getting it in — jam or fold, never flat.';
+    }
+    baseFourBet = baseFourBet.clamp(1.0, 10.0).toDouble();
+    baseContinue = baseContinue.clamp(baseFourBet, 25.0).toDouble();
+    final gto = _tieredLine(
+        ctx.handClass,
+        baseFourBet,
+        baseContinue,
+        'GTO continues about the top ${_pct(baseContinue)} against a 3-bet, '
+        '4-betting the top ${_pct(baseFourBet)}.${stackNote != null ? ' $stackNote' : ''}');
+
+    final notes = <String>[];
+    double fourBetThresh = baseFourBet;
+    double continueThresh = baseContinue;
     if (threeBettor != null && !threeBettor.isGenericBot) {
       if (threeBettor.threeBet >= 9) {
         fourBetThresh += 1.5;
         continueThresh += 5;
         notes.add('${threeBettor.name} 3-bets ${_pct(threeBettor.threeBet)} '
-            '(${threeBettor.confidenceLabel}) — too wide to give him your good hands, continue lighter.');
+            '(${threeBettor.confidenceLabel}) — too wide to fold to, continue lighter and 4-bet more.');
       } else if (threeBettor.threeBet <= 4.5) {
         continueThresh -= 3;
         notes.add('${threeBettor.name} almost never 3-bets '
-            '(${_pct(threeBettor.threeBet)}) — this re-raise is the top of the deck, fold everything but premiums.');
+            '(${_pct(threeBettor.threeBet)}) — this is the top of the deck, fold everything but premiums.');
       }
     }
-    if (ctx.stackBB <= 25) {
-      notes.add('Short-stacked: continuing means getting it in — '
-          'jam or fold, never flat.');
-    }
     fourBetThresh = fourBetThresh.clamp(1.0, 10.0).toDouble();
-    continueThresh =
-        continueThresh.clamp(fourBetThresh, 25.0).toDouble();
+    continueThresh = continueThresh.clamp(fourBetThresh, 25.0).toDouble();
+    final exploitReason = notes.isNotEmpty
+        ? notes.join(' ')
+        : (stackNote ??
+            'No strong read on the 3-bettor — continue a solid default range.');
+    final exploit =
+        _tieredLine(ctx.handClass, fourBetThresh, continueThresh, exploitReason);
 
-    final top = DrillHandStrength.topPercent(ctx.handClass);
-    final String recommended;
-    if (top <= fourBetThresh) {
-      recommended = 'raise';
-    } else if (top <= continueThresh) {
-      recommended = 'call';
-    } else {
-      recommended = 'fold';
-    }
-
-    final baseReason = switch (recommended) {
-      'raise' => '${ctx.handClass} is a premium — 4-bet for value.',
-      'call' =>
-        '${ctx.handClass} is strong enough to see a flop against the 3-bet.',
-      _ =>
-        'Opening ${ctx.handClass} was fine, but it can\'t continue against a 3-bet — let it go.',
-    };
-
-    return _compare(
-      ctx: ctx,
-      action: action,
-      recommended: recommended,
-      boundary: recommended == 'raise' ? fourBetThresh : continueThresh,
-      baseReason: baseReason,
-      notes: notes,
-      secondaryBoundary: recommended == 'fold' ? fourBetThresh : null,
-    );
+    return _finalize(ctx, action, null,
+        gto: gto, exploit: exploit, secondaryBoundary: fourBetThresh);
   }
 
   // ── Cold-facing a 3-bet (hero hasn't raised) ────────────────────────
 
   static DrillGradeResult _gradeVs3betCold(
       DrillDecisionContext ctx, String action) {
+    const baseContinue = 3.0;
+    const raiseThresh = 1.5;
+    final gto = _tieredLine(ctx.handClass, raiseThresh, baseContinue,
+        'GTO enters a cold 3-bet pot with only premiums — about the top ${_pct(baseContinue)}.');
+
     final notes = <String>[];
-    double continueThresh = 3;
+    double continueThresh = baseContinue;
     if (ctx.opener != null &&
         !ctx.opener!.isGenericBot &&
         ctx.opener!.vpip >= 33) {
       continueThresh += 2;
-      notes.add('Both raises came from loose players — you can continue '
-          'slightly wider than usual, but this is still a premium-only spot.');
+      notes.add('${ctx.opener!.name} and the raiser are both loose, so you can '
+          'continue a touch wider — but this is still a premium-only spot.');
     }
+    continueThresh = continueThresh.clamp(raiseThresh, 25.0).toDouble();
+    final exploitReason = notes.isNotEmpty
+        ? notes.join(' ')
+        : 'A raise and a re-raise mean two strong ranges — fold everything but premiums.';
+    final exploit =
+        _tieredLine(ctx.handClass, raiseThresh, continueThresh, exploitReason);
 
-    final top = DrillHandStrength.topPercent(ctx.handClass);
-    final String recommended;
-    if (top <= 1.5) {
-      recommended = 'raise';
-    } else if (top <= continueThresh) {
-      recommended = 'call';
-    } else {
-      recommended = 'fold';
-    }
-
-    final baseReason = recommended == 'fold'
-        ? 'A raise and a re-raise in front of you means two strong ranges — ${ctx.handClass} is an easy fold.'
-        : '${ctx.handClass} is one of the few hands that can profitably enter a 3-bet pot cold.';
-
-    return _compare(
-      ctx: ctx,
-      action: action,
-      recommended: recommended,
-      boundary: continueThresh,
-      baseReason: baseReason,
-      notes: notes,
-      secondaryBoundary: recommended == 'fold' ? 1.5 : null,
-    );
+    return _finalize(ctx, action, null,
+        gto: gto, exploit: exploit, secondaryBoundary: raiseThresh);
   }
 
-  // ── Shared comparison / message building ────────────────────────────
+  // ── Verdict assembly ────────────────────────────────────────────────
 
-  /// Compares the hero's action to the recommendation. When they differ,
-  /// hands within [_closeBand] points of the relevant range boundary grade
-  /// as "ok". [secondaryBoundary] covers the raise boundary when the
-  /// recommendation is fold (so a near-3-bet-range raise isn't a "mistake").
-  static DrillGradeResult _compare({
-    required DrillDecisionContext ctx,
-    required String action,
-    required String recommended,
-    required double boundary,
-    required String baseReason,
-    required List<String> notes,
+  /// Grades the hero's [action] against the **exploit** line and packages
+  /// both lines. [secondaryBoundary] lets a near-raise-threshold raise count
+  /// as "close" when the exploit line says fold.
+  static DrillGradeResult _finalize(
+    DrillDecisionContext ctx,
+    String action,
+    double? raiseToBB, {
+    required _Line gto,
+    required _Line exploit,
     double? secondaryBoundary,
+    double? sizingIdealTo,
+    String? sizingLabel,
   }) {
-    // check and call are equivalent "passive continue" when there's nothing
-    // to call (BB option spots)
-    final normalizedAction =
-        (action == 'check' && recommended == 'call') ? 'call' : action;
-    final normalizedRecommended =
-        (recommended == 'check' && action == 'call' && ctx.toCallBB <= 0)
-            ? 'call'
-            : recommended;
-
     final top = DrillHandStrength.topPercent(ctx.handClass);
 
+    // check/call are the same "passive continue" when nothing is owed
+    final normAction =
+        (action == 'check' && exploit.action == 'call') ? 'call' : action;
+    final normRec =
+        (exploit.action == 'check' && action == 'call' && ctx.toCallBB <= 0)
+            ? 'call'
+            : exploit.action;
+
     DrillGrade grade;
-    if (normalizedAction == normalizedRecommended) {
+    if (normAction == normRec) {
       grade = DrillGrade.correct;
     } else {
-      var nearBoundary = (top - boundary).abs() <= _closeBand;
-      if (!nearBoundary && secondaryBoundary != null && action == 'raise') {
-        nearBoundary = (top - secondaryBoundary).abs() <= _closeBand;
+      var near = (top - exploit.boundary).abs() <= _closeBand;
+      if (!near && secondaryBoundary != null && action == 'raise') {
+        near = (top - secondaryBoundary).abs() <= _closeBand;
       }
-      // Folding the BB option / checking instead of a thin iso is never
-      // more than a minor error... but folding when checking was free IS.
-      if (action == 'fold' && ctx.toCallBB <= 0) {
-        nearBoundary = false;
-      }
-      grade = nearBoundary ? DrillGrade.ok : DrillGrade.mistake;
+      if (action == 'fold' && ctx.toCallBB <= 0) near = false;
+      grade = near ? DrillGrade.ok : DrillGrade.mistake;
     }
 
-    final detail = [if (notes.isNotEmpty) notes.join(' ') else baseReason];
     final String lead;
     switch (grade) {
       case DrillGrade.correct:
-        lead = '${_actionWord(recommended)} is the right play.';
+        lead = '${_actionWord(exploit.action)} is the exploitative play.';
       case DrillGrade.ok:
         lead =
-            'Close spot — ${_actionWord(recommended).toLowerCase()} is slightly better here.';
+            'Close — ${_actionWord(exploit.action).toLowerCase()} is slightly better against this lineup.';
       case DrillGrade.mistake:
-        lead = '${_actionWord(recommended)} was the play.';
+        lead = '${_actionWord(exploit.action)} was the exploitative play.';
     }
 
-    return DrillGradeResult(
+    var result = DrillGradeResult(
       grade: grade,
       heroAction: action,
-      recommendedAction: recommended,
-      explanation: '$lead ${detail.join(' ')}',
+      recommendedAction: exploit.action,
+      explanation: '$lead ${exploit.reason}',
       handTopPercent: top,
-      rangePercent: boundary,
+      rangePercent: exploit.boundary,
+      gtoAction: gto.action,
+      gtoRangePercent: gto.boundary,
+      gtoReason: gto.reason,
+      exploitAction: exploit.action,
+      exploitRangePercent: exploit.boundary,
+      exploitReason: exploit.reason,
     );
+
+    if (sizingIdealTo != null && sizingLabel != null) {
+      result = _withSizingNote(result, action, raiseToBB,
+          idealTo: sizingIdealTo, label: sizingLabel, stackBB: ctx.stackBB);
+    }
+    return result;
   }
 
   /// Demotes a correct raise to "ok" when the sizing is far off, appending a
-  /// sizing tip.
+  /// sizing tip to both the headline and the exploit reasoning.
   static DrillGradeResult _withSizingNote(
       DrillGradeResult result, String action, double? raiseToBB,
       {required double idealTo,
@@ -503,15 +484,14 @@ class DrillGrader {
     final note = ratio < 0.7
         ? 'Size up: a $label around ${idealTo.toStringAsFixed(1)}BB charges the field properly — ${raiseToBB.toStringAsFixed(1)}BB invites the whole table along.'
         : 'That sizing is bigger than it needs to be — around ${idealTo.toStringAsFixed(1)}BB does the same job at a better price.';
-    return DrillGradeResult(
+    return result.copyWith(
       grade: DrillGrade.ok,
-      heroAction: result.heroAction,
-      recommendedAction: result.recommendedAction,
       explanation: '${result.explanation} $note',
-      handTopPercent: result.handTopPercent,
-      rangePercent: result.rangePercent,
+      exploitReason: '${result.exploitReason} $note',
     );
   }
+
+  // ── Small helpers ───────────────────────────────────────────────────
 
   /// Joins names like "Tom", "Tom & Dave", "Tom, Dave & Sue".
   static String _nameList(List<String> names) {

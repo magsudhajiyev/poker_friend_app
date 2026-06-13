@@ -609,4 +609,77 @@ void main() {
       expect(r.explanation, contains('SteadyEddie'));
     });
   });
+
+  group('DrillGrader dual GTO/exploit evaluation', () {
+    test('every verdict carries both a GTO and an exploit line', () {
+      final r = DrillGrader.grade(
+          ctx(handClass: 'AA', positionGroup: 'BTN'), 'raise',
+          raiseToBB: 2.5);
+      expect(r.gtoAction, isNotEmpty);
+      expect(r.exploitAction, isNotEmpty);
+      expect(r.gtoReason, isNotEmpty);
+      expect(r.exploitReason, isNotEmpty);
+    });
+
+    test('lines agree (and are flagged) when there is no read to exploit', () {
+      final r = DrillGrader.grade(
+          ctx(handClass: 'AA', positionGroup: 'BTN'), 'raise',
+          raiseToBB: 2.5);
+      expect(r.gtoAction, 'raise');
+      expect(r.exploitAction, 'raise');
+      expect(r.linesAgree, isTrue);
+    });
+
+    test('lines diverge: GTO fold but exploit open vs tight blinds', () {
+      final marginal = DrillHandStrength.allHandClasses.firstWhere((h) {
+        final t = DrillHandStrength.topPercent(h);
+        return t > 45 && t < 53;
+      });
+      final nit = profile(name: 'Nit', vpip: 10, pfr: 8, hands: 300);
+      final r = DrillGrader.grade(
+        ctx(
+          handClass: marginal,
+          positionGroup: 'BTN',
+          behindDetail: [seatRef(nit, pos: 'SB'), seatRef(nit, pos: 'BB')],
+        ),
+        'raise',
+        raiseToBB: 2.5,
+      );
+      expect(r.gtoAction, 'fold');
+      expect(r.exploitAction, 'raise');
+      expect(r.linesAgree, isFalse);
+      // Graded against the exploit line, raising is correct here
+      expect(r.grade, DrillGrade.correct);
+      expect(r.gtoRangePercent, lessThan(r.exploitRangePercent));
+    });
+
+    test('vs an open the GTO line is stack/position-only, exploit adds reads',
+        () {
+      // A hand outside the GTO 3-bet range (top 5%) but inside FoldyFred's
+      // widened one (top 11%): GTO flats, exploit 3-bets.
+      final hand = DrillHandStrength.allHandClasses.firstWhere((h) {
+        final t = DrillHandStrength.topPercent(h);
+        return t > 6 && t < 10;
+      });
+      final foldy = profile(name: 'FoldyFred', fold3bet: 78, hands: 250);
+      final r = DrillGrader.grade(
+        ctx(
+          handClass: hand,
+          positionGroup: 'BTN',
+          scenario: DrillScenario.vsRaise,
+          opener: foldy,
+          toCallBB: 2.5,
+          currentBetBB: 2.5,
+          potBB: 4,
+          raisesBeforeHero: 1,
+        ),
+        'raise',
+        raiseToBB: 7.5,
+      );
+      expect(r.gtoAction, 'call'); // GTO continues but doesn't re-raise
+      expect(r.exploitAction, 'raise'); // exploit 3-bets the foldy opener
+      expect(r.exploitReason, contains('FoldyFred'));
+      expect(r.gtoReason.toLowerCase(), contains('gto'));
+    });
+  });
 }

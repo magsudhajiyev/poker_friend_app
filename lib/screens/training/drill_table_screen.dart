@@ -667,6 +667,7 @@ class _DrillTableScreenState extends State<DrillTableScreen>
       DrillGrade.ok => (_gold, 'CLOSE'),
       DrillGrade.mistake => (_red, 'MISTAKE'),
     };
+    final diverge = !grade.linesAgree;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(14),
@@ -687,25 +688,59 @@ class _DrillTableScreenState extends State<DrillTableScreen>
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 1.0)),
+              const SizedBox(width: 8),
+              Text('· you chose ${grade.heroAction}',
+                  style: GoogleFonts.ibmPlexSans(
+                      color: Colors.white.withOpacity(0.45), fontSize: 12)),
               const Spacer(),
-              if (grade.rangePercent > 0)
-                Text(
-                  '${_engine.heroHandClass} top ${grade.handTopPercent.round()}% · range top ${grade.rangePercent.round()}%',
-                  style: GoogleFonts.robotoMono(
-                      color: Colors.white.withOpacity(0.45),
-                      fontSize: 10),
-                ),
+              Text(
+                '${_engine.heroHandClass} = top ${grade.handTopPercent.round()}%',
+                style: GoogleFonts.robotoMono(
+                    color: Colors.white.withOpacity(0.5), fontSize: 11),
+              ),
             ],
           ),
-          const SizedBox(height: 6),
+          if (diverge) ...[
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: _accent.withOpacity(0.12),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                'This lineup changes the play: GTO ${grade.gtoAction}s, exploit ${grade.exploitAction}s',
+                style: GoogleFonts.ibmPlexSans(
+                    color: _accent, fontSize: 12, fontWeight: FontWeight.w600),
+              ),
+            ),
+          ],
+          const SizedBox(height: 10),
           ConstrainedBox(
             constraints: BoxConstraints(
-                maxHeight: MediaQuery.of(context).size.height * 0.18),
+                maxHeight: MediaQuery.of(context).size.height * 0.26),
             child: SingleChildScrollView(
-              child: Text(
-                grade.explanation,
-                style: GoogleFonts.ibmPlexSans(
-                    color: Colors.white, fontSize: 14, height: 1.4),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _evalRow(
+                    'GTO',
+                    Colors.white.withOpacity(0.5),
+                    grade.gtoAction,
+                    grade.gtoRangePercent,
+                    grade.gtoReason,
+                    highlight: false,
+                  ),
+                  const SizedBox(height: 8),
+                  _evalRow(
+                    'EXPLOIT',
+                    _accent,
+                    grade.exploitAction,
+                    grade.exploitRangePercent,
+                    grade.exploitReason,
+                    highlight: diverge,
+                  ),
+                ],
               ),
             ),
           ),
@@ -732,6 +767,64 @@ class _DrillTableScreenState extends State<DrillTableScreen>
               ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  /// One line of the dual evaluation: a tag (GTO/EXPLOIT), the recommended
+  /// action coloured by type, the range cutoff, and the reasoning.
+  Widget _evalRow(String tag, Color tagColor, String action,
+      double rangePercent, String reason,
+      {required bool highlight}) {
+    final actionColor = switch (action) {
+      'raise' => _gold,
+      'call' || 'check' => _accent,
+      _ => _red,
+    };
+    return Container(
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: highlight ? _accent.withOpacity(0.07) : Colors.transparent,
+        borderRadius: BorderRadius.circular(10),
+        border: highlight
+            ? Border.all(color: _accent.withOpacity(0.3))
+            : null,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              SizedBox(
+                width: 64,
+                child: Text(tag,
+                    style: GoogleFonts.ibmPlexSans(
+                        color: tagColor,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.8)),
+              ),
+              Text(action.toUpperCase(),
+                  style: GoogleFonts.ibmPlexSans(
+                      color: actionColor,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700)),
+              const Spacer(),
+              if (rangePercent > 0 && rangePercent < 100)
+                Text('top ${rangePercent.round()}%',
+                    style: GoogleFonts.robotoMono(
+                        color: Colors.white.withOpacity(0.4), fontSize: 10)),
+            ],
+          ),
+          if (reason.isNotEmpty) ...[
+            const SizedBox(height: 3),
+            Text(reason,
+                style: GoogleFonts.ibmPlexSans(
+                    color: Colors.white.withOpacity(0.7),
+                    fontSize: 12,
+                    height: 1.35)),
+          ],
         ],
       ),
     );
