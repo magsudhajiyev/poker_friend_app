@@ -205,6 +205,15 @@ class DrillDecisionContext {
   final double potBB;
   final int raisesBeforeHero;
 
+  /// Profile of the player in the BB seat (null when hero is BB).
+  final DrillVillainProfile? bbProfile;
+
+  /// Profile of the player in the SB seat (null when hero is SB).
+  final DrillVillainProfile? sbProfile;
+
+  /// Whether hero acts after the last aggressor (positional advantage).
+  final bool isInPosition;
+
   const DrillDecisionContext({
     required this.handClass,
     required this.positionGroup,
@@ -218,6 +227,9 @@ class DrillDecisionContext {
     required this.currentBetBB,
     required this.potBB,
     required this.raisesBeforeHero,
+    this.bbProfile,
+    this.sbProfile,
+    this.isInPosition = false,
   });
 
   /// Live opponents in the blinds who still get to act after the hero —

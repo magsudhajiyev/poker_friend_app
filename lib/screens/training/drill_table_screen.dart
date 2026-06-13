@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../models/drill_models.dart';
 import '../../services/drill_engine.dart';
+import '../../widgets/hand_micro_animations.dart';
 import '../../widgets/poker_table_widget.dart';
 
 /// The drill loop: one preflop hand at a time against bots that play like
@@ -26,17 +27,24 @@ class DrillTableScreen extends StatefulWidget {
 
 enum _Phase { acting, feedback, handOver }
 
-class _DrillTableScreenState extends State<DrillTableScreen> {
+class _DrillTableScreenState extends State<DrillTableScreen>
+    with TickerProviderStateMixin {
   static const _accent = Color(0xFF89F1EC);
   static const _gold = Color(0xFFFFC857);
   static const _red = Color(0xFFE85D5D);
   static const _green = Color(0xFF54E98A);
+  static const _chipWhite = Color(0xFFCCCCCC);
 
   late final DrillEngine _engine;
   final Set<int> _foldedSeats = {};
   final Map<int, String> _lastAction = {}; // seat -> compact action label
   final List<String> _recentLines = []; // newest last, capped
   final List<DrillDecisionRecord> _records = [];
+
+  // Chip flight animation state
+  final List<_DrillChipFlight> _chipFlights = [];
+  final GlobalKey _tableAreaKey = GlobalKey();
+  int _chipSeed = 0;
 
   _Phase _phase = _Phase.handOver;
   DrillHeroTurn? _heroTurn;
@@ -55,9 +63,23 @@ class _DrillTableScreenState extends State<DrillTableScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) => _nextHand());
   }
 
+  @override
+  void dispose() {
+    for (final f in _chipFlights) {
+      f.controller.dispose();
+    }
+    super.dispose();
+  }
+
   // ── Drill flow ──────────────────────────────────────────────────────
 
   void _nextHand() {
+    // Dispose and clear lingering chip flights from previous hand
+    for (final f in _chipFlights) {
+      f.controller.dispose();
+    }
+    _chipFlights.clear();
+
     setState(() {
       _foldedSeats.clear();
       _lastAction.clear();
@@ -79,6 +101,9 @@ class _DrillTableScreenState extends State<DrillTableScreen> {
 
   void _consume(DrillHandUpdate update) {
     _lastUpdate = update;
+    // Collect seats that need chip flights this batch
+    final flightQueue = <(int seat, String action)>[];
+
     for (final e in update.newEvents) {
       if (e.action == 'folds') _foldedSeats.add(e.seat);
       _lastAction[e.seat] = _actionLabel(e);
@@ -89,6 +114,21 @@ class _DrillTableScreenState extends State<DrillTableScreen> {
         _recentLines.add('${e.name} (${e.position}) ${e.action}$amount');
         if (_recentLines.length > 3) _recentLines.removeAt(0);
       }
+
+      // Queue chip flight for money actions (not folds/checks)
+      if (e.action != 'folds' && e.action != 'checks') {
+        flightQueue.add((e.seat, e.action));
+      }
+    }
+
+    // Fire chip flights after the frame so layout positions are valid
+    if (flightQueue.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        for (final (seat, action) in flightQueue) {
+          _fireChipFlight(seat, action);
+        }
+      });
     }
 
     if (update.grade != null) {
@@ -284,16 +324,41 @@ class _DrillTableScreenState extends State<DrillTableScreen> {
     };
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      child: PokerTableWidget(
-        activeSeatMap: activeSeatMap,
-        buttonPosition: _engine.handNumber > 0 ? _engine.buttonSeat : null,
-        showDealerButton: _engine.handNumber > 0,
-        showLogo: false,
-        seatWidthFraction: 1.02,
-        seatHeightFraction: 0.86,
-        seatBuilder: (seatNumber, isActive) =>
-            isActive ? _buildSeat(seatNumber) : const SizedBox.shrink(),
-        centerContent: _buildPot(),
+      child: Stack(
+        key: _tableAreaKey,
+        children: [
+          PokerTableWidget(
+            activeSeatMap: activeSeatMap,
+            buttonPosition: _engine.handNumber > 0 ? _engine.buttonSeat : null,
+            showDealerButton: _engine.handNumber > 0,
+            showLogo: false,
+            seatWidthFraction: 1.02,
+            seatHeightFraction: 0.86,
+            seatBuilder: (seatNumber, isActive) =>
+                isActive ? _buildSeat(seatNumber) : const SizedBox.shrink(),
+            centerContent: _buildPot(),
+          ),
+          // Chip flight overlay — painted above the table
+          if (_chipFlights.isNotEmpty)
+            Positioned.fill(
+              child: IgnorePointer(
+                child: CustomPaint(
+                  painter: ChipFlightPainter(
+                    flights: _chipFlights
+                        .map((f) => ChipFlightFrame(
+                              start: f.start,
+                              end: f.end,
+                              color: f.color,
+                              progress: f.controller.value,
+                              seed: f.seed,
+                              chipCount: f.chipCount,
+                            ))
+                        .toList(),
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -404,6 +469,91 @@ class _DrillTableScreenState extends State<DrillTableScreen> {
         ],
       ),
     );
+  }
+
+  // ── Chip flight animations ─────────────────────────────────────────
+
+  void _fireChipFlight(int fromSeat, String action) {
+    final renderBox =
+        _tableAreaKey.currentContext?.findRenderObject() as RenderBox?;
+    if (renderBox == null) return;
+
+    final areaSize = renderBox.size;
+    final seatPos = PokerTableWidget.getSeatPosition(
+      fromSeat,
+      areaSize,
+      widthFraction: 1.02,
+      heightFraction: 0.86,
+    );
+    final potPos = Offset(areaSize.width / 2, areaSize.height / 2);
+
+    final color = _chipFlightColor(action);
+    final chipCount = _chipFlightCount(action);
+    final seed = _chipSeed++;
+
+    final controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
+
+    final flight = _DrillChipFlight(
+      controller: controller,
+      start: seatPos,
+      end: potPos,
+      color: color,
+      seed: seed,
+      chipCount: chipCount,
+    );
+
+    controller.addListener(() {
+      if (mounted) setState(() {});
+    });
+    controller.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        _chipFlights.remove(flight);
+        controller.dispose();
+        if (mounted) setState(() {});
+      }
+    });
+
+    _chipFlights.add(flight);
+    controller.forward();
+  }
+
+  Color _chipFlightColor(String action) {
+    switch (action) {
+      case 'posts SB':
+      case 'posts BB':
+        return _chipWhite;
+      case 'raises':
+      case '3-bets':
+      case '4-bets':
+        return _gold;
+      case 'jams':
+        return _red;
+      default: // calls, limps
+        return _accent;
+    }
+  }
+
+  int _chipFlightCount(String action) {
+    switch (action) {
+      case 'posts SB':
+        return 1;
+      case 'posts BB':
+        return 2;
+      case 'limps':
+      case 'calls':
+        return 3;
+      case 'raises':
+      case '3-bets':
+      case '4-bets':
+        return 4;
+      case 'jams':
+        return 5;
+      default:
+        return 2;
+    }
   }
 
   Color _actionColor(String label) {
@@ -705,6 +855,24 @@ class _DrillTableScreenState extends State<DrillTableScreen> {
       ),
     );
   }
+}
+
+class _DrillChipFlight {
+  final AnimationController controller;
+  final Offset start;
+  final Offset end;
+  final Color color;
+  final int seed;
+  final int chipCount;
+
+  const _DrillChipFlight({
+    required this.controller,
+    required this.start,
+    required this.end,
+    required this.color,
+    required this.seed,
+    required this.chipCount,
+  });
 }
 
 class _DrillSummarySheet extends StatelessWidget {
