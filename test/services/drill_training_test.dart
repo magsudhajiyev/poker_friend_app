@@ -5,6 +5,7 @@ import 'package:poker_logger/models/drill_models.dart';
 import 'package:poker_logger/models/opponent_stats.dart';
 import 'package:poker_logger/services/drill_engine.dart';
 import 'package:poker_logger/services/drill_grader.dart';
+import 'package:poker_logger/services/drill_gto_charts.dart';
 import 'package:poker_logger/services/drill_hand_strength.dart';
 import 'package:poker_logger/services/drill_opponent_profiler.dart';
 
@@ -541,11 +542,10 @@ void main() {
     });
 
     test('a marginal BTN hand becomes an open vs passive blinds', () {
-      // Find a hand outside a default BTN range but inside a widened one.
-      final marginal = DrillHandStrength.allHandClasses.firstWhere((h) {
-        final t = DrillHandStrength.topPercent(h);
-        return t > 45 && t < 53;
-      });
+      // A hand just outside the GTO BTN open but inside a widened range.
+      final gtoSet = DrillGtoCharts.openRange('BTN');
+      final marginal = DrillGtoCharts.widen(gtoSet, 12)
+          .firstWhere((h) => !gtoSet.contains(h));
       final nit = profile(name: 'Nit', vpip: 10, pfr: 8, hands: 300);
       final passive = ctx(
         handClass: marginal,
@@ -631,10 +631,9 @@ void main() {
     });
 
     test('lines diverge: GTO fold but exploit open vs tight blinds', () {
-      final marginal = DrillHandStrength.allHandClasses.firstWhere((h) {
-        final t = DrillHandStrength.topPercent(h);
-        return t > 45 && t < 53;
-      });
+      final gtoSet = DrillGtoCharts.openRange('BTN');
+      final marginal = DrillGtoCharts.widen(gtoSet, 12)
+          .firstWhere((h) => !gtoSet.contains(h));
       final nit = profile(name: 'Nit', vpip: 10, pfr: 8, hands: 300);
       final r = DrillGrader.grade(
         ctx(
@@ -680,6 +679,41 @@ void main() {
       expect(r.exploitAction, 'raise'); // exploit 3-bets the foldy opener
       expect(r.exploitReason, contains('FoldyFred'));
       expect(r.gtoReason.toLowerCase(), contains('gto'));
+    });
+  });
+
+  group('DrillGrader GTO opening ranges (chart-based)', () {
+    test('55 is a GTO open from early position (the reported bug)', () {
+      for (final pos in ['EP', 'MP', 'CO', 'BTN', 'SB']) {
+        final r = DrillGrader.grade(
+            ctx(handClass: '55', positionGroup: pos), 'raise',
+            raiseToBB: 2.5);
+        expect(r.gtoAction, 'raise', reason: '55 should open from $pos');
+        expect(r.grade, DrillGrade.correct, reason: '55 open from $pos');
+      }
+    });
+
+    test('folding 55 from EP is now a mistake (it is an open)', () {
+      final r =
+          DrillGrader.grade(ctx(handClass: '55', positionGroup: 'EP'), 'fold');
+      expect(r.recommendedAction, 'raise');
+      expect(r.grade, DrillGrade.mistake);
+    });
+
+    test('72o is a GTO fold from every position', () {
+      for (final pos in ['EP', 'MP', 'CO', 'BTN', 'SB']) {
+        final r =
+            DrillGrader.grade(ctx(handClass: '72o', positionGroup: pos), 'fold');
+        expect(r.gtoAction, 'fold', reason: '72o should fold from $pos');
+        expect(r.grade, DrillGrade.correct);
+      }
+    });
+
+    test('opening a small pair from EP grades correct, not against GTO', () {
+      final r = DrillGrader.grade(
+          ctx(handClass: '22', positionGroup: 'EP'), 'raise',
+          raiseToBB: 2.5);
+      expect(r.gtoAction, 'raise');
     });
   });
 }

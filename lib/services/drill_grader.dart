@@ -1,4 +1,5 @@
 import '../models/drill_models.dart';
+import 'drill_gto_charts.dart';
 import 'drill_hand_strength.dart';
 
 /// One recommended line (GTO baseline or exploit-adjusted) for a decision.
@@ -55,11 +56,6 @@ class DrillGrader {
 
   // ── Decision helpers (thresholds → action) ──────────────────────────
 
-  static _Line _openLine(String hand, double thresh, String reason) {
-    final inRange = DrillHandStrength.inTopPercent(hand, thresh);
-    return _Line(inRange ? 'raise' : 'fold', thresh, reason);
-  }
-
   static _Line _limpLine(
       String hand, double isoThresh, bool canCheck, String reason) {
     final overlimp = isoThresh + 12;
@@ -87,13 +83,27 @@ class DrillGrader {
   static DrillGradeResult _gradeUnopened(
       DrillDecisionContext ctx, String action, double? raiseToBB) {
     final pos = ctx.positionGroup;
-    final gtoThresh = _openThreshold[pos] ?? 20;
-    final gto = _openLine(ctx.handClass, gtoThresh,
-        'GTO opens roughly the top ${_pct(gtoThresh)} from ${_posName(pos)}.');
+    final hand = ctx.handClass;
 
-    // ── Exploit: shift the open range for the actual lineup ──
+    // GTO baseline: an explicit RFI chart, not a strength percentile —
+    // small pairs and suited hands open well above their raw-strength rank.
+    final gtoSet = DrillGtoCharts.openRange(pos);
+    final gtoCoverage = DrillGtoCharts.coverageOf(gtoSet);
+    final gtoOpen = gtoSet.contains(hand);
+    final gto = _Line(
+      gtoOpen ? 'raise' : 'fold',
+      gtoCoverage,
+      gtoOpen
+          ? '$hand is in the GTO opening range from ${_posName(pos)} '
+              '(opens ~${_pct(gtoCoverage)} of hands).'
+          : '$hand is not a GTO open from ${_posName(pos)} '
+              '(opens ~${_pct(gtoCoverage)} of hands).',
+    );
+
+    // ── Exploit: widen/tighten the chart for the actual lineup ──
+    // Positive widenPct loosens the open range; negative tightens it.
     final notes = <String>[];
-    double openThresh = gtoThresh;
+    double widenPct = 0;
     final isStealSeat = pos == 'CO' || pos == 'BTN' || pos == 'SB';
 
     final blinds =
@@ -108,18 +118,18 @@ class DrillGrader {
       final plural = blinds.length > 1;
 
       if (avgVpip <= 24) {
-        openThresh += ((24 - avgVpip) * 1.1).clamp(0.0, 22.0).toDouble();
+        widenPct += ((24 - avgVpip) * 1.1).clamp(0.0, 22.0).toDouble();
         notes.add('$names ${plural ? 'fold' : 'folds'} the blinds a lot '
             '(VPIP ${_pct(avgVpip)}) — steal relentlessly from ${_posName(pos)}, '
             'open any halfway-playable hand.');
       } else if (avgVpip >= 34) {
-        openThresh -= 3;
+        widenPct -= 4;
         notes.add('$names ${plural ? 'defend' : 'defends'} the blinds wide '
-            '(VPIP ${_pct(avgVpip)}) — your steals get called, so open hands that '
-            'flop well and drop the offsuit junk.');
+            '(VPIP ${_pct(avgVpip)}) — your steals get called, so tighten toward '
+            'hands that flop well and drop the offsuit junk.');
       }
       if (maxThreeBet >= 11) {
-        openThresh -= 5;
+        widenPct -= 6;
         notes.add('Careful — a blind 3-bets ${_pct(maxThreeBet)}, so the very '
             'bottom of your steal range just gets blown off the pot.');
       }
@@ -144,7 +154,7 @@ class DrillGrader {
       }
     }
     if (aggro != null) {
-      openThresh -= aggro.isDirectLeft ? 6.0 : 3.0;
+      widenPct -= aggro.isDirectLeft ? 8.0 : 4.0;
       final where =
           aggro.isDirectLeft ? 'on your direct left' : 'still to act behind you';
       notes.add('${aggro.profile.name} 3-bets ${_pct(aggro.profile.threeBet)} '
@@ -157,15 +167,20 @@ class DrillGrader {
         (p) => p.vpip >= 42 && p.pfr < 15 && !p.isGenericBot,
         (p) => p.vpip);
     if (station != null && aggro == null) {
-      openThresh -= 2;
+      widenPct -= 3;
       notes.add('${station.name} calls far too much (VPIP ${_pct(station.vpip)}) '
           '— favour hands that flop strong top pairs over pure steal trash.');
     }
 
-    openThresh = openThresh.clamp(7.0, 70.0).toDouble();
+    final exploitSet = widenPct >= 0
+        ? DrillGtoCharts.widen(gtoSet, widenPct)
+        : DrillGtoCharts.tighten(gtoSet, -widenPct);
+    final exploitCoverage = DrillGtoCharts.coverageOf(exploitSet);
+    final exploitOpen = exploitSet.contains(hand);
     final exploitReason =
         notes.isEmpty ? _lineupFallbackNote(ctx, isStealSeat) : notes.join(' ');
-    final exploit = _openLine(ctx.handClass, openThresh, exploitReason);
+    final exploit =
+        _Line(exploitOpen ? 'raise' : 'fold', exploitCoverage, exploitReason);
 
     return _finalize(ctx, action, raiseToBB,
         gto: gto, exploit: exploit, sizingIdealTo: 2.5, sizingLabel: 'open');
