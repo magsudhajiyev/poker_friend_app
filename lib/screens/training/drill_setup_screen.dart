@@ -363,37 +363,74 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
 
   Widget _buildLineupRow() {
     return SizedBox(
-      height: 44,
+      height: 60,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: _lineups.length,
-        separatorBuilder: (_, __) =>
-            const SizedBox(width: AppSpacing.xxs),
-        itemBuilder: (context, i) {
-          final lineup = _lineups[i];
-          return GestureDetector(
-            onTap: () => _applyLineup(lineup),
-            onLongPress: () => _deleteLineup(lineup),
-            child: Container(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.md),
+        separatorBuilder: (_, __) => const SizedBox(width: 10),
+        itemBuilder: (context, i) => _lineupCard(_lineups[i]),
+      ),
+    );
+  }
+
+  Widget _lineupCard(DrillLineup lineup) {
+    return GestureDetector(
+      onTap: () => _applyLineup(lineup),
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(10, 8, 8, 8),
+        decoration: BoxDecoration(
+          color: AppColors.whiteOverlay(opacity: 0.08),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.whiteBorder()),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 34,
+              height: 34,
               decoration: BoxDecoration(
-                color: AppColors.whiteOverlay(opacity: 0.08),
-                borderRadius: BorderRadius.circular(
-                    AppDecorations.pillRadius),
-                border: Border.all(
-                    color: AppColors.whiteBorder()),
+                color: AppColors.buttonPrimary.withOpacity(0.15),
+                shape: BoxShape.circle,
               ),
-              child: Center(
-                child: Text(
-                  '${lineup.name} · ${lineup.playerCount}P',
-                  style: AppTypography.bodySmall(
-                      color: AppColors.textPrimary),
+              child: const Icon(Icons.groups,
+                  color: AppColors.buttonPrimary, size: 18),
+            ),
+            const SizedBox(width: 10),
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  lineup.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.ibmPlexSans(
+                      color: AppColors.textPrimary,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600),
                 ),
+                const SizedBox(height: 2),
+                Text(
+                  '${lineup.playerCount}P · ${lineup.stackBB.toInt()}BB',
+                  style: GoogleFonts.robotoMono(
+                      color: Colors.white.withOpacity(0.5), fontSize: 11),
+                ),
+              ],
+            ),
+            const SizedBox(width: 8),
+            GestureDetector(
+              onTap: () => _deleteLineup(lineup),
+              behavior: HitTestBehavior.opaque,
+              child: Padding(
+                padding: const EdgeInsets.all(4),
+                child: Icon(Icons.close,
+                    size: 16, color: Colors.white.withOpacity(0.4)),
               ),
             ),
-          );
-        },
+          ],
+        ),
       ),
     );
   }
@@ -402,60 +439,91 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Players',
-            style: AppTypography.bodySmMedium(
-                color: AppColors.textSecondary)),
-        const SizedBox(height: AppSpacing.xxs),
-        Wrap(
-          spacing: AppSpacing.xxs,
-          runSpacing: AppSpacing.xxs,
-          children: [
-            for (int n = 2; n <= 9; n++)
-              _chip('$n', _playerCount == n, () {
+        _fieldLabel('Players'),
+        const SizedBox(height: 8),
+        _segmented([
+          for (int n = 2; n <= 9; n++)
+            (
+              '$n',
+              _playerCount == n,
+              () {
                 setState(() {
                   _playerCount = n;
                   if (_heroSeat > n) _heroSeat = 1;
                   _picks.removeWhere((seat, _) => seat > n);
                 });
-              }),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.md),
-        Text('Stack depth',
-            style: AppTypography.bodySmMedium(
-                color: AppColors.textSecondary)),
-        const SizedBox(height: AppSpacing.xxs),
-        Wrap(
-          spacing: AppSpacing.xxs,
-          runSpacing: AppSpacing.xxs,
-          children: [
-            for (final s in _stackOptions)
-              _chip('${s.toInt()}BB', _stackBB == s,
-                  () => setState(() => _stackBB = s)),
-          ],
-        ),
+              }
+            ),
+        ]),
+        const SizedBox(height: 18),
+        _fieldLabel('Stack depth'),
+        const SizedBox(height: 8),
+        _segmented([
+          for (final s in _stackOptions)
+            ('${s.toInt()}BB', _stackBB == s, () => setState(() => _stackBB = s)),
+        ]),
       ],
     );
   }
 
-  Widget _chip(String label, bool selected, VoidCallback onTap) {
+  Widget _fieldLabel(String text) {
+    return Text(
+      text,
+      style: GoogleFonts.ibmPlexSans(
+          color: Colors.white.withOpacity(0.6),
+          fontSize: 13,
+          fontWeight: FontWeight.w500),
+    );
+  }
+
+  /// Equal-width segmented selector — a clean alternative to wrapped chips
+  /// for a contiguous set of options (player count, stack depth).
+  Widget _segmented(List<(String, bool, VoidCallback)> items) {
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        children: [
+          for (int i = 0; i < items.length; i++) ...[
+            if (i > 0) const SizedBox(width: 4),
+            Expanded(
+              child: _segButton(items[i].$1, items[i].$2, items[i].$3),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _segButton(String label, bool selected, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.md, vertical: AppSpacing.xxs),
+      behavior: HitTestBehavior.opaque,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 160),
+        curve: Curves.easeOut,
+        padding: const EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(
-          color: selected
-              ? AppColors.buttonPrimary
-              : AppColors.whiteOverlay(opacity: 0.08),
-          borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
+          color: selected ? AppColors.buttonPrimary : Colors.transparent,
+          borderRadius: BorderRadius.circular(10),
         ),
-        child: Text(
-          label,
-          style: GoogleFonts.ibmPlexSans(
-            color: selected ? AppColors.textInverse : AppColors.textPrimary,
-            fontSize: 14,
-            fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+        child: Center(
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              label,
+              maxLines: 1,
+              style: GoogleFonts.ibmPlexSans(
+                color: selected
+                    ? AppColors.textInverse
+                    : Colors.white.withOpacity(0.8),
+                fontSize: 14,
+                fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+              ),
+            ),
           ),
         ),
       ),
