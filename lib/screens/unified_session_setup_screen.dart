@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -1039,6 +1041,7 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
                     // Seat centers match the table outline boundary
                     seatWidthFraction: 0.68,
                     seatHeightFraction: 0.72,
+                    seatAngleOffset: 7 * (2 * math.pi / 9),
                     onDealerButtonMoved: (newSeat) {
                       setState(() => _buttonPosition = newSeat);
                     },

@@ -74,6 +74,11 @@ class PokerTableWidget extends StatelessWidget {
   /// Called with the seat number the button is on. Return Offset.zero for no nudge.
   final Offset Function(int seatNumber)? dealerButtonNudge;
 
+  /// Extra angle (radians) added to every seat position.
+  /// Use to rotate the entire seating arrangement without changing seat numbers.
+  /// E.g. `7 * (2 * pi / 9)` moves seat 1 to where seat 8 normally sits.
+  final double seatAngleOffset;
+
   const PokerTableWidget({
     Key? key,
     required this.activeSeatMap,
@@ -93,13 +98,17 @@ class PokerTableWidget extends StatelessWidget {
     this.dealerButtonSize = 32,
     this.dealerButtonQuarterTurns = 0,
     this.dealerButtonNudge,
+    this.seatAngleOffset = 0.0,
   }) : super(key: key);
 
   // ─── SEAT POSITION MATH ─────────────────────────────────────────
 
   /// Compute the center position for a seat (1-indexed) on the ellipse.
+  /// [angleOffset] rotates all seats by extra radians (default 0).
   static Offset getSeatPosition(int seatNumber, Size areaSize,
-      {double widthFraction = 0.80, double heightFraction = 0.88}) {
+      {double widthFraction = 0.80,
+      double heightFraction = 0.88,
+      double angleOffset = 0.0}) {
     final double centerX = areaSize.width / 2;
     final double centerY = areaSize.height / 2;
     final double radiusX = (areaSize.width * widthFraction) / 2;
@@ -109,7 +118,8 @@ class PokerTableWidget extends StatelessWidget {
     // +π/12 (15°) rotates the layout so the gap between seats 7 and 8
     // falls at 180° (left-center), aligning with the notch in Table.svg.
     const double startAngle = math.pi * 1.25 + (2 * math.pi) / 9 + math.pi / 12;
-    final double angle = startAngle + (angleStep * (seatNumber - 1));
+    final double angle =
+        startAngle + (angleStep * (seatNumber - 1)) + angleOffset;
 
     return Offset(
       centerX + radiusX * math.cos(angle),
@@ -128,10 +138,11 @@ class PokerTableWidget extends StatelessWidget {
   }
 
   /// Compute the angle for a seat (used for button offset).
-  static double getSeatAngle(int seatNumber) {
+  static double getSeatAngle(int seatNumber,
+      {double angleOffset = 0.0}) {
     final double angleStep = (2 * math.pi) / 9;
     const double startAngle = math.pi * 1.25 + (2 * math.pi) / 9 + math.pi / 12;
-    return startAngle + (angleStep * (seatNumber - 1));
+    return startAngle + (angleStep * (seatNumber - 1)) + angleOffset;
   }
 
   // ─── BUILD ──────────────────────────────────────────────────────
@@ -158,7 +169,8 @@ class PokerTableWidget extends StatelessWidget {
               final isActive = activeSeatMap[seatNumber] ?? false;
               final position = getSeatPosition(seatNumber, areaSize,
                   widthFraction: seatWidthFraction ?? tableWidthFraction,
-                  heightFraction: seatHeightFraction ?? tableHeightFraction);
+                  heightFraction: seatHeightFraction ?? tableHeightFraction,
+                  angleOffset: seatAngleOffset);
 
               if (seatBuilder != null) {
                 // Custom seat builder — caller provides the full widget
@@ -399,8 +411,10 @@ class PokerTableWidget extends StatelessWidget {
   Widget _buildDealerButton(Size areaSize, BoxConstraints constraints) {
     final position = getSeatPosition(buttonPosition!, areaSize,
         widthFraction: tableWidthFraction,
-        heightFraction: tableHeightFraction);
-    final seatAngle = getSeatAngle(buttonPosition!);
+        heightFraction: tableHeightFraction,
+        angleOffset: seatAngleOffset);
+    final seatAngle = getSeatAngle(buttonPosition!,
+        angleOffset: seatAngleOffset);
 
     // Offset button toward center
     final buttonOffset = dealerButtonSize * 1.5;
@@ -479,7 +493,8 @@ class PokerTableWidget extends StatelessWidget {
       if (activeSeatMap[i] == true) {
         final seatPos = getSeatPosition(i, areaSize,
             widthFraction: tableWidthFraction,
-            heightFraction: tableHeightFraction);
+            heightFraction: tableHeightFraction,
+            angleOffset: seatAngleOffset);
         final distance = (seatPos - localPosition).distance;
 
         if (distance < minDistance) {

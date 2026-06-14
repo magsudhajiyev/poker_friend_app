@@ -1,6 +1,12 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../design_system/constants/colors.dart';
+import '../../design_system/constants/decorations.dart';
+import '../../design_system/constants/spacing.dart';
+import '../../design_system/constants/typography.dart';
 import '../../design_system/components/modals/confirm_dialog.dart';
 import '../../models/drill_models.dart';
 import '../../models/opponent.dart';
@@ -33,7 +39,6 @@ class _SeatPick {
 
 class _DrillSetupScreenState extends State<DrillSetupScreen> {
   static const _stackOptions = [20.0, 40.0, 60.0, 100.0, 150.0];
-  static const _accent = Color(0xFF89F1EC);
 
   int _playerCount = 6;
   int _heroSeat = 1;
@@ -83,22 +88,19 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
     final name = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1A1D1F),
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        backgroundColor: AppColors.bgSurface,
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppDecorations.radiusLg)),
         title: Text('Save lineup',
-            style: GoogleFonts.ibmPlexSans(
-                color: Colors.white,
-                fontSize: 17,
-                fontWeight: FontWeight.w600)),
+            style: AppTypography.titleBase()),
         content: TextField(
           controller: controller,
           autofocus: true,
-          style: GoogleFonts.ibmPlexSans(color: Colors.white),
+          style: GoogleFonts.ibmPlexSans(color: AppColors.textPrimary),
           decoration: InputDecoration(
             hintText: 'e.g. Tuesday home game',
             hintStyle: GoogleFonts.ibmPlexSans(
-                color: Colors.white.withOpacity(0.3)),
+                color: AppColors.textSecondary),
           ),
         ),
         actions: [
@@ -106,14 +108,15 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
             onPressed: () => Navigator.pop(context),
             child: Text('Cancel',
                 style: GoogleFonts.ibmPlexSans(
-                    color: Colors.white.withOpacity(0.6))),
+                    color: AppColors.textSecondary)),
           ),
           TextButton(
             onPressed: () =>
                 Navigator.pop(context, controller.text.trim()),
             child: Text('Save',
                 style: GoogleFonts.ibmPlexSans(
-                    color: _accent, fontWeight: FontWeight.w600)),
+                    color: AppColors.buttonPrimary,
+                    fontWeight: FontWeight.w600)),
           ),
         ],
       ),
@@ -161,9 +164,10 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
     if (seat == _heroSeat) return;
     final pick = await showModalBottomSheet<_SeatPick?>(
       context: context,
-      backgroundColor: const Color(0xFF131616),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      backgroundColor: AppColors.infoCardBg,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+            top: Radius.circular(AppDecorations.radiusXl)),
       ),
       isScrollControlled: true,
       builder: (context) => _OpponentPickerSheet(
@@ -224,62 +228,65 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
     if (!SubscriptionService.isPremium) return _buildPremiumGate();
 
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: AppColors.bgPrimary,
       body: SafeArea(
         child: Column(
           children: [
             _buildHeader(),
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md),
                 children: [
                   if (_lineups.isNotEmpty) ...[
                     _sectionLabel('SAVED LINEUPS'),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppSpacing.xxs),
                     _buildLineupRow(),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: AppSpacing.space5),
                   ],
                   _sectionLabel('TABLE'),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppSpacing.xxs),
                   _buildCard(child: _buildTableConfig()),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: AppSpacing.space5),
                   _sectionLabel('SEATS'),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: AppSpacing.xxxs),
                   Text(
                     'Tap a seat to assign an opponent or move yourself.',
                     style: GoogleFonts.ibmPlexSans(
-                        color: Colors.white.withOpacity(0.4), fontSize: 12),
+                        color: AppColors.textSecondary, fontSize: 12),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: AppSpacing.xxxs),
                   _buildSeatTable(),
                   _buildScoutingRow(),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppSpacing.xxs),
                   GestureDetector(
                     onTap: _saveLineup,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                          vertical: AppSpacing.xs),
                       decoration: BoxDecoration(
                         border: Border.all(
-                            color: Colors.white.withOpacity(0.2)),
-                        borderRadius: BorderRadius.circular(60),
+                            color: AppColors.borderStrong),
+                        borderRadius: BorderRadius.circular(
+                            AppDecorations.buttonRadius),
                       ),
                       child: Center(
                         child: Text('Save this lineup',
-                            style: GoogleFonts.ibmPlexSans(
-                                color: Colors.white,
-                                fontSize: 15,
-                                fontWeight: FontWeight.w500)),
+                            style: AppTypography.labelLg(
+                                color: AppColors.textPrimary)),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppSpacing.xs),
                   GestureDetector(
                     onTap: _startDrill,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      padding: const EdgeInsets.symmetric(
+                          vertical: AppSpacing.sm),
                       decoration: BoxDecoration(
-                        color: _accent,
-                        borderRadius: BorderRadius.circular(60),
+                        color: AppColors.buttonPrimary,
+                        borderRadius: BorderRadius.circular(
+                            AppDecorations.buttonRadius),
                       ),
                       child: Center(
                         child: _starting
@@ -287,16 +294,14 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
                                 width: 20,
                                 height: 20,
                                 child: CircularProgressIndicator(
-                                    strokeWidth: 2, color: Colors.black))
+                                    strokeWidth: 2,
+                                    color: AppColors.textInverse))
                             : Text('Start Drill',
-                                style: GoogleFonts.ibmPlexSans(
-                                    color: Colors.black,
-                                    fontSize: 17,
-                                    fontWeight: FontWeight.w600)),
+                                style: AppTypography.buttonText()),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 40),
+                  const SizedBox(height: AppSpacing.space10),
                 ],
               ),
             ),
@@ -308,7 +313,8 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
 
   Widget _buildHeader() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+      padding: const EdgeInsets.fromLTRB(
+          AppSpacing.md, AppSpacing.xs, AppSpacing.md, AppSpacing.md),
       child: Row(
         children: [
           GestureDetector(
@@ -317,21 +323,21 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
               width: 38,
               height: 38,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.1),
+                color: AppColors.whiteOverlay(opacity: 0.1),
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.arrow_back,
-                  color: Colors.white, size: 20),
+                  color: AppColors.textPrimary, size: 20),
             ),
           ),
-          const SizedBox(width: 14),
+          const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Text(
               'Training Drills',
               style: GoogleFonts.ibmPlexSans(
                   fontSize: 22,
                   fontWeight: FontWeight.w600,
-                  color: Colors.white),
+                  color: AppColors.textPrimary),
             ),
           ),
         ],
@@ -340,24 +346,16 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
   }
 
   Widget _sectionLabel(String text) {
-    return Text(
-      text,
-      style: GoogleFonts.ibmPlexSans(
-        fontSize: 12,
-        fontWeight: FontWeight.w600,
-        letterSpacing: 1.0,
-        color: const Color(0xFF87ED81),
-      ),
-    );
+    return Text(text, style: AppTypography.sectionHeader());
   }
 
   Widget _buildCard({required Widget child}) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: const Color(0xFF131616),
-        borderRadius: BorderRadius.circular(18),
+        color: AppColors.infoCardBg,
+        borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
       ),
       child: child,
     );
@@ -369,24 +367,28 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: _lineups.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        separatorBuilder: (_, __) =>
+            const SizedBox(width: AppSpacing.xxs),
         itemBuilder: (context, i) {
           final lineup = _lineups[i];
           return GestureDetector(
             onTap: () => _applyLineup(lineup),
             onLongPress: () => _deleteLineup(lineup),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.md),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.08),
-                borderRadius: BorderRadius.circular(40),
-                border: Border.all(color: Colors.white.withOpacity(0.1)),
+                color: AppColors.whiteOverlay(opacity: 0.08),
+                borderRadius: BorderRadius.circular(
+                    AppDecorations.pillRadius),
+                border: Border.all(
+                    color: AppColors.whiteBorder()),
               ),
               child: Center(
                 child: Text(
                   '${lineup.name} · ${lineup.playerCount}P',
-                  style: GoogleFonts.ibmPlexSans(
-                      color: Colors.white, fontSize: 14),
+                  style: AppTypography.bodySmall(
+                      color: AppColors.textPrimary),
                 ),
               ),
             ),
@@ -401,12 +403,12 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text('Players',
-            style: GoogleFonts.ibmPlexSans(
-                color: Colors.white.withOpacity(0.6), fontSize: 13)),
-        const SizedBox(height: 8),
+            style: AppTypography.bodySmMedium(
+                color: AppColors.textSecondary)),
+        const SizedBox(height: AppSpacing.xxs),
         Wrap(
-          spacing: 8,
-          runSpacing: 8,
+          spacing: AppSpacing.xxs,
+          runSpacing: AppSpacing.xxs,
           children: [
             for (int n = 2; n <= 9; n++)
               _chip('$n', _playerCount == n, () {
@@ -418,14 +420,14 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
               }),
           ],
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpacing.md),
         Text('Stack depth',
-            style: GoogleFonts.ibmPlexSans(
-                color: Colors.white.withOpacity(0.6), fontSize: 13)),
-        const SizedBox(height: 8),
+            style: AppTypography.bodySmMedium(
+                color: AppColors.textSecondary)),
+        const SizedBox(height: AppSpacing.xxs),
         Wrap(
-          spacing: 8,
-          runSpacing: 8,
+          spacing: AppSpacing.xxs,
+          runSpacing: AppSpacing.xxs,
           children: [
             for (final s in _stackOptions)
               _chip('${s.toInt()}BB', _stackBB == s,
@@ -440,15 +442,18 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md, vertical: AppSpacing.xxs),
         decoration: BoxDecoration(
-          color: selected ? _accent : Colors.white.withOpacity(0.08),
-          borderRadius: BorderRadius.circular(40),
+          color: selected
+              ? AppColors.buttonPrimary
+              : AppColors.whiteOverlay(opacity: 0.08),
+          borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
         ),
         child: Text(
           label,
           style: GoogleFonts.ibmPlexSans(
-            color: selected ? Colors.black : Colors.white,
+            color: selected ? AppColors.textInverse : AppColors.textPrimary,
             fontSize: 14,
             fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
           ),
@@ -468,42 +473,40 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
     if (assigned.isEmpty) return const SizedBox.shrink();
 
     return Padding(
-      padding: const EdgeInsets.only(top: 8),
+      padding: const EdgeInsets.only(top: AppSpacing.xxs),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('SCOUTING',
-              style: GoogleFonts.ibmPlexSans(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 1.0,
-                  color: const Color(0xFF87ED81))),
+              style: AppTypography.sectionHeader()),
           const SizedBox(height: 6),
           Wrap(
-            spacing: 8,
-            runSpacing: 8,
+            spacing: AppSpacing.xxs,
+            runSpacing: AppSpacing.xxs,
             children: [
               for (final e in assigned.entries)
                 GestureDetector(
                   onTap: () => _showScouting(e.key, e.value),
                   child: Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 8),
+                        horizontal: AppSpacing.sm,
+                        vertical: AppSpacing.xxs),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.08),
-                      borderRadius: BorderRadius.circular(40),
-                      border:
-                          Border.all(color: Colors.white.withOpacity(0.1)),
+                      color: AppColors.whiteOverlay(opacity: 0.08),
+                      borderRadius: BorderRadius.circular(
+                          AppDecorations.pillRadius),
+                      border: Border.all(
+                          color: AppColors.whiteBorder()),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         const Icon(Icons.query_stats,
-                            size: 14, color: Color(0xFF89F1EC)),
+                            size: 14, color: AppColors.buttonPrimary),
                         const SizedBox(width: 6),
                         Text(e.value,
-                            style: GoogleFonts.ibmPlexSans(
-                                color: Colors.white, fontSize: 13)),
+                            style: AppTypography.bodySmMedium(
+                                color: AppColors.textPrimary)),
                       ],
                     ),
                   ),
@@ -521,7 +524,7 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
       context: context,
       barrierColor: Colors.black54,
       builder: (_) => const Center(
-        child: CircularProgressIndicator(color: Color(0xFF89F1EC)),
+        child: CircularProgressIndicator(color: AppColors.buttonPrimary),
       ),
     );
     ObservedRange range;
@@ -536,16 +539,40 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
   }
 
   Widget _buildSeatTable() {
-    return SizedBox(
-      height: MediaQuery.of(context).size.height * 0.46,
-      child: PokerTableWidget(
-        activeSeatMap: {for (int i = 1; i <= 9; i++) i: i <= _playerCount},
-        showDealerButton: false,
-        showLogo: false,
-        seatWidthFraction: 1.02,
-        seatHeightFraction: 0.86,
-        seatBuilder: (seatNumber, isActive) =>
-            isActive ? _buildTableSeat(seatNumber) : const SizedBox.shrink(),
+    final screen = MediaQuery.of(context).size;
+    // Shift left to counteract the ListView's 16px horizontal padding,
+    // giving the table the full screen width (matching session setup).
+    return Transform.translate(
+      offset: const Offset(-16, 0),
+      child: SizedBox(
+        width: screen.width,
+        height: screen.height * 0.50,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            // Dotted background — same as session setup
+            Image.asset(
+              'assets/icons/Table bg_small.png',
+              fit: BoxFit.cover,
+            ),
+            // Table + seats — same fractions as session setup
+            PokerTableWidget(
+              activeSeatMap: {
+                for (int i = 1; i <= 9; i++) i: i <= _playerCount,
+              },
+              showDealerButton: false,
+              showLogo: true,
+              tableWidthFraction: 0.68,
+              tableHeightFraction: 0.72,
+              seatWidthFraction: 0.68,
+              seatHeightFraction: 0.72,
+              seatAngleOffset: 7 * (2 * math.pi / 9),
+              seatBuilder: (seatNumber, isActive) => isActive
+                  ? _buildTableSeat(seatNumber)
+                  : const SizedBox.shrink(),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -556,6 +583,9 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
     final label = isHero ? 'You' : (pick?.name ?? 'Bot');
     final display =
         label.length > 8 ? '${label.substring(0, 7)}…' : label;
+    final borderColor = (isHero || pick != null)
+        ? AppColors.accentSecondary
+        : AppColors.bgElevated;
     return GestureDetector(
       onTap: () => _tapSeat(seat),
       child: Column(
@@ -563,28 +593,19 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
         children: [
           Container(
             padding:
-                const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+                const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
             decoration: BoxDecoration(
-              color: const Color(0xFF161719),
+              color: AppColors.bgSurface,
               borderRadius: BorderRadius.circular(35),
-              border: Border.all(
-                color: isHero
-                    ? _accent
-                    : pick != null
-                        ? const Color(0xFFA3FF78)
-                        : const Color(0xFF2C2C2E),
-                width: isHero ? 2 : 1.5,
-              ),
+              border: Border.all(color: borderColor, width: 2),
             ),
             child: Text(
               display,
               maxLines: 1,
               style: GoogleFonts.ibmPlexSans(
-                color: isHero
-                    ? _accent
-                    : pick != null
-                        ? Colors.white
-                        : Colors.white.withOpacity(0.45),
+                color: (isHero || pick != null)
+                    ? AppColors.accentSecondary
+                    : AppColors.textSecondary,
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
                 height: 1.2,
@@ -595,7 +616,7 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
           Text(
             'Seat $seat',
             style: GoogleFonts.robotoMono(
-              color: Colors.white.withOpacity(0.35),
+              color: AppColors.textSecondary,
               fontSize: 9,
             ),
           ),
@@ -606,40 +627,38 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
 
   Widget _buildPremiumGate() {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: AppColors.bgPrimary,
       body: SafeArea(
         child: Column(
           children: [
             _buildHeader(),
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.all(32),
+                padding: const EdgeInsets.all(AppSpacing.xxxl),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const Icon(Icons.fitness_center,
-                        color: Color(0xFF89F1EC), size: 48),
-                    const SizedBox(height: 20),
+                        color: AppColors.buttonPrimary, size: 48),
+                    const SizedBox(height: AppSpacing.space5),
                     Text(
                       'Train against your real opponents',
                       textAlign: TextAlign.center,
                       style: GoogleFonts.ibmPlexSans(
-                          color: Colors.white,
+                          color: AppColors.textPrimary,
                           fontSize: 20,
                           fontWeight: FontWeight.w600),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: AppSpacing.xs),
                     Text(
                       'Seat the players you actually face, drill preflop spots '
                       'against bots that play with their measured tendencies, '
                       'and get exploit-based feedback on every decision.',
                       textAlign: TextAlign.center,
-                      style: GoogleFonts.ibmPlexSans(
-                          color: Colors.white.withOpacity(0.6),
-                          fontSize: 15,
-                          height: 1.4),
+                      style: AppTypography.bodyMedium(
+                          color: AppColors.textSecondary),
                     ),
-                    const SizedBox(height: 28),
+                    const SizedBox(height: AppSpacing.xxl),
                     GestureDetector(
                       onTap: () async {
                         await PaywallScreen.show(context,
@@ -648,16 +667,15 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
                       },
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 32, vertical: 14),
+                            horizontal: AppSpacing.xxxl,
+                            vertical: AppSpacing.sm),
                         decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(60),
+                          color: AppColors.bgInverse,
+                          borderRadius: BorderRadius.circular(
+                              AppDecorations.buttonRadius),
                         ),
                         child: Text('Upgrade to Premium',
-                            style: GoogleFonts.ibmPlexSans(
-                                color: Colors.black,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600)),
+                            style: AppTypography.buttonText()),
                       ),
                     ),
                   ],
@@ -699,31 +717,33 @@ class _OpponentPickerSheetState extends State<_OpponentPickerSheet> {
         height: MediaQuery.of(context).size.height * 0.6,
         child: Column(
           children: [
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.xs),
             Container(
               width: 36,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
+                color: AppColors.whiteOverlay(opacity: 0.2),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppSpacing.md),
               child: TextField(
                 autofocus: false,
                 onChanged: (v) => setState(() => _query = v),
-                style: GoogleFonts.ibmPlexSans(color: Colors.white),
+                style: GoogleFonts.ibmPlexSans(
+                    color: AppColors.textPrimary),
                 decoration: InputDecoration(
                   hintText: 'Search opponents',
                   hintStyle: GoogleFonts.ibmPlexSans(
-                      color: Colors.white.withOpacity(0.3)),
+                      color: AppColors.textSecondary),
                   prefixIcon: Icon(Icons.search,
-                      color: Colors.white.withOpacity(0.3)),
+                      color: AppColors.textSecondary),
                   filled: true,
-                  fillColor: Colors.white.withOpacity(0.06),
+                  fillColor: AppColors.whiteOverlay(opacity: 0.06),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(
+                        AppDecorations.radiusMd),
                     borderSide: BorderSide.none,
                   ),
                 ),
@@ -735,27 +755,27 @@ class _OpponentPickerSheetState extends State<_OpponentPickerSheet> {
                   if (widget.showHeroOption)
                     ListTile(
                       leading: const Icon(Icons.person,
-                          color: Color(0xFF89F1EC)),
+                          color: AppColors.buttonPrimary),
                       title: Text('This is me',
                           style: GoogleFonts.ibmPlexSans(
-                              color: const Color(0xFF89F1EC),
+                              color: AppColors.buttonPrimary,
                               fontWeight: FontWeight.w600)),
                       subtitle: Text('Move your seat here',
                           style: GoogleFonts.ibmPlexSans(
-                              color: Colors.white.withOpacity(0.4),
+                              color: AppColors.textSecondary,
                               fontSize: 13)),
                       onTap: () => Navigator.pop(
                           context, const _SeatPick('__hero__', 'You')),
                     ),
                   ListTile(
                     leading: Icon(Icons.smart_toy,
-                        color: Colors.white.withOpacity(0.5)),
+                        color: AppColors.textSecondary),
                     title: Text('Generic bot',
-                        style:
-                            GoogleFonts.ibmPlexSans(color: Colors.white)),
+                        style: GoogleFonts.ibmPlexSans(
+                            color: AppColors.textPrimary)),
                     subtitle: Text('Balanced regular',
                         style: GoogleFonts.ibmPlexSans(
-                            color: Colors.white.withOpacity(0.4),
+                            color: AppColors.textSecondary,
                             fontSize: 13)),
                     onTap: () => Navigator.pop(
                         context, const _SeatPick('__clear__', 'Bot')),
@@ -774,8 +794,8 @@ class _OpponentPickerSheetState extends State<_OpponentPickerSheet> {
                         ),
                       ),
                       title: Text(o.name,
-                          style:
-                              GoogleFonts.ibmPlexSans(color: Colors.white)),
+                          style: GoogleFonts.ibmPlexSans(
+                              color: AppColors.textPrimary)),
                       onTap: () =>
                           Navigator.pop(context, _SeatPick(o.id, o.name)),
                     ),

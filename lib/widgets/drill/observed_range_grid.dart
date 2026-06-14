@@ -43,7 +43,8 @@ class ObservedRangeGrid extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final cell = constraints.maxWidth / 13;
+        // Each cell has 0.5 margin on each side = 1px per cell
+        final cell = (constraints.maxWidth - 13) / 13;
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
