@@ -1857,13 +1857,13 @@ abstract class AppLocalizations {
   /// No description provided for @handMainPot.
   ///
   /// In en, this message translates to:
-  /// **'Main Pot'**
+  /// **'Main'**
   String get handMainPot;
 
   /// No description provided for @handSidePot.
   ///
   /// In en, this message translates to:
-  /// **'Side Pot {index}'**
+  /// **'Side {index}'**
   String handSidePot(int index);
 
   /// No description provided for @handPokerSession.
@@ -13202,6 +13202,1123 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Skip for now'**
   String get onboardingSkipNickname;
+
+  /// No description provided for @drillTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Training Drills'**
+  String get drillTitle;
+
+  /// No description provided for @drillSaveLineup.
+  ///
+  /// In en, this message translates to:
+  /// **'Save lineup'**
+  String get drillSaveLineup;
+
+  /// No description provided for @drillSaveLineupHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Tuesday home game'**
+  String get drillSaveLineupHint;
+
+  /// No description provided for @drillDeleteLineup.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete lineup'**
+  String get drillDeleteLineup;
+
+  /// No description provided for @drillDeleteLineupMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove \"{name}\" from your saved lineups?'**
+  String drillDeleteLineupMessage(String name);
+
+  /// No description provided for @drillSavedLineups.
+  ///
+  /// In en, this message translates to:
+  /// **'SAVED LINEUPS'**
+  String get drillSavedLineups;
+
+  /// No description provided for @drillTable.
+  ///
+  /// In en, this message translates to:
+  /// **'TABLE'**
+  String get drillTable;
+
+  /// No description provided for @drillSeats.
+  ///
+  /// In en, this message translates to:
+  /// **'SEATS'**
+  String get drillSeats;
+
+  /// No description provided for @drillSeatsInstruction.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap a seat to assign an opponent or move yourself.'**
+  String get drillSeatsInstruction;
+
+  /// No description provided for @drillSaveThisLineup.
+  ///
+  /// In en, this message translates to:
+  /// **'Save this lineup'**
+  String get drillSaveThisLineup;
+
+  /// No description provided for @drillStartDrill.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Drill'**
+  String get drillStartDrill;
+
+  /// No description provided for @drillPlayers.
+  ///
+  /// In en, this message translates to:
+  /// **'Players'**
+  String get drillPlayers;
+
+  /// No description provided for @drillStackDepth.
+  ///
+  /// In en, this message translates to:
+  /// **'Stack depth'**
+  String get drillStackDepth;
+
+  /// No description provided for @drillScouting.
+  ///
+  /// In en, this message translates to:
+  /// **'SCOUTING'**
+  String get drillScouting;
+
+  /// No description provided for @drillYou.
+  ///
+  /// In en, this message translates to:
+  /// **'You'**
+  String get drillYou;
+
+  /// No description provided for @drillSeatNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Seat {seat}'**
+  String drillSeatNumber(int seat);
+
+  /// No description provided for @drillPremiumTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Train against your real opponents'**
+  String get drillPremiumTitle;
+
+  /// No description provided for @drillPremiumDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Seat the players you actually face, drill preflop spots against bots that play with their measured tendencies, and get exploit-based feedback on every decision.'**
+  String get drillPremiumDescription;
+
+  /// No description provided for @drillUpgradeToPremium.
+  ///
+  /// In en, this message translates to:
+  /// **'Upgrade to Premium'**
+  String get drillUpgradeToPremium;
+
+  /// No description provided for @drillSearchOpponents.
+  ///
+  /// In en, this message translates to:
+  /// **'Search opponents'**
+  String get drillSearchOpponents;
+
+  /// No description provided for @drillThisIsMe.
+  ///
+  /// In en, this message translates to:
+  /// **'This is me'**
+  String get drillThisIsMe;
+
+  /// No description provided for @drillMoveYourSeatHere.
+  ///
+  /// In en, this message translates to:
+  /// **'Move your seat here'**
+  String get drillMoveYourSeatHere;
+
+  /// No description provided for @drillGenericBot.
+  ///
+  /// In en, this message translates to:
+  /// **'Generic bot'**
+  String get drillGenericBot;
+
+  /// No description provided for @drillBalancedRegular.
+  ///
+  /// In en, this message translates to:
+  /// **'Balanced regular'**
+  String get drillBalancedRegular;
+
+  /// No description provided for @drillHandNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Hand #{number}'**
+  String drillHandNumber(int number);
+
+  /// No description provided for @drillHandedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'{stack}BB · {players}-handed'**
+  String drillHandedLabel(int stack, int players);
+
+  /// No description provided for @drillPot.
+  ///
+  /// In en, this message translates to:
+  /// **'POT'**
+  String get drillPot;
+
+  /// No description provided for @drillWalkedNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Everyone folded — you win the blinds.'**
+  String get drillWalkedNote;
+
+  /// No description provided for @drillWonUncontestedNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Everyone folded — you take it down ({pot}BB).'**
+  String drillWonUncontestedNote(String pot);
+
+  /// No description provided for @drillReachedFlopNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Hand goes to the flop — preflop drill complete.'**
+  String get drillReachedFlopNote;
+
+  /// No description provided for @drillHandOverNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Hand over.'**
+  String get drillHandOverNote;
+
+  /// No description provided for @drillCorrect.
+  ///
+  /// In en, this message translates to:
+  /// **'CORRECT'**
+  String get drillCorrect;
+
+  /// No description provided for @drillClose.
+  ///
+  /// In en, this message translates to:
+  /// **'CLOSE'**
+  String get drillClose;
+
+  /// No description provided for @drillMistake.
+  ///
+  /// In en, this message translates to:
+  /// **'MISTAKE'**
+  String get drillMistake;
+
+  /// No description provided for @drillYouChose.
+  ///
+  /// In en, this message translates to:
+  /// **'· you chose {action}'**
+  String drillYouChose(String action);
+
+  /// No description provided for @drillTopPercent.
+  ///
+  /// In en, this message translates to:
+  /// **'top {percent}%'**
+  String drillTopPercent(int percent);
+
+  /// No description provided for @drillLineupChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'This lineup changes the play: GTO {gto}s, exploit {exploit}s'**
+  String drillLineupChanges(String gto, String exploit);
+
+  /// No description provided for @drillGto.
+  ///
+  /// In en, this message translates to:
+  /// **'GTO'**
+  String get drillGto;
+
+  /// No description provided for @drillExploit.
+  ///
+  /// In en, this message translates to:
+  /// **'EXPLOIT'**
+  String get drillExploit;
+
+  /// No description provided for @drillContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get drillContinue;
+
+  /// No description provided for @drillGotIt.
+  ///
+  /// In en, this message translates to:
+  /// **'Got it'**
+  String get drillGotIt;
+
+  /// No description provided for @drillRaiseTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Raise to:'**
+  String get drillRaiseTo;
+
+  /// No description provided for @drillJam.
+  ///
+  /// In en, this message translates to:
+  /// **'JAM'**
+  String get drillJam;
+
+  /// No description provided for @drillPotLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Pot {pot}BB'**
+  String drillPotLabel(String pot);
+
+  /// No description provided for @drillToCall.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount}BB to call'**
+  String drillToCall(String amount);
+
+  /// No description provided for @drillFold.
+  ///
+  /// In en, this message translates to:
+  /// **'FOLD'**
+  String get drillFold;
+
+  /// No description provided for @drillCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'CHECK'**
+  String get drillCheck;
+
+  /// No description provided for @drillCall.
+  ///
+  /// In en, this message translates to:
+  /// **'CALL'**
+  String get drillCall;
+
+  /// No description provided for @drillRaise.
+  ///
+  /// In en, this message translates to:
+  /// **'RAISE'**
+  String get drillRaise;
+
+  /// No description provided for @drillNextHand.
+  ///
+  /// In en, this message translates to:
+  /// **'Next Hand'**
+  String get drillNextHand;
+
+  /// No description provided for @drillSummaryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Drill Summary'**
+  String get drillSummaryTitle;
+
+  /// No description provided for @drillAccuracy.
+  ///
+  /// In en, this message translates to:
+  /// **'Accuracy'**
+  String get drillAccuracy;
+
+  /// No description provided for @drillDecisions.
+  ///
+  /// In en, this message translates to:
+  /// **'Decisions'**
+  String get drillDecisions;
+
+  /// No description provided for @drillCorrectLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Correct'**
+  String get drillCorrectLabel;
+
+  /// No description provided for @drillCloseLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get drillCloseLabel;
+
+  /// No description provided for @drillMistakes.
+  ///
+  /// In en, this message translates to:
+  /// **'Mistakes'**
+  String get drillMistakes;
+
+  /// No description provided for @drillWhereYouLeaked.
+  ///
+  /// In en, this message translates to:
+  /// **'WHERE YOU LEAKED'**
+  String get drillWhereYouLeaked;
+
+  /// No description provided for @drillMistakeDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'{handClass} · {position} · you chose {heroAction}, {recommendedAction} was right'**
+  String drillMistakeDetail(String handClass, String position,
+      String heroAction, String recommendedAction);
+
+  /// No description provided for @drillKeepDrilling.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep Drilling'**
+  String get drillKeepDrilling;
+
+  /// No description provided for @drillEndDrill.
+  ///
+  /// In en, this message translates to:
+  /// **'End Drill'**
+  String get drillEndDrill;
+
+  /// No description provided for @drillActionSb.
+  ///
+  /// In en, this message translates to:
+  /// **'SB 0.5'**
+  String get drillActionSb;
+
+  /// No description provided for @drillActionBb.
+  ///
+  /// In en, this message translates to:
+  /// **'BB 1'**
+  String get drillActionBb;
+
+  /// No description provided for @drillActionFold.
+  ///
+  /// In en, this message translates to:
+  /// **'FOLD'**
+  String get drillActionFold;
+
+  /// No description provided for @drillActionCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'CHECK'**
+  String get drillActionCheck;
+
+  /// No description provided for @drillActionLimp.
+  ///
+  /// In en, this message translates to:
+  /// **'LIMP'**
+  String get drillActionLimp;
+
+  /// No description provided for @drillActionCall.
+  ///
+  /// In en, this message translates to:
+  /// **'CALL {amount}'**
+  String drillActionCall(String amount);
+
+  /// No description provided for @drillActionRaise.
+  ///
+  /// In en, this message translates to:
+  /// **'RAISE {amount}'**
+  String drillActionRaise(String amount);
+
+  /// No description provided for @drillAction3bet.
+  ///
+  /// In en, this message translates to:
+  /// **'3-BET {amount}'**
+  String drillAction3bet(String amount);
+
+  /// No description provided for @drillAction4bet.
+  ///
+  /// In en, this message translates to:
+  /// **'4-BET {amount}'**
+  String drillAction4bet(String amount);
+
+  /// No description provided for @drillActionJam.
+  ///
+  /// In en, this message translates to:
+  /// **'JAM {amount}'**
+  String drillActionJam(String amount);
+
+  /// No description provided for @rangeCash.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash'**
+  String get rangeCash;
+
+  /// No description provided for @rangeTourney.
+  ///
+  /// In en, this message translates to:
+  /// **'Tourney'**
+  String get rangeTourney;
+
+  /// No description provided for @rangeAllStacks.
+  ///
+  /// In en, this message translates to:
+  /// **'All stacks'**
+  String get rangeAllStacks;
+
+  /// No description provided for @rangeStackDepth.
+  ///
+  /// In en, this message translates to:
+  /// **'Stack depth'**
+  String get rangeStackDepth;
+
+  /// No description provided for @rangeAllPositions.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get rangeAllPositions;
+
+  /// No description provided for @rangeAllSpots.
+  ///
+  /// In en, this message translates to:
+  /// **'All spots'**
+  String get rangeAllSpots;
+
+  /// No description provided for @rangeRfi.
+  ///
+  /// In en, this message translates to:
+  /// **'RFI'**
+  String get rangeRfi;
+
+  /// No description provided for @rangeVsRaise.
+  ///
+  /// In en, this message translates to:
+  /// **'vs Raise'**
+  String get rangeVsRaise;
+
+  /// No description provided for @rangeHandsLogged.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} / 169 hands logged'**
+  String rangeHandsLogged(int count);
+
+  /// No description provided for @rangeSyncingHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Syncing your hand history…'**
+  String get rangeSyncingHistory;
+
+  /// No description provided for @rangePreflopHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'PREFLOP RANGE — BUILT FROM YOUR LOGGED HANDS'**
+  String get rangePreflopHeader;
+
+  /// No description provided for @rangeEmptyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Your preflop chart builds itself: log hands and enter your hole cards, and each starting hand fills in with how you actually played it before the flop.'**
+  String get rangeEmptyHint;
+
+  /// No description provided for @rangeSpotsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} preflop {count, plural, =1{spot} other{spots}}'**
+  String rangeSpotsCount(int count);
+
+  /// No description provided for @rangeRfiSuffix.
+  ///
+  /// In en, this message translates to:
+  /// **' · RFI'**
+  String get rangeRfiSuffix;
+
+  /// No description provided for @rangeVsRaiseSuffix.
+  ///
+  /// In en, this message translates to:
+  /// **' · vs raise'**
+  String get rangeVsRaiseSuffix;
+
+  /// No description provided for @rangeRaised.
+  ///
+  /// In en, this message translates to:
+  /// **'Raised'**
+  String get rangeRaised;
+
+  /// No description provided for @rangeRaisedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Raised'**
+  String get rangeRaisedLabel;
+
+  /// No description provided for @rangeCalled.
+  ///
+  /// In en, this message translates to:
+  /// **'Called'**
+  String get rangeCalled;
+
+  /// No description provided for @rangeChecked.
+  ///
+  /// In en, this message translates to:
+  /// **'Checked'**
+  String get rangeChecked;
+
+  /// No description provided for @rangeFolded.
+  ///
+  /// In en, this message translates to:
+  /// **'Folded'**
+  String get rangeFolded;
+
+  /// No description provided for @rangeCalledLimped.
+  ///
+  /// In en, this message translates to:
+  /// **'Called / limped'**
+  String get rangeCalledLimped;
+
+  /// No description provided for @rangeToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get rangeToday;
+
+  /// No description provided for @rangeYesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday'**
+  String get rangeYesterday;
+
+  /// No description provided for @rangeDaysAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{days}d ago'**
+  String rangeDaysAgo(int days);
+
+  /// No description provided for @rangeWeeksAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{weeks}w ago'**
+  String rangeWeeksAgo(int weeks);
+
+  /// No description provided for @rangeMonthsAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{months}mo ago'**
+  String rangeMonthsAgo(int months);
+
+  /// No description provided for @rangeYearsAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{years}y ago'**
+  String rangeYearsAgo(int years);
+
+  /// No description provided for @rangeWonBB.
+  ///
+  /// In en, this message translates to:
+  /// **'W {bb} BB'**
+  String rangeWonBB(int bb);
+
+  /// No description provided for @rangeLostBB.
+  ///
+  /// In en, this message translates to:
+  /// **'– {bb} BB'**
+  String rangeLostBB(int bb);
+
+  /// No description provided for @rangeScoutingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} · Scouting report'**
+  String rangeScoutingTitle(String name);
+
+  /// No description provided for @rangeShowdownBias.
+  ///
+  /// In en, this message translates to:
+  /// **'Shown hands skew toward value and called-down hands — they tell you what is in the range and its shape, not the full range.'**
+  String get rangeShowdownBias;
+
+  /// No description provided for @rangeNoShowdowns.
+  ///
+  /// In en, this message translates to:
+  /// **'Log a few hands to showdown with this opponent\'s cards entered, and their range will start filling in here.'**
+  String get rangeNoShowdowns;
+
+  /// No description provided for @rangePremium.
+  ///
+  /// In en, this message translates to:
+  /// **'Premium'**
+  String get rangePremium;
+
+  /// No description provided for @rangeStrong.
+  ///
+  /// In en, this message translates to:
+  /// **'Strong'**
+  String get rangeStrong;
+
+  /// No description provided for @rangeMedium.
+  ///
+  /// In en, this message translates to:
+  /// **'Medium'**
+  String get rangeMedium;
+
+  /// No description provided for @rangeWeak.
+  ///
+  /// In en, this message translates to:
+  /// **'Weak'**
+  String get rangeWeak;
+
+  /// No description provided for @profileSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile Settings'**
+  String get profileSettings;
+
+  /// No description provided for @profileEditName.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Name'**
+  String get profileEditName;
+
+  /// No description provided for @profileYourName.
+  ///
+  /// In en, this message translates to:
+  /// **'Your name'**
+  String get profileYourName;
+
+  /// No description provided for @profileEditEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit email'**
+  String get profileEditEmail;
+
+  /// No description provided for @profileEditEmailHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Email changes require account re-authentication. Contact support to change your email.'**
+  String get profileEditEmailHint;
+
+  /// No description provided for @profileChangePassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Change Password'**
+  String get profileChangePassword;
+
+  /// No description provided for @profilePasswordMask.
+  ///
+  /// In en, this message translates to:
+  /// **'***********'**
+  String get profilePasswordMask;
+
+  /// No description provided for @profileContactSupport.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact support'**
+  String get profileContactSupport;
+
+  /// No description provided for @profileShareFeedback.
+  ///
+  /// In en, this message translates to:
+  /// **'Share your feedback'**
+  String get profileShareFeedback;
+
+  /// No description provided for @profileEmailUpdates.
+  ///
+  /// In en, this message translates to:
+  /// **'Email updates'**
+  String get profileEmailUpdates;
+
+  /// No description provided for @profileFollowUs.
+  ///
+  /// In en, this message translates to:
+  /// **'Follow @finaltable'**
+  String get profileFollowUs;
+
+  /// No description provided for @profileEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get profileEdit;
+
+  /// No description provided for @profileEditUsername.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit username'**
+  String get profileEditUsername;
+
+  /// No description provided for @profileUsernameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'username'**
+  String get profileUsernameHint;
+
+  /// No description provided for @profileInsteadOfName.
+  ///
+  /// In en, this message translates to:
+  /// **'instead of your name in events and hand logging'**
+  String get profileInsteadOfName;
+
+  /// No description provided for @profileUsernameTaken.
+  ///
+  /// In en, this message translates to:
+  /// **'Username already taken'**
+  String get profileUsernameTaken;
+
+  /// No description provided for @profileFixUsernameError.
+  ///
+  /// In en, this message translates to:
+  /// **'Fix username error before saving'**
+  String get profileFixUsernameError;
+
+  /// No description provided for @profileUsernameUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Username no longer available'**
+  String get profileUsernameUnavailable;
+
+  /// No description provided for @profileSavedSuccessfully.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved successfully'**
+  String get profileSavedSuccessfully;
+
+  /// No description provided for @profileDeleteAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Account'**
+  String get profileDeleteAccount;
+
+  /// No description provided for @profileDeleteAccountMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This will permanently delete your account and all associated data. This action cannot be undone.\n\nIf you have an active subscription, please cancel it first in your device settings.'**
+  String get profileDeleteAccountMessage;
+
+  /// No description provided for @profileChangePasswordTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Change Password'**
+  String get profileChangePasswordTitle;
+
+  /// No description provided for @profileChangePasswordMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'We\'ll send a password reset link to your email address.'**
+  String get profileChangePasswordMessage;
+
+  /// No description provided for @profileResetEmailSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Password reset email sent to {email}'**
+  String profileResetEmailSent(String email);
+
+  /// No description provided for @profileResetEmailFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to send reset email'**
+  String get profileResetEmailFailed;
+
+  /// No description provided for @profileSendResetEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Send Reset Email'**
+  String get profileSendResetEmail;
+
+  /// No description provided for @settingsGeneral.
+  ///
+  /// In en, this message translates to:
+  /// **'General'**
+  String get settingsGeneral;
+
+  /// No description provided for @settingsClubs.
+  ///
+  /// In en, this message translates to:
+  /// **'Clubs'**
+  String get settingsClubs;
+
+  /// No description provided for @settingsBankroll.
+  ///
+  /// In en, this message translates to:
+  /// **'Bankroll'**
+  String get settingsBankroll;
+
+  /// No description provided for @settingsRegisterClub.
+  ///
+  /// In en, this message translates to:
+  /// **'Register Club'**
+  String get settingsRegisterClub;
+
+  /// No description provided for @settingsChooseLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose Language'**
+  String get settingsChooseLanguage;
+
+  /// No description provided for @settingsMoreLanguagesLater.
+  ///
+  /// In en, this message translates to:
+  /// **'More languages will be announced later'**
+  String get settingsMoreLanguagesLater;
+
+  /// No description provided for @settingsChoose.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose'**
+  String get settingsChoose;
+
+  /// No description provided for @settingsChooseCurrency.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose Currency'**
+  String get settingsChooseCurrency;
+
+  /// No description provided for @settingsMoreCurrenciesLater.
+  ///
+  /// In en, this message translates to:
+  /// **'More currencies will be announced later'**
+  String get settingsMoreCurrenciesLater;
+
+  /// No description provided for @settingsNoClubs.
+  ///
+  /// In en, this message translates to:
+  /// **'No clubs'**
+  String get settingsNoClubs;
+
+  /// No description provided for @settingsNoClubsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No Clubs Yet'**
+  String get settingsNoClubsYet;
+
+  /// No description provided for @settingsNoClubsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Register or join a club to see them here.'**
+  String get settingsNoClubsHint;
+
+  /// No description provided for @settingsRegisterAClub.
+  ///
+  /// In en, this message translates to:
+  /// **'Register a Club'**
+  String get settingsRegisterAClub;
+
+  /// No description provided for @settingsYourClubs.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Clubs'**
+  String get settingsYourClubs;
+
+  /// No description provided for @settingsChooseTour.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose which tour to replay'**
+  String get settingsChooseTour;
+
+  /// No description provided for @settingsAbout.
+  ///
+  /// In en, this message translates to:
+  /// **'About'**
+  String get settingsAbout;
+
+  /// No description provided for @settingsPending.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} pending'**
+  String settingsPending(int count);
+
+  /// No description provided for @settingsGetPlus.
+  ///
+  /// In en, this message translates to:
+  /// **'Get Final Table Plus'**
+  String get settingsGetPlus;
+
+  /// No description provided for @settingsGetPlusSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Log more hands and AI analysis'**
+  String get settingsGetPlusSubtitle;
+
+  /// No description provided for @statsHandsLogged.
+  ///
+  /// In en, this message translates to:
+  /// **'Hands Logged'**
+  String get statsHandsLogged;
+
+  /// No description provided for @statsVpip.
+  ///
+  /// In en, this message translates to:
+  /// **'VPIP'**
+  String get statsVpip;
+
+  /// No description provided for @statsPfr.
+  ///
+  /// In en, this message translates to:
+  /// **'PFR'**
+  String get statsPfr;
+
+  /// No description provided for @stats3Bet.
+  ///
+  /// In en, this message translates to:
+  /// **'3-Bet'**
+  String get stats3Bet;
+
+  /// No description provided for @statsCBet.
+  ///
+  /// In en, this message translates to:
+  /// **'C-Bet'**
+  String get statsCBet;
+
+  /// No description provided for @statsSteal.
+  ///
+  /// In en, this message translates to:
+  /// **'Steal'**
+  String get statsSteal;
+
+  /// No description provided for @statsCheckRaise.
+  ///
+  /// In en, this message translates to:
+  /// **'Check-Raise'**
+  String get statsCheckRaise;
+
+  /// No description provided for @statsRanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Ranges'**
+  String get statsRanges;
+
+  /// No description provided for @statsStats.
+  ///
+  /// In en, this message translates to:
+  /// **'Stats'**
+  String get statsStats;
+
+  /// No description provided for @loggingChoose.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose'**
+  String get loggingChoose;
+
+  /// No description provided for @loggingTrainingDrills.
+  ///
+  /// In en, this message translates to:
+  /// **'Training Drills'**
+  String get loggingTrainingDrills;
+
+  /// No description provided for @loggingTrainingDrillsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Practice preflop spots against your real opponents'**
+  String get loggingTrainingDrillsSubtitle;
+
+  /// No description provided for @loggingPro.
+  ///
+  /// In en, this message translates to:
+  /// **'PRO'**
+  String get loggingPro;
+
+  /// No description provided for @opponentsEnterName.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter name'**
+  String get opponentsEnterName;
+
+  /// No description provided for @opponentsAddNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Add notes'**
+  String get opponentsAddNotes;
+
+  /// No description provided for @opponentsNoNotesAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'No notes added'**
+  String get opponentsNoNotesAdded;
+
+  /// No description provided for @opponentsDeleteOpponent.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete opponent'**
+  String get opponentsDeleteOpponent;
+
+  /// No description provided for @seatManagePlayers.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage Players'**
+  String get seatManagePlayers;
+
+  /// No description provided for @seatUpdatePlayerInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Update player information'**
+  String get seatUpdatePlayerInfo;
+
+  /// No description provided for @seatStartSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Session'**
+  String get seatStartSession;
+
+  /// No description provided for @seatSaveChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Changes'**
+  String get seatSaveChanges;
+
+  /// No description provided for @seatYou.
+  ///
+  /// In en, this message translates to:
+  /// **'You'**
+  String get seatYou;
+
+  /// No description provided for @seatKeep.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep'**
+  String get seatKeep;
+
+  /// No description provided for @seatMove.
+  ///
+  /// In en, this message translates to:
+  /// **'Move'**
+  String get seatMove;
+
+  /// No description provided for @tableManageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Table'**
+  String get tableManageTitle;
+
+  /// No description provided for @tableButtonOnEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Button on Empty Seat'**
+  String get tableButtonOnEmpty;
+
+  /// No description provided for @handPlayerLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Player '**
+  String get handPlayerLabel;
+
+  /// No description provided for @handBbLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'BB'**
+  String get handBbLabel;
+
+  /// No description provided for @handRaiseLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'RAISE'**
+  String get handRaiseLabel;
+
+  /// No description provided for @handBetLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'BET'**
+  String get handBetLabel;
+
+  /// No description provided for @handFoldLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'FOLD'**
+  String get handFoldLabel;
+
+  /// No description provided for @handRaiseAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Raise'**
+  String get handRaiseAction;
+
+  /// No description provided for @handBetAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Bet'**
+  String get handBetAction;
+
+  /// No description provided for @handOnlyOneRemaining.
+  ///
+  /// In en, this message translates to:
+  /// **'Hand ends: Only one player remaining'**
+  String get handOnlyOneRemaining;
+
+  /// No description provided for @handSessionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Session'**
+  String get handSessionTitle;
 }
 
 class _AppLocalizationsDelegate

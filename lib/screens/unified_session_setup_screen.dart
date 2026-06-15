@@ -204,9 +204,10 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
     final startingStack = _gameType == GameType.cash
         ? buyIn
         : double.parse(_startingStackController.text);
+    final l10n = AppLocalizations.of(context);
     final sessionName = _sessionNameController.text.isNotEmpty
         ? _sessionNameController.text
-        : 'Session';
+        : l10n.handSessionTitle;
 
     final sessionManager = PokerSessionManager(
       smallBlind: _smallBlind,
@@ -446,7 +447,7 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
           crossAxisAlignment: CrossAxisAlignment.center,
           content: _buildTextField(
             controller: _sessionNameController,
-            hint: 'Enter name',
+            hint: l10n.opponentsEnterName,
           ),
         ),
         _buildDivider(),

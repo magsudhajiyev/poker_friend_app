@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../models/stack_bucket.dart';
 import '../../screens/hand_actions_screen.dart';
 import '../../services/range_grid_cloud_backfill.dart';
@@ -152,15 +153,15 @@ class _RangeGridViewState extends State<RangeGridView>
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          segment('Cash', 'cash'),
-          segment('Tourney', 'tournament'),
+          segment(AppLocalizations.of(context).rangeCash, 'cash'),
+          segment(AppLocalizations.of(context).rangeTourney, 'tournament'),
         ],
       ),
     );
   }
 
-  String get _stackLabel => _stackBucket == null
-      ? 'All stacks'
+  String _stackLabelText(AppLocalizations l10n) => _stackBucket == null
+      ? l10n.rangeAllStacks
       : StackBucketHelper.rangeLabel(
           StackRange.values.firstWhere(
             (r) => r.name == _stackBucket,
@@ -193,7 +194,7 @@ class _RangeGridViewState extends State<RangeGridView>
             ),
             const SizedBox(width: 6),
             Text(
-              _stackLabel,
+              _stackLabelText(AppLocalizations.of(context)),
               style: GoogleFonts.ibmPlexSans(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
@@ -215,6 +216,7 @@ class _RangeGridViewState extends State<RangeGridView>
   }
 
   void _showStackPicker() {
+    final l10n = AppLocalizations.of(context);
     HapticFeedback.selectionClick();
     showModalBottomSheet(
       context: context,
@@ -282,7 +284,7 @@ class _RangeGridViewState extends State<RangeGridView>
               ),
               const SizedBox(height: 14),
               Text(
-                'Stack depth',
+                l10n.rangeStackDepth,
                 style: GoogleFonts.ibmPlexSans(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
@@ -290,7 +292,7 @@ class _RangeGridViewState extends State<RangeGridView>
                 ),
               ),
               const SizedBox(height: 6),
-              option('All stacks', null),
+              option(l10n.rangeAllStacks, null),
               for (final range in StackRange.values)
                 option(StackBucketHelper.rangeLabel(range), range.name),
             ],
@@ -343,7 +345,7 @@ class _RangeGridViewState extends State<RangeGridView>
       ),
       child: Row(
         children: [
-          segment('All', null),
+          segment(AppLocalizations.of(context).rangeAllPositions, null),
           for (final group in _posGroups) segment(group, group),
         ],
       ),
@@ -426,9 +428,9 @@ class _RangeGridViewState extends State<RangeGridView>
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          segment('All spots', null),
-          segment('RFI', 'rfi'),
-          segment('vs Raise', 'vs_raise'),
+          segment(AppLocalizations.of(context).rangeAllSpots, null),
+          segment(AppLocalizations.of(context).rangeRfi, 'rfi'),
+          segment(AppLocalizations.of(context).rangeVsRaise, 'vs_raise'),
         ],
       ),
     );
@@ -616,7 +618,7 @@ class _RangeGridViewState extends State<RangeGridView>
           ),
           const SizedBox(width: 10),
           Text(
-            '$logged / 169 hands logged',
+            AppLocalizations.of(context).rangeHandsLogged(logged),
             style: GoogleFonts.ibmPlexSans(
               fontSize: 12,
               fontWeight: FontWeight.w500,
@@ -641,7 +643,7 @@ class _RangeGridViewState extends State<RangeGridView>
           ),
           const SizedBox(width: 8),
           Text(
-            'Syncing your hand history…',
+            AppLocalizations.of(context).rangeSyncingHistory,
             style: GoogleFonts.ibmPlexSans(
               fontSize: 12,
               color: Colors.white.withValues(alpha: 0.5),
@@ -700,7 +702,7 @@ class _RangeGridViewState extends State<RangeGridView>
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Text(
-              'PREFLOP RANGE — BUILT FROM YOUR LOGGED HANDS',
+              AppLocalizations.of(context).rangePreflopHeader,
               style: GoogleFonts.ibmPlexSans(
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
@@ -731,9 +733,7 @@ class _RangeGridViewState extends State<RangeGridView>
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 32),
                 child: Text(
-                  'Your preflop chart builds itself: log hands and enter your '
-                  'hole cards, and each starting hand fills in with how you '
-                  'actually played it before the flop.',
+                  AppLocalizations.of(context).rangeEmptyHint,
                   textAlign: TextAlign.center,
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: 13,
@@ -799,6 +799,7 @@ class _CellDetailSheetState extends State<_CellDetailSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final agg = widget.aggregate;
     return Container(
       constraints: BoxConstraints(
@@ -837,8 +838,8 @@ class _CellDetailSheetState extends State<_CellDetailSheet> {
               ),
               const SizedBox(width: 10),
               Text(
-                '${agg.total} preflop ${agg.total == 1 ? 'spot' : 'spots'}'
-                '${widget.scenario == 'rfi' ? ' · RFI' : widget.scenario == 'vs_raise' ? ' · vs raise' : ''}'
+                '${l10n.rangeSpotsCount(agg.total)}'
+                '${widget.scenario == 'rfi' ? l10n.rangeRfiSuffix : widget.scenario == 'vs_raise' ? l10n.rangeVsRaiseSuffix : ''}'
                 '${widget.posGroup != null ? ' · ${widget.posGroup}' : ''}',
                 style: GoogleFonts.ibmPlexSans(
                   fontSize: 13,

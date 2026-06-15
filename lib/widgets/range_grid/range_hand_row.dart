@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../services/range_grid_service.dart';
 
 /// Compact row for one logged hand behind a grid cell: relative date,
@@ -11,19 +12,20 @@ class RangeHandRow extends StatelessWidget {
 
   const RangeHandRow({super.key, required this.entry, this.onTap});
 
-  String _relativeDate() {
+  String _relativeDate(AppLocalizations l10n) {
     final date = DateTime.fromMillisecondsSinceEpoch(entry.timestamp);
     final diff = DateTime.now().difference(date);
-    if (diff.inDays < 1) return 'Today';
-    if (diff.inDays == 1) return 'Yesterday';
-    if (diff.inDays < 7) return '${diff.inDays}d ago';
-    if (diff.inDays < 30) return '${(diff.inDays / 7).floor()}w ago';
-    if (diff.inDays < 365) return '${(diff.inDays / 30).floor()}mo ago';
-    return '${(diff.inDays / 365).floor()}y ago';
+    if (diff.inDays < 1) return l10n.rangeToday;
+    if (diff.inDays == 1) return l10n.rangeYesterday;
+    if (diff.inDays < 7) return l10n.rangeDaysAgo(diff.inDays);
+    if (diff.inDays < 30) return l10n.rangeWeeksAgo((diff.inDays / 7).floor());
+    if (diff.inDays < 365) return l10n.rangeMonthsAgo((diff.inDays / 30).floor());
+    return l10n.rangeYearsAgo((diff.inDays / 365).floor());
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
@@ -34,7 +36,7 @@ class RangeHandRow extends StatelessWidget {
             SizedBox(
               width: 64,
               child: Text(
-                _relativeDate(),
+                _relativeDate(l10n),
                 style: GoogleFonts.ibmPlexSans(
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
@@ -83,7 +85,7 @@ class RangeHandRow extends StatelessWidget {
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
-                '${entry.won ? 'W' : '–'} ${entry.potBB.round()} BB',
+                entry.won ? l10n.rangeWonBB(entry.potBB.round()) : l10n.rangeLostBB(entry.potBB.round()),
                 style: GoogleFonts.ibmPlexSans(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,

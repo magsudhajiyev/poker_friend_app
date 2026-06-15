@@ -593,7 +593,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> with SingleTicker
                       textInputAction: TextInputAction.next,
                       style: GoogleFonts.ibmPlexSans(fontSize: 15, color: const Color(0xFF0C0C0C)),
                       decoration: InputDecoration(
-                        hintText: 'Enter name',
+                        hintText: l10n.opponentsEnterName,
                         hintStyle: GoogleFonts.ibmPlexSans(fontSize: 15, color: const Color(0xFFB9B9B9)),
                         filled: true,
                         fillColor: Colors.transparent,
@@ -650,7 +650,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> with SingleTicker
                       focusNode: _notesFocusNode,
                       style: GoogleFonts.ibmPlexSans(fontSize: 15, color: const Color(0xFF0C0C0C)),
                       decoration: InputDecoration(
-                        hintText: 'Add notes',
+                        hintText: l10n.opponentsAddNotes,
                         hintStyle: GoogleFonts.ibmPlexSans(fontSize: 15, color: const Color(0xFFB9B9B9)),
                         filled: true,
                         fillColor: Colors.transparent,
@@ -882,6 +882,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> with SingleTicker
   }
 
   Widget _buildOpponentCard(Opponent opponent) {
+    final l10n = AppLocalizations.of(context);
     final avatarColor = _getColorForOpponent(opponent.color);
     final handsCount = OpponentHandsScreen.filteredHandCounts[opponent.id]
         ?? opponentHandsCounts[opponent.id]
@@ -976,7 +977,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> with SingleTicker
                   Text(
                     opponent.notes?.isNotEmpty == true
                         ? opponent.notes!
-                        : 'No notes added',
+                        : l10n.opponentsNoNotesAdded,
                     style: GoogleFonts.ibmPlexSans(
                       fontSize: 11,
                       fontWeight: FontWeight.w400,
@@ -1145,7 +1146,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> with SingleTicker
     showGeneralDialog(
       context: context,
       barrierDismissible: true,
-      barrierLabel: 'Delete opponent',
+      barrierLabel: l10n.opponentsDeleteOpponent,
       barrierColor: Colors.transparent,
       transitionDuration: const Duration(milliseconds: 200),
       transitionBuilder: (context, animation, _, child) => FadeTransition(

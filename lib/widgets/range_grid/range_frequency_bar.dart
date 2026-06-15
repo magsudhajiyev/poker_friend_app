@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../l10n/app_localizations.dart';
+
 /// Stacked raise/call/check/fold frequency bar with a legend.
 /// Colors follow the action-flash palette used during hand logging.
 class RangeFrequencyBar extends StatelessWidget {
@@ -27,6 +29,7 @@ class RangeFrequencyBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (_total == 0) return const SizedBox.shrink();
+    final l10n = AppLocalizations.of(context);
 
     final segments = <(int, Color)>[
       (raiseCount, raiseColor),
@@ -83,10 +86,10 @@ class RangeFrequencyBar extends StatelessWidget {
           spacing: 14,
           runSpacing: 4,
           children: [
-            if (raiseCount > 0) _legendItem('Raised', raiseCount, raiseColor),
-            if (callCount > 0) _legendItem('Called', callCount, callColor),
-            if (checkCount > 0) _legendItem('Checked', checkCount, checkColor),
-            if (foldCount > 0) _legendItem('Folded', foldCount, foldColor),
+            if (raiseCount > 0) _legendItem(l10n.rangeRaised, raiseCount, raiseColor),
+            if (callCount > 0) _legendItem(l10n.rangeCalled, callCount, callColor),
+            if (checkCount > 0) _legendItem(l10n.rangeChecked, checkCount, checkColor),
+            if (foldCount > 0) _legendItem(l10n.rangeFolded, foldCount, foldColor),
           ],
         ),
       ],

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../models/observed_range.dart';
 
 /// Compact 13×13 grid highlighting the hand classes an opponent has actually
@@ -124,6 +125,7 @@ class ObservedRangeSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return SafeArea(
       child: Container(
         constraints: BoxConstraints(
@@ -138,7 +140,7 @@ class ObservedRangeSheet extends StatelessWidget {
                 children: [
                   Expanded(
                     child: Text(
-                      '${range.name} · Scouting report',
+                      l10n.rangeScoutingTitle(range.name),
                       style: GoogleFonts.ibmPlexSans(
                           color: Colors.white,
                           fontSize: 18,
@@ -169,15 +171,14 @@ class ObservedRangeSheet extends StatelessWidget {
                       height: 1.4)),
               const SizedBox(height: 16),
               if (range.hasData) ...[
-                _composition(),
+                _composition(l10n),
                 const SizedBox(height: 16),
                 ObservedRangeGrid(range: range),
                 const SizedBox(height: 12),
-                _legend(),
+                _legend(l10n),
                 const SizedBox(height: 12),
                 Text(
-                  'Shown hands skew toward value and called-down hands — they '
-                  'tell you what is in the range and its shape, not the full range.',
+                  l10n.rangeShowdownBias,
                   style: GoogleFonts.ibmPlexSans(
                       color: Colors.white.withOpacity(0.4),
                       fontSize: 11,
@@ -189,8 +190,7 @@ class ObservedRangeSheet extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(vertical: 24),
                   child: Center(
                     child: Text(
-                      'Log a few hands to showdown with this opponent\'s cards '
-                      'entered, and their range will start filling in here.',
+                      l10n.rangeNoShowdowns,
                       textAlign: TextAlign.center,
                       style: GoogleFonts.ibmPlexSans(
                           color: Colors.white.withOpacity(0.5),
@@ -206,7 +206,7 @@ class ObservedRangeSheet extends StatelessWidget {
     );
   }
 
-  Widget _composition() {
+  Widget _composition(AppLocalizations l10n) {
     Widget chip(String label, int count, Color color) {
       if (count == 0) return const SizedBox.shrink();
       return Container(
@@ -225,15 +225,15 @@ class ObservedRangeSheet extends StatelessWidget {
       spacing: 8,
       runSpacing: 8,
       children: [
-        chip('Premium', range.premiumCount, const Color(0xFF54E98A)),
-        chip('Strong', range.strongCount, const Color(0xFF89F1EC)),
-        chip('Medium', range.mediumCount, const Color(0xFFFFC857)),
-        chip('Weak', range.wideCount, const Color(0xFFE85D5D)),
+        chip(l10n.rangePremium, range.premiumCount, const Color(0xFF54E98A)),
+        chip(l10n.rangeStrong, range.strongCount, const Color(0xFF89F1EC)),
+        chip(l10n.rangeMedium, range.mediumCount, const Color(0xFFFFC857)),
+        chip(l10n.rangeWeak, range.wideCount, const Color(0xFFE85D5D)),
       ],
     );
   }
 
-  Widget _legend() {
+  Widget _legend(AppLocalizations l10n) {
     Widget dot(String label, Color color) => Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -246,9 +246,9 @@ class ObservedRangeSheet extends StatelessWidget {
         );
     return Row(
       children: [
-        dot('Raised', const Color(0xFFFFC857)),
+        dot(l10n.rangeRaisedLabel, const Color(0xFFFFC857)),
         const SizedBox(width: 16),
-        dot('Called / limped', const Color(0xFF89F1EC)),
+        dot(l10n.rangeCalledLimped, const Color(0xFF89F1EC)),
       ],
     );
   }

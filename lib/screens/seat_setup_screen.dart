@@ -864,6 +864,7 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
@@ -928,7 +929,7 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              widget.isInitialSetup ? 'Setup Seat' : 'Manage Players',
+                              widget.isInitialSetup ? l10n.seatSetupTitle : l10n.seatManagePlayers,
                               style: GoogleFonts.ibmPlexSans(
                                 fontSize: 24,
                                 color: Colors.white,
@@ -942,7 +943,7 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                                   ? 'Click seat to configure. Drag button to position'
                                   : _isButtonLocked()
                                       ? 'Button locked - hand in progress'
-                                      : 'Update player information',
+                                      : l10n.seatUpdatePlayerInfo,
                               style: GoogleFonts.ibmPlexSans(
                                 fontSize: 14,
                                 color: _isButtonLocked() ? Colors.orange : Colors.white.withOpacity(0.6),
@@ -1003,7 +1004,7 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                                   ),
                                   child: Center(
                                     child: Text(
-                                      widget.isInitialSetup ? 'Start Session' : 'Save Changes',
+                                      widget.isInitialSetup ? l10n.seatStartSession : l10n.seatSaveChanges,
                                       style: GoogleFonts.ibmPlexSans(
                                         color: Colors.black,
                                         fontSize: 17,
@@ -1055,8 +1056,9 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
     final stackController = stackControllers[previousSeat];
 
     if (nameController != null && stackController != null) {
+      final l10n = AppLocalizations.of(context);
       bool wasUserSeat = nameController.text == userName ||
-                        nameController.text == "You" ||
+                        nameController.text == l10n.seatYou ||
                         nameController.text.isEmpty;
 
       if (wasUserSeat) {
@@ -1164,6 +1166,7 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
   /// Returns the new button seat if auto-moved, or non-null if user chose to keep it.
   /// Returns null if user cancelled.
   Future<int?> _showButtonOnEmptySeatWarning(int currentBtnSeat) async {
+    final l10n = AppLocalizations.of(context);
     // Find nearest active seat clockwise
     int? nearestActive;
     for (int i = 1; i <= 9; i++) {
@@ -1198,11 +1201,11 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text('Keep', style: GoogleFonts.ibmPlexSans(color: const Color(0xFF8C8C8C))),
+            child: Text(l10n.seatKeep, style: GoogleFonts.ibmPlexSans(color: const Color(0xFF8C8C8C))),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: Text('Move', style: GoogleFonts.ibmPlexSans(color: const Color(0xFF62E3BC))),
+            child: Text(l10n.seatMove, style: GoogleFonts.ibmPlexSans(color: const Color(0xFF62E3BC))),
           ),
         ],
       ),

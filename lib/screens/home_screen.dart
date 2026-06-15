@@ -949,7 +949,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
     try {
       final userId = AuthService.userId;
-      final userName = AuthService.userDisplayName ?? 'User';
+      final l10n = AppLocalizations.of(context);
+      final userName = AuthService.userDisplayName ?? l10n.homeUserFallback;
 
       if (userId == null) {
         throw 'Not authenticated';
@@ -1187,7 +1188,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             earningsChartData = AppDataCache.cachedEarningsData?['chartData'];
             avgEarnings = AppDataCache.cachedEarningsData?['avgEarnings'] ?? 0.0;
             upcomingEvents = AppDataCache.cachedUpcomingEvents?.cast<Map<String, dynamic>>() ?? [];
-            userName = AppDataCache.cachedUserName ?? 'User';
+            userName = AppDataCache.cachedUserName ?? AppLocalizations.of(context).homeUserFallback;
             isLoadingData = false;
           });
           _progressAnimationController.reset();

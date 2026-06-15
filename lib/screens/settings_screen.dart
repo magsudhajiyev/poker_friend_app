@@ -196,7 +196,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            'Choose Language',
+                            l10n.settingsChooseLanguage,
                             style: GoogleFonts.ibmPlexSans(
                               fontSize: 15,
                               fontWeight: FontWeight.w600,
@@ -282,7 +282,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           const Icon(Icons.public, size: 13, color: Color(0xFFB9B9B9)),
                           const SizedBox(width: 4),
                           Text(
-                            'More languages will be announced later',
+                            l10n.settingsMoreLanguagesLater,
                             style: GoogleFonts.ibmPlexSans(
                               fontSize: 11,
                               color: const Color(0xFFB9B9B9),
@@ -334,7 +334,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   borderRadius: BorderRadius.circular(999),
                                 ),
                                 child: Text(
-                                  'Choose',
+                                  l10n.settingsChoose,
                                   textAlign: TextAlign.center,
                                   style: GoogleFonts.ibmPlexSans(
                                     fontSize: 15,
@@ -418,7 +418,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'Choose Currency',
+                          l10n.settingsChooseCurrency,
                           style: GoogleFonts.ibmPlexSans(
                             fontSize: 15,
                             fontWeight: FontWeight.w600,
@@ -505,7 +505,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 const Icon(Icons.public, size: 13, color: Color(0xFFB9B9B9)),
                                 const SizedBox(width: 4),
                                 Text(
-                                  'More currencies will be announced later',
+                                  l10n.settingsMoreCurrenciesLater,
                                   style: GoogleFonts.ibmPlexSans(
                                     fontSize: 11,
                                     color: const Color(0xFFB9B9B9),
@@ -555,7 +555,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                         borderRadius: BorderRadius.circular(999),
                                       ),
                                       child: Text(
-                                        'Choose',
+                                        l10n.settingsChoose,
                                         textAlign: TextAlign.center,
                                         style: GoogleFonts.ibmPlexSans(
                                           fontSize: 15,
@@ -625,7 +625,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(60)),
                   padding: const EdgeInsets.symmetric(vertical: 14),
                 ),
-                child: Text('Got it',
+                child: Text(l10n.drillGotIt,
                     style: GoogleFonts.ibmPlexSans(fontSize: 17, fontWeight: FontWeight.w600, color: Colors.white)),
               ),
             ),
@@ -638,12 +638,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
   // ── Clubs ──────────────────────────────────────────────────────────────────
 
   void _showClubs() {
+    final l10n = AppLocalizations.of(context);
     if (_clubs.isEmpty) {
       final bottomInset = MediaQuery.of(context).padding.bottom;
       showGeneralDialog(
         context: context,
         barrierDismissible: true,
-        barrierLabel: 'No clubs',
+        barrierLabel: l10n.settingsNoClubs,
         barrierColor: Colors.black.withValues(alpha: 0.45),
         transitionDuration: const Duration(milliseconds: 300),
         transitionBuilder: (_, animation, __, child) => SlideTransition(
@@ -697,7 +698,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           Column(
                             children: [
                               Text(
-                                'No Clubs Yet',
+                                l10n.settingsNoClubsYet,
                                 textAlign: TextAlign.center,
                                 style: GoogleFonts.ibmPlexSans(
                                   fontSize: 17,
@@ -708,7 +709,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               ),
                               const SizedBox(height: 7),
                               Text(
-                                'Register or join a club to see them here.',
+                                l10n.settingsNoClubsHint,
                                 textAlign: TextAlign.center,
                                 style: GoogleFonts.ibmPlexSans(
                                   fontSize: 15,
@@ -738,7 +739,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         borderRadius: BorderRadius.circular(999),
                       ),
                       child: Text(
-                        'Register a Club',
+                        l10n.settingsRegisterAClub,
                         textAlign: TextAlign.center,
                         style: GoogleFonts.ibmPlexSans(
                           fontSize: 15,
@@ -769,7 +770,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Your Clubs',
+              Text(l10n.settingsYourClubs,
                   style: GoogleFonts.ibmPlexSans(fontSize: 20, fontWeight: FontWeight.w600, color: Colors.white)),
               const SizedBox(height: 16),
               ..._clubs.map((club) => _buildClubRow(club)),
@@ -834,7 +835,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               Text(l10n.settingsGuidedTour,
                   style: GoogleFonts.ibmPlexSans(fontSize: 20, fontWeight: FontWeight.w600, color: Colors.white)),
               const SizedBox(height: 8),
-              Text('Choose which tour to replay', style: GoogleFonts.ibmPlexSans(fontSize: 14, color: _secondary)),
+              Text(l10n.settingsChooseTour, style: GoogleFonts.ibmPlexSans(fontSize: 14, color: _secondary)),
               const SizedBox(height: 20),
               _buildTourOption(
                 icon: Icons.style_rounded,
@@ -937,13 +938,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final hPad = screenWidth * 0.044; // ≈16px at 375pt
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       backgroundColor: _bg,
       body: Column(
         children: [
           TopNavBar(
-            title: 'Settings',
+            title: l10n.settingsTitle,
             onBack: () => Navigator.pop(context),
             backgroundColor: _bg,
           ),
@@ -958,32 +960,32 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   _buildProfileCard(),
                   const SizedBox(height: 24),
                   _buildSection(
-                    label: 'General',
+                    label: l10n.settingsGeneral,
                     children: [
                       _buildRow(
                         icon: _svgIcon('assets/icons/Club.svg'),
-                        title: 'Clubs',
+                        title: l10n.settingsClubs,
                         onTap: _showClubs,
                       ),
                       _buildRow(
                         icon: const Icon(Icons.account_balance_wallet_outlined, color: AppColors.contentInactive, size: 24),
-                        title: 'Bankroll',
+                        title: l10n.settingsBankroll,
                         onTap: _navigateToBankroll,
                       ),
                       _buildRow(
                         icon: const Icon(Icons.add_circle_outline_rounded, color: AppColors.contentInactive, size: 24),
-                        title: 'Register Club',
+                        title: l10n.settingsRegisterClub,
                         onTap: () => showRegisterClubDialog(context),
                       ),
                       _buildRow(
                         icon: const Icon(Icons.translate_rounded, color: AppColors.contentInactive, size: 24),
-                        title: 'Language',
+                        title: l10n.settingsLanguage,
                         subtitle: _currentLocaleName(),
                         onTap: _showLanguagePicker,
                       ),
                       _buildRow(
                         icon: const Icon(Icons.monetization_on_outlined, color: AppColors.contentInactive, size: 24),
-                        title: 'Currency',
+                        title: l10n.settingsCurrency,
                         subtitle: '${CurrencyService.current.name} (${CurrencyService.symbol})',
                         onTap: _showCurrencyPicker,
                         isLast: true,
@@ -992,25 +994,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                   const SizedBox(height: 16),
                   _buildSection(
-                    label: 'Knowledge Base',
+                    label: l10n.settingsKnowledgeBase,
                     children: [
                       _buildRow(
                         icon: const Icon(Icons.school_outlined, color: AppColors.contentInactive, size: 24),
-                        title: 'Guided Tour',
-                        subtitle: 'Replay onboarding tours',
+                        title: l10n.settingsGuidedTour,
+                        subtitle: l10n.settingsGuidedTourSubtitle,
                         onTap: _showGuidedTourSheet,
                       ),
                       _buildRow(
                         icon: _svgIcon('assets/icons/ChartBar.svg'),
-                        title: 'Understanding Your Stats',
-                        subtitle: 'Learn what each metric means',
+                        title: l10n.settingsUnderstandingStats,
+                        subtitle: l10n.settingsUnderstandingStatsSubtitle,
                         onTap: () => Navigator.push(context, MaterialPageRoute(
                             builder: (_) => const KnowledgeBaseScreen(section: KnowledgeBaseSection.stats))),
                       ),
                       _buildRow(
                         icon: _svgIcon('assets/icons/Club.svg'),
-                        title: 'Clubs & Events',
-                        subtitle: 'How club play works',
+                        title: l10n.settingsClubsEvents,
+                        subtitle: l10n.settingsClubsEventsSubtitle,
                         onTap: () => Navigator.push(context, MaterialPageRoute(
                             builder: (_) => const KnowledgeBaseScreen(section: KnowledgeBaseSection.clubs))),
                         isLast: true,
@@ -1019,26 +1021,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                   const SizedBox(height: 16),
                   _buildSection(
-                    label: 'About',
+                    label: l10n.settingsAbout,
                     children: [
                       _buildRow(
                         icon: const Icon(Icons.chat_bubble_outline_rounded, color: AppColors.contentInactive, size: 24),
-                        title: 'Contact support',
+                        title: l10n.profileContactSupport,
                         onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const HelpSupportScreen())),
                       ),
                       _buildRow(
                         icon: const Icon(Icons.auto_awesome_outlined, color: AppColors.contentInactive, size: 24),
-                        title: 'Share your feedback',
+                        title: l10n.profileShareFeedback,
                         onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const HelpSupportScreen())),
                       ),
                       _buildRow(
                         icon: _svgIcon('assets/icons/X.svg'),
-                        title: 'Follow @finaltable',
+                        title: l10n.profileFollowUs,
                         onTap: () => launchUrl(Uri.parse('https://x.com/finaltable'), mode: LaunchMode.externalApplication),
                       ),
                       _buildRow(
                         icon: const Icon(Icons.logout_rounded, color: _danger, size: 24),
-                        title: 'Sign out',
+                        title: l10n.profileSignOut,
                         titleColor: _danger,
                         onTap: _showSignOutConfirmation,
                         isLast: true,
@@ -1050,12 +1052,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   if (_isAppAdmin) ...[
                     const SizedBox(height: 16),
                     _buildSection(
-                      label: 'Admin',
+                      label: l10n.settingsAdmin,
                       children: [
                         _buildRow(
                           icon: const Icon(Icons.business_center_rounded, color: Color(0xFFE8B55A), size: 24),
-                          title: 'Club Requests',
-                          subtitle: _pendingRequestCount > 0 ? '$_pendingRequestCount pending' : null,
+                          title: l10n.settingsClubRequests,
+                          subtitle: _pendingRequestCount > 0 ? l10n.settingsPending(_pendingRequestCount) : null,
                           onTap: () async {
                             await Navigator.push(context, MaterialPageRoute(builder: (_) => const ClubRequestsScreen()));
                             _loadData();
@@ -1063,8 +1065,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ),
                         _buildRow(
                           icon: const Icon(Icons.support_agent_rounded, color: Color(0xFFE8B55A), size: 24),
-                          title: 'Support Requests',
-                          subtitle: _pendingSupportCount > 0 ? '$_pendingSupportCount pending' : null,
+                          title: l10n.settingsSupportRequests,
+                          subtitle: _pendingSupportCount > 0 ? l10n.settingsPending(_pendingSupportCount) : null,
                           onTap: () async {
                             await Navigator.push(context, MaterialPageRoute(builder: (_) => const SupportRequestsScreen()));
                             _loadData();
@@ -1072,7 +1074,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ),
                         _buildRow(
                           icon: const Icon(Icons.notifications_active_rounded, color: Color(0xFF89F1EC), size: 24),
-                          title: 'Notification Tester',
+                          title: l10n.settingsNotificationTester,
                           onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationTesterScreen())),
                           isLast: true,
                         ),
@@ -1116,9 +1118,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Get Final Table Plus',
+                  Text(AppLocalizations.of(context).settingsGetPlus,
                       style: GoogleFonts.ibmPlexSans(fontSize: 17, fontWeight: FontWeight.w600, color: Colors.white, letterSpacing: 0)),
-                  Text('Log more hands and AI analysis',
+                  Text(AppLocalizations.of(context).settingsGetPlusSubtitle,
                       style: GoogleFonts.ibmPlexSans(fontSize: 15, fontWeight: FontWeight.w500, color: _secondary)),
                 ],
               ),

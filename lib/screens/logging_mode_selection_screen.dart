@@ -153,6 +153,7 @@ class _LoggingModeSelectionScreenState
     required VoidCallback onChoose,
     Key? key,
   }) {
+    final l10n = AppLocalizations.of(context);
     return Container(
       key: key,
       width: double.infinity,
@@ -206,7 +207,7 @@ class _LoggingModeSelectionScreenState
                 borderRadius: BorderRadius.circular(999),
               ),
               child: Text(
-                'Choose',
+                l10n.loggingChoose,
                 textAlign: TextAlign.center,
                 style: GoogleFonts.ibmPlexSans(
                   fontSize: 15,
@@ -223,6 +224,7 @@ class _LoggingModeSelectionScreenState
   }
 
   Widget _buildTrainingRow(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return GestureDetector(
       onTap: () {
         Navigator.push(
@@ -245,7 +247,7 @@ class _LoggingModeSelectionScreenState
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Training Drills',
+                    l10n.loggingTrainingDrills,
                     style: GoogleFonts.ibmPlexSans(
                       fontSize: 17,
                       fontWeight: FontWeight.w600,
@@ -254,7 +256,7 @@ class _LoggingModeSelectionScreenState
                     ),
                   ),
                   Text(
-                    'Practice preflop spots against your real opponents',
+                    l10n.loggingTrainingDrillsSubtitle,
                     style: GoogleFonts.ibmPlexSans(
                       fontSize: 13,
                       fontWeight: FontWeight.w400,
@@ -273,7 +275,7 @@ class _LoggingModeSelectionScreenState
                 borderRadius: BorderRadius.circular(40),
               ),
               child: Text(
-                'PRO',
+                l10n.loggingPro,
                 style: GoogleFonts.ibmPlexSans(
                   fontSize: 11,
                   fontWeight: FontWeight.w700,

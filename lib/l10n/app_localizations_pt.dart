@@ -7556,4 +7556,637 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get onboardingSkipNickname => 'Pular por enquanto';
+
+  @override
+  String get drillTitle => 'Training Drills';
+
+  @override
+  String get drillSaveLineup => 'Save lineup';
+
+  @override
+  String get drillSaveLineupHint => 'e.g. Tuesday home game';
+
+  @override
+  String get drillDeleteLineup => 'Delete lineup';
+
+  @override
+  String drillDeleteLineupMessage(String name) {
+    return 'Remove \"$name\" from your saved lineups?';
+  }
+
+  @override
+  String get drillSavedLineups => 'SAVED LINEUPS';
+
+  @override
+  String get drillTable => 'TABLE';
+
+  @override
+  String get drillSeats => 'SEATS';
+
+  @override
+  String get drillSeatsInstruction =>
+      'Tap a seat to assign an opponent or move yourself.';
+
+  @override
+  String get drillSaveThisLineup => 'Save this lineup';
+
+  @override
+  String get drillStartDrill => 'Start Drill';
+
+  @override
+  String get drillPlayers => 'Players';
+
+  @override
+  String get drillStackDepth => 'Stack depth';
+
+  @override
+  String get drillScouting => 'SCOUTING';
+
+  @override
+  String get drillYou => 'You';
+
+  @override
+  String drillSeatNumber(int seat) {
+    return 'Seat $seat';
+  }
+
+  @override
+  String get drillPremiumTitle => 'Train against your real opponents';
+
+  @override
+  String get drillPremiumDescription =>
+      'Seat the players you actually face, drill preflop spots against bots that play with their measured tendencies, and get exploit-based feedback on every decision.';
+
+  @override
+  String get drillUpgradeToPremium => 'Upgrade to Premium';
+
+  @override
+  String get drillSearchOpponents => 'Search opponents';
+
+  @override
+  String get drillThisIsMe => 'This is me';
+
+  @override
+  String get drillMoveYourSeatHere => 'Move your seat here';
+
+  @override
+  String get drillGenericBot => 'Generic bot';
+
+  @override
+  String get drillBalancedRegular => 'Balanced regular';
+
+  @override
+  String drillHandNumber(int number) {
+    return 'Hand #$number';
+  }
+
+  @override
+  String drillHandedLabel(int stack, int players) {
+    return '${stack}BB · $players-handed';
+  }
+
+  @override
+  String get drillPot => 'POT';
+
+  @override
+  String get drillWalkedNote => 'Everyone folded — you win the blinds.';
+
+  @override
+  String drillWonUncontestedNote(String pot) {
+    return 'Everyone folded — you take it down (${pot}BB).';
+  }
+
+  @override
+  String get drillReachedFlopNote =>
+      'Hand goes to the flop — preflop drill complete.';
+
+  @override
+  String get drillHandOverNote => 'Hand over.';
+
+  @override
+  String get drillCorrect => 'CORRECT';
+
+  @override
+  String get drillClose => 'CLOSE';
+
+  @override
+  String get drillMistake => 'MISTAKE';
+
+  @override
+  String drillYouChose(String action) {
+    return '· you chose $action';
+  }
+
+  @override
+  String drillTopPercent(int percent) {
+    return 'top $percent%';
+  }
+
+  @override
+  String drillLineupChanges(String gto, String exploit) {
+    return 'This lineup changes the play: GTO ${gto}s, exploit ${exploit}s';
+  }
+
+  @override
+  String get drillGto => 'GTO';
+
+  @override
+  String get drillExploit => 'EXPLOIT';
+
+  @override
+  String get drillContinue => 'Continue';
+
+  @override
+  String get drillGotIt => 'Got it';
+
+  @override
+  String get drillRaiseTo => 'Raise to:';
+
+  @override
+  String get drillJam => 'JAM';
+
+  @override
+  String drillPotLabel(String pot) {
+    return 'Pot ${pot}BB';
+  }
+
+  @override
+  String drillToCall(String amount) {
+    return '${amount}BB to call';
+  }
+
+  @override
+  String get drillFold => 'FOLD';
+
+  @override
+  String get drillCheck => 'CHECK';
+
+  @override
+  String get drillCall => 'CALL';
+
+  @override
+  String get drillRaise => 'RAISE';
+
+  @override
+  String get drillNextHand => 'Next Hand';
+
+  @override
+  String get drillSummaryTitle => 'Drill Summary';
+
+  @override
+  String get drillAccuracy => 'Accuracy';
+
+  @override
+  String get drillDecisions => 'Decisions';
+
+  @override
+  String get drillCorrectLabel => 'Correct';
+
+  @override
+  String get drillCloseLabel => 'Close';
+
+  @override
+  String get drillMistakes => 'Mistakes';
+
+  @override
+  String get drillWhereYouLeaked => 'WHERE YOU LEAKED';
+
+  @override
+  String drillMistakeDetail(String handClass, String position,
+      String heroAction, String recommendedAction) {
+    return '$handClass · $position · you chose $heroAction, $recommendedAction was right';
+  }
+
+  @override
+  String get drillKeepDrilling => 'Keep Drilling';
+
+  @override
+  String get drillEndDrill => 'End Drill';
+
+  @override
+  String get drillActionSb => 'SB 0.5';
+
+  @override
+  String get drillActionBb => 'BB 1';
+
+  @override
+  String get drillActionFold => 'FOLD';
+
+  @override
+  String get drillActionCheck => 'CHECK';
+
+  @override
+  String get drillActionLimp => 'LIMP';
+
+  @override
+  String drillActionCall(String amount) {
+    return 'CALL $amount';
+  }
+
+  @override
+  String drillActionRaise(String amount) {
+    return 'RAISE $amount';
+  }
+
+  @override
+  String drillAction3bet(String amount) {
+    return '3-BET $amount';
+  }
+
+  @override
+  String drillAction4bet(String amount) {
+    return '4-BET $amount';
+  }
+
+  @override
+  String drillActionJam(String amount) {
+    return 'JAM $amount';
+  }
+
+  @override
+  String get rangeCash => 'Cash';
+
+  @override
+  String get rangeTourney => 'Tourney';
+
+  @override
+  String get rangeAllStacks => 'All stacks';
+
+  @override
+  String get rangeStackDepth => 'Stack depth';
+
+  @override
+  String get rangeAllPositions => 'All';
+
+  @override
+  String get rangeAllSpots => 'All spots';
+
+  @override
+  String get rangeRfi => 'RFI';
+
+  @override
+  String get rangeVsRaise => 'vs Raise';
+
+  @override
+  String rangeHandsLogged(int count) {
+    return '$count / 169 hands logged';
+  }
+
+  @override
+  String get rangeSyncingHistory => 'Syncing your hand history…';
+
+  @override
+  String get rangePreflopHeader =>
+      'PREFLOP RANGE — BUILT FROM YOUR LOGGED HANDS';
+
+  @override
+  String get rangeEmptyHint =>
+      'Your preflop chart builds itself: log hands and enter your hole cards, and each starting hand fills in with how you actually played it before the flop.';
+
+  @override
+  String rangeSpotsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'spots',
+      one: 'spot',
+    );
+    return '$count preflop $_temp0';
+  }
+
+  @override
+  String get rangeRfiSuffix => ' · RFI';
+
+  @override
+  String get rangeVsRaiseSuffix => ' · vs raise';
+
+  @override
+  String get rangeRaised => 'Raised';
+
+  @override
+  String get rangeRaisedLabel => 'Raised';
+
+  @override
+  String get rangeCalled => 'Called';
+
+  @override
+  String get rangeChecked => 'Checked';
+
+  @override
+  String get rangeFolded => 'Folded';
+
+  @override
+  String get rangeCalledLimped => 'Called / limped';
+
+  @override
+  String get rangeToday => 'Today';
+
+  @override
+  String get rangeYesterday => 'Yesterday';
+
+  @override
+  String rangeDaysAgo(int days) {
+    return '${days}d ago';
+  }
+
+  @override
+  String rangeWeeksAgo(int weeks) {
+    return '${weeks}w ago';
+  }
+
+  @override
+  String rangeMonthsAgo(int months) {
+    return '${months}mo ago';
+  }
+
+  @override
+  String rangeYearsAgo(int years) {
+    return '${years}y ago';
+  }
+
+  @override
+  String rangeWonBB(int bb) {
+    return 'W $bb BB';
+  }
+
+  @override
+  String rangeLostBB(int bb) {
+    return '– $bb BB';
+  }
+
+  @override
+  String rangeScoutingTitle(String name) {
+    return '$name · Scouting report';
+  }
+
+  @override
+  String get rangeShowdownBias =>
+      'Shown hands skew toward value and called-down hands — they tell you what is in the range and its shape, not the full range.';
+
+  @override
+  String get rangeNoShowdowns =>
+      'Log a few hands to showdown with this opponent\'s cards entered, and their range will start filling in here.';
+
+  @override
+  String get rangePremium => 'Premium';
+
+  @override
+  String get rangeStrong => 'Strong';
+
+  @override
+  String get rangeMedium => 'Medium';
+
+  @override
+  String get rangeWeak => 'Weak';
+
+  @override
+  String get profileSettings => 'Profile Settings';
+
+  @override
+  String get profileEditName => 'Edit Name';
+
+  @override
+  String get profileYourName => 'Your name';
+
+  @override
+  String get profileEditEmail => 'Edit email';
+
+  @override
+  String get profileEditEmailHint =>
+      'Email changes require account re-authentication. Contact support to change your email.';
+
+  @override
+  String get profileChangePassword => 'Change Password';
+
+  @override
+  String get profilePasswordMask => '***********';
+
+  @override
+  String get profileContactSupport => 'Contact support';
+
+  @override
+  String get profileShareFeedback => 'Share your feedback';
+
+  @override
+  String get profileEmailUpdates => 'Email updates';
+
+  @override
+  String get profileFollowUs => 'Follow @finaltable';
+
+  @override
+  String get profileEdit => 'Edit';
+
+  @override
+  String get profileEditUsername => 'Edit username';
+
+  @override
+  String get profileUsernameHint => 'username';
+
+  @override
+  String get profileInsteadOfName =>
+      'instead of your name in events and hand logging';
+
+  @override
+  String get profileUsernameTaken => 'Username already taken';
+
+  @override
+  String get profileFixUsernameError => 'Fix username error before saving';
+
+  @override
+  String get profileUsernameUnavailable => 'Username no longer available';
+
+  @override
+  String get profileSavedSuccessfully => 'Saved successfully';
+
+  @override
+  String get profileDeleteAccount => 'Delete Account';
+
+  @override
+  String get profileDeleteAccountMessage =>
+      'This will permanently delete your account and all associated data. This action cannot be undone.\n\nIf you have an active subscription, please cancel it first in your device settings.';
+
+  @override
+  String get profileChangePasswordTitle => 'Change Password';
+
+  @override
+  String get profileChangePasswordMessage =>
+      'We\'ll send a password reset link to your email address.';
+
+  @override
+  String profileResetEmailSent(String email) {
+    return 'Password reset email sent to $email';
+  }
+
+  @override
+  String get profileResetEmailFailed => 'Failed to send reset email';
+
+  @override
+  String get profileSendResetEmail => 'Send Reset Email';
+
+  @override
+  String get settingsGeneral => 'General';
+
+  @override
+  String get settingsClubs => 'Clubs';
+
+  @override
+  String get settingsBankroll => 'Bankroll';
+
+  @override
+  String get settingsRegisterClub => 'Register Club';
+
+  @override
+  String get settingsChooseLanguage => 'Choose Language';
+
+  @override
+  String get settingsMoreLanguagesLater =>
+      'More languages will be announced later';
+
+  @override
+  String get settingsChoose => 'Choose';
+
+  @override
+  String get settingsChooseCurrency => 'Choose Currency';
+
+  @override
+  String get settingsMoreCurrenciesLater =>
+      'More currencies will be announced later';
+
+  @override
+  String get settingsNoClubs => 'No clubs';
+
+  @override
+  String get settingsNoClubsYet => 'No Clubs Yet';
+
+  @override
+  String get settingsNoClubsHint => 'Register or join a club to see them here.';
+
+  @override
+  String get settingsRegisterAClub => 'Register a Club';
+
+  @override
+  String get settingsYourClubs => 'Your Clubs';
+
+  @override
+  String get settingsChooseTour => 'Choose which tour to replay';
+
+  @override
+  String get settingsAbout => 'About';
+
+  @override
+  String settingsPending(int count) {
+    return '$count pending';
+  }
+
+  @override
+  String get settingsGetPlus => 'Get Final Table Plus';
+
+  @override
+  String get settingsGetPlusSubtitle => 'Log more hands and AI analysis';
+
+  @override
+  String get statsHandsLogged => 'Hands Logged';
+
+  @override
+  String get statsVpip => 'VPIP';
+
+  @override
+  String get statsPfr => 'PFR';
+
+  @override
+  String get stats3Bet => '3-Bet';
+
+  @override
+  String get statsCBet => 'C-Bet';
+
+  @override
+  String get statsSteal => 'Steal';
+
+  @override
+  String get statsCheckRaise => 'Check-Raise';
+
+  @override
+  String get statsRanges => 'Ranges';
+
+  @override
+  String get statsStats => 'Stats';
+
+  @override
+  String get loggingChoose => 'Choose';
+
+  @override
+  String get loggingTrainingDrills => 'Training Drills';
+
+  @override
+  String get loggingTrainingDrillsSubtitle =>
+      'Practice preflop spots against your real opponents';
+
+  @override
+  String get loggingPro => 'PRO';
+
+  @override
+  String get opponentsEnterName => 'Enter name';
+
+  @override
+  String get opponentsAddNotes => 'Add notes';
+
+  @override
+  String get opponentsNoNotesAdded => 'No notes added';
+
+  @override
+  String get opponentsDeleteOpponent => 'Delete opponent';
+
+  @override
+  String get seatManagePlayers => 'Manage Players';
+
+  @override
+  String get seatUpdatePlayerInfo => 'Update player information';
+
+  @override
+  String get seatStartSession => 'Start Session';
+
+  @override
+  String get seatSaveChanges => 'Save Changes';
+
+  @override
+  String get seatYou => 'You';
+
+  @override
+  String get seatKeep => 'Keep';
+
+  @override
+  String get seatMove => 'Move';
+
+  @override
+  String get tableManageTitle => 'Table';
+
+  @override
+  String get tableButtonOnEmpty => 'Button on Empty Seat';
+
+  @override
+  String get handPlayerLabel => 'Player ';
+
+  @override
+  String get handBbLabel => 'BB';
+
+  @override
+  String get handRaiseLabel => 'RAISE';
+
+  @override
+  String get handBetLabel => 'BET';
+
+  @override
+  String get handFoldLabel => 'FOLD';
+
+  @override
+  String get handRaiseAction => 'Raise';
+
+  @override
+  String get handBetAction => 'Bet';
+
+  @override
+  String get handOnlyOneRemaining => 'Hand ends: Only one player remaining';
+
+  @override
+  String get handSessionTitle => 'Session';
 }

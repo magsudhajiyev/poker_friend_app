@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../design_system/constants/colors.dart';
 import '../../design_system/constants/decorations.dart';
 import '../../design_system/constants/spacing.dart';
@@ -306,6 +307,7 @@ class _DrillTableScreenState extends State<DrillTableScreen>
   @override
   Widget build(BuildContext context) {
     final s = _s(context);
+    final l10n = AppLocalizations.of(context);
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
@@ -316,11 +318,11 @@ class _DrillTableScreenState extends State<DrillTableScreen>
         body: SafeArea(
           child: Column(
             children: [
-              _buildHeader(s),
-              Expanded(child: _buildTable(s)),
+              _buildHeader(s, l10n),
+              Expanded(child: _buildTable(s, l10n)),
               _buildHeroRow(s),
               _buildRecentLines(s),
-              _buildBottomPanel(s),
+              _buildBottomPanel(s, l10n),
             ],
           ),
         ),
@@ -328,7 +330,7 @@ class _DrillTableScreenState extends State<DrillTableScreen>
     );
   }
 
-  Widget _buildHeader(double s) {
+  Widget _buildHeader(double s, AppLocalizations l10n) {
     final total = _records.length;
     return Padding(
       padding: EdgeInsets.fromLTRB(
@@ -353,13 +355,13 @@ class _DrillTableScreenState extends State<DrillTableScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Hand #${_engine.handNumber}',
+                Text(l10n.drillHandNumber(_engine.handNumber),
                     style: GoogleFonts.ibmPlexSans(
                         color: AppColors.textPrimary,
                         fontSize: 16 * s,
                         fontWeight: FontWeight.w600)),
                 Text(
-                  '${widget.stackBB.toInt()}BB · ${widget.seats.length}-handed',
+                  l10n.drillHandedLabel(widget.stackBB.toInt(), widget.seats.length),
                   style: GoogleFonts.ibmPlexSans(
                       color: AppColors.textSecondary,
                       fontSize: 12 * s),
@@ -399,7 +401,7 @@ class _DrillTableScreenState extends State<DrillTableScreen>
   static const _seatW = 0.92;
   static const _seatH = 0.82;
 
-  Widget _buildTable(double s) {
+  Widget _buildTable(double s, AppLocalizations l10n) {
     // Build active seat map using visual positions
     final activeSeatMap = {
       for (final seat in widget.seats) _visualSeatMap[seat.seatNumber]!: true,
@@ -425,7 +427,7 @@ class _DrillTableScreenState extends State<DrillTableScreen>
             seatHeightFraction: _seatH,
             seatBuilder: (visualSeat, isActive) =>
                 isActive ? _buildSeat(_actualSeat(visualSeat), s) : const SizedBox.shrink(),
-            centerContent: _buildPot(s),
+            centerContent: _buildPot(s, l10n),
           ),
           // Chip flight overlay — painted above the table
           if (_chipFlights.isNotEmpty)
@@ -452,12 +454,12 @@ class _DrillTableScreenState extends State<DrillTableScreen>
     );
   }
 
-  Widget _buildPot(double s) {
+  Widget _buildPot(double s, AppLocalizations l10n) {
     if (_engine.handNumber == 0) return const SizedBox.shrink();
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text('POT',
+        Text(l10n.drillPot,
             style: GoogleFonts.ibmPlexSans(
                 color: AppColors.textSecondary,
                 fontSize: 11 * s,
@@ -806,25 +808,25 @@ class _DrillTableScreenState extends State<DrillTableScreen>
 
   // ── Bottom panel ────────────────────────────────────────────────────
 
-  Widget _buildBottomPanel(double s) {
+  Widget _buildBottomPanel(double s, AppLocalizations l10n) {
     return Container(
       padding: EdgeInsets.fromLTRB(
           AppSpacing.md * s, AppSpacing.xxs * s,
           AppSpacing.md * s, AppSpacing.md * s),
       child: switch (_phase) {
-        _Phase.feedback => _buildFeedback(s),
-        _Phase.acting => _buildActions(s),
-        _Phase.handOver => _buildHandOver(s),
+        _Phase.feedback => _buildFeedback(s, l10n),
+        _Phase.acting => _buildActions(s, l10n),
+        _Phase.handOver => _buildHandOver(s, l10n),
       },
     );
   }
 
-  Widget _buildFeedback(double s) {
+  Widget _buildFeedback(double s, AppLocalizations l10n) {
     final grade = _lastGrade!;
     final (color, label) = switch (grade.grade) {
-      DrillGrade.correct => (_green, 'CORRECT'),
-      DrillGrade.ok => (_gold, 'CLOSE'),
-      DrillGrade.mistake => (_red, 'MISTAKE'),
+      DrillGrade.correct => (_green, l10n.drillCorrect),
+      DrillGrade.ok => (_gold, l10n.drillClose),
+      DrillGrade.mistake => (_red, l10n.drillMistake),
     };
     final diverge = !grade.linesAgree;
     return Container(
@@ -848,13 +850,13 @@ class _DrillTableScreenState extends State<DrillTableScreen>
                       fontWeight: FontWeight.w700,
                       letterSpacing: 1.0)),
               SizedBox(width: AppSpacing.xxs * s),
-              Text('· you chose ${grade.heroAction}',
+              Text(l10n.drillYouChose(grade.heroAction),
                   style: GoogleFonts.ibmPlexSans(
                       color: AppColors.textSecondary,
                       fontSize: 12 * s)),
               const Spacer(),
               Text(
-                '${_engine.heroHandClass} = top ${grade.handTopPercent.round()}%',
+                '${_engine.heroHandClass} = ${l10n.drillTopPercent(grade.handTopPercent.round())}',
                 style: GoogleFonts.robotoMono(
                     color: AppColors.textSecondary, fontSize: 11 * s),
               ),
@@ -872,7 +874,7 @@ class _DrillTableScreenState extends State<DrillTableScreen>
                     AppDecorations.radiusSm * s),
               ),
               child: Text(
-                'This lineup changes the play: GTO ${grade.gtoAction}s, exploit ${grade.exploitAction}s',
+                l10n.drillLineupChanges(grade.gtoAction, grade.exploitAction),
                 style: GoogleFonts.ibmPlexSans(
                     color: _accent,
                     fontSize: 12 * s,
@@ -889,23 +891,25 @@ class _DrillTableScreenState extends State<DrillTableScreen>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _evalRow(
-                    'GTO',
+                    l10n.drillGto,
                     AppColors.textSecondary,
                     grade.gtoAction,
                     grade.gtoRangePercent,
                     grade.gtoReason,
                     highlight: false,
                     s: s,
+                    l10n: l10n,
                   ),
                   SizedBox(height: AppSpacing.xxs * s),
                   _evalRow(
-                    'EXPLOIT',
+                    l10n.drillExploit,
                     _accent,
                     grade.exploitAction,
                     grade.exploitRangePercent,
                     grade.exploitReason,
                     highlight: diverge,
                     s: s,
+                    l10n: l10n,
                   ),
                 ],
               ),
@@ -926,8 +930,8 @@ class _DrillTableScreenState extends State<DrillTableScreen>
               child: Center(
                 child: Text(
                   (_lastUpdate?.awaitingHero ?? false)
-                      ? 'Continue'
-                      : 'Got it',
+                      ? l10n.drillContinue
+                      : l10n.drillGotIt,
                   style: GoogleFonts.ibmPlexSans(
                       color: AppColors.textInverse,
                       fontSize: 15 * s,
@@ -945,7 +949,8 @@ class _DrillTableScreenState extends State<DrillTableScreen>
   /// action coloured by type, the range cutoff, and the reasoning.
   Widget _evalRow(String tag, Color tagColor, String action,
       double rangePercent, String reason,
-      {required bool highlight, required double s}) {
+      {required bool highlight, required double s,
+      required AppLocalizations l10n}) {
     final actionColor = switch (action) {
       'raise' => _gold,
       'call' || 'check' => _accent,
@@ -981,7 +986,7 @@ class _DrillTableScreenState extends State<DrillTableScreen>
                       fontWeight: FontWeight.w700)),
               const Spacer(),
               if (rangePercent > 0 && rangePercent < 100)
-                Text('top ${rangePercent.round()}%',
+                Text(l10n.drillTopPercent(rangePercent.round()),
                     style: GoogleFonts.robotoMono(
                         color: AppColors.textSecondary,
                         fontSize: 10 * s)),
@@ -1000,7 +1005,7 @@ class _DrillTableScreenState extends State<DrillTableScreen>
     );
   }
 
-  Widget _buildActions(double s) {
+  Widget _buildActions(double s, AppLocalizations l10n) {
     final turn = _heroTurn;
     if (turn == null) return const SizedBox.shrink();
 
@@ -1010,7 +1015,7 @@ class _DrillTableScreenState extends State<DrillTableScreen>
         children: [
           Row(
             children: [
-              Text('Raise to:',
+              Text(l10n.drillRaiseTo,
                   style: GoogleFonts.ibmPlexSans(
                       color: AppColors.textSecondary,
                       fontSize: 13 * s)),
@@ -1029,7 +1034,7 @@ class _DrillTableScreenState extends State<DrillTableScreen>
                 Expanded(
                   child: _actionButton(
                     size >= turn.maxRaiseToBB
-                        ? 'JAM'
+                        ? l10n.drillJam
                         : '${size.toStringAsFixed(1)}BB',
                     _gold,
                     () => _act('raise', raiseToBB: size),
@@ -1049,8 +1054,7 @@ class _DrillTableScreenState extends State<DrillTableScreen>
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(
-          'Pot ${turn.potBB.toStringAsFixed(1)}BB'
-          '${turn.toCallBB > 0 ? ' · ${turn.toCallBB.toStringAsFixed(1)}BB to call' : ''}',
+          '${l10n.drillPotLabel(turn.potBB.toStringAsFixed(1))}${turn.toCallBB > 0 ? ' · ${l10n.drillToCall(turn.toCallBB.toStringAsFixed(1))}' : ''}',
           style: GoogleFonts.robotoMono(
               color: AppColors.textSecondary, fontSize: 13 * s),
         ),
@@ -1059,19 +1063,19 @@ class _DrillTableScreenState extends State<DrillTableScreen>
           children: [
             Expanded(
                 child:
-                    _actionButton('FOLD', _red, () => _act('fold'), s)),
+                    _actionButton(l10n.drillFold, _red, () => _act('fold'), s)),
             SizedBox(width: AppSpacing.xxs * s),
             Expanded(
               child: turn.canCheck
                   ? _actionButton(
-                      'CHECK', _accent, () => _act('check'), s)
+                      l10n.drillCheck, _accent, () => _act('check'), s)
                   : _actionButton(
-                      'CALL', _accent, () => _act('call'), s),
+                      l10n.drillCall, _accent, () => _act('call'), s),
             ),
             if (turn.canRaise) ...[
               SizedBox(width: AppSpacing.xxs * s),
               Expanded(
-                child: _actionButton('RAISE', _gold,
+                child: _actionButton(l10n.drillRaise, _gold,
                     () => setState(() => _showRaiseSizes = true), s),
               ),
             ],
@@ -1104,7 +1108,7 @@ class _DrillTableScreenState extends State<DrillTableScreen>
     );
   }
 
-  Widget _buildHandOver(double s) {
+  Widget _buildHandOver(double s, AppLocalizations l10n) {
     return GestureDetector(
       onTap: _nextHand,
       child: Container(
@@ -1115,7 +1119,7 @@ class _DrillTableScreenState extends State<DrillTableScreen>
           borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
         ),
         child: Center(
-          child: Text('Next Hand',
+          child: Text(l10n.drillNextHand,
               style: GoogleFonts.ibmPlexSans(
                   color: AppColors.textInverse,
                   fontSize: 17 * s,
@@ -1150,6 +1154,7 @@ class _DrillSummarySheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final correct =
         records.where((r) => r.result.grade == DrillGrade.correct).length;
     final ok = records.where((r) => r.result.grade == DrillGrade.ok).length;
@@ -1169,7 +1174,7 @@ class _DrillSummarySheet extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Drill Summary',
+            Text(l10n.drillSummaryTitle,
                 style: GoogleFonts.ibmPlexSans(
                     color: AppColors.textPrimary,
                     fontSize: 20,
@@ -1177,18 +1182,18 @@ class _DrillSummarySheet extends StatelessWidget {
             const SizedBox(height: AppSpacing.md),
             Row(
               children: [
-                _stat('Accuracy', '$accuracy%', AppColors.accentGreenBright),
-                _stat('Decisions', '${records.length}',
+                _stat(l10n.drillAccuracy, '$accuracy%', AppColors.accentGreenBright),
+                _stat(l10n.drillDecisions, '${records.length}',
                     AppColors.textPrimary),
-                _stat('Correct', '$correct', AppColors.accentGreenBright),
-                _stat('Close', '$ok', const Color(0xFFFFC857)),
-                _stat('Mistakes', '${mistakes.length}',
+                _stat(l10n.drillCorrectLabel, '$correct', AppColors.accentGreenBright),
+                _stat(l10n.drillCloseLabel, '$ok', const Color(0xFFFFC857)),
+                _stat(l10n.drillMistakes, '${mistakes.length}',
                     const Color(0xFFE85D5D)),
               ],
             ),
             const SizedBox(height: AppSpacing.md),
             if (mistakes.isNotEmpty) ...[
-              Text('WHERE YOU LEAKED',
+              Text(l10n.drillWhereYouLeaked,
                   style: AppTypography.sectionHeader()),
               const SizedBox(height: AppSpacing.xxs),
               Flexible(
@@ -1207,9 +1212,7 @@ class _DrillSummarySheet extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            '${m.handClass} · ${m.position} · '
-                            'you chose ${m.result.heroAction}, '
-                            '${m.result.recommendedAction} was right',
+                            l10n.drillMistakeDetail(m.handClass, m.position, m.result.heroAction, m.result.recommendedAction),
                             style: AppTypography.bodySmall(
                                 color: AppColors.textPrimary),
                           ),
@@ -1244,7 +1247,7 @@ class _DrillSummarySheet extends StatelessWidget {
                             AppDecorations.buttonRadius),
                       ),
                       child: Center(
-                        child: Text('Keep Drilling',
+                        child: Text(l10n.drillKeepDrilling,
                             style: AppTypography.labelLg(
                                 color: AppColors.textPrimary)),
                       ),
@@ -1264,7 +1267,7 @@ class _DrillSummarySheet extends StatelessWidget {
                             AppDecorations.buttonRadius),
                       ),
                       child: Center(
-                        child: Text('End Drill',
+                        child: Text(l10n.drillEndDrill,
                             style: AppTypography.labelLg(
                                 color: AppColors.textInverse)),
                       ),

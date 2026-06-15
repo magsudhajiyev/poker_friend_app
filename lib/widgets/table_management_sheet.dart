@@ -290,10 +290,11 @@ class _TableManagementModalState extends State<_TableManagementModal> {
   }
 
   Widget _buildHeader() {
+    final l10n = AppLocalizations.of(context);
     return Row(
       children: [
         Text(
-          'Table',
+          l10n.tableManageTitle,
           style: GoogleFonts.ibmPlexSans(
             fontSize: 15,
             fontWeight: FontWeight.w600,
@@ -326,6 +327,7 @@ class _TableManagementModalState extends State<_TableManagementModal> {
   }
 
   Widget _buildSessionChipAndDealer() {
+    final l10n = AppLocalizations.of(context);
     final elapsed = _sessionElapsed();
     final playerCount = widget.sessionManager.activeSeats.length;
     final btnPos = widget.gameState.buttonPosition;
@@ -382,7 +384,7 @@ class _TableManagementModalState extends State<_TableManagementModal> {
           child: Row(
             children: [
               Text(
-                'Dealer Button',
+                l10n.tableManagementDealerButton,
                 style: GoogleFonts.ibmPlexSans(
                   fontSize: 15,
                   fontWeight: FontWeight.w500,
@@ -649,11 +651,12 @@ class _TableManagementModalState extends State<_TableManagementModal> {
     if (nearestActive == null) return;
     final moveTo = nearestActive;
 
+    final l10n = AppLocalizations.of(context);
     _showConfirmDialog(
-      title: 'Button on Empty Seat',
+      title: l10n.tableButtonOnEmpty,
       body: 'The dealer button is on Seat $btnPos which is now empty. Move it to Seat $moveTo?',
-      cancelLabel: 'Keep',
-      confirmLabel: 'Move',
+      cancelLabel: l10n.seatKeep,
+      confirmLabel: l10n.seatMove,
       onConfirm: () {
         if (!mounted) return;
         setState(() {

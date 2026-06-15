@@ -1484,7 +1484,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                                 color: const Color(0xFF0C0C0C),
                               ),
                               decoration: InputDecoration(
-                                hintText: 'Enter name',
+                                hintText: l10n.opponentsEnterName,
                                 hintStyle: GoogleFonts.ibmPlexSans(
                                   fontSize: 15,
                                   color: const Color(0xFFB9B9B9),
@@ -1554,7 +1554,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                                 color: const Color(0xFF0C0C0C),
                               ),
                               decoration: InputDecoration(
-                                hintText: 'Add notes',
+                                hintText: l10n.opponentsAddNotes,
                                 hintStyle: GoogleFonts.ibmPlexSans(
                                   fontSize: 15,
                                   color: const Color(0xFFB9B9B9),
@@ -1691,7 +1691,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
       context,
       title: l10n.opponentDetailDeleteConfirmTitle,
       message: l10n.opponentDetailDeleteConfirmMessage(_opponent.name),
-      confirmLabel: 'Confirm',
+      confirmLabel: l10n.commonConfirm,
       onConfirm: () async {
         try {
           await OpponentService.deleteOpponent(_opponent.id);

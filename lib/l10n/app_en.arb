@@ -4175,5 +4175,353 @@
   "onboardingPurposeStacks": "Tracking stack sizes in tournaments",
   "onboardingContinue": "Continue",
   "onboardingGetStarted": "Get Started",
-  "onboardingSkipNickname": "Skip for now"
+  "onboardingSkipNickname": "Skip for now",
+
+  "drillTitle": "Training Drills",
+  "drillSaveLineup": "Save lineup",
+  "drillSaveLineupHint": "e.g. Tuesday home game",
+  "drillDeleteLineup": "Delete lineup",
+  "drillDeleteLineupMessage": "Remove \"{name}\" from your saved lineups?",
+  "@drillDeleteLineupMessage": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "drillSavedLineups": "SAVED LINEUPS",
+  "drillTable": "TABLE",
+  "drillSeats": "SEATS",
+  "drillSeatsInstruction": "Tap a seat to assign an opponent or move yourself.",
+  "drillSaveThisLineup": "Save this lineup",
+  "drillStartDrill": "Start Drill",
+  "drillPlayers": "Players",
+  "drillStackDepth": "Stack depth",
+  "drillScouting": "SCOUTING",
+  "drillYou": "You",
+  "drillSeatNumber": "Seat {seat}",
+  "@drillSeatNumber": {
+    "placeholders": {
+      "seat": { "type": "int" }
+    }
+  },
+  "drillPremiumTitle": "Train against your real opponents",
+  "drillPremiumDescription": "Seat the players you actually face, drill preflop spots against bots that play with their measured tendencies, and get exploit-based feedback on every decision.",
+  "drillUpgradeToPremium": "Upgrade to Premium",
+  "drillSearchOpponents": "Search opponents",
+  "drillThisIsMe": "This is me",
+  "drillMoveYourSeatHere": "Move your seat here",
+  "drillGenericBot": "Generic bot",
+  "drillBalancedRegular": "Balanced regular",
+  "drillHandNumber": "Hand #{number}",
+  "@drillHandNumber": {
+    "placeholders": {
+      "number": { "type": "int" }
+    }
+  },
+  "drillHandedLabel": "{stack}BB · {players}-handed",
+  "@drillHandedLabel": {
+    "placeholders": {
+      "stack": { "type": "int" },
+      "players": { "type": "int" }
+    }
+  },
+  "drillPot": "POT",
+  "drillWalkedNote": "Everyone folded — you win the blinds.",
+  "drillWonUncontestedNote": "Everyone folded — you take it down ({pot}BB).",
+  "@drillWonUncontestedNote": {
+    "placeholders": {
+      "pot": { "type": "String" }
+    }
+  },
+  "drillReachedFlopNote": "Hand goes to the flop — preflop drill complete.",
+  "drillHandOverNote": "Hand over.",
+  "drillCorrect": "CORRECT",
+  "drillClose": "CLOSE",
+  "drillMistake": "MISTAKE",
+  "drillYouChose": "· you chose {action}",
+  "@drillYouChose": {
+    "placeholders": {
+      "action": { "type": "String" }
+    }
+  },
+  "drillTopPercent": "top {percent}%",
+  "@drillTopPercent": {
+    "placeholders": {
+      "percent": { "type": "int" }
+    }
+  },
+  "drillLineupChanges": "This lineup changes the play: GTO {gto}s, exploit {exploit}s",
+  "@drillLineupChanges": {
+    "placeholders": {
+      "gto": { "type": "String" },
+      "exploit": { "type": "String" }
+    }
+  },
+  "drillGto": "GTO",
+  "drillExploit": "EXPLOIT",
+  "drillContinue": "Continue",
+  "drillGotIt": "Got it",
+  "drillRaiseTo": "Raise to:",
+  "drillJam": "JAM",
+  "drillPotLabel": "Pot {pot}BB",
+  "@drillPotLabel": {
+    "placeholders": {
+      "pot": { "type": "String" }
+    }
+  },
+  "drillToCall": "{amount}BB to call",
+  "@drillToCall": {
+    "placeholders": {
+      "amount": { "type": "String" }
+    }
+  },
+  "drillFold": "FOLD",
+  "drillCheck": "CHECK",
+  "drillCall": "CALL",
+  "drillRaise": "RAISE",
+  "drillNextHand": "Next Hand",
+  "drillSummaryTitle": "Drill Summary",
+  "drillAccuracy": "Accuracy",
+  "drillDecisions": "Decisions",
+  "drillCorrectLabel": "Correct",
+  "drillCloseLabel": "Close",
+  "drillMistakes": "Mistakes",
+  "drillWhereYouLeaked": "WHERE YOU LEAKED",
+  "drillMistakeDetail": "{handClass} · {position} · you chose {heroAction}, {recommendedAction} was right",
+  "@drillMistakeDetail": {
+    "placeholders": {
+      "handClass": { "type": "String" },
+      "position": { "type": "String" },
+      "heroAction": { "type": "String" },
+      "recommendedAction": { "type": "String" }
+    }
+  },
+  "drillKeepDrilling": "Keep Drilling",
+  "drillEndDrill": "End Drill",
+  "drillActionSb": "SB 0.5",
+  "drillActionBb": "BB 1",
+  "drillActionFold": "FOLD",
+  "drillActionCheck": "CHECK",
+  "drillActionLimp": "LIMP",
+  "drillActionCall": "CALL {amount}",
+  "@drillActionCall": {
+    "placeholders": {
+      "amount": { "type": "String" }
+    }
+  },
+  "drillActionRaise": "RAISE {amount}",
+  "@drillActionRaise": {
+    "placeholders": {
+      "amount": { "type": "String" }
+    }
+  },
+  "drillAction3bet": "3-BET {amount}",
+  "@drillAction3bet": {
+    "placeholders": {
+      "amount": { "type": "String" }
+    }
+  },
+  "drillAction4bet": "4-BET {amount}",
+  "@drillAction4bet": {
+    "placeholders": {
+      "amount": { "type": "String" }
+    }
+  },
+  "drillActionJam": "JAM {amount}",
+  "@drillActionJam": {
+    "placeholders": {
+      "amount": { "type": "String" }
+    }
+  },
+
+  "rangeCash": "Cash",
+  "rangeTourney": "Tourney",
+  "rangeAllStacks": "All stacks",
+  "rangeStackDepth": "Stack depth",
+  "rangeAllPositions": "All",
+  "rangeAllSpots": "All spots",
+  "rangeRfi": "RFI",
+  "rangeVsRaise": "vs Raise",
+  "rangeHandsLogged": "{count} / 169 hands logged",
+  "@rangeHandsLogged": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "rangeSyncingHistory": "Syncing your hand history…",
+  "rangePreflopHeader": "PREFLOP RANGE — BUILT FROM YOUR LOGGED HANDS",
+  "rangeEmptyHint": "Your preflop chart builds itself: log hands and enter your hole cards, and each starting hand fills in with how you actually played it before the flop.",
+  "rangeSpotsCount": "{count} preflop {count, plural, =1{spot} other{spots}}",
+  "@rangeSpotsCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "rangeRfiSuffix": " · RFI",
+  "rangeVsRaiseSuffix": " · vs raise",
+  "rangeRaised": "Raised",
+  "rangeRaisedLabel": "Raised",
+  "rangeCalled": "Called",
+  "rangeChecked": "Checked",
+  "rangeFolded": "Folded",
+  "rangeCalledLimped": "Called / limped",
+  "rangeToday": "Today",
+  "rangeYesterday": "Yesterday",
+  "rangeDaysAgo": "{days}d ago",
+  "@rangeDaysAgo": {
+    "placeholders": {
+      "days": { "type": "int" }
+    }
+  },
+  "rangeWeeksAgo": "{weeks}w ago",
+  "@rangeWeeksAgo": {
+    "placeholders": {
+      "weeks": { "type": "int" }
+    }
+  },
+  "rangeMonthsAgo": "{months}mo ago",
+  "@rangeMonthsAgo": {
+    "placeholders": {
+      "months": { "type": "int" }
+    }
+  },
+  "rangeYearsAgo": "{years}y ago",
+  "@rangeYearsAgo": {
+    "placeholders": {
+      "years": { "type": "int" }
+    }
+  },
+  "rangeWonBB": "W {bb} BB",
+  "@rangeWonBB": {
+    "placeholders": {
+      "bb": { "type": "int" }
+    }
+  },
+  "rangeLostBB": "– {bb} BB",
+  "@rangeLostBB": {
+    "placeholders": {
+      "bb": { "type": "int" }
+    }
+  },
+  "rangeScoutingTitle": "{name} · Scouting report",
+  "@rangeScoutingTitle": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "rangeShowdownBias": "Shown hands skew toward value and called-down hands — they tell you what is in the range and its shape, not the full range.",
+  "rangeNoShowdowns": "Log a few hands to showdown with this opponent's cards entered, and their range will start filling in here.",
+  "rangePremium": "Premium",
+  "rangeStrong": "Strong",
+  "rangeMedium": "Medium",
+  "rangeWeak": "Weak",
+
+  "profileSettings": "Profile Settings",
+  "profileEditName": "Edit Name",
+  "profileYourName": "Your name",
+  "profileEditEmail": "Edit email",
+  "profileEditEmailHint": "Email changes require account re-authentication. Contact support to change your email.",
+  "profileChangePassword": "Change Password",
+  "profilePasswordMask": "***********",
+  "profileContactSupport": "Contact support",
+  "profileShareFeedback": "Share your feedback",
+  "profileEmailUpdates": "Email updates",
+  "profileFollowUs": "Follow @finaltable",
+  "profileEdit": "Edit",
+  "profileEditUsername": "Edit username",
+  "profileUsernameHint": "username",
+  "profileInsteadOfName": "instead of your name in events and hand logging",
+  "profileUsernameTaken": "Username already taken",
+  "profileFixUsernameError": "Fix username error before saving",
+  "profileUsernameUnavailable": "Username no longer available",
+  "profileSavedSuccessfully": "Saved successfully",
+  "profileDeleteAccount": "Delete Account",
+  "profileDeleteAccountMessage": "This will permanently delete your account and all associated data. This action cannot be undone.\n\nIf you have an active subscription, please cancel it first in your device settings.",
+  "profileChangePasswordTitle": "Change Password",
+  "profileChangePasswordMessage": "We'll send a password reset link to your email address.",
+  "profileResetEmailSent": "Password reset email sent to {email}",
+  "@profileResetEmailSent": {
+    "placeholders": {
+      "email": { "type": "String" }
+    }
+  },
+  "profileResetEmailFailed": "Failed to send reset email",
+  "profileSendResetEmail": "Send Reset Email",
+  "profileDevTools": "Dev Tools",
+  "profilePremiumOverride": "Premium Override",
+
+  "settingsGeneral": "General",
+  "settingsClubs": "Clubs",
+  "settingsBankroll": "Bankroll",
+  "settingsRegisterClub": "Register Club",
+  "settingsChooseLanguage": "Choose Language",
+  "settingsMoreLanguagesLater": "More languages will be announced later",
+  "settingsChoose": "Choose",
+  "settingsChooseCurrency": "Choose Currency",
+  "settingsMoreCurrenciesLater": "More currencies will be announced later",
+  "settingsNoClubs": "No clubs",
+  "settingsNoClubsYet": "No Clubs Yet",
+  "settingsNoClubsHint": "Register or join a club to see them here.",
+  "settingsRegisterAClub": "Register a Club",
+  "settingsYourClubs": "Your Clubs",
+  "settingsChooseTour": "Choose which tour to replay",
+  "settingsAbout": "About",
+  "settingsPending": "{count} pending",
+  "@settingsPending": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "settingsGetPlus": "Get Final Table Plus",
+  "settingsGetPlusSubtitle": "Log more hands and AI analysis",
+
+  "statsHandsLogged": "Hands Logged",
+  "statsVpip": "VPIP",
+  "statsPfr": "PFR",
+  "stats3Bet": "3-Bet",
+  "statsCBet": "C-Bet",
+  "statsSteal": "Steal",
+  "statsCheckRaise": "Check-Raise",
+  "statsRanges": "Ranges",
+  "statsStats": "Stats",
+
+  "loggingChoose": "Choose",
+  "loggingTrainingDrills": "Training Drills",
+  "loggingTrainingDrillsSubtitle": "Practice preflop spots against your real opponents",
+  "loggingPro": "PRO",
+
+  "opponentsEnterName": "Enter name",
+  "opponentsAddNotes": "Add notes",
+  "opponentsNoNotesAdded": "No notes added",
+  "opponentsDeleteOpponent": "Delete opponent",
+
+  "seatSetupTitle": "Setup Seat",
+  "seatManagePlayers": "Manage Players",
+  "seatUpdatePlayerInfo": "Update player information",
+  "seatStartSession": "Start Session",
+  "seatSaveChanges": "Save Changes",
+  "seatYou": "You",
+  "seatKeep": "Keep",
+  "seatMove": "Move",
+
+  "tableManageTitle": "Table",
+  "tableButtonOnEmpty": "Button on Empty Seat",
+
+  "handPlayerLabel": "Player ",
+  "handBbLabel": "BB",
+  "handRaiseLabel": "RAISE",
+  "handBetLabel": "BET",
+  "handFoldLabel": "FOLD",
+  "handMainPot": "Main",
+  "handSidePot": "Side {index}",
+  "@handSidePot": {
+    "placeholders": {
+      "index": { "type": "int" }
+    }
+  },
+  "handRaiseAction": "Raise",
+  "handBetAction": "Bet",
+  "handOnlyOneRemaining": "Hand ends: Only one player remaining",
+  "handSessionTitle": "Session",
+
+  "homeUserFallback": "User"
 }

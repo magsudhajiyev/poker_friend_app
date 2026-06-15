@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../design_system/constants/colors.dart';
 import '../../design_system/constants/decorations.dart';
 import '../../design_system/constants/spacing.dart';
@@ -84,6 +85,7 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
   }
 
   Future<void> _saveLineup() async {
+    final l10n = AppLocalizations.of(context);
     final controller = TextEditingController();
     final name = await showDialog<String>(
       context: context,
@@ -91,14 +93,14 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
         backgroundColor: AppColors.bgSurface,
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppDecorations.radiusLg)),
-        title: Text('Save lineup',
+        title: Text(l10n.drillSaveLineup,
             style: AppTypography.titleBase()),
         content: TextField(
           controller: controller,
           autofocus: true,
           style: GoogleFonts.ibmPlexSans(color: AppColors.textPrimary),
           decoration: InputDecoration(
-            hintText: 'e.g. Tuesday home game',
+            hintText: l10n.drillSaveLineupHint,
             hintStyle: GoogleFonts.ibmPlexSans(
                 color: AppColors.textSecondary),
           ),
@@ -106,14 +108,14 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Cancel',
+            child: Text(l10n.commonCancel,
                 style: GoogleFonts.ibmPlexSans(
                     color: AppColors.textSecondary)),
           ),
           TextButton(
             onPressed: () =>
                 Navigator.pop(context, controller.text.trim()),
-            child: Text('Save',
+            child: Text(l10n.commonSave,
                 style: GoogleFonts.ibmPlexSans(
                     color: AppColors.buttonPrimary,
                     fontWeight: FontWeight.w600)),
@@ -146,11 +148,12 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
   }
 
   void _deleteLineup(DrillLineup lineup) {
+    final l10n = AppLocalizations.of(context);
     ConfirmDialog.show(
       context,
-      title: 'Delete lineup',
-      message: 'Remove "${lineup.name}" from your saved lineups?',
-      confirmLabel: 'Delete',
+      title: l10n.drillDeleteLineup,
+      message: l10n.drillDeleteLineupMessage(lineup.name),
+      confirmLabel: l10n.commonDelete,
       onConfirm: () async {
         await DrillLineupStore.deleteLineup(lineup.id);
         final lineups = await DrillLineupStore.getLineups();
@@ -226,6 +229,7 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
   @override
   Widget build(BuildContext context) {
     if (!SubscriptionService.isPremium) return _buildPremiumGate();
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       backgroundColor: AppColors.bgPrimary,
@@ -239,19 +243,19 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
                     horizontal: AppSpacing.md),
                 children: [
                   if (_lineups.isNotEmpty) ...[
-                    _sectionLabel('SAVED LINEUPS'),
+                    _sectionLabel(l10n.drillSavedLineups),
                     const SizedBox(height: AppSpacing.xxs),
                     _buildLineupRow(),
                     const SizedBox(height: AppSpacing.space5),
                   ],
-                  _sectionLabel('TABLE'),
+                  _sectionLabel(l10n.drillTable),
                   const SizedBox(height: AppSpacing.xxs),
                   _buildCard(child: _buildTableConfig()),
                   const SizedBox(height: AppSpacing.space5),
-                  _sectionLabel('SEATS'),
+                  _sectionLabel(l10n.drillSeats),
                   const SizedBox(height: AppSpacing.xxxs),
                   Text(
-                    'Tap a seat to assign an opponent or move yourself.',
+                    l10n.drillSeatsInstruction,
                     style: GoogleFonts.ibmPlexSans(
                         color: AppColors.textSecondary, fontSize: 12),
                   ),
@@ -271,7 +275,7 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
                             AppDecorations.buttonRadius),
                       ),
                       child: Center(
-                        child: Text('Save this lineup',
+                        child: Text(l10n.drillSaveThisLineup,
                             style: AppTypography.labelLg(
                                 color: AppColors.textPrimary)),
                       ),
@@ -296,7 +300,7 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
                                 child: CircularProgressIndicator(
                                     strokeWidth: 2,
                                     color: AppColors.textInverse))
-                            : Text('Start Drill',
+                            : Text(l10n.drillStartDrill,
                                 style: AppTypography.buttonText()),
                       ),
                     ),
@@ -312,6 +316,7 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
   }
 
   Widget _buildHeader() {
+    final l10n = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.fromLTRB(
           AppSpacing.md, AppSpacing.xs, AppSpacing.md, AppSpacing.md),
@@ -333,7 +338,7 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Text(
-              'Training Drills',
+              l10n.drillTitle,
               style: GoogleFonts.ibmPlexSans(
                   fontSize: 22,
                   fontWeight: FontWeight.w600,
@@ -436,10 +441,11 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
   }
 
   Widget _buildTableConfig() {
+    final l10n = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _fieldLabel('Players'),
+        _fieldLabel(l10n.drillPlayers),
         const SizedBox(height: 8),
         _segmented([
           for (int n = 2; n <= 9; n++)
@@ -456,7 +462,7 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
             ),
         ]),
         const SizedBox(height: 18),
-        _fieldLabel('Stack depth'),
+        _fieldLabel(l10n.drillStackDepth),
         const SizedBox(height: 8),
         _segmented([
           for (final s in _stackOptions)
@@ -545,7 +551,7 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('SCOUTING',
+          Text(AppLocalizations.of(context).drillScouting,
               style: AppTypography.sectionHeader()),
           const SizedBox(height: 6),
           Wrap(
@@ -646,9 +652,10 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
   }
 
   Widget _buildTableSeat(int seat) {
+    final l10n = AppLocalizations.of(context);
     final isHero = seat == _heroSeat;
     final pick = _picks[seat];
-    final label = isHero ? 'You' : (pick?.name ?? 'Bot');
+    final label = isHero ? l10n.drillYou : (pick?.name ?? 'Bot');
     final display =
         label.length > 8 ? '${label.substring(0, 7)}…' : label;
     final borderColor = (isHero || pick != null)
@@ -682,7 +689,7 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
           ),
           const SizedBox(height: 3),
           Text(
-            'Seat $seat',
+            l10n.drillSeatNumber(seat),
             style: GoogleFonts.robotoMono(
               color: AppColors.textSecondary,
               fontSize: 9,
@@ -694,6 +701,7 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
   }
 
   Widget _buildPremiumGate() {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: AppColors.bgPrimary,
       body: SafeArea(
@@ -710,7 +718,7 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
                         color: AppColors.buttonPrimary, size: 48),
                     const SizedBox(height: AppSpacing.space5),
                     Text(
-                      'Train against your real opponents',
+                      l10n.drillPremiumTitle,
                       textAlign: TextAlign.center,
                       style: GoogleFonts.ibmPlexSans(
                           color: AppColors.textPrimary,
@@ -719,9 +727,7 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
                     ),
                     const SizedBox(height: AppSpacing.xs),
                     Text(
-                      'Seat the players you actually face, drill preflop spots '
-                      'against bots that play with their measured tendencies, '
-                      'and get exploit-based feedback on every decision.',
+                      l10n.drillPremiumDescription,
                       textAlign: TextAlign.center,
                       style: AppTypography.bodyMedium(
                           color: AppColors.textSecondary),
@@ -742,7 +748,7 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
                           borderRadius: BorderRadius.circular(
                               AppDecorations.buttonRadius),
                         ),
-                        child: Text('Upgrade to Premium',
+                        child: Text(l10n.drillUpgradeToPremium,
                             style: AppTypography.buttonText()),
                       ),
                     ),
@@ -774,6 +780,7 @@ class _OpponentPickerSheetState extends State<_OpponentPickerSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final filtered = widget.opponents
         .where((o) => o.name.toLowerCase().contains(_query.toLowerCase()))
         .toList();
@@ -802,7 +809,7 @@ class _OpponentPickerSheetState extends State<_OpponentPickerSheet> {
                 style: GoogleFonts.ibmPlexSans(
                     color: AppColors.textPrimary),
                 decoration: InputDecoration(
-                  hintText: 'Search opponents',
+                  hintText: l10n.drillSearchOpponents,
                   hintStyle: GoogleFonts.ibmPlexSans(
                       color: AppColors.textSecondary),
                   prefixIcon: Icon(Icons.search,
@@ -824,11 +831,11 @@ class _OpponentPickerSheetState extends State<_OpponentPickerSheet> {
                     ListTile(
                       leading: const Icon(Icons.person,
                           color: AppColors.buttonPrimary),
-                      title: Text('This is me',
+                      title: Text(l10n.drillThisIsMe,
                           style: GoogleFonts.ibmPlexSans(
                               color: AppColors.buttonPrimary,
                               fontWeight: FontWeight.w600)),
-                      subtitle: Text('Move your seat here',
+                      subtitle: Text(l10n.drillMoveYourSeatHere,
                           style: GoogleFonts.ibmPlexSans(
                               color: AppColors.textSecondary,
                               fontSize: 13)),
@@ -838,10 +845,10 @@ class _OpponentPickerSheetState extends State<_OpponentPickerSheet> {
                   ListTile(
                     leading: Icon(Icons.smart_toy,
                         color: AppColors.textSecondary),
-                    title: Text('Generic bot',
+                    title: Text(l10n.drillGenericBot,
                         style: GoogleFonts.ibmPlexSans(
                             color: AppColors.textPrimary)),
-                    subtitle: Text('Balanced regular',
+                    subtitle: Text(l10n.drillBalancedRegular,
                         style: GoogleFonts.ibmPlexSans(
                             color: AppColors.textSecondary,
                             fontSize: 13)),

@@ -457,48 +457,48 @@ class _StatisticsScreenState extends State<StatisticsScreen>
               children: [
                 // Hands logged + 7 core metric cards
                 _buildMetricCard(
-                  chipLabel: 'Hands Logged',
+                  chipLabel: l10n.statsHandsLogged,
                   value: totalHands.toString(),
                   forceActive: true,
                 ),
                 const SizedBox(height: 8),
                 _buildMetricCard(
-                  chipLabel: 'VPIP',
+                  chipLabel: l10n.statsVpip,
                   value: totalHands > 0 ? '${vpip.toStringAsFixed(1)}%' : na,
                 ),
                 const SizedBox(height: 8),
                 _buildMetricCard(
-                  chipLabel: 'PFR',
+                  chipLabel: l10n.statsPfr,
                   value: totalHands > 0 ? '${pfr.toStringAsFixed(1)}%' : na,
                 ),
                 const SizedBox(height: 8),
                 _buildMetricCard(
-                  chipLabel: '3-Bet',
+                  chipLabel: l10n.stats3Bet,
                   value: fmt(threeBet, threeBetOpportunity),
                 ),
                 const SizedBox(height: 8),
                 _buildMetricCard(
-                  chipLabel: 'Fold to 3-Bet',
+                  chipLabel: l10n.statsFoldTo3Bet,
                   value: fmt(fold3Bet, facing3BetCount),
                 ),
                 const SizedBox(height: 8),
                 _buildMetricCard(
-                  chipLabel: 'C-Bet',
+                  chipLabel: l10n.statsCBet,
                   value: fmt(cbet, cbetOpportunity),
                 ),
                 const SizedBox(height: 8),
                 _buildMetricCard(
-                  chipLabel: 'Steal',
+                  chipLabel: l10n.statsSteal,
                   value: fmt(steal, stealOpportunity),
                 ),
                 const SizedBox(height: 8),
                 _buildMetricCard(
-                  chipLabel: 'Check-Raise',
+                  chipLabel: l10n.statsCheckRaise,
                   value: fmt(checkRaise, checkRaiseFlopOpportunity),
                 ),
                 const SizedBox(height: 8),
                 _buildMetricCard(
-                  chipLabel: 'Win Rate',
+                  chipLabel: l10n.statsWinRate,
                   value: handsPlayed > 0 ? '${winRate.toStringAsFixed(1)}%' : na,
                 ),
 
@@ -529,6 +529,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
   /// Stats | Ranges segmented toggle — same pattern as Session History's
   /// cash/tournament tab switcher (white pill outer, dark active segment).
   Widget _buildTabSwitcher() {
+    final l10n = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: AnimatedBuilder(
@@ -557,7 +558,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
                       ),
                       child: Center(
                         child: Text(
-                          'Stats',
+                          l10n.statsStats,
                           style: GoogleFonts.ibmPlexSans(
                             fontSize: 15,
                             fontWeight: FontWeight.w500,
@@ -584,7 +585,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
                       ),
                       child: Center(
                         child: Text(
-                          'Ranges',
+                          l10n.statsRanges,
                           style: GoogleFonts.ibmPlexSans(
                             fontSize: 15,
                             fontWeight: FontWeight.w500,

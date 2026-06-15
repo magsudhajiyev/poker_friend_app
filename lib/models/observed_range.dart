@@ -51,6 +51,7 @@ enum ObservedShape {
 }
 
 extension ObservedShapeLabel on ObservedShape {
+  // TODO: i18n — model has no BuildContext; pass l10n from caller when ready
   String get label {
     switch (this) {
       case ObservedShape.insufficient:
@@ -119,6 +120,6 @@ class ObservedRange {
     mediumCount: 0,
     wideCount: 0,
     shape: ObservedShape.insufficient,
-    summary: 'No showdowns recorded yet.',
+    summary: 'No showdowns recorded yet.', // TODO: i18n — model has no BuildContext
   );
 }

@@ -1599,7 +1599,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                                         child: Transform.rotate(
                                           angle: direction * -0.08 * progress,
                                           child: Text(
-                                            'FOLD',
+                                            l10n.handFoldLabel,
                                             style: GoogleFonts.ibmPlexSans(
                                               fontSize: 32,
                                               fontWeight: FontWeight.w800,
@@ -1641,7 +1641,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Text('BB', style: GoogleFonts.ibmPlexSans(fontSize: 10, fontWeight: FontWeight.w700, color: const Color(0xFFB9B9B9))),
+                                  Text(l10n.handBbLabel, style: GoogleFonts.ibmPlexSans(fontSize: 10, fontWeight: FontWeight.w700, color: const Color(0xFFB9B9B9))),
                                   const SizedBox(width: 4),
                                   Text(
                                     '${formatBlindValue(gameState.smallBlind)}/${formatBlindValue(gameState.bigBlind)}',
@@ -1808,7 +1808,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                         currentAmount: _raiseSnapAmount,
                         activeSnapIndex: _activeSnapIndex,
                         dragProgress: _raiseSnapProgress,
-                        actionLabel: _raiseSnapAction == PlayerAction.raise ? 'RAISE' : 'BET',
+                        actionLabel: _raiseSnapAction == PlayerAction.raise ? l10n.handRaiseLabel : l10n.handBetLabel,
                         formattedAmount: gameState.formatCurrency(_raiseSnapAmount),
                         isCashGame: gameState.isCashGame,
                         onTapAmount: _openNumpadFromSnap,
@@ -2299,7 +2299,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     // Bet/status pill — pops in when it appears or its content changes
     Widget? statusPill;
     if (isFolded) {
-      statusPill = _buildStatusPill('FOLD', Colors.white.withValues(alpha: 0.15), Colors.white38);
+      statusPill = _buildStatusPill(AppLocalizations.of(context).handFoldLabel, Colors.white.withValues(alpha: 0.15), Colors.white38);
     } else if (isAllIn) {
       statusPill = _buildStatusPill('ALL-IN', const Color(0xFFE53935), Colors.white);
     } else if (bet > 0) {
@@ -2661,6 +2661,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
   }
 
   Widget _buildSidePotPills() {
+    final l10n = AppLocalizations.of(context);
     final pots = gameState.activeSidePots;
     final maxDisplay = 3;
     final displayPots = pots.length <= maxDisplay ? pots : pots.sublist(0, maxDisplay);
@@ -2672,7 +2673,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         for (int i = 0; i < displayPots.length; i++) ...[
           if (i > 0) const SizedBox(width: 4),
           _buildSinglePotPill(
-            i == 0 ? 'Main' : 'Side $i',
+            i == 0 ? l10n.handMainPot : l10n.handSidePot(i),
             displayPots[i].amount,
             i == 0,
           ),
@@ -3726,7 +3727,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                           ),
                           child: Center(
                             child: Text(
-                              action == PlayerAction.raise ? 'Raise' : 'Bet',
+                              action == PlayerAction.raise ? l10n.handRaiseAction : l10n.handBetAction,
                               style: GoogleFonts.ibmPlexSans(
                                 color: Colors.black,
                                 fontSize: 17,
@@ -6005,6 +6006,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
   }
 
   Future<void> _showSessionSummary({Map<String, dynamic>? bankrollResult}) async {
+    final l10n = AppLocalizations.of(context);
     final ourSeat = sessionManager.ourSeatNumber;
     final finalStack = ourSeat != null && ourSeat >= 1 && ourSeat <= gameState.players.length
         ? gameState.players[ourSeat - 1].currentStack
@@ -6040,7 +6042,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     await SessionSummaryCard.show(
       context: context,
       data: SessionSummaryData(
-        sessionName: widget.sessionName ?? sessionManager.sessionName ?? 'Session',
+        sessionName: widget.sessionName ?? sessionManager.sessionName ?? l10n.handSessionTitle,
         gameType: widget.gameType,
         profitLoss: profitLoss,
         totalBuyIn: sessionManager.totalBuyIn,
@@ -6560,6 +6562,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
   }
 
   Future<void> _checkForBustedPlayers() async {
+    final l10n = AppLocalizations.of(context);
     // Find all busted players (stack = 0 or negative) who are still active
     List<int> bustedPlayers = [];
     for (int playerId = 1; playerId <= gameState.numberOfPlayers; playerId++) {
@@ -6576,7 +6579,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
 
     // Handle each busted player
     for (int playerId in bustedPlayers) {
-      String playerName = sessionManager.getPlayerNameWithPosition(playerId) ?? "Player $playerId";
+      String playerName = sessionManager.getPlayerNameWithPosition(playerId) ?? "${l10n.handPlayerLabel}$playerId";
 
       // Show rebuy/leave dialog
       final result = await showDialog<Map<String, dynamic>>(

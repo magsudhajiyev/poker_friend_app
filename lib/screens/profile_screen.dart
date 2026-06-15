@@ -21,6 +21,8 @@ import 'poker_hand_screen.dart';
 import 'session_analytics_screen.dart';
 import '../widgets/session_summary_card.dart';
 import 'onboarding/onboarding_flow.dart';
+import '../services/test_data_seed_service.dart';
+import '../l10n/app_localizations.dart';
 
 class ProfileScreen extends StatefulWidget {
   @override
@@ -128,7 +130,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (mounted) {
         setState(() {
           _isCheckingUsername = false;
-          _usernameError = available ? null : 'Username already taken';
+          _usernameError = available ? null : AppLocalizations.of(context).profileUsernameTaken;
         });
       }
     });
@@ -142,7 +144,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final newUsername = _usernameCtrl.text.replaceAll('@', '').trim();
 
     if (_usernameError != null) {
-      _showSnack('Fix username error before saving');
+      _showSnack(AppLocalizations.of(context).profileFixUsernameError);
       return;
     }
 
@@ -166,7 +168,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (newUsername.isNotEmpty && newUsername != _originalUsername) {
         final claimed = await UsernameService.claimUsername(newUsername);
         if (!claimed) {
-          if (mounted) _showSnack('Username no longer available');
+          if (mounted) _showSnack(AppLocalizations.of(context).profileUsernameUnavailable);
           setState(() => _isSaving = false);
           return;
         }
@@ -174,7 +176,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       }
 
       if (mounted) {
-        _showSnack('Saved successfully', isSuccess: true);
+        _showSnack(AppLocalizations.of(context).profileSavedSuccessfully, isSuccess: true);
         setState(() => _isSaving = false);
       }
     } catch (e) {
@@ -197,18 +199,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
   // ── Sign out / Delete ──────────────────────────────────────────────────────
 
   void _showSignOutConfirmation() {
+    final l10n = AppLocalizations.of(context);
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: const Color(0xFF1A1A1E),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text('Sign Out', style: GoogleFonts.ibmPlexSans(color: Colors.white, fontWeight: FontWeight.w600)),
-        content: Text('Are you sure you want to sign out?',
+        title: Text(l10n.profileSignOut, style: GoogleFonts.ibmPlexSans(color: Colors.white, fontWeight: FontWeight.w600)),
+        content: Text(l10n.profileSignOutConfirmation,
             style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 14)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text('Cancel', style: GoogleFonts.ibmPlexSans(color: _secondary, fontWeight: FontWeight.w500)),
+            child: Text(l10n.commonCancel, style: GoogleFonts.ibmPlexSans(color: _secondary, fontWeight: FontWeight.w500)),
           ),
           TextButton(
             onPressed: () async {
@@ -219,7 +222,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     context, MaterialPageRoute(builder: (_) => IntroScreen()), (_) => false);
               }
             },
-            child: Text('Sign Out', style: GoogleFonts.ibmPlexSans(color: _danger, fontWeight: FontWeight.w500)),
+            child: Text(l10n.profileSignOut, style: GoogleFonts.ibmPlexSans(color: _danger, fontWeight: FontWeight.w500)),
           ),
         ],
       ),
@@ -227,12 +230,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _showDeleteConfirmation() {
+    final l10n = AppLocalizations.of(context);
     ConfirmDialog.show(
       context,
-      title: 'Delete Account',
-      message:
-          'This will permanently delete your account and all associated data. This action cannot be undone.\n\nIf you have an active subscription, please cancel it first in your device settings.',
-      confirmLabel: 'Delete',
+      title: l10n.profileDeleteAccount,
+      message: l10n.profileDeleteAccountMessage,
+      confirmLabel: l10n.commonDelete,
       onConfirm: _deleteAccount,
     );
   }
@@ -318,6 +321,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
 
     final hPad = MediaQuery.of(context).size.width * 0.044;
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       backgroundColor: _bg,
@@ -325,7 +329,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       body: Column(
         children: [
           TopNavBar(
-            title: 'Profile Settings',
+            title: l10n.profileSettings,
             onBack: () => Navigator.pop(context),
             backgroundColor: _surface,
             rightAction: GestureDetector(
@@ -348,7 +352,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     : Align(
                         alignment: Alignment.centerRight,
                         child: Text(
-                          'Save',
+                          l10n.commonSave,
                           style: GoogleFonts.ibmPlexSans(
                             fontSize: 17,
                             fontWeight: FontWeight.w600,
@@ -388,7 +392,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   color: _elevated,
                                   borderRadius: BorderRadius.circular(999),
                                 ),
-                                child: Text('Edit',
+                                child: Text(l10n.profileEdit,
                                     style: GoogleFonts.ibmPlexSans(
                                         fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white)),
                               ),
@@ -411,12 +415,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('Use nickname in games',
+                              Text(l10n.profileUseNicknameInGames,
                                   style: GoogleFonts.ibmPlexSans(
                                       fontSize: 15, fontWeight: FontWeight.w500, color: Colors.white)),
                               const SizedBox(height: 4),
                               Text(
-                                'Show @${_usernameCtrl.text.replaceAll('@', '').isNotEmpty ? _usernameCtrl.text.replaceAll('@', '') : 'username'} instead of your name in events and hand logging',
+                                'Show @${_usernameCtrl.text.replaceAll('@', '').isNotEmpty ? _usernameCtrl.text.replaceAll('@', '') : 'username'} ${l10n.profileInsteadOfName}',
                                 style: GoogleFonts.ibmPlexSans(fontSize: 13, color: _secondary, height: 20 / 13),
                               ),
                             ],
@@ -432,27 +436,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                   // ── Inputs ──────────────────────────────────────────────
                   _buildInputField(
-                    label: 'Edit Name',
+                    label: l10n.profileEditName,
                     controller: _nameCtrl,
                     focusNode: _nameFocus,
-                    placeholder: 'Your name',
+                    placeholder: l10n.profileYourName,
                   ),
                   const SizedBox(height: 16),
                   _buildInputField(
-                    label: 'Edit email',
+                    label: l10n.profileEditEmail,
                     controller: _emailCtrl,
                     placeholder: 'your@email.com',
                     keyboardType: TextInputType.emailAddress,
                     readOnly: true,
-                    onTap: () => _showSnack('Email changes require account re-authentication. Contact support to change your email.'),
+                    onTap: () => _showSnack(l10n.profileEditEmailHint),
                   ),
                   const SizedBox(height: 16),
                   _buildUsernameField(),
                   const SizedBox(height: 16),
                   _buildInputField(
-                    label: 'Change password',
-                    controller: TextEditingController(text: '***********'),
-                    placeholder: '***********',
+                    label: l10n.profileChangePassword,
+                    controller: TextEditingController(text: l10n.profilePasswordMask),
+                    placeholder: l10n.profilePasswordMask,
                     readOnly: true,
                     onTap: _showChangePasswordSheet,
                   ),
@@ -462,31 +466,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   // ── List rows ───────────────────────────────────────────
                   _buildRow(
                     icon: const Icon(Icons.chat_bubble_outline_rounded, color: AppColors.contentInactive, size: 24),
-                    title: 'Contact support',
+                    title: l10n.profileContactSupport,
                     onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const HelpSupportScreen())),
                   ),
                   _buildRow(
                     icon: const Icon(Icons.auto_awesome_outlined, color: AppColors.contentInactive, size: 24),
-                    title: 'Share your feedback',
+                    title: l10n.profileShareFeedback,
                     onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const HelpSupportScreen())),
                   ),
                   _buildRow(
                     icon: const Icon(Icons.email_outlined, color: AppColors.contentInactive, size: 24),
-                    title: 'Email updates',
+                    title: l10n.profileEmailUpdates,
                     trailing: _buildToggle(_emailUpdates, (v) => setState(() => _emailUpdates = v)),
                   ),
                   _buildRow(
                     icon: _svgIcon('assets/icons/X.svg'),
-                    title: 'Follow @finaltable',
+                    title: l10n.profileFollowUs,
                     onTap: () => launchUrl(Uri.parse('https://x.com/finaltable'), mode: LaunchMode.externalApplication),
                   ),
                   _buildRow(
                     icon: const Icon(Icons.logout_rounded, color: AppColors.contentInactive, size: 24),
-                    title: 'Sign out',
+                    title: l10n.profileSignOut,
                     onTap: _showSignOutConfirmation,
                   ),
                   _buildRow(
-                    title: 'Delete Account',
+                    title: l10n.profileDeleteAccount,
                     titleColor: _grey,
                     onTap: _showDeleteConfirmation,
                     showCaret: true,
@@ -580,7 +584,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Edit username',
+        Text(AppLocalizations.of(context).profileEditUsername,
             style: GoogleFonts.ibmPlexSans(fontSize: 13, fontWeight: FontWeight.w500, color: _secondary)),
         const SizedBox(height: 8),
         Container(
@@ -594,7 +598,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             focusNode: _usernameFocus,
             style: GoogleFonts.ibmPlexSans(fontSize: 15, color: Colors.white),
             decoration: InputDecoration(
-              hintText: 'username',
+              hintText: AppLocalizations.of(context).profileUsernameHint,
               hintStyle: GoogleFonts.ibmPlexSans(fontSize: 15, color: _secondary),
               prefixText: '@',
               prefixStyle: GoogleFonts.ibmPlexSans(fontSize: 15, color: Colors.white),
@@ -708,6 +712,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   // ── Change password sheet ──────────────────────────────────────────────────
 
   void _showChangePasswordSheet() {
+    final l10n = AppLocalizations.of(context);
     showModalBottomSheet(
       context: context,
       backgroundColor: _surface,
@@ -718,10 +723,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Change Password',
+              Text(l10n.profileChangePasswordTitle,
                   style: GoogleFonts.ibmPlexSans(fontSize: 20, fontWeight: FontWeight.w600, color: Colors.white)),
               const SizedBox(height: 8),
-              Text('We\'ll send a password reset link to your email address.',
+              Text(l10n.profileChangePasswordMessage,
                   style: GoogleFonts.ibmPlexSans(fontSize: 14, color: _secondary), textAlign: TextAlign.center),
               const SizedBox(height: 24),
               SizedBox(
@@ -733,9 +738,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     if (email != null) {
                       try {
                         await AuthService.sendPasswordReset(email);
-                        if (mounted) _showSnack('Password reset email sent to $email', isSuccess: true);
+                        if (mounted) _showSnack(l10n.profileResetEmailSent(email), isSuccess: true);
                       } catch (e) {
-                        if (mounted) _showSnack('Failed to send reset email');
+                        if (mounted) _showSnack(l10n.profileResetEmailFailed);
                       }
                     }
                   },
@@ -743,7 +748,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     decoration: BoxDecoration(
                         color: _elevated, borderRadius: BorderRadius.circular(60)),
-                    child: Text('Send Reset Email',
+                    child: Text(l10n.profileSendResetEmail,
                         textAlign: TextAlign.center,
                         style: GoogleFonts.ibmPlexSans(
                             fontSize: 17, fontWeight: FontWeight.w600, color: Colors.white)),
@@ -774,7 +779,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Row(children: [
             const Icon(Icons.bug_report, color: Color(0xFFFF6B6B), size: 20),
             const SizedBox(width: 8),
-            Text('Dev Tools', style: GoogleFonts.ibmPlexSans(
+            Text(AppLocalizations.of(context).profileDevTools, style: GoogleFonts.ibmPlexSans(
                 fontSize: 17, fontWeight: FontWeight.w600, color: const Color(0xFFFF6B6B))),
           ]),
           const SizedBox(height: 16),
@@ -782,7 +787,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text('Premium Override', style: GoogleFonts.ibmPlexSans(fontSize: 15, fontWeight: FontWeight.w500, color: Colors.white)),
+                Text(AppLocalizations.of(context).profilePremiumOverride, style: GoogleFonts.ibmPlexSans(fontSize: 15, fontWeight: FontWeight.w500, color: Colors.white)),
                 Text(
                   override == null
                       ? 'Real: ${SubscriptionService.isPremium ? 'Premium' : 'Free'}'
@@ -819,6 +824,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           }),
           const SizedBox(height: 8),
           _devButton('Open Latest Session Analytics', const Color(0xFFFFB74D), _openLatestSession),
+          const SizedBox(height: 8),
+          _devButton('Seed Scouting Data (Aldante + Kulikor)', const Color(0xFF87ED81), _seedScoutingData),
         ],
       ),
     );
@@ -880,6 +887,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (!mounted) return;
       Navigator.push(context, MaterialPageRoute(
           builder: (_) => SessionAnalyticsScreen(sessionData: data, sessionId: doc.id)));
+    } catch (e) {
+      if (mounted) _showSnack('Error: $e');
+    }
+  }
+
+  Future<void> _seedScoutingData() async {
+    _showSnack('Cleaning old data & seeding scouting data...');
+    try {
+      await TestDataSeedService.cleanupShowdownSeeds();
+      await TestDataSeedService.seedShowdownHands(['Aldante', 'Kulikor']);
+      if (mounted) _showSnack('Scouting data seeded! Tap an opponent in drill setup to see it.');
     } catch (e) {
       if (mounted) _showSnack('Error: $e');
     }
