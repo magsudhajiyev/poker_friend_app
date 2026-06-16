@@ -39,10 +39,13 @@ import '../widgets/hand_micro_animations.dart';
 import '../services/firebase_service.dart';
 import '../services/local_storage_service.dart';
 import '../services/auth_service.dart';
+import '../services/user_stats_service.dart';
 import '../services/display_identity_service.dart';
 import '../services/logger_service.dart';
 import '../services/free_tier_limits.dart';
 import '../services/subscription_service.dart';
+import '../services/skip_hand_scouting_service.dart';
+import '../widgets/skip_hand_scouting_sheet.dart';
 import '../onboarding/onboarding_state.dart';
 import 'home_screen.dart';
 import '../onboarding/onboarding_tour.dart';
@@ -4160,6 +4163,34 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       if (confirmed != true) return;
     }
 
+    // --- Skip-hand scouting: ask "what happened?" before resetting state ---
+    SkipScoutResult? scoutResult;
+    Map<int, String>? scoutNames;
+    Set<int>? scoutSeats;
+    int? scoutButton;
+    int? scoutHero;
+
+    if (SkipHandScoutingService.isEnabled && !OnboardingState.isGuidedHandActive) {
+      scoutNames = Map<int, String>.from(sessionManager.playerNames);
+      scoutSeats = Set<int>.from(
+        gameState.players
+            .where((p) => p.isActive)
+            .map((p) => p.playerId),
+      );
+      scoutButton = gameState.buttonPosition;
+      scoutHero = sessionManager.ourSeatNumber;
+
+      if (scoutHero != null && scoutSeats.length > 1) {
+        scoutResult = await SkipHandScoutingSheet.show(
+          context: context,
+          playerNames: scoutNames,
+          activeSeats: scoutSeats,
+          heroSeat: scoutHero,
+          buttonPosition: scoutButton,
+        );
+      }
+    }
+
     // Play card scatter animation
     _scatterSeed = DateTime.now().millisecondsSinceEpoch;
     _nextHandSweepController?.dispose();
@@ -4285,6 +4316,33 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         gameState.currentPlayer = activePlayers[0];
       }
     });
+
+    // Count this skipped hand in totalHands so VPIP/PFR denominators are accurate.
+    // Hero folded preflop, so only totalHands increments — all other deltas stay 0.
+    if (!OnboardingState.isGuidedHandActive) {
+      final userId = AuthService.userId;
+      if (userId != null) {
+        UserStatsService.updateStatsAtomic(
+          userId: userId,
+          totalHandsDelta: 1,
+        ).catchError((e) {
+          debugPrint('⚠️ Error updating stats for skipped hand: $e');
+        });
+      }
+
+      // Fire-and-forget opponent stats from scouting
+      if (scoutResult != null) {
+        SkipHandScoutingService.applySkipDeltas(
+          result: scoutResult,
+          playerNames: scoutNames!,
+          activeSeats: scoutSeats!,
+          heroSeat: scoutHero!,
+          buttonPosition: scoutButton!,
+        ).catchError((e) {
+          debugPrint('⚠️ Skip scouting stats error: $e');
+        });
+      }
+    }
   }
 
   /// Action-specific flash colors.

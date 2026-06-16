@@ -4523,5 +4523,11 @@
   "handOnlyOneRemaining": "Hand ends: Only one player remaining",
   "handSessionTitle": "Session",
 
-  "homeUserFallback": "User"
+  "homeUserFallback": "User",
+
+  "settingsSkipHandScouting": "Skip Hand Scouting",
+  "settingsSkipHandScoutingDesc": "Track opponent actions when you fold preflop",
+  "skipScoutTitle": "What happened?",
+  "skipScoutNoRaise": "No one raised",
+  "skipScoutSkip": "Skip"
 }

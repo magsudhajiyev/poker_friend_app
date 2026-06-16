@@ -10,6 +10,7 @@ import '../l10n/app_localizations.dart';
 import '../services/auth_service.dart';
 import '../services/locale_service.dart';
 import '../services/currency_service.dart';
+import '../services/skip_hand_scouting_service.dart';
 import '../services/username_service.dart';
 import '../services/club_service.dart';
 import '../services/session_result_service.dart';
@@ -44,6 +45,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   int _pendingRequestCount = 0;
   int _pendingSupportCount = 0;
   List<Club> _clubs = [];
+  bool _scoutingEnabled = false;
 
   static const _bg = Color(0xFF0C0C0C);
   static const _surface = Color(0xFF161719);
@@ -80,6 +82,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
       final clubs = await ClubService.getClubs();
       if (mounted) setState(() => _clubs = clubs);
     } catch (_) {}
+
+    if (mounted) {
+      setState(() => _scoutingEnabled = SkipHandScoutingService.isEnabled);
+    }
   }
 
   String _currentLocaleName() {
@@ -988,6 +994,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         title: l10n.settingsCurrency,
                         subtitle: '${CurrencyService.current.name} (${CurrencyService.symbol})',
                         onTap: _showCurrencyPicker,
+                      ),
+                      _buildToggleRow(
+                        icon: const Icon(Icons.visibility_outlined, color: AppColors.contentInactive, size: 24),
+                        title: l10n.settingsSkipHandScouting,
+                        subtitle: l10n.settingsSkipHandScoutingDesc,
+                        value: _scoutingEnabled,
+                        onChanged: (v) async {
+                          await SkipHandScoutingService.setEnabled(v);
+                          setState(() => _scoutingEnabled = v);
+                        },
                         isLast: true,
                       ),
                     ],
@@ -1230,6 +1246,48 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 colorFilter: const ColorFilter.mode(AppColors.contentInactive, BlendMode.srcIn)),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildToggleRow({
+    required Widget icon,
+    required String title,
+    String? subtitle,
+    required bool value,
+    required ValueChanged<bool> onChanged,
+    bool isLast = false,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Row(
+        children: [
+          SizedBox(width: 24, height: 24, child: icon),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(title,
+                    style: GoogleFonts.ibmPlexSans(
+                        fontSize: 17, fontWeight: FontWeight.w400,
+                        color: Colors.white, height: 26 / 17)),
+                if (subtitle != null)
+                  Text(subtitle,
+                      style: GoogleFonts.ibmPlexSans(fontSize: 11, color: _secondary, height: 16 / 11)),
+              ],
+            ),
+          ),
+          SizedBox(
+            height: 28,
+            child: Switch.adaptive(
+              value: value,
+              onChanged: onChanged,
+              activeColor: AppColors.accentPrimary,
+            ),
+          ),
+        ],
       ),
     );
   }

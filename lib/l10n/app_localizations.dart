@@ -14319,6 +14319,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Session'**
   String get handSessionTitle;
+
+  /// No description provided for @settingsSkipHandScouting.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip Hand Scouting'**
+  String get settingsSkipHandScouting;
+
+  /// No description provided for @settingsSkipHandScoutingDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Track opponent actions when you fold preflop'**
+  String get settingsSkipHandScoutingDesc;
+
+  /// No description provided for @skipScoutTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What happened?'**
+  String get skipScoutTitle;
+
+  /// No description provided for @skipScoutNoRaise.
+  ///
+  /// In en, this message translates to:
+  /// **'No one raised'**
+  String get skipScoutNoRaise;
+
+  /// No description provided for @skipScoutSkip.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get skipScoutSkip;
 }
 
 class _AppLocalizationsDelegate

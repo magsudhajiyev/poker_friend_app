@@ -8,6 +8,7 @@ import 'package:uuid/uuid.dart';
 import '../models/opponent.dart';
 import '../models/opponent_stats.dart';
 import 'local_storage_service.dart';
+import 'opponent_range_service.dart';
 import 'opponent_service.dart';
 import 'opponent_stats_service.dart';
 
@@ -2160,6 +2161,451 @@ class TestDataSeedService {
       'isCurrentUser': isHero,
       'playerPosition': position,
       'playerStack': 10000.0,
+      if (amount != null) 'amount': amount,
+    };
+  }
+
+  // ── Showdown hand seeder for scouting feature ──────────────────────
+
+  /// Remove any previously seeded scouting sessions.
+  static Future<void> cleanupShowdownSeeds() async {
+    if (!kDebugMode) return;
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    final firestore = FirebaseFirestore.instance;
+    final sessions = await firestore
+        .collection('poker_sessions')
+        .where('userId', isEqualTo: user.uid)
+        .get();
+
+    for (final doc in sessions.docs) {
+      if (doc.data()['sessionName'] == 'Scouting Data Session') {
+        final hands = await doc.reference.collection('poker_hands').get();
+        final batch = firestore.batch();
+        for (final h in hands.docs) {
+          batch.delete(h.reference);
+        }
+        batch.delete(doc.reference);
+        await batch.commit();
+        debugPrint('Deleted old scouting session ${doc.id} with ${hands.docs.length} hands');
+      }
+    }
+    OpponentRangeService.clearCache();
+  }
+
+  /// Seeds showdown hands for named opponents so the scouting/observed-range
+  /// feature has data. Looks up real opponents by name from Firebase.
+  /// Call from profile dev tools.
+  static Future<void> seedShowdownHands(List<String> opponentNames) async {
+    if (!kDebugMode) return;
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      debugPrint('No user logged in');
+      return;
+    }
+
+    // Look up real opponents by name
+    final allOpponents = await OpponentService.getAllOpponents();
+    final nameToOpponent = <String, Opponent>{};
+    for (final name in opponentNames) {
+      final match = allOpponents.cast<Opponent?>().firstWhere(
+        (o) => o!.name.toLowerCase() == name.toLowerCase(),
+        orElse: () => null,
+      );
+      if (match != null) {
+        nameToOpponent[match.name] = match;
+        debugPrint('Found opponent: ${match.name} (${match.id})');
+      } else {
+        debugPrint('Opponent "$name" not found — skipping');
+      }
+    }
+    if (nameToOpponent.isEmpty) {
+      debugPrint('No matching opponents found');
+      return;
+    }
+
+    final firestore = FirebaseFirestore.instance;
+    final sessionId = _uuid.v4();
+    final now = DateTime.now();
+
+    // Create a session doc
+    await firestore.collection('poker_sessions').doc(sessionId).set({
+      'userId': user.uid,
+      'sessionName': 'Scouting Data Session',
+      'smallBlind': 1.0,
+      'bigBlind': 2.0,
+      'playerCount': 6,
+      'ourSeatNumber': 1,
+      'gameType': 'cash',
+      'startTime': Timestamp.fromDate(now.subtract(const Duration(hours: 4))),
+      'endTime': Timestamp.fromDate(now),
+      'totalHands': 0,
+      'isIndividualSession': false,
+      'buyInAmount': 200.0,
+      'totalBuyIn': 200.0,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+
+    final batch = firestore.batch();
+    int handNum = 0;
+
+    final showdownDefs = <Map<String, dynamic>>[
+      ..._aldanteHands(),
+      ..._kulikorHands(),
+    ];
+
+    for (final def in showdownDefs) {
+      final oppName = def['oppName'] as String;
+      if (!nameToOpponent.containsKey(oppName)) continue;
+
+      handNum++;
+      final oppSeat = def['oppSeat'] as int;
+      final oppCards = def['oppCards'] as Map<String, String>;
+      final oppPosition = def['oppPosition'] as String;
+      final heroPosition = def['heroPosition'] as String;
+      final heroCards = def['heroCards'] as Map<String, String>;
+      final board = def['board'] as Map<String, dynamic>;
+      final winner = def['winner'] as int;
+      final oppAction = def['oppAction'] as String;
+      final oppAmount = def['oppAmount'] as double;
+      final pot = def['pot'] as double;
+
+      // Build actions — NO blind posts (they inflate raise counts in
+      // derivePreflopLine). Only voluntary preflop actions matter.
+      final actions = _buildShowdownActions(
+        oppSeat: oppSeat,
+        oppName: oppName,
+        oppPosition: oppPosition,
+        oppAction: oppAction,
+        oppAmount: oppAmount,
+        heroPosition: heroPosition,
+      );
+
+      final playerNames = <String, String>{
+        '1': 'Hero',
+        oppSeat.toString(): oppName,
+        '3': 'Player 3',
+        '4': 'Player 4',
+        '5': 'Player 5',
+        '6': 'Player 6',
+      };
+
+      final showdownData = {
+        'playerCards': {
+          '1': heroCards,
+          oppSeat.toString(): oppCards,
+        },
+        'winner': winner,
+      };
+
+      final handId = '${sessionId}_hand_$handNum';
+      final handRef = firestore
+          .collection('poker_sessions')
+          .doc(sessionId)
+          .collection('poker_hands')
+          .doc(handId);
+
+      batch.set(handRef, {
+        'sessionId': sessionId,
+        'handNumber': handNum,
+        'buttonPosition': 5,
+        'playerCount': 6,
+        'startTime': now.subtract(Duration(minutes: 240 - handNum * 5)).toIso8601String(),
+        'endTime': now.subtract(Duration(minutes: 237 - handNum * 5)).toIso8601String(),
+        'actions': actions,
+        'boardCards': board,
+        'ourHoleCards': heroCards,
+        'showdownData': showdownData,
+        'reachedShowdown': true,
+        'potAmount': pot,
+        'preflopPot': pot,
+        'winnerId': winner,
+        'heroPosition': 1,
+        'heroPositionName': heroPosition,
+        'heroSeatNumber': 1,
+        'playerNames': playerNames,
+        'bigBlind': 2.0,
+        'smallBlind': 1.0,
+        'handBigBlind': 2.0,
+        'handSmallBlind': 1.0,
+        'gameType': 'cash',
+        'handGameType': 'cash',
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+    }
+
+    await batch.commit();
+
+    await firestore.collection('poker_sessions').doc(sessionId).update({
+      'totalHands': handNum,
+    });
+
+    // Clear the observed-range cache so new data is picked up immediately
+    OpponentRangeService.clearCache();
+
+    debugPrint('Seeded $handNum showdown hands for scouting in session $sessionId');
+  }
+
+  /// Build a clean action sequence for one showdown hand.
+  /// Avoids blind posts (which would be counted as raises by derivePreflopLine).
+  /// Uses seat layout: Hero=1, opponent varies, fillers on remaining seats.
+  static List<Map<String, dynamic>> _buildShowdownActions({
+    required int oppSeat,
+    required String oppName,
+    required String oppPosition,
+    required String oppAction,
+    required double oppAmount,
+    required String heroPosition,
+  }) {
+    final actions = <Map<String, dynamic>>[];
+
+    // For open-raise spots (UTG/MP/CO/BTN): folds before, then opponent acts
+    // For SB: everyone folds to SB, SB raises
+    // For BB vs raise: UTG raises, folds, BB calls/raises
+    // For call spots: hero raises, then opponent calls
+    final isCallSpot = oppAction == 'call';
+
+    if (isCallSpot) {
+      // Hero opens, opponent flat-calls
+      actions.add(_sdAction(1, 'raise', 'preflop', heroPosition,
+          amount: oppAmount, isHero: true));
+      // Folds between hero and opponent
+      for (final s in [2, 3, 4, 5, 6]) {
+        if (s == 1 || s == oppSeat) continue;
+        actions.add(_sdAction(s, 'fold', 'preflop', 'MP'));
+      }
+      actions.add(_sdAction(oppSeat, 'call', 'preflop', oppPosition,
+          amount: oppAmount, playerName: oppName));
+    } else if (oppPosition == 'BB') {
+      // Someone opens, BB calls
+      actions.add(_sdAction(6, 'raise', 'preflop', 'UTG', amount: 6.0));
+      for (final s in [2, 3, 4, 5]) {
+        if (s == oppSeat) continue;
+        actions.add(_sdAction(s, 'fold', 'preflop', 'MP'));
+      }
+      actions.add(_sdAction(oppSeat, oppAction, 'preflop', oppPosition,
+          amount: oppAmount, playerName: oppName));
+      actions.add(_sdAction(1, 'call', 'preflop', heroPosition,
+          amount: oppAmount, isHero: true));
+    } else {
+      // Open-raise spot: folds before, opponent raises, hero calls
+      // Seats that act before the opponent fold
+      final posOrder = ['UTG', 'MP', 'CO', 'BTN', 'SB'];
+      final oppIdx = posOrder.indexOf(oppPosition);
+      // Use filler seats for positions before the opponent
+      final fillerSeats = [6, 3, 2, 5, 4]; // map to positions before opp
+      for (int i = 0; i < oppIdx && i < fillerSeats.length; i++) {
+        final s = fillerSeats[i];
+        if (s == oppSeat || s == 1) continue;
+        actions.add(_sdAction(s, 'fold', 'preflop', posOrder[i]));
+      }
+      // Opponent opens
+      actions.add(_sdAction(oppSeat, oppAction, 'preflop', oppPosition,
+          amount: oppAmount, playerName: oppName));
+      // Everyone else folds, hero calls
+      actions.add(_sdAction(1, 'call', 'preflop', heroPosition,
+          amount: oppAmount, isHero: true));
+    }
+
+    // Postflop: check-check to showdown on all streets
+    for (final street in ['flop', 'turn', 'river']) {
+      actions.add(_sdAction(1, 'check', street, heroPosition, isHero: true));
+      actions.add(_sdAction(oppSeat, 'check', street, oppPosition,
+          playerName: oppName));
+    }
+
+    return actions;
+  }
+
+  /// Showdown hand definitions for Aldante — varied hand classes and positions.
+  static List<Map<String, dynamic>> _aldanteHands() => [
+    {
+      'oppName': 'Aldante', 'oppSeat': 2, 'oppPosition': 'UTG',
+      'oppAction': 'raise', 'oppAmount': 6.0,
+      'oppCards': {'card1': 'A♠', 'card2': 'A♥'},
+      'heroPosition': 'BB', 'heroCards': {'card1': 'K♠', 'card2': 'Q♠'},
+      'board': {'flop': ['7♦', '4♣', '2♠'], 'turn': '9♥', 'river': '3♦'},
+      'winner': 2, 'pot': 14.0,
+    },
+    {
+      'oppName': 'Aldante', 'oppSeat': 2, 'oppPosition': 'CO',
+      'oppAction': 'raise', 'oppAmount': 5.0,
+      'oppCards': {'card1': 'K♦', 'card2': 'K♣'},
+      'heroPosition': 'BB', 'heroCards': {'card1': 'J♥', 'card2': 'T♥'},
+      'board': {'flop': ['8♦', '5♣', '2♥'], 'turn': 'Q♦', 'river': '6♣'},
+      'winner': 2, 'pot': 12.0,
+    },
+    {
+      'oppName': 'Aldante', 'oppSeat': 2, 'oppPosition': 'BTN',
+      'oppAction': 'raise', 'oppAmount': 5.0,
+      'oppCards': {'card1': 'A♣', 'card2': 'K♣'},
+      'heroPosition': 'BB', 'heroCards': {'card1': '9♠', 'card2': '8♠'},
+      'board': {'flop': ['A♦', '7♣', '3♠'], 'turn': '2♥', 'river': 'J♦'},
+      'winner': 2, 'pot': 12.0,
+    },
+    {
+      'oppName': 'Aldante', 'oppSeat': 2, 'oppPosition': 'MP',
+      'oppAction': 'raise', 'oppAmount': 5.0,
+      'oppCards': {'card1': 'Q♠', 'card2': 'Q♦'},
+      'heroPosition': 'BB', 'heroCards': {'card1': 'A♠', 'card2': '5♠'},
+      'board': {'flop': ['J♦', '8♣', '4♠'], 'turn': '2♣', 'river': 'T♠'},
+      'winner': 1, 'pot': 12.0,
+    },
+    {
+      'oppName': 'Aldante', 'oppSeat': 2, 'oppPosition': 'CO',
+      'oppAction': 'call', 'oppAmount': 6.0,
+      'oppCards': {'card1': 'J♥', 'card2': 'T♥'},
+      'heroPosition': 'UTG', 'heroCards': {'card1': 'A♠', 'card2': 'A♦'},
+      'board': {'flop': ['J♦', 'T♣', '3♠'], 'turn': '5♥', 'river': '2♣'},
+      'winner': 2, 'pot': 14.0,
+    },
+    {
+      'oppName': 'Aldante', 'oppSeat': 2, 'oppPosition': 'BTN',
+      'oppAction': 'raise', 'oppAmount': 5.0,
+      'oppCards': {'card1': '9♣', 'card2': '9♠'},
+      'heroPosition': 'BB', 'heroCards': {'card1': 'K♥', 'card2': 'J♦'},
+      'board': {'flop': ['T♦', '6♣', '2♠'], 'turn': '4♥', 'river': '8♦'},
+      'winner': 2, 'pot': 12.0,
+    },
+    {
+      'oppName': 'Aldante', 'oppSeat': 4, 'oppPosition': 'SB',
+      'oppAction': 'raise', 'oppAmount': 6.0,
+      'oppCards': {'card1': 'A♥', 'card2': '5♥'},
+      'heroPosition': 'BB', 'heroCards': {'card1': 'K♣', 'card2': 'T♦'},
+      'board': {'flop': ['A♦', '8♣', '3♠'], 'turn': '7♥', 'river': 'K♦'},
+      'winner': 4, 'pot': 14.0,
+    },
+    {
+      'oppName': 'Aldante', 'oppSeat': 2, 'oppPosition': 'CO',
+      'oppAction': 'raise', 'oppAmount': 5.0,
+      'oppCards': {'card1': '8♦', 'card2': '7♦'},
+      'heroPosition': 'BB', 'heroCards': {'card1': 'A♠', 'card2': '2♠'},
+      'board': {'flop': ['6♦', '5♦', '2♣'], 'turn': 'K♥', 'river': 'Q♣'},
+      'winner': 2, 'pot': 12.0,
+    },
+    {
+      'oppName': 'Aldante', 'oppSeat': 2, 'oppPosition': 'UTG',
+      'oppAction': 'raise', 'oppAmount': 6.0,
+      'oppCards': {'card1': 'A♦', 'card2': 'Q♠'},
+      'heroPosition': 'BB', 'heroCards': {'card1': '7♠', 'card2': '6♠'},
+      'board': {'flop': ['A♣', '9♦', '4♠'], 'turn': 'T♥', 'river': '2♦'},
+      'winner': 2, 'pot': 14.0,
+    },
+    {
+      'oppName': 'Aldante', 'oppSeat': 2, 'oppPosition': 'BTN',
+      'oppAction': 'call', 'oppAmount': 6.0,
+      'oppCards': {'card1': 'K♠', 'card2': 'T♣'},
+      'heroPosition': 'CO', 'heroCards': {'card1': 'A♥', 'card2': 'J♥'},
+      'board': {'flop': ['K♦', '7♣', '3♠'], 'turn': '5♥', 'river': '2♠'},
+      'winner': 2, 'pot': 14.0,
+    },
+  ];
+
+  /// Showdown hand definitions for Kulikor — wider, looser range.
+  static List<Map<String, dynamic>> _kulikorHands() => [
+    {
+      'oppName': 'Kulikor', 'oppSeat': 3, 'oppPosition': 'UTG',
+      'oppAction': 'raise', 'oppAmount': 6.0,
+      'oppCards': {'card1': 'T♠', 'card2': 'T♥'},
+      'heroPosition': 'BB', 'heroCards': {'card1': 'A♠', 'card2': 'K♦'},
+      'board': {'flop': ['9♦', '4♣', '2♠'], 'turn': '7♥', 'river': '3♦'},
+      'winner': 3, 'pot': 14.0,
+    },
+    {
+      'oppName': 'Kulikor', 'oppSeat': 3, 'oppPosition': 'CO',
+      'oppAction': 'raise', 'oppAmount': 5.0,
+      'oppCards': {'card1': 'A♣', 'card2': 'J♦'},
+      'heroPosition': 'BB', 'heroCards': {'card1': 'K♠', 'card2': 'Q♣'},
+      'board': {'flop': ['A♦', '8♣', '5♠'], 'turn': '2♥', 'river': '9♦'},
+      'winner': 3, 'pot': 12.0,
+    },
+    {
+      'oppName': 'Kulikor', 'oppSeat': 3, 'oppPosition': 'BTN',
+      'oppAction': 'raise', 'oppAmount': 5.0,
+      'oppCards': {'card1': '7♣', 'card2': '6♣'},
+      'heroPosition': 'BB', 'heroCards': {'card1': 'A♥', 'card2': '9♥'},
+      'board': {'flop': ['7♦', '6♠', '2♣'], 'turn': 'K♥', 'river': 'Q♦'},
+      'winner': 3, 'pot': 12.0,
+    },
+    {
+      'oppName': 'Kulikor', 'oppSeat': 3, 'oppPosition': 'MP',
+      'oppAction': 'raise', 'oppAmount': 5.0,
+      'oppCards': {'card1': 'K♥', 'card2': 'Q♥'},
+      'heroPosition': 'BB', 'heroCards': {'card1': 'J♠', 'card2': 'T♠'},
+      'board': {'flop': ['K♦', '8♣', '4♠'], 'turn': '2♣', 'river': '5♦'},
+      'winner': 3, 'pot': 12.0,
+    },
+    {
+      'oppName': 'Kulikor', 'oppSeat': 3, 'oppPosition': 'CO',
+      'oppAction': 'call', 'oppAmount': 6.0,
+      'oppCards': {'card1': '5♠', 'card2': '5♦'},
+      'heroPosition': 'UTG', 'heroCards': {'card1': 'A♠', 'card2': 'K♠'},
+      'board': {'flop': ['5♣', 'J♦', '3♠'], 'turn': '9♥', 'river': '2♣'},
+      'winner': 3, 'pot': 14.0,
+    },
+    {
+      'oppName': 'Kulikor', 'oppSeat': 3, 'oppPosition': 'BTN',
+      'oppAction': 'raise', 'oppAmount': 5.0,
+      'oppCards': {'card1': 'Q♠', 'card2': '9♠'},
+      'heroPosition': 'BB', 'heroCards': {'card1': 'K♦', 'card2': 'J♣'},
+      'board': {'flop': ['Q♦', '6♣', '2♠'], 'turn': '4♥', 'river': '8♦'},
+      'winner': 3, 'pot': 12.0,
+    },
+    {
+      'oppName': 'Kulikor', 'oppSeat': 4, 'oppPosition': 'SB',
+      'oppAction': 'raise', 'oppAmount': 6.0,
+      'oppCards': {'card1': 'A♦', 'card2': '3♠'},
+      'heroPosition': 'BB', 'heroCards': {'card1': '8♠', 'card2': '7♠'},
+      'board': {'flop': ['A♣', 'T♦', '4♠'], 'turn': '2♥', 'river': 'K♣'},
+      'winner': 4, 'pot': 14.0,
+    },
+    {
+      'oppName': 'Kulikor', 'oppSeat': 3, 'oppPosition': 'CO',
+      'oppAction': 'raise', 'oppAmount': 5.0,
+      'oppCards': {'card1': 'J♣', 'card2': '8♣'},
+      'heroPosition': 'BB', 'heroCards': {'card1': 'A♠', 'card2': '4♠'},
+      'board': {'flop': ['J♦', '8♦', '3♣'], 'turn': '5♥', 'river': 'K♠'},
+      'winner': 3, 'pot': 12.0,
+    },
+    {
+      'oppName': 'Kulikor', 'oppSeat': 3, 'oppPosition': 'BB',
+      'oppAction': 'call', 'oppAmount': 6.0,
+      'oppCards': {'card1': '4♠', 'card2': '4♥'},
+      'heroPosition': 'CO', 'heroCards': {'card1': 'A♠', 'card2': 'Q♦'},
+      'board': {'flop': ['T♦', '7♣', '4♦'], 'turn': '2♥', 'river': '9♣'},
+      'winner': 3, 'pot': 14.0,
+    },
+    {
+      'oppName': 'Kulikor', 'oppSeat': 3, 'oppPosition': 'BTN',
+      'oppAction': 'call', 'oppAmount': 6.0,
+      'oppCards': {'card1': 'T♣', 'card2': '8♦'},
+      'heroPosition': 'CO', 'heroCards': {'card1': 'A♥', 'card2': 'K♥'},
+      'board': {'flop': ['T♦', '8♠', '3♣'], 'turn': '5♥', 'river': '2♠'},
+      'winner': 3, 'pot': 14.0,
+    },
+  ];
+
+  /// Action helper for showdown seeder.
+  static Map<String, dynamic> _sdAction(
+    int player,
+    String action,
+    String street,
+    String position, {
+    double? amount,
+    String? playerName,
+    bool isHero = false,
+  }) {
+    return {
+      'player': player,
+      'action': action,
+      'street': street,
+      'timestamp': DateTime.now().toIso8601String(),
+      'buttonPosition': 5,
+      'playerName': isHero ? 'Hero' : (playerName ?? 'Player $player'),
+      'isCurrentUser': isHero,
+      'playerPosition': position,
+      'playerStack': 200.0,
       if (amount != null) 'amount': amount,
     };
   }

@@ -19,6 +19,7 @@ import 'services/subscription_service.dart';
 import 'services/app_data_cache.dart';
 import 'services/locale_service.dart';
 import 'services/currency_service.dart';
+import 'services/skip_hand_scouting_service.dart';
 import 'services/opponent_service.dart';
 import 'config/env_config.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -72,6 +73,13 @@ void main() async {
     await CurrencyService.init();
   } catch (e) {
     debugPrint('Currency service init failed: $e');
+  }
+
+  // Load skip-hand scouting preference
+  try {
+    await SkipHandScoutingService.init();
+  } catch (e) {
+    debugPrint('Skip hand scouting service init failed: $e');
   }
 
   // Launch app FIRST, then init services in background.

@@ -8134,4 +8134,20 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get handSessionTitle => 'Session';
+
+  @override
+  String get settingsSkipHandScouting => 'Skip Hand Scouting';
+
+  @override
+  String get settingsSkipHandScoutingDesc =>
+      'Track opponent actions when you fold preflop';
+
+  @override
+  String get skipScoutTitle => 'What happened?';
+
+  @override
+  String get skipScoutNoRaise => 'No one raised';
+
+  @override
+  String get skipScoutSkip => 'Skip';
 }

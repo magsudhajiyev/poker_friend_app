@@ -5323,5 +5323,11 @@
   "drillLineupChanges": "This lineup changes the play: GTO {gto}s, exploit {exploit}s",
   "profileDeleteAccountMessage": "This will permanently delete your account and all associated data. This action cannot be undone.\n\nIf you have an active subscription, please cancel it first in your device settings.",
   "opponentsEnterName": "Enter name",
-  "rangeStackDepth": "Stack depth"
+  "rangeStackDepth": "Stack depth",
+
+  "settingsSkipHandScouting": "Skip Hand Scouting",
+  "settingsSkipHandScoutingDesc": "Track opponent actions when you fold preflop",
+  "skipScoutTitle": "What happened?",
+  "skipScoutNoRaise": "No one raised",
+  "skipScoutSkip": "Skip"
 }

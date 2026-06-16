@@ -247,23 +247,14 @@ class OpponentRangeService {
     Map<String, String> idToName, {
     bool forceRefresh = false,
   }) async {
+    // If cache exists and already contains ALL requested opponents, return it.
+    // Otherwise rescan — a partial cache from a single-opponent query must not
+    // shadow opponents that were never scanned.
     if (!forceRefresh && _cache != null) {
-      return {
-        for (final e in idToName.entries)
-          e.key: _cache![e.key] ??
-              ObservedRange(
-                opponentId: e.key,
-                name: e.value,
-                combos: const [],
-                total: 0,
-                premiumCount: 0,
-                strongCount: 0,
-                mediumCount: 0,
-                wideCount: 0,
-                shape: ObservedShape.insufficient,
-                summary: 'No showdowns recorded for ${e.value} yet.',
-              ),
-      };
+      final allPresent = idToName.keys.every((id) => _cache!.containsKey(id));
+      if (allPresent) {
+        return {for (final e in idToName.entries) e.key: _cache![e.key]!};
+      }
     }
 
     final nameToId = {for (final e in idToName.entries) e.value: e.key};
@@ -308,7 +299,9 @@ class OpponentRangeService {
     idToName.forEach((id, name) {
       result[id] = classify(id, name, combosById[id] ?? const []);
     });
-    _cache = result;
+    // Merge into existing cache so sequential single-opponent queries
+    // don't overwrite each other's results.
+    _cache = {...?_cache, ...result};
     return result;
   }
 
