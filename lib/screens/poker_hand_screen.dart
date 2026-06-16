@@ -2459,7 +2459,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       heroName: heroName,
       seatedPlayers: seatedPlayers,
       isCash: sessionManager.gameType == GameType.cash,
-      showSaveAsOpponent: false,
+      showSaveAsOpponent: !isHero,
       titleOverride: l10n.tableManagementAddPlayerSeatTitle(seatNumber),
       onSave: ({
         required String name,

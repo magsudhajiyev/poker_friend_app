@@ -159,7 +159,7 @@ class _TableManagementModalState extends State<_TableManagementModal> {
       heroName: heroName,
       seatedPlayers: seatedPlayers,
       isCash: widget.sessionManager.gameType == GameType.cash,
-      showSaveAsOpponent: false,
+      showSaveAsOpponent: !isHero,
       titleOverride: l10n.tableManagementAddPlayerSeatTitle(seat),
       onSave: ({
         required String name,

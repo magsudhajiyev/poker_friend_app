@@ -282,8 +282,22 @@ class _SeatConfigSheetState extends State<SeatConfigSheet> {
               GestureDetector(
                 onTap: () => setState(() {
                   _isHero = !_isHero;
-                  // Hero is never saved as an opponent
-                  if (_isHero) _saveAsOpponent = false;
+                  if (_isHero) {
+                    // Hero is never saved as an opponent
+                    _saveAsOpponent = false;
+                    // Auto-fill hero name and default stack
+                    if (widget.heroName.isNotEmpty) {
+                      _nameController.removeListener(_onNameChanged);
+                      _nameController.text = widget.heroName;
+                      _nameController.addListener(_onNameChanged);
+                      _filteredOpponents = [];
+                    }
+                    if (_stackController.text.isEmpty && widget.defaultStack > 0) {
+                      _stackController.text = widget.defaultStack == widget.defaultStack.roundToDouble()
+                          ? widget.defaultStack.toInt().toString()
+                          : widget.defaultStack.toStringAsFixed(2);
+                    }
+                  }
                 }),
                 behavior: HitTestBehavior.opaque,
                 child: Row(
@@ -523,7 +537,7 @@ class _SeatConfigSheetState extends State<SeatConfigSheet> {
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 child: Row(
                   children: [
-                    if (CurrencyService.prefixText != null) ...[
+                    if (widget.isCash && CurrencyService.prefixText != null) ...[
                       Text(
                         CurrencyService.prefixText!,
                         style: GoogleFonts.ibmPlexSans(
@@ -560,7 +574,7 @@ class _SeatConfigSheetState extends State<SeatConfigSheet> {
                         ),
                       ),
                     ),
-                    if (CurrencyService.suffixText != null) ...[
+                    if (widget.isCash && CurrencyService.suffixText != null) ...[
                       Text(
                         CurrencyService.suffixText!,
                         style: GoogleFonts.ibmPlexSans(
