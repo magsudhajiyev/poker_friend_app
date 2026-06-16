@@ -6,6 +6,7 @@ import '../../design_system/constants/colors.dart';
 import '../../design_system/constants/decorations.dart';
 import '../../design_system/constants/spacing.dart';
 import '../../design_system/constants/typography.dart';
+import '../../design_system/components/buttons/app_button.dart';
 import '../../models/drill_models.dart';
 import '../../services/drill_engine.dart';
 import '../../widgets/hand_micro_animations.dart';
@@ -37,7 +38,7 @@ enum _ChipDir { up, down, left, right }
 
 class _DrillTableScreenState extends State<DrillTableScreen>
     with TickerProviderStateMixin {
-  static const _accent = AppColors.buttonPrimary;
+  static const _accent = AppColors.accentPrimary;
   static const _gold = Color(0xFFFFC857);
   static const _red = Color(0xFFE85D5D);
   static const _green = AppColors.accentGreenBright;
@@ -397,9 +398,9 @@ class _DrillTableScreenState extends State<DrillTableScreen>
 
   // ── Table ───────────────────────────────────────────────────────────
 
-  // Seat fractions matching the table surface so seats land on the rim.
-  static const _seatW = 0.92;
-  static const _seatH = 0.82;
+  // Seat fractions — sized so seats + action pills fit inside the dotted grid.
+  static const _seatW = 0.82;
+  static const _seatH = 0.70;
 
   Widget _buildTable(double s, AppLocalizations l10n) {
     // Build active seat map using visual positions
@@ -416,8 +417,15 @@ class _DrillTableScreenState extends State<DrillTableScreen>
           horizontal: AppSpacing.xs * s, vertical: AppSpacing.xxxs * s),
       child: Stack(
         key: _tableAreaKey,
-        clipBehavior: Clip.none,
+        clipBehavior: Clip.hardEdge,
         children: [
+          // Dotted background grid
+          Positioned.fill(
+            child: Image.asset(
+              'assets/icons/Table bg_small.png',
+              fit: BoxFit.cover,
+            ),
+          ),
           PokerTableWidget(
             activeSeatMap: activeSeatMap,
             buttonPosition: visualButton,
@@ -1186,9 +1194,9 @@ class _DrillSummarySheet extends StatelessWidget {
                 _stat(l10n.drillDecisions, '${records.length}',
                     AppColors.textPrimary),
                 _stat(l10n.drillCorrectLabel, '$correct', AppColors.accentGreenBright),
-                _stat(l10n.drillCloseLabel, '$ok', const Color(0xFFFFC857)),
+                _stat(l10n.drillCloseLabel, '$ok', AppColors.accentTertiary),
                 _stat(l10n.drillMistakes, '${mistakes.length}',
-                    const Color(0xFFE85D5D)),
+                    AppColors.accentDanger),
               ],
             ),
             const SizedBox(height: AppSpacing.md),
@@ -1235,43 +1243,20 @@ class _DrillSummarySheet extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  child: GestureDetector(
+                  child: AppButton(
+                    label: l10n.drillKeepDrilling,
+                    variant: AppButtonVariant.secondaryLarge,
+                    fullWidth: true,
                     onTap: () => Navigator.pop(context, false),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          vertical: AppSpacing.xs),
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                            color: AppColors.borderStrong),
-                        borderRadius: BorderRadius.circular(
-                            AppDecorations.buttonRadius),
-                      ),
-                      child: Center(
-                        child: Text(l10n.drillKeepDrilling,
-                            style: AppTypography.labelLg(
-                                color: AppColors.textPrimary)),
-                      ),
-                    ),
                   ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
-                  child: GestureDetector(
+                  child: AppButton(
+                    label: l10n.drillEndDrill,
+                    variant: AppButtonVariant.white,
+                    fullWidth: true,
                     onTap: () => Navigator.pop(context, true),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          vertical: AppSpacing.xs),
-                      decoration: BoxDecoration(
-                        color: AppColors.bgInverse,
-                        borderRadius: BorderRadius.circular(
-                            AppDecorations.buttonRadius),
-                      ),
-                      child: Center(
-                        child: Text(l10n.drillEndDrill,
-                            style: AppTypography.labelLg(
-                                color: AppColors.textInverse)),
-                      ),
-                    ),
                   ),
                 ),
               ],

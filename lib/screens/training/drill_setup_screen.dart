@@ -8,6 +8,7 @@ import '../../design_system/constants/colors.dart';
 import '../../design_system/constants/decorations.dart';
 import '../../design_system/constants/spacing.dart';
 import '../../design_system/constants/typography.dart';
+import '../../design_system/components/buttons/app_button.dart';
 import '../../design_system/components/modals/confirm_dialog.dart';
 import '../../models/drill_models.dart';
 import '../../models/opponent.dart';
@@ -117,7 +118,7 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
                 Navigator.pop(context, controller.text.trim()),
             child: Text(l10n.commonSave,
                 style: GoogleFonts.ibmPlexSans(
-                    color: AppColors.buttonPrimary,
+                    color: AppColors.accentPrimary,
                     fontWeight: FontWeight.w600)),
           ),
         ],
@@ -263,48 +264,29 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
                   _buildSeatTable(),
                   _buildScoutingRow(),
                   const SizedBox(height: AppSpacing.xxs),
-                  GestureDetector(
+                  AppButton(
+                    label: l10n.drillSaveThisLineup,
+                    variant: AppButtonVariant.secondaryLarge,
+                    fullWidth: true,
                     onTap: _saveLineup,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          vertical: AppSpacing.xs),
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                            color: AppColors.borderStrong),
-                        borderRadius: BorderRadius.circular(
-                            AppDecorations.buttonRadius),
-                      ),
-                      child: Center(
-                        child: Text(l10n.drillSaveThisLineup,
-                            style: AppTypography.labelLg(
-                                color: AppColors.textPrimary)),
-                      ),
-                    ),
                   ),
                   const SizedBox(height: AppSpacing.xs),
-                  GestureDetector(
-                    onTap: _startDrill,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          vertical: AppSpacing.sm),
-                      decoration: BoxDecoration(
-                        color: AppColors.buttonPrimary,
-                        borderRadius: BorderRadius.circular(
-                            AppDecorations.buttonRadius),
-                      ),
-                      child: Center(
-                        child: _starting
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: AppColors.textInverse))
-                            : Text(l10n.drillStartDrill,
-                                style: AppTypography.buttonText()),
-                      ),
-                    ),
-                  ),
+                  _starting
+                      ? const Center(
+                          child: SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: AppColors.accentPrimary),
+                          ),
+                        )
+                      : AppButton(
+                          label: l10n.drillStartDrill,
+                          variant: AppButtonVariant.primaryLarge,
+                          fullWidth: true,
+                          onTap: _startDrill,
+                        ),
                   const SizedBox(height: AppSpacing.space10),
                 ],
               ),
@@ -395,11 +377,11 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
               width: 34,
               height: 34,
               decoration: BoxDecoration(
-                color: AppColors.buttonPrimary.withOpacity(0.15),
+                color: AppColors.accentPrimary.withOpacity(0.15),
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.groups,
-                  color: AppColors.buttonPrimary, size: 18),
+                  color: AppColors.accentPrimary, size: 18),
             ),
             const SizedBox(width: 10),
             Column(
@@ -420,7 +402,7 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
                 Text(
                   '${lineup.playerCount}P · ${lineup.stackBB.toInt()}BB',
                   style: GoogleFonts.robotoMono(
-                      color: Colors.white.withOpacity(0.5), fontSize: 11),
+                      color: AppColors.textSecondary, fontSize: 11),
                 ),
               ],
             ),
@@ -431,7 +413,7 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
               child: Padding(
                 padding: const EdgeInsets.all(4),
                 child: Icon(Icons.close,
-                    size: 16, color: Colors.white.withOpacity(0.4)),
+                    size: 16, color: AppColors.contentInactive),
               ),
             ),
           ],
@@ -476,7 +458,7 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
     return Text(
       text,
       style: GoogleFonts.ibmPlexSans(
-          color: Colors.white.withOpacity(0.6),
+          color: AppColors.textSecondary,
           fontSize: 13,
           fontWeight: FontWeight.w500),
     );
@@ -488,7 +470,7 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: AppColors.whiteOverlay(opacity: 0.05),
         borderRadius: BorderRadius.circular(14),
       ),
       child: Row(
@@ -513,7 +495,7 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
         curve: Curves.easeOut,
         padding: const EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(
-          color: selected ? AppColors.buttonPrimary : Colors.transparent,
+          color: selected ? AppColors.accentPrimary : Colors.transparent,
           borderRadius: BorderRadius.circular(10),
         ),
         child: Center(
@@ -525,7 +507,7 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
               style: GoogleFonts.ibmPlexSans(
                 color: selected
                     ? AppColors.textInverse
-                    : Colors.white.withOpacity(0.8),
+                    : AppColors.contentActive.withOpacity(0.8),
                 fontSize: 14,
                 fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
               ),
@@ -576,7 +558,7 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         const Icon(Icons.query_stats,
-                            size: 14, color: AppColors.buttonPrimary),
+                            size: 14, color: AppColors.accentPrimary),
                         const SizedBox(width: 6),
                         Text(e.value,
                             style: AppTypography.bodySmMedium(
@@ -598,7 +580,7 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
       context: context,
       barrierColor: Colors.black54,
       builder: (_) => const Center(
-        child: CircularProgressIndicator(color: AppColors.buttonPrimary),
+        child: CircularProgressIndicator(color: AppColors.accentPrimary),
       ),
     );
     ObservedRange range;
@@ -614,38 +596,43 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
 
   Widget _buildSeatTable() {
     final screen = MediaQuery.of(context).size;
-    // Shift left to counteract the ListView's 16px horizontal padding,
-    // giving the table the full screen width (matching session setup).
-    return Transform.translate(
-      offset: const Offset(-16, 0),
-      child: SizedBox(
-        width: screen.width,
-        height: screen.height * 0.50,
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            // Dotted background — same as session setup
-            Image.asset(
-              'assets/icons/Table bg_small.png',
-              fit: BoxFit.cover,
-            ),
-            // Table + seats — same fractions as session setup
-            PokerTableWidget(
-              activeSeatMap: {
-                for (int i = 1; i <= 9; i++) i: i <= _playerCount,
-              },
-              showDealerButton: false,
-              showLogo: true,
-              tableWidthFraction: 0.68,
-              tableHeightFraction: 0.72,
-              seatWidthFraction: 0.68,
-              seatHeightFraction: 0.72,
-              seatAngleOffset: 7 * (2 * math.pi / 9),
-              seatBuilder: (seatNumber, isActive) => isActive
-                  ? _buildTableSeat(seatNumber)
-                  : const SizedBox.shrink(),
-            ),
-          ],
+    // Break out of the ListView's horizontal padding so the table is
+    // perfectly centered on screen.
+    return SizedBox(
+      width: screen.width,
+      height: screen.height * 0.50,
+      child: OverflowBox(
+        maxWidth: screen.width,
+        alignment: Alignment.center,
+        child: SizedBox(
+          width: screen.width,
+          height: screen.height * 0.50,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              // Dotted background — same as session setup
+              Image.asset(
+                'assets/icons/Table bg_small.png',
+                fit: BoxFit.cover,
+              ),
+              // Table + seats — same fractions as session setup
+              PokerTableWidget(
+                activeSeatMap: {
+                  for (int i = 1; i <= 9; i++) i: i <= _playerCount,
+                },
+                showDealerButton: false,
+                showLogo: true,
+                tableWidthFraction: 0.68,
+                tableHeightFraction: 0.72,
+                seatWidthFraction: 0.68,
+                seatHeightFraction: 0.72,
+                seatAngleOffset: 7 * (2 * math.pi / 9),
+                seatBuilder: (seatNumber, isActive) => isActive
+                    ? _buildTableSeat(seatNumber)
+                    : const SizedBox.shrink(),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -715,7 +702,7 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const Icon(Icons.fitness_center,
-                        color: AppColors.buttonPrimary, size: 48),
+                        color: AppColors.accentPrimary, size: 48),
                     const SizedBox(height: AppSpacing.space5),
                     Text(
                       l10n.drillPremiumTitle,
@@ -733,24 +720,14 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
                           color: AppColors.textSecondary),
                     ),
                     const SizedBox(height: AppSpacing.xxl),
-                    GestureDetector(
+                    AppButton(
+                      label: l10n.drillUpgradeToPremium,
+                      variant: AppButtonVariant.white,
                       onTap: () async {
                         await PaywallScreen.show(context,
                             featureName: 'Training Drills');
                         if (mounted) setState(() {});
                       },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: AppSpacing.xxxl,
-                            vertical: AppSpacing.sm),
-                        decoration: BoxDecoration(
-                          color: AppColors.bgInverse,
-                          borderRadius: BorderRadius.circular(
-                              AppDecorations.buttonRadius),
-                        ),
-                        child: Text(l10n.drillUpgradeToPremium,
-                            style: AppTypography.buttonText()),
-                      ),
                     ),
                   ],
                 ),
@@ -830,10 +807,10 @@ class _OpponentPickerSheetState extends State<_OpponentPickerSheet> {
                   if (widget.showHeroOption)
                     ListTile(
                       leading: const Icon(Icons.person,
-                          color: AppColors.buttonPrimary),
+                          color: AppColors.accentPrimary),
                       title: Text(l10n.drillThisIsMe,
                           style: GoogleFonts.ibmPlexSans(
-                              color: AppColors.buttonPrimary,
+                              color: AppColors.accentPrimary,
                               fontWeight: FontWeight.w600)),
                       subtitle: Text(l10n.drillMoveYourSeatHere,
                           style: GoogleFonts.ibmPlexSans(

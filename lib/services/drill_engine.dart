@@ -2,6 +2,8 @@ import 'dart:math';
 
 import '../models/drill_models.dart';
 import 'drill_grader.dart';
+import 'drill_gto_charts.dart';
+import 'drill_hand_strength.dart';
 
 /// Hero's available options at a decision point.
 class DrillHeroTurn {
@@ -573,14 +575,45 @@ class DrillEngine {
   ];
   static const _dealSuits = ['♠', '♥', '♦', '♣'];
 
+  /// Deal hero cards with a bias toward playable hands.
+  ///
+  /// ~65% of the time we ensure the hand is "interesting" — inside the GTO
+  /// opening range for the hero's position, or close to the boundary (top
+  /// percentile up to range + 10%). The remaining ~35% are fully random so
+  /// the user still practises folding trash.
   void _dealHero() {
-    final first = _rng.nextInt(52);
-    int second = _rng.nextInt(51);
-    if (second >= first) second++;
-    final c1 = _cardFromIndex(first);
-    final c2 = _cardFromIndex(second);
-    heroCards = [c1, c2];
-    heroHandClass = handClassFor(c1, c2);
+    final posGroup = positionGroup(_positions[heroSeat] ?? 'MP');
+    final range = DrillGtoCharts.openRange(posGroup);
+    final rangeCoverage = DrillGtoCharts.coverageOf(range);
+    // "Interesting" = in range OR borderline (within 10% above the range edge)
+    final interestingCutoff = rangeCoverage + 10;
+
+    // 65% chance we force an interesting hand
+    final forceInteresting = _rng.nextDouble() < 0.65;
+
+    for (int attempt = 0; attempt < 20; attempt++) {
+      final first = _rng.nextInt(52);
+      int second = _rng.nextInt(51);
+      if (second >= first) second++;
+      final c1 = _cardFromIndex(first);
+      final c2 = _cardFromIndex(second);
+      final hc = handClassFor(c1, c2);
+
+      if (!forceInteresting || attempt == 19) {
+        // Accept any hand on the last attempt or when not forcing
+        heroCards = [c1, c2];
+        heroHandClass = hc;
+        return;
+      }
+
+      // Accept if the hand is in range or borderline
+      if (range.contains(hc) ||
+          DrillHandStrength.topPercent(hc) <= interestingCutoff) {
+        heroCards = [c1, c2];
+        heroHandClass = hc;
+        return;
+      }
+    }
   }
 
   static String _cardFromIndex(int i) =>

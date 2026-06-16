@@ -124,7 +124,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   final _editBankrollController = TextEditingController();
   String _manualGameType = 'cash';
   bool _showEditFields = false;
-
+  bool _isBankrollEditing = false;
 
   // Context menu state
   String? _selectedEventId;
@@ -2229,13 +2229,49 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(l10n.profileSessionResultAdded),
-          backgroundColor: const Color(0xFF62E3BC),
+          backgroundColor: AppColors.accentPrimary,
         ),
       );
     }
   }
 
   Widget _buildBankrollCard() => _buildBankrollFront();
+
+  void _startBankrollEdit() {
+    _editBankrollController.text = currentBankroll > 0 ? currentBankroll.toStringAsFixed(0) : '';
+    _editGoalController.text = bankrollGoal > 0 ? bankrollGoal.toStringAsFixed(0) : '';
+    setState(() => _isBankrollEditing = true);
+  }
+
+  void _cancelBankrollEdit() {
+    setState(() => _isBankrollEditing = false);
+  }
+
+  Future<void> _saveBankrollEdit() async {
+    final newBankroll = double.tryParse(_editBankrollController.text);
+    final newGoal = double.tryParse(_editGoalController.text);
+
+    if (newBankroll != null) {
+      await BankrollService.setCurrentBankroll(newBankroll);
+    }
+    if (newGoal != null) {
+      await BankrollService.setBankrollGoal(newGoal);
+    }
+
+    AppDataCache.markHomeDirty();
+    _loadData();
+    setState(() => _isBankrollEditing = false);
+
+    if (mounted) {
+      final l10n = AppLocalizations.of(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.bankrollSheetBankrollUpdated),
+          backgroundColor: const Color(0xFF62E3BC),
+        ),
+      );
+    }
+  }
 
   Widget _buildBankrollFront() {
     final remaining = bankrollGoal - currentBankroll;
@@ -2247,115 +2283,218 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         ? ui.ImageFilter.blur(sigmaX: 7, sigmaY: 7)
         : ui.ImageFilter.blur(sigmaX: 0, sigmaY: 0);
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // "Total Bankroll" label
-          Text(
-            'Total Bankroll',
-            style: GoogleFonts.ibmPlexSans(
-              fontSize: 10, fontWeight: FontWeight.w600,
-              color: AppColors.textSecondary,
+    final l10n = AppLocalizations.of(context);
+
+    return GestureDetector(
+      onLongPress: _isBankrollHidden ? null : _startBankrollEdit,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // "Total Bankroll" label
+            Text(
+              'Total Bankroll',
+              style: GoogleFonts.ibmPlexSans(
+                fontSize: 10, fontWeight: FontWeight.w600,
+                color: AppColors.textSecondary,
+              ),
             ),
-          ),
 
-          const SizedBox(height: 12),
+            const SizedBox(height: 12),
 
-          // Amount row + eye icon
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Expanded(
-                child: ImageFiltered(
-                  imageFilter: blurFilter,
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.centerLeft,
-                    child: RichText(
-                      text: TextSpan(
-                        children: [
-                          TextSpan(
-                            text: CurrencyService.formatBankroll(currentBankroll),
-                            style: GoogleFonts.familjenGrotesk(
-                              fontSize: 64, fontWeight: FontWeight.w600,
-                              color: Colors.white, height: 1.0,
-                            ),
-                          ),
-                          TextSpan(
-                            text: '  of ${CurrencyService.formatBankroll(bankrollGoal)}',
-                            style: GoogleFonts.familjenGrotesk(
-                              fontSize: 24, fontWeight: FontWeight.w400,
-                              color: AppColors.textSecondary, height: 1.0,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              GestureDetector(
-                onTap: () async {
-                  final prefs = await SharedPreferences.getInstance();
-                  setState(() => _isBankrollHidden = !_isBankrollHidden);
-                  await prefs.setBool('bankroll_hidden', _isBankrollHidden);
-                },
-                child: _buildIcon('icons/figma_icons/eye.svg', 24, Colors.white),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 8),
-
-          // "$X left" | "Y%" + progress bar
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            // Amount row + eye icon
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                ImageFiltered(
-                  imageFilter: blurFilter,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        '${CurrencyService.formatBankroll(remaining)} left',
-                        style: GoogleFonts.ibmPlexSans(
-                          fontSize: 13, fontWeight: FontWeight.w600,
-                          color: Colors.white,
+                Expanded(
+                  child: ImageFiltered(
+                    imageFilter: blurFilter,
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: RichText(
+                        text: TextSpan(
+                          children: [
+                            TextSpan(
+                              text: CurrencyService.formatBankroll(currentBankroll),
+                              style: GoogleFonts.familjenGrotesk(
+                                fontSize: 64, fontWeight: FontWeight.w600,
+                                color: Colors.white, height: 1.0,
+                              ),
+                            ),
+                            TextSpan(
+                              text: '  of ${CurrencyService.formatBankroll(bankrollGoal)}',
+                              style: GoogleFonts.familjenGrotesk(
+                                fontSize: 24, fontWeight: FontWeight.w400,
+                                color: AppColors.textSecondary, height: 1.0,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      Text(
-                        '$progressPct%',
-                        style: GoogleFonts.ibmPlexSans(
-                          fontSize: 13, fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 8),
-                ImageFiltered(
-                  imageFilter: blurFilter,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(70),
-                    child: LinearProgressIndicator(
-                      value: progress,
-                      minHeight: 6,
-                      backgroundColor: AppColors.borderStrong,
-                      valueColor: const AlwaysStoppedAnimation<Color>(AppColors.accentPrimary),
                     ),
                   ),
+                ),
+                const SizedBox(width: 12),
+                GestureDetector(
+                  onTap: () async {
+                    final prefs = await SharedPreferences.getInstance();
+                    setState(() {
+                      _isBankrollHidden = !_isBankrollHidden;
+                      if (_isBankrollHidden) _isBankrollEditing = false;
+                    });
+                    await prefs.setBool('bankroll_hidden', _isBankrollHidden);
+                  },
+                  child: _buildIcon('icons/figma_icons/eye.svg', 24, Colors.white),
                 ),
               ],
             ),
-          ),
-        ],
+
+            // Inline edit fields (shown on long-press)
+            if (_isBankrollEditing) ...[
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildBankrollEditField(
+                      label: l10n.bankrollSheetCurrentLabel,
+                      controller: _editBankrollController,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildBankrollEditField(
+                      label: l10n.bankrollSheetGoalLabel,
+                      controller: _editGoalController,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: AppButton(
+                      label: l10n.commonCancel,
+                      variant: AppButtonVariant.secondarySmall,
+                      onTap: _cancelBankrollEdit,
+                      fullWidth: true,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: AppButton(
+                      label: l10n.commonSave,
+                      variant: AppButtonVariant.primarySmall,
+                      onTap: _saveBankrollEdit,
+                      fullWidth: true,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+
+            const SizedBox(height: 8),
+
+            // "$X left" | "Y%" + progress bar
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ImageFiltered(
+                    imageFilter: blurFilter,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          '${CurrencyService.formatBankroll(remaining)} left',
+                          style: GoogleFonts.ibmPlexSans(
+                            fontSize: 13, fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                        Text(
+                          '$progressPct%',
+                          style: GoogleFonts.ibmPlexSans(
+                            fontSize: 13, fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  ImageFiltered(
+                    imageFilter: blurFilter,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(70),
+                      child: LinearProgressIndicator(
+                        value: progress,
+                        minHeight: 6,
+                        backgroundColor: AppColors.borderStrong,
+                        valueColor: const AlwaysStoppedAnimation<Color>(AppColors.accentPrimary),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
+    );
+  }
+
+  Widget _buildBankrollEditField({
+    required String label,
+    required TextEditingController controller,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: GoogleFonts.ibmPlexSans(
+            fontSize: 11, fontWeight: FontWeight.w500,
+            color: AppColors.textSecondary,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
+            border: Border.all(color: AppColors.borderStrong),
+            color: AppColors.bgSurface,
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          child: TextField(
+            controller: controller,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            textAlign: TextAlign.left,
+            style: GoogleFonts.robotoMono(
+              fontSize: 15, fontWeight: FontWeight.w500, color: Colors.white,
+            ),
+            decoration: InputDecoration(
+              prefixText: CurrencyService.prefixText,
+              suffixText: CurrencyService.suffixText,
+              prefixStyle: GoogleFonts.robotoMono(
+                fontSize: 15, color: AppColors.contentInactive,
+              ),
+              suffixStyle: GoogleFonts.robotoMono(
+                fontSize: 15, color: AppColors.contentInactive,
+              ),
+              border: InputBorder.none,
+              enabledBorder: InputBorder.none,
+              focusedBorder: InputBorder.none,
+              isDense: true,
+              contentPadding: const EdgeInsets.symmetric(vertical: 10),
+            ),
+            onSubmitted: (_) => _saveBankrollEdit(),
+          ),
+        ),
+      ],
     );
   }
 
@@ -2363,9 +2502,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     final l10n = AppLocalizations.of(context);
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        color: const Color(0xFF121F24),
-        border: Border.all(color: const Color(0xFF2A605D), width: 1),
+        borderRadius: BorderRadius.circular(AppDecorations.radiusXl),
+        color: AppColors.bgSurface,
+        border: Border.all(color: AppColors.borderStrong, width: 1),
         boxShadow: const [
           BoxShadow(color: Color(0x40000000), blurRadius: 4, offset: Offset(0, 4)),
         ],
@@ -2451,25 +2590,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     const SizedBox(height: 10),
 
                     // Submit button
-                    GestureDetector(
+                    AppButton(
+                      label: l10n.profileAddResult,
+                      variant: AppButtonVariant.primaryLarge,
                       onTap: _submitBankrollResult,
-                      child: Container(
-                        width: double.infinity,
-                        height: 38,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF89F1EC),
-                          borderRadius: BorderRadius.circular(60),
-                        ),
-                        child: Center(
-                          child: Text(
-                            l10n.profileAddResult,
-                            style: GoogleFonts.ibmPlexSans(
-                              fontSize: 15, fontWeight: FontWeight.w600,
-                              color: Colors.black, letterSpacing: -0.3,
-                            ),
-                          ),
-                        ),
-                      ),
+                      fullWidth: true,
                     ),
                     const SizedBox(height: 8),
 
@@ -2505,7 +2630,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           _loadData();
                           if (mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(l10n.bankrollSheetGoalUpdated), backgroundColor: const Color(0xFF89F1EC)),
+                              SnackBar(content: Text(l10n.bankrollSheetGoalUpdated), backgroundColor: AppColors.accentPrimary),
                             );
                           }
                         }
@@ -2518,7 +2643,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           _loadData();
                           if (mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(l10n.bankrollSheetBankrollUpdated), backgroundColor: const Color(0xFF89F1EC)),
+                              SnackBar(content: Text(l10n.bankrollSheetBankrollUpdated), backgroundColor: AppColors.accentPrimary),
                             );
                           }
                         }
@@ -2537,16 +2662,16 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         child: Container(
           height: 32,
           decoration: BoxDecoration(
-            color: isSelected ? const Color(0xFF89F1EC).withValues(alpha: 0.15) : Colors.transparent,
+            color: isSelected ? AppColors.accentPrimary.withValues(alpha: 0.15) : Colors.transparent,
             borderRadius: BorderRadius.circular(16),
-            border: isSelected ? Border.all(color: const Color(0xFF89F1EC).withValues(alpha: 0.4), width: 1) : null,
+            border: isSelected ? Border.all(color: AppColors.accentPrimary.withValues(alpha: 0.4), width: 1) : null,
           ),
           child: Center(
             child: Text(
               label,
               style: GoogleFonts.ibmPlexSans(
                 fontSize: 12, fontWeight: FontWeight.w500,
-                color: isSelected ? const Color(0xFF89F1EC) : Colors.white.withValues(alpha: 0.4),
+                color: isSelected ? AppColors.accentPrimary : AppColors.contentInactive,
               ),
             ),
           ),
@@ -2564,15 +2689,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             label,
             style: GoogleFonts.ibmPlexSans(
               fontSize: 13, fontWeight: FontWeight.w400,
-              color: Colors.white.withValues(alpha: 0.5),
+              color: AppColors.textSecondary,
             ),
           ),
           const Spacer(),
           Container(
             width: 120,
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.15), width: 0.5),
+              borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
+              border: Border.all(color: AppColors.borderStrong, width: 0.5),
             ),
             padding: const EdgeInsets.symmetric(horizontal: 8),
             child: TextField(
@@ -2586,7 +2711,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 prefixText: CurrencyService.prefixText,
                 suffixText: CurrencyService.suffixText,
                 prefixStyle: GoogleFonts.robotoMono(
-                  fontSize: 14, color: Colors.white.withValues(alpha: 0.3),
+                  fontSize: 14, color: AppColors.contentInactive,
                 ),
                 border: InputBorder.none,
                 enabledBorder: InputBorder.none,
@@ -2604,10 +2729,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               width: 24, height: 24,
               margin: const EdgeInsets.only(left: 4),
               decoration: const BoxDecoration(
-                color: Color(0xFF89F1EC),
+                color: AppColors.accentPrimary,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.check, size: 14, color: Color(0xFF1A4A4A)),
+              child: Icon(Icons.check, size: 14, color: AppColors.bgPrimary),
             ),
           ),
         ],
