@@ -1679,14 +1679,10 @@ class PokerGameState {
     return "${formatCurrency(player.currentStack)}";
   }
 
-  void resetPotForNewStreet() {
-    currentBet = 0.0;
-    _lastRaiseSize = 0.0;
-    hasBetThisRound = false;
-    for (PlayerState player in players) {
-      player.betThisRound = 0.0;
-    }
-  }
+  // NOTE: Street transitions use PlayerState.resetForNewStreet(), which rolls
+  // betThisRound into totalContribution (see startNewStreet). A game-state
+  // level "reset pot" that only zeroed betThisRound was removed here because
+  // it silently dropped each street's chips and would corrupt side pots.
 
   /// Get current pot amount for street-specific tracking
   double getPotAmountForStreet() {
