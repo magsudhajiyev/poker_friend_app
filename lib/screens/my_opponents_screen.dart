@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -14,6 +15,7 @@ import 'opponent_hands_screen.dart';
 import '../design_system/components/cards/error_state_card.dart';
 import '../design_system/components/headers/top_nav_bar.dart';
 import '../services/app_data_cache.dart';
+import '../services/logger_service.dart';
 import '../l10n/app_localizations.dart';
 
 class MyOpponentsScreen extends StatefulWidget {
@@ -66,10 +68,12 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> with SingleTicker
     (OpponentColor.purple, Color(0xFFBF5AF2)),
     (OpponentColor.teal,   Color(0xFFFFD60A)),
   ];
+  StreamSubscription<bool>? _premiumSub;
 
   @override
   void initState() {
     super.initState();
+    LoggerService.logScreenView('opponents');
     _loadOpponents(useCache: !AppDataCache.isOpponentsDirty);
     _searchController = TextEditingController()..addListener(() => setState(() {}));
     _nameController = TextEditingController()..addListener(() => setState(() {}));
@@ -89,6 +93,10 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> with SingleTicker
       begin: const Offset(0, 1),
       end: Offset.zero,
     ).animate(CurvedAnimation(parent: _formAnimController, curve: Curves.easeOutCubic));
+    // Rebuild when subscription tier changes (e.g. after purchase)
+    _premiumSub = SubscriptionService.premiumStatusStream.listen((_) {
+      if (mounted) setState(() {});
+    });
   }
 
   @override
@@ -100,6 +108,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> with SingleTicker
     _notesFocusNode.dispose();
     _searchFocusNode.dispose();
     _formAnimController.dispose();
+    _premiumSub?.cancel();
     super.dispose();
   }
 
@@ -436,6 +445,13 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> with SingleTicker
   }
 
   void _openAddForm({Opponent? opponent}) {
+    // Free-tier cap enforcement (restored from main; design_v2 dropped it).
+    // Only gate NEW opponents, never edits.
+    if (opponent == null &&
+        !FreeTierLimits.canCreateAnotherOpponent(opponents.length)) {
+      FreeTierLimits.showOpponentLimitDialog(context);
+      return;
+    }
     setState(() {
       _editingOpponent = opponent;
       _nameController.text = opponent?.name ?? '';

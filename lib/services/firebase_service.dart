@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/poker_game_state.dart';
@@ -5,12 +6,14 @@ import '../models/game_types.dart';
 import 'auth_service.dart';
 import 'display_identity_service.dart';
 import 'local_storage_service.dart';
+import 'logger_service.dart';
 import 'opponent_service.dart';
 import 'opponent_stats_service.dart';
 import 'stats_calculator.dart';
 import 'user_stats_service.dart';
 import 'app_data_cache.dart';
 import 'subscription_service.dart';
+import 'free_tier_limits.dart';
 
 class FirebaseService {
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -101,7 +104,7 @@ class FirebaseService {
       AppDataCache.markStatsDirty();
       return sessionRef.id;
     } catch (e) {
-      debugPrint('Error creating session: $e');
+      await LoggerService.error('Error creating session', e, StackTrace.current);
       rethrow;
     }
   }
@@ -330,13 +333,18 @@ class FirebaseService {
         reachedShowdown: reachedShowdown,
       );
 
+      unawaited(LoggerService.logEvent('hand_saved', parameters: {
+        'session_id': sessionId,
+        'hand_number': handNumber,
+      }));
+
       AppDataCache.markHomeDirty();
       AppDataCache.markSessionsDirty();
       AppDataCache.markStatsDirty();
       AppDataCache.markOpponentsDirty();
       AppDataCache.markOpponentHandsDirty();
     } catch (e) {
-      debugPrint('Error saving hand: $e');
+      await LoggerService.error('Error saving hand', e, StackTrace.current);
       rethrow;
     }
   }
@@ -374,7 +382,7 @@ class FirebaseService {
           .update(updateData);
 
     } catch (e) {
-      debugPrint('Error updating hand annotations: $e');
+      await LoggerService.error('Error updating hand annotations', e, StackTrace.current);
       rethrow;
     }
   }
@@ -400,7 +408,7 @@ class FirebaseService {
       });
       
     } catch (e) {
-      debugPrint('Error saving action: $e');
+      await LoggerService.error('Error saving action', e, StackTrace.current);
       // Don't rethrow - action logging shouldn't break the game
     }
   }
@@ -450,7 +458,7 @@ class FirebaseService {
       AppDataCache.markSessionsDirty();
       AppDataCache.markStatsDirty();
     } catch (e) {
-      debugPrint('Error ending session: $e');
+      await LoggerService.error('Error ending session', e, StackTrace.current);
       rethrow;
     }
   }
@@ -464,7 +472,7 @@ class FirebaseService {
       }
       return null;
     } catch (e) {
-      debugPrint('Error getting session: $e');
+      await LoggerService.error('Error getting session', e, StackTrace.current);
       return null;
     }
   }
@@ -490,7 +498,7 @@ class FirebaseService {
         };
       }).toList();
     } catch (e) {
-      debugPrint('Error getting session hands from Firebase: $e');
+      await LoggerService.error('Error getting session hands from Firebase', e, StackTrace.current);
       return [];
     }
   }
@@ -557,7 +565,7 @@ class FirebaseService {
         ...doc.data(),
       }).toList();
     } catch (e) {
-      debugPrint('Error getting recent sessions: $e');
+      await LoggerService.error('Error getting recent sessions', e, StackTrace.current);
       return [];
     }
   }
@@ -661,42 +669,42 @@ class FirebaseService {
         };
       }).toList();
 
-      // Apply 30-day filtering for free-tier users
-      if (!SubscriptionService.isPremium) {
-        final thirtyDaysAgo = DateTime.now().subtract(const Duration(days: 30));
+      // Apply session history filtering based on subscription tier
+      final cutoff = FreeTierLimits.sessionHistoryCutoff();
+      if (cutoff != null) {
         sessions = sessions.where((session) {
           final startTimeStr = session['startTime'] as String?;
           if (startTimeStr == null) return false;
 
           final startTime = DateTime.tryParse(startTimeStr);
-          return startTime != null && startTime.isAfter(thirtyDaysAgo);
+          return startTime != null && startTime.isAfter(cutoff);
         }).toList();
       }
 
       return sessions;
     } catch (e) {
-      debugPrint('Error getting user sessions from Firebase: $e');
+      await LoggerService.error('Error getting user sessions from Firebase', e, StackTrace.current);
       debugPrint('Falling back to local storage...');
 
       // Fallback to local storage
       try {
         var localSessions = await LocalStorageService.getUserSessions();
 
-        // Apply 30-day filtering to local storage fallback for free-tier users
-        if (!SubscriptionService.isPremium) {
-          final thirtyDaysAgo = DateTime.now().subtract(const Duration(days: 30));
+        // Apply session history filtering to local storage fallback
+        final cutoff = FreeTierLimits.sessionHistoryCutoff();
+        if (cutoff != null) {
           localSessions = localSessions.where((session) {
             final startTimeStr = session['startTime'] as String?;
             if (startTimeStr == null) return false;
 
             final startTime = DateTime.tryParse(startTimeStr);
-            return startTime != null && startTime.isAfter(thirtyDaysAgo);
+            return startTime != null && startTime.isAfter(cutoff);
           }).toList();
         }
 
         return localSessions;
       } catch (localError) {
-        debugPrint('Error getting sessions from local storage: $localError');
+        await LoggerService.error('Error getting sessions from local storage', localError, StackTrace.current);
         return _getMockOfflineData();
       }
     }
@@ -738,7 +746,7 @@ class FirebaseService {
         'participationPeriods': participationPeriods,
       });
     } catch (e) {
-      debugPrint('Error adding session participant: $e');
+      await LoggerService.error('Error adding session participant', e, StackTrace.current);
       // Don't rethrow - this is a non-critical operation
     }
   }
@@ -769,7 +777,7 @@ class FirebaseService {
         });
       }
     } catch (e) {
-      debugPrint('Error marking participant left: $e');
+      await LoggerService.error('Error marking participant left', e, StackTrace.current);
       // Don't rethrow - this is a non-critical operation
     }
   }
@@ -832,7 +840,7 @@ class FirebaseService {
         'totalActions': folds + bets + calls + raises + checks,
       };
     } catch (e) {
-      debugPrint('Error getting player stats: $e');
+      await LoggerService.error('Error getting player stats', e, StackTrace.current);
       return {};
     }
   }
@@ -849,7 +857,7 @@ class FirebaseService {
       });
       
     } catch (e) {
-      debugPrint('Error updating session name: $e');
+      await LoggerService.error('Error updating session name', e, StackTrace.current);
       rethrow;
     }
   }
@@ -894,7 +902,7 @@ class FirebaseService {
       await _firestore.collection(_sessionsCollection).doc(sessionId).update(updateData);
 
     } catch (e) {
-      debugPrint('Error updating session: $e');
+      await LoggerService.error('Error updating session', e, StackTrace.current);
       rethrow;
     }
   }
@@ -971,7 +979,7 @@ class FirebaseService {
       await _firestore.collection(_sessionsCollection).doc(sessionId).update(updateData);
 
     } catch (e) {
-      debugPrint('Error updating individual session: $e');
+      await LoggerService.error('Error updating individual session', e, StackTrace.current);
       rethrow;
     }
   }
@@ -1032,7 +1040,7 @@ class FirebaseService {
       });
 
     } catch (e) {
-      debugPrint('Error adding rebuy to session: $e');
+      await LoggerService.error('Error adding rebuy to session', e, StackTrace.current);
       rethrow;
     }
   }
@@ -1068,7 +1076,7 @@ class FirebaseService {
         await sessionDoc.reference.delete();
       }
     } catch (e) {
-      debugPrint('Error clearing user sessions from Firebase: $e');
+      await LoggerService.error('Error clearing user sessions from Firebase', e, StackTrace.current);
       rethrow;
     }
   }
@@ -1357,7 +1365,7 @@ class FirebaseService {
       }
 
     } catch (e) {
-      debugPrint('⚠️ Error updating opponent stats: $e');
+      await LoggerService.error('Error updating opponent stats', e, StackTrace.current);
       // Don't rethrow - stats update failure shouldn't break hand saving
     }
   }
@@ -1474,7 +1482,7 @@ class FirebaseService {
 
 
     } catch (e) {
-      debugPrint('⚠️ Error updating user stats: $e');
+      await LoggerService.error('Error updating user stats', e, StackTrace.current);
       // Don't rethrow - stats update failure shouldn't break hand saving
     }
   }
@@ -1557,7 +1565,7 @@ class FirebaseService {
           wonHandsDelta: (didWin && didPlay) ? 1 : 0,
         );
       } catch (e) {
-        debugPrint('⚠️ Error updating stats for player $odUserId at seat $seatNumber: $e');
+        await LoggerService.error('Error updating stats for player $odUserId at seat $seatNumber', e, StackTrace.current);
         // Continue with other players
       }
     }
@@ -1656,7 +1664,7 @@ class FirebaseService {
           syncedCount++;
         } catch (e) {
           errors.add('Session $sessionId: $e');
-          debugPrint('❌ Failed to sync session $sessionId: $e');
+          await LoggerService.error('Failed to sync session $sessionId', e, StackTrace.current);
         }
       }
 
@@ -1671,7 +1679,7 @@ class FirebaseService {
         'errors': errors,
       };
     } catch (e) {
-      debugPrint('❌ Sync failed: $e');
+      await LoggerService.error('Sync failed', e, StackTrace.current);
       return {
         'success': false,
         'message': 'Sync failed: $e',

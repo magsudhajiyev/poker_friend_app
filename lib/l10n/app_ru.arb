@@ -584,7 +584,7 @@
   "paywallAvailablePlans": "Доступные планы",
   "paywallStepLabel": "Шаг 1 из 2",
   "paywallChooseYourPlan": "Выберите план",
-  "paywallUpgradeOrCancel": "Улучшайте или отменяйте* в любое время",
+  "paywallUpgradeOrCancel": "Улучшайте или отменяйте в любое время",
   "paywallContinue": "Продолжить",
   "paywallUnlockFeature": "Разблокировать {featureName}",
   "@paywallUnlockFeature": {
@@ -625,7 +625,7 @@
   "paywallClubMonthly": "$39.99/месяц",
   "paywallClubYearly": "или $199.99/год. Экономия около 25%**",
   "paywallGetClub": "Получить Club",
-  "paywallDisclaimer": "Подписки продлеваются автоматически. Отмените* в любое время\nв настройках аккаунта.",
+  "paywallDisclaimer": "Подписки продлеваются автоматически. После окончания бесплатного пробного периода с вас будет списана указанная сумма, если вы не отмените подписку как минимум за 24 часа до окончания периода. Отмените в любое время в настройках аккаунта.",
   "paywallTerms": "Условия",
   "paywallPrivacy": "Конфиденциальность",
   "paywallPurchasesRestored": "Покупки восстановлены",
@@ -635,7 +635,7 @@
   "paywallSubscriptionUnavailable": "Варианты подписки недоступны. Попробуйте снова.",
   "paywallMonthly": "Ежемесячно",
   "paywallAnnual": "Ежегодно",
-  "paywallAnnualSave": "Ежегодно (Скидка ~25%)",
+  "paywallAnnualSave": "Ежегодно (Скидка ~40%)",
   "paywallComingSoon": "Подписка {tier} скоро появится",
   "@paywallComingSoon": {
     "placeholders": {
@@ -5324,10 +5324,147 @@
   "profileDeleteAccountMessage": "This will permanently delete your account and all associated data. This action cannot be undone.\n\nIf you have an active subscription, please cancel it first in your device settings.",
   "opponentsEnterName": "Enter name",
   "rangeStackDepth": "Stack depth",
-
   "settingsSkipHandScouting": "Skip Hand Scouting",
   "settingsSkipHandScoutingDesc": "Track opponent actions when you fold preflop",
   "skipScoutTitle": "What happened?",
   "skipScoutNoRaise": "No one raised",
-  "skipScoutSkip": "Skip"
+  "skipScoutSkip": "Skip",
+  "paywallNotNow": "Не сейчас",
+  "paywallFreeTrialBadge14": "14 дней бесплатно",
+  "freeTierHandLimitTitle": "Достигнут лимит рук",
+  "freeTierHandLimitFree": "Бесплатные аккаунты могут записывать до {free} рук за сессию. Обновитесь до Pro для {pro} рук или Elite для неограниченного количества.",
+  "@freeTierHandLimitFree": {
+    "placeholders": {
+      "free": {
+        "type": "int"
+      },
+      "pro": {
+        "type": "int"
+      }
+    }
+  },
+  "freeTierHandLimitPro": "Аккаунты Pro могут записывать до {pro} рук за сессию. Обновитесь до Elite для неограниченной записи.",
+  "@freeTierHandLimitPro": {
+    "placeholders": {
+      "pro": {
+        "type": "int"
+      }
+    }
+  },
+  "freeTierOpponentLimitTitle": "Достигнут лимит соперников",
+  "freeTierOpponentLimitFree": "Бесплатные аккаунты могут сохранять до {free} профилей соперников. Обновитесь до Pro для {pro} или Elite для неограниченного.",
+  "@freeTierOpponentLimitFree": {
+    "placeholders": {
+      "free": {
+        "type": "int"
+      },
+      "pro": {
+        "type": "int"
+      }
+    }
+  },
+  "freeTierOpponentLimitPro": "Аккаунты Pro могут сохранять до {pro} профилей соперников. Обновитесь до Elite для неограниченного количества.",
+  "@freeTierOpponentLimitPro": {
+    "placeholders": {
+      "pro": {
+        "type": "int"
+      }
+    }
+  },
+  "freeTierUpgrade": "Обновить",
+  "freeTierNotNow": "Не сейчас",
+  "quotaMonthlyLimitTitle": "Достигнут месячный лимит",
+  "quotaAiLimitElite": "Вы использовали все {max} анализов ИИ в этом месяце. Квота обновится в следующем месяце.",
+  "@quotaAiLimitElite": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "quotaAiLimitPro": "Вы использовали все {max} анализов ИИ в этом месяце (лимит Pro). Обновитесь до Elite для {elite} анализов/месяц.",
+  "@quotaAiLimitPro": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      },
+      "elite": {
+        "type": "int"
+      }
+    }
+  },
+  "quotaExportLimitTitle": "Достигнут лимит экспорта",
+  "quotaExportLimitPro": "Вы использовали все {max} экспортов в этом месяце (лимит Pro). Обновитесь до Elite для неограниченного экспорта.",
+  "@quotaExportLimitPro": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "quotaSessionExportLimitPro": "Вы использовали все {max} экспортов сессий в этом месяце (лимит Pro). Обновитесь до Elite для неограниченного экспорта.",
+  "@quotaSessionExportLimitPro": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "quotaUpgradeToElite": "Обновить до Elite",
+  "quotaOk": "OK",
+  "statsLockedTitle": "Обновитесь для разблокировки",
+  "statsLockedSubtitle": "Этот раздел доступен в плане Pro и выше.",
+  "statsLockedUpgrade": "Обновить",
+  "paywallBestValue": "ЛУЧШАЯ ЦЕННОСТЬ",
+  "paywallWelcomeElite": "Добро пожаловать в Elite!",
+  "paywallWelcomeClub": "Добро пожаловать в Club!",
+  "paywallStartWithPro": "Начать с Pro",
+  "paywallGetEliteAction": "Получить Elite",
+  "paywallGetClubAction": "Получить Club",
+  "paywallCurrentPlan": "Текущий план",
+  "paywallProFeature1": "50 рук за сессию",
+  "paywallProFeature2": "История за 90 дней",
+  "paywallProFeature3": "15 профилей соперников",
+  "paywallProFeature4": "10 анализов ИИ / месяц",
+  "paywallProFeature5": "30 экспортов / месяц",
+  "paywallEliteFeature4": "Неограниченная запись рук",
+  "paywallEliteFeature5": "Полная история сессий",
+  "paywallEliteFeature6": "Неограниченное количество соперников",
+  "paywallEliteFeature7": "30 анализов ИИ / месяц",
+  "paywallEliteFeature8": "Неограниченный экспорт",
+  "paywallClubFeature1": "Всё из Elite",
+  "paywallClubFeature2": "Создайте и управляйте своим клубом",
+  "paywallClubFeature3": "Приглашайте дилеров и управляйте участниками",
+  "paywallClubFeature4": "Проводите многостольные турниры с рейтингами в реальном времени",
+  "profileTierOverride": "Переопределить уровень подписки",
+  "profileTierOverrideSubtitleReal": "Реально: {tier}",
+  "@profileTierOverrideSubtitleReal": {
+    "placeholders": {
+      "tier": {
+        "type": "String"
+      }
+    }
+  },
+  "profileTierOverrideSubtitleActive": "Переопределено: {tier}",
+  "@profileTierOverrideSubtitleActive": {
+    "placeholders": {
+      "tier": {
+        "type": "String"
+      }
+    }
+  },
+  "profileTierFree": "бесплатно",
+  "profileTierPro": "Pro",
+  "profileTierElite": "Elite",
+  "profileTierClub": "Club",
+  "authExpContinueApple": "Продолжить с Apple",
+  "authExpLinkAppleTitle": "Привязать аккаунт Apple",
+  "authExpLinkAppleMessage": "Аккаунт с {email} уже существует. Введите пароль, чтобы привязать ваш аккаунт Apple.",
+  "@authExpLinkAppleMessage": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  }
 }

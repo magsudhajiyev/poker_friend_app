@@ -36,7 +36,7 @@
       "localizations" : [
 
       ],
-      "name" : "Pro",
+      "name" : "Premium",
       "subscriptions" : [
         {
           "adHocOffers" : [
@@ -45,14 +45,14 @@
           "codeOffers" : [
 
           ],
-          "displayPrice" : "29.99",
+          "displayPrice" : "19.99",
           "familyShareable" : false,
           "groupNumber" : 1,
           "internalID" : "24210ACE",
           "introductoryOffer" : null,
           "localizations" : [
             {
-              "description" : "Unlimited hand logging, AI analysis, full history",
+              "description" : "50 hands/session, 90-day history, 15 opponents, 10 AI analyses/month",
               "displayName" : "Pro Monthly",
               "locale" : "en_US"
             }
@@ -73,14 +73,14 @@
           "codeOffers" : [
 
           ],
-          "displayPrice" : "249.99",
+          "displayPrice" : "159.99",
           "familyShareable" : false,
           "groupNumber" : 1,
           "internalID" : "3ED0212C",
           "introductoryOffer" : null,
           "localizations" : [
             {
-              "description" : "Unlimited hand logging, AI analysis, full history",
+              "description" : "50 hands/session, 90-day history, 15 opponents, 10 AI analyses/month",
               "displayName" : "Pro Annual",
               "locale" : "en_US"
             }
@@ -88,6 +88,138 @@
           "productID" : "pro_annual",
           "recurringSubscriptionPeriod" : "P1Y",
           "referenceName" : "Pro Annual",
+          "subscriptionGroupID" : "ECD86BD7",
+          "type" : "RecurringSubscription",
+          "winbackOffers" : [
+
+          ]
+        },
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "24.99",
+          "familyShareable" : false,
+          "groupNumber" : 2,
+          "internalID" : "A1B2C3D4",
+          "introductoryOffer" : {
+            "duration" : "P7D",
+            "offerIdentifier" : null,
+            "offerMode" : "freeTrial",
+            "offerType" : "introductoryOffer"
+          },
+          "localizations" : [
+            {
+              "description" : "Unlimited hands, all-time history, unlimited opponents, 30 AI analyses/month",
+              "displayName" : "Elite Monthly",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "ft_elite_monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Elite Monthly",
+          "subscriptionGroupID" : "ECD86BD7",
+          "type" : "RecurringSubscription",
+          "winbackOffers" : [
+
+          ]
+        },
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "189.99",
+          "familyShareable" : false,
+          "groupNumber" : 2,
+          "internalID" : "E5F6A7B8",
+          "introductoryOffer" : {
+            "duration" : "P7D",
+            "offerIdentifier" : null,
+            "offerMode" : "freeTrial",
+            "offerType" : "introductoryOffer"
+          },
+          "localizations" : [
+            {
+              "description" : "Unlimited hands, all-time history, unlimited opponents, 30 AI analyses/month",
+              "displayName" : "Elite Annual",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "ft_elite_annual",
+          "recurringSubscriptionPeriod" : "P1Y",
+          "referenceName" : "Elite Annual",
+          "subscriptionGroupID" : "ECD86BD7",
+          "type" : "RecurringSubscription",
+          "winbackOffers" : [
+
+          ]
+        },
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "59.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "C9D0E1F2",
+          "introductoryOffer" : {
+            "duration" : "P7D",
+            "offerIdentifier" : null,
+            "offerMode" : "freeTrial",
+            "offerType" : "introductoryOffer"
+          },
+          "localizations" : [
+            {
+              "description" : "Everything in Elite + club management, dealer voice logging, multi-table events",
+              "displayName" : "Club Monthly",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "ft_club_monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Club Monthly",
+          "subscriptionGroupID" : "ECD86BD7",
+          "type" : "RecurringSubscription",
+          "winbackOffers" : [
+
+          ]
+        },
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "449.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "A3B4C5D6",
+          "introductoryOffer" : {
+            "duration" : "P7D",
+            "offerIdentifier" : null,
+            "offerMode" : "freeTrial",
+            "offerType" : "introductoryOffer"
+          },
+          "localizations" : [
+            {
+              "description" : "Everything in Elite + club management, dealer voice logging, multi-table events",
+              "displayName" : "Club Annual",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "ft_club_annual",
+          "recurringSubscriptionPeriod" : "P1Y",
+          "referenceName" : "Club Annual",
           "subscriptionGroupID" : "ECD86BD7",
           "type" : "RecurringSubscription",
           "winbackOffers" : [

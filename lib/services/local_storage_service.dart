@@ -5,6 +5,7 @@ import 'package:path/path.dart' as path;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/auth_service.dart';
 import '../services/subscription_service.dart';
+import '../services/free_tier_limits.dart';
 import '../models/game_types.dart';
 
 class LocalStorageService {
@@ -545,18 +546,17 @@ class LocalStorageService {
         orderBy: 'startTime DESC',
       );
 
-      // Apply 30-day filtering for free-tier users (matching Firebase behavior)
-      if (!SubscriptionService.isPremium) {
-        final thirtyDaysAgo = DateTime.now().subtract(const Duration(days: 30));
+      // Apply session history filtering based on subscription tier
+      final cutoff = FreeTierLimits.sessionHistoryCutoff();
+      if (cutoff != null) {
         sessions = sessions.where((session) {
           final startTimeStr = session['startTime'] as String?;
           if (startTimeStr == null) return false;
 
           try {
             final startTime = DateTime.parse(startTimeStr);
-            return startTime.isAfter(thirtyDaysAgo);
+            return startTime.isAfter(cutoff);
           } catch (e) {
-            // If startTime parsing fails, exclude the session
             debugPrint('Error parsing session startTime "$startTimeStr": $e');
             return false;
           }

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -100,7 +101,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _usernameCtrl.text = username ?? '';
         _originalUsername = username;
         _useNicknameInGame = useNickname;
-        _isAdmin = isAdmin;
+        // SECURITY (main audit H2): dev tools / premium override must never
+        // be reachable in release, even for a role=='admin' user.
+        _isAdmin = isAdmin && !kReleaseMode;
         _isLoading = false;
       });
     }

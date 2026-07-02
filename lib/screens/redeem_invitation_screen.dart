@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../design_system/poker_friend_theme.dart';
+import '../models/club_member.dart';
 import '../services/invitation_service.dart';
 import '../l10n/app_localizations.dart';
 
@@ -251,7 +252,7 @@ class _RedeemInvitationScreenState extends State<RedeemInvitationScreen> {
         ),
         const SizedBox(height: 12),
         Text(
-          l10n.redeemJoinedAs(clubName: _clubName ?? '', role: _role ?? ''),
+          l10n.redeemJoinedAs(_clubName ?? '', _role ?? ''),
           style: TextStyle(
             fontSize: 16,
             color: PokerFriendColors.dark9,

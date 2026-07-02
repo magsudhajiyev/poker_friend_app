@@ -66,6 +66,7 @@ import '../services/event_attendance_service.dart';
 import '../models/event_attendance.dart';
 import '../services/app_data_cache.dart';
 import '../services/display_identity_service.dart';
+import '../services/logger_service.dart';
 import '../l10n/app_localizations.dart';
 
 /// Home screen
@@ -134,6 +135,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
+    LoggerService.logScreenView('home');
 
     _flipController = AnimationController(
       duration: const Duration(milliseconds: 500),

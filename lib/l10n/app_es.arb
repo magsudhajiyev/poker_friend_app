@@ -768,7 +768,7 @@
   "paywallAvailablePlans": "Planes disponibles",
   "paywallStepLabel": "Paso 1 de 2",
   "paywallChooseYourPlan": "Elige tu plan",
-  "paywallUpgradeOrCancel": "Mejora o cancela* en cualquier momento",
+  "paywallUpgradeOrCancel": "Mejora o cancela en cualquier momento",
   "paywallContinue": "Continuar",
   "paywallUnlockFeature": "Desbloquear {featureName}",
   "@paywallUnlockFeature": {
@@ -800,7 +800,7 @@
   "paywallClubMonthly": "$39.99/mes",
   "paywallClubYearly": "o $199.99/año. Ahorra un 25 %**",
   "paywallGetClub": "Obtener Club",
-  "paywallDisclaimer": "Las suscripciones se renuevan automáticamente. Cancela* en cualquier momento\ndesde los ajustes de tu cuenta.",
+  "paywallDisclaimer": "Las suscripciones se renuevan automáticamente. Después de tu prueba gratuita, se te cobrará el precio indicado a menos que canceles al menos 24 horas antes de que finalice el período. Cancela en cualquier momento desde los ajustes de tu cuenta.",
   "paywallTerms": "Términos",
   "paywallPrivacy": "Privacidad",
   "paywallPurchasesRestored": "Compras restauradas",
@@ -810,7 +810,7 @@
   "paywallSubscriptionUnavailable": "Opciones de suscripción no disponibles. Por favor, inténtalo de nuevo.",
   "paywallMonthly": "Mensual",
   "paywallAnnual": "Anual",
-  "paywallAnnualSave": "Anual (Ahorra ~25%)",
+  "paywallAnnualSave": "Anual (Ahorra ~40%)",
   "paywallComingSoon": "Suscripciones {tier} próximamente",
   "@paywallComingSoon": {
     "placeholders": {
@@ -5324,10 +5324,147 @@
   "profileDeleteAccountMessage": "This will permanently delete your account and all associated data. This action cannot be undone.\n\nIf you have an active subscription, please cancel it first in your device settings.",
   "opponentsEnterName": "Enter name",
   "rangeStackDepth": "Stack depth",
-
   "settingsSkipHandScouting": "Skip Hand Scouting",
   "settingsSkipHandScoutingDesc": "Track opponent actions when you fold preflop",
   "skipScoutTitle": "What happened?",
   "skipScoutNoRaise": "No one raised",
-  "skipScoutSkip": "Skip"
+  "skipScoutSkip": "Skip",
+  "paywallNotNow": "Ahora no",
+  "paywallFreeTrialBadge14": "Prueba gratis de 14 días",
+  "freeTierHandLimitTitle": "Límite de manos alcanzado",
+  "freeTierHandLimitFree": "Las cuentas gratuitas pueden registrar hasta {free} manos por sesión. Mejora a Pro para {pro} manos o a Elite para ilimitadas.",
+  "@freeTierHandLimitFree": {
+    "placeholders": {
+      "free": {
+        "type": "int"
+      },
+      "pro": {
+        "type": "int"
+      }
+    }
+  },
+  "freeTierHandLimitPro": "Las cuentas Pro pueden registrar hasta {pro} manos por sesión. Mejora a Elite para manos ilimitadas.",
+  "@freeTierHandLimitPro": {
+    "placeholders": {
+      "pro": {
+        "type": "int"
+      }
+    }
+  },
+  "freeTierOpponentLimitTitle": "Límite de rivales alcanzado",
+  "freeTierOpponentLimitFree": "Las cuentas gratuitas pueden guardar hasta {free} perfiles de rivales. Mejora a Pro para {pro} o a Elite para ilimitados.",
+  "@freeTierOpponentLimitFree": {
+    "placeholders": {
+      "free": {
+        "type": "int"
+      },
+      "pro": {
+        "type": "int"
+      }
+    }
+  },
+  "freeTierOpponentLimitPro": "Las cuentas Pro pueden guardar hasta {pro} perfiles de rivales. Mejora a Elite para rivales ilimitados.",
+  "@freeTierOpponentLimitPro": {
+    "placeholders": {
+      "pro": {
+        "type": "int"
+      }
+    }
+  },
+  "freeTierUpgrade": "Mejorar",
+  "freeTierNotNow": "Ahora no",
+  "quotaMonthlyLimitTitle": "Límite mensual alcanzado",
+  "quotaAiLimitElite": "Has usado los {max} análisis de IA de este mes. Tu cuota se restablece el próximo mes.",
+  "@quotaAiLimitElite": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "quotaAiLimitPro": "Has usado los {max} análisis de IA de este mes (límite Pro). Mejora a Elite para {elite} análisis/mes.",
+  "@quotaAiLimitPro": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      },
+      "elite": {
+        "type": "int"
+      }
+    }
+  },
+  "quotaExportLimitTitle": "Límite de exportaciones alcanzado",
+  "quotaExportLimitPro": "Has usado las {max} exportaciones de este mes (límite Pro). Mejora a Elite para exportaciones ilimitadas.",
+  "@quotaExportLimitPro": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "quotaSessionExportLimitPro": "Has usado las {max} exportaciones de sesión de este mes (límite Pro). Mejora a Elite para exportaciones ilimitadas.",
+  "@quotaSessionExportLimitPro": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "quotaUpgradeToElite": "Mejorar a Elite",
+  "quotaOk": "OK",
+  "statsLockedTitle": "Mejora para desbloquear",
+  "statsLockedSubtitle": "Esta sección está disponible en Pro y superior.",
+  "statsLockedUpgrade": "Mejorar",
+  "paywallBestValue": "MEJOR VALOR",
+  "paywallWelcomeElite": "¡Bienvenido a Elite!",
+  "paywallWelcomeClub": "¡Bienvenido a Club!",
+  "paywallStartWithPro": "Empezar con Pro",
+  "paywallGetEliteAction": "Obtener Elite",
+  "paywallGetClubAction": "Obtener Club",
+  "paywallCurrentPlan": "Plan actual",
+  "paywallProFeature1": "50 manos por sesión",
+  "paywallProFeature2": "Historial de 90 días",
+  "paywallProFeature3": "15 perfiles de rivales",
+  "paywallProFeature4": "10 análisis de IA / mes",
+  "paywallProFeature5": "30 exportaciones / mes",
+  "paywallEliteFeature4": "Registro de manos ilimitado",
+  "paywallEliteFeature5": "Historial de sesiones completo",
+  "paywallEliteFeature6": "Rivales ilimitados",
+  "paywallEliteFeature7": "30 análisis de IA / mes",
+  "paywallEliteFeature8": "Exportaciones ilimitadas",
+  "paywallClubFeature1": "Todo en Elite",
+  "paywallClubFeature2": "Crea y gestiona tu propio club",
+  "paywallClubFeature3": "Invita dealers y gestiona miembros",
+  "paywallClubFeature4": "Organiza eventos multimesa con rankings en vivo",
+  "profileTierOverride": "Anular nivel de suscripción",
+  "profileTierOverrideSubtitleReal": "Real: {tier}",
+  "@profileTierOverrideSubtitleReal": {
+    "placeholders": {
+      "tier": {
+        "type": "String"
+      }
+    }
+  },
+  "profileTierOverrideSubtitleActive": "Anulado: {tier}",
+  "@profileTierOverrideSubtitleActive": {
+    "placeholders": {
+      "tier": {
+        "type": "String"
+      }
+    }
+  },
+  "profileTierFree": "gratuito",
+  "profileTierPro": "Pro",
+  "profileTierElite": "Elite",
+  "profileTierClub": "Club",
+  "authExpContinueApple": "Continuar con Apple",
+  "authExpLinkAppleTitle": "Vincular cuenta de Apple",
+  "authExpLinkAppleMessage": "Ya existe una cuenta con {email}. Ingresa tu contraseña para vincular tu cuenta de Apple.",
+  "@authExpLinkAppleMessage": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  }
 }

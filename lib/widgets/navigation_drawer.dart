@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -8,6 +9,7 @@ import '../models/club.dart';
 import '../services/auth_service.dart';
 import '../services/club_service.dart';
 import '../services/session_result_service.dart';
+import '../services/subscription_service.dart';
 import '../screens/statistics_screen.dart';
 import '../screens/calendar_screen.dart';
 import '../screens/settings_screen.dart';
@@ -39,6 +41,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
   Map<String, String> _clubUserRoles = {};
   bool _hasLoadedClubs = false;
   bool _isClubsExpanded = false;
+  StreamSubscription<bool>? _premiumSub;
 
   // Avatar colors matching Figma examples
   static const List<Color> _avatarColors = [
@@ -56,6 +59,15 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
   void initState() {
     super.initState();
     _loadClubs();
+    _premiumSub = SubscriptionService.premiumStatusStream.listen((_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _premiumSub?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadClubs() async {
@@ -207,7 +219,11 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
                                   label: l10n.navDrawerRegisterClub,
                                   onTap: () {
                                     Navigator.pop(context);
-                                    showRegisterClubDialog(context);
+                                    if (SubscriptionService.isClub) {
+                                      showRegisterClubDialog(context);
+                                    } else {
+                                      PaywallScreen.show(context, featureName: l10n.navDrawerRegisterClub, preselectedTier: 2);
+                                    }
                                   },
                                 ),
                                 _MenuItemData(
@@ -255,6 +271,16 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
     );
   }
 
+  /// Returns the subscription pill label based on the current tier.
+  String _subscriptionPillLabel(AppLocalizations l10n) {
+    switch (SubscriptionService.currentTier) {
+      case 'club':  return l10n.profileTierClub;
+      case 'elite': return l10n.profileTierElite;
+      case 'pro':   return l10n.profileTierPro;
+      default:      return l10n.navDrawerUpgrade;
+    }
+  }
+
   Widget _buildHeaderRow(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     return Padding(
@@ -278,7 +304,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
             ),
           ),
 
-          // Upgrade button with diamond icon and glow
+          // Subscription pill — shows plan name when subscribed, "Upgrade" when free
           GestureDetector(
             onTap: () {
               Navigator.pop(context);
@@ -307,7 +333,6 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Diamond icon
                   const Icon(
                     Icons.diamond_outlined,
                     color: Color(0xFF89F1EC),
@@ -315,7 +340,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    l10n.navDrawerUpgrade,
+                    _subscriptionPillLabel(l10n),
                     style: GoogleFonts.ibmPlexSans(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,

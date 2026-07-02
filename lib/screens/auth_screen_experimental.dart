@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show defaultTargetPlatform, TargetPlatform;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -234,7 +235,113 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
     );
   }
 
-  Widget _buildGoogleSection() {
+  Future<void> _handleAppleSignIn() async {
+    setState(() => _isLoading = true);
+    try {
+      final credential = await AuthService.signInWithApple();
+      if (credential != null && mounted) {
+        Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+      }
+    } on AppleSignInAccountLinkException catch (e) {
+      if (mounted) _showAppleAccountLinkDialog(e);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  void _showAppleAccountLinkDialog(AppleSignInAccountLinkException e) {
+    final passwordController = TextEditingController();
+    bool isLinking = false;
+    final l10n = AppLocalizations.of(context);
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          backgroundColor: AppColors.backgroundSurface,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Text(l10n.authExpLinkAppleTitle,
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                l10n.authExpLinkAppleMessage(e.email),
+                style: TextStyle(color: Colors.white70, fontSize: 14),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: passwordController,
+                obscureText: true,
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  labelText: l10n.authExpPassword,
+                  labelStyle: TextStyle(color: Colors.white54),
+                  filled: true,
+                  fillColor: AppColors.whiteOverlay(opacity: 0.10),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppDecorations.cardRadius),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(l10n.commonCancel, style: TextStyle(color: Colors.white54)),
+            ),
+            ElevatedButton(
+              onPressed: isLinking
+                  ? null
+                  : () async {
+                      setDialogState(() => isLinking = true);
+                      try {
+                        await AuthService.linkAppleToExistingAccount(
+                          email: e.email,
+                          password: passwordController.text,
+                          appleCredential: e.appleCredential,
+                        );
+                        if (ctx.mounted) Navigator.pop(ctx);
+                        if (mounted) {
+                          Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+                        }
+                      } catch (err) {
+                        setDialogState(() => isLinking = false);
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(err.toString()),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
+                      }
+                    },
+              child: isLinking
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Text(l10n.authExpLinkAccount),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSocialSignInSection() {
     final l10n = AppLocalizations.of(context);
     return Column(
       children: [
@@ -250,6 +357,37 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
           ],
         ),
         const SizedBox(height: 20),
+        // Apple Sign-In button — iOS only, shown above Google per Apple HIG
+        if (defaultTargetPlatform == TargetPlatform.iOS) ...[
+          SizedBox(
+            width: double.infinity,
+            height: 56,
+            child: OutlinedButton(
+              onPressed: _isLoading ? null : _handleAppleSignIn,
+              style: OutlinedButton.styleFrom(
+                side: BorderSide(color: AppColors.whiteOverlay(opacity: 0.30)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SvgPicture.asset('assets/icons/apple_logo.svg', height: 20, width: 20),
+                  const SizedBox(width: 10),
+                  Text(
+                    l10n.authExpContinueApple,
+                    style: AppTypography.buttonText(color: Colors.white).copyWith(
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+        ],
+        // Google Sign-In button
         SizedBox(
           width: double.infinity,
           height: 56,
@@ -465,7 +603,7 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
             ),
           ),
 
-          _buildGoogleSection(),
+          _buildSocialSignInSection(),
         ],
       ),
     );
@@ -564,7 +702,7 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
             ),
           ),
 
-          _buildGoogleSection(),
+          _buildSocialSignInSection(),
         ],
       ),
     );

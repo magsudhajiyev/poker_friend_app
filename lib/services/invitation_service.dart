@@ -280,6 +280,39 @@ class InvitationService {
     AuthService.clearAccountTypeCache();
   }
 
+  /// Get an invitation by its shareable token code (searches all clubs)
+  /// Returns null if no matching valid invitation is found
+  static Future<ClubInvitation?> getInvitationByToken(String token) async {
+    try {
+      final clubsSnapshot = await _firestore.collection(_clubsCollection).get();
+
+      for (final clubDoc in clubsSnapshot.docs) {
+        final query = await clubDoc.reference
+            .collection(_invitationsSubcollection)
+            .where('token', isEqualTo: token)
+            .where('status', isEqualTo: 'pending')
+            .limit(1)
+            .get();
+
+        for (final invDoc in query.docs) {
+          final invitation = ClubInvitation.fromFirestore(invDoc, clubId: clubDoc.id);
+          if (!invitation.isExpired) return invitation;
+        }
+      }
+      return null;
+    } catch (e) {
+      debugPrint('Error getting invitation by token: $e');
+      return null;
+    }
+  }
+
+  /// Accept an invitation identified by its shareable token code
+  static Future<void> acceptInvitationByToken(String token) async {
+    final invitation = await getInvitationByToken(token);
+    if (invitation == null) throw 'Invitation not found or expired';
+    await acceptInvitation(clubId: invitation.clubId, invitationId: invitation.id);
+  }
+
   /// Watch pending invitations for the current user
   static Stream<List<ClubInvitation>> watchPendingInvitations() async* {
     final email = AuthService.currentUser?.email?.toLowerCase().trim();

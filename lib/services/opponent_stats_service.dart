@@ -9,6 +9,7 @@ import 'firebase_service.dart';
 import 'local_storage_service.dart';
 import 'stats_migration_service.dart';
 import 'app_data_cache.dart';
+import 'logger_service.dart';
 
 /// Optimized service for managing opponent statistics using incremental updates
 /// instead of recalculating from all hands every time
@@ -38,7 +39,7 @@ class OpponentStatsService {
       // Return Firebase result (even if null - means no stats exist)
       return stats;
     } catch (e) {
-      debugPrint('⚠️ Firebase stats load failed, using local storage: $e');
+      await LoggerService.error('Firebase stats load failed, using local storage', e, StackTrace.current);
       // Only fallback to local storage on actual errors
       return await _getStatsFromLocal(opponentId);
     }
@@ -51,7 +52,7 @@ class OpponentStatsService {
       await _saveStatsToFirebase(stats);
       debugPrint('✅ Stats saved to Firebase: ${stats.opponentId}');
     } catch (e) {
-      debugPrint('⚠️ Firebase stats save failed, using local storage: $e');
+      await LoggerService.error('Firebase stats save failed, using local storage', e, StackTrace.current);
     }
 
     // Always save to local storage as backup
@@ -225,7 +226,7 @@ class OpponentStatsService {
       AppDataCache.markOpponentHandsDirty();
       debugPrint('✅ Stats updated atomically for opponent: $opponentId');
     } catch (e) {
-      debugPrint('⚠️ Atomic update failed, falling back to regular update: $e');
+      await LoggerService.error('Atomic update failed, falling back to regular update', e, StackTrace.current);
       await updateStatsIncremental(
         opponentId: opponentId,
         handsDelta: handsDelta,
@@ -263,7 +264,7 @@ class OpponentStatsService {
       // Use the migration service to rebuild stats
       await StatsMigrationService.rebuildOpponentStats(opponentId);
     } catch (e) {
-      debugPrint('❌ Failed to rebuild stats for opponent $opponentId: $e');
+      await LoggerService.error('Failed to rebuild stats for opponent $opponentId', e, StackTrace.current);
     }
   }
 
@@ -275,7 +276,7 @@ class OpponentStatsService {
       // Return Firebase result (even if empty - means no stats exist)
       return firebaseStats;
     } catch (e) {
-      debugPrint('⚠️ Firebase bulk load failed, using local storage: $e');
+      await LoggerService.error('Firebase bulk load failed, using local storage', e, StackTrace.current);
       // Only fallback to local storage on actual errors
       return await _getAllStatsFromLocal();
     }
@@ -381,7 +382,7 @@ class OpponentStatsService {
       await _statsCollection.doc(opponentId).delete();
       debugPrint('✅ Stats deleted from Firebase: $opponentId');
     } catch (e) {
-      debugPrint('⚠️ Firebase deletion failed: $e');
+      await LoggerService.error('Firebase deletion failed', e, StackTrace.current);
     }
 
     // Delete from local storage
@@ -402,7 +403,7 @@ class OpponentStatsService {
       await batch.commit();
       debugPrint('✅ All stats cleared from Firebase');
     } catch (e) {
-      debugPrint('⚠️ Firebase clear failed: $e');
+      await LoggerService.error('Firebase clear failed', e, StackTrace.current);
     }
 
     // Clear local storage
@@ -431,7 +432,7 @@ class OpponentStatsService {
       }
 
     } catch (e) {
-      debugPrint('⚠️ Error initializing stats optimization: $e');
+      await LoggerService.error('Error initializing stats optimization', e, StackTrace.current);
       // Don't rethrow - app should continue working even if optimization fails
     }
   }
@@ -444,7 +445,7 @@ class OpponentStatsService {
         await StatsMigrationService.migrateInBackground();
         debugPrint('🎉 Background migration completed successfully');
       } catch (e) {
-        debugPrint('❌ Background migration failed: $e');
+        LoggerService.error('Background migration failed', e, StackTrace.current);
       }
     });
   }
@@ -466,7 +467,7 @@ class OpponentStatsService {
       };
 
     } catch (e) {
-      debugPrint('❌ Error getting performance stats: $e');
+      await LoggerService.error('Error getting performance stats', e, StackTrace.current);
       return {
         'error': e.toString(),
         'optimizationActive': false,
@@ -481,7 +482,7 @@ class OpponentStatsService {
       await StatsMigrationService.migrateAllOpponentsToOptimizedStats();
       debugPrint('✅ Manual stats rebuild completed');
     } catch (e) {
-      debugPrint('❌ Manual stats rebuild failed: $e');
+      await LoggerService.error('Manual stats rebuild failed', e, StackTrace.current);
       rethrow;
     }
   }

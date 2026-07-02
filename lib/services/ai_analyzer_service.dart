@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -34,7 +35,8 @@ class AIAnalyzerService {
           'opponentContext': opponentContext,
       };
 
-      await LoggerService.info('🎲 ===== FULL AI ANALYSIS REQUEST =====');
+      await LoggerService.info('Full AI analysis requested');
+      unawaited(LoggerService.logEvent('ai_analysis_requested'));
 
       final response = await http.post(
         Uri.parse('$_baseUrl/analyze-hand-full'),
@@ -250,7 +252,7 @@ class AIAnalyzerService {
           .doc(sessionId)
           .collection('poker_hands')
           .doc(handId)
-          .get();
+          .get(const GetOptions(source: Source.server));
 
       if (doc.exists) {
         final data = doc.data();

@@ -2,63 +2,129 @@ import 'package:flutter/material.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/spacing.dart';
 import '../design_system/constants/typography.dart';
+import '../l10n/app_localizations.dart';
 import '../screens/paywall_screen.dart';
+import '../onboarding/onboarding_state.dart';
 import 'subscription_service.dart';
 
-/// Free-tier limits for the v1 launch.
+/// Free-tier limits for the 4-tier subscription system.
 ///
-/// Centralizes the cap values and the "show the upgrade dialog" logic so
-/// the gates in different screens stay consistent.
+/// Centralizes cap values and "show upgrade dialog" logic so gates across
+/// different screens stay consistent.
 class FreeTierLimits {
   FreeTierLimits._();
 
-  /// Maximum number of hands a free user can log per session.
-  /// TODO(v1-launch): Set back to 5 once subscriptions are wired up.
-  static const int maxHandsPerSession = 999;
+  // ---------------------------------------------------------------------------
+  // Hand logging limits
+  // ---------------------------------------------------------------------------
 
-  /// Maximum number of saved opponent profiles for a free user.
-  static const int maxOpponentProfiles = 10;
+  /// Free tier: 10 hands per session.
+  static const int maxHandsPerSessionFree = 10;
 
-  /// Returns true if the user can log more hands in the current session.
-  /// Premium users always return true.
+  /// Pro tier: 50 hands per session.
+  static const int maxHandsPerSessionPro = 50;
+
+  /// Guided tour is always capped at 5 hands regardless of plan.
+  static const int maxHandsPerTour = 5;
+
+  /// Computed cap for the current tier (used for display in subtitles).
+  static int get maxHandsPerSession {
+    if (SubscriptionService.isElite) return 999999; // unlimited
+    if (SubscriptionService.isPro) return maxHandsPerSessionPro;
+    return maxHandsPerSessionFree;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Opponent limits
+  // ---------------------------------------------------------------------------
+
+  /// Free tier: 5 opponent profiles.
+  static const int maxOpponentProfilesFree = 5;
+
+  /// Pro tier: 15 opponent profiles.
+  static const int maxOpponentProfilesPro = 15;
+
+  /// Computed cap for the current tier.
+  static int get maxOpponentProfiles {
+    if (SubscriptionService.isElite) return 999999; // unlimited
+    if (SubscriptionService.isPro) return maxOpponentProfilesPro;
+    return maxOpponentProfilesFree;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Session history window
+  // ---------------------------------------------------------------------------
+
+  /// Returns null (all time) for Elite/Club, or a cutoff DateTime for others.
+  static DateTime? sessionHistoryCutoff() {
+    if (SubscriptionService.isElite) return null; // all time
+    if (SubscriptionService.isPro) {
+      return DateTime.now().subtract(const Duration(days: 90));
+    }
+    return DateTime.now().subtract(const Duration(days: 30));
+  }
+
+  // ---------------------------------------------------------------------------
+  // Gate checks
+  // ---------------------------------------------------------------------------
+
+  /// Returns true if the user can log another hand in the current session.
   static bool canLogAnotherHand(int completedHandsInSession) {
-    if (SubscriptionService.isPremium) return true;
-    return completedHandsInSession < maxHandsPerSession;
+    // Tour has its own fixed cap — no upgrade dialog ever shown during tour
+    if (OnboardingState.isOnboardingActive) {
+      return completedHandsInSession < maxHandsPerTour;
+    }
+    if (SubscriptionService.isElite) return true; // unlimited
+    if (SubscriptionService.isPro) {
+      return completedHandsInSession < maxHandsPerSessionPro;
+    }
+    return completedHandsInSession < maxHandsPerSessionFree;
   }
 
   /// Returns true if the user can create another opponent profile.
-  /// Premium users always return true.
   static bool canCreateAnotherOpponent(int currentOpponentCount) {
-    if (SubscriptionService.isPremium) return true;
-    return currentOpponentCount < maxOpponentProfiles;
+    if (SubscriptionService.isElite) return true; // unlimited
+    if (SubscriptionService.isPro) {
+      return currentOpponentCount < maxOpponentProfilesPro;
+    }
+    return currentOpponentCount < maxOpponentProfilesFree;
   }
 
-  /// Show a styled explanation dialog for the "hands per session" limit,
-  /// with an Upgrade button that routes to the paywall. Resolves to `true`
-  /// if the user tapped Upgrade, `false` (or null) if they dismissed.
+  // ---------------------------------------------------------------------------
+  // Upgrade dialogs
+  // ---------------------------------------------------------------------------
+
+  /// Show a styled explanation dialog for the "hands per session" limit.
+  /// Tier-aware: message varies based on current tier.
   static Future<bool?> showHandsLimitDialog(
     BuildContext context, {
-    String dismissLabel = 'Not now',
+    String? dismissLabel,
   }) {
+    final l10n = AppLocalizations.of(context);
+    final String message = SubscriptionService.isPro
+        ? l10n.freeTierHandLimitPro(maxHandsPerSessionPro)
+        : l10n.freeTierHandLimitFree(maxHandsPerSessionFree, maxHandsPerSessionPro);
+
     return _showLimitDialog(
       context: context,
-      title: 'Hand limit reached',
-      message:
-          'Free accounts can log up to $maxHandsPerSession hands per session. '
-          'Upgrade to Pro to log unlimited hands and keep your full history.',
+      title: l10n.freeTierHandLimitTitle,
+      message: message,
       featureName: 'Unlimited hand logging',
-      dismissLabel: dismissLabel,
+      dismissLabel: dismissLabel ?? l10n.freeTierNotNow,
     );
   }
 
   /// Show a styled explanation dialog for the "opponent profiles" limit.
   static Future<bool?> showOpponentLimitDialog(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final String message = SubscriptionService.isPro
+        ? l10n.freeTierOpponentLimitPro(maxOpponentProfilesPro)
+        : l10n.freeTierOpponentLimitFree(maxOpponentProfilesFree, maxOpponentProfilesPro);
+
     return _showLimitDialog(
       context: context,
-      title: 'Opponent limit reached',
-      message:
-          'Free accounts can save up to $maxOpponentProfiles opponent profiles. '
-          'Upgrade to Pro to track as many opponents as you like.',
+      title: l10n.freeTierOpponentLimitTitle,
+      message: message,
       featureName: 'Unlimited opponent profiles',
     );
   }
@@ -68,8 +134,10 @@ class FreeTierLimits {
     required String title,
     required String message,
     required String featureName,
-    String dismissLabel = 'Not now',
+    String? dismissLabel,
   }) async {
+    final l10n = AppLocalizations.of(context);
+    final resolvedDismissLabel = dismissLabel ?? l10n.freeTierNotNow;
     // Show dialog and wait for user's choice.
     // barrierDismissible: false forces user to tap a button.
     final result = await showDialog<String>(
@@ -146,7 +214,7 @@ class FreeTierLimits {
                           ),
                         ),
                         child: Text(
-                          dismissLabel,
+                          resolvedDismissLabel,
                           style: AppTypography.bodyMedium(
                             color: Colors.white,
                           ).copyWith(fontWeight: FontWeight.w500),
@@ -169,7 +237,7 @@ class FreeTierLimits {
                           ),
                           child: Center(
                             child: Text(
-                              'Upgrade',
+                              l10n.freeTierUpgrade,
                               style: AppTypography.buttonText().copyWith(
                                 fontSize: 15,
                               ),
