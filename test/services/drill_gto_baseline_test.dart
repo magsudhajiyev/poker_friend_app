@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:poker_logger/models/drill_models.dart';
 import 'package:poker_logger/services/drill_engine.dart';
 import 'package:poker_logger/services/drill_grader.dart';
+import 'package:poker_logger/services/drill_insights.dart';
 import 'package:poker_logger/services/drill_gto_charts.dart';
 import 'package:poker_logger/services/drill_nash_pushfold.dart';
 
@@ -247,4 +248,29 @@ void main() {
     check(update.handComplete, 'hand completed');
   });
 
+
+  // ── Insight engine: repeated read-less spots vary their teaching ────
+  scenario('insights: same read-less spot gives varied explanations', () {
+    DrillInsights.resetRotation();
+    final seen = <String>{};
+    for (var i = 0; i < 3; i++) {
+      final r = DrillGrader.grade(ctx(hand: '55', pos: 'EP'), 'raise',
+          raiseToBB: 2.5);
+      seen.add(r.explanation);
+      check(r.trace.any((l) => l.startsWith('insight: variant')),
+          'trace records the chosen insight variant');
+    }
+    check(seen.length >= 2,
+        'explanations vary: got ${seen.length} distinct of 3');
+  });
+
+  scenario('insights: opponent-read reasons keep the name (not templated)', () {
+    final foldy = prof(name: 'FoldyFred', fold3bet: 78);
+    final r = DrillGrader.grade(
+        ctx(hand: '88', pos: 'BTN', scenario: DrillScenario.vsRaise,
+            opener: foldy, openerPos: 'CO', toCall: 2.5, bet: 2.5, raises: 1),
+        'raise', raiseToBB: 8);
+    check(r.explanation.contains('FoldyFred'),
+        'read-based explanation still names the opponent');
+  });
 }

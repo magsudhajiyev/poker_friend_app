@@ -1,6 +1,6 @@
 import '../models/drill_models.dart';
 import 'drill_gto_charts.dart';
-import 'drill_hand_strength.dart';
+import 'drill_insights.dart';
 import 'drill_nash_pushfold.dart';
 
 /// One recommended line (GTO baseline or exploit-adjusted) for a decision.
@@ -8,7 +8,9 @@ class _Line {
   final String action; // 'raise' | 'call' | 'check' | 'fold'
   final double rangePct; // coverage % of the primary range (for UI)
   final String reason;
-  const _Line(this.action, this.rangePct, this.reason);
+  final bool fromReads; // reason cites a specific opponent read
+  const _Line(this.action, this.rangePct, this.reason,
+      {this.fromReads = false});
 }
 
 /// Grades hero decisions two ways and shows both:
@@ -182,7 +184,8 @@ class DrillGrader {
         ? 'No exploitable reads behind you — the exploit matches the GTO baseline.'
         : notes.join(' ');
     final exploit = _Line(exploitOpen ? 'raise' : 'fold',
-        DrillGtoCharts.coverageOf(exploitSet), exploitReason);
+        DrillGtoCharts.coverageOf(exploitSet), exploitReason,
+        fromReads: notes.isNotEmpty);
 
     return _finalize(ctx, action, raiseToBB,
         gto: gto,
@@ -246,7 +249,8 @@ class DrillGrader {
         notes.isEmpty
             ? 'The limper${plural ? 's are' : ' is'} unremarkable — iso a '
                 'standard range and check back the rest.'
-            : notes.join(' '));
+            : notes.join(' '),
+        fromReads: notes.isNotEmpty);
 
     return _finalize(ctx, action, raiseToBB,
         gto: gtoLine,
@@ -313,7 +317,8 @@ class DrillGrader {
       final lineX = _Line(
           inX ? 'call' : 'fold',
           DrillGtoCharts.coverageOf(callSetX),
-          notes.isEmpty ? 'No read on the jammer — Nash is the play.' : notes.join(' '));
+          notes.isEmpty ? 'No read on the jammer — Nash is the play.' : notes.join(' '),
+          fromReads: notes.isNotEmpty);
       return _finalize(ctx, action, raiseToBB,
           gto: line,
           exploit: lineX,
@@ -396,7 +401,8 @@ class DrillGrader {
         DrillGtoCharts.coverageOf(chartX.continueRange),
         notes.isEmpty
             ? 'No strong read on the opener — defend the chart range.'
-            : notes.join(' '));
+            : notes.join(' '),
+        fromReads: notes.isNotEmpty);
 
     return _finalize(ctx, action, raiseToBB,
         gto: gto,
@@ -472,7 +478,8 @@ class DrillGrader {
         DrillGtoCharts.coverageOf(chartX.continueRange),
         notes.isEmpty
             ? 'No strong read on the 3-bettor — continue the chart range.'
-            : notes.join(' '));
+            : notes.join(' '),
+        fromReads: notes.isNotEmpty);
 
     return _finalize(ctx, action, null,
         gto: gto,
@@ -520,7 +527,8 @@ class DrillGrader {
         DrillGtoCharts.coverageOf(cont),
         notes.isEmpty
             ? 'Two strong ranges ahead — stick to premiums.'
-            : notes.join(' '));
+            : notes.join(' '),
+        fromReads: notes.isNotEmpty);
 
     return _finalize(ctx, action, null,
         gto: gto,
@@ -569,22 +577,18 @@ class DrillGrader {
           ' → ${near ? 'within' : 'outside'} ±$_closeBand close band');
     }
 
-    final String lead;
-    switch (grade) {
-      case DrillGrade.correct:
-        lead = '${_actionWord(exploit.action)} is the exploitative play.';
-      case DrillGrade.ok:
-        lead =
-            'Close — ${_actionWord(exploit.action).toLowerCase()} is slightly better against this lineup.';
-      case DrillGrade.mistake:
-        lead = '${_actionWord(exploit.action)} was the exploitative play.';
-    }
+    // Varied headline: rotated lead + (opponent read, or a rotated insight
+    // when there is no read — kills the repetitive boilerplate).
+    final lead = DrillInsights.lead(grade, exploit.action);
+    final headlineReason = exploit.fromReads
+        ? exploit.reason
+        : DrillInsights.insight(ctx, exploit.action, exploit.rangePct, trace);
 
     var result = DrillGradeResult(
       grade: grade,
       heroAction: action,
       recommendedAction: exploit.action,
-      explanation: '$lead ${exploit.reason}',
+      explanation: '$lead $headlineReason',
       handTopPercent: play,
       rangePercent: exploit.rangePct,
       gtoAction: gto.action,
@@ -670,18 +674,4 @@ class DrillGrader {
     }
   }
 
-  static String _actionWord(String action) {
-    switch (action) {
-      case 'raise':
-        return 'Raising';
-      case 'call':
-        return 'Calling';
-      case 'check':
-        return 'Checking';
-      case 'fold':
-        return 'Folding';
-      default:
-        return action;
-    }
-  }
 }
