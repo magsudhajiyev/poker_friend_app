@@ -206,12 +206,12 @@ void main() {
   scenario('exploit: foldy opener turns a GTO-fold into a 3-bet (diverge)', () {
     final foldy = prof(name: 'FoldyFred', fold3bet: 78);
     // A hand just outside the BTN-vs-CO 3-bet chart, first in the
-    // playability-ordered widening frontier (see probe): 99
+    // playability-ordered widening frontier and the GTO call set: 88
     final r = DrillGrader.grade(
-        ctx(hand: '99', pos: 'BTN', scenario: DrillScenario.vsRaise,
+        ctx(hand: '88', pos: 'BTN', scenario: DrillScenario.vsRaise,
             opener: foldy, openerPos: 'CO', toCall: 2.5, bet: 2.5, raises: 1),
         'raise', raiseToBB: 8);
-    check(r.gtoAction == 'call', 'GTO flats 99, got ${r.gtoAction}');
+    check(r.gtoAction == 'call', 'GTO flats 88, got ${r.gtoAction}');
     check(r.exploitAction == 'raise',
         'exploit 3-bets vs 78% folder, got ${r.exploitAction}');
     check(r.explanation.contains('FoldyFred'), 'names the opponent');

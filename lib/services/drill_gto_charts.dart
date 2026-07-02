@@ -167,7 +167,8 @@ class DrillGtoCharts {
           ..removeAll(_expand(['JJ+', 'AQs+', 'AKo', 'KQs'])),
       ),
       'CO': DefendChart(
-        threeBet: _expand(['TT+', 'AQs+', 'AQo+', 'A5s', 'A4s', 'A3s', 'KQs', '76s']),
+        threeBet: _expand(
+            ['99+', 'AJs+', 'AQo+', 'A5s', 'A4s', 'A3s', 'KQs', 'KJs', '76s', '65s']),
         call: _expand([
           '22+', 'A9s+', 'A5s-', 'KTs+', 'QTs+', 'JTs', 'T9s', '98s', '87s',
           '65s', '54s', 'AJo+', 'KQo'
