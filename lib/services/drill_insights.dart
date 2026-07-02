@@ -16,15 +16,17 @@ import 'drill_gto_charts.dart';
 class DrillInsights {
   DrillInsights._();
 
-  static int _seq = 0;
+  /// Per-spot counters: the same salt cycles through its pool in order, so a
+  /// repeated identical spot is GUARANTEED a different line until the pool is
+  /// exhausted. The hash offset varies which variant each spot starts on.
+  static final Map<String, int> _spotSeq = {};
 
   /// Test hook: makes variant selection reproducible.
-  static void resetRotation() => _seq = 0;
+  static void resetRotation() => _spotSeq.clear();
 
   static T _pick<T>(List<T> pool, String salt) {
-    _seq++;
-    final h = salt.hashCode ^ (_seq * 2654435761);
-    return pool[h.abs() % pool.length];
+    final n = _spotSeq.update(salt, (v) => v + 1, ifAbsent: () => 0);
+    return pool[(salt.hashCode.abs() + n) % pool.length];
   }
 
   // ── Verdict leads ───────────────────────────────────────────────────
@@ -192,8 +194,8 @@ class DrillInsights {
       'raise': [
         '{hand} sits inside the {rangePct} range for this spot from {pos} — '
             'in range means play it with conviction.',
-        'This is the {rangePct} territory of your {pos} range — {hand} '
-            'qualifies, so take the aggressive line.',
+        'This is the {rangePct} territory of your range from {pos} — '
+            '{hand} qualifies, so take the aggressive line.',
       ],
       'fold': [
         '{hand} falls outside the {rangePct} that continues here — folding '
