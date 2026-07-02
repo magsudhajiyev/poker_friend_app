@@ -206,10 +206,17 @@ class DrillGrader {
     final base = pos == 'BB'
         ? DrillGtoCharts.tighten(DrillGtoCharts.openRange('CO'), 10)
         : DrillGtoCharts.openRange(pos);
-    final isoBase = DrillGtoCharts.widen(base, 4.0 + 2.0 * limperCount);
+    // Dead money widens the iso for the FIRST limper, but each additional
+    // limper means more players to get through — iso TIGHTER multiway
+    // (sizing scales up instead; see suggested sizes).
+    final isoDelta = 4.0 - 2.0 * (limperCount - 1);
+    final isoBase = isoDelta >= 0
+        ? DrillGtoCharts.widen(base, isoDelta)
+        : DrillGtoCharts.tighten(base, -isoDelta);
     trace.add('baseline: iso chart = ${pos == 'BB' ? 'CO-open−10%' : 'RFI $pos'} '
-        'widened +${(4.0 + 2.0 * limperCount).toStringAsFixed(0)}% for '
-        '$limperCount limper${plural ? 's' : ''} → '
+        '${isoDelta >= 0 ? '+' : ''}${isoDelta.toStringAsFixed(0)}% for '
+        '$limperCount limper${plural ? 's' : ''} '
+        '(first widens, extras tighten) → '
         '${DrillGtoCharts.coverageOf(isoBase).toStringAsFixed(1)}%');
     final gto = _limpLine(ctx, isoBase, canCheck, trace, 'gto');
     final gtoLine = _Line(
@@ -323,6 +330,10 @@ class DrillGrader {
     final usedOpener = resolved?.$2 ?? openerPos;
     if (profile != '100bb') {
       chart = DrillGtoCharts.defendAt40bb(chart);
+    }
+    if (ctx.heroLimped) {
+      trace.add('note: hero LIMPED earlier — grading with the cold-defend '
+          'chart (limp-defend ranges are an approximation here)');
     }
     trace.add('baseline: defend chart $pos vs $usedOpener open @ $profile — '
         '3bet ${DrillGtoCharts.coverageOf(chart.threeBet).toStringAsFixed(1)}%, '

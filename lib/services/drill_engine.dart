@@ -461,6 +461,7 @@ class DrillEngine {
       openerPosGroup: _raises > 0 && _lastAggressorSeat != null
           ? positionGroup(_positions[_lastAggressorSeat!] ?? '')
           : '',
+      heroLimped: hero.limped,
       limpers: limpers,
       playersBehind: behindPlayers.map((p) => p.profile).toList(),
       behindDetail: behindDetail,

@@ -198,6 +198,7 @@ class DrillDecisionContext {
   final DrillScenario scenario;
   final DrillVillainProfile? opener; // last aggressor before hero, if any
   final String openerPosGroup; // position group of the opener ('' if none)
+  final bool heroLimped; // hero limped earlier this hand (limp-then-face-raise)
   final List<DrillVillainProfile> limpers;
   final List<DrillVillainProfile> playersBehind; // not folded, act after hero
   final List<DrillSeatRef> behindDetail; // same players, position-tagged
@@ -222,6 +223,7 @@ class DrillDecisionContext {
     required this.scenario,
     required this.opener,
     this.openerPosGroup = '',
+    this.heroLimped = false,
     required this.limpers,
     required this.playersBehind,
     this.behindDetail = const [],
