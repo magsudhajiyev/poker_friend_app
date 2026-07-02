@@ -57,30 +57,22 @@ class _PaywallScreenState extends State<PaywallScreen> {
   Future<void> _onContinue() async {
     final l10n = AppLocalizations.of(context);
 
-    // Only Pro (index 0) is purchasable — Elite/Club show "coming soon"
-    if (_selectedPlanIndex != 0) {
-      final tierLabels = [
-        l10n.paywallProTier,
-        l10n.paywallEliteTier,
-        l10n.paywallClubTier,
-      ];
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.paywallComingSoon(tierLabels[_selectedPlanIndex])),
-          duration: const Duration(seconds: 2),
-        ),
-      );
-      return;
-    }
-
-    // Get the appropriate package
-    final package = _isAnnual ? _offering?.annual : _offering?.monthly;
+    // Get the appropriate package via product ID lookup
+    final tierIds = [
+      ['pro_monthly', 'pro_annual'],
+      ['elite_monthly', 'elite_annual'],
+      ['club_monthly', 'club_annual'],
+    ];
+    final ids = tierIds[_selectedPlanIndex];
+    final package = SubscriptionService.packageById(
+        _isAnnual ? ids[1] : ids[0]);
     debugPrint('📦 Paywall: offering=$_offering, isAnnual=$_isAnnual, package=${package?.identifier}');
     if (package == null) {
       // Try fetching offerings one more time before giving up
       await SubscriptionService.fetchOfferings();
       _offering = SubscriptionService.currentOffering;
-      final retryPackage = _isAnnual ? _offering?.annual : _offering?.monthly;
+      final retryPackage = SubscriptionService.packageById(
+          _isAnnual ? ids[1] : ids[0]);
       debugPrint('📦 Paywall retry: offering=$_offering, package=${retryPackage?.identifier}');
       if (retryPackage != null) {
         if (mounted) setState(() {});
@@ -337,21 +329,30 @@ class _PaywallScreenState extends State<PaywallScreen> {
     );
   }
 
-  /// Build the price strings for Pro card from RevenueCat or fallback to l10n.
-  String _proPrimaryPrice(AppLocalizations l10n) {
-    if (_isAnnual) {
-      return _offering?.annual?.storeProduct.priceString ?? l10n.paywallProYearly;
-    }
-    return _offering?.monthly?.storeProduct.priceString ?? l10n.paywallProMonthly;
+  /// Pull the localized price string from a RevenueCat package, or fall back.
+  String _priceOf(String packageId, String fallback) {
+    return SubscriptionService.packageById(packageId)
+            ?.storeProduct
+            .priceString ??
+        fallback;
   }
 
-  String _proSecondaryPrice(AppLocalizations l10n) {
+  /// Primary price line for a tier (the big price shown on the card).
+  String _tierPrimaryPrice(String monthlyId, String annualId,
+      AppLocalizations l10n, String monthlyFallback, String annualFallback) {
     if (_isAnnual) {
-      final monthly = _offering?.monthly?.storeProduct.priceString;
-      return monthly != null ? 'or $monthly/month' : l10n.paywallProMonthly;
+      return '${_priceOf(annualId, annualFallback)}/year';
     }
-    final annual = _offering?.annual?.storeProduct.priceString;
-    return annual != null ? 'or $annual/year' : l10n.paywallProYearly;
+    return '${_priceOf(monthlyId, monthlyFallback)}/month';
+  }
+
+  /// Secondary price line (the smaller "or …" alternate period).
+  String _tierSecondaryPrice(String monthlyId, String annualId,
+      AppLocalizations l10n, String monthlyFallback, String annualFallback) {
+    if (_isAnnual) {
+      return 'or ${_priceOf(monthlyId, monthlyFallback)}/month';
+    }
+    return 'or ${_priceOf(annualId, annualFallback)}/year';
   }
 
   Widget _buildPlanCards(AppLocalizations l10n) {
@@ -360,10 +361,10 @@ class _PaywallScreenState extends State<PaywallScreen> {
         _PlanCard(
           tierLabel: l10n.paywallProTier,
           tagline: l10n.paywallProDescription,
-          primaryPrice: _isAnnual
-              ? '${_offering?.annual?.storeProduct.priceString ?? '\$249.99'}/year'
-              : '${_offering?.monthly?.storeProduct.priceString ?? '\$29.99'}/month',
-          secondaryPrice: _proSecondaryPrice(l10n),
+          primaryPrice: _tierPrimaryPrice(
+              'pro_monthly', 'pro_annual', l10n, '\$19.99', '\$159.99'),
+          secondaryPrice: _tierSecondaryPrice(
+              'pro_monthly', 'pro_annual', l10n, '\$19.99', '\$159.99'),
           features: [
             l10n.paywallUnlimitedHandLogging,
             l10n.paywallFullSessionHistory,
@@ -379,8 +380,10 @@ class _PaywallScreenState extends State<PaywallScreen> {
         _PlanCard(
           tierLabel: l10n.paywallEliteTier,
           tagline: l10n.paywallEliteDescription,
-          primaryPrice: _isAnnual ? l10n.paywallEliteYearly : l10n.paywallEliteMonthly,
-          secondaryPrice: _isAnnual ? l10n.paywallEliteMonthly : l10n.paywallEliteYearly,
+          primaryPrice: _tierPrimaryPrice(
+              'elite_monthly', 'elite_annual', l10n, '\$24.99', '\$189.99'),
+          secondaryPrice: _tierSecondaryPrice(
+              'elite_monthly', 'elite_annual', l10n, '\$24.99', '\$189.99'),
           features: [
             l10n.paywallEverythingInProElite,
             l10n.paywallEliteFeature1,
@@ -395,8 +398,10 @@ class _PaywallScreenState extends State<PaywallScreen> {
         _PlanCard(
           tierLabel: l10n.paywallClubTier,
           tagline: l10n.paywallClubDescription,
-          primaryPrice: _isAnnual ? l10n.paywallClubYearly : l10n.paywallClubMonthly,
-          secondaryPrice: _isAnnual ? l10n.paywallClubMonthly : l10n.paywallClubYearly,
+          primaryPrice: _tierPrimaryPrice(
+              'club_monthly', 'club_annual', l10n, '\$59.99', '\$449.99'),
+          secondaryPrice: _tierSecondaryPrice(
+              'club_monthly', 'club_annual', l10n, '\$59.99', '\$449.99'),
           features: [
             l10n.paywallEverythingInPro,
             l10n.paywallClubManagement,

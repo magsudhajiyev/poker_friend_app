@@ -245,6 +245,25 @@ class SubscriptionService {
     }
   }
 
+  /// Look up a package by its custom identifier (e.g. 'elite_monthly').
+  /// Returns null if the offering hasn't loaded or the identifier doesn't exist.
+  static Package? packageById(String identifier) {
+    final packages = currentOffering?.availablePackages;
+    if (packages == null) return null;
+    // Try exact RevenueCat package identifier match first
+    for (final p in packages) {
+      if (p.identifier == identifier) return p;
+    }
+    // Fallback: match by store product identifier.
+    // Store IDs use colons (e.g. 'pro:monthly') while our lookup keys use
+    // underscores (e.g. 'pro_monthly'), so normalize both to compare.
+    final normalized = identifier.replaceAll('_', ':');
+    for (final p in packages) {
+      if (p.storeProduct.identifier == normalized) return p;
+    }
+    return null;
+  }
+
   /// Format price for display
   static String formatPrice(Package package) {
     final product = package.storeProduct;
