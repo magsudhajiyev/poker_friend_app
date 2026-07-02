@@ -197,6 +197,7 @@ class DrillDecisionContext {
   final double stackBB;
   final DrillScenario scenario;
   final DrillVillainProfile? opener; // last aggressor before hero, if any
+  final String openerPosGroup; // position group of the opener ('' if none)
   final List<DrillVillainProfile> limpers;
   final List<DrillVillainProfile> playersBehind; // not folded, act after hero
   final List<DrillSeatRef> behindDetail; // same players, position-tagged
@@ -220,6 +221,7 @@ class DrillDecisionContext {
     required this.stackBB,
     required this.scenario,
     required this.opener,
+    this.openerPosGroup = '',
     required this.limpers,
     required this.playersBehind,
     this.behindDetail = const [],
@@ -279,7 +281,13 @@ class DrillGradeResult {
     this.exploitAction = 'fold',
     this.exploitRangePercent = 0,
     this.exploitReason = '',
+    this.trace = const [],
   });
+
+  /// Step-by-step decision trace for debugging: which chart/table produced
+  /// the baseline, every exploit adjustment applied, membership checks, and
+  /// the final verdict math. Logged via debugPrint in debug builds.
+  final List<String> trace;
 
   /// True when the exploitative line matches the GTO baseline.
   bool get linesAgree => gtoAction == exploitAction;
@@ -302,6 +310,7 @@ class DrillGradeResult {
       exploitAction: exploitAction,
       exploitRangePercent: exploitRangePercent,
       exploitReason: exploitReason ?? this.exploitReason,
+      trace: trace,
     );
   }
 }

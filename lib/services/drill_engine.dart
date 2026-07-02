@@ -1,5 +1,7 @@
 import 'dart:math';
 
+import 'package:flutter/foundation.dart';
+
 import '../models/drill_models.dart';
 import 'drill_grader.dart';
 import 'drill_gto_charts.dart';
@@ -147,6 +149,17 @@ class DrillEngine {
     final grade = ctx != null
         ? DrillGrader.grade(ctx, action, raiseToBB: raiseToBB)
         : null;
+    if (grade != null && grade.trace.isNotEmpty) {
+      // Debug-build decision trace: exactly how this grade was computed
+      debugPrint('┌─ DRILL DECISION TRACE (hand #$handNumber, '
+          '${ctx!.handClass} @ $heroPosition, ${stackBB.toInt()}BB)');
+      for (final line in grade.trace) {
+        debugPrint('│ $line');
+      }
+      debugPrint('└─ verdict: ${grade.grade.name.toUpperCase()} '
+          '(hero: $action, exploit: ${grade.exploitAction}, '
+          'gto: ${grade.gtoAction})');
+    }
 
     final hero = _bySeat[heroSeat]!;
     final events = <DrillEvent>[];
@@ -445,6 +458,9 @@ class DrillEngine {
       stackBB: stackBB,
       scenario: _scenarioFor(hero),
       opener: _raises > 0 ? opener : null,
+      openerPosGroup: _raises > 0 && _lastAggressorSeat != null
+          ? positionGroup(_positions[_lastAggressorSeat!] ?? '')
+          : '',
       limpers: limpers,
       playersBehind: behindPlayers.map((p) => p.profile).toList(),
       behindDetail: behindDetail,
