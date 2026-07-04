@@ -1178,6 +1178,7 @@
     }
   },
   "seatConfigRemove": "Usun",
+  "seatConfigRemoveMe": "Usuń mnie z tego miejsca",
   "seatConfigThisIsMe": "To ja",
   "seatConfigNameLabel": "Nazwa",
   "seatConfigSearchOrEnterName": "Wyszukaj lub wprowadz nazwe",

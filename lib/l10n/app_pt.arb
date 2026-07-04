@@ -1352,6 +1352,7 @@
     }
   },
   "seatConfigRemove": "Remover",
+  "seatConfigRemoveMe": "Remover-me deste assento",
   "seatConfigThisIsMe": "Sou eu",
   "seatConfigNameLabel": "Nome",
   "seatConfigSearchOrEnterName": "Buscar ou inserir nome",

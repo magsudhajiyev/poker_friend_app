@@ -2435,6 +2435,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get seatConfigRemove => 'Удалить';
 
   @override
+  String get seatConfigRemoveMe => 'Убрать меня с этого места';
+
+  @override
   String get seatConfigThisIsMe => 'Это я';
 
   @override

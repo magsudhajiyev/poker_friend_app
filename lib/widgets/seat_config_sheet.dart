@@ -596,16 +596,18 @@ class _SeatConfigSheetState extends State<SeatConfigSheet> {
                 ),
               ),
 
-              // Remove player link (only for already-active seats).
-              // The hero's seat can't be removed — that would leave the
-              // session without an owner seat (ourSeatNumber would dangle).
-              if (_isActive && !widget.isHero) ...[
+              // Remove link (only for already-active seats). For the hero's
+              // own seat this unseats the user — the save handler clears
+              // ourSeatNumber so it never dangles on a reassigned seat.
+              if (_isActive) ...[
                 const SizedBox(height: 16),
                 Center(
                   child: GestureDetector(
                     onTap: _remove,
                     child: Text(
-                      l10n.seatConfigRemove,
+                      widget.isHero
+                          ? l10n.seatConfigRemoveMe
+                          : l10n.seatConfigRemove,
                       style: GoogleFonts.ibmPlexSans(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,

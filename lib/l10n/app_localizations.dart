@@ -4482,6 +4482,12 @@ abstract class AppLocalizations {
   /// **'Remove'**
   String get seatConfigRemove;
 
+  /// Remove-self link on the hero's own seat sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Remove me from this seat'**
+  String get seatConfigRemoveMe;
+
   /// No description provided for @seatConfigThisIsMe.
   ///
   /// In en, this message translates to:

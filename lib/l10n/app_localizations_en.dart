@@ -2430,6 +2430,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get seatConfigRemove => 'Remove';
 
   @override
+  String get seatConfigRemoveMe => 'Remove me from this seat';
+
+  @override
   String get seatConfigThisIsMe => 'This is me';
 
   @override

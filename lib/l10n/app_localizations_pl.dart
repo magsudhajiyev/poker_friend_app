@@ -2440,6 +2440,9 @@ class AppLocalizationsPl extends AppLocalizations {
   String get seatConfigRemove => 'Usun';
 
   @override
+  String get seatConfigRemoveMe => 'Usuń mnie z tego miejsca';
+
+  @override
   String get seatConfigThisIsMe => 'To ja';
 
   @override

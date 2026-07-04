@@ -6,6 +6,7 @@ import '../models/poker_game_state.dart';
 import '../models/hand_state_machine.dart';
 import '../models/game_types.dart';
 import '../utils/poker_positions.dart';
+import '../services/display_identity_service.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/decorations.dart';
 import 'seat_config_sheet.dart';
@@ -13,14 +14,12 @@ import 'seat_config_sheet.dart';
 class TableManagementSheet extends StatefulWidget {
   final PokerGameState gameState;
   final PokerSessionManager sessionManager;
-  final int heroSeat;
   final VoidCallback onChanged;
 
   const TableManagementSheet({
     super.key,
     required this.gameState,
     required this.sessionManager,
-    required this.heroSeat,
     required this.onChanged,
   });
 
@@ -28,7 +27,6 @@ class TableManagementSheet extends StatefulWidget {
     required BuildContext context,
     required PokerGameState gameState,
     required PokerSessionManager sessionManager,
-    required int heroSeat,
     required VoidCallback onChanged,
   }) {
     return showModalBottomSheet(
@@ -38,7 +36,6 @@ class TableManagementSheet extends StatefulWidget {
       builder: (_) => _TableManagementModal(
         gameState: gameState,
         sessionManager: sessionManager,
-        heroSeat: heroSeat,
         onChanged: onChanged,
       ),
     );
@@ -54,7 +51,6 @@ class _TableManagementSheetState extends State<TableManagementSheet> {
     return _TableManagementModal(
       gameState: widget.gameState,
       sessionManager: widget.sessionManager,
-      heroSeat: widget.heroSeat,
       onChanged: widget.onChanged,
     );
   }
@@ -67,13 +63,11 @@ class _TableManagementSheetState extends State<TableManagementSheet> {
 class _TableManagementModal extends StatefulWidget {
   final PokerGameState gameState;
   final PokerSessionManager sessionManager;
-  final int heroSeat;
   final VoidCallback onChanged;
 
   const _TableManagementModal({
     required this.gameState,
     required this.sessionManager,
-    required this.heroSeat,
     required this.onChanged,
   });
 
@@ -82,7 +76,22 @@ class _TableManagementModal extends StatefulWidget {
 }
 
 class _TableManagementModalState extends State<_TableManagementModal> {
-  int get _heroSeat => widget.sessionManager.ourSeatNumber ?? widget.heroSeat;
+  /// The hero's seat is ALWAYS read live from the session manager. Never
+  /// fall back to a snapshot — if the user reassigned their old seat to an
+  /// opponent, a stale fallback resurrects that seat (and its new occupant's
+  /// name) as "the hero".
+  int? get _heroSeat => widget.sessionManager.ourSeatNumber;
+
+  /// The hero's display name: their current seat's name while seated,
+  /// otherwise their profile identity (used to pre-fill "This is my seat").
+  String get _heroName {
+    final seat = _heroSeat;
+    if (seat != null) {
+      final name = widget.sessionManager.playerNames[seat] ?? '';
+      if (name.isNotEmpty) return name;
+    }
+    return DisplayIdentityService.cachedDisplayIdentity;
+  }
 
   // ---------------------------------------------------------------------------
   // Helpers
@@ -134,7 +143,7 @@ class _TableManagementModalState extends State<_TableManagementModal> {
     final defaultStack = widget.sessionManager.bigBlind > 0
         ? (widget.sessionManager.bigBlind * 100).toDouble()
         : 0.0;
-    final heroName = widget.sessionManager.playerNames[_heroSeat] ?? '';
+    final heroName = _heroName;
 
     final seatedPlayers = <String, int>{};
     for (final entry in widget.sessionManager.playerNames.entries) {
@@ -168,7 +177,11 @@ class _TableManagementModalState extends State<_TableManagementModal> {
         required bool isActive,
       }) {
         if (!isActive) {
-          // Remove player
+          // Remove player. Removing the hero's own seat unseats the user —
+          // clear ourSeatNumber so it never points at a dead/reused seat.
+          if (seat == widget.sessionManager.ourSeatNumber) {
+            widget.sessionManager.ourSeatNumber = null;
+          }
           widget.sessionManager.activeSeats.remove(seat);
           widget.sessionManager.playerNames.remove(seat);
           widget.sessionManager.playerStacks.remove(seat);
@@ -185,7 +198,9 @@ class _TableManagementModalState extends State<_TableManagementModal> {
 
         if (isHero && widget.sessionManager.ourSeatNumber != seat) {
           // Hero moving to a different seat — carry over current stack
-          final heroStack = widget.gameState.getPlayerStack(_heroSeat);
+          final oldSeat = widget.sessionManager.ourSeatNumber;
+          final heroStack =
+              oldSeat != null ? widget.gameState.getPlayerStack(oldSeat) : 0.0;
           widget.sessionManager.reseatHero(
             newSeat: seat,
             gameState: widget.gameState,
@@ -194,6 +209,13 @@ class _TableManagementModalState extends State<_TableManagementModal> {
           );
         } else {
           // Editing hero's own seat, or adding/editing a regular player.
+          // If the user unticked "This is my seat" on their OWN seat, they
+          // are handing it to someone else — relinquish hero ownership so
+          // ourSeatNumber can't keep pointing at the opponent's seat (the
+          // cause of the "my new seat shows the old occupant's name" bug).
+          if (!isHero && seat == widget.sessionManager.ourSeatNumber) {
+            widget.sessionManager.ourSeatNumber = null;
+          }
           // Move player if already seated elsewhere
           if (!isHero && name.isNotEmpty) {
             final lower = name.toLowerCase();

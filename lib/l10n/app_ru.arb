@@ -1178,6 +1178,7 @@
     }
   },
   "seatConfigRemove": "Удалить",
+  "seatConfigRemoveMe": "Убрать меня с этого места",
   "seatConfigThisIsMe": "Это я",
   "seatConfigNameLabel": "Имя",
   "seatConfigSearchOrEnterName": "Найти или ввести имя",

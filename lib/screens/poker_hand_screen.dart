@@ -623,7 +623,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         context: context,
         gameState: gameState,
         sessionManager: sessionManager,
-        heroSeat: sessionManager.ourSeatNumber ?? 1,
         onChanged: () => setState(() {}),
       );
     }
@@ -2435,7 +2434,14 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     final defaultStack = sessionManager.bigBlind > 0
         ? sessionManager.bigBlind * 100
         : 0.0;
-    final heroName = sessionManager.playerNames[sessionManager.ourSeatNumber ?? -1] ?? '';
+    // Hero name: current seat's name while seated, profile identity when
+    // unseated (never read a seat that was handed to an opponent).
+    final heroSeatNow = sessionManager.ourSeatNumber;
+    String heroName =
+        heroSeatNow != null ? (sessionManager.playerNames[heroSeatNow] ?? '') : '';
+    if (heroName.isEmpty) {
+      heroName = DisplayIdentityService.cachedDisplayIdentity;
+    }
 
     final seatedPlayers = <String, int>{};
     for (final entry in sessionManager.playerNames.entries) {
@@ -2469,7 +2475,11 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         required bool isActive,
       }) {
         if (!isActive) {
-          // Remove player
+          // Remove player. Removing the hero's own seat unseats the user —
+          // clear ourSeatNumber so it never points at a dead/reused seat.
+          if (seatNumber == sessionManager.ourSeatNumber) {
+            sessionManager.ourSeatNumber = null;
+          }
           sessionManager.activeSeats.remove(seatNumber);
           sessionManager.playerNames.remove(seatNumber);
           sessionManager.playerStacks.remove(seatNumber);
@@ -2481,7 +2491,9 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
 
         if (isHero && sessionManager.ourSeatNumber != seatNumber) {
           // Hero moving to a different seat — carry over current stack
-          final heroStack = gameState.getPlayerStack(sessionManager.ourSeatNumber ?? seatNumber);
+          final oldSeat = sessionManager.ourSeatNumber;
+          final heroStack =
+              oldSeat != null ? gameState.getPlayerStack(oldSeat) : 0.0;
           sessionManager.reseatHero(
             newSeat: seatNumber,
             gameState: gameState,
@@ -2490,6 +2502,13 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
           );
         } else {
           // Editing hero's own seat, or adding/editing a regular player.
+          // If the user unticked "This is my seat" on their OWN seat, they
+          // are handing it to someone else — relinquish hero ownership so
+          // ourSeatNumber can't keep pointing at the opponent's seat (the
+          // cause of the "my new seat shows the old occupant's name" bug).
+          if (!isHero && seatNumber == sessionManager.ourSeatNumber) {
+            sessionManager.ourSeatNumber = null;
+          }
           // Move player if already seated elsewhere (only for named players)
           if (!isHero && name.isNotEmpty) {
             final lower = name.toLowerCase();
@@ -5878,25 +5897,30 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       // addAction removed
 
       // Show hole cards dialog BEFORE completing the hand — skip only if hero
-      // folded preflop WITHOUT voluntarily entering the pot (no call/bet/raise)
-      final heroSeat = sessionManager.ourSeatNumber ?? 1;
-      final heroFolded = gameState.players[heroSeat - 1].hasFolded;
-      final isPreflopOnly = gameState.currentRound == BettingRound.preflop;
-      bool heroVoluntarilyEntered = false;
-      if (heroFolded && isPreflopOnly) {
-        final actions = sessionManager.currentHand?.actions ?? [];
-        for (final a in actions) {
-          if (a.player == heroSeat &&
-              (a.action == PlayerAction.call ||
-               a.action == PlayerAction.bet ||
-               a.action == PlayerAction.raise)) {
-            heroVoluntarilyEntered = true;
-            break;
+      // folded preflop WITHOUT voluntarily entering the pot (no call/bet/raise).
+      // When the user is unseated (removed themselves from their seat) there
+      // are no hero hole cards to ask for.
+      final heroSeatOrNull = sessionManager.ourSeatNumber;
+      final heroSeat = heroSeatOrNull ?? 1;
+      if (heroSeatOrNull != null) {
+        final heroFolded = gameState.players[heroSeat - 1].hasFolded;
+        final isPreflopOnly = gameState.currentRound == BettingRound.preflop;
+        bool heroVoluntarilyEntered = false;
+        if (heroFolded && isPreflopOnly) {
+          final actions = sessionManager.currentHand?.actions ?? [];
+          for (final a in actions) {
+            if (a.player == heroSeat &&
+                (a.action == PlayerAction.call ||
+                 a.action == PlayerAction.bet ||
+                 a.action == PlayerAction.raise)) {
+              heroVoluntarilyEntered = true;
+              break;
+            }
           }
         }
-      }
-      if (!heroFolded || !isPreflopOnly || heroVoluntarilyEntered) {
-        await _showHoleCardsDialog();
+        if (!heroFolded || !isPreflopOnly || heroVoluntarilyEntered) {
+          await _showHoleCardsDialog();
+        }
       }
 
       // Notify guided overlay after all dialogs are done (no opponent dialog in this path)

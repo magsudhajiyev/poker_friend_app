@@ -437,7 +437,12 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
               () {
                 setState(() {
                   _playerCount = n;
-                  if (_heroSeat > n) _heroSeat = 1;
+                  if (_heroSeat > n) {
+                    _heroSeat = 1;
+                    // Hero landed on seat 1 — evict any opponent pick there
+                    // so the hero seat never hides a stale assignment.
+                    _picks.remove(1);
+                  }
                   _picks.removeWhere((seat, _) => seat > n);
                 });
               }

@@ -2454,6 +2454,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get seatConfigRemove => 'Entfernen';
 
   @override
+  String get seatConfigRemoveMe => 'Mich von diesem Platz entfernen';
+
+  @override
   String get seatConfigThisIsMe => 'Das bin ich';
 
   @override
