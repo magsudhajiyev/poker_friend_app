@@ -265,7 +265,7 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
       barrierDismissible: false,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) => AlertDialog(
-          backgroundColor: AppColors.backgroundSurface,
+          backgroundColor: AppColors.bgSurface,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: Text(l10n.authExpLinkAppleTitle,
               style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),

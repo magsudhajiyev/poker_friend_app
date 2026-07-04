@@ -13,14 +13,28 @@ import '../services/subscription_service.dart';
 /// triggers RevenueCat's native purchase flow for the selected plan.
 class PaywallScreen extends StatefulWidget {
   final String? featureName;
+  final bool showSkip;
+  final int? preselectedTier;
 
-  const PaywallScreen({super.key, this.featureName});
+  const PaywallScreen({
+    super.key,
+    this.featureName,
+    this.showSkip = false,
+    this.preselectedTier,
+  });
 
-  static Future<bool?> show(BuildContext context, {String? featureName}) {
+  static Future<bool?> show(
+    BuildContext context, {
+    String? featureName,
+    int? preselectedTier,
+  }) {
     return Navigator.of(context).push<bool>(
       MaterialPageRoute(
         fullscreenDialog: true,
-        builder: (context) => PaywallScreen(featureName: featureName),
+        builder: (context) => PaywallScreen(
+          featureName: featureName,
+          preselectedTier: preselectedTier,
+        ),
       ),
     );
   }

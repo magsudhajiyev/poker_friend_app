@@ -2817,7 +2817,7 @@ abstract class AppLocalizations {
   /// No description provided for @paywallUpgradeOrCancel.
   ///
   /// In en, this message translates to:
-  /// **'Upgrade or cancel* at anytime'**
+  /// **'Upgrade or cancel at any time'**
   String get paywallUpgradeOrCancel;
 
   /// No description provided for @paywallContinue.
@@ -3021,7 +3021,7 @@ abstract class AppLocalizations {
   /// No description provided for @paywallDisclaimer.
   ///
   /// In en, this message translates to:
-  /// **'Subscriptions auto-renew. Cancel* anytime\nfrom your account settings.'**
+  /// **'Subscriptions auto-renew. After your free trial, you\'ll be charged the listed price unless you cancel at least 24 hours before the period ends. Cancel anytime in your account settings.'**
   String get paywallDisclaimer;
 
   /// No description provided for @paywallTerms.
@@ -3081,7 +3081,7 @@ abstract class AppLocalizations {
   /// No description provided for @paywallAnnualSave.
   ///
   /// In en, this message translates to:
-  /// **'Annual (Save ~25%)'**
+  /// **'Annual (Save ~40%)'**
   String get paywallAnnualSave;
 
   /// No description provided for @paywallComingSoon.
@@ -4482,7 +4482,7 @@ abstract class AppLocalizations {
   /// **'Remove'**
   String get seatConfigRemove;
 
-  /// Remove-self link on the hero's own seat sheet
+  /// No description provided for @seatConfigRemoveMe.
   ///
   /// In en, this message translates to:
   /// **'Remove me from this seat'**
@@ -13287,24 +13287,6 @@ abstract class AppLocalizations {
   /// **'Stack depth'**
   String get drillStackDepth;
 
-  /// Drill setup: game format section label
-  ///
-  /// In en, this message translates to:
-  /// **'Format'**
-  String get drillFormat;
-
-  /// Drill setup: cash (no ante) format option
-  ///
-  /// In en, this message translates to:
-  /// **'Cash'**
-  String get drillFormatCash;
-
-  /// Drill setup: tournament format with BB ante
-  ///
-  /// In en, this message translates to:
-  /// **'MTT · Ante'**
-  String get drillFormatAnte;
-
   /// No description provided for @drillScouting.
   ///
   /// In en, this message translates to:
@@ -14373,6 +14355,318 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Skip'**
   String get skipScoutSkip;
+
+  /// No description provided for @paywallNotNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get paywallNotNow;
+
+  /// No description provided for @paywallFreeTrialBadge14.
+  ///
+  /// In en, this message translates to:
+  /// **'14-Day Free Trial'**
+  String get paywallFreeTrialBadge14;
+
+  /// No description provided for @freeTierHandLimitTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Hand limit reached'**
+  String get freeTierHandLimitTitle;
+
+  /// No description provided for @freeTierHandLimitFree.
+  ///
+  /// In en, this message translates to:
+  /// **'Free accounts can log up to {free} hands per session. Upgrade to Pro for {pro} hands, or Elite for unlimited.'**
+  String freeTierHandLimitFree(int free, int pro);
+
+  /// No description provided for @freeTierHandLimitPro.
+  ///
+  /// In en, this message translates to:
+  /// **'Pro accounts can log up to {pro} hands per session. Upgrade to Elite for unlimited hand logging.'**
+  String freeTierHandLimitPro(int pro);
+
+  /// No description provided for @freeTierOpponentLimitTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Opponent limit reached'**
+  String get freeTierOpponentLimitTitle;
+
+  /// No description provided for @freeTierOpponentLimitFree.
+  ///
+  /// In en, this message translates to:
+  /// **'Free accounts can save up to {free} opponent profiles. Upgrade to Pro for {pro}, or Elite for unlimited.'**
+  String freeTierOpponentLimitFree(int free, int pro);
+
+  /// No description provided for @freeTierOpponentLimitPro.
+  ///
+  /// In en, this message translates to:
+  /// **'Pro accounts can save up to {pro} opponent profiles. Upgrade to Elite for unlimited opponents.'**
+  String freeTierOpponentLimitPro(int pro);
+
+  /// No description provided for @freeTierUpgrade.
+  ///
+  /// In en, this message translates to:
+  /// **'Upgrade'**
+  String get freeTierUpgrade;
+
+  /// No description provided for @freeTierNotNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get freeTierNotNow;
+
+  /// No description provided for @quotaMonthlyLimitTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly Limit Reached'**
+  String get quotaMonthlyLimitTitle;
+
+  /// No description provided for @quotaAiLimitElite.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve used all {max} AI analyses this month. Your quota resets next month.'**
+  String quotaAiLimitElite(int max);
+
+  /// No description provided for @quotaAiLimitPro.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve used all {max} AI analyses this month (Pro limit). Upgrade to Elite for {elite} analyses/month.'**
+  String quotaAiLimitPro(int max, int elite);
+
+  /// No description provided for @quotaExportLimitTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Export Limit Reached'**
+  String get quotaExportLimitTitle;
+
+  /// No description provided for @quotaExportLimitPro.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve used all {max} exports this month (Pro limit). Upgrade to Elite for unlimited exports.'**
+  String quotaExportLimitPro(int max);
+
+  /// No description provided for @quotaSessionExportLimitPro.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve used all {max} session exports this month (Pro limit). Upgrade to Elite for unlimited exports.'**
+  String quotaSessionExportLimitPro(int max);
+
+  /// No description provided for @quotaUpgradeToElite.
+  ///
+  /// In en, this message translates to:
+  /// **'Upgrade to Elite'**
+  String get quotaUpgradeToElite;
+
+  /// No description provided for @quotaOk.
+  ///
+  /// In en, this message translates to:
+  /// **'OK'**
+  String get quotaOk;
+
+  /// No description provided for @statsLockedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Upgrade to unlock'**
+  String get statsLockedTitle;
+
+  /// No description provided for @statsLockedSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This section is available on Pro and above.'**
+  String get statsLockedSubtitle;
+
+  /// No description provided for @statsLockedUpgrade.
+  ///
+  /// In en, this message translates to:
+  /// **'Upgrade'**
+  String get statsLockedUpgrade;
+
+  /// No description provided for @paywallBestValue.
+  ///
+  /// In en, this message translates to:
+  /// **'BEST VALUE'**
+  String get paywallBestValue;
+
+  /// No description provided for @paywallWelcomeElite.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to Elite!'**
+  String get paywallWelcomeElite;
+
+  /// No description provided for @paywallWelcomeClub.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to Club!'**
+  String get paywallWelcomeClub;
+
+  /// No description provided for @paywallStartWithPro.
+  ///
+  /// In en, this message translates to:
+  /// **'Start with Pro'**
+  String get paywallStartWithPro;
+
+  /// No description provided for @paywallGetEliteAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Get Elite'**
+  String get paywallGetEliteAction;
+
+  /// No description provided for @paywallGetClubAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Get Club'**
+  String get paywallGetClubAction;
+
+  /// No description provided for @paywallCurrentPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Current Plan'**
+  String get paywallCurrentPlan;
+
+  /// No description provided for @paywallProFeature1.
+  ///
+  /// In en, this message translates to:
+  /// **'50 hands per session'**
+  String get paywallProFeature1;
+
+  /// No description provided for @paywallProFeature2.
+  ///
+  /// In en, this message translates to:
+  /// **'90-day session history'**
+  String get paywallProFeature2;
+
+  /// No description provided for @paywallProFeature3.
+  ///
+  /// In en, this message translates to:
+  /// **'15 opponent profiles'**
+  String get paywallProFeature3;
+
+  /// No description provided for @paywallProFeature4.
+  ///
+  /// In en, this message translates to:
+  /// **'10 AI analyses / month'**
+  String get paywallProFeature4;
+
+  /// No description provided for @paywallProFeature5.
+  ///
+  /// In en, this message translates to:
+  /// **'30 exports / month'**
+  String get paywallProFeature5;
+
+  /// No description provided for @paywallEliteFeature4.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlimited hand logging'**
+  String get paywallEliteFeature4;
+
+  /// No description provided for @paywallEliteFeature5.
+  ///
+  /// In en, this message translates to:
+  /// **'All-time session history'**
+  String get paywallEliteFeature5;
+
+  /// No description provided for @paywallEliteFeature6.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlimited opponents'**
+  String get paywallEliteFeature6;
+
+  /// No description provided for @paywallEliteFeature7.
+  ///
+  /// In en, this message translates to:
+  /// **'30 AI analyses / month'**
+  String get paywallEliteFeature7;
+
+  /// No description provided for @paywallEliteFeature8.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlimited exports'**
+  String get paywallEliteFeature8;
+
+  /// No description provided for @paywallClubFeature1.
+  ///
+  /// In en, this message translates to:
+  /// **'Everything in Elite'**
+  String get paywallClubFeature1;
+
+  /// No description provided for @paywallClubFeature2.
+  ///
+  /// In en, this message translates to:
+  /// **'Create & run your own club'**
+  String get paywallClubFeature2;
+
+  /// No description provided for @paywallClubFeature3.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite dealers & manage members'**
+  String get paywallClubFeature3;
+
+  /// No description provided for @paywallClubFeature4.
+  ///
+  /// In en, this message translates to:
+  /// **'Host multi-table events with live rankings'**
+  String get paywallClubFeature4;
+
+  /// No description provided for @profileTierOverride.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscription tier override'**
+  String get profileTierOverride;
+
+  /// No description provided for @profileTierOverrideSubtitleReal.
+  ///
+  /// In en, this message translates to:
+  /// **'Real: {tier}'**
+  String profileTierOverrideSubtitleReal(String tier);
+
+  /// No description provided for @profileTierOverrideSubtitleActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Override: {tier}'**
+  String profileTierOverrideSubtitleActive(String tier);
+
+  /// No description provided for @profileTierFree.
+  ///
+  /// In en, this message translates to:
+  /// **'free'**
+  String get profileTierFree;
+
+  /// No description provided for @profileTierPro.
+  ///
+  /// In en, this message translates to:
+  /// **'Pro'**
+  String get profileTierPro;
+
+  /// No description provided for @profileTierElite.
+  ///
+  /// In en, this message translates to:
+  /// **'Elite'**
+  String get profileTierElite;
+
+  /// No description provided for @profileTierClub.
+  ///
+  /// In en, this message translates to:
+  /// **'Club'**
+  String get profileTierClub;
+
+  /// No description provided for @authExpContinueApple.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with Apple'**
+  String get authExpContinueApple;
+
+  /// No description provided for @authExpLinkAppleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Link Apple Account'**
+  String get authExpLinkAppleTitle;
+
+  /// No description provided for @authExpLinkAppleMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'An account with {email} already exists. Enter your password to link your Apple account.'**
+  String authExpLinkAppleMessage(String email);
 }
 
 class _AppLocalizationsDelegate
