@@ -1506,7 +1506,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get paywallChooseYourPlan => 'Elige tu plan';
 
   @override
-  String get paywallUpgradeOrCancel => 'Mejora o cancela* en cualquier momento';
+  String get paywallUpgradeOrCancel => 'Mejora o cancela en cualquier momento';
 
   @override
   String get paywallContinue => 'Continuar';
@@ -1615,7 +1615,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get paywallDisclaimer =>
-      'Las suscripciones se renuevan automáticamente. Cancela* en cualquier momento\ndesde los ajustes de tu cuenta.';
+      'Las suscripciones se renuevan automáticamente. Después de tu prueba gratuita, se te cobrará el precio indicado a menos que canceles al menos 24 horas antes de que finalice el período. Cancela en cualquier momento desde los ajustes de tu cuenta.';
 
   @override
   String get paywallTerms => 'Términos';
@@ -1648,7 +1648,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get paywallAnnual => 'Anual';
 
   @override
-  String get paywallAnnualSave => 'Anual (Ahorra ~25%)';
+  String get paywallAnnualSave => 'Anual (Ahorra ~40%)';
 
   @override
   String paywallComingSoon(String tier) {
@@ -8207,4 +8207,184 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get skipScoutSkip => 'Skip';
+
+  @override
+  String get paywallNotNow => 'Ahora no';
+
+  @override
+  String get paywallFreeTrialBadge14 => 'Prueba gratis de 14 días';
+
+  @override
+  String get freeTierHandLimitTitle => 'Límite de manos alcanzado';
+
+  @override
+  String freeTierHandLimitFree(int free, int pro) {
+    return 'Las cuentas gratuitas pueden registrar hasta $free manos por sesión. Mejora a Pro para $pro manos o a Elite para ilimitadas.';
+  }
+
+  @override
+  String freeTierHandLimitPro(int pro) {
+    return 'Las cuentas Pro pueden registrar hasta $pro manos por sesión. Mejora a Elite para manos ilimitadas.';
+  }
+
+  @override
+  String get freeTierOpponentLimitTitle => 'Límite de rivales alcanzado';
+
+  @override
+  String freeTierOpponentLimitFree(int free, int pro) {
+    return 'Las cuentas gratuitas pueden guardar hasta $free perfiles de rivales. Mejora a Pro para $pro o a Elite para ilimitados.';
+  }
+
+  @override
+  String freeTierOpponentLimitPro(int pro) {
+    return 'Las cuentas Pro pueden guardar hasta $pro perfiles de rivales. Mejora a Elite para rivales ilimitados.';
+  }
+
+  @override
+  String get freeTierUpgrade => 'Mejorar';
+
+  @override
+  String get freeTierNotNow => 'Ahora no';
+
+  @override
+  String get quotaMonthlyLimitTitle => 'Límite mensual alcanzado';
+
+  @override
+  String quotaAiLimitElite(int max) {
+    return 'Has usado los $max análisis de IA de este mes. Tu cuota se restablece el próximo mes.';
+  }
+
+  @override
+  String quotaAiLimitPro(int max, int elite) {
+    return 'Has usado los $max análisis de IA de este mes (límite Pro). Mejora a Elite para $elite análisis/mes.';
+  }
+
+  @override
+  String get quotaExportLimitTitle => 'Límite de exportaciones alcanzado';
+
+  @override
+  String quotaExportLimitPro(int max) {
+    return 'Has usado las $max exportaciones de este mes (límite Pro). Mejora a Elite para exportaciones ilimitadas.';
+  }
+
+  @override
+  String quotaSessionExportLimitPro(int max) {
+    return 'Has usado las $max exportaciones de sesión de este mes (límite Pro). Mejora a Elite para exportaciones ilimitadas.';
+  }
+
+  @override
+  String get quotaUpgradeToElite => 'Mejorar a Elite';
+
+  @override
+  String get quotaOk => 'OK';
+
+  @override
+  String get statsLockedTitle => 'Mejora para desbloquear';
+
+  @override
+  String get statsLockedSubtitle =>
+      'Esta sección está disponible en Pro y superior.';
+
+  @override
+  String get statsLockedUpgrade => 'Mejorar';
+
+  @override
+  String get paywallBestValue => 'MEJOR VALOR';
+
+  @override
+  String get paywallWelcomeElite => '¡Bienvenido a Elite!';
+
+  @override
+  String get paywallWelcomeClub => '¡Bienvenido a Club!';
+
+  @override
+  String get paywallStartWithPro => 'Empezar con Pro';
+
+  @override
+  String get paywallGetEliteAction => 'Obtener Elite';
+
+  @override
+  String get paywallGetClubAction => 'Obtener Club';
+
+  @override
+  String get paywallCurrentPlan => 'Plan actual';
+
+  @override
+  String get paywallProFeature1 => '50 manos por sesión';
+
+  @override
+  String get paywallProFeature2 => 'Historial de 90 días';
+
+  @override
+  String get paywallProFeature3 => '15 perfiles de rivales';
+
+  @override
+  String get paywallProFeature4 => '10 análisis de IA / mes';
+
+  @override
+  String get paywallProFeature5 => '30 exportaciones / mes';
+
+  @override
+  String get paywallEliteFeature4 => 'Registro de manos ilimitado';
+
+  @override
+  String get paywallEliteFeature5 => 'Historial de sesiones completo';
+
+  @override
+  String get paywallEliteFeature6 => 'Rivales ilimitados';
+
+  @override
+  String get paywallEliteFeature7 => '30 análisis de IA / mes';
+
+  @override
+  String get paywallEliteFeature8 => 'Exportaciones ilimitadas';
+
+  @override
+  String get paywallClubFeature1 => 'Todo en Elite';
+
+  @override
+  String get paywallClubFeature2 => 'Crea y gestiona tu propio club';
+
+  @override
+  String get paywallClubFeature3 => 'Invita dealers y gestiona miembros';
+
+  @override
+  String get paywallClubFeature4 =>
+      'Organiza eventos multimesa con rankings en vivo';
+
+  @override
+  String get profileTierOverride => 'Anular nivel de suscripción';
+
+  @override
+  String profileTierOverrideSubtitleReal(String tier) {
+    return 'Real: $tier';
+  }
+
+  @override
+  String profileTierOverrideSubtitleActive(String tier) {
+    return 'Anulado: $tier';
+  }
+
+  @override
+  String get profileTierFree => 'gratuito';
+
+  @override
+  String get profileTierPro => 'Pro';
+
+  @override
+  String get profileTierElite => 'Elite';
+
+  @override
+  String get profileTierClub => 'Club';
+
+  @override
+  String get authExpContinueApple => 'Continuar con Apple';
+
+  @override
+  String get authExpLinkAppleTitle => 'Vincular cuenta de Apple';
+
+  @override
+  String authExpLinkAppleMessage(String email) {
+    return 'Ya existe una cuenta con $email. Ingresa tu contraseña para vincular tu cuenta de Apple.';
+  }
 }

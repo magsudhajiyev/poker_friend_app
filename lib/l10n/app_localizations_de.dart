@@ -1507,7 +1507,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get paywallChooseYourPlan => 'Wähle deinen Plan';
 
   @override
-  String get paywallUpgradeOrCancel => 'Jederzeit upgraden oder kündigen*';
+  String get paywallUpgradeOrCancel => 'Jederzeit upgraden oder kündigen';
 
   @override
   String get paywallContinue => 'Weiter';
@@ -1617,7 +1617,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get paywallDisclaimer =>
-      'Abos verlängern sich automatisch. Kündige* jederzeit\nin deinen Kontoeinstellungen.';
+      'Abos verlängern sich automatisch. Nach der kostenlosen Testphase wird dir der angezeigte Preis berechnet, sofern du nicht mindestens 24 Stunden vor Ablauf des Zeitraums kündigst. Kündige jederzeit in deinen Kontoeinstellungen.';
 
   @override
   String get paywallTerms => 'AGB';
@@ -1649,7 +1649,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get paywallAnnual => 'Jährlich';
 
   @override
-  String get paywallAnnualSave => 'Jährlich (Spare ~25%)';
+  String get paywallAnnualSave => 'Jährlich (Spare ~40%)';
 
   @override
   String paywallComingSoon(String tier) {
@@ -8213,4 +8213,183 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get skipScoutSkip => 'Skip';
+
+  @override
+  String get paywallNotNow => 'Nicht jetzt';
+
+  @override
+  String get paywallFreeTrialBadge14 => '14-Tage-Testversion';
+
+  @override
+  String get freeTierHandLimitTitle => 'Handlimit erreicht';
+
+  @override
+  String freeTierHandLimitFree(int free, int pro) {
+    return 'Kostenlose Konten können bis zu $free Hände pro Session loggen. Upgrade auf Pro für $pro Hände oder Elite für unbegrenzt.';
+  }
+
+  @override
+  String freeTierHandLimitPro(int pro) {
+    return 'Pro-Konten können bis zu $pro Hände pro Session loggen. Upgrade auf Elite für unbegrenzte Handprotokollierung.';
+  }
+
+  @override
+  String get freeTierOpponentLimitTitle => 'Gegnerlimit erreicht';
+
+  @override
+  String freeTierOpponentLimitFree(int free, int pro) {
+    return 'Kostenlose Konten können bis zu $free Gegnerprofile speichern. Upgrade auf Pro für $pro oder Elite für unbegrenzt.';
+  }
+
+  @override
+  String freeTierOpponentLimitPro(int pro) {
+    return 'Pro-Konten können bis zu $pro Gegnerprofile speichern. Upgrade auf Elite für unbegrenzte Gegner.';
+  }
+
+  @override
+  String get freeTierUpgrade => 'Upgrade';
+
+  @override
+  String get freeTierNotNow => 'Nicht jetzt';
+
+  @override
+  String get quotaMonthlyLimitTitle => 'Monatliches Limit erreicht';
+
+  @override
+  String quotaAiLimitElite(int max) {
+    return 'Du hast alle $max KI-Analysen diesen Monat verwendet. Dein Kontingent wird nächsten Monat zurückgesetzt.';
+  }
+
+  @override
+  String quotaAiLimitPro(int max, int elite) {
+    return 'Du hast alle $max KI-Analysen diesen Monat verwendet (Pro-Limit). Upgrade auf Elite für $elite Analysen/Monat.';
+  }
+
+  @override
+  String get quotaExportLimitTitle => 'Exportlimit erreicht';
+
+  @override
+  String quotaExportLimitPro(int max) {
+    return 'Du hast alle $max Exporte diesen Monat verwendet (Pro-Limit). Upgrade auf Elite für unbegrenzte Exporte.';
+  }
+
+  @override
+  String quotaSessionExportLimitPro(int max) {
+    return 'Du hast alle $max Session-Exporte diesen Monat verwendet (Pro-Limit). Upgrade auf Elite für unbegrenzte Exporte.';
+  }
+
+  @override
+  String get quotaUpgradeToElite => 'Auf Elite upgraden';
+
+  @override
+  String get quotaOk => 'OK';
+
+  @override
+  String get statsLockedTitle => 'Upgrade zum Entsperren';
+
+  @override
+  String get statsLockedSubtitle => 'Dieser Bereich ist ab Pro verfügbar.';
+
+  @override
+  String get statsLockedUpgrade => 'Upgrade';
+
+  @override
+  String get paywallBestValue => 'BESTES ANGEBOT';
+
+  @override
+  String get paywallWelcomeElite => 'Willkommen bei Elite!';
+
+  @override
+  String get paywallWelcomeClub => 'Willkommen beim Club!';
+
+  @override
+  String get paywallStartWithPro => 'Mit Pro starten';
+
+  @override
+  String get paywallGetEliteAction => 'Elite holen';
+
+  @override
+  String get paywallGetClubAction => 'Club holen';
+
+  @override
+  String get paywallCurrentPlan => 'Aktueller Plan';
+
+  @override
+  String get paywallProFeature1 => '50 Hände pro Session';
+
+  @override
+  String get paywallProFeature2 => '90-Tage-Sessionverlauf';
+
+  @override
+  String get paywallProFeature3 => '15 Gegnerprofile';
+
+  @override
+  String get paywallProFeature4 => '10 KI-Analysen / Monat';
+
+  @override
+  String get paywallProFeature5 => '30 Exporte / Monat';
+
+  @override
+  String get paywallEliteFeature4 => 'Unbegrenzte Handprotokollierung';
+
+  @override
+  String get paywallEliteFeature5 => 'Vollständiger Sessionverlauf';
+
+  @override
+  String get paywallEliteFeature6 => 'Unbegrenzte Gegner';
+
+  @override
+  String get paywallEliteFeature7 => '30 KI-Analysen / Monat';
+
+  @override
+  String get paywallEliteFeature8 => 'Unbegrenzte Exporte';
+
+  @override
+  String get paywallClubFeature1 => 'Alles in Elite';
+
+  @override
+  String get paywallClubFeature2 => 'Eigenen Club erstellen & leiten';
+
+  @override
+  String get paywallClubFeature3 => 'Dealer einladen & Mitglieder verwalten';
+
+  @override
+  String get paywallClubFeature4 =>
+      'Mehrtisch-Events mit Live-Ranglisten veranstalten';
+
+  @override
+  String get profileTierOverride => 'Abonnement-Stufe überschreiben';
+
+  @override
+  String profileTierOverrideSubtitleReal(String tier) {
+    return 'Real: $tier';
+  }
+
+  @override
+  String profileTierOverrideSubtitleActive(String tier) {
+    return 'Überschrieben: $tier';
+  }
+
+  @override
+  String get profileTierFree => 'kostenlos';
+
+  @override
+  String get profileTierPro => 'Pro';
+
+  @override
+  String get profileTierElite => 'Elite';
+
+  @override
+  String get profileTierClub => 'Club';
+
+  @override
+  String get authExpContinueApple => 'Weiter mit Apple';
+
+  @override
+  String get authExpLinkAppleTitle => 'Apple-Konto verknüpfen';
+
+  @override
+  String authExpLinkAppleMessage(String email) {
+    return 'Ein Konto mit $email existiert bereits. Geben Sie Ihr Passwort ein, um Ihr Apple-Konto zu verknüpfen.';
+  }
 }

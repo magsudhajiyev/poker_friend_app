@@ -152,11 +152,18 @@ class SubscriptionService {
   /// Returns null if the package doesn't exist on the current platform.
   static Package? packageById(String identifier) {
     final packages = defaultOffering?.availablePackages ?? [];
-    try {
-      return packages.firstWhere((p) => p.identifier == identifier);
-    } catch (_) {
-      return null; // Package absent on this platform
+    // Try exact RC package identifier match first
+    for (final p in packages) {
+      if (p.identifier == identifier) return p;
     }
+    // Fallback: match by store product identifier.
+    // Store IDs use colons (e.g. 'pro:monthly') while lookup keys use
+    // underscores (e.g. 'pro_monthly'), so normalize to compare.
+    final normalized = identifier.replaceAll('_', ':');
+    for (final p in packages) {
+      if (p.storeProduct.identifier == normalized) return p;
+    }
+    return null;
   }
 
   // Package identifier constants — must match RevenueCat dashboard
@@ -424,24 +431,6 @@ class SubscriptionService {
     }
   }
 
-  /// Look up a package by its custom identifier (e.g. 'elite_monthly').
-  /// Returns null if the offering hasn't loaded or the identifier doesn't exist.
-  static Package? packageById(String identifier) {
-    final packages = currentOffering?.availablePackages;
-    if (packages == null) return null;
-    // Try exact RevenueCat package identifier match first
-    for (final p in packages) {
-      if (p.identifier == identifier) return p;
-    }
-    // Fallback: match by store product identifier.
-    // Store IDs use colons (e.g. 'pro:monthly') while our lookup keys use
-    // underscores (e.g. 'pro_monthly'), so normalize both to compare.
-    final normalized = identifier.replaceAll('_', ':');
-    for (final p in packages) {
-      if (p.storeProduct.identifier == normalized) return p;
-    }
-    return null;
-  }
 
   /// Format price for display
   static String formatPrice(Package package) {

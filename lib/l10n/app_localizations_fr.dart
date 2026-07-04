@@ -1512,7 +1512,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get paywallUpgradeOrCancel =>
-      'Mettez à niveau ou annulez* à tout moment';
+      'Mettez à niveau ou annulez à tout moment';
 
   @override
   String get paywallContinue => 'Continuer';
@@ -1622,7 +1622,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get paywallDisclaimer =>
-      'Les abonnements se renouvellent automatiquement. Annulez* à tout moment\ndepuis les paramètres de votre compte.';
+      'Les abonnements se renouvellent automatiquement. Après votre essai gratuit, le prix affiché vous sera facturé sauf si vous annulez au moins 24 heures avant la fin de la période. Annulez à tout moment dans les paramètres de votre compte.';
 
   @override
   String get paywallTerms => 'Conditions';
@@ -1653,7 +1653,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get paywallAnnual => 'Annuel';
 
   @override
-  String get paywallAnnualSave => 'Annuel (Économisez ~25%)';
+  String get paywallAnnualSave => 'Annuel (Économisez ~40%)';
 
   @override
   String paywallComingSoon(String tier) {
@@ -8236,4 +8236,184 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get skipScoutSkip => 'Skip';
+
+  @override
+  String get paywallNotNow => 'Pas maintenant';
+
+  @override
+  String get paywallFreeTrialBadge14 => 'Essai gratuit de 14 jours';
+
+  @override
+  String get freeTierHandLimitTitle => 'Limite de mains atteinte';
+
+  @override
+  String freeTierHandLimitFree(int free, int pro) {
+    return 'Les comptes gratuits peuvent enregistrer jusqu\'à $free mains par session. Passez à Pro pour $pro mains ou à Elite pour illimité.';
+  }
+
+  @override
+  String freeTierHandLimitPro(int pro) {
+    return 'Les comptes Pro peuvent enregistrer jusqu\'à $pro mains par session. Passez à Elite pour un enregistrement illimité.';
+  }
+
+  @override
+  String get freeTierOpponentLimitTitle => 'Limite d\'adversaires atteinte';
+
+  @override
+  String freeTierOpponentLimitFree(int free, int pro) {
+    return 'Les comptes gratuits peuvent sauvegarder jusqu\'à $free profils d\'adversaires. Passez à Pro pour $pro ou à Elite pour illimité.';
+  }
+
+  @override
+  String freeTierOpponentLimitPro(int pro) {
+    return 'Les comptes Pro peuvent sauvegarder jusqu\'à $pro profils d\'adversaires. Passez à Elite pour des adversaires illimités.';
+  }
+
+  @override
+  String get freeTierUpgrade => 'Améliorer';
+
+  @override
+  String get freeTierNotNow => 'Pas maintenant';
+
+  @override
+  String get quotaMonthlyLimitTitle => 'Limite mensuelle atteinte';
+
+  @override
+  String quotaAiLimitElite(int max) {
+    return 'Vous avez utilisé toutes vos $max analyses IA ce mois-ci. Votre quota se réinitialise le mois prochain.';
+  }
+
+  @override
+  String quotaAiLimitPro(int max, int elite) {
+    return 'Vous avez utilisé toutes vos $max analyses IA ce mois-ci (limite Pro). Passez à Elite pour $elite analyses/mois.';
+  }
+
+  @override
+  String get quotaExportLimitTitle => 'Limite d\'exportations atteinte';
+
+  @override
+  String quotaExportLimitPro(int max) {
+    return 'Vous avez utilisé toutes vos $max exportations ce mois-ci (limite Pro). Passez à Elite pour des exportations illimitées.';
+  }
+
+  @override
+  String quotaSessionExportLimitPro(int max) {
+    return 'Vous avez utilisé toutes vos $max exportations de session ce mois-ci (limite Pro). Passez à Elite pour des exportations illimitées.';
+  }
+
+  @override
+  String get quotaUpgradeToElite => 'Passer à Elite';
+
+  @override
+  String get quotaOk => 'OK';
+
+  @override
+  String get statsLockedTitle => 'Améliorez pour débloquer';
+
+  @override
+  String get statsLockedSubtitle =>
+      'Cette section est disponible en Pro et supérieur.';
+
+  @override
+  String get statsLockedUpgrade => 'Améliorer';
+
+  @override
+  String get paywallBestValue => 'MEILLEURE OFFRE';
+
+  @override
+  String get paywallWelcomeElite => 'Bienvenue dans Elite !';
+
+  @override
+  String get paywallWelcomeClub => 'Bienvenue dans Club !';
+
+  @override
+  String get paywallStartWithPro => 'Commencer avec Pro';
+
+  @override
+  String get paywallGetEliteAction => 'Obtenir Elite';
+
+  @override
+  String get paywallGetClubAction => 'Obtenir Club';
+
+  @override
+  String get paywallCurrentPlan => 'Plan actuel';
+
+  @override
+  String get paywallProFeature1 => '50 mains par session';
+
+  @override
+  String get paywallProFeature2 => 'Historique de 90 jours';
+
+  @override
+  String get paywallProFeature3 => '15 profils d\'adversaires';
+
+  @override
+  String get paywallProFeature4 => '10 analyses IA / mois';
+
+  @override
+  String get paywallProFeature5 => '30 exportations / mois';
+
+  @override
+  String get paywallEliteFeature4 => 'Enregistrement de mains illimité';
+
+  @override
+  String get paywallEliteFeature5 => 'Historique de sessions complet';
+
+  @override
+  String get paywallEliteFeature6 => 'Adversaires illimités';
+
+  @override
+  String get paywallEliteFeature7 => '30 analyses IA / mois';
+
+  @override
+  String get paywallEliteFeature8 => 'Exportations illimitées';
+
+  @override
+  String get paywallClubFeature1 => 'Tout dans Elite';
+
+  @override
+  String get paywallClubFeature2 => 'Créez et gérez votre propre club';
+
+  @override
+  String get paywallClubFeature3 => 'Invitez des dealers et gérez les membres';
+
+  @override
+  String get paywallClubFeature4 =>
+      'Organisez des événements multi-tables avec classements en direct';
+
+  @override
+  String get profileTierOverride => 'Remplacer le niveau d\'abonnement';
+
+  @override
+  String profileTierOverrideSubtitleReal(String tier) {
+    return 'Réel : $tier';
+  }
+
+  @override
+  String profileTierOverrideSubtitleActive(String tier) {
+    return 'Remplacé : $tier';
+  }
+
+  @override
+  String get profileTierFree => 'gratuit';
+
+  @override
+  String get profileTierPro => 'Pro';
+
+  @override
+  String get profileTierElite => 'Elite';
+
+  @override
+  String get profileTierClub => 'Club';
+
+  @override
+  String get authExpContinueApple => 'Continuer avec Apple';
+
+  @override
+  String get authExpLinkAppleTitle => 'Lier le compte Apple';
+
+  @override
+  String authExpLinkAppleMessage(String email) {
+    return 'Un compte avec $email existe déjà. Entrez votre mot de passe pour lier votre compte Apple.';
+  }
 }

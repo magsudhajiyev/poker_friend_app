@@ -1494,7 +1494,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get paywallUpgradeOrCancel =>
-      'Zmień plan lub anuluj* w dowolnym momencie';
+      'Zmień plan lub anuluj w dowolnym momencie';
 
   @override
   String get paywallContinue => 'Kontynuuj';
@@ -1604,7 +1604,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get paywallDisclaimer =>
-      'Subskrypcje odnawiają się automatycznie. Anuluj* w dowolnym momencie\nw ustawieniach konta.';
+      'Subskrypcje odnawiają się automatycznie. Po zakończeniu bezpłatnego okresu próbnego zostanie naliczona podana cena, chyba że anulujesz co najmniej 24 godziny przed końcem okresu. Anuluj w dowolnym momencie w ustawieniach konta.';
 
   @override
   String get paywallTerms => 'Regulamin';
@@ -1636,7 +1636,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get paywallAnnual => 'Rocznie';
 
   @override
-  String get paywallAnnualSave => 'Rocznie (Oszczedz ~25%)';
+  String get paywallAnnualSave => 'Rocznie (Oszczedz ~40%)';
 
   @override
   String paywallComingSoon(String tier) {
@@ -8182,4 +8182,184 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get skipScoutSkip => 'Skip';
+
+  @override
+  String get paywallNotNow => 'Nie teraz';
+
+  @override
+  String get paywallFreeTrialBadge14 => '14-dniowy bezpłatny okres próbny';
+
+  @override
+  String get freeTierHandLimitTitle => 'Osiągnięto limit rąk';
+
+  @override
+  String freeTierHandLimitFree(int free, int pro) {
+    return 'Bezpłatne konta mogą logować do $free rąk na sesję. Ulepsz do Pro dla $pro rąk lub Elite dla nieograniczonych.';
+  }
+
+  @override
+  String freeTierHandLimitPro(int pro) {
+    return 'Konta Pro mogą logować do $pro rąk na sesję. Ulepsz do Elite dla nieograniczonego logowania.';
+  }
+
+  @override
+  String get freeTierOpponentLimitTitle => 'Osiągnięto limit przeciwników';
+
+  @override
+  String freeTierOpponentLimitFree(int free, int pro) {
+    return 'Bezpłatne konta mogą zapisać do $free profili przeciwników. Ulepsz do Pro dla $pro lub Elite dla nieograniczonych.';
+  }
+
+  @override
+  String freeTierOpponentLimitPro(int pro) {
+    return 'Konta Pro mogą zapisać do $pro profili przeciwników. Ulepsz do Elite dla nieograniczonych przeciwników.';
+  }
+
+  @override
+  String get freeTierUpgrade => 'Ulepsz';
+
+  @override
+  String get freeTierNotNow => 'Nie teraz';
+
+  @override
+  String get quotaMonthlyLimitTitle => 'Osiągnięto miesięczny limit';
+
+  @override
+  String quotaAiLimitElite(int max) {
+    return 'Wykorzystałeś wszystkie $max analizy AI w tym miesiącu. Limit zostanie odnowiony w przyszłym miesiącu.';
+  }
+
+  @override
+  String quotaAiLimitPro(int max, int elite) {
+    return 'Wykorzystałeś wszystkie $max analizy AI w tym miesiącu (limit Pro). Ulepsz do Elite dla $elite analiz/miesiąc.';
+  }
+
+  @override
+  String get quotaExportLimitTitle => 'Osiągnięto limit eksportów';
+
+  @override
+  String quotaExportLimitPro(int max) {
+    return 'Wykorzystałeś wszystkie $max eksporty w tym miesiącu (limit Pro). Ulepsz do Elite dla nieograniczonych eksportów.';
+  }
+
+  @override
+  String quotaSessionExportLimitPro(int max) {
+    return 'Wykorzystałeś wszystkie $max eksporty sesji w tym miesiącu (limit Pro). Ulepsz do Elite dla nieograniczonych eksportów.';
+  }
+
+  @override
+  String get quotaUpgradeToElite => 'Ulepsz do Elite';
+
+  @override
+  String get quotaOk => 'OK';
+
+  @override
+  String get statsLockedTitle => 'Ulepsz, aby odblokować';
+
+  @override
+  String get statsLockedSubtitle =>
+      'Ta sekcja jest dostępna w planie Pro i wyższych.';
+
+  @override
+  String get statsLockedUpgrade => 'Ulepsz';
+
+  @override
+  String get paywallBestValue => 'NAJLEPSZA WARTOŚĆ';
+
+  @override
+  String get paywallWelcomeElite => 'Witaj w Elite!';
+
+  @override
+  String get paywallWelcomeClub => 'Witaj w Club!';
+
+  @override
+  String get paywallStartWithPro => 'Zacznij z Pro';
+
+  @override
+  String get paywallGetEliteAction => 'Zdobądź Elite';
+
+  @override
+  String get paywallGetClubAction => 'Zdobądź Club';
+
+  @override
+  String get paywallCurrentPlan => 'Bieżący plan';
+
+  @override
+  String get paywallProFeature1 => '50 rąk na sesję';
+
+  @override
+  String get paywallProFeature2 => 'Historia 90 dni';
+
+  @override
+  String get paywallProFeature3 => '15 profili przeciwników';
+
+  @override
+  String get paywallProFeature4 => '10 analiz AI / miesiąc';
+
+  @override
+  String get paywallProFeature5 => '30 eksportów / miesiąc';
+
+  @override
+  String get paywallEliteFeature4 => 'Nieograniczone logowanie rąk';
+
+  @override
+  String get paywallEliteFeature5 => 'Pełna historia sesji';
+
+  @override
+  String get paywallEliteFeature6 => 'Nieograniczona liczba przeciwników';
+
+  @override
+  String get paywallEliteFeature7 => '30 analiz AI / miesiąc';
+
+  @override
+  String get paywallEliteFeature8 => 'Nieograniczone eksporty';
+
+  @override
+  String get paywallClubFeature1 => 'Wszystko z Elite';
+
+  @override
+  String get paywallClubFeature2 => 'Utwórz i prowadź własny klub';
+
+  @override
+  String get paywallClubFeature3 => 'Zapraszaj krupierów i zarządzaj członkami';
+
+  @override
+  String get paywallClubFeature4 =>
+      'Organizuj eventy wielostołowe z rankingami na żywo';
+
+  @override
+  String get profileTierOverride => 'Zastąp poziom subskrypcji';
+
+  @override
+  String profileTierOverrideSubtitleReal(String tier) {
+    return 'Rzeczywisty: $tier';
+  }
+
+  @override
+  String profileTierOverrideSubtitleActive(String tier) {
+    return 'Zastąpiony: $tier';
+  }
+
+  @override
+  String get profileTierFree => 'darmowy';
+
+  @override
+  String get profileTierPro => 'Pro';
+
+  @override
+  String get profileTierElite => 'Elite';
+
+  @override
+  String get profileTierClub => 'Club';
+
+  @override
+  String get authExpContinueApple => 'Kontynuuj z Apple';
+
+  @override
+  String get authExpLinkAppleTitle => 'Połącz konto Apple';
+
+  @override
+  String authExpLinkAppleMessage(String email) {
+    return 'Konto z adresem $email już istnieje. Wprowadź hasło, aby połączyć swoje konto Apple.';
+  }
 }
