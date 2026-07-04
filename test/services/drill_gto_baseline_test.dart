@@ -295,12 +295,48 @@ void main() {
     check(cash.grade == DrillGrade.correct, 'cash fold graded correct');
   });
 
-  scenario('ante widens first-in ranges (+3%)', () {
-    final base = DrillGtoCharts.coverageOf(DrillGtoCharts.openRange('BTN'));
-    final wide = DrillGtoCharts.coverageOf(
-        DrillGtoCharts.widen(DrillGtoCharts.openRange('BTN'),
-            DrillGtoCharts.anteWidenPct));
-    check(wide > base + 2 && wide < base + 5,
-        'BTN ${base.toStringAsFixed(1)}% -> ${wide.toStringAsFixed(1)}%');
+  scenario('ante RFI comes from engine data and out-widens the cash charts', () {
+    // Engine MTT (ante) charts are wider than the curated cash baselines,
+    // and much more so in late position (the old flat +3% was wrong there).
+    for (final p in ['EP', 'MP', 'CO', 'BTN']) {
+      final data = DrillGtoCharts.mttOpenRange(p, '100bb');
+      check(data != null, 'engine RFI export exists for $p');
+      final mtt = DrillGtoCharts.coverageOf(data!.$1);
+      final cash = DrillGtoCharts.coverageOf(DrillGtoCharts.openRange(p));
+      check(mtt > cash,
+          '$p ante RFI ${mtt.toStringAsFixed(1)}% > cash ${cash.toStringAsFixed(1)}%');
+    }
+    final r = DrillGrader.grade(
+        DrillDecisionContext(
+            handClass: 'K7o', positionGroup: 'BTN', stackBB: 100,
+            scenario: DrillScenario.unopened, opener: null,
+            limpers: const [], playersBehind: const [],
+            toCallBB: 0, currentBetBB: 1, potBB: 2.5, raisesBeforeHero: 0,
+            anteMode: true),
+        'raise', raiseToBB: 2.5);
+    check(r.trace.any((l) => l.contains('engine MTT chart')),
+        'ante trace cites the engine chart: ${r.trace}');
+  });
+
+  scenario('ante SB continue set matches the engine (~86%, folds ~14%)', () {
+    final cov = DrillGtoCharts.mttSbContinueCoverage('100bb');
+    check(cov > 80 && cov < 92,
+        'SB continue coverage ${cov.toStringAsFixed(1)}% in engine window');
+    check(DrillGtoCharts.sbCompletesMtt('65o', '100bb'), '65o completes');
+    check(!DrillGtoCharts.sbCompletesMtt('72o', '100bb'), '72o still folds');
+  });
+
+  scenario('ante 40BB defend uses the real engine chart (no transform)', () {
+    final r = DrillGrader.grade(
+        DrillDecisionContext(
+            handClass: 'TT', positionGroup: 'BTN', stackBB: 40,
+            scenario: DrillScenario.vsRaise, opener: prof(),
+            openerPosGroup: 'CO', limpers: const [], playersBehind: const [],
+            toCallBB: 2.5, currentBetBB: 2.5, potBB: 4, raisesBeforeHero: 1,
+            anteMode: true),
+        'call');
+    check(r.trace.any((l) => l.contains('engine data')),
+        '40bb ante defend cites engine data: ${r.trace}');
+    check(r.gtoAction != 'fold', 'TT continues BTN vs CO at 40bb ante');
   });
 }

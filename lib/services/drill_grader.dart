@@ -16,11 +16,14 @@ class _Line {
 /// Grades hero decisions two ways and shows both:
 ///
 /// 1. **GTO** — chart/table membership, no formulas:
-///    - >60BB: curated ~100BB charts (RFI, defend-vs-open keyed by BOTH
-///      positions, vs-3-bet by opener seat).
-///    - 20–60BB: the same charts with flat-calls tightened (~40BB profile).
-///    - ≤20BB: self-computed Nash push/fold tables (exact for SB-vs-BB,
-///      fold-through approximation for earlier seats).
+///    - Cash: curated ~100BB charts (RFI, defend-vs-open keyed by BOTH
+///      positions, vs-3-bet by opener seat); 20–70BB tightens flat-calls
+///      (~40BB transform).
+///    - MTT/ante: engine-exported real charts at 100/60/40BB
+///      (drill_gto_ranges_data.dart), including the SB complete-or-raise
+///      strategy — no widen/tighten heuristics.
+///    - ≤20BB (both formats): self-computed Nash push/fold tables (exact
+///      for SB-vs-BB, fold-through approximation for earlier seats).
 /// 2. **Exploit** — the baseline range widened/tightened along the
 ///    chart-derived playability ordering according to opponent reads.
 ///
@@ -73,15 +76,24 @@ class DrillGrader {
       baseLabel = DrillNashPushfold.isExact(pos)
           ? 'Nash push/fold (exact), $pos @ ${s.toInt()}BB'
           : 'Nash push/fold (fold-through approx.), $pos @ ${s.toInt()}BB';
+    } else if (ctx.anteMode) {
+      // Ante format: real MTT charts exported from the engine repo at
+      // build time (offline), instead of the old flat +3% widen.
+      final data = DrillGtoCharts.mttOpenRange(pos, profile);
+      if (data != null) {
+        gtoSet = data.$1;
+        baseLabel = 'MTT/ante RFI chart $pos @ $profile (${data.$2})';
+        trace.add('ante in play: engine MTT chart replaces the cash baseline');
+      } else {
+        gtoSet = DrillGtoCharts.widen(
+            DrillGtoCharts.openRange(pos), DrillGtoCharts.anteWidenPct);
+        baseLabel = 'RFI chart $pos @ $profile + ante (fallback)';
+        trace.add('ante in play: engine chart missing — curated baseline '
+            'widened +${DrillGtoCharts.anteWidenPct.toStringAsFixed(0)}%');
+      }
     } else {
       gtoSet = DrillGtoCharts.openRange(pos);
       baseLabel = 'RFI chart $pos @ $profile';
-      if (ctx.anteMode) {
-        gtoSet = DrillGtoCharts.widen(gtoSet, DrillGtoCharts.anteWidenPct);
-        baseLabel = '$baseLabel + ante';
-        trace.add('ante in play: baseline widened '
-            '+${DrillGtoCharts.anteWidenPct.toStringAsFixed(0)}% for the dead money');
-      }
     }
     trace.add('baseline: $baseLabel — '
         '${DrillGtoCharts.coverageOf(gtoSet).toStringAsFixed(1)}% of hands');
@@ -90,23 +102,24 @@ class DrillGrader {
     trace.add('gto membership: ${ctx.handClass} '
         '${gtoOpen ? 'IN' : 'NOT IN'} baseline');
     // SB with an ante is NOT raise-or-fold: the dead money makes the small
-    // blind complete nearly everything playable instead of folding.
+    // blind complete nearly everything playable instead of folding. The
+    // continue set comes from the engine's real SB strategy at this depth
+    // (solver folds only ~14–19%), not the old top-75% playability cutoff.
     final sbCompleteSpot = ctx.anteMode && profile != 'nash' && pos == 'SB';
-    final gtoCompletes = sbCompleteSpot &&
-        !gtoOpen &&
-        DrillGtoCharts.sbCompletes(ctx.handClass);
+    final sbCompletesHand =
+        sbCompleteSpot && DrillGtoCharts.sbCompletesMtt(ctx.handClass, profile);
+    final sbCompleteCov = DrillGtoCharts.mttSbContinueCoverage(profile);
+    final gtoCompletes = sbCompleteSpot && !gtoOpen && sbCompletesHand;
     if (sbCompleteSpot) {
-      trace.add('sb complete strategy: continue cutoff = top '
-          '${DrillGtoCharts.sbCompleteCutoff.toStringAsFixed(0)}% playability; '
-          '${ctx.handClass} ${DrillGtoCharts.sbCompletes(ctx.handClass) ? 'COMPLETES' : 'FOLDS'} '
+      trace.add('sb complete strategy: engine continue set = '
+          '${sbCompleteCov.toStringAsFixed(1)}% of hands; '
+          '${ctx.handClass} ${sbCompletesHand ? 'COMPLETES' : 'FOLDS'} '
           'when not raising');
     }
     final verb = profile == 'nash' ? 'jams' : 'opens';
     final gto = _Line(
       gtoOpen ? 'raise' : (gtoCompletes ? 'call' : 'fold'),
-      gtoCompletes
-          ? DrillGtoCharts.sbCompleteCutoff
-          : DrillGtoCharts.coverageOf(gtoSet),
+      gtoCompletes ? sbCompleteCov : DrillGtoCharts.coverageOf(gtoSet),
       gtoOpen
           ? '${ctx.handClass} is in the GTO $verb range from ${_posName(pos)} '
               '($baseLabel).'
@@ -204,29 +217,32 @@ class DrillGrader {
         '${DrillGtoCharts.coverageOf(exploitSet).toStringAsFixed(1)}% of hands; '
         '${ctx.handClass} ${exploitSet.contains(ctx.handClass) ? 'IN' : 'NOT IN'}');
     final exploitOpen = exploitSet.contains(ctx.handClass);
-    final exploitCompletes = sbCompleteSpot &&
-        !exploitOpen &&
-        DrillGtoCharts.sbCompletes(ctx.handClass);
+    final exploitCompletes = sbCompleteSpot && !exploitOpen && sbCompletesHand;
     final exploitReason = notes.isEmpty
         ? 'No exploitable reads behind you — the exploit matches the GTO baseline.'
         : notes.join(' ');
     final exploit = _Line(
         exploitOpen ? 'raise' : (exploitCompletes ? 'call' : 'fold'),
-        exploitCompletes
-            ? DrillGtoCharts.sbCompleteCutoff
-            : DrillGtoCharts.coverageOf(exploitSet),
+        exploitCompletes ? sbCompleteCov : DrillGtoCharts.coverageOf(exploitSet),
         exploitReason,
         fromReads: notes.isNotEmpty);
+
+    // Folding a hand the engine SB strategy NEVER folds is a real mistake
+    // even right at the range edge; folds the solver genuinely mixes
+    // (sbFoldMix) keep the usual close-band tolerance.
+    final strictFold = exploitCompletes &&
+        !DrillGtoCharts.mttSbFoldMix(profile).contains(ctx.handClass);
 
     return _finalize(ctx, action, raiseToBB,
         gto: gto,
         exploit: exploit,
         exploitEdgePct: exploitCompletes
-            ? DrillGtoCharts.sbCompleteCutoff
+            ? sbCompleteCov
             : DrillGtoCharts.coverageOf(exploitSet),
         secondaryEdgePct:
             exploitCompletes ? DrillGtoCharts.coverageOf(exploitSet) : null,
         mixedRaiseOk: exploitCompletes,
+        strictFold: strictFold,
         trace: trace,
         sizingIdealTo: profile == 'nash' ? null : 2.5,
         sizingLabel: 'open');
@@ -362,21 +378,38 @@ class DrillGrader {
           trace: trace);
     }
 
-    // Chart defend, keyed by BOTH positions
-    final resolved = DrillGtoCharts.defendFor(pos, openerPos);
-    var chart = resolved?.$1 ??
-        DefendChart(
-            threeBet: DrillGtoCharts.tighten(DrillGtoCharts.openRange(pos), 30),
-            call: <String>{});
-    final usedOpener = resolved?.$2 ?? openerPos;
-    if (profile != '100bb') {
-      chart = DrillGtoCharts.defendAt40bb(chart);
+    // Chart defend, keyed by BOTH positions. Ante format uses the real
+    // engine charts at this depth; cash keeps the curated charts (with the
+    // 40bb tightening transform below 100bb).
+    DefendChart chart;
+    String usedOpener;
+    String chartSource;
+    final mtt = ctx.anteMode && profile != 'nash'
+        ? DrillGtoCharts.mttDefendFor(pos, openerPos, profile)
+        : null;
+    if (mtt != null) {
+      chart = mtt.$1;
+      usedOpener = mtt.$2;
+      chartSource = mtt.$3;
+    } else {
+      final resolved = DrillGtoCharts.defendFor(pos, openerPos);
+      chart = resolved?.$1 ??
+          DefendChart(
+              threeBet:
+                  DrillGtoCharts.tighten(DrillGtoCharts.openRange(pos), 30),
+              call: <String>{});
+      usedOpener = resolved?.$2 ?? openerPos;
+      if (profile != '100bb') {
+        chart = DrillGtoCharts.defendAt40bb(chart);
+      }
+      chartSource = 'curated';
     }
     if (ctx.heroLimped) {
       trace.add('note: hero LIMPED earlier — grading with the cold-defend '
           'chart (limp-defend ranges are an approximation here)');
     }
-    trace.add('baseline: defend chart $pos vs $usedOpener open @ $profile — '
+    trace.add('baseline: defend chart $pos vs $usedOpener open @ $profile '
+        '($chartSource) — '
         '3bet ${DrillGtoCharts.coverageOf(chart.threeBet).toStringAsFixed(1)}%, '
         'call ${DrillGtoCharts.coverageOf(chart.call).toStringAsFixed(1)}%');
 
@@ -456,17 +489,28 @@ class DrillGrader {
       DrillDecisionContext ctx, String action, List<String> trace) {
     final pos = ctx.positionGroup;
     final profile = DrillGtoCharts.profileFor(ctx.stackBB);
-    var chart = DrillGtoCharts.vs3betFor(pos);
-    if (profile != '100bb') {
-      chart = Vs3BetChart(
-        fourBet: chart.fourBet,
-        call: profile == 'nash'
-            ? <String>{} // jam-or-fold: flats disappear
-            : DrillGtoCharts.tighten(
-                chart.call, DrillGtoCharts.coverageOf(chart.call) * 0.35),
-      );
+    var chartSource = 'curated';
+    Vs3BetChart chart;
+    final mtt = ctx.anteMode && profile != 'nash'
+        ? DrillGtoCharts.mttVs3betFor(pos, profile)
+        : null;
+    if (mtt != null) {
+      chart = mtt.$1;
+      chartSource = mtt.$2;
+    } else {
+      chart = DrillGtoCharts.vs3betFor(pos);
+      if (profile != '100bb') {
+        chart = Vs3BetChart(
+          fourBet: chart.fourBet,
+          call: profile == 'nash'
+              ? <String>{} // jam-or-fold: flats disappear
+              : DrillGtoCharts.tighten(
+                  chart.call, DrillGtoCharts.coverageOf(chart.call) * 0.35),
+        );
+      }
     }
-    trace.add('baseline: vs-3bet chart (opened from $pos) @ $profile — '
+    trace.add('baseline: vs-3bet chart (opened from $pos) @ $profile '
+        '($chartSource) — '
         '4bet ${DrillGtoCharts.coverageOf(chart.fourBet).toStringAsFixed(1)}%, '
         'call ${DrillGtoCharts.coverageOf(chart.call).toStringAsFixed(1)}%');
 
@@ -585,6 +629,7 @@ class DrillGrader {
     required double exploitEdgePct,
     double? secondaryEdgePct,
     bool mixedRaiseOk = false,
+    bool strictFold = false,
     required List<String> trace,
     double? sizingIdealTo,
     String? sizingLabel,
@@ -615,6 +660,11 @@ class DrillGrader {
             'low-frequency mix — graded CLOSE; the pure play is to complete');
       }
       if (action == 'fold' && ctx.toCallBB <= 0) near = false;
+      if (action == 'fold' && strictFold) {
+        near = false;
+        trace.add('verdict: the engine strategy never folds this hand here '
+            '— fold graded a full mistake despite range-edge proximity');
+      }
       grade = near ? DrillGrade.ok : DrillGrade.mistake;
       trace.add('verdict math: playability ${play.toStringAsFixed(1)}% vs '
           'range edge ${exploitEdgePct.toStringAsFixed(1)}%'
