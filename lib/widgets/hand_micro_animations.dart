@@ -205,7 +205,7 @@ class _PulseGlowState extends State<PulseGlow>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 1100),
+    duration: const Duration(milliseconds: 850),
   );
 
   @override

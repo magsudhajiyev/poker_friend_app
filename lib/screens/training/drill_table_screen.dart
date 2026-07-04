@@ -51,8 +51,8 @@ class _DrillTableScreenState extends State<DrillTableScreen>
   final List<DrillDecisionRecord> _records = [];
 
   // Action ripple: each batch of engine events is revealed in order around
-  // the table (90ms apart) instead of appearing all at once.
-  static const _rippleStepMs = 90;
+  // the table (one step apart) instead of appearing all at once.
+  static const _rippleStepMs = 55;
   int _batchId = 0;
   final Map<int, int> _actionStamp = {}; // seat -> batch that last acted
   final Map<int, int> _actionDelayMs = {}; // seat -> entrance delay in batch
@@ -230,7 +230,7 @@ class _DrillTableScreenState extends State<DrillTableScreen>
       if (update.heroWalked) {
         // No decision was possible — flow straight into the next hand
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          Future.delayed(const Duration(milliseconds: 900), () {
+          Future.delayed(const Duration(milliseconds: 700), () {
             if (mounted && _phase == _Phase.handOver) _nextHand();
           });
         });
@@ -497,6 +497,7 @@ class _DrillTableScreenState extends State<DrillTableScreen>
         // Rolls between values and pulses when the pot grows
         AnimatedAmountText(
           value: _lastUpdate?.potBB ?? _engine.potBB,
+          duration: const Duration(milliseconds: 300),
           pulseOnIncrease: true,
           formatter: (v) => '${v.toStringAsFixed(1)}BB',
           style: GoogleFonts.robotoMono(
@@ -560,7 +561,7 @@ class _DrillTableScreenState extends State<DrillTableScreen>
             // Position + live stack (rolls down as chips go in)
             AnimatedAmountText(
               value: stackNow,
-              duration: const Duration(milliseconds: 350),
+              duration: const Duration(milliseconds: 260),
               formatter: (v) {
                 final stackText =
                     v <= 0.05 ? 'ALL-IN' : v.toStringAsFixed(1);
@@ -587,7 +588,7 @@ class _DrillTableScreenState extends State<DrillTableScreen>
       statusPill = PopIn(
         triggerKey: '${_actionStamp[seatNumber]}|$action',
         delay: Duration(milliseconds: _actionDelayMs[seatNumber] ?? 0),
-        duration: const Duration(milliseconds: 280),
+        duration: const Duration(milliseconds: 200),
         child: Container(
           padding: EdgeInsets.symmetric(
               horizontal: 7 * s, vertical: 2.5 * s),
@@ -650,11 +651,11 @@ class _DrillTableScreenState extends State<DrillTableScreen>
 
     // Folds ease out (dim + slight shrink) instead of snapping
     return AnimatedOpacity(
-      duration: const Duration(milliseconds: 450),
+      duration: const Duration(milliseconds: 280),
       curve: Curves.easeOut,
       opacity: folded ? 0.35 : 1.0,
       child: AnimatedScale(
-        duration: const Duration(milliseconds: 450),
+        duration: const Duration(milliseconds: 280),
         curve: Curves.easeOut,
         scale: folded ? 0.94 : 1.0,
         child: content,
@@ -713,7 +714,7 @@ class _DrillTableScreenState extends State<DrillTableScreen>
 
     final controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 500),
+      duration: const Duration(milliseconds: 380),
     );
 
     final flight = _DrillChipFlight(
@@ -799,7 +800,7 @@ class _DrillTableScreenState extends State<DrillTableScreen>
       // New hole cards pop in with each hand
       child: PopIn(
         triggerKey: _engine.handNumber,
-        duration: const Duration(milliseconds: 320),
+        duration: const Duration(milliseconds: 240),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -860,7 +861,7 @@ class _DrillTableScreenState extends State<DrillTableScreen>
       height: 22 * s,
       child: Center(
         child: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 200),
+          duration: const Duration(milliseconds: 150),
           child: Text(
             text,
             key: ValueKey(text),
@@ -892,7 +893,7 @@ class _DrillTableScreenState extends State<DrillTableScreen>
       // not popping) — keyed by phase + decision count so each new grade
       // animates even when the phase stays `feedback`.
       child: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 280),
+        duration: const Duration(milliseconds: 190),
         switchInCurve: Curves.easeOutCubic,
         switchOutCurve: Curves.easeIn,
         transitionBuilder: (child, animation) => FadeTransition(
