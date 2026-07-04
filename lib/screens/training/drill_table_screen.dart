@@ -20,11 +20,13 @@ import '../../widgets/poker_table_widget.dart';
 class DrillTableScreen extends StatefulWidget {
   final List<DrillSeat> seats;
   final double stackBB;
+  final bool anteMode;
 
   const DrillTableScreen({
     super.key,
     required this.seats,
     required this.stackBB,
+    this.anteMode = false,
   });
 
   @override
@@ -79,7 +81,10 @@ class _DrillTableScreenState extends State<DrillTableScreen>
   @override
   void initState() {
     super.initState();
-    _engine = DrillEngine(seats: widget.seats, stackBB: widget.stackBB);
+    _engine = DrillEngine(
+        seats: widget.seats,
+        stackBB: widget.stackBB,
+        anteMode: widget.anteMode);
     _visualSeatMap = _buildVisualSeatMap();
     WidgetsBinding.instance.addPostFrameCallback((_) => _nextHand());
   }

@@ -5203,6 +5203,9 @@
   "profileContactSupport": "Contact support",
   "profileEmailUpdates": "Email updates",
   "drillStackDepth": "Stack depth",
+  "drillFormat": "Format",
+  "drillFormatCash": "Cash",
+  "drillFormatAnte": "MTT · Ante",
   "@drillPotLabel": {
     "placeholders": {
       "pot": {

@@ -76,6 +76,12 @@ class DrillGrader {
     } else {
       gtoSet = DrillGtoCharts.openRange(pos);
       baseLabel = 'RFI chart $pos @ $profile';
+      if (ctx.anteMode) {
+        gtoSet = DrillGtoCharts.widen(gtoSet, DrillGtoCharts.anteWidenPct);
+        baseLabel = '$baseLabel + ante';
+        trace.add('ante in play: baseline widened '
+            '+${DrillGtoCharts.anteWidenPct.toStringAsFixed(0)}% for the dead money');
+      }
     }
     trace.add('baseline: $baseLabel — '
         '${DrillGtoCharts.coverageOf(gtoSet).toStringAsFixed(1)}% of hands');
@@ -83,15 +89,33 @@ class DrillGrader {
     final gtoOpen = gtoSet.contains(ctx.handClass);
     trace.add('gto membership: ${ctx.handClass} '
         '${gtoOpen ? 'IN' : 'NOT IN'} baseline');
+    // SB with an ante is NOT raise-or-fold: the dead money makes the small
+    // blind complete nearly everything playable instead of folding.
+    final sbCompleteSpot = ctx.anteMode && profile != 'nash' && pos == 'SB';
+    final gtoCompletes = sbCompleteSpot &&
+        !gtoOpen &&
+        DrillGtoCharts.sbCompletes(ctx.handClass);
+    if (sbCompleteSpot) {
+      trace.add('sb complete strategy: continue cutoff = top '
+          '${DrillGtoCharts.sbCompleteCutoff.toStringAsFixed(0)}% playability; '
+          '${ctx.handClass} ${DrillGtoCharts.sbCompletes(ctx.handClass) ? 'COMPLETES' : 'FOLDS'} '
+          'when not raising');
+    }
     final verb = profile == 'nash' ? 'jams' : 'opens';
     final gto = _Line(
-      gtoOpen ? 'raise' : 'fold',
-      DrillGtoCharts.coverageOf(gtoSet),
+      gtoOpen ? 'raise' : (gtoCompletes ? 'call' : 'fold'),
+      gtoCompletes
+          ? DrillGtoCharts.sbCompleteCutoff
+          : DrillGtoCharts.coverageOf(gtoSet),
       gtoOpen
           ? '${ctx.handClass} is in the GTO $verb range from ${_posName(pos)} '
               '($baseLabel).'
-          : '${ctx.handClass} is not a GTO $verb from ${_posName(pos)} '
-              '($baseLabel).',
+          : gtoCompletes
+              ? '${ctx.handClass} is too weak to open-raise, but with the '
+                  'ante in the pot the small blind completes almost every '
+                  'playable hand instead of folding ($baseLabel).'
+              : '${ctx.handClass} is not a GTO $verb from ${_posName(pos)} '
+                  '($baseLabel).',
     );
 
     // Exploit: widen/tighten along the playability ordering
@@ -180,17 +204,29 @@ class DrillGrader {
         '${DrillGtoCharts.coverageOf(exploitSet).toStringAsFixed(1)}% of hands; '
         '${ctx.handClass} ${exploitSet.contains(ctx.handClass) ? 'IN' : 'NOT IN'}');
     final exploitOpen = exploitSet.contains(ctx.handClass);
+    final exploitCompletes = sbCompleteSpot &&
+        !exploitOpen &&
+        DrillGtoCharts.sbCompletes(ctx.handClass);
     final exploitReason = notes.isEmpty
         ? 'No exploitable reads behind you — the exploit matches the GTO baseline.'
         : notes.join(' ');
-    final exploit = _Line(exploitOpen ? 'raise' : 'fold',
-        DrillGtoCharts.coverageOf(exploitSet), exploitReason,
+    final exploit = _Line(
+        exploitOpen ? 'raise' : (exploitCompletes ? 'call' : 'fold'),
+        exploitCompletes
+            ? DrillGtoCharts.sbCompleteCutoff
+            : DrillGtoCharts.coverageOf(exploitSet),
+        exploitReason,
         fromReads: notes.isNotEmpty);
 
     return _finalize(ctx, action, raiseToBB,
         gto: gto,
         exploit: exploit,
-        exploitEdgePct: DrillGtoCharts.coverageOf(exploitSet),
+        exploitEdgePct: exploitCompletes
+            ? DrillGtoCharts.sbCompleteCutoff
+            : DrillGtoCharts.coverageOf(exploitSet),
+        secondaryEdgePct:
+            exploitCompletes ? DrillGtoCharts.coverageOf(exploitSet) : null,
+        mixedRaiseOk: exploitCompletes,
         trace: trace,
         sizingIdealTo: profile == 'nash' ? null : 2.5,
         sizingLabel: 'open');
@@ -548,6 +584,7 @@ class DrillGrader {
     required _Line exploit,
     required double exploitEdgePct,
     double? secondaryEdgePct,
+    bool mixedRaiseOk = false,
     required List<String> trace,
     double? sizingIdealTo,
     String? sizingLabel,
@@ -568,6 +605,14 @@ class DrillGrader {
       var near = (play - exploitEdgePct).abs() <= _closeBand;
       if (!near && secondaryEdgePct != null && action == 'raise') {
         near = (play - secondaryEdgePct).abs() <= _closeBand;
+      }
+      if (!near &&
+          action == 'raise' &&
+          exploit.action == 'call' &&
+          mixedRaiseOk) {
+        near = true;
+        trace.add('verdict: raising a completing hand is an acceptable '
+            'low-frequency mix — graded CLOSE; the pure play is to complete');
       }
       if (action == 'fold' && ctx.toCallBB <= 0) near = false;
       grade = near ? DrillGrade.ok : DrillGrade.mistake;

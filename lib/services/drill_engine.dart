@@ -74,6 +74,11 @@ class _HandPlayer {
 class DrillEngine {
   final List<DrillSeat> seats;
   final double stackBB;
+
+  /// BB-ante (MTT) format: 1BB of dead money is added to every pot and
+  /// villains open slightly wider. Stacks are unaffected (drill hands
+  /// reset each deal, so the ante is modelled as dead money only).
+  final bool anteMode;
   final Random _rng;
 
   late final int heroSeat;
@@ -97,6 +102,7 @@ class DrillEngine {
   DrillEngine({
     required this.seats,
     required this.stackBB,
+    this.anteMode = false,
     Random? rng,
   }) : _rng = rng ?? Random() {
     heroSeat = seats.firstWhere((s) => s.isHero).seatNumber;
@@ -108,7 +114,8 @@ class DrillEngine {
   int get buttonSeat => _buttonSeat;
   String positionOf(int seat) => _positions[seat] ?? '';
   double get potBB =>
-      _players.fold(0.0, (sum, p) => sum + p.committedBB);
+      _players.fold(0.0, (sum, p) => sum + p.committedBB) +
+      (anteMode && _players.isNotEmpty ? 1.0 : 0.0);
 
   /// Remaining stack (BB) for a seat in the current hand. Stacks reset to
   /// [stackBB] every hand — this is a drill, not a bankroll simulation.
@@ -305,8 +312,10 @@ class DrillEngine {
         }
         return;
       }
-      final openFreq =
-          (profile.pfr * _positionOpenMultiplier(p.seat)).clamp(0.0, 92.0);
+      final openFreq = (profile.pfr *
+              _positionOpenMultiplier(p.seat) *
+              (anteMode ? 1.12 : 1.0))
+          .clamp(0.0, 92.0);
       if (roll < openFreq) {
         _applyRaise(p, 2.5 + limpersInPot, events);
       } else if (roll < openFreq + profile.limpRate) {
@@ -473,6 +482,7 @@ class DrillEngine {
       currentBetBB: _currentBetBB,
       potBB: potBB,
       raisesBeforeHero: _raises,
+      anteMode: anteMode,
     );
   }
 

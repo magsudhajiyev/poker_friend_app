@@ -7605,6 +7605,15 @@ class AppLocalizationsEs extends AppLocalizations {
   String get drillStackDepth => 'Stack depth';
 
   @override
+  String get drillFormat => 'Format';
+
+  @override
+  String get drillFormatCash => 'Cash';
+
+  @override
+  String get drillFormatAnte => 'MTT · Ante';
+
+  @override
   String get drillScouting => 'SCOUTING';
 
   @override

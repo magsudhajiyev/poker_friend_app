@@ -93,6 +93,9 @@ class DrillLineup {
   final int heroSeat;
   final double stackBB;
 
+  /// BB-ante (MTT) format; false = cash. Old saved lineups default to cash.
+  final bool hasAnte;
+
   /// seat number -> opponentId ('' means generic bot). Hero seat excluded.
   final Map<int, String> seatOpponentIds;
 
@@ -106,6 +109,7 @@ class DrillLineup {
     required this.playerCount,
     required this.heroSeat,
     required this.stackBB,
+    this.hasAnte = false,
     required this.seatOpponentIds,
     required this.seatNames,
   });
@@ -116,6 +120,7 @@ class DrillLineup {
         'playerCount': playerCount,
         'heroSeat': heroSeat,
         'stackBB': stackBB,
+        'hasAnte': hasAnte,
         'seatOpponentIds':
             seatOpponentIds.map((k, v) => MapEntry(k.toString(), v)),
         'seatNames': seatNames.map((k, v) => MapEntry(k.toString(), v)),
@@ -139,6 +144,7 @@ class DrillLineup {
       playerCount: (json['playerCount'] as num?)?.toInt() ?? 6,
       heroSeat: (json['heroSeat'] as num?)?.toInt() ?? 1,
       stackBB: (json['stackBB'] as num?)?.toDouble() ?? 100,
+      hasAnte: json['hasAnte'] == true,
       seatOpponentIds: parseSeatMap(json['seatOpponentIds']),
       seatNames: parseSeatMap(json['seatNames']),
     );
@@ -216,6 +222,10 @@ class DrillDecisionContext {
   /// Whether hero acts after the last aggressor (positional advantage).
   final bool isInPosition;
 
+  /// BB-ante format (MTT): extra dead money widens opens and turns the SB
+  /// into a complete-or-raise (almost never fold) spot.
+  final bool anteMode;
+
   const DrillDecisionContext({
     required this.handClass,
     required this.positionGroup,
@@ -234,6 +244,7 @@ class DrillDecisionContext {
     this.bbProfile,
     this.sbProfile,
     this.isInPosition = false,
+    this.anteMode = false,
   });
 
   /// Live opponents in the blinds who still get to act after the hero —

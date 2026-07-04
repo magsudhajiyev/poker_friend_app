@@ -273,4 +273,34 @@ void main() {
     check(r.explanation.contains('FoldyFred'),
         'read-based explanation still names the opponent');
   });
+
+  // ── Ante format: SB is complete-or-raise, not raise-or-fold ─────────
+  scenario('ante SB: 65o completes (GTO call), fold is a mistake', () {
+    DrillDecisionContext sb(bool ante) => DrillDecisionContext(
+        handClass: '65o', positionGroup: 'SB', stackBB: 100,
+        scenario: DrillScenario.unopened, opener: null,
+        limpers: const [], playersBehind: [prof(name: 'BBguy')],
+        toCallBB: 0.5, currentBetBB: 1, potBB: 2.5, raisesBeforeHero: 0,
+        anteMode: ante);
+    final call = DrillGrader.grade(sb(true), 'call');
+    check(call.gtoAction == 'call', 'GTO completes 65o, got ${call.gtoAction}');
+    check(call.grade == DrillGrade.correct, 'completing graded correct');
+    final fold = DrillGrader.grade(sb(true), 'fold');
+    check(fold.grade == DrillGrade.mistake, 'folding a completing hand = mistake');
+    final raise = DrillGrader.grade(sb(true), 'raise', raiseToBB: 3);
+    check(raise.grade == DrillGrade.ok, 'raise = acceptable low-freq mix (CLOSE)');
+    // Cash stays raise-or-fold
+    final cash = DrillGrader.grade(sb(false), 'fold');
+    check(cash.gtoAction == 'fold', 'cash SB still folds 65o');
+    check(cash.grade == DrillGrade.correct, 'cash fold graded correct');
+  });
+
+  scenario('ante widens first-in ranges (+3%)', () {
+    final base = DrillGtoCharts.coverageOf(DrillGtoCharts.openRange('BTN'));
+    final wide = DrillGtoCharts.coverageOf(
+        DrillGtoCharts.widen(DrillGtoCharts.openRange('BTN'),
+            DrillGtoCharts.anteWidenPct));
+    check(wide > base + 2 && wide < base + 5,
+        'BTN ${base.toStringAsFixed(1)}% -> ${wide.toStringAsFixed(1)}%');
+  });
 }

@@ -121,6 +121,22 @@ class DrillGtoCharts {
   };
 
   static Set<String> openRange(String posGroup) => rfi[posGroup] ?? rfi['MP']!;
+
+  /// With a BB ante in play there is ~1BB of extra dead money preflop, so
+  /// every first-in range widens. Applied on top of the base charts.
+  static const double anteWidenPct = 3.0;
+
+  /// SB completion strategy for ante formats. Raise-or-fold from the SB is
+  /// a cash-game simplification — with an ante the small blind continues
+  /// with nearly everything playable, completing (limping) the hands too
+  /// weak to open-raise and folding only the bottom of the deck. The
+  /// continue region is the top [sbCompleteCutoff]% by playability — our
+  /// own chart-derived expression (see tool/nash/README.md for the
+  /// provenance policy).
+  static const double sbCompleteCutoff = 75.0;
+
+  static bool sbCompletes(String handClass) =>
+      playabilityPercent(handClass) <= sbCompleteCutoff;
   static bool isOpen(String posGroup, String handClass) =>
       openRange(posGroup).contains(handClass);
 

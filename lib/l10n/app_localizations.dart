@@ -13287,6 +13287,24 @@ abstract class AppLocalizations {
   /// **'Stack depth'**
   String get drillStackDepth;
 
+  /// Drill setup: game format section label
+  ///
+  /// In en, this message translates to:
+  /// **'Format'**
+  String get drillFormat;
+
+  /// Drill setup: cash (no ante) format option
+  ///
+  /// In en, this message translates to:
+  /// **'Cash'**
+  String get drillFormatCash;
+
+  /// Drill setup: tournament format with BB ante
+  ///
+  /// In en, this message translates to:
+  /// **'MTT · Ante'**
+  String get drillFormatAnte;
+
   /// No description provided for @drillScouting.
   ///
   /// In en, this message translates to:

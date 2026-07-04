@@ -45,6 +45,7 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
   int _playerCount = 6;
   int _heroSeat = 1;
   double _stackBB = 100;
+  bool _ante = false; // BB-ante (MTT) format vs cash
   final Map<int, _SeatPick> _picks = {}; // seat -> opponent pick
   List<Opponent> _opponents = [];
   List<DrillLineup> _lineups = [];
@@ -76,6 +77,7 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
       _playerCount = lineup.playerCount.clamp(2, 9).toInt();
       _heroSeat = lineup.heroSeat.clamp(1, _playerCount).toInt();
       _stackBB = lineup.stackBB;
+      _ante = lineup.hasAnte;
       _picks.clear();
       lineup.seatOpponentIds.forEach((seat, oppId) {
         if (seat <= _playerCount && seat != _heroSeat) {
@@ -132,6 +134,7 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
       playerCount: _playerCount,
       heroSeat: _heroSeat,
       stackBB: _stackBB,
+      hasAnte: _ante,
       seatOpponentIds: {
         for (final e in _picks.entries)
           if (e.key <= _playerCount && e.key != _heroSeat)
@@ -217,7 +220,8 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => DrillTableScreen(seats: seats, stackBB: _stackBB),
+          builder: (_) => DrillTableScreen(
+              seats: seats, stackBB: _stackBB, anteMode: _ante),
         ),
       );
     } finally {
@@ -454,6 +458,13 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
         _segmented([
           for (final s in _stackOptions)
             ('${s.toInt()}BB', _stackBB == s, () => setState(() => _stackBB = s)),
+        ]),
+        const SizedBox(height: 18),
+        _fieldLabel(l10n.drillFormat),
+        const SizedBox(height: 8),
+        _segmented([
+          (l10n.drillFormatCash, !_ante, () => setState(() => _ante = false)),
+          (l10n.drillFormatAnte, _ante, () => setState(() => _ante = true)),
         ]),
       ],
     );
