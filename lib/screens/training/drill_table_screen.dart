@@ -50,6 +50,13 @@ class _DrillTableScreenState extends State<DrillTableScreen>
   final List<String> _recentLines = []; // newest last, capped
   final List<DrillDecisionRecord> _records = [];
 
+  // Action ripple: each batch of engine events is revealed in order around
+  // the table (90ms apart) instead of appearing all at once.
+  static const _rippleStepMs = 90;
+  int _batchId = 0;
+  final Map<int, int> _actionStamp = {}; // seat -> batch that last acted
+  final Map<int, int> _actionDelayMs = {}; // seat -> entrance delay in batch
+
   // Chip flight animation state
   final List<_DrillChipFlight> _chipFlights = [];
   final GlobalKey _tableAreaKey = GlobalKey();
@@ -140,6 +147,8 @@ class _DrillTableScreenState extends State<DrillTableScreen>
       _foldedSeats.clear();
       _lastAction.clear();
       _recentLines.clear();
+      _actionStamp.clear();
+      _actionDelayMs.clear();
       _lastGrade = null;
       _showRaiseSizes = false;
       _handOverNote = '';
@@ -157,12 +166,16 @@ class _DrillTableScreenState extends State<DrillTableScreen>
 
   void _consume(DrillHandUpdate update) {
     _lastUpdate = update;
-    // Collect seats that need chip flights this batch
-    final flightQueue = <(int seat, String action)>[];
+    _batchId++;
+    // Collect seats that need chip flights this batch, with their ripple slot
+    final flightQueue = <(int seat, String action, int order)>[];
 
+    var order = 0;
     for (final e in update.newEvents) {
       if (e.action == 'folds') _foldedSeats.add(e.seat);
       _lastAction[e.seat] = _actionLabel(e);
+      _actionStamp[e.seat] = _batchId;
+      _actionDelayMs[e.seat] = order * _rippleStepMs;
       if (!e.action.startsWith('posts')) {
         final amount = e.toAmountBB != null
             ? ' to ${e.toAmountBB!.toStringAsFixed(1)}BB'
@@ -173,16 +186,24 @@ class _DrillTableScreenState extends State<DrillTableScreen>
 
       // Queue chip flight for money actions (not folds/checks)
       if (e.action != 'folds' && e.action != 'checks') {
-        flightQueue.add((e.seat, e.action));
+        flightQueue.add((e.seat, e.action, order));
       }
+      order++;
     }
 
-    // Fire chip flights after the frame so layout positions are valid
+    // Fire chip flights after the frame so layout positions are valid,
+    // staggered to match each seat's slot in the action ripple. The hand
+    // token guards against a flight landing after "Next hand" was tapped.
     if (flightQueue.isNotEmpty) {
+      final handToken = _engine.handNumber;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
-        for (final (seat, action) in flightQueue) {
-          _fireChipFlight(seat, action);
+        for (final (seat, action, ord) in flightQueue) {
+          Future.delayed(Duration(milliseconds: ord * _rippleStepMs), () {
+            if (mounted && _engine.handNumber == handToken) {
+              _fireChipFlight(seat, action);
+            }
+          });
         }
       });
     }
@@ -473,8 +494,11 @@ class _DrillTableScreenState extends State<DrillTableScreen>
                 fontSize: 11 * s,
                 fontWeight: FontWeight.w600,
                 letterSpacing: 1.2)),
-        Text(
-          '${(_lastUpdate?.potBB ?? _engine.potBB).toStringAsFixed(1)}BB',
+        // Rolls between values and pulses when the pot grows
+        AnimatedAmountText(
+          value: _lastUpdate?.potBB ?? _engine.potBB,
+          pulseOnIncrease: true,
+          formatter: (v) => '${v.toStringAsFixed(1)}BB',
           style: GoogleFonts.robotoMono(
               color: AppColors.textPrimary,
               fontSize: 20 * s,
@@ -493,74 +517,99 @@ class _DrillTableScreenState extends State<DrillTableScreen>
     final action = _lastAction[seatNumber];
     final position = _engine.positionOf(seatNumber);
     final heroActing = seat.isHero && _phase == _Phase.acting;
+    final stackNow = _engine.stackOf(seatNumber);
 
     final name = seat.displayName.length > 8
         ? '${seat.displayName.substring(0, 7)}…'
         : seat.displayName;
 
-    // Player info pill
-    final playerInfo = Container(
-      padding: EdgeInsets.symmetric(
-          horizontal: AppSpacing.xxs * s, vertical: AppSpacing.xxxs * s),
-      decoration: BoxDecoration(
-        color: AppColors.bgSurface,
-        borderRadius: BorderRadius.circular(35),
-        border: Border.all(
-          color: heroActing
-              ? _accent
-              : seat.isHero
-                  ? _accent.withOpacity(0.55)
-                  : AppColors.bgElevated,
-          width: heroActing ? 2 : 1.5,
-        ),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            name,
-            maxLines: 1,
-            style: GoogleFonts.ibmPlexSans(
-              color: seat.isHero ? _accent : AppColors.textPrimary,
-              fontSize: 13 * s,
-              fontWeight: FontWeight.w600,
-              height: 1.2,
-            ),
+    // Player info pill: name + position·stack, wrapped in a breathing glow
+    // while it's the hero's turn to act.
+    final playerInfo = PulseGlow(
+      enabled: heroActing,
+      color: _accent,
+      borderRadius: BorderRadius.circular(35),
+      child: Container(
+        padding: EdgeInsets.symmetric(
+            horizontal: AppSpacing.xxs * s, vertical: AppSpacing.xxxs * s),
+        decoration: BoxDecoration(
+          color: AppColors.bgSurface,
+          borderRadius: BorderRadius.circular(35),
+          border: Border.all(
+            color: heroActing
+                ? _accent
+                : seat.isHero
+                    ? _accent.withOpacity(0.55)
+                    : AppColors.bgElevated,
+            width: heroActing ? 2 : 1.5,
           ),
-          if (position.isNotEmpty)
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
             Text(
-              position,
+              name,
+              maxLines: 1,
+              style: GoogleFonts.ibmPlexSans(
+                color: seat.isHero ? _accent : AppColors.textPrimary,
+                fontSize: 13 * s,
+                fontWeight: FontWeight.w600,
+                height: 1.2,
+              ),
+            ),
+            // Position + live stack (rolls down as chips go in)
+            AnimatedAmountText(
+              value: stackNow,
+              duration: const Duration(milliseconds: 350),
+              formatter: (v) {
+                final stackText =
+                    v <= 0.05 ? 'ALL-IN' : v.toStringAsFixed(1);
+                return position.isEmpty
+                    ? stackText
+                    : '$position · $stackText';
+              },
               style: GoogleFonts.robotoMono(
                 color: AppColors.textSecondary,
                 fontSize: 10 * s,
                 height: 1.2,
               ),
             ),
-        ],
+          ],
+        ),
       ),
     );
 
-    // Action/bet pill — placed toward the table center
+    // Action/bet pill — solid base + colored glow so it pops off the felt,
+    // entering in its ripple slot (staggered per batch of actions).
     Widget? statusPill;
     if (action != null) {
       final pillColor = _actionColor(action);
-      final pillTrigger = action;
       statusPill = PopIn(
-        triggerKey: pillTrigger,
+        triggerKey: '${_actionStamp[seatNumber]}|$action',
+        delay: Duration(milliseconds: _actionDelayMs[seatNumber] ?? 0),
+        duration: const Duration(milliseconds: 280),
         child: Container(
           padding: EdgeInsets.symmetric(
-              horizontal: 5 * s, vertical: 1 * s),
+              horizontal: 7 * s, vertical: 2.5 * s),
           decoration: BoxDecoration(
-            color: pillColor.withOpacity(0.2),
+            color: AppColors.bgSurface,
             borderRadius: BorderRadius.circular(
                 AppDecorations.radiusSm),
+            border: Border.all(color: pillColor.withOpacity(0.55)),
+            boxShadow: [
+              BoxShadow(
+                color: pillColor.withOpacity(0.28),
+                blurRadius: 9,
+                spreadRadius: 0.5,
+              ),
+            ],
           ),
           child: Text(
             action,
             style: GoogleFonts.robotoMono(
               color: pillColor,
-              fontSize: 9 * s,
-              fontWeight: FontWeight.w600,
+              fontSize: 10 * s,
+              fontWeight: FontWeight.w700,
             ),
           ),
         ),
@@ -599,9 +648,17 @@ class _DrillTableScreenState extends State<DrillTableScreen>
       }
     }
 
-    return Opacity(
+    // Folds ease out (dim + slight shrink) instead of snapping
+    return AnimatedOpacity(
+      duration: const Duration(milliseconds: 450),
+      curve: Curves.easeOut,
       opacity: folded ? 0.35 : 1.0,
-      child: content,
+      child: AnimatedScale(
+        duration: const Duration(milliseconds: 450),
+        curve: Curves.easeOut,
+        scale: folded ? 0.94 : 1.0,
+        child: content,
+      ),
     );
   }
 
@@ -739,25 +796,30 @@ class _DrillTableScreenState extends State<DrillTableScreen>
     return Padding(
       padding: EdgeInsets.symmetric(
           horizontal: AppSpacing.md * s, vertical: AppSpacing.xxxs * s),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          for (final card in _engine.heroCards) ...[
-            _buildCard(card, s),
-            SizedBox(width: 6 * s),
+      // New hole cards pop in with each hand
+      child: PopIn(
+        triggerKey: _engine.handNumber,
+        duration: const Duration(milliseconds: 320),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            for (final card in _engine.heroCards) ...[
+              _buildCard(card, s),
+              SizedBox(width: 6 * s),
+            ],
+            SizedBox(width: AppSpacing.xxs * s),
+            Text(_engine.heroHandClass,
+                style: GoogleFonts.robotoMono(
+                    color: AppColors.textPrimary,
+                    fontSize: 17 * s,
+                    fontWeight: FontWeight.w600)),
+            SizedBox(width: AppSpacing.xxs * s),
+            Text(_engine.heroPosition,
+                style: GoogleFonts.ibmPlexSans(
+                    color: AppColors.textSecondary,
+                    fontSize: 13 * s)),
           ],
-          SizedBox(width: AppSpacing.xxs * s),
-          Text(_engine.heroHandClass,
-              style: GoogleFonts.robotoMono(
-                  color: AppColors.textPrimary,
-                  fontSize: 17 * s,
-                  fontWeight: FontWeight.w600)),
-          SizedBox(width: AppSpacing.xxs * s),
-          Text(_engine.heroPosition,
-              style: GoogleFonts.ibmPlexSans(
-                  color: AppColors.textSecondary,
-                  fontSize: 13 * s)),
-        ],
+        ),
       ),
     );
   }
@@ -797,17 +859,22 @@ class _DrillTableScreenState extends State<DrillTableScreen>
     return SizedBox(
       height: 22 * s,
       child: Center(
-        child: Text(
-          text,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: GoogleFonts.ibmPlexSans(
-            color: _handOverNote.isNotEmpty
-                ? _accent.withOpacity(0.85)
-                : AppColors.textSecondary,
-            fontSize: 13 * s,
-            fontStyle:
-                _handOverNote.isNotEmpty ? FontStyle.italic : FontStyle.normal,
+        child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 200),
+          child: Text(
+            text,
+            key: ValueKey(text),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: GoogleFonts.ibmPlexSans(
+              color: _handOverNote.isNotEmpty
+                  ? _accent.withOpacity(0.85)
+                  : AppColors.textSecondary,
+              fontSize: 13 * s,
+              fontStyle: _handOverNote.isNotEmpty
+                  ? FontStyle.italic
+                  : FontStyle.normal,
+            ),
           ),
         ),
       ),
@@ -821,11 +888,32 @@ class _DrillTableScreenState extends State<DrillTableScreen>
       padding: EdgeInsets.fromLTRB(
           AppSpacing.md * s, AppSpacing.xxs * s,
           AppSpacing.md * s, AppSpacing.md * s),
-      child: switch (_phase) {
-        _Phase.feedback => _buildFeedback(s, l10n),
-        _Phase.acting => _buildActions(s, l10n),
-        _Phase.handOver => _buildHandOver(s, l10n),
-      },
+      // Phase changes slide-fade in (feedback card rising feels deliberate,
+      // not popping) — keyed by phase + decision count so each new grade
+      // animates even when the phase stays `feedback`.
+      child: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 280),
+        switchInCurve: Curves.easeOutCubic,
+        switchOutCurve: Curves.easeIn,
+        transitionBuilder: (child, animation) => FadeTransition(
+          opacity: animation,
+          child: SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(0, 0.08),
+              end: Offset.zero,
+            ).animate(animation),
+            child: child,
+          ),
+        ),
+        child: KeyedSubtree(
+          key: ValueKey('$_phase|${_records.length}'),
+          child: switch (_phase) {
+            _Phase.feedback => _buildFeedback(s, l10n),
+            _Phase.acting => _buildActions(s, l10n),
+            _Phase.handOver => _buildHandOver(s, l10n),
+          },
+        ),
+      ),
     );
   }
 

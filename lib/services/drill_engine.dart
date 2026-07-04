@@ -110,6 +110,10 @@ class DrillEngine {
   double get potBB =>
       _players.fold(0.0, (sum, p) => sum + p.committedBB);
 
+  /// Remaining stack (BB) for a seat in the current hand. Stacks reset to
+  /// [stackBB] every hand — this is a drill, not a bankroll simulation.
+  double stackOf(int seat) => stackBB - (_bySeat[seat]?.committedBB ?? 0.0);
+
   DrillHandUpdate startHand() {
     handNumber++;
     _buttonSeat = handNumber == 1 ? _buttonSeat : _nextSeat(_buttonSeat);

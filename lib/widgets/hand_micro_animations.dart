@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -99,17 +100,21 @@ class _AnimatedAmountTextState extends State<AnimatedAmountText>
 // ─────────────────────────────────────────────────────────────────────────
 
 /// Plays a scale 0.7→1.0 (easeOutBack) + fade entrance when first built,
-/// and replays it whenever [triggerKey] changes.
+/// and replays it whenever [triggerKey] changes. An optional [delay] holds
+/// the child invisible before the entrance — used to stagger a batch of
+/// pills so actions ripple around the table instead of appearing at once.
 class PopIn extends StatefulWidget {
   final Widget child;
   final Object? triggerKey;
   final Duration duration;
+  final Duration delay;
 
   const PopIn({
     super.key,
     required this.child,
     this.triggerKey,
     this.duration = const Duration(milliseconds: 240),
+    this.delay = Duration.zero,
   });
 
   @override
@@ -120,6 +125,7 @@ class _PopInState extends State<PopIn> with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   late final Animation<double> _scale;
   late final Animation<double> _fade;
+  Timer? _delayTimer;
 
   @override
   void initState() {
@@ -132,14 +138,90 @@ class _PopInState extends State<PopIn> with SingleTickerProviderStateMixin {
       parent: _controller,
       curve: const Interval(0.0, 0.6, curve: Curves.easeOut),
     );
-    _controller.forward();
+    _play();
+  }
+
+  void _play() {
+    _delayTimer?.cancel();
+    if (widget.delay == Duration.zero) {
+      _controller.forward(from: 0.0);
+    } else {
+      _controller.value = 0.0; // invisible until its turn in the ripple
+      _delayTimer = Timer(widget.delay, () {
+        if (mounted) _controller.forward(from: 0.0);
+      });
+    }
   }
 
   @override
   void didUpdateWidget(PopIn oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.triggerKey != oldWidget.triggerKey) {
-      _controller.forward(from: 0.0);
+      _play();
+    }
+  }
+
+  @override
+  void dispose() {
+    _delayTimer?.cancel();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _fade,
+      child: ScaleTransition(scale: _scale, child: widget.child),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// PulseGlow — breathing glow ring for "it's your turn" emphasis
+// ─────────────────────────────────────────────────────────────────────────
+
+/// Wraps [child] in a softly pulsing box-shadow glow while [enabled].
+/// The controller only runs while enabled, so idle seats cost nothing.
+class PulseGlow extends StatefulWidget {
+  final Widget child;
+  final Color color;
+  final BorderRadius borderRadius;
+  final bool enabled;
+
+  const PulseGlow({
+    super.key,
+    required this.child,
+    required this.color,
+    required this.borderRadius,
+    this.enabled = true,
+  });
+
+  @override
+  State<PulseGlow> createState() => _PulseGlowState();
+}
+
+class _PulseGlowState extends State<PulseGlow>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1100),
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.enabled) _controller.repeat(reverse: true);
+  }
+
+  @override
+  void didUpdateWidget(PulseGlow oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.enabled && !oldWidget.enabled) {
+      _controller.repeat(reverse: true);
+    } else if (!widget.enabled && oldWidget.enabled) {
+      _controller.stop();
+      _controller.value = 0.0;
     }
   }
 
@@ -151,9 +233,26 @@ class _PopInState extends State<PopIn> with SingleTickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    return FadeTransition(
-      opacity: _fade,
-      child: ScaleTransition(scale: _scale, child: widget.child),
+    if (!widget.enabled) return widget.child;
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        final t = Curves.easeInOut.transform(_controller.value);
+        return Container(
+          decoration: BoxDecoration(
+            borderRadius: widget.borderRadius,
+            boxShadow: [
+              BoxShadow(
+                color: widget.color.withValues(alpha: 0.18 + 0.24 * t),
+                blurRadius: 10 + 8 * t,
+                spreadRadius: 1 + 1.5 * t,
+              ),
+            ],
+          ),
+          child: child,
+        );
+      },
+      child: widget.child,
     );
   }
 }
