@@ -192,14 +192,14 @@ class DrillInsights {
     },
     'generic': {
       'raise': [
-        '{hand} sits inside the {rangePct} range for this spot from {pos} — '
-            'in range means play it with conviction.',
-        'This is the {rangePct} territory of your range from {pos} — '
-            '{hand} qualifies, so take the aggressive line.',
+        'From {pos} you get to play {rangePct} in this spot — {hand} makes '
+            'the cut, so play it with conviction.',
+        'GTO plays {rangePct} here from {pos} — {hand} qualifies, so take '
+            'the aggressive line.',
       ],
       'fold': [
-        '{hand} falls outside the {rangePct} that continues here — folding '
-            'the bottom is what keeps the rest of your range profitable.',
+        'Only {rangePct} continue here, and {hand} doesn\'t make the cut — '
+            'folding the bottom keeps the rest of your hands profitable.',
         'Discipline spot: {hand} is below the cutoff, and the hands just '
             'above it are the ones that make money.',
         'Every range has a floor — {hand} is under it from {pos}.',
@@ -218,6 +218,21 @@ class DrillInsights {
     },
   };
 
+  /// Renders a range share as natural language, keeping the exact number
+  /// for correctness. Player-facing copy uses this instead of raw
+  /// "top X%" / "widen +3%" range arithmetic.
+  static String naturalShare(double pct) {
+    final exact = '(${pct.toStringAsFixed(0)}%)';
+    if (pct < 6) return 'only your very strongest hands $exact';
+    if (pct < 13) return 'about one hand in ten $exact';
+    if (pct < 21) return 'about one hand in six $exact';
+    if (pct < 29) return 'about a quarter of hands $exact';
+    if (pct < 40) return 'about a third of hands $exact';
+    if (pct < 55) return 'about half of all hands $exact';
+    if (pct < 72) return 'about two-thirds of hands $exact';
+    return 'almost everything playable $exact';
+  }
+
   /// An insight line for spots WITHOUT an opponent read. Rotates between
   /// hand-type and generic pools so repeated spots teach different angles.
   static String insight(DrillDecisionContext ctx, String action,
@@ -228,8 +243,7 @@ class DrillInsights {
     }
     candidates.addAll(_pools['generic']![action] ?? const []);
     if (candidates.isEmpty) {
-      return 'The chart range for this spot covers the top '
-          '${rangePct.toStringAsFixed(0)}% of hands.';
+      return 'In this spot GTO plays ${naturalShare(rangePct)}.';
     }
     final line = _pick(candidates, '${ctx.handClass}|$action');
     trace.add('insight: variant ${candidates.indexOf(line) + 1}/'
@@ -237,7 +251,7 @@ class DrillInsights {
     return line
         .replaceAll('{hand}', ctx.handClass)
         .replaceAll('{pos}', _posName(ctx.positionGroup))
-        .replaceAll('{rangePct}', 'top ${rangePct.toStringAsFixed(0)}%');
+        .replaceAll('{rangePct}', naturalShare(rangePct));
   }
 
   static String _posName(String group) {

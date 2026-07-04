@@ -116,19 +116,23 @@ class DrillGrader {
           '${ctx.handClass} ${sbCompletesHand ? 'COMPLETES' : 'FOLDS'} '
           'when not raising');
     }
+    // Player-facing reasons stay in plain poker language — the chart
+    // provenance ($baseLabel) lives in the trace for debugging.
     final verb = profile == 'nash' ? 'jams' : 'opens';
+    final coverShare =
+        DrillInsights.naturalShare(DrillGtoCharts.coverageOf(gtoSet));
     final gto = _Line(
       gtoOpen ? 'raise' : (gtoCompletes ? 'call' : 'fold'),
       gtoCompletes ? sbCompleteCov : DrillGtoCharts.coverageOf(gtoSet),
       gtoOpen
-          ? '${ctx.handClass} is in the GTO $verb range from ${_posName(pos)} '
-              '($baseLabel).'
+          ? '${ctx.handClass} is a standard ${profile == 'nash' ? 'jam' : 'open'} '
+              'from ${_posName(pos)} — GTO $verb $coverShare here.'
           : gtoCompletes
-              ? '${ctx.handClass} is too weak to open-raise, but with the '
-                  'ante in the pot the small blind completes almost every '
-                  'playable hand instead of folding ($baseLabel).'
-              : '${ctx.handClass} is not a GTO $verb from ${_posName(pos)} '
-                  '($baseLabel).',
+              ? '${ctx.handClass} is too weak to raise, but with the ante '
+                  'already in the pot the small blind just completes with '
+                  'almost everything playable — folding here gives up money.'
+              : '${ctx.handClass} is not a GTO ${profile == 'nash' ? 'jam' : 'open'} '
+                  'from ${_posName(pos)} — only $coverShare $verb here.',
     );
 
     // Exploit: widen/tighten along the playability ordering
@@ -277,9 +281,8 @@ class DrillGrader {
     final gtoLine = _Line(
         gto,
         DrillGtoCharts.coverageOf(isoBase),
-        'Iso-raise about the top '
-        '${_pct(DrillGtoCharts.coverageOf(isoBase))} over '
-        '$limperCount limper${plural ? 's' : ''}; take free flops with the rest.');
+        'Iso-raise ${DrillInsights.naturalShare(DrillGtoCharts.coverageOf(isoBase))} '
+        'over $limperCount limper${plural ? 's' : ''}; take free flops with the rest.');
 
     // Exploit
     final notes = <String>[];
