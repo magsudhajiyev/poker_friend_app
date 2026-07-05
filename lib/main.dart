@@ -14,6 +14,7 @@ import 'screens/player/player_session_screen.dart';
 import 'services/notification_service.dart';
 import 'services/fcm_service.dart';
 import 'services/auth_service.dart';
+import 'services/feature_flag_service.dart';
 import 'services/logger_service.dart';
 import 'services/deep_link_service.dart';
 import 'services/club_service.dart';
@@ -83,6 +84,14 @@ void main() async {
     await SkipHandScoutingService.init();
   } catch (e) {
     debugPrint('Skip hand scouting service init failed: $e');
+  }
+
+  // Feature flags: cached values load here; the Firestore listener keeps
+  // them fresh. Gating falls back to per-flag defaults when offline.
+  try {
+    await FeatureFlagService.init();
+  } catch (e) {
+    debugPrint('Feature flag service init failed: $e');
   }
 
   // Install global error handlers for Crashlytics

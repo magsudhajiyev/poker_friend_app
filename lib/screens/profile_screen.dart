@@ -25,6 +25,7 @@ import 'onboarding/onboarding_flow.dart';
 import '../services/test_data_seed_service.dart';
 import '../services/stats_calculator.dart';
 import '../l10n/app_localizations.dart';
+import '../services/feature_flag_service.dart';
 
 class ProfileScreen extends StatefulWidget {
   @override
@@ -505,6 +506,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     const SizedBox(height: 24),
                     _buildDevTools(),
                   ],
+
+                  // ── Super-admin feature flags ───────────────────────────
+                  // Available in release too: writes are enforced by
+                  // Firestore rules (isSuperAdmin), not by this UI check.
+                  if (FeatureFlagService.isSuperAdmin) ...[
+                    const SizedBox(height: 24),
+                    _buildFeatureFlags(),
+                  ],
                 ],
               ),
             ),
@@ -761,6 +770,80 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  // ── Super-admin feature flags ──────────────────────────────────────────────
+
+  Widget _buildFeatureFlags() {
+    return ValueListenableBuilder<int>(
+      valueListenable: FeatureFlagService.revision,
+      builder: (context, _, __) => Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: const Color(0xFF101115),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+              color: const Color(0xFF62E3BC).withValues(alpha: 0.3)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(children: [
+              const Icon(Icons.flag_outlined,
+                  color: Color(0xFF62E3BC), size: 20),
+              const SizedBox(width: 8),
+              Text('Feature Flags',
+                  style: GoogleFonts.ibmPlexSans(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF62E3BC))),
+            ]),
+            const SizedBox(height: 4),
+            Text('Global toggles — apply to all users immediately.',
+                style:
+                    GoogleFonts.ibmPlexSans(fontSize: 12, color: _secondary)),
+            const SizedBox(height: 8),
+            for (final flag in FeatureFlagService.all)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(flag.title,
+                            style: GoogleFonts.ibmPlexSans(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.white)),
+                        Text(flag.description,
+                            style: GoogleFonts.ibmPlexSans(
+                                fontSize: 12, color: _secondary)),
+                      ],
+                    ),
+                  ),
+                  Switch(
+                    value: FeatureFlagService.isEnabled(flag.key),
+                    onChanged: (v) async {
+                      try {
+                        await FeatureFlagService.setFlag(flag.key, v);
+                      } catch (e) {
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                              content: Text('Flag update failed: $e')));
+                        }
+                      }
+                    },
+                    activeColor: const Color(0xFF62E3BC),
+                    inactiveThumbColor: const Color(0xFF8C8C8C),
+                    inactiveTrackColor: const Color(0xFF35373C),
+                  ),
+                ],
+              ),
+          ],
         ),
       ),
     );

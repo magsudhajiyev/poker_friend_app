@@ -19,6 +19,7 @@ import '../l10n/app_localizations.dart';
 import 'paywall_screen.dart';
 import '../services/currency_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../services/feature_flag_service.dart';
 
 class HandActionsScreen extends StatefulWidget {
   final Map<String, dynamic> hand;
@@ -389,6 +390,14 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
   }
 
   Future<void> _analyzeHand() async {
+    // Remote kill-switch (super-admin feature flag) for backend outages.
+    if (!FeatureFlagService.isEnabled(FeatureFlagService.aiHandAnalysis)) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('AI analysis is temporarily unavailable.')));
+      }
+      return;
+    }
     final ourHoleCards = widget.hand['ourHoleCards'] as Map<String, dynamic>?;
     final card1 = ourHoleCards?['card1'] as String?;
     final card2 = ourHoleCards?['card2'] as String?;

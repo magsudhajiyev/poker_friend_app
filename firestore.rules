@@ -174,6 +174,12 @@ service cloud.firestore {
       allow read, update, delete: if isSuperAdmin();
     }
 
+    // App config (feature flags) - everyone reads, only super admin writes
+    match /app_config/{docId} {
+      allow read: if isAuthenticated();
+      allow write: if isSuperAdmin();
+    }
+
     // Email templates - admin dashboard only
     match /email_templates/{docId} {
       allow read, write: if isSuperAdmin();

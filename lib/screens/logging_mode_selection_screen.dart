@@ -7,6 +7,7 @@ import '../onboarding/onboarding_progress_bar.dart';
 import 'individual_session_setup_screen.dart';
 import 'training/drill_setup_screen.dart';
 import 'unified_session_setup_screen.dart';
+import '../services/feature_flag_service.dart';
 
 class LoggingModeSelectionScreen extends StatefulWidget {
   const LoggingModeSelectionScreen({super.key});
@@ -132,10 +133,17 @@ class _LoggingModeSelectionScreenState
                       onChoose: () => _navigateToMode(context, LoggingMode.individual),
                     ),
 
-                    const SizedBox(height: 16),
-
-                    // Training Drills entry (premium)
-                    _buildTrainingRow(context),
+                    // Training Drills entry (premium, feature-flagged)
+                    ValueListenableBuilder<int>(
+                      valueListenable: FeatureFlagService.revision,
+                      builder: (context, _, __) => FeatureFlagService
+                              .isEnabled(FeatureFlagService.trainingDrills)
+                          ? Column(children: [
+                              const SizedBox(height: 16),
+                              _buildTrainingRow(context),
+                            ])
+                          : const SizedBox.shrink(),
+                    ),
                   ],
                 ),
               ),
