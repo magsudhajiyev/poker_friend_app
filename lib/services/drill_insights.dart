@@ -1,5 +1,4 @@
 import '../models/drill_models.dart';
-import 'drill_gto_charts.dart';
 
 /// Varies the drill feedback so repeated spots teach DIFFERENT things
 /// instead of repeating one template. Two mechanisms:

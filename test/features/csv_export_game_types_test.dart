@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:poker_friend/services/csv_export_service.dart';
-import 'package:poker_friend/models/game_types.dart';
+import 'package:poker_logger/services/csv_export_service.dart';
+import 'package:poker_logger/models/game_types.dart';
 import '../fixtures/mock_hand_actions.dart';
 
 void main() {

@@ -1,7 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../screens/home_screen.dart';
 import '../screens/my_opponents_screen.dart';
 import '../screens/session_history_screen.dart';

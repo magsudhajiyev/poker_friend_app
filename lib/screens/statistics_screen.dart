@@ -15,9 +15,6 @@ import '../widgets/global_bottom_nav_bar.dart';
 import '../design_system/design_system.dart';
 import '../design_system/components/cards/error_state_card.dart';
 import '../widgets/range_grid/range_grid_view.dart';
-import '../design_system/constants/colors.dart';
-import '../design_system/constants/typography.dart';
-import '../design_system/constants/decorations.dart';
 
 class StatisticsScreen extends StatefulWidget {
   @override

@@ -51,9 +51,6 @@ import '../onboarding/onboarding_tour.dart';
 import '../onboarding/onboarding_progress_bar.dart';
 import '../onboarding/guided_hand_overlay.dart';
 import 'session_history_screen.dart';
-import '../design_system/constants/colors.dart';
-import '../design_system/constants/typography.dart';
-import '../design_system/constants/decorations.dart';
 
 class PokerHandScreen extends StatefulWidget {
   final double smallBlind;

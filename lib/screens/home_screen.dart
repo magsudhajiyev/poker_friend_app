@@ -38,9 +38,6 @@ import '../onboarding/onboarding_state.dart';
 import '../onboarding/onboarding_progress_bar.dart';
 import '../design_system/design_system.dart';
 import '../design_system/poker_friend_theme.dart';
-import '../design_system/components.dart';
-import '../design_system/constants/colors.dart';
-import '../design_system/constants/typography.dart';
 import '../design_system/components/drawer_dots.dart';
 import '../design_system/components/cards/error_state_card.dart';
 import '../services/seat_service.dart';
@@ -67,7 +64,6 @@ import '../services/app_data_cache.dart';
 import '../services/display_identity_service.dart';
 import '../services/logger_service.dart';
 import '../l10n/app_localizations.dart';
-import '../design_system/constants/decorations.dart';
 
 /// Home screen
 class HomeScreen extends StatefulWidget {

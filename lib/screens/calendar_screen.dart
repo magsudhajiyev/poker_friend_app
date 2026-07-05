@@ -16,9 +16,6 @@ import '../widgets/event_success_popup.dart';
 import 'club/event_detail_screen.dart' as club_detail;
 import 'event_detail_screen.dart';
 import '../l10n/app_localizations.dart';
-import '../design_system/constants/colors.dart';
-import '../design_system/constants/typography.dart';
-import '../design_system/constants/decorations.dart';
 
 class CalendarScreen extends StatefulWidget {
   @override
