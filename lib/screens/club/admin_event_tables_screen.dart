@@ -12,6 +12,7 @@ import '../../services/waitlist_service.dart';
 import '../../services/event_service.dart';
 import '../../l10n/app_localizations.dart';
 import 'admin_table_management_screen.dart';
+import '../../design_system/constants/colors.dart';
 
 /// Screen for admin to view all tables in an event with shared waitlist
 /// Used when event has multiple tables
@@ -201,7 +202,7 @@ class _AdminEventTablesScreenState extends State<AdminEventTablesScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text(AppLocalizations.of(context).commonCancel, style: const TextStyle(color: Color(0xFF9A9A9A))),
+            child: Text(AppLocalizations.of(context).commonCancel, style: const TextStyle(color: AppColors.textMuted)),
           ),
         ],
       ),
@@ -251,12 +252,12 @@ class _AdminEventTablesScreenState extends State<AdminEventTablesScreen> {
           occupiedCount > 0
               ? AppLocalizations.of(context).adminEventTablesCloseWithPlayers(occupiedCount)
               : AppLocalizations.of(context).adminEventTablesCloseEmpty,
-          style: const TextStyle(color: Color(0xFF9A9A9A)),
+          style: const TextStyle(color: AppColors.textMuted),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text(AppLocalizations.of(context).commonCancel, style: const TextStyle(color: Color(0xFF9A9A9A))),
+            child: Text(AppLocalizations.of(context).commonCancel, style: const TextStyle(color: AppColors.textMuted)),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
@@ -380,7 +381,7 @@ class _AdminEventTablesScreenState extends State<AdminEventTablesScreen> {
                 Text(
                   AppLocalizations.of(context).adminEventTablesSummary(_tables.length, _totalOccupied, _totalOpen),
                   style: const TextStyle(
-                    color: Color(0xFF9A9A9A),
+                    color: AppColors.textMuted,
                     fontSize: 13,
                   ),
                 ),
@@ -618,7 +619,7 @@ class _AdminEventTablesScreenState extends State<AdminEventTablesScreen> {
             Text(
               AppLocalizations.of(context).adminEventTablesNoWaitlist,
               style: TextStyle(
-                color: Color(0xFF9A9A9A),
+                color: AppColors.textMuted,
                 fontSize: 15,
               ),
             ),
@@ -670,7 +671,7 @@ class _AdminEventTablesScreenState extends State<AdminEventTablesScreen> {
                   Text(
                     AppLocalizations.of(context).adminEventTablesWaitlistNext(_waitlist.first.userDisplayName),
                     style: const TextStyle(
-                      color: Color(0xFF9A9A9A),
+                      color: AppColors.textMuted,
                       fontSize: 12,
                     ),
                   ),

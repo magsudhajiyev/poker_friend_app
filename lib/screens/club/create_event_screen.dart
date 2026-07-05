@@ -10,6 +10,7 @@ import '../../services/event_service.dart';
 import '../../services/table_service.dart';
 import '../../services/club_notification_service.dart';
 import '../../design_system/components/calendar/custom_date_picker.dart';
+import '../../design_system/constants/colors.dart';
 
 /// Shows the Create/Edit Event drawer as a modal bottom sheet.
 /// Returns true if event was created/updated, null otherwise.
@@ -177,7 +178,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
       final proceed = await showDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
-          backgroundColor: const Color(0xFF1B1E24),
+          backgroundColor: AppColors.neutral800,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(18),
           ),
@@ -207,7 +208,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
             TextButton(
               onPressed: () => Navigator.pop(context, true),
               style: TextButton.styleFrom(
-                foregroundColor: const Color(0xFF89F1EC),
+                foregroundColor: AppColors.buttonPrimary,
               ),
               child: Text(
                 AppLocalizations.of(context).eventContinue,
@@ -384,7 +385,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
               width: 38,
               height: 38,
               decoration: const BoxDecoration(
-                color: Color(0xFF35373C),
+                color: AppColors.neutral700,
                 shape: BoxShape.circle,
               ),
               child: const Center(
@@ -421,7 +422,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
                     ? const Color(0xFF54E98A).withValues(alpha: 0.5)
                     : _isFormValid
                         ? const Color(0xFF54E98A)
-                        : const Color(0xFF35373C),
+                        : AppColors.neutral700,
                 shape: BoxShape.circle,
               ),
               child: Center(
@@ -435,7 +436,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
                         ),
                       )
                     : Icon(Icons.check,
-                        color: _isFormValid ? Colors.black : const Color(0xFF8C8C8C),
+                        color: _isFormValid ? Colors.black : AppColors.textDisabled,
                         size: 16),
               ),
             ),
@@ -450,7 +451,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Container(
         decoration: BoxDecoration(
-          color: const Color(0xFF101115),
+          color: AppColors.surfaceDark,
           borderRadius: BorderRadius.circular(16),
         ),
         padding: const EdgeInsets.symmetric(vertical: 8),
@@ -497,7 +498,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Container(
         decoration: BoxDecoration(
-          color: const Color(0xFF101115),
+          color: AppColors.surfaceDark,
           borderRadius: BorderRadius.circular(16),
         ),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
@@ -536,17 +537,17 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF1B1E24) : Colors.transparent,
+          color: isSelected ? AppColors.neutral800 : Colors.transparent,
           borderRadius: BorderRadius.circular(40),
           border: Border.all(
-            color: isSelected ? const Color(0xFF89F1EC) : const Color(0xFF35373C),
+            color: isSelected ? AppColors.buttonPrimary : AppColors.neutral700,
             width: 1,
           ),
         ),
         child: Text(
           label,
           style: GoogleFonts.ibmPlexSans(
-            color: isSelected ? const Color(0xFF89F1EC) : const Color(0xFF8C8C8C),
+            color: isSelected ? AppColors.buttonPrimary : AppColors.textDisabled,
             fontSize: 15,
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
           ),
@@ -560,7 +561,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Container(
         decoration: BoxDecoration(
-          color: const Color(0xFF101115),
+          color: AppColors.surfaceDark,
           borderRadius: BorderRadius.circular(18),
         ),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
@@ -597,7 +598,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF1B1E24),
+                      color: AppColors.neutral800,
                       borderRadius: BorderRadius.circular(40),
                     ),
                     child: Text(
@@ -617,7 +618,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF1B1E24),
+                      color: AppColors.neutral800,
                       borderRadius: BorderRadius.circular(40),
                     ),
                     child: Text(
@@ -643,7 +644,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Container(
         decoration: BoxDecoration(
-          color: const Color(0xFF101115),
+          color: AppColors.surfaceDark,
           borderRadius: BorderRadius.circular(16),
         ),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
@@ -678,7 +679,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
                           ? AppLocalizations.of(context).eventDeselectAll
                           : AppLocalizations.of(context).eventSelectAll,
                       style: GoogleFonts.ibmPlexSans(
-                        color: const Color(0xFF89F1EC),
+                        color: AppColors.buttonPrimary,
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                       ),
@@ -697,7 +698,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
                     width: 20,
                     height: 20,
                     child: CircularProgressIndicator(
-                      color: Color(0xFF89F1EC),
+                      color: AppColors.buttonPrimary,
                       strokeWidth: 2,
                     ),
                   ),
@@ -709,7 +710,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
                     ? AppLocalizations.of(context).eventAllTablesInUse
                     : AppLocalizations.of(context).eventNoTablesConfigured,
                 style: GoogleFonts.ibmPlexSans(
-                  color: const Color(0xFF8C8C8C),
+                  color: AppColors.textDisabled,
                   fontSize: 15,
                   height: 1.44,
                 ),
@@ -734,13 +735,13 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                       decoration: BoxDecoration(
                         color: isSelected
-                            ? const Color(0xFF1B4341)
-                            : const Color(0xFF1B1E24),
+                            ? AppColors.mint900
+                            : AppColors.neutral800,
                         borderRadius: BorderRadius.circular(40),
                         border: Border.all(
                           color: isSelected
-                              ? const Color(0xFF89F1EC)
-                              : const Color(0xFF35373C),
+                              ? AppColors.buttonPrimary
+                              : AppColors.neutral700,
                           width: 1,
                         ),
                       ),
@@ -750,15 +751,15 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
                           Icon(
                             isSelected ? Icons.check_circle : Icons.circle_outlined,
                             color: isSelected
-                                ? const Color(0xFF89F1EC)
-                                : const Color(0xFF8C8C8C),
+                                ? AppColors.buttonPrimary
+                                : AppColors.textDisabled,
                             size: 16,
                           ),
                           const SizedBox(width: 6),
                           Text(
                             table.name,
                             style: GoogleFonts.ibmPlexSans(
-                              color: isSelected ? Colors.white : const Color(0xFF8C8C8C),
+                              color: isSelected ? Colors.white : AppColors.textDisabled,
                               fontSize: 14,
                               fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
                             ),
@@ -780,7 +781,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Container(
         decoration: BoxDecoration(
-          color: const Color(0xFF101115),
+          color: AppColors.surfaceDark,
           borderRadius: BorderRadius.circular(16),
         ),
         padding: const EdgeInsets.symmetric(vertical: 8),
@@ -799,7 +800,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Container(
         decoration: BoxDecoration(
-          color: const Color(0xFF101115),
+          color: AppColors.surfaceDark,
           borderRadius: BorderRadius.circular(16),
         ),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -809,12 +810,12 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
               width: 36,
               height: 36,
               decoration: BoxDecoration(
-                color: const Color(0xFF1B1E24),
+                color: AppColors.neutral800,
                 borderRadius: BorderRadius.circular(10),
               ),
               child: const Icon(
                 Icons.notifications_active,
-                color: Color(0xFF89F1EC),
+                color: AppColors.buttonPrimary,
                 size: 18,
               ),
             ),
@@ -835,7 +836,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
                   Text(
                     AppLocalizations.of(context).eventNotifyMembersSubtitle,
                     style: GoogleFonts.ibmPlexSans(
-                      color: const Color(0xFF8C8C8C),
+                      color: AppColors.textDisabled,
                       fontSize: 13,
                       fontWeight: FontWeight.w400,
                     ),
@@ -846,9 +847,9 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
             Switch(
               value: _notifyMembers,
               onChanged: (value) => setState(() => _notifyMembers = value),
-              activeColor: const Color(0xFF89F1EC),
+              activeColor: AppColors.buttonPrimary,
               inactiveThumbColor: Colors.white,
-              inactiveTrackColor: const Color(0xFF35373C),
+              inactiveTrackColor: AppColors.neutral700,
             ),
           ],
         ),
@@ -865,10 +866,10 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 14),
         decoration: BoxDecoration(
-          color: const Color(0xFFFF4444).withOpacity(0.1),
+          color: AppColors.lossRed.withOpacity(0.1),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: const Color(0xFFFF4444).withOpacity(0.3),
+            color: AppColors.lossRed.withOpacity(0.3),
           ),
         ),
         child: Row(
@@ -876,7 +877,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
           children: [
             const Icon(
               Icons.delete_outline,
-              color: Color(0xFFFF4444),
+              color: AppColors.lossRed,
               size: 20,
             ),
             const SizedBox(width: 8),
@@ -884,7 +885,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
               AppLocalizations.of(context).eventDeleteEvent,
               style: GoogleFonts.ibmPlexSans(
                 fontSize: 17,
-                color: const Color(0xFFFF4444),
+                color: AppColors.lossRed,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -899,7 +900,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1B1E24),
+        backgroundColor: AppColors.neutral800,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(18),
         ),
@@ -929,7 +930,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(
-              foregroundColor: const Color(0xFFFF4444),
+              foregroundColor: AppColors.lossRed,
             ),
             child: Text(
               AppLocalizations.of(context).commonDelete,
@@ -953,7 +954,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(AppLocalizations.of(context).eventDeleteFailed('$e')),
-              backgroundColor: const Color(0xFFFF4444),
+              backgroundColor: AppColors.lossRed,
             ),
           );
         }
@@ -973,7 +974,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
     return Container(
       decoration: showError
           ? BoxDecoration(
-              border: Border.all(color: const Color(0xFFFF4444), width: 1),
+              border: Border.all(color: AppColors.lossRed, width: 1),
               borderRadius: BorderRadius.circular(8),
             )
           : null,
@@ -993,7 +994,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
         decoration: InputDecoration(
           hintText: hint,
           hintStyle: GoogleFonts.ibmPlexSans(
-            color: showError ? const Color(0xFFFF4444).withValues(alpha: 0.7) : const Color(0xFF8C8C8C),
+            color: showError ? AppColors.lossRed.withValues(alpha: 0.7) : AppColors.textDisabled,
             fontSize: 17,
             fontWeight: FontWeight.w500,
             height: 1.44,
@@ -1012,7 +1013,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       height: 1,
-      color: const Color(0xFF1C1F21),
+      color: AppColors.separatorDark,
     );
   }
 
@@ -1041,7 +1042,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
           data: Theme.of(context).copyWith(
             colorScheme: const ColorScheme.dark(
               primary: Color(0xFF5CD9A4),
-              surface: Color(0xFF1B1E24),
+              surface: AppColors.neutral800,
             ),
           ),
           child: child!,
@@ -1074,7 +1075,7 @@ class CreateEventScreen extends StatelessWidget {
     });
 
     return const Scaffold(
-      backgroundColor: Color(0xFF02050B),
+      backgroundColor: AppColors.paper,
       body: SizedBox.shrink(),
     );
   }

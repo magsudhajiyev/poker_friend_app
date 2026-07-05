@@ -17,6 +17,7 @@ import '../widgets/event_success_popup.dart';
 import 'club/event_detail_screen.dart' as club_detail;
 import 'event_detail_screen.dart';
 import '../l10n/app_localizations.dart';
+import '../design_system/constants/colors.dart';
 
 class CalendarScreen extends StatefulWidget {
   @override
@@ -174,7 +175,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Container(
             decoration: BoxDecoration(
-              color: const Color(0xFF101115),
+              color: AppColors.surfaceDark,
               borderRadius: BorderRadius.circular(16),
             ),
             padding: const EdgeInsets.symmetric(vertical: 8),
@@ -196,7 +197,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                         Text(
                           l10n.calendarEventType,
                           style: GoogleFonts.ibmPlexSans(
-                            color: const Color(0xFFD3FFFD),
+                            color: AppColors.textMint,
                             fontSize: 17,
                             fontWeight: FontWeight.w500,
                             height: 1.44,
@@ -238,7 +239,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                   decoration: InputDecoration(
                     hintText: l10n.calendarEventTitle,
                     hintStyle: GoogleFonts.ibmPlexSans(
-                      color: const Color(0xFF8C8C8C),
+                      color: AppColors.textDisabled,
                       fontSize: 17,
                       fontWeight: FontWeight.w500,
                       height: 1.44,
@@ -263,7 +264,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                   decoration: InputDecoration(
                     hintText: l10n.calendarLocation,
                     hintStyle: GoogleFonts.ibmPlexSans(
-                      color: const Color(0xFF8C8C8C),
+                      color: AppColors.textDisabled,
                       fontSize: 17,
                       fontWeight: FontWeight.w500,
                       height: 1.44,
@@ -289,7 +290,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                   decoration: InputDecoration(
                     hintText: l10n.calendarBuyInAmount,
                     hintStyle: GoogleFonts.ibmPlexSans(
-                      color: const Color(0xFF8C8C8C),
+                      color: AppColors.textDisabled,
                       fontSize: 17,
                       fontWeight: FontWeight.w500,
                       height: 1.44,
@@ -311,7 +312,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Container(
             decoration: BoxDecoration(
-              color: const Color(0xFF101115),
+              color: AppColors.surfaceDark,
               borderRadius: BorderRadius.circular(18),
             ),
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
@@ -358,7 +359,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF1B1E24),
+                          color: AppColors.neutral800,
                           borderRadius: BorderRadius.circular(40),
                         ),
                         child: Text(
@@ -382,7 +383,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                               data: Theme.of(context).copyWith(
                                 colorScheme: const ColorScheme.dark(
                                   primary: Color(0xFF5CD9A4),
-                                  surface: Color(0xFF1B1E24),
+                                  surface: AppColors.neutral800,
                                 ),
                               ),
                               child: child!,
@@ -396,7 +397,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF1B1E24),
+                          color: AppColors.neutral800,
                           borderRadius: BorderRadius.circular(40),
                         ),
                         child: Text(
@@ -425,7 +426,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       height: 1,
-      color: const Color(0xFF1C1F21),
+      color: AppColors.separatorDark,
     );
   }
 
@@ -1025,7 +1026,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
     final eventDates = events.map((e) => DateTime(e.date.year, e.date.month, e.date.day)).toSet();
 
     return Scaffold(
-      backgroundColor: const Color(0xFF02050B),
+      backgroundColor: AppColors.paper,
       body: Stack(
         children: [
           // Top gradient blur
@@ -1142,7 +1143,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
           width: double.infinity,
           padding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
           decoration: BoxDecoration(
-            color: const Color(0xFF101115),
+            color: AppColors.surfaceDark,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: Colors.black),
           ),
@@ -1152,7 +1153,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
               Icon(
                 Icons.calendar_today_outlined,
                 size: 24,
-                color: const Color(0xFF89F1EC),
+                color: AppColors.buttonPrimary,
               ),
               const SizedBox(height: 6),
               // Title
@@ -1172,7 +1173,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 style: GoogleFonts.ibmPlexSans(
                   fontSize: 17,
                   fontWeight: FontWeight.w400,
-                  color: const Color(0xFFD3FFFD),
+                  color: AppColors.textMint,
                   height: 1.44,
                 ),
                 textAlign: TextAlign.center,
@@ -1185,7 +1186,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF89F1EC),
+                    color: AppColors.buttonPrimary,
                     borderRadius: BorderRadius.circular(110),
                   ),
                   child: Row(
@@ -1294,7 +1295,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
           decoration: BoxDecoration(
-            color: const Color(0xFF101115),
+            color: AppColors.surfaceDark,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: Colors.black),
           ),
@@ -1332,7 +1333,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
               // Separator
               Container(
                 height: 1,
-                color: const Color(0xFF1C1F21),
+                color: AppColors.separatorDark,
               ),
               // Bottom row: Date + Buy-in
               SizedBox(
@@ -1361,7 +1362,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                           style: GoogleFonts.ibmPlexSans(
                             fontSize: 17,
                             fontWeight: FontWeight.w500,
-                            color: const Color(0xFFD3FFFD),
+                            color: AppColors.textMint,
                             height: 1.44,
                           ),
                           textAlign: TextAlign.right,
@@ -1408,7 +1409,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                   width: tooltipWidth,
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF02050B),
+                    color: AppColors.paper,
                     borderRadius: BorderRadius.circular(18),
                     boxShadow: const [
                       BoxShadow(
@@ -1459,7 +1460,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                       // Separator
                       Container(
                         height: 1,
-                        color: const Color(0xFF1C1F21),
+                        color: AppColors.separatorDark,
                       ),
                       // Delete Event
                       GestureDetector(
@@ -1474,7 +1475,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                               width: 16,
                               height: 16,
                               colorFilter: const ColorFilter.mode(
-                                Color(0xFFD55A41),
+                                AppColors.errorRed,
                                 BlendMode.srcIn,
                               ),
                             ),
@@ -1768,7 +1769,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
               Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF101115),
+                  color: AppColors.surfaceDark,
                   borderRadius: BorderRadius.circular(18),
                 ),
                 child: Column(
@@ -1830,7 +1831,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                   width: double.infinity,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF101115),
+                    color: AppColors.surfaceDark,
                     borderRadius: BorderRadius.circular(100),
                   ),
                   child: Center(
@@ -1857,14 +1858,14 @@ class _CalendarScreenState extends State<CalendarScreen> {
       case 'Tournament':
         return Color(0xFF5B9CDF);
       case 'Cash Game':
-        return Color(0xFF5AC95A);
+        return AppColors.profitGreen;
       case 'Home Game':
       case 'Private Game':
         return Color(0xFFE67E22);
       case 'Online':
         return Color(0xFF8B5CF6);
       default:
-        return Color(0xFF9A9A9A);
+        return AppColors.textMuted;
     }
   }
 }

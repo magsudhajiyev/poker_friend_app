@@ -17,6 +17,7 @@ import '../design_system/components/headers/top_nav_bar.dart';
 import '../services/app_data_cache.dart';
 import '../services/logger_service.dart';
 import '../l10n/app_localizations.dart';
+import '../design_system/constants/colors.dart';
 
 class MyOpponentsScreen extends StatefulWidget {
   // Static cache accessible from other screens
@@ -1094,7 +1095,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> with SingleTicker
                       ),
                     ),
                     // Divider
-                    Container(height: 1, color: const Color(0xFF1C1F21)),
+                    Container(height: 1, color: AppColors.separatorDark),
                     // Delete row
                     GestureDetector(
                       onTap: () {

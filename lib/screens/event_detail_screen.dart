@@ -5,6 +5,7 @@ import 'dart:ui' as ui;
 import '../widgets/global_bottom_nav_bar.dart';
 import '../l10n/app_localizations.dart';
 import '../services/currency_service.dart';
+import '../design_system/constants/colors.dart';
 
 /// Event detail screen matching Figma node 158:2943
 /// Shows event title, date/time, details card, and delete button
@@ -75,7 +76,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF02050B),
+      backgroundColor: AppColors.paper,
       body: Stack(
         children: [
           // Teal/cyan gradient glow at top (matching calendar screen)
@@ -151,7 +152,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                         width: double.infinity,
                         padding: const EdgeInsets.symmetric(vertical: 8),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF131616),
+                          color: AppColors.infoCardBg,
                           borderRadius: BorderRadius.circular(18),
                         ),
                         child: Builder(
@@ -198,7 +199,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                             child: Container(
                               padding: const EdgeInsets.fromLTRB(8, 6, 16, 6),
                               decoration: BoxDecoration(
-                                color: const Color(0xFF1B1E24),
+                                color: AppColors.neutral800,
                                 borderRadius: BorderRadius.circular(40),
                               ),
                               child: Row(
@@ -243,7 +244,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                   height: 36,
                                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFF1B1E24),
+                                    color: AppColors.neutral800,
                                     borderRadius: BorderRadius.circular(40),
                                   ),
                                   child: Center(
@@ -330,7 +331,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                 Container(
                   width: double.infinity,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF101115),
+                    color: AppColors.surfaceDark,
                     borderRadius: BorderRadius.circular(18),
                   ),
                   child: Column(
@@ -389,7 +390,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                     width: double.infinity,
                     height: 48,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF101115),
+                      color: AppColors.surfaceDark,
                       borderRadius: BorderRadius.circular(100),
                     ),
                     child: Center(
@@ -452,7 +453,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Container(
         height: 1,
-        color: const Color(0xFF1C1F21),
+        color: AppColors.separatorDark,
       ),
     );
   }

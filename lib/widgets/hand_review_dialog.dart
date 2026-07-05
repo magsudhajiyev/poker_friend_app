@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../l10n/app_localizations.dart';
 import '../models/hand_state_machine.dart';
 import 'card_keyboard.dart';
+import '../design_system/constants/colors.dart';
 
 class HandReviewDialog extends StatefulWidget {
   final HoleCards? existingCards;
@@ -75,9 +76,9 @@ class _HandReviewDialogState extends State<HandReviewDialog> {
       child: Container(
         constraints: const BoxConstraints(maxWidth: 400),
         decoration: BoxDecoration(
-          color: const Color(0xFF101115),
+          color: AppColors.surfaceDark,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFF1B1E24), width: 1),
+          border: Border.all(color: AppColors.neutral800, width: 1),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -123,7 +124,7 @@ class _HandReviewDialogState extends State<HandReviewDialog> {
               width: 38,
               height: 38,
               decoration: const BoxDecoration(
-                color: Color(0xFF35373C),
+                color: AppColors.neutral700,
                 shape: BoxShape.circle,
               ),
               child: const Center(
@@ -155,16 +156,16 @@ class _HandReviewDialogState extends State<HandReviewDialog> {
               decoration: BoxDecoration(
                 color: _isStarred
                     ? Colors.amber.withValues(alpha: 0.2)
-                    : const Color(0xFF1B1E24),
+                    : AppColors.neutral800,
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
-                  color: _isStarred ? Colors.amber : const Color(0xFF35373C),
+                  color: _isStarred ? Colors.amber : AppColors.neutral700,
                   width: 1,
                 ),
               ),
               child: Icon(
                 _isStarred ? Icons.star : Icons.star_border,
-                color: _isStarred ? Colors.amber : const Color(0xFF8C8C8C),
+                color: _isStarred ? Colors.amber : AppColors.textDisabled,
                 size: 20,
               ),
             ),
@@ -193,7 +194,7 @@ class _HandReviewDialogState extends State<HandReviewDialog> {
             Text(
               l10n.handReviewOptional,
               style: GoogleFonts.ibmPlexSans(
-                color: const Color(0xFF8C8C8C),
+                color: AppColors.textDisabled,
                 fontSize: 13,
               ),
             ),
@@ -250,11 +251,11 @@ class _HandReviewDialogState extends State<HandReviewDialog> {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected
-              ? const Color(0xFF89F1EC).withValues(alpha: 0.15)
-              : const Color(0xFF1B1E24),
+              ? AppColors.buttonPrimary.withValues(alpha: 0.15)
+              : AppColors.neutral800,
           borderRadius: BorderRadius.circular(40),
           border: Border.all(
-            color: isSelected ? const Color(0xFF89F1EC) : const Color(0xFF35373C),
+            color: isSelected ? AppColors.buttonPrimary : AppColors.neutral700,
             width: 1,
           ),
         ),
@@ -264,14 +265,14 @@ class _HandReviewDialogState extends State<HandReviewDialog> {
             Icon(
               icon,
               size: 14,
-              color: isSelected ? const Color(0xFF89F1EC) : const Color(0xFF8C8C8C),
+              color: isSelected ? AppColors.buttonPrimary : AppColors.textDisabled,
             ),
             const SizedBox(width: 6),
             Text(
               label,
               style: GoogleFonts.ibmPlexSans(
                 fontSize: 13,
-                color: isSelected ? const Color(0xFF89F1EC) : Colors.white70,
+                color: isSelected ? AppColors.buttonPrimary : Colors.white70,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
               ),
             ),
@@ -297,9 +298,9 @@ class _HandReviewDialogState extends State<HandReviewDialog> {
         const SizedBox(height: 10),
         Container(
           decoration: BoxDecoration(
-            color: const Color(0xFF02050B),
+            color: AppColors.paper,
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: const Color(0xFF1B1E24)),
+            border: Border.all(color: AppColors.neutral800),
           ),
           child: TextField(
             controller: _notesController,
@@ -308,7 +309,7 @@ class _HandReviewDialogState extends State<HandReviewDialog> {
             decoration: InputDecoration(
               hintText: l10n.handReviewNotesHint,
               hintStyle: GoogleFonts.ibmPlexSans(
-                color: const Color(0xFF4E5054),
+                color: AppColors.infoCardDateText,
                 fontSize: 13,
               ),
               border: InputBorder.none,
@@ -330,7 +331,7 @@ class _HandReviewDialogState extends State<HandReviewDialog> {
           child: TextButton(
             onPressed: _saveHand,
             style: TextButton.styleFrom(
-              backgroundColor: const Color(0xFF89F1EC),
+              backgroundColor: AppColors.buttonPrimary,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(40),
               ),

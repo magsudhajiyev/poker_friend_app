@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../l10n/app_localizations.dart';
+import '../../design_system/constants/colors.dart';
 
 /// Stacked raise/call/check/fold frequency bar with a legend.
 /// Colors follow the action-flash palette used during hand logging.
@@ -20,7 +21,7 @@ class RangeFrequencyBar extends StatelessWidget {
   });
 
   static const raiseColor = Color(0xFFFFC857);
-  static const callColor = Color(0xFF89F1EC);
+  static const callColor = AppColors.buttonPrimary;
   static const checkColor = Color(0xFF3BA55D);
   static const foldColor = Color(0xFFE85D5D);
 

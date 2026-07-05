@@ -9,6 +9,7 @@ import '../services/club_service.dart';
 import '../services/club_notification_service.dart';
 import '../services/email_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../design_system/constants/colors.dart';
 
 /// Dialog for club admins to invite dealers or other admins
 class InviteMemberDialog extends StatefulWidget {
@@ -134,7 +135,7 @@ class _InviteMemberDialogState extends State<InviteMemberDialog> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(AppLocalizations.of(context).inviteMemberError(e.toString())),
-          backgroundColor: const Color(0xFFFF4444),
+          backgroundColor: AppColors.lossRed,
         ),
       );
     }
@@ -166,7 +167,7 @@ class _InviteMemberDialogState extends State<InviteMemberDialog> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF131616),
+        backgroundColor: AppColors.infoCardBg,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(18),
         ),
@@ -177,12 +178,12 @@ class _InviteMemberDialogState extends State<InviteMemberDialog> {
               width: 52,
               height: 52,
               decoration: BoxDecoration(
-                color: const Color(0xFF89F1EC).withOpacity(0.1),
+                color: AppColors.buttonPrimary.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
                 Icons.check_circle,
-                color: Color(0xFF89F1EC),
+                color: AppColors.buttonPrimary,
                 size: 28,
               ),
             ),
@@ -212,7 +213,7 @@ class _InviteMemberDialogState extends State<InviteMemberDialog> {
             child: Text(
               AppLocalizations.of(context).commonDone,
               style: GoogleFonts.ibmPlexSans(
-                color: const Color(0xFF89F1EC),
+                color: AppColors.buttonPrimary,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -225,7 +226,7 @@ class _InviteMemberDialogState extends State<InviteMemberDialog> {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      backgroundColor: const Color(0xFF131616),
+      backgroundColor: AppColors.infoCardBg,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(18),
       ),
@@ -253,12 +254,12 @@ class _InviteMemberDialogState extends State<InviteMemberDialog> {
                 width: 38,
                 height: 38,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF89F1EC).withOpacity(0.1),
+                  color: AppColors.buttonPrimary.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Icon(
                   Icons.person_add,
-                  color: Color(0xFF89F1EC),
+                  color: AppColors.buttonPrimary,
                   size: 20,
                 ),
               ),
@@ -332,19 +333,19 @@ class _InviteMemberDialogState extends State<InviteMemberDialog> {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Color(0xFF89F1EC), width: 1),
+                borderSide: const BorderSide(color: AppColors.buttonPrimary, width: 1),
               ),
               errorBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Color(0xFFFF4444), width: 1),
+                borderSide: const BorderSide(color: AppColors.lossRed, width: 1),
               ),
               focusedErrorBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Color(0xFFFF4444), width: 1),
+                borderSide: const BorderSide(color: AppColors.lossRed, width: 1),
               ),
               errorStyle: GoogleFonts.ibmPlexSans(
                 fontSize: 12,
-                color: const Color(0xFFFF4444),
+                color: AppColors.lossRed,
               ),
             ),
             validator: (value) {
@@ -426,7 +427,7 @@ class _InviteMemberDialogState extends State<InviteMemberDialog> {
                     padding: const EdgeInsets.symmetric(vertical: 13),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(60),
-                      color: const Color(0xFF89F1EC),
+                      color: AppColors.buttonPrimary,
                     ),
                     child: Center(
                       child: _isSubmitting
@@ -463,7 +464,7 @@ class _InviteMemberDialogState extends State<InviteMemberDialog> {
     required String label,
   }) {
     final isSelected = _selectedRole == role;
-    const mint = Color(0xFF89F1EC);
+    const mint = AppColors.buttonPrimary;
 
     return GestureDetector(
       onTap: () {

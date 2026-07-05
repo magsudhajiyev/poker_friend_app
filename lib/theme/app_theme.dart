@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../design_system/constants/colors.dart';
 
 class NoTransitionsBuilder extends PageTransitionsBuilder {
   const NoTransitionsBuilder();
@@ -37,10 +38,10 @@ class AppTheme {
         seedColor: const Color(0xFF1B4332),
         brightness: Brightness.dark,
       ).copyWith(
-        primary: const Color(0xFF62E3BC),
-        secondary: const Color(0xFF89F1EC),
-        tertiary: const Color(0xFF87ED81),
-        surface: const Color(0xFF131616),
+        primary: AppColors.tealPrimary,
+        secondary: AppColors.buttonPrimary,
+        tertiary: AppColors.limeGreen,
+        surface: AppColors.infoCardBg,
         onSurface: Colors.white,
         background: Colors.black,
         onBackground: Colors.white,
@@ -132,7 +133,7 @@ class AppTheme {
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF62E3BC),
+          backgroundColor: AppColors.tealPrimary,
           foregroundColor: Colors.black,
           padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
           shape: RoundedRectangleBorder(
@@ -148,7 +149,7 @@ class AppTheme {
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: const Color(0xFF89F1EC),
+          foregroundColor: AppColors.buttonPrimary,
           textStyle: GoogleFonts.ibmPlexSans(
             fontSize: 17,
             fontWeight: FontWeight.w500,
@@ -161,19 +162,19 @@ class AppTheme {
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
           borderSide: BorderSide(
-            color: const Color(0xFF89F1EC).withOpacity(0.2),
+            color: AppColors.buttonPrimary.withOpacity(0.2),
           ),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
           borderSide: BorderSide(
-            color: const Color(0xFF89F1EC).withOpacity(0.2),
+            color: AppColors.buttonPrimary.withOpacity(0.2),
           ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
           borderSide: const BorderSide(
-            color: Color(0xFF89F1EC),
+            color: AppColors.buttonPrimary,
           ),
         ),
         hintStyle: GoogleFonts.ibmPlexSans(
@@ -193,7 +194,7 @@ class AppTheme {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(30),
         ),
-        color: const Color(0xFF131616),
+        color: AppColors.infoCardBg,
       ),
       appBarTheme: AppBarTheme(
         backgroundColor: Colors.black,
@@ -207,8 +208,8 @@ class AppTheme {
         ),
       ),
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
-        backgroundColor: const Color(0xFF131616),
-        selectedItemColor: const Color(0xFF62E3BC),
+        backgroundColor: AppColors.infoCardBg,
+        selectedItemColor: AppColors.tealPrimary,
         unselectedItemColor: Colors.white.withOpacity(0.5),
         selectedLabelStyle: GoogleFonts.ibmPlexSans(
           fontSize: 12,
@@ -236,7 +237,7 @@ class AppTheme {
         ),
       ),
       snackBarTheme: SnackBarThemeData(
-        backgroundColor: const Color(0xFF62E3BC),
+        backgroundColor: AppColors.tealPrimary,
         contentTextStyle: GoogleFonts.ibmPlexSans(
           fontSize: 14,
           fontWeight: FontWeight.w500,

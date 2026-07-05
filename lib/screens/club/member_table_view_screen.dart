@@ -11,6 +11,7 @@ import '../../services/auth_service.dart';
 import '../../services/table_service.dart';
 import '../../services/seat_service.dart';
 import '../../widgets/poker_table_widget.dart';
+import '../../design_system/constants/colors.dart';
 
 /// Read-only screen for members to view who's seated at a table.
 /// Joining the waitlist is handled exclusively by the grouped cash game
@@ -190,7 +191,7 @@ class _MemberTableViewScreenState extends State<MemberTableViewScreen> {
                 Text(
                   AppLocalizations.of(context).memberTableSeatedOpen(_occupiedSeats, _openSeats),
                   style: const TextStyle(
-                    color: Color(0xFF9A9A9A),
+                    color: AppColors.textMuted,
                     fontSize: 13,
                   ),
                 ),
@@ -251,10 +252,10 @@ class _MemberTableViewScreenState extends State<MemberTableViewScreen> {
       ];
     } else if (isOccupied) {
       bgColor = Colors.black;
-      borderColor = const Color(0xFF89F1EC);
+      borderColor = AppColors.buttonPrimary;
       shadows = [
         BoxShadow(
-          color: const Color(0xFF89F1EC).withValues(alpha: 0.3),
+          color: AppColors.buttonPrimary.withValues(alpha: 0.3),
           blurRadius: 8,
           spreadRadius: 1,
         ),
@@ -271,7 +272,7 @@ class _MemberTableViewScreenState extends State<MemberTableViewScreen> {
       ];
     } else {
       bgColor = const Color(0xFF2A2A2E);
-      borderColor = const Color(0xFF89F1EC).withValues(alpha: 0.3);
+      borderColor = AppColors.buttonPrimary.withValues(alpha: 0.3);
       shadows = null;
     }
 

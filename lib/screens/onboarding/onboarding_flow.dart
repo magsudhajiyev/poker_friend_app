@@ -7,6 +7,7 @@ import 'game_type_step.dart';
 import 'journey_step.dart';
 import 'weekly_hours_step.dart';
 import 'purpose_step.dart';
+import '../../design_system/constants/colors.dart';
 
 /// Main onboarding flow controller.
 ///
@@ -157,7 +158,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF02050B),
+      backgroundColor: AppColors.paper,
       body: PageView(
         controller: _pageController,
         physics: const NeverScrollableScrollPhysics(),

@@ -19,6 +19,7 @@ import '../onboarding/onboarding_tour.dart';
 import '../onboarding/onboarding_progress_bar.dart';
 import 'poker_hand_screen.dart';
 import 'my_opponents_screen.dart';
+import '../design_system/constants/colors.dart';
 
 class SeatSetupScreen extends StatefulWidget {
   final int? playerCount;
@@ -856,7 +857,7 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(AppLocalizations.of(context).seatSetupOpponentSaved),
-          backgroundColor: const Color(0xFF62E3BC),
+          backgroundColor: AppColors.tealPrimary,
         ));
       }
     } catch (_) {}
@@ -888,8 +889,8 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                     radius: 0.5,
                     colors: [
                       Color(0xFF1A4A4A),
-                      Color(0xFF133538).withOpacity(0.7),
-                      Color(0xFF133538).withOpacity(0.3),
+                      AppColors.headerGradientTeal.withOpacity(0.7),
+                      AppColors.headerGradientTeal.withOpacity(0.3),
                       Colors.transparent,
                     ],
                     stops: [0.0, 0.3, 0.6, 1.0],
@@ -999,7 +1000,7 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                                   width: double.infinity,
                                   padding: const EdgeInsets.symmetric(vertical: 16),
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFF62E3BC),
+                                    color: AppColors.tealPrimary,
                                     borderRadius: BorderRadius.circular(110),
                                   ),
                                   child: Center(
@@ -1194,18 +1195,18 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
         content: Text(
           'The dealer button is on Seat $currentBtnSeat which is empty. Move it to Seat $nearestActive?',
           style: GoogleFonts.ibmPlexSans(
-            color: const Color(0xFF8C8C8C),
+            color: AppColors.textDisabled,
             fontSize: 15,
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text(l10n.seatKeep, style: GoogleFonts.ibmPlexSans(color: const Color(0xFF8C8C8C))),
+            child: Text(l10n.seatKeep, style: GoogleFonts.ibmPlexSans(color: AppColors.textDisabled)),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: Text(l10n.seatMove, style: GoogleFonts.ibmPlexSans(color: const Color(0xFF62E3BC))),
+            child: Text(l10n.seatMove, style: GoogleFonts.ibmPlexSans(color: AppColors.tealPrimary)),
           ),
         ],
       ),

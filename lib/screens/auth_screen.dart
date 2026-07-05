@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
 import '../services/auth_service.dart';
 import 'home_screen.dart';
+import '../design_system/constants/colors.dart';
 
 class AuthScreen extends StatefulWidget {
   @override
@@ -165,7 +166,7 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
                       child: TabBar(
                         controller: _tabController,
                         labelColor: Colors.white,
-                        unselectedLabelColor: Color(0xFF9A9A9A),
+                        unselectedLabelColor: AppColors.textMuted,
                         indicatorColor: Color(0xFFcb5242),
                         indicatorWeight: 3,
                         labelStyle: TextStyle(
@@ -216,8 +217,8 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
               style: TextStyle(color: Colors.white),
               decoration: InputDecoration(
                 labelText: l10n.authEmail,
-                labelStyle: TextStyle(color: Color(0xFF9A9A9A)),
-                prefixIcon: Icon(Icons.email, color: Color(0xFF9A9A9A)),
+                labelStyle: TextStyle(color: AppColors.textMuted),
+                prefixIcon: Icon(Icons.email, color: AppColors.textMuted),
                 filled: true,
                 fillColor: Color(0xFF2A2A2E),
                 border: OutlineInputBorder(
@@ -256,12 +257,12 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
               style: TextStyle(color: Colors.white),
               decoration: InputDecoration(
                 labelText: l10n.authPassword,
-                labelStyle: TextStyle(color: Color(0xFF9A9A9A)),
-                prefixIcon: Icon(Icons.lock, color: Color(0xFF9A9A9A)),
+                labelStyle: TextStyle(color: AppColors.textMuted),
+                prefixIcon: Icon(Icons.lock, color: AppColors.textMuted),
                 suffixIcon: IconButton(
                   icon: Icon(
                     _obscureLoginPassword ? Icons.visibility : Icons.visibility_off,
-                    color: Color(0xFF9A9A9A),
+                    color: AppColors.textMuted,
                   ),
                   onPressed: () => setState(() => _obscureLoginPassword = !_obscureLoginPassword),
                 ),
@@ -326,7 +327,7 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
               onPressed: () => _showForgotPasswordDialog(),
               child: Text(
                 l10n.authForgotPassword,
-                style: TextStyle(color: Color(0xFF9A9A9A)),
+                style: TextStyle(color: AppColors.textMuted),
               ),
             ),
           ],
@@ -351,8 +352,8 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
               style: TextStyle(color: Colors.white),
               decoration: InputDecoration(
                 labelText: l10n.authDisplayName,
-                labelStyle: TextStyle(color: Color(0xFF9A9A9A)),
-                prefixIcon: Icon(Icons.person, color: Color(0xFF9A9A9A)),
+                labelStyle: TextStyle(color: AppColors.textMuted),
+                prefixIcon: Icon(Icons.person, color: AppColors.textMuted),
                 filled: true,
                 fillColor: Color(0xFF2A2A2E),
                 border: OutlineInputBorder(
@@ -391,8 +392,8 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
               style: TextStyle(color: Colors.white),
               decoration: InputDecoration(
                 labelText: l10n.authEmail,
-                labelStyle: TextStyle(color: Color(0xFF9A9A9A)),
-                prefixIcon: Icon(Icons.email, color: Color(0xFF9A9A9A)),
+                labelStyle: TextStyle(color: AppColors.textMuted),
+                prefixIcon: Icon(Icons.email, color: AppColors.textMuted),
                 filled: true,
                 fillColor: Color(0xFF2A2A2E),
                 border: OutlineInputBorder(
@@ -431,12 +432,12 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
               style: TextStyle(color: Colors.white),
               decoration: InputDecoration(
                 labelText: l10n.authPassword,
-                labelStyle: TextStyle(color: Color(0xFF9A9A9A)),
-                prefixIcon: Icon(Icons.lock, color: Color(0xFF9A9A9A)),
+                labelStyle: TextStyle(color: AppColors.textMuted),
+                prefixIcon: Icon(Icons.lock, color: AppColors.textMuted),
                 suffixIcon: IconButton(
                   icon: Icon(
                     _obscureRegisterPassword ? Icons.visibility : Icons.visibility_off,
-                    color: Color(0xFF9A9A9A),
+                    color: AppColors.textMuted,
                   ),
                   onPressed: () => setState(() => _obscureRegisterPassword = !_obscureRegisterPassword),
                 ),
@@ -478,12 +479,12 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
               style: TextStyle(color: Colors.white),
               decoration: InputDecoration(
                 labelText: l10n.authConfirmPassword,
-                labelStyle: TextStyle(color: Color(0xFF9A9A9A)),
-                prefixIcon: Icon(Icons.lock_outline, color: Color(0xFF9A9A9A)),
+                labelStyle: TextStyle(color: AppColors.textMuted),
+                prefixIcon: Icon(Icons.lock_outline, color: AppColors.textMuted),
                 suffixIcon: IconButton(
                   icon: Icon(
                     _obscureConfirmPassword ? Icons.visibility : Icons.visibility_off,
-                    color: Color(0xFF9A9A9A),
+                    color: AppColors.textMuted,
                   ),
                   onPressed: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
                 ),
@@ -567,7 +568,7 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
           children: [
             Text(
               l10n.authResetPasswordMessage,
-              style: TextStyle(color: Color(0xFF9A9A9A)),
+              style: TextStyle(color: AppColors.textMuted),
             ),
             SizedBox(height: 16),
             TextField(
@@ -576,7 +577,7 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
               style: TextStyle(color: Colors.white),
               decoration: InputDecoration(
                 labelText: l10n.authEmail,
-                labelStyle: TextStyle(color: Color(0xFF9A9A9A)),
+                labelStyle: TextStyle(color: AppColors.textMuted),
                 filled: true,
                 fillColor: Color(0xFF2A2A2E),
                 border: OutlineInputBorder(
@@ -600,7 +601,7 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
             onPressed: () => Navigator.pop(context),
             child: Text(
               l10n.commonCancel,
-              style: TextStyle(color: Color(0xFF9A9A9A)),
+              style: TextStyle(color: AppColors.textMuted),
             ),
           ),
           ElevatedButton(
@@ -626,7 +627,7 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
               }
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: Color(0xFF5AC95A),
+              backgroundColor: AppColors.profitGreen,
               foregroundColor: Colors.white,
             ),
             child: Text(l10n.authSendResetLink),

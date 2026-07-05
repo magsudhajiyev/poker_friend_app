@@ -54,7 +54,7 @@ Widget buildWelcomeCard({required VoidCallback onNext, required BuildContext con
     padding: const EdgeInsets.all(28),
     margin: const EdgeInsets.symmetric(horizontal: 24),
     decoration: BoxDecoration(
-      color: const Color(0xFF101115),
+      color: AppColors.surfaceDark,
       borderRadius: BorderRadius.circular(20),
       border: Border.all(
         color: AppColors.buttonPrimary.withValues(alpha: 0.15),
@@ -121,7 +121,7 @@ Widget buildTooltip({
     padding: const EdgeInsets.all(24),
     margin: const EdgeInsets.symmetric(horizontal: 24),
     decoration: BoxDecoration(
-      color: const Color(0xFF101115),
+      color: AppColors.surfaceDark,
       borderRadius: BorderRadius.circular(16),
       border: Border.all(
         color: AppColors.buttonPrimary.withValues(alpha: 0.15),
@@ -775,9 +775,9 @@ class _OnboardingCompleteDialog extends StatelessWidget {
         margin: const EdgeInsets.symmetric(horizontal: 32),
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: const Color(0xFF101115),
+          color: AppColors.surfaceDark,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFF1B1E24)),
+          border: Border.all(color: AppColors.neutral800),
           boxShadow: const [
             BoxShadow(
               color: Colors.black,
@@ -791,7 +791,7 @@ class _OnboardingCompleteDialog extends StatelessWidget {
           children: [
             const Icon(
               Icons.check_circle_outline,
-              color: Color(0xFF62E3BC),
+              color: AppColors.tealPrimary,
               size: 48,
             ),
             const SizedBox(height: 16),
@@ -810,7 +810,7 @@ class _OnboardingCompleteDialog extends StatelessWidget {
             Text(
               l10n.guidedTourCompleteBody,
               style: GoogleFonts.ibmPlexSans(
-                color: const Color(0xFF8C8C8C),
+                color: AppColors.textDisabled,
                 fontSize: 15,
                 height: 1.44,
                 decoration: TextDecoration.none,

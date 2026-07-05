@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
+import '../design_system/constants/colors.dart';
 
 class GlobalLoadingSpinner extends StatefulWidget {
   final String? message;
@@ -65,7 +66,7 @@ class _GlobalLoadingSpinnerState extends State<GlobalLoadingSpinner>
               width: widget.size * 0.8,
               height: widget.size * 0.8,
               child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF5AC95A)),
+                valueColor: AlwaysStoppedAnimation<Color>(AppColors.profitGreen),
                 strokeWidth: 3,
               ),
             ),
@@ -85,7 +86,7 @@ class _GlobalLoadingSpinnerState extends State<GlobalLoadingSpinner>
             Text(
               AppLocalizations.of(context).loadingDefault,
               style: TextStyle(
-                color: Color(0xFF9A9A9A),
+                color: AppColors.textMuted,
                 fontSize: 14,
               ),
             ),

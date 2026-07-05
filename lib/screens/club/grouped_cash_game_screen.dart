@@ -439,7 +439,7 @@ class _GroupedCashGameScreenState extends State<GroupedCashGameScreen> {
               width: 44,
               height: 44,
               decoration: const BoxDecoration(
-                color: Color(0xFF101115),
+                color: AppColors.surfaceDark,
                 shape: BoxShape.circle,
               ),
               alignment: Alignment.center,
@@ -493,7 +493,7 @@ class _GroupedCashGameScreenState extends State<GroupedCashGameScreen> {
                 alignment: Alignment.center,
                 child: const Icon(
                   Icons.add,
-                  color: Color(0xFF02050B),
+                  color: AppColors.paper,
                   size: 24,
                 ),
               ),
@@ -625,7 +625,7 @@ class _GroupedCashGameScreenState extends State<GroupedCashGameScreen> {
       onTap: () => _navigateToTable(t),
       child: Container(
         decoration: BoxDecoration(
-          color: const Color(0xFF101115),
+          color: AppColors.surfaceDark,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(color: const Color(0xFF161A14), width: 1),
         ),
@@ -1171,7 +1171,7 @@ class _AdminWaitlistSheetState extends State<_AdminWaitlistSheet> {
               width: 38,
               height: 38,
               decoration: const BoxDecoration(
-                color: Color(0xFF35373C),
+                color: AppColors.neutral700,
                 shape: BoxShape.circle,
               ),
               child: const Center(
@@ -1615,7 +1615,7 @@ class _AddTableSheetState extends State<_AddTableSheet> {
               width: 38,
               height: 38,
               decoration: const BoxDecoration(
-                color: Color(0xFF35373C),
+                color: AppColors.neutral700,
                 shape: BoxShape.circle,
               ),
               child: const Center(
@@ -1751,7 +1751,7 @@ class _AddTableSheetState extends State<_AddTableSheet> {
                 : Text(
                     AppLocalizations.of(context).clubCashGameAdd,
                     style: GoogleFonts.ibmPlexSans(
-                      color: const Color(0xFF02050B),
+                      color: AppColors.paper,
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
                     ),

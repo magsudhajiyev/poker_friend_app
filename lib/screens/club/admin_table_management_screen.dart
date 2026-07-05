@@ -16,6 +16,7 @@ import '../../services/waitlist_service.dart';
 import '../../services/event_service.dart';
 import '../../widgets/poker_table_widget.dart';
 import '../../l10n/app_localizations.dart';
+import '../../design_system/constants/colors.dart';
 
 /// Full-screen elliptic table view for admin seat management
 /// Uses the same visual design as seat_setup_screen.dart
@@ -251,7 +252,7 @@ class _AdminTableManagementScreenState
                 Text(
                   '$occupiedCount seated  •  $openCount open',
                   style: const TextStyle(
-                    color: Color(0xFF9A9A9A),
+                    color: AppColors.textMuted,
                     fontSize: 13,
                   ),
                 ),
@@ -311,12 +312,12 @@ class _AdminTableManagementScreenState
           occupiedCount > 0
               ? AppLocalizations.of(context).adminTableThisWillMoveMsg(occupiedCount)
               : AppLocalizations.of(context).adminTableThisWillRemoveMsg,
-          style: const TextStyle(color: Color(0xFF9A9A9A)),
+          style: const TextStyle(color: AppColors.textMuted),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text(AppLocalizations.of(context).commonCancel, style: const TextStyle(color: Color(0xFF9A9A9A))),
+            child: Text(AppLocalizations.of(context).commonCancel, style: const TextStyle(color: AppColors.textMuted)),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
@@ -392,10 +393,10 @@ class _AdminTableManagementScreenState
       ];
     } else if (isOccupied) {
       bgColor = Colors.black;
-      borderColor = const Color(0xFF89F1EC);
+      borderColor = AppColors.buttonPrimary;
       shadows = [
         BoxShadow(
-          color: const Color(0xFF89F1EC).withValues(alpha: 0.3),
+          color: AppColors.buttonPrimary.withValues(alpha: 0.3),
           blurRadius: 8,
           spreadRadius: 1,
         ),
@@ -412,7 +413,7 @@ class _AdminTableManagementScreenState
       ];
     } else {
       bgColor = const Color(0xFF2A2A2E);
-      borderColor = const Color(0xFF89F1EC).withValues(alpha: 0.3);
+      borderColor = AppColors.buttonPrimary.withValues(alpha: 0.3);
       shadows = null;
     }
 
@@ -529,7 +530,7 @@ class _AdminTableManagementScreenState
                   Text(
                     AppLocalizations.of(context).adminTableWaitlistNextName(_waitlist.first.userDisplayName),
                     style: const TextStyle(
-                      color: Color(0xFF9A9A9A),
+                      color: AppColors.textMuted,
                       fontSize: 12,
                     ),
                   ),
@@ -647,12 +648,12 @@ class _AdminTableManagementScreenState
         ),
         content: Text(
           AppLocalizations.of(context).adminTableWaitingForApproval(seatNumber),
-          style: const TextStyle(color: Color(0xFF9A9A9A)),
+          style: const TextStyle(color: AppColors.textMuted),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text(AppLocalizations.of(context).commonCancel, style: const TextStyle(color: Color(0xFF9A9A9A))),
+            child: Text(AppLocalizations.of(context).commonCancel, style: const TextStyle(color: AppColors.textMuted)),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, 'reject'),
@@ -686,11 +687,11 @@ class _AdminTableManagementScreenState
           assignment.playerName ?? 'Player',
           style: const TextStyle(color: Colors.white, fontSize: 20),
         ),
-        content: Text(AppLocalizations.of(context).adminTableSeatNumber(seatNumber), style: const TextStyle(color: Color(0xFF9A9A9A))),
+        content: Text(AppLocalizations.of(context).adminTableSeatNumber(seatNumber), style: const TextStyle(color: AppColors.textMuted)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text(AppLocalizations.of(context).commonCancel, style: const TextStyle(color: Color(0xFF9A9A9A))),
+            child: Text(AppLocalizations.of(context).commonCancel, style: const TextStyle(color: AppColors.textMuted)),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, 'remove'),
@@ -730,7 +731,7 @@ class _AdminTableManagementScreenState
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(AppLocalizations.of(context).adminTableSelectSeat, style: const TextStyle(color: Color(0xFF9A9A9A))),
+            Text(AppLocalizations.of(context).adminTableSelectSeat, style: const TextStyle(color: AppColors.textMuted)),
             const SizedBox(height: 16),
             Wrap(
               spacing: 8,
@@ -765,7 +766,7 @@ class _AdminTableManagementScreenState
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text(AppLocalizations.of(context).commonCancel, style: const TextStyle(color: Color(0xFF9A9A9A))),
+            child: Text(AppLocalizations.of(context).commonCancel, style: const TextStyle(color: AppColors.textMuted)),
           ),
         ],
       ),
@@ -1113,7 +1114,7 @@ class _SeatPlayerSheet extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(title, style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600)),
-                  Text(subtitle, style: const TextStyle(color: Color(0xFF9A9A9A), fontSize: 12)),
+                  Text(subtitle, style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
                 ],
               ),
             ),
@@ -1177,7 +1178,7 @@ class _SeatPlayerSheet extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text(AppLocalizations.of(context).commonCancel, style: const TextStyle(color: Color(0xFF9A9A9A))),
+            child: Text(AppLocalizations.of(context).commonCancel, style: const TextStyle(color: AppColors.textMuted)),
           ),
           TextButton(
             onPressed: () {
@@ -1280,14 +1281,14 @@ class _MemberSearchSheetState extends State<_MemberSearchSheet> {
                         ? Text(
                             seatedAt,
                             style: const TextStyle(
-                              color: Color(0xFF89F1EC),
+                              color: AppColors.buttonPrimary,
                               fontSize: 12,
                               fontWeight: FontWeight.w500,
                             ),
                           )
                         : null,
                     trailing: isSeated
-                        ? const Icon(Icons.event_seat, color: Color(0xFF89F1EC), size: 18)
+                        ? const Icon(Icons.event_seat, color: AppColors.buttonPrimary, size: 18)
                         : const Icon(Icons.chevron_right, color: Color(0xFF4A4A4E)),
                   ),
                 );

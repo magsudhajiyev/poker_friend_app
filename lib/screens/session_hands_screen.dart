@@ -10,6 +10,7 @@ import '../utils/poker_positions.dart';
 import '../widgets/loading_screen.dart';
 import 'hand_actions_page_view.dart';
 import '../widgets/global_bottom_nav_bar.dart';
+import '../design_system/constants/colors.dart';
 
 class SessionHandsScreen extends StatefulWidget {
   final Map<String, dynamic> session;
@@ -145,7 +146,7 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
                 gradient: RadialGradient(
                   colors: [
                     const Color(0xFF1A4A4A).withOpacity(0.6),
-                    const Color(0xFF133538).withOpacity(0.3),
+                    AppColors.headerGradientTeal.withOpacity(0.3),
                     Colors.transparent,
                   ],
                   stops: const [0.0, 0.4, 1.0],
@@ -168,7 +169,7 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
                           width: 44,
                           height: 44,
                           decoration: const BoxDecoration(
-                            color: Color(0xFF101115),
+                            color: AppColors.surfaceDark,
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(
@@ -255,7 +256,7 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF89F1EC),
+                  color: AppColors.buttonPrimary,
                   borderRadius: BorderRadius.circular(60),
                 ),
                 child: Text(
@@ -281,7 +282,7 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
               width: 80,
               height: 80,
               decoration: BoxDecoration(
-                color: const Color(0xFF131616),
+                color: AppColors.infoCardBg,
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Image.asset(
@@ -320,7 +321,7 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
     );
   }
 
-  static const _mint = Color(0xFF89F1EC);
+  static const _mint = AppColors.buttonPrimary;
 
   Widget _buildHandCard(Map<String, dynamic> hand, int handNumber) {
     final l10n = AppLocalizations.of(context);

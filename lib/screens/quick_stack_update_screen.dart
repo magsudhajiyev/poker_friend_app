@@ -12,6 +12,7 @@ import '../l10n/app_localizations.dart';
 import '../onboarding/onboarding_state.dart';
 import '../onboarding/onboarding_tour.dart';
 import '../onboarding/onboarding_progress_bar.dart';
+import '../design_system/constants/colors.dart';
 
 class QuickStackUpdateScreen extends StatefulWidget {
   final double smallBlind;
@@ -49,8 +50,8 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
   List<Opponent> opponents = []; // Available opponents
   bool _loadingOpponents = true;
 
-  static const _cardColor = Color(0xFF131616);
-  static const _mint = Color(0xFF89F1EC);
+  static const _cardColor = AppColors.infoCardBg;
+  static const _mint = AppColors.buttonPrimary;
 
   // Onboarding GlobalKeys
   final GlobalKey _seatToggleKey = GlobalKey(debugLabel: 'seatToggle1');
@@ -810,7 +811,7 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
                 gradient: RadialGradient(
                   colors: [
                     const Color(0xFF1A4A4A).withValues(alpha: 0.6),
-                    const Color(0xFF133538).withValues(alpha: 0.3),
+                    AppColors.headerGradientTeal.withValues(alpha: 0.3),
                     Colors.transparent,
                   ],
                   stops: const [0.0, 0.4, 1.0],

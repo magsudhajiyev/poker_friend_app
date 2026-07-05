@@ -19,6 +19,7 @@ import '../screens/club/club_dashboard_screen.dart';
 import '../screens/paywall_screen.dart';
 import '../screens/earnings_chart_screen.dart';
 import 'register_club_dialog.dart';
+import '../design_system/constants/colors.dart';
 
 /// Profile screen drawer matching Figma design (node 522-4548)
 class AppNavigationDrawer extends StatefulWidget {
@@ -160,8 +161,8 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
                           radius: 0.5,
                           colors: [
                             const Color(0xFF1A4A4A).withOpacity(0.6),
-                            const Color(0xFF133538).withOpacity(0.4),
-                            const Color(0xFF133538).withOpacity(0.2),
+                            AppColors.headerGradientTeal.withOpacity(0.4),
+                            AppColors.headerGradientTeal.withOpacity(0.2),
                             Colors.transparent,
                           ],
                           stops: const [0.0, 0.3, 0.6, 1.0],
@@ -319,7 +320,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
                 color: const Color(0xFF104034).withOpacity(0.6),
                 borderRadius: BorderRadius.circular(70),
                 border: Border.all(
-                  color: const Color(0xFF89F1EC),
+                  color: AppColors.buttonPrimary,
                   width: 1,
                 ),
                 boxShadow: [
@@ -335,7 +336,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
                 children: [
                   const Icon(
                     Icons.diamond_outlined,
-                    color: Color(0xFF89F1EC),
+                    color: AppColors.buttonPrimary,
                     size: 18,
                   ),
                   const SizedBox(width: 6),
@@ -344,7 +345,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
                     style: GoogleFonts.ibmPlexSans(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: const Color(0xFF89F1EC),
+                      color: AppColors.buttonPrimary,
                     ),
                   ),
                 ],
@@ -399,7 +400,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
       decoration: BoxDecoration(
-        color: const Color(0xFF131616),
+        color: AppColors.infoCardBg,
         borderRadius: BorderRadius.circular(30),
       ),
       child: Column(
@@ -425,7 +426,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
       decoration: BoxDecoration(
-        color: const Color(0xFF131616),
+        color: AppColors.infoCardBg,
         borderRadius: BorderRadius.circular(30),
       ),
       child: Column(
@@ -677,8 +678,8 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
                     height: 20,
                     decoration: BoxDecoration(
                       color: isAdmin
-                          ? const Color(0xFF1B4341)
-                          : const Color(0xFF1B1E24),
+                          ? AppColors.mint900
+                          : AppColors.neutral800,
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Center(
@@ -688,8 +689,8 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
                           fontSize: 10,
                           fontWeight: FontWeight.w600,
                           color: isAdmin
-                              ? const Color(0xFF89F1EC)
-                              : const Color(0xFF67696D),
+                              ? AppColors.buttonPrimary
+                              : AppColors.neutral500,
                         ),
                       ),
                     ),
@@ -846,7 +847,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
           style: GoogleFonts.inter(
             fontSize: size * 0.357,
             fontWeight: FontWeight.w600,
-            color: const Color(0xFF87ED81),
+            color: AppColors.limeGreen,
           ),
         ),
       ),
@@ -945,7 +946,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
                           // Icon
                           const Icon(
                             Icons.show_chart_rounded,
-                            color: Color(0xFF89F1EC),
+                            color: AppColors.buttonPrimary,
                             size: 48,
                           ),
 
@@ -1005,7 +1006,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
                                 l10n.commonOk,
                                 style: GoogleFonts.ibmPlexSans(
                                   fontSize: 16,
-                                  color: const Color(0xFF89F1EC),
+                                  color: AppColors.buttonPrimary,
                                   fontWeight: FontWeight.w600,
                                   letterSpacing: 0,
                                   height: 1.2,

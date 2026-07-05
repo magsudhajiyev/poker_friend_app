@@ -457,7 +457,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
     final dateText = DateFormat('MMM d, yyyy').format(startTime);
 
     final plColor = profitLoss == null
-        ? const Color(0xFF8C8C8C)
+        ? AppColors.textDisabled
         : profitLoss > 0
             ? const Color(0xFFA3FF78)
             : profitLoss < 0
@@ -700,7 +700,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
                           TextSpan(
                             text: displayName,
                             style: TextStyle(
-                              color: isHero ? Color(0xFF5AC95A) : Colors.white,
+                              color: isHero ? AppColors.profitGreen : Colors.white,
                               fontWeight: isHero ? FontWeight.bold : FontWeight.normal,
                             ),
                           ),

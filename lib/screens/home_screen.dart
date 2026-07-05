@@ -297,7 +297,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     switch (notification.type) {
       case NotificationType.eventCreated:
         icon = Icons.event_available;
-        iconColor = const Color(0xFF5AC95A);
+        iconColor = AppColors.profitGreen;
         break;
       case NotificationType.eventStarted:
         icon = Icons.play_circle_filled;
@@ -349,11 +349,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         break;
       case NotificationType.newSupportRequest:
         icon = Icons.support_agent;
-        iconColor = const Color(0xFF89F1EC);
+        iconColor = AppColors.buttonPrimary;
         break;
       case NotificationType.supportRequestUpdated:
         icon = Icons.check_circle;
-        iconColor = const Color(0xFF87ED81);
+        iconColor = AppColors.limeGreen;
         break;
     }
 
@@ -388,7 +388,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       title: AppLocalizations.of(context).eventDetailYoureSeatedGoodLuck,
       subtitle: AppLocalizations.of(context).homeTableSeatInfo(tableNumber.toString(), seat.seatNumber.toString()),
       icon: Icons.event_seat,
-      iconColor: const Color(0xFF5AC95A),
+      iconColor: AppColors.profitGreen,
       displayDuration: const Duration(seconds: 6),
       onTap: () async {
         if (event != null) {
@@ -528,7 +528,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   width: 8,
                   height: 8,
                   decoration: const BoxDecoration(
-                    color: Color(0xFF5AC95A),
+                    color: AppColors.profitGreen,
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -589,12 +589,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                color: const Color(0xFF5AC95A).withValues(alpha: 0.15),
+                color: AppColors.profitGreen.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: const Icon(
                 Icons.casino,
-                color: Color(0xFF5AC95A),
+                color: AppColors.profitGreen,
                 size: 22,
               ),
             ),
@@ -714,13 +714,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF101115),
+        backgroundColor: AppColors.surfaceDark,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Row(
           children: [
             Icon(
               isResolved ? Icons.check_circle : Icons.cancel,
-              color: isResolved ? const Color(0xFF87ED81) : const Color(0xFFD55A41),
+              color: isResolved ? AppColors.limeGreen : AppColors.errorRed,
               size: 22,
             ),
             const SizedBox(width: 8),
@@ -752,7 +752,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             Text(
               request.category,
               style: GoogleFonts.ibmPlexSans(
-                color: const Color(0xFF8C8C8C),
+                color: AppColors.textDisabled,
                 fontSize: 13,
               ),
             ),
@@ -761,7 +761,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               Text(
                 AppLocalizations.of(context).homeResponse,
                 style: GoogleFonts.ibmPlexSans(
-                  color: const Color(0xFF8C8C8C),
+                  color: AppColors.textDisabled,
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                   letterSpacing: 0.5,
@@ -773,8 +773,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: isResolved
-                      ? const Color(0xFF87ED81).withValues(alpha: 0.1)
-                      : const Color(0xFFD55A41).withValues(alpha: 0.1),
+                      ? AppColors.limeGreen.withValues(alpha: 0.1)
+                      : AppColors.errorRed.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
@@ -795,7 +795,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             child: Text(
               'OK',
               style: GoogleFonts.ibmPlexSans(
-                color: const Color(0xFF89F1EC),
+                color: AppColors.buttonPrimary,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -1538,7 +1538,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       // Keep the logo animation looping through the whole loading course
       // instead of cutting to a static loader after the splash.
       return Scaffold(
-        backgroundColor: const Color(0xFF02050B),
+        backgroundColor: AppColors.paper,
         body: Column(
           children: [
             const Expanded(child: LoopingSplashLogo()),
@@ -1559,7 +1559,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
     if (_loadError != null && currentBankroll == 0.0 && recentSessions.isEmpty) {
       return Scaffold(
-        backgroundColor: const Color(0xFF02050B),
+        backgroundColor: AppColors.paper,
         body: ErrorStateCard(onRetry: _loadData),
       );
     }
@@ -2269,7 +2269,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(l10n.bankrollSheetBankrollUpdated),
-          backgroundColor: const Color(0xFF62E3BC),
+          backgroundColor: AppColors.tealPrimary,
         ),
       );
     }
@@ -3063,14 +3063,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             spots: tournamentSpots,
             isCurved: true,
             curveSmoothness: 0.3,
-            color: const Color(0xFF00C3FF),
+            color: AppColors.tournamentBlue,
             barWidth: 1.5,
             isStrokeCapRound: true,
             dotData: FlDotData(
               show: true,
               getDotPainter: (spot, _, __, ___) => FlDotCirclePainter(
                 radius: 3,
-                color: const Color(0xFF00C3FF),
+                color: AppColors.tournamentBlue,
                 strokeWidth: 0,
               ),
             ),
@@ -3081,14 +3081,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             spots: cashSpots,
             isCurved: true,
             curveSmoothness: 0.3,
-            color: const Color(0xFF44EC49),
+            color: AppColors.cashGameGreen,
             barWidth: 1.5,
             isStrokeCapRound: true,
             dotData: FlDotData(
               show: true,
               getDotPainter: (spot, _, __, ___) => FlDotCirclePainter(
                 radius: 3,
-                color: const Color(0xFF44EC49),
+                color: AppColors.cashGameGreen,
                 strokeWidth: 0,
               ),
             ),
@@ -3174,7 +3174,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF101115),
+        color: AppColors.surfaceDark,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.black, width: 1),
       ),
@@ -3572,7 +3572,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 buyIn,
                 style: GoogleFonts.robotoMono(
                   fontSize: 22,
-                  color: Color(0xFF87ED81),
+                  color: AppColors.limeGreen,
                   fontWeight: FontWeight.w600,
                   letterSpacing: 0,
                   height: 1.0,
@@ -4358,12 +4358,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                     child: Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
-                                        Icon(Icons.close, color: Color(0xFFD55A41), size: 12),
+                                        Icon(Icons.close, color: AppColors.errorRed, size: 12),
                                         SizedBox(width: 4),
                                         Text(
                                           AppLocalizations.of(context).commonClear,
                                           style: GoogleFonts.ibmPlexSans(
-                                            color: Color(0xFFD55A41),
+                                            color: AppColors.errorRed,
                                             fontSize: 10,
                                             fontWeight: FontWeight.w500,
                                           ),
@@ -4583,11 +4583,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                       child: Container(
                                         decoration: BoxDecoration(
                                           color: isSelected
-                                              ? Color(0xFF5AC95A)
+                                              ? AppColors.profitGreen
                                               : (isToday ? Color(0xFF2A2A2E) : Colors.transparent),
                                           borderRadius: BorderRadius.circular(8),
                                           border: isToday && !isSelected
-                                              ? Border.all(color: Color(0xFF5AC95A), width: 1)
+                                              ? Border.all(color: AppColors.profitGreen, width: 1)
                                               : null,
                                         ),
                                         child: Center(
@@ -4792,7 +4792,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           AppLocalizations.of(context).commonDelete,
                           style: GoogleFonts.ibmPlexSans(
                             fontSize: 16,
-                            color: Color(0xFFD55A41), // Red color
+                            color: AppColors.errorRed, // Red color
                             fontWeight: FontWeight.w600,
                             letterSpacing: 0,
                             height: 1.2,
@@ -4926,7 +4926,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           // Icon
                           Icon(
                             Icons.show_chart_rounded,
-                            color: const Color(0xFF89F1EC),
+                            color: AppColors.buttonPrimary,
                             size: 48,
                           ),
 
@@ -4986,7 +4986,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 'OK',
                                 style: GoogleFonts.ibmPlexSans(
                                   fontSize: 16,
-                                  color: const Color(0xFF89F1EC),
+                                  color: AppColors.buttonPrimary,
                                   fontWeight: FontWeight.w600,
                                   letterSpacing: 0,
                                   height: 1.2,
@@ -5023,7 +5023,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(AppLocalizations.of(context).homeEventDeletedSuccessfully),
-          backgroundColor: Color(0xFF5AC95A),
+          backgroundColor: AppColors.profitGreen,
           duration: Duration(seconds: 2),
         ),
       );

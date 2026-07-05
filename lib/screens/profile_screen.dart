@@ -308,7 +308,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       child: Center(
         child: Text(initials,
             style: GoogleFonts.ibmPlexSans(
-                fontSize: size * 0.35, fontWeight: FontWeight.w600, color: const Color(0xFF87ED81))),
+                fontSize: size * 0.35, fontWeight: FontWeight.w600, color: AppColors.limeGreen)),
       ),
     );
   }
@@ -321,7 +321,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       return Scaffold(
         backgroundColor: _bg,
         body: const Center(child: CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation(Color(0xFF89F1EC)))),
+            valueColor: AlwaysStoppedAnimation(AppColors.buttonPrimary))),
       );
     }
 
@@ -783,23 +783,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
       builder: (context, _, __) => Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(0xFF101115),
+          color: AppColors.surfaceDark,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-              color: const Color(0xFF62E3BC).withValues(alpha: 0.3)),
+              color: AppColors.tealPrimary.withValues(alpha: 0.3)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(children: [
               const Icon(Icons.flag_outlined,
-                  color: Color(0xFF62E3BC), size: 20),
+                  color: AppColors.tealPrimary, size: 20),
               const SizedBox(width: 8),
               Text('Feature Flags',
                   style: GoogleFonts.ibmPlexSans(
                       fontSize: 17,
                       fontWeight: FontWeight.w600,
-                      color: const Color(0xFF62E3BC))),
+                      color: AppColors.tealPrimary)),
             ]),
             const SizedBox(height: 4),
             Text('Global toggles — apply to all users immediately.',
@@ -837,9 +837,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         }
                       }
                     },
-                    activeColor: const Color(0xFF62E3BC),
-                    inactiveThumbColor: const Color(0xFF8C8C8C),
-                    inactiveTrackColor: const Color(0xFF35373C),
+                    activeColor: AppColors.tealPrimary,
+                    inactiveThumbColor: AppColors.textDisabled,
+                    inactiveTrackColor: AppColors.neutral700,
                   ),
                 ],
               ),
@@ -885,9 +885,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
               Switch(
                 value: SubscriptionService.isPremium,
                 onChanged: (v) async { await SubscriptionService.setDebugPremiumOverride(v); setState(() {}); },
-                activeColor: const Color(0xFF62E3BC),
-                inactiveThumbColor: const Color(0xFF8C8C8C),
-                inactiveTrackColor: const Color(0xFF35373C),
+                activeColor: AppColors.tealPrimary,
+                inactiveThumbColor: AppColors.textDisabled,
+                inactiveTrackColor: AppColors.neutral700,
               ),
             ],
           ),
@@ -895,8 +895,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             GestureDetector(
               onTap: () async { await SubscriptionService.setDebugPremiumOverride(null); setState(() {}); },
               child: Text('Reset to real', style: GoogleFonts.ibmPlexSans(
-                  fontSize: 13, color: const Color(0xFF89F1EC),
-                  decoration: TextDecoration.underline, decorationColor: const Color(0xFF89F1EC))),
+                  fontSize: 13, color: AppColors.buttonPrimary,
+                  decoration: TextDecoration.underline, decorationColor: AppColors.buttonPrimary)),
             ),
             const SizedBox(height: 8),
           ],
@@ -912,7 +912,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           const SizedBox(height: 8),
           _devButton('Open Latest Session Analytics', const Color(0xFFFFB74D), _openLatestSession),
           const SizedBox(height: 8),
-          _devButton('Seed Scouting Data (Aldante + Kulikor)', const Color(0xFF87ED81), _seedScoutingData),
+          _devButton('Seed Scouting Data (Aldante + Kulikor)', AppColors.limeGreen, _seedScoutingData),
           const SizedBox(height: 8),
           _devButton('Diagnose Stats (Latest Session)', const Color(0xFFFFB74D), _diagnoseStats),
         ],

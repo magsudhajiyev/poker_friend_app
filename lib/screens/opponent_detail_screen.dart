@@ -13,6 +13,7 @@ import '../widgets/global_bottom_nav_bar.dart';
 import '../design_system/components/drawer_dots.dart';
 import '../design_system/components/modals/confirm_dialog.dart';
 import '../l10n/app_localizations.dart';
+import '../design_system/constants/colors.dart';
 
 class OpponentDetailScreen extends StatefulWidget {
   final Opponent opponent;
@@ -704,7 +705,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
 
     return Container(
       decoration: BoxDecoration(
-        color: Color(0xFF101115),
+        color: AppColors.surfaceDark,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.black),
       ),
@@ -755,7 +756,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
             // Separator line
             Container(
               height: 1,
-              color: Color(0xFF1C1F21),
+              color: AppColors.separatorDark,
             ),
 
             SizedBox(height: 14),
@@ -782,7 +783,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                     '${OpponentHandsScreen.filteredHandCounts[_opponent.id] ?? _statistics?['totalHands'] ?? 0}',
                     style: GoogleFonts.ibmPlexSans(
                       fontSize: 17,
-                      color: Color(0xFFD3FFFD),
+                      color: AppColors.textMint,
                       fontWeight: FontWeight.w500,
                       height: 1.44,
                     ),
@@ -844,7 +845,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: Color(0xFF101115),
+        color: AppColors.surfaceDark,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.black),
       ),
@@ -921,7 +922,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
               child: Container(
                 width: 184,
                 decoration: BoxDecoration(
-                  color: Color(0xFF02050B),
+                  color: AppColors.paper,
                   borderRadius: BorderRadius.circular(18),
                   boxShadow: [
                     BoxShadow(
@@ -971,7 +972,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                     // Separator
                     Container(
                       height: 1,
-                      color: Color(0xFF1C1F21),
+                      color: AppColors.separatorDark,
                     ),
                     // Delete Opponent row
                     GestureDetector(
@@ -985,7 +986,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                           _buildIcon(
                             'icons/figma_icons/delete.svg',
                             16,
-                            Color(0xFFD55A41),
+                            AppColors.errorRed,
                           ),
                           SizedBox(width: 10),
                           Expanded(
@@ -1020,7 +1021,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
     if (_isLoadingStats) {
       return const Center(
         child: CircularProgressIndicator(
-          color: Color(0xFF89F1EC),
+          color: AppColors.buttonPrimary,
         ),
       );
     }
@@ -1145,7 +1146,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                 style: GoogleFonts.ibmPlexSans(
                   fontSize: 17,
                   fontWeight: FontWeight.w500,
-                  color: Color(0xFF8C8C8C),
+                  color: AppColors.textDisabled,
                   height: 1.44,
                 ),
               ),
@@ -1155,7 +1156,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                 style: GoogleFonts.ibmPlexSans(
                   fontSize: 15,
                   fontWeight: FontWeight.w500,
-                  color: Color(0xFF8C8C8C),
+                  color: AppColors.textDisabled,
                   height: 1.44,
                 ),
               ),
@@ -1185,7 +1186,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
               }
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF89F1EC),
+              backgroundColor: AppColors.buttonPrimary,
               foregroundColor: Colors.black,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(110),

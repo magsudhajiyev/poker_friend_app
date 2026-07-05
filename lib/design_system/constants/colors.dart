@@ -71,6 +71,14 @@ class AppColors {
   static const Color textDisabled  = Color(0xFF8C8C8C);  // Muted text labels
   static const Color errorRed      = Color(0xFFD55A41);  // Error state (distinct from accentDanger)
 
+  // Core brand palette (were hardcoded across screens; tokenized 2026-07)
+  static const Color tealPrimary = Color(0xFF62E3BC);  // Brand primary teal
+  static const Color paper       = Color(0xFF02050B);  // App background "Paper"
+  static const Color surfaceDark = Color(0xFF101115);  // Card/sheet surface
+  static const Color textMuted   = Color(0xFF9A9A9A);  // Tertiary/muted text
+  static const Color profitGreen = Color(0xFF5AC95A);  // Positive amounts
+  static const Color lossRed     = Color(0xFFFF4444);  // Negative amounts
+
   // Navigation
   static const Color navBarBackground = Color(0xFF1E1E1E);
   static const Color navBarBorder     = Color(0xFF292F29);

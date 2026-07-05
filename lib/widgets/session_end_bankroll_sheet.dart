@@ -7,6 +7,7 @@ import '../services/bankroll_service.dart';
 import '../services/session_result_service.dart';
 import '../services/app_data_cache.dart';
 import '../services/currency_service.dart';
+import '../design_system/constants/colors.dart';
 
 /// Shows session-end bankroll sheet using FormDrawer.
 /// Cash: editable pre-filled profit + total invested.
@@ -142,7 +143,7 @@ class _CashBodyState extends State<_CashBody> {
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Container(
         decoration: BoxDecoration(
-          color: const Color(0xFF131616),
+          color: AppColors.infoCardBg,
           borderRadius: BorderRadius.circular(18),
         ),
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -159,7 +160,7 @@ class _CashBodyState extends State<_CashBody> {
                     style: GoogleFonts.ibmPlexSans(
                       fontSize: 13,
                       fontWeight: FontWeight.w400,
-                      color: const Color(0xFF8C8C8C),
+                      color: AppColors.textDisabled,
                     ),
                   ),
                   Text(
@@ -167,7 +168,7 @@ class _CashBodyState extends State<_CashBody> {
                     style: GoogleFonts.ibmPlexSans(
                       fontSize: 13,
                       fontWeight: FontWeight.w400,
-                      color: const Color(0xFF8C8C8C),
+                      color: AppColors.textDisabled,
                     ),
                   ),
                 ],
@@ -198,8 +199,8 @@ class _CashBodyState extends State<_CashBody> {
                               fontSize: 28,
                               fontWeight: FontWeight.w600,
                               color: isPositive
-                                  ? const Color(0xFF62E3BC)
-                                  : const Color(0xFFD55A41),
+                                  ? AppColors.tealPrimary
+                                  : AppColors.errorRed,
                             ),
                             onChanged: (_) => setState(() {}),
                             decoration: InputDecoration(
@@ -208,8 +209,8 @@ class _CashBodyState extends State<_CashBody> {
                                 fontSize: 28,
                                 fontWeight: FontWeight.w600,
                                 color: isPositive
-                                    ? const Color(0xFF62E3BC)
-                                    : const Color(0xFFD55A41),
+                                    ? AppColors.tealPrimary
+                                    : AppColors.errorRed,
                               ),
                               border: InputBorder.none,
                               enabledBorder: InputBorder.none,
@@ -229,8 +230,8 @@ class _CashBodyState extends State<_CashBody> {
                                 fontSize: 16,
                                 fontWeight: FontWeight.w500,
                                 color: isPositive
-                                    ? const Color(0xFF62E3BC).withValues(alpha: 0.6)
-                                    : const Color(0xFFD55A41).withValues(alpha: 0.6),
+                                    ? AppColors.tealPrimary.withValues(alpha: 0.6)
+                                    : AppColors.errorRed.withValues(alpha: 0.6),
                               ),
                             ),
                           ),
@@ -303,7 +304,7 @@ class _TournamentBodyState extends State<_TournamentBody> {
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Container(
         decoration: BoxDecoration(
-          color: const Color(0xFF131616),
+          color: AppColors.infoCardBg,
           borderRadius: BorderRadius.circular(18),
         ),
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -376,8 +377,8 @@ class _TournamentBodyState extends State<_TournamentBody> {
                         fontSize: 17,
                         fontWeight: FontWeight.w600,
                         color: _calculatedProfit! >= 0
-                            ? const Color(0xFF62E3BC)
-                            : const Color(0xFFD55A41),
+                            ? AppColors.tealPrimary
+                            : AppColors.errorRed,
                       ),
                     ),
                   ],
@@ -428,13 +429,13 @@ class _TournamentBodyState extends State<_TournamentBody> {
                 prefixStyle: GoogleFonts.ibmPlexSans(
                   fontSize: 17,
                   fontWeight: FontWeight.w500,
-                  color: const Color(0xFF8C8C8C),
+                  color: AppColors.textDisabled,
                 ),
                 suffixText: suffix,
                 suffixStyle: GoogleFonts.ibmPlexSans(
                   fontSize: 17,
                   fontWeight: FontWeight.w500,
-                  color: const Color(0xFF8C8C8C),
+                  color: AppColors.textDisabled,
                 ),
                 contentPadding: const EdgeInsets.symmetric(vertical: 8),
                 border: InputBorder.none,

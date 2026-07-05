@@ -7,6 +7,7 @@ import '../services/currency_service.dart';
 import '../services/free_tier_limits.dart';
 import '../services/opponent_service.dart';
 import '../models/opponent.dart';
+import '../design_system/constants/colors.dart';
 
 class SeatManagementDialog extends StatefulWidget {
   final int playerCount;
@@ -168,12 +169,12 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
                       width: 36,
                       height: 36,
                       decoration: BoxDecoration(
-                        color: Color(0xFF5AC95A).withOpacity(0.1),
+                        color: AppColors.profitGreen.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Icon(
                         Icons.person_add,
-                        color: Color(0xFF5AC95A),
+                        color: AppColors.profitGreen,
                         size: 18,
                       ),
                     ),
@@ -196,7 +197,7 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
                   AppLocalizations.of(context).seatManagementSaveOpponentMessage(name),
                   style: TextStyle(
                     fontSize: 14,
-                    color: Color(0xFF9A9A9A),
+                    color: AppColors.textMuted,
                     height: 1.4,
                   ),
                 ),
@@ -223,7 +224,7 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
                           child: Text(
                             AppLocalizations.of(context).seatManagementNotNow,
                             style: TextStyle(
-                              color: Color(0xFF9A9A9A),
+                              color: AppColors.textMuted,
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
                             ),
@@ -237,7 +238,7 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
                         height: 44,
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
-                            colors: [Color(0xFF5AC95A), Color(0xFF4CAF50)],
+                            colors: [AppColors.profitGreen, Color(0xFF4CAF50)],
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                           ),
@@ -281,7 +282,7 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text(AppLocalizations.of(context).seatManagementOpponentSavedSuccess(name)),
-                                  backgroundColor: Color(0xFF5AC95A),
+                                  backgroundColor: AppColors.profitGreen,
                                 ),
                               );
                             } catch (e) {
@@ -449,12 +450,12 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
                     width: 40,
                     height: 40,
                     decoration: BoxDecoration(
-                      color: Color(0xFF5AC95A).withOpacity(0.1),
+                      color: AppColors.profitGreen.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
                       Icons.group_outlined,
-                      color: Color(0xFF5AC95A),
+                      color: AppColors.profitGreen,
                       size: 20,
                     ),
                   ),
@@ -477,7 +478,7 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
                               : l10n.seatManagementUpdatePlayerSubtitle,
                           style: TextStyle(
                             fontSize: 14,
-                            color: Color(0xFF9A9A9A),
+                            color: AppColors.textMuted,
                           ),
                         ),
                       ],
@@ -487,7 +488,7 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
                     onPressed: () => Navigator.pop(context),
                     icon: Icon(
                       Icons.close,
-                      color: Color(0xFF9A9A9A),
+                      color: AppColors.textMuted,
                       size: 20,
                     ),
                   ),
@@ -515,7 +516,7 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
                               children: [
                                 Icon(
                                   Icons.casino_outlined,
-                                  color: Color(0xFF5AC95A),
+                                  color: AppColors.profitGreen,
                                   size: 18,
                                 ),
                                 SizedBox(width: 8),
@@ -550,14 +551,14 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
                                         color: !isActive
                                             ? Color(0xFF0A0A0C)
                                             : isSelected
-                                            ? Color(0xFF5AC95A)
+                                            ? AppColors.profitGreen
                                             : Color(0xFF161618),
                                         borderRadius: BorderRadius.circular(12),
                                         border: Border.all(
                                           color: !isActive
                                               ? Color(0xFF1A1A1E)
                                               : isSelected
-                                              ? Color(0xFF5AC95A)
+                                              ? AppColors.profitGreen
                                               : Color(0xFF2A2A2E),
                                           width: 1,
                                         ),
@@ -595,11 +596,11 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
                             margin: EdgeInsets.only(bottom: 12),
                             decoration: BoxDecoration(
                               color: isSelected 
-                                  ? Color(0xFF5AC95A).withOpacity(0.1)
+                                  ? AppColors.profitGreen.withOpacity(0.1)
                                   : Color(0xFF1F1F23),
                               borderRadius: BorderRadius.circular(16),
                               border: isSelected 
-                                  ? Border.all(color: Color(0xFF5AC95A), width: 1)
+                                  ? Border.all(color: AppColors.profitGreen, width: 1)
                                   : null,
                             ),
                             child: Padding(
@@ -616,10 +617,10 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
                                           height: 24,
                                           margin: EdgeInsets.only(right: 12),
                                           decoration: BoxDecoration(
-                                            color: isSelected ? Color(0xFF5AC95A) : Color(0xFF161618),
+                                            color: isSelected ? AppColors.profitGreen : Color(0xFF161618),
                                             borderRadius: BorderRadius.circular(12),
                                             border: Border.all(
-                                              color: isSelected ? Color(0xFF5AC95A) : Color(0xFF2A2A2E),
+                                              color: isSelected ? AppColors.profitGreen : Color(0xFF2A2A2E),
                                             ),
                                           ),
                                           child: InkWell(
@@ -679,7 +680,7 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
                                                   isActive ? _getPositionForActiveSeat(seatNumber) : l10n.seatManagementEmpty,
                                                   style: TextStyle(
                                                     fontSize: 12,
-                                                    color: Color(0xFF9A9A9A),
+                                                    color: AppColors.textMuted,
                                                     fontWeight: FontWeight.w500,
                                                   ),
                                                 ),
@@ -693,7 +694,7 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
                                         children: [
                                           Switch(
                                             value: isActive,
-                                            activeColor: Color(0xFF5AC95A),
+                                            activeColor: AppColors.profitGreen,
                                             inactiveThumbColor: Colors.white,
                                             inactiveTrackColor: Color(0xFF2A2A2E),
                                             onChanged: (value) {
@@ -726,7 +727,7 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
                                             isActive ? l10n.seatManagementActive : l10n.seatManagementEmpty,
                                             style: TextStyle(
                                               fontSize: 11,
-                                              color: isActive ? Color(0xFF5AC95A) : Color(0xFF9A9A9A),
+                                              color: isActive ? AppColors.profitGreen : AppColors.textMuted,
                                               fontWeight: FontWeight.w500,
                                             ),
                                           ),
@@ -769,13 +770,13 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
                                                 style: TextStyle(color: Colors.white, fontSize: 16),
                                                 decoration: InputDecoration(
                                                   labelText: l10n.seatManagementPlayerNameLabel,
-                                                  labelStyle: TextStyle(color: Color(0xFF9A9A9A)),
+                                                  labelStyle: TextStyle(color: AppColors.textMuted),
                                                   hintText: l10n.seatManagementEnterPlayerName,
-                                                  hintStyle: TextStyle(color: Color(0xFF9A9A9A)),
+                                                  hintStyle: TextStyle(color: AppColors.textMuted),
                                                   border: InputBorder.none,
                                                   contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                                                   suffixIcon: allOpponents.isNotEmpty 
-                                                      ? Icon(Icons.search, size: 18, color: Color(0xFF9A9A9A)) 
+                                                      ? Icon(Icons.search, size: 18, color: AppColors.textMuted) 
                                                       : null,
                                                 ),
                                                 textCapitalization: TextCapitalization.words,
@@ -835,7 +836,7 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
                                                           subtitle: opponent.notes != null && opponent.notes!.isNotEmpty
                                                               ? Text(
                                                                   opponent.notes!,
-                                                                  style: TextStyle(fontSize: 11, color: Color(0xFF9A9A9A)),
+                                                                  style: TextStyle(fontSize: 11, color: AppColors.textMuted),
                                                                   maxLines: 1,
                                                                   overflow: TextOverflow.ellipsis,
                                                                 )
@@ -866,21 +867,21 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
                                             child: Container(
                                               padding: EdgeInsets.all(12),
                                               decoration: BoxDecoration(
-                                                color: Color(0xFF5AC95A).withOpacity(0.1),
-                                                border: Border.all(color: Color(0xFF5AC95A).withOpacity(0.3)),
+                                                color: AppColors.profitGreen.withOpacity(0.1),
+                                                border: Border.all(color: AppColors.profitGreen.withOpacity(0.3)),
                                                 borderRadius: BorderRadius.circular(8),
                                               ),
                                               child: Row(
                                                 children: [
-                                                  Icon(Icons.person_add, size: 16, color: Color(0xFF5AC95A)),
+                                                  Icon(Icons.person_add, size: 16, color: AppColors.profitGreen),
                                                   SizedBox(width: 8),
                                                   Expanded(
                                                     child: Text(
                                                       l10n.seatManagementSaveAsOpponentPrompt(nameControllers[seatNumber]!.text),
-                                                      style: TextStyle(fontSize: 12, color: Color(0xFF5AC95A)),
+                                                      style: TextStyle(fontSize: 12, color: AppColors.profitGreen),
                                                     ),
                                                   ),
-                                                  Icon(Icons.arrow_forward, size: 16, color: Color(0xFF5AC95A)),
+                                                  Icon(Icons.arrow_forward, size: 16, color: AppColors.profitGreen),
                                                 ],
                                               ),
                                             ),
@@ -901,13 +902,13 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
                                             style: TextStyle(color: Colors.white, fontSize: 16),
                                             decoration: InputDecoration(
                                               labelText: widget.isCashGame ? l10n.seatManagementBuyInAmountCash : l10n.seatManagementStartingChips,
-                                              labelStyle: TextStyle(color: Color(0xFF9A9A9A)),
+                                              labelStyle: TextStyle(color: AppColors.textMuted),
                                               hintText: widget.isCashGame ? '100.00' : '1500',
-                                              hintStyle: TextStyle(color: Color(0xFF9A9A9A)),
+                                              hintStyle: TextStyle(color: AppColors.textMuted),
                                               prefixText: widget.isCashGame ? CurrencyService.prefixText : '',
                                               suffixText: widget.isCashGame ? CurrencyService.suffixText : null,
-                                              prefixStyle: TextStyle(color: Color(0xFF9A9A9A)),
-                                              suffixStyle: TextStyle(color: Color(0xFF9A9A9A)),
+                                              prefixStyle: TextStyle(color: AppColors.textMuted),
+                                              suffixStyle: TextStyle(color: AppColors.textMuted),
                                               border: InputBorder.none,
                                               contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                                             ),
@@ -976,7 +977,7 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
                         child: Text(
                           l10n.commonCancel,
                           style: TextStyle(
-                            color: Color(0xFF9A9A9A),
+                            color: AppColors.textMuted,
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
                           ),
@@ -990,7 +991,7 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
                       height: 48,
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [Color(0xFF5AC95A), Color(0xFF4CAF50)],
+                          colors: [AppColors.profitGreen, Color(0xFF4CAF50)],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),

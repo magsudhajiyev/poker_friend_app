@@ -192,7 +192,7 @@ class KnowledgeBaseScreen extends StatelessWidget {
             children: [
               const Icon(
                 Icons.calendar_month_rounded,
-                color: Color(0xFF4879FF),
+                color: AppColors.cardIconBlue,
                 size: 24,
               ),
               const SizedBox(height: 12),
@@ -250,7 +250,7 @@ class KnowledgeBaseScreen extends StatelessWidget {
             width: 28,
             height: 28,
             decoration: BoxDecoration(
-              color: const Color(0xFF4879FF),
+              color: AppColors.cardIconBlue,
               borderRadius: BorderRadius.circular(10),
             ),
             child: const Icon(

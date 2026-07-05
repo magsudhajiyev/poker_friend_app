@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../l10n/app_localizations.dart';
+import '../design_system/constants/colors.dart';
 
 /// A snap point for the raise slider.
 class SnapPoint {
@@ -90,7 +91,7 @@ class RaiseSnapOverlay extends StatelessWidget {
                         formattedAmount,
                         style: GoogleFonts.robotoMono(
                           fontSize: 32,
-                          color: const Color(0xFF89F1EC),
+                          color: AppColors.buttonPrimary,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
@@ -152,7 +153,7 @@ class RaiseSnapOverlay extends StatelessWidget {
                 width: progressWidth,
                 height: trackHeight * clampedProgress,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF89F1EC),
+                  color: AppColors.buttonPrimary,
                   borderRadius: BorderRadius.circular(progressWidth / 2),
                 ),
               ),
@@ -189,7 +190,7 @@ class RaiseSnapOverlay extends StatelessWidget {
                     style: GoogleFonts.ibmPlexSans(
                       fontSize: isActive ? 15 : (isKeyPoint ? 13 : 11),
                       color: isActive
-                          ? const Color(0xFF89F1EC)
+                          ? AppColors.buttonPrimary
                           : isPassed
                               ? Colors.white.withValues(alpha: isKeyPoint ? 0.7 : 0.45)
                               : Colors.white.withValues(alpha: isKeyPoint ? 0.4 : 0.25),
@@ -204,14 +205,14 @@ class RaiseSnapOverlay extends StatelessWidget {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: isActive
-                          ? const Color(0xFF89F1EC)
+                          ? AppColors.buttonPrimary
                           : isPassed
                               ? Colors.white.withValues(alpha: 0.5)
                               : Colors.white.withValues(alpha: 0.2),
                       boxShadow: isActive
                           ? [
                               BoxShadow(
-                                color: const Color(0xFF89F1EC).withValues(alpha: 0.5),
+                                color: AppColors.buttonPrimary.withValues(alpha: 0.5),
                                 blurRadius: 8,
                               )
                             ]

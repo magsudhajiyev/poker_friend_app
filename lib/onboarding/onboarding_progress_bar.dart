@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../design_system/constants/typography.dart';
 import '../l10n/app_localizations.dart';
 import 'onboarding_state.dart';
+import '../design_system/constants/colors.dart';
 
 /// Thin progress bar shown at the top of screens during onboarding.
 /// Only renders when [OnboardingState.isOnboardingActive] is true.
@@ -37,7 +38,7 @@ class OnboardingProgressBar extends StatelessWidget {
                     alignment: Alignment.centerLeft,
                     child: Container(
                       decoration: const BoxDecoration(
-                        color: Color(0xFF89F1EC),
+                        color: AppColors.buttonPrimary,
                       ),
                     ),
                   ),

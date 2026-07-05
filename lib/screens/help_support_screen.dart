@@ -50,7 +50,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
         SnackBar(
           content: Text(l10n.supportFillAllFields,
               style: GoogleFonts.ibmPlexSans(color: Colors.white)),
-          backgroundColor: const Color(0xFFD55A41),
+          backgroundColor: AppColors.errorRed,
         ),
       );
       return;
@@ -71,7 +71,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
         SnackBar(
           content: Text(l10n.supportSubmitted,
               style: GoogleFonts.ibmPlexSans(color: Colors.white)),
-          backgroundColor: const Color(0xFF87ED81),
+          backgroundColor: AppColors.limeGreen,
         ),
       );
 
@@ -83,7 +83,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
         SnackBar(
           content: Text(l10n.supportFailedSubmit(e.toString()),
               style: GoogleFonts.ibmPlexSans(color: Colors.white)),
-          backgroundColor: const Color(0xFFD55A41),
+          backgroundColor: AppColors.errorRed,
         ),
       );
     }

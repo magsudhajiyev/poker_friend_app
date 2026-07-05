@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../l10n/app_localizations.dart';
+import '../design_system/constants/colors.dart';
 
 /// A sliding in-app notification that appears from the top of the screen.
 /// Swipe up to dismiss, or tap to trigger an action.
@@ -23,7 +24,7 @@ class SlidingNotification extends StatefulWidget {
     required this.subtitle,
     this.detail,
     this.icon = Icons.event_seat,
-    this.iconColor = const Color(0xFF5AC95A),
+    this.iconColor = AppColors.profitGreen,
     this.onTap,
     required this.onDismiss,
     this.displayDuration = const Duration(seconds: 5),
@@ -211,7 +212,7 @@ class _SlidingNotificationState extends State<SlidingNotification>
                       width: 44,
                       height: 44,
                       decoration: BoxDecoration(
-                        color: const Color(0xFF2A605D),
+                        color: AppColors.mint800,
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Icon(
@@ -281,7 +282,7 @@ class SlidingNotificationOverlay {
     required String subtitle,
     String? detail,
     IconData icon = Icons.event_seat,
-    Color iconColor = const Color(0xFF5AC95A),
+    Color iconColor = AppColors.profitGreen,
     VoidCallback? onTap,
     Duration displayDuration = const Duration(seconds: 5),
     bool autoDismiss = true,

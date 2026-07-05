@@ -91,7 +91,7 @@ class _PurposeStepState extends State<PurposeStep>
                         style: GoogleFonts.ibmPlexSans(
                           fontSize: 17,
                           fontWeight: FontWeight.w400,
-                          color: const Color(0xFF8C8C8C),
+                          color: AppColors.textDisabled,
                           height: 1.5,
                         ),
                       ),
@@ -194,7 +194,7 @@ class _CheckCard extends StatelessWidget {
         height: 56,
         padding: const EdgeInsets.symmetric(horizontal: 16),
         decoration: BoxDecoration(
-          color: const Color(0xFF101115).withValues(alpha: 0.8),
+          color: AppColors.surfaceDark.withValues(alpha: 0.8),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isSelected

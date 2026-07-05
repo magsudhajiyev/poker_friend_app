@@ -8,6 +8,7 @@ import 'individual_session_setup_screen.dart';
 import 'training/drill_setup_screen.dart';
 import 'unified_session_setup_screen.dart';
 import '../services/feature_flag_service.dart';
+import '../design_system/constants/colors.dart';
 
 class LoggingModeSelectionScreen extends StatefulWidget {
   const LoggingModeSelectionScreen({super.key});
@@ -288,7 +289,7 @@ class _LoggingModeSelectionScreenState
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 1.0,
-                  color: const Color(0xFF89F1EC),
+                  color: AppColors.buttonPrimary,
                 ),
               ),
             ),

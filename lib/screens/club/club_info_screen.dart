@@ -362,7 +362,7 @@ class _ClubInfoScreenState extends State<ClubInfoScreen> {
       case ClubRole.dealer:
         return const Color(0xFF4A87F2);
       case ClubRole.player:
-        return const Color(0xFF62E3BC);
+        return AppColors.tealPrimary;
     }
   }
 }

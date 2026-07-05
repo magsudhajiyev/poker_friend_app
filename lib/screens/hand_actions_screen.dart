@@ -20,6 +20,7 @@ import 'paywall_screen.dart';
 import '../services/currency_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/feature_flag_service.dart';
+import '../design_system/constants/colors.dart';
 
 class HandActionsScreen extends StatefulWidget {
   final Map<String, dynamic> hand;
@@ -205,7 +206,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
         ),
         child: Row(
           children: [
-            Icon(icon, color: const Color(0xFF62E3BC), size: 22),
+            Icon(icon, color: AppColors.tealPrimary, size: 22),
             const SizedBox(width: 14),
             Expanded(
               child: Column(
@@ -264,7 +265,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
       showDialog(
         context: context,
         builder: (ctx) => AlertDialog(
-          backgroundColor: const Color(0xFF131616),
+          backgroundColor: AppColors.infoCardBg,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
           title: Text(
             l10n.quotaExportLimitTitle,
@@ -291,7 +292,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
               child: Text(
                 l10n.quotaUpgradeToElite,
                 style: GoogleFonts.ibmPlexSans(
-                  color: const Color(0xFF89F1EC),
+                  color: AppColors.buttonPrimary,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
@@ -302,7 +303,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
               child: Text(
                 l10n.quotaOk,
                 style: GoogleFonts.ibmPlexSans(
-                  color: const Color(0xFF89F1EC),
+                  color: AppColors.buttonPrimary,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
@@ -439,7 +440,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                 child: Text(
                   'OK',
                   style: GoogleFonts.ibmPlexSans(
-                    color: const Color(0xFF62E3BC),
+                    color: AppColors.tealPrimary,
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
@@ -579,7 +580,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                 gradient: RadialGradient(
                   colors: [
                     const Color(0xFF1A4A4A).withOpacity(0.6),
-                    const Color(0xFF133538).withOpacity(0.3),
+                    AppColors.headerGradientTeal.withOpacity(0.3),
                     Colors.transparent,
                   ],
                   stops: const [0.0, 0.4, 1.0],
@@ -646,7 +647,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                           height: 40,
                           decoration: BoxDecoration(
                             color: _showBB
-                                ? const Color(0xFF62E3BC).withOpacity(0.2)
+                                ? AppColors.tealPrimary.withOpacity(0.2)
                                 : const Color(0xFF2C2C2E),
                             shape: BoxShape.circle,
                           ),
@@ -657,7 +658,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                                 fontSize: 13,
                                 fontWeight: FontWeight.w700,
                                 color: _showBB
-                                    ? const Color(0xFF62E3BC)
+                                    ? AppColors.tealPrimary
                                     : Colors.white,
                               ),
                             ),
@@ -841,19 +842,19 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
               decoration: BoxDecoration(
                 color: const Color(0xFF161719),
                 borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: const Color(0xFF62E3BC).withOpacity(0.4)),
+                border: Border.all(color: AppColors.tealPrimary.withOpacity(0.4)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.style, color: const Color(0xFF62E3BC), size: 16),
+                      Icon(Icons.style, color: AppColors.tealPrimary, size: 16),
                       const SizedBox(width: 6),
                       Text(
                         AppLocalizations.of(context).handActionsYourCards,
                         style: GoogleFonts.ibmPlexSans(
-                          color: const Color(0xFF62E3BC),
+                          color: AppColors.tealPrimary,
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
                         ),
@@ -1051,7 +1052,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
         Text(
           value,
           style: GoogleFonts.ibmPlexSans(
-            color: isWinner ? const Color(0xFFFFD700) : const Color(0xFF62E3BC),
+            color: isWinner ? const Color(0xFFFFD700) : AppColors.tealPrimary,
             fontSize: 15,
             fontWeight: FontWeight.w600,
           ),
@@ -1108,10 +1109,10 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: const Color(0xFF62E3BC).withOpacity(0.1),
+        color: AppColors.tealPrimary.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: const Color(0xFF62E3BC).withOpacity(0.3),
+          color: AppColors.tealPrimary.withOpacity(0.3),
           width: 1,
         ),
       ),
@@ -1121,14 +1122,14 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
           Icon(
             tagIcon,
             size: 14,
-            color: const Color(0xFF62E3BC),
+            color: AppColors.tealPrimary,
           ),
           const SizedBox(width: 6),
           Text(
             tag,
             style: GoogleFonts.ibmPlexSans(
               fontSize: 13,
-              color: const Color(0xFF62E3BC),
+              color: AppColors.tealPrimary,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -1269,7 +1270,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                     Text(
                       streetName,
                       style: GoogleFonts.ibmPlexSans(
-                        color: const Color(0xFF62E3BC),
+                        color: AppColors.tealPrimary,
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 1.0,
@@ -1289,14 +1290,14 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF62E3BC).withOpacity(0.1),
+                      color: AppColors.tealPrimary.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: const Color(0xFF62E3BC).withOpacity(0.3)),
+                      border: Border.all(color: AppColors.tealPrimary.withOpacity(0.3)),
                     ),
                     child: Text(
                       _formatPotAmount(potAmount as double, gameType),
                       style: GoogleFonts.ibmPlexSans(
-                        color: const Color(0xFF62E3BC),
+                        color: AppColors.tealPrimary,
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
                       ),
@@ -1443,7 +1444,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                 Text(
                   AppLocalizations.of(context).handActionsBoard,
                   style: GoogleFonts.ibmPlexSans(
-                    color: const Color(0xFF62E3BC),
+                    color: AppColors.tealPrimary,
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 1.2,
@@ -1535,7 +1536,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
         break;
       case 'call':
       case 'check':
-        actionColor = const Color(0xFF62E3BC);
+        actionColor = AppColors.tealPrimary;
         break;
       case 'raise':
       case 'bet':
@@ -1560,7 +1561,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                 child: Text(
                   playerDisplay,
                   style: GoogleFonts.ibmPlexSans(
-                    color: isHero ? const Color(0xFF62E3BC) : Colors.white,
+                    color: isHero ? AppColors.tealPrimary : Colors.white,
                     fontSize: 11,
                     fontWeight: isHero ? FontWeight.w600 : FontWeight.normal,
                   ),
@@ -1733,7 +1734,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
       buttonColor = Colors.white.withOpacity(0.1);
       textColor = Colors.white.withOpacity(0.4);
     } else {
-      buttonColor = const Color(0xFF62E3BC);
+      buttonColor = AppColors.tealPrimary;
       textColor = Colors.black;
     }
 
@@ -1873,7 +1874,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF131616),
+        backgroundColor: AppColors.infoCardBg,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
         title: Text(
           l10n.quotaMonthlyLimitTitle,
@@ -1903,7 +1904,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
               child: Text(
                 l10n.quotaUpgradeToElite,
                 style: GoogleFonts.ibmPlexSans(
-                  color: const Color(0xFF89F1EC),
+                  color: AppColors.buttonPrimary,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
@@ -1914,7 +1915,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
             child: Text(
               l10n.quotaOk,
               style: GoogleFonts.ibmPlexSans(
-                color: const Color(0xFF89F1EC),
+                color: AppColors.buttonPrimary,
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
               ),
@@ -1991,12 +1992,12 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.psychology, color: Color(0xFF62E3BC), size: 20),
+                    const Icon(Icons.psychology, color: AppColors.tealPrimary, size: 20),
                     const SizedBox(width: 8),
                     Text(
                       AppLocalizations.of(context).handActionsAiAnalysis,
                       style: GoogleFonts.ibmPlexSans(
-                        color: const Color(0xFF62E3BC),
+                        color: AppColors.tealPrimary,
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                       ),
@@ -2062,12 +2063,12 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.school_rounded, color: Color(0xFF87ED81), size: 20),
+                    const Icon(Icons.school_rounded, color: AppColors.limeGreen, size: 20),
                     const SizedBox(width: 8),
                     Text(
                       AppLocalizations.of(context).handActionsStreetByStreetBreakdown,
                       style: GoogleFonts.ibmPlexSans(
-                        color: const Color(0xFF87ED81),
+                        color: AppColors.limeGreen,
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                       ),
@@ -2190,7 +2191,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
   Color _gradeColor(String grade) {
     switch (grade.toUpperCase()) {
       case 'A': return const Color(0xFF54E98A);
-      case 'B': return const Color(0xFF62E3BC);
+      case 'B': return AppColors.tealPrimary;
       case 'C': return const Color(0xFFFFD700);
       case 'D': return Colors.orange;
       case 'F': return Colors.red;

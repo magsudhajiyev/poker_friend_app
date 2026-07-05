@@ -8,6 +8,7 @@ import 'poker_hand_screen.dart';
 import '../widgets/loading_screen.dart';
 import 'logging_mode_selection_screen.dart';
 import 'individual_session_setup_screen.dart';
+import '../design_system/constants/colors.dart';
 
 class IntroductionScreen extends StatefulWidget {
   final LoggingMode? loggingMode;
@@ -67,7 +68,7 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
                             l10n.introConfigureSession,
                             style: TextStyle(
                               fontSize: 16,
-                              color: Color(0xFF9A9A9A),
+                              color: AppColors.textMuted,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -238,7 +239,7 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
                                 l10n.introBbAnteDescription,
                                 style: TextStyle(
                                   fontSize: 14,
-                                  color: Color(0xFF9A9A9A),
+                                  color: AppColors.textMuted,
                                 ),
                               ),
                             ],
@@ -371,7 +372,7 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
             style: TextStyle(color: Colors.white, fontSize: 16),
             decoration: InputDecoration(
               hintText: l10n.introEnterAmount,
-              hintStyle: TextStyle(color: Color(0xFF9A9A9A)),
+              hintStyle: TextStyle(color: AppColors.textMuted),
               enabledBorder: UnderlineInputBorder(
                 borderSide: BorderSide(color: Color(0xFFcb5242)),
               ),
@@ -383,7 +384,7 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
           actions: <Widget>[
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: Text(l10n.commonCancel, style: TextStyle(color: Color(0xFF9A9A9A))),
+              child: Text(l10n.commonCancel, style: TextStyle(color: AppColors.textMuted)),
             ),
             TextButton(
               onPressed: () {
@@ -447,12 +448,12 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
                       width: 36,
                       height: 36,
                       decoration: BoxDecoration(
-                        color: Color(0xFF5AC95A).withOpacity(0.1),
+                        color: AppColors.profitGreen.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Icon(
                         icon ?? Icons.help_outline,
-                        color: Color(0xFF5AC95A),
+                        color: AppColors.profitGreen,
                         size: 20,
                       ),
                     ),
@@ -569,7 +570,7 @@ class _GameTypeButton extends StatelessWidget {
               gameType == GameType.cash ? l10n.introRingGame : l10n.introMultiTable,
               style: TextStyle(
                 fontSize: 12,
-                color: isSelected ? Colors.white.withOpacity(0.8) : Color(0xFF9A9A9A),
+                color: isSelected ? Colors.white.withOpacity(0.8) : AppColors.textMuted,
               ),
               textAlign: TextAlign.center,
             ),

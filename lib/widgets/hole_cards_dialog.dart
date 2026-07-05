@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../l10n/app_localizations.dart';
 import '../models/hand_state_machine.dart';
 import 'card_keyboard.dart';
+import '../design_system/constants/colors.dart';
 
 class HoleCardsDialog extends StatefulWidget {
   final HoleCards? existingCards;
@@ -51,9 +52,9 @@ class _HoleCardsDialogState extends State<HoleCardsDialog> {
       child: Container(
         constraints: const BoxConstraints(maxWidth: 400),
         decoration: BoxDecoration(
-          color: const Color(0xFF101115),
+          color: AppColors.surfaceDark,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFF1B1E24), width: 1),
+          border: Border.all(color: AppColors.neutral800, width: 1),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -98,7 +99,7 @@ class _HoleCardsDialogState extends State<HoleCardsDialog> {
               width: 38,
               height: 38,
               decoration: const BoxDecoration(
-                color: Color(0xFF35373C),
+                color: AppColors.neutral700,
                 shape: BoxShape.circle,
               ),
               child: const Center(
@@ -123,7 +124,7 @@ class _HoleCardsDialogState extends State<HoleCardsDialog> {
                           widget.playerName!,
                           style: GoogleFonts.ibmPlexSans(
                             fontSize: 17,
-                            color: const Color(0xFF89F1EC),
+                            color: AppColors.buttonPrimary,
                             fontWeight: FontWeight.w600,
                           ),
                           overflow: TextOverflow.ellipsis,
@@ -159,7 +160,7 @@ class _HoleCardsDialogState extends State<HoleCardsDialog> {
                     l10n.holeCardsSubtitle,
                     style: GoogleFonts.ibmPlexSans(
                       fontSize: 13,
-                      color: const Color(0xFF8C8C8C),
+                      color: AppColors.textDisabled,
                     ),
                   ),
                 ] else ...[
@@ -191,7 +192,7 @@ class _HoleCardsDialogState extends State<HoleCardsDialog> {
           child: TextButton(
             onPressed: _saveCards,
             style: TextButton.styleFrom(
-              backgroundColor: const Color(0xFF89F1EC),
+              backgroundColor: AppColors.buttonPrimary,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(40),
               ),
@@ -252,7 +253,7 @@ class _HoleCardsDialogState extends State<HoleCardsDialog> {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(40),
                   side: BorderSide(
-                    color: const Color(0xFFD55A41).withValues(alpha: 0.5),
+                    color: AppColors.errorRed.withValues(alpha: 0.5),
                     width: 1,
                   ),
                 ),
@@ -261,7 +262,7 @@ class _HoleCardsDialogState extends State<HoleCardsDialog> {
               child: Text(
                 l10n.holeCardsSkipAllRemaining,
                 style: GoogleFonts.ibmPlexSans(
-                  color: const Color(0xFFD55A41),
+                  color: AppColors.errorRed,
                   fontSize: 17,
                   fontWeight: FontWeight.w600,
                   letterSpacing: -0.5,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../design_system/constants/colors.dart';
 
 /// Shared card selection keyboard with three input paths:
 /// - Path A: Drag from rank button to suit button
@@ -225,9 +226,9 @@ class _CardKeyboardState extends State<CardKeyboard> {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: const Color(0xFF02050B),
+              color: AppColors.paper,
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: const Color(0xFF1B1E24), width: 1),
+              border: Border.all(color: AppColors.neutral800, width: 1),
             ),
             child: Column(
               children: [
@@ -283,16 +284,16 @@ class _CardKeyboardState extends State<CardKeyboard> {
           color: isLocked
               ? const Color(0xFF1B3A2A)
               : isEmpty
-                  ? const Color(0xFF1B1E24)
+                  ? AppColors.neutral800
                   : Colors.white,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
             color: isActive
-                ? const Color(0xFF89F1EC)
+                ? AppColors.buttonPrimary
                 : isLocked
                     ? const Color(0xFF2A5A3A)
                     : isEmpty
-                        ? const Color(0xFF35373C)
+                        ? AppColors.neutral700
                         : Colors.grey[400]!,
             width: isActive ? 2 : 1,
           ),
@@ -302,7 +303,7 @@ class _CardKeyboardState extends State<CardKeyboard> {
                 child: Text(
                   '${index + 1}',
                   style: GoogleFonts.ibmPlexSans(
-                    color: const Color(0xFF4E5054),
+                    color: AppColors.infoCardDateText,
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
                   ),
@@ -328,7 +329,7 @@ class _CardKeyboardState extends State<CardKeyboard> {
                         width: 14,
                         height: 14,
                         decoration: const BoxDecoration(
-                          color: Color(0xFF35373C),
+                          color: AppColors.neutral700,
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(
@@ -372,18 +373,18 @@ class _CardKeyboardState extends State<CardKeyboard> {
         height: 44,
         decoration: BoxDecoration(
           color: isDragging
-              ? const Color(0xFF89F1EC).withValues(alpha: 0.25)
+              ? AppColors.buttonPrimary.withValues(alpha: 0.25)
               : isArmed
-                  ? const Color(0xFF89F1EC).withValues(alpha: 0.15)
+                  ? AppColors.buttonPrimary.withValues(alpha: 0.15)
                   : isFullyExcluded
                       ? const Color(0xFF0A0A0E)
-                      : const Color(0xFF1B1E24),
+                      : AppColors.neutral800,
           border: Border.all(
             color: (isArmed || isDragging)
-                ? const Color(0xFF89F1EC)
+                ? AppColors.buttonPrimary
                 : isFullyExcluded
-                    ? const Color(0xFF1B1E24)
-                    : const Color(0xFF35373C),
+                    ? AppColors.neutral800
+                    : AppColors.neutral700,
             width: 1,
           ),
           borderRadius: BorderRadius.circular(8),
@@ -395,9 +396,9 @@ class _CardKeyboardState extends State<CardKeyboard> {
               fontSize: 16,
               fontWeight: FontWeight.w600,
               color: (isArmed || isDragging)
-                  ? const Color(0xFF89F1EC)
+                  ? AppColors.buttonPrimary
                   : isFullyExcluded
-                      ? const Color(0xFF35373C)
+                      ? AppColors.neutral700
                       : Colors.white,
             ),
           ),
@@ -428,18 +429,18 @@ class _CardKeyboardState extends State<CardKeyboard> {
                 height: 56,
                 decoration: BoxDecoration(
                   color: isHovered
-                      ? const Color(0xFF89F1EC).withValues(alpha: 0.2)
+                      ? AppColors.buttonPrimary.withValues(alpha: 0.2)
                       : isExcluded
                           ? const Color(0xFF0A0A0E)
-                          : const Color(0xFF1B1E24),
+                          : AppColors.neutral800,
                   border: Border.all(
                     color: isHovered
-                        ? const Color(0xFF89F1EC)
+                        ? AppColors.buttonPrimary
                         : (hasActiveRank && !isExcluded)
-                            ? const Color(0xFF89F1EC).withValues(alpha: 0.4)
+                            ? AppColors.buttonPrimary.withValues(alpha: 0.4)
                             : isExcluded
-                                ? const Color(0xFF1B1E24)
-                                : const Color(0xFF35373C),
+                                ? AppColors.neutral800
+                                : AppColors.neutral700,
                     width: isHovered ? 2 : 1,
                   ),
                   borderRadius: BorderRadius.circular(8),
@@ -451,7 +452,7 @@ class _CardKeyboardState extends State<CardKeyboard> {
                       fontSize: isHovered ? 24 : 20,
                       fontWeight: FontWeight.bold,
                       color: isExcluded
-                          ? const Color(0xFF35373C)
+                          ? AppColors.neutral700
                           : suitColor,
                     ),
                   ),

@@ -11,6 +11,7 @@ import '../../services/seat_service.dart';
 import '../../services/waitlist_service.dart';
 import '../../l10n/app_localizations.dart';
 import 'member_table_view_screen.dart';
+import '../../design_system/constants/colors.dart';
 
 /// Screen for members to view all tables in a multi-table event
 /// Shows availability across all tables and allows joining shared waitlist
@@ -317,7 +318,7 @@ class _MemberEventTablesScreenState extends State<MemberEventTablesScreen> {
                 Text(
                   AppLocalizations.of(context).memberEventTablesSummary(_tables.length, _totalOccupied, _totalOpen),
                   style: const TextStyle(
-                    color: Color(0xFF9A9A9A),
+                    color: AppColors.textMuted,
                     fontSize: 13,
                   ),
                 ),
@@ -532,7 +533,7 @@ class _MemberEventTablesScreenState extends State<MemberEventTablesScreen> {
                       Text(
                         AppLocalizations.of(context).memberEventTotalWaiting(_totalWaitlistCount),
                         style: const TextStyle(
-                          color: Color(0xFF9A9A9A),
+                          color: AppColors.textMuted,
                           fontSize: 12,
                         ),
                       ),
@@ -647,7 +648,7 @@ class _MemberEventTablesScreenState extends State<MemberEventTablesScreen> {
           Text(
             AppLocalizations.of(context).memberEventAllTablesFull,
             style: TextStyle(
-              color: Color(0xFF9A9A9A),
+              color: AppColors.textMuted,
               fontSize: 15,
             ),
           ),

@@ -25,6 +25,7 @@ import '../models/hand_state_machine.dart';
 import '../widgets/stack_growth_chart.dart';
 import '../l10n/app_localizations.dart';
 import '../services/currency_service.dart';
+import '../design_system/constants/colors.dart';
 
 class IndividualSessionTrackingScreen extends StatefulWidget {
   final String sessionName;
@@ -458,7 +459,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
     if (_currentStack == _initialStack) {
       return Colors.white;
     } else if (_currentStack > _initialStack) {
-      return const Color(0xFF89F1EC);
+      return AppColors.buttonPrimary;
     } else {
       return Colors.red;
     }
@@ -509,7 +510,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
         padding: const EdgeInsets.symmetric(horizontal: 16),
         child: Container(
           decoration: BoxDecoration(
-            color: const Color(0xFF131616),
+            color: AppColors.infoCardBg,
             borderRadius: BorderRadius.circular(18),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -535,7 +536,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                           ? CurrencyService.formatCash(_currentStack)
                           : _currentStack.toStringAsFixed(0),
                       style: GoogleFonts.ibmPlexSans(
-                        color: const Color(0xFF89F1EC),
+                        color: AppColors.buttonPrimary,
                         fontSize: 17,
                         fontWeight: FontWeight.w600,
                       ),
@@ -691,7 +692,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
               child: Container(
                 width: 184,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF02050B),
+                  color: AppColors.paper,
                   borderRadius: BorderRadius.circular(18),
                   boxShadow: [
                     BoxShadow(
@@ -715,7 +716,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                       behavior: HitTestBehavior.opaque,
                       child: Row(
                         children: [
-                          const Icon(Icons.add_circle_outline, color: Color(0xFF89F1EC), size: 16),
+                          const Icon(Icons.add_circle_outline, color: AppColors.buttonPrimary, size: 16),
                           const SizedBox(width: 10),
                           Expanded(
                             child: Padding(
@@ -747,7 +748,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                       behavior: HitTestBehavior.opaque,
                       child: Row(
                         children: [
-                          const Icon(Icons.attach_money, color: Color(0xFF89F1EC), size: 16),
+                          const Icon(Icons.attach_money, color: AppColors.buttonPrimary, size: 16),
                           const SizedBox(width: 10),
                           Expanded(
                             child: Padding(
@@ -785,7 +786,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
-          backgroundColor: const Color(0xFF131616),
+          backgroundColor: AppColors.infoCardBg,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(18),
           ),
@@ -859,7 +860,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
               child: Text(
                 l10n.commonUpdate,
                 style: GoogleFonts.ibmPlexSans(
-                  color: const Color(0xFF89F1EC),
+                  color: AppColors.buttonPrimary,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -1099,7 +1100,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                     l10n.handSaveAndExit,
                     style: GoogleFonts.ibmPlexSans(
                       fontSize: 17,
-                      color: const Color(0xFF89F1EC),
+                      color: AppColors.buttonPrimary,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -1114,7 +1115,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                     l10n.handDiscardAndExit,
                     style: GoogleFonts.ibmPlexSans(
                       fontSize: 17,
-                      color: const Color(0xFFFF4444),
+                      color: AppColors.lossRed,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -1223,9 +1224,9 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
             width: 309,
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: const Color(0xFF101115),
+              color: AppColors.surfaceDark,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFF1B1E24)),
+              border: Border.all(color: AppColors.neutral800),
               boxShadow: const [
                 BoxShadow(
                   color: Colors.black,
@@ -1244,7 +1245,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: const Color(0xFFD55A41),
+                      color: AppColors.errorRed,
                       width: 0.857,
                     ),
                   ),
@@ -1252,7 +1253,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                     child: Container(
                       width: 11.14,
                       height: 11.14,
-                      color: const Color(0xFFD55A41),
+                      color: AppColors.errorRed,
                     ),
                   ),
                 ),
@@ -1271,7 +1272,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                   l10n.individualStopSessionMessage,
                   textAlign: TextAlign.center,
                   style: GoogleFonts.ibmPlexSans(
-                    color: const Color(0xFF8C8C8C),
+                    color: AppColors.textDisabled,
                     fontSize: 15,
                     height: 1.44,
                   ),
@@ -1310,7 +1311,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                         child: Container(
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFD55A41),
+                            color: AppColors.errorRed,
                             borderRadius: BorderRadius.circular(110),
                           ),
                           child: Center(
@@ -1421,9 +1422,9 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
             width: 309,
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: const Color(0xFF101115),
+              color: AppColors.surfaceDark,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFF1B1E24)),
+              border: Border.all(color: AppColors.neutral800),
               boxShadow: const [
                 BoxShadow(
                   color: Colors.black,
@@ -1437,7 +1438,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
               children: [
                 const Icon(
                   Icons.check_circle_outline,
-                  color: Color(0xFF62E3BC),
+                  color: AppColors.tealPrimary,
                   size: 48,
                 ),
                 const SizedBox(height: 16),
@@ -1456,7 +1457,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                   l10n.guidedTourCompleteBody,
                   textAlign: TextAlign.center,
                   style: GoogleFonts.ibmPlexSans(
-                    color: const Color(0xFF8C8C8C),
+                    color: AppColors.textDisabled,
                     fontSize: 15,
                     height: 1.44,
                   ),
@@ -1497,7 +1498,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
     return await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF131616),
+        backgroundColor: AppColors.infoCardBg,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(18),
         ),
@@ -1577,13 +1578,13 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
     final result = await showDialog<Map<String, dynamic>>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF131616),
+        backgroundColor: AppColors.infoCardBg,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(18),
         ),
         title: Row(
           children: [
-            const Icon(Icons.attach_money, color: Color(0xFF89F1EC), size: 24),
+            const Icon(Icons.attach_money, color: AppColors.buttonPrimary, size: 24),
             const SizedBox(width: 12),
             Text(
               l10n.individualAddOn,
@@ -1675,7 +1676,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               decoration: BoxDecoration(
-                color: const Color(0xFF89F1EC),
+                color: AppColors.buttonPrimary,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
@@ -1734,13 +1735,13 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
     final result = await showDialog<Map<String, dynamic>>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF131616),
+        backgroundColor: AppColors.infoCardBg,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(18),
         ),
         title: Row(
           children: [
-            const Icon(Icons.add_circle_outline, color: Color(0xFF89F1EC), size: 24),
+            const Icon(Icons.add_circle_outline, color: AppColors.buttonPrimary, size: 24),
             const SizedBox(width: 12),
             Text(
               l10n.individualRebuy,
@@ -1898,7 +1899,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               decoration: BoxDecoration(
-                color: const Color(0xFF89F1EC),
+                color: AppColors.buttonPrimary,
                 borderRadius: BorderRadius.circular(60),
               ),
               child: Text(
@@ -1958,7 +1959,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                 ? l10n.individualRebuyAddedSimple(rebuyAmount.toStringAsFixed(2))
                 : l10n.individualRebuyAddedWithStack(rebuyAmount.toStringAsFixed(2), newStack.toStringAsFixed(0)),
           ),
-          backgroundColor: const Color(0xFF89F1EC),
+          backgroundColor: AppColors.buttonPrimary,
         ),
       );
     }
@@ -1996,7 +1997,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                 gradient: RadialGradient(
                   colors: [
                     const Color(0xFF1A4A4A).withOpacity(0.6),
-                    const Color(0xFF133538).withOpacity(0.3),
+                    AppColors.headerGradientTeal.withOpacity(0.3),
                     Colors.transparent,
                   ],
                   stops: const [0.0, 0.4, 1.0],
@@ -2054,7 +2055,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                                 _formatDuration(_sessionDuration),
                                 style: GoogleFonts.ibmPlexSans(
                                   fontSize: 14,
-                                  color: const Color(0xFF89F1EC),
+                                  color: AppColors.buttonPrimary,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
@@ -2086,7 +2087,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
                     margin: const EdgeInsets.only(bottom: 16),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF131616),
+                      color: AppColors.infoCardBg,
                       borderRadius: BorderRadius.circular(18),
                     ),
                     child: Row(
@@ -2115,7 +2116,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF131616),
+                      color: AppColors.infoCardBg,
                       borderRadius: BorderRadius.circular(18),
                     ),
                     child: Column(
@@ -2137,20 +2138,20 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                                 key: _updateStackBtnKey,
                                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFF89F1EC).withOpacity(0.15),
+                                  color: AppColors.buttonPrimary.withOpacity(0.15),
                                   borderRadius: BorderRadius.circular(60),
                                   border: Border.all(
-                                    color: const Color(0xFF89F1EC).withOpacity(0.3),
+                                    color: AppColors.buttonPrimary.withOpacity(0.3),
                                   ),
                                 ),
                                 child: Row(
                                   children: [
-                                    const Icon(Icons.edit, color: Color(0xFF89F1EC), size: 14),
+                                    const Icon(Icons.edit, color: AppColors.buttonPrimary, size: 14),
                                     const SizedBox(width: 4),
                                     Text(
                                       l10n.commonUpdate,
                                       style: GoogleFonts.ibmPlexSans(
-                                        color: const Color(0xFF89F1EC),
+                                        color: AppColors.buttonPrimary,
                                         fontSize: 13,
                                         fontWeight: FontWeight.w600,
                                       ),
@@ -2190,7 +2191,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                                     : '${profitLoss >= 0 ? '+' : ''}${profitLoss.toStringAsFixed(0)}',
                                 style: GoogleFonts.ibmPlexSans(
                                   fontSize: 18,
-                                  color: isProfit ? const Color(0xFF89F1EC) : (profitLoss < 0 ? Colors.red : Colors.white),
+                                  color: isProfit ? AppColors.buttonPrimary : (profitLoss < 0 ? Colors.red : Colors.white),
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
@@ -2223,7 +2224,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF131616),
+                      color: AppColors.infoCardBg,
                       borderRadius: BorderRadius.circular(18),
                     ),
                     child: Column(
@@ -2294,8 +2295,8 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       decoration: BoxDecoration(
                         color: widget.isFromActiveSession
-                            ? const Color(0xFF131616)
-                            : const Color(0xFF89F1EC),
+                            ? AppColors.infoCardBg
+                            : AppColors.buttonPrimary,
                         borderRadius: BorderRadius.circular(60),
                         border: widget.isFromActiveSession
                             ? Border.all(color: Colors.white.withOpacity(0.1))
@@ -2355,7 +2356,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
       key: _stackChartKey,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFF131616),
+        color: AppColors.infoCardBg,
         borderRadius: BorderRadius.circular(18),
       ),
       child: Column(
@@ -2453,7 +2454,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
             value,
             style: GoogleFonts.ibmPlexSans(
               fontSize: 15,
-              color: const Color(0xFF89F1EC),
+              color: AppColors.buttonPrimary,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -2484,14 +2485,14 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                   value,
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: 15,
-                    color: const Color(0xFF89F1EC),
+                    color: AppColors.buttonPrimary,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
                 const SizedBox(width: 8),
                 const Icon(
                   Icons.edit,
-                  color: Color(0xFF89F1EC),
+                  color: AppColors.buttonPrimary,
                   size: 14,
                 ),
               ],

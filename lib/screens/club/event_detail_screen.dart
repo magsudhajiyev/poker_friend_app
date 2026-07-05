@@ -30,6 +30,7 @@ import 'final_standings_screen.dart';
 import '../../design_system/components/cards/error_state_card.dart';
 import '../../l10n/app_localizations.dart';
 import '../../services/currency_service.dart';
+import '../../design_system/constants/colors.dart';
 
 /// Event detail screen with RSVP functionality
 class EventDetailScreen extends StatefulWidget {
@@ -147,13 +148,13 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         final l10n = AppLocalizations.of(context);
         if (newStatus == EventStatus.active) {
           message = l10n.eventDetailLiveNow;
-          bgColor = const Color(0xFF89F1EC);
+          bgColor = AppColors.buttonPrimary;
         } else if (newStatus == EventStatus.completed) {
           message = l10n.eventDetailEnded;
           bgColor = Colors.white.withOpacity(0.3);
         } else if (newStatus == EventStatus.cancelled) {
           message = l10n.eventDetailCancelled;
-          bgColor = const Color(0xFFFF4444);
+          bgColor = AppColors.lossRed;
         } else if (newStatus == EventStatus.paused) {
           message = l10n.eventDetailPaused;
           bgColor = Colors.amber;
@@ -344,7 +345,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       await showDialog(
         context: context,
         builder: (context) => AlertDialog(
-          backgroundColor: const Color(0xFF1B1E24),
+          backgroundColor: AppColors.neutral800,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(18),
           ),
@@ -365,7 +366,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             TextButton(
               onPressed: () => Navigator.pop(context),
               style: TextButton.styleFrom(
-                foregroundColor: const Color(0xFF89F1EC),
+                foregroundColor: AppColors.buttonPrimary,
               ),
               child: Text(
                 AppLocalizations.of(context).commonOk,
@@ -413,7 +414,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF101115),
+        backgroundColor: AppColors.surfaceDark,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(18),
         ),
@@ -443,7 +444,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(
-              foregroundColor: isLive ? const Color(0xFF89F1EC) : const Color(0xFFFF4444),
+              foregroundColor: isLive ? AppColors.buttonPrimary : AppColors.lossRed,
             ),
             child: Text(
               confirmButtonText,
@@ -520,7 +521,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(AppLocalizations.of(context).eventDetailAddedToCalendar),
-            backgroundColor: const Color(0xFF89F1EC),
+            backgroundColor: AppColors.buttonPrimary,
           ),
         );
       }
@@ -529,7 +530,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(AppLocalizations.of(context).eventDetailCalendarFailed('$e')),
-            backgroundColor: const Color(0xFFFF4444),
+            backgroundColor: AppColors.lossRed,
           ),
         );
       }
@@ -561,7 +562,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         }
       },
       child: Scaffold(
-        backgroundColor: const Color(0xFF02050B),
+        backgroundColor: AppColors.paper,
         body: Stack(
           children: [
             // Teal radial gradient background
@@ -576,7 +577,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                   gradient: RadialGradient(
                     colors: [
                       const Color(0xFF1A4A4A).withOpacity(0.6),
-                      const Color(0xFF133538).withOpacity(0.6),
+                      AppColors.headerGradientTeal.withOpacity(0.6),
                       Colors.transparent,
                     ],
                     stops: const [0.0, 0.4, 1.0],
@@ -593,7 +594,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                     child: _isLoading
                         ? Center(
                             child: CircularProgressIndicator(
-                              color: const Color(0xFF89F1EC),
+                              color: AppColors.buttonPrimary,
                             ),
                           )
                         : _loadError != null
@@ -648,7 +649,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                     content: Text(
                                       CurrencyService.formatCash((_event.buyInAmount ?? 0).toDouble()),
                                       style: GoogleFonts.ibmPlexSans(
-                                        color: const Color(0xFF89F1EC),
+                                        color: AppColors.buttonPrimary,
                                         fontSize: 20,
                                         fontWeight: FontWeight.w700,
                                       ),
@@ -697,7 +698,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                     AppLocalizations.of(context).eventDetailAbout,
                                     style: GoogleFonts.ibmPlexSans(
                                       fontSize: 12,
-                                      color: const Color(0xFF87ED81),
+                                      color: AppColors.limeGreen,
                                       fontWeight: FontWeight.w600,
                                       letterSpacing: 1.0,
                                     ),
@@ -799,7 +800,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
               width: 44,
               height: 44,
               decoration: const BoxDecoration(
-                color: Color(0xFF101115),
+                color: AppColors.surfaceDark,
                 shape: BoxShape.circle,
               ),
               child: const Icon(
@@ -831,12 +832,12 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                 width: 44,
                 height: 44,
                 decoration: const BoxDecoration(
-                  color: Color(0xFF101115),
+                  color: AppColors.surfaceDark,
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
                   Icons.edit,
-                  color: Color(0xFF89F1EC),
+                  color: AppColors.buttonPrimary,
                   size: 20,
                 ),
               ),
@@ -878,8 +879,8 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       textColor = Colors.white.withOpacity(0.7);
       text = l10n.eventDetailCompletedBadge;
     } else {
-      bgColor = const Color(0xFF89F1EC).withOpacity(0.2);
-      textColor = const Color(0xFF89F1EC);
+      bgColor = AppColors.buttonPrimary.withOpacity(0.2);
+      textColor = AppColors.buttonPrimary;
       text = l10n.eventDetailUpcomingBadge;
     }
 
@@ -924,7 +925,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFF101115),
+        color: AppColors.surfaceDark,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
@@ -933,12 +934,12 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             width: 38,
             height: 38,
             decoration: BoxDecoration(
-              color: const Color(0xFF89F1EC).withOpacity(0.1),
+              color: AppColors.buttonPrimary.withOpacity(0.1),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(
               icon,
-              color: const Color(0xFF89F1EC),
+              color: AppColors.buttonPrimary,
               size: 18,
             ),
           ),
@@ -999,12 +1000,12 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF2A605D),
+                        color: AppColors.mint800,
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: const Icon(
                         Icons.event_seat,
-                        color: Color(0xFF89F1EC),
+                        color: AppColors.buttonPrimary,
                         size: 24,
                       ),
                     ),
@@ -1035,7 +1036,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                   ],
                 ),
                 const SizedBox(height: 16),
-                const Divider(color: Color(0xFF1B1E24), height: 1),
+                const Divider(color: AppColors.neutral800, height: 1),
                 const SizedBox(height: 16),
               ],
 
@@ -1098,7 +1099,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           AppLocalizations.of(context).eventDetailAreYouGoing,
           style: GoogleFonts.ibmPlexSans(
             fontSize: 12,
-            color: const Color(0xFF87ED81),
+            color: AppColors.limeGreen,
             fontWeight: FontWeight.w600,
             letterSpacing: 1.0,
           ),
@@ -1111,7 +1112,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                 status: AttendanceStatus.going,
                 icon: Icons.check_circle,
                 label: AppLocalizations.of(context).eventDetailRsvpGoing,
-                color: const Color(0xFF89F1EC),
+                color: AppColors.buttonPrimary,
               ),
             ),
             const SizedBox(width: 8),
@@ -1129,7 +1130,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                 status: AttendanceStatus.notGoing,
                 icon: Icons.cancel_outlined,
                 label: AppLocalizations.of(context).eventDetailRsvpCantGo,
-                color: const Color(0xFFFF4444),
+                color: AppColors.lossRed,
               ),
             ),
           ],
@@ -1152,7 +1153,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: isSelected ? color.withOpacity(0.15) : const Color(0xFF101115),
+          color: isSelected ? color.withOpacity(0.15) : AppColors.surfaceDark,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: isSelected ? color : Colors.white.withOpacity(0.06),
@@ -1195,7 +1196,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         decoration: BoxDecoration(
           color: _addedToCalendar
               ? Colors.white.withOpacity(0.05)
-              : const Color(0xFF89F1EC),
+              : AppColors.buttonPrimary,
           borderRadius: BorderRadius.circular(60),
         ),
         child: Row(
@@ -1228,7 +1229,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFF101115),
+        color: AppColors.surfaceDark,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -1254,7 +1255,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                   AppLocalizations.of(context).eventDetailSeeAll,
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: 17,
-                    color: const Color(0xFFD3FFFD),
+                    color: AppColors.textMint,
                     fontWeight: FontWeight.w500,
                     height: 1.44,
                   ),
@@ -1263,14 +1264,14 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             ],
           ),
           const SizedBox(height: 10),
-          const Divider(color: Color(0xFF1C1F21), height: 1),
+          const Divider(color: AppColors.separatorDark, height: 1),
           const SizedBox(height: 10),
 
           // Going row
           _buildAttendanceRow(
             label: AppLocalizations.of(context).eventDetailRsvpGoing,
             count: goingCount,
-            countColor: const Color(0xFF89F1EC),
+            countColor: AppColors.buttonPrimary,
           ),
           const SizedBox(height: 20),
 
@@ -1333,7 +1334,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: const Color(0xFF89F1EC),
+          color: AppColors.buttonPrimary,
           borderRadius: BorderRadius.circular(60),
         ),
         child: Row(
@@ -1376,10 +1377,10 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: const Color(0xFF101115),
+          color: AppColors.surfaceDark,
           borderRadius: BorderRadius.circular(60),
           border: Border.all(
-            color: const Color(0xFF89F1EC).withOpacity(0.3),
+            color: AppColors.buttonPrimary.withOpacity(0.3),
           ),
         ),
         child: Row(
@@ -1387,7 +1388,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           children: [
             const Icon(
               Icons.leaderboard,
-              color: Color(0xFF89F1EC),
+              color: AppColors.buttonPrimary,
               size: 22,
             ),
             const SizedBox(width: 10),
@@ -1396,7 +1397,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
               style: GoogleFonts.ibmPlexSans(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: const Color(0xFF89F1EC),
+                color: AppColors.buttonPrimary,
               ),
             ),
           ],
@@ -1459,7 +1460,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(AppLocalizations.of(context).eventDetailErrorFindingSeat(e.toString())),
-            backgroundColor: const Color(0xFFFF4444),
+            backgroundColor: AppColors.lossRed,
           ),
         );
       }
@@ -1473,10 +1474,10 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: const Color(0xFF101115),
+          color: AppColors.surfaceDark,
           borderRadius: BorderRadius.circular(60),
           border: Border.all(
-            color: const Color(0xFF89F1EC).withOpacity(0.3),
+            color: AppColors.buttonPrimary.withOpacity(0.3),
           ),
         ),
         child: Row(
@@ -1484,7 +1485,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           children: [
             const Icon(
               Icons.event_seat,
-              color: Color(0xFF89F1EC),
+              color: AppColors.buttonPrimary,
               size: 22,
             ),
             const SizedBox(width: 10),
@@ -1493,7 +1494,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
               style: GoogleFonts.ibmPlexSans(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: const Color(0xFF89F1EC),
+                color: AppColors.buttonPrimary,
               ),
             ),
           ],
@@ -1519,7 +1520,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: const Color(0xFF101115),
+          color: AppColors.surfaceDark,
           borderRadius: BorderRadius.circular(60),
           border: Border.all(
             color: Colors.amber.withOpacity(0.3),
@@ -1555,7 +1556,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: const Color(0xFF89F1EC),
+          color: AppColors.buttonPrimary,
           borderRadius: BorderRadius.circular(60),
         ),
         child: Row(
@@ -1588,10 +1589,10 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: const Color(0xFF101115),
+          color: AppColors.surfaceDark,
           borderRadius: BorderRadius.circular(60),
           border: Border.all(
-            color: const Color(0xFF89F1EC).withOpacity(0.3),
+            color: AppColors.buttonPrimary.withOpacity(0.3),
           ),
         ),
         child: Row(
@@ -1599,7 +1600,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           children: [
             const Icon(
               Icons.event_seat,
-              color: Color(0xFF89F1EC),
+              color: AppColors.buttonPrimary,
               size: 22,
             ),
             const SizedBox(width: 10),
@@ -1608,7 +1609,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
               style: GoogleFonts.ibmPlexSans(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: const Color(0xFF89F1EC),
+                color: AppColors.buttonPrimary,
               ),
             ),
           ],
@@ -1623,10 +1624,10 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFF89F1EC).withOpacity(0.1),
+        color: AppColors.buttonPrimary.withOpacity(0.1),
         borderRadius: BorderRadius.circular(60),
         border: Border.all(
-          color: const Color(0xFF89F1EC).withOpacity(0.3),
+          color: AppColors.buttonPrimary.withOpacity(0.3),
         ),
       ),
       child: Row(
@@ -1634,7 +1635,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         children: [
           const Icon(
             Icons.check_circle,
-            color: Color(0xFF89F1EC),
+            color: AppColors.buttonPrimary,
             size: 22,
           ),
           const SizedBox(width: 10),
@@ -1643,7 +1644,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             style: GoogleFonts.ibmPlexSans(
               fontSize: 16,
               fontWeight: FontWeight.w600,
-              color: const Color(0xFF89F1EC),
+              color: AppColors.buttonPrimary,
             ),
           ),
         ],
@@ -1726,7 +1727,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           AppLocalizations.of(context).eventDetailAdminActions,
           style: GoogleFonts.ibmPlexSans(
             fontSize: 12,
-            color: const Color(0xFF87ED81),
+            color: AppColors.limeGreen,
             fontWeight: FontWeight.w600,
             letterSpacing: 1.0,
           ),
@@ -1740,7 +1741,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                   onTap: _startEvent,
                   icon: Icons.play_arrow,
                   label: AppLocalizations.of(context).eventDetailStartEvent,
-                  color: const Color(0xFF89F1EC),
+                  color: AppColors.buttonPrimary,
                 ),
               ),
             if (_event.status == EventStatus.scheduled)
@@ -1761,8 +1762,8 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                       : AppLocalizations.of(context).commonCancel,
                   color: (_event.status == EventStatus.active ||
                           _event.status == EventStatus.paused)
-                      ? const Color(0xFF89F1EC)
-                      : const Color(0xFFFF4444),
+                      ? AppColors.buttonPrimary
+                      : AppColors.lossRed,
                 ),
               ),
           ],

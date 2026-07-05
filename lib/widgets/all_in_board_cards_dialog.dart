@@ -4,6 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../l10n/app_localizations.dart';
 import '../models/hand_state_machine.dart';
 import 'card_keyboard.dart';
+import '../design_system/constants/colors.dart';
 
 class AllInBoardCardsDialog extends StatefulWidget {
   final List<String> excludedCards; // Hole cards to exclude from selection
@@ -66,9 +67,9 @@ class _AllInBoardCardsDialogState extends State<AllInBoardCardsDialog> {
       child: Container(
         constraints: const BoxConstraints(maxWidth: 400),
         decoration: BoxDecoration(
-          color: const Color(0xFF101115),
+          color: AppColors.surfaceDark,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFF1B1E24), width: 1),
+          border: Border.all(color: AppColors.neutral800, width: 1),
         ),
         child: SingleChildScrollView(
           child: Padding(
@@ -133,7 +134,7 @@ class _AllInBoardCardsDialogState extends State<AllInBoardCardsDialog> {
           child: TextButton(
             onPressed: valid ? _saveCards : null,
             style: TextButton.styleFrom(
-              backgroundColor: valid ? const Color(0xFF89F1EC) : const Color(0xFF1B1E24),
+              backgroundColor: valid ? AppColors.buttonPrimary : AppColors.neutral800,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(40),
               ),
@@ -142,7 +143,7 @@ class _AllInBoardCardsDialogState extends State<AllInBoardCardsDialog> {
             child: Text(
               l10n.commonSave,
               style: GoogleFonts.ibmPlexSans(
-                color: valid ? Colors.black : const Color(0xFF4E5054),
+                color: valid ? Colors.black : AppColors.infoCardDateText,
                 fontSize: 17,
                 fontWeight: FontWeight.w600,
                 letterSpacing: -0.5,

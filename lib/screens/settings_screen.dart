@@ -147,7 +147,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           style: GoogleFonts.ibmPlexSans(
             fontSize: size * 0.35,
             fontWeight: FontWeight.w600,
-            color: const Color(0xFF87ED81),
+            color: AppColors.limeGreen,
           ),
         ),
       ),
@@ -612,7 +612,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.bar_chart_rounded, color: Color(0xFF89F1EC), size: 48),
+            const Icon(Icons.bar_chart_rounded, color: AppColors.buttonPrimary, size: 48),
             const SizedBox(height: 16),
             Text(l10n.navDrawerNoEarningsTitle,
                 style: GoogleFonts.ibmPlexSans(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white),
@@ -627,7 +627,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               child: TextButton(
                 onPressed: () => Navigator.pop(context),
                 style: TextButton.styleFrom(
-                  backgroundColor: const Color(0xFF1C1F21),
+                  backgroundColor: AppColors.separatorDark,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(60)),
                   padding: const EdgeInsets.symmetric(vertical: 14),
                 ),
@@ -807,7 +807,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               child: Center(
                 child: Text(
                   club.name.length >= 2 ? club.name.substring(0, 2).toUpperCase() : club.name.toUpperCase(),
-                  style: GoogleFonts.ibmPlexSans(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF87ED81)),
+                  style: GoogleFonts.ibmPlexSans(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.limeGreen),
                 ),
               ),
             ),
@@ -882,8 +882,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           children: [
             Container(
               width: 40, height: 40,
-              decoration: BoxDecoration(color: const Color(0xFF89F1EC).withOpacity(0.12), borderRadius: BorderRadius.circular(10)),
-              child: Icon(icon, color: const Color(0xFF89F1EC), size: 22),
+              decoration: BoxDecoration(color: AppColors.buttonPrimary.withOpacity(0.12), borderRadius: BorderRadius.circular(10)),
+              child: Icon(icon, color: AppColors.buttonPrimary, size: 22),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -1089,7 +1089,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           },
                         ),
                         _buildRow(
-                          icon: const Icon(Icons.notifications_active_rounded, color: Color(0xFF89F1EC), size: 24),
+                          icon: const Icon(Icons.notifications_active_rounded, color: AppColors.buttonPrimary, size: 24),
                           title: l10n.settingsNotificationTester,
                           onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationTesterScreen())),
                           isLast: true,
@@ -1120,13 +1120,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
             Container(
               width: 40, height: 40,
               decoration: BoxDecoration(
-                color: const Color(0xFF1C1F21),
+                color: AppColors.separatorDark,
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(color: const Color(0xFF3A3A3C), width: 1),
               ),
               child: Center(
                 child: Text('FT',
-                    style: GoogleFonts.ibmPlexSans(fontSize: 12, fontWeight: FontWeight.w700, color: const Color(0xFF89F1EC))),
+                    style: GoogleFonts.ibmPlexSans(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.buttonPrimary)),
               ),
             ),
             const SizedBox(width: 12),

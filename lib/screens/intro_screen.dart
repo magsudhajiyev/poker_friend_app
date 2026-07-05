@@ -73,7 +73,7 @@ class _IntroScreenState extends State<IntroScreen> {
                             style: GoogleFonts.ibmPlexSans(
                               fontSize: 15,
                               fontWeight: FontWeight.w500,
-                              color: const Color(0xFF8C8C8C),
+                              color: AppColors.textDisabled,
                             ),
                           ),
                         ),
@@ -120,7 +120,7 @@ class _IntroScreenState extends State<IntroScreen> {
                         height: 8,
                         decoration: BoxDecoration(
                           color: isActive
-                              ? const Color(0xFF89F1EC)
+                              ? AppColors.buttonPrimary
                               : Colors.white.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(4),
                         ),
@@ -161,7 +161,7 @@ class _IntroScreenState extends State<IntroScreen> {
             style: GoogleFonts.ibmPlexSans(
               fontSize: 17,
               fontWeight: FontWeight.w400,
-              color: const Color(0xFF8C8C8C),
+              color: AppColors.textDisabled,
               height: 1.5,
             ),
           ),
@@ -194,7 +194,7 @@ class _IntroScreenState extends State<IntroScreen> {
             style: GoogleFonts.ibmPlexSans(
               fontSize: 17,
               fontWeight: FontWeight.w400,
-              color: const Color(0xFF8C8C8C),
+              color: AppColors.textDisabled,
               height: 1.5,
             ),
           ),

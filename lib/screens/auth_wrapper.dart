@@ -12,6 +12,7 @@ import '../widgets/looping_splash_logo.dart';
 import 'intro_screen.dart';
 import 'home_screen.dart';
 import 'onboarding/onboarding_flow.dart';
+import '../design_system/constants/colors.dart';
 
 class AuthWrapper extends StatefulWidget {
   const AuthWrapper({super.key});
@@ -205,7 +206,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
     // Keep the logo animation looping while auth/user data loads, instead
     // of cutting to a blank screen after the splash plays once.
     return const Scaffold(
-      backgroundColor: Color(0xFF02050B),
+      backgroundColor: AppColors.paper,
       body: LoopingSplashLogo(),
     );
   }
@@ -213,7 +214,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
   Widget _buildConnectionErrorScreen(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     return Scaffold(
-      backgroundColor: const Color(0xFF02050B),
+      backgroundColor: AppColors.paper,
       body: Center(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 32),
@@ -229,7 +230,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
                 ),
                 child: const Icon(
                   Icons.wifi_off_rounded,
-                  color: Color(0xFF8C8C8C),
+                  color: AppColors.textDisabled,
                   size: 40,
                 ),
               ),
@@ -248,7 +249,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
                 l10n.authConnectionIssueBody,
                 style: GoogleFonts.ibmPlexSans(
                   fontSize: 15,
-                  color: const Color(0xFF8C8C8C),
+                  color: AppColors.textDisabled,
                   height: 1.5,
                 ),
                 textAlign: TextAlign.center,
@@ -264,7 +265,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(40),
                     border: Border.all(
-                      color: const Color(0xFF89F1EC).withValues(alpha: 0.5),
+                      color: AppColors.buttonPrimary.withValues(alpha: 0.5),
                       width: 1,
                     ),
                   ),
@@ -273,7 +274,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
                     style: GoogleFonts.ibmPlexSans(
                       fontSize: 17,
                       fontWeight: FontWeight.w600,
-                      color: const Color(0xFF89F1EC),
+                      color: AppColors.buttonPrimary,
                       letterSpacing: -0.5,
                     ),
                   ),

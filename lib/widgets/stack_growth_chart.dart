@@ -5,6 +5,7 @@ import 'package:fl_chart/fl_chart.dart';
 import '../l10n/app_localizations.dart';
 import '../models/hand_state_machine.dart';
 import '../services/currency_service.dart';
+import '../design_system/constants/colors.dart';
 
 /// Default number of data points visible in the viewport.
 const _defaultVisiblePoints = 7;
@@ -105,7 +106,7 @@ class _StackGrowthChartState extends State<StackGrowthChart> {
     // Line color based on profit/loss
     final currentStack = spots.last.y;
     final lineColor = currentStack >= widget.startingStack
-        ? const Color(0xFF89F1EC)
+        ? AppColors.buttonPrimary
         : const Color(0xFFFF6B6B);
 
     // Viewport: show _visiblePoints worth of space
@@ -591,7 +592,7 @@ class _StackGrowthChartFullScreenState
   @override
   Widget build(BuildContext context) {
     final lineColor = widget.profitLoss >= 0
-        ? const Color(0xFF89F1EC)
+        ? AppColors.buttonPrimary
         : const Color(0xFFFF6B6B);
 
     return Scaffold(
@@ -648,7 +649,7 @@ class _StackGrowthChartFullScreenState
               width: 40,
               height: 40,
               decoration: const BoxDecoration(
-                color: Color(0xFF101115),
+                color: AppColors.surfaceDark,
                 shape: BoxShape.circle,
               ),
               child: const Icon(

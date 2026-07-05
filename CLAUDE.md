@@ -418,6 +418,7 @@ saveHand() called
 | FCMService | `lib/services/fcm_service.dart` | Push notifications (fire-and-forget!) |
 | DeepLinkService | `lib/services/deep_link_service.dart` | Email invitation deep links |
 | AiAnalyzerService | `lib/services/ai_analyzer_service.dart` | Hand analysis API calls |
+| FeatureFlagService | `lib/services/feature_flag_service.dart` | Global remote feature flags (Firestore `app_config/feature_flags`, super-admin toggles on Profile, offline cache). Gated: training_drills, ai_hand_analysis |
 
 ---
 
@@ -653,6 +654,7 @@ flutter test test/services/stats_calculator_test.dart
 - Never commit active print statements
 
 ### Design System Usage
+- **Unification in progress** — see `lib/design_system/README.md` for the phase plan and rules; run `python3 tool/design_lint.py` before committing UI work (hardcoded-value count must not increase; `--fix` auto-replaces exact token matches)
 - Always use `AppColors`, `AppTypography`, `AppSpacing`, `AppDecorations` constants
 - Use design system components (GlassyCard, PrimaryButton, etc.) over custom containers
 - New screens must use Modern Dark theme (AppTheme), not legacy PokerFriendTheme

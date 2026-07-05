@@ -19,7 +19,7 @@ class NotificationTesterScreen extends StatelessWidget {
       body: 'Friday Night Poker - Apr 11, 8:00 PM',
       clubName: 'Ace High Club',
       icon: Icons.event_available,
-      iconColor: const Color(0xFF5AC95A),
+      iconColor: AppColors.profitGreen,
     ),
     _NotificationMock(
       type: NotificationType.eventUpdated,
@@ -123,7 +123,7 @@ class NotificationTesterScreen extends StatelessWidget {
       body: 'John D.: [Bug Report] App crashes on hand save',
       clubName: '',
       icon: Icons.support_agent,
-      iconColor: const Color(0xFF89F1EC),
+      iconColor: AppColors.buttonPrimary,
     ),
     _NotificationMock(
       type: NotificationType.supportRequestUpdated,
@@ -131,7 +131,7 @@ class NotificationTesterScreen extends StatelessWidget {
       body: 'Your request "App crashes on hand save" has been resolved.',
       clubName: '',
       icon: Icons.check_circle,
-      iconColor: const Color(0xFF87ED81),
+      iconColor: AppColors.limeGreen,
     ),
   ];
 
@@ -169,7 +169,7 @@ class NotificationTesterScreen extends StatelessWidget {
                           width: 44,
                           height: 44,
                           decoration: const BoxDecoration(
-                            color: Color(0xFF101115),
+                            color: AppColors.surfaceDark,
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(
@@ -202,10 +202,10 @@ class NotificationTesterScreen extends StatelessWidget {
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF89F1EC).withValues(alpha: 0.08),
+                      color: AppColors.buttonPrimary.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: const Color(0xFF89F1EC).withValues(alpha: 0.2),
+                        color: AppColors.buttonPrimary.withValues(alpha: 0.2),
                       ),
                     ),
                     child: Text(
@@ -213,7 +213,7 @@ class NotificationTesterScreen extends StatelessWidget {
                       'Tap the list icon to preview it as a notification list item.',
                       style: GoogleFonts.ibmPlexSans(
                         fontSize: 13,
-                        color: const Color(0xFF89F1EC),
+                        color: AppColors.buttonPrimary,
                         height: 1.4,
                       ),
                     ),
@@ -228,7 +228,7 @@ class NotificationTesterScreen extends StatelessWidget {
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
                     itemCount: _mocks.length,
                     separatorBuilder: (_, __) => const Divider(
-                      color: Color(0xFF1C1F21),
+                      color: AppColors.separatorDark,
                       height: 1,
                     ),
                     itemBuilder: (context, index) {
@@ -288,7 +288,7 @@ class NotificationTesterScreen extends StatelessWidget {
                     mock.title,
                     style: GoogleFonts.ibmPlexSans(
                       fontSize: 13,
-                      color: const Color(0xFF8C8C8C),
+                      color: AppColors.textDisabled,
                     ),
                   ),
                 ],
@@ -302,12 +302,12 @@ class NotificationTesterScreen extends StatelessWidget {
                 width: 36,
                 height: 36,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF101115),
+                  color: AppColors.surfaceDark,
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Icon(
                   Icons.list_alt,
-                  color: Color(0xFF8C8C8C),
+                  color: AppColors.textDisabled,
                   size: 20,
                 ),
               ),
@@ -322,7 +322,7 @@ class NotificationTesterScreen extends StatelessWidget {
   void _showListPreview(BuildContext context, _NotificationMock mock) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF101115),
+      backgroundColor: AppColors.surfaceDark,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -339,7 +339,7 @@ class NotificationTesterScreen extends StatelessWidget {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF8C8C8C),
+                    color: AppColors.textDisabled,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -358,7 +358,7 @@ class NotificationTesterScreen extends StatelessWidget {
                 mock.type.displayName,
                 style: GoogleFonts.ibmPlexSans(
                   fontSize: 13,
-                  color: const Color(0xFF8C8C8C),
+                  color: AppColors.textDisabled,
                 ),
               ),
               const SizedBox(height: 20),
@@ -369,7 +369,7 @@ class NotificationTesterScreen extends StatelessWidget {
                 style: GoogleFonts.ibmPlexSans(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: const Color(0xFF87ED81),
+                  color: AppColors.limeGreen,
                   letterSpacing: 1.0,
                 ),
               ),
@@ -384,7 +384,7 @@ class NotificationTesterScreen extends StatelessWidget {
                 style: GoogleFonts.ibmPlexSans(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: const Color(0xFF8C8C8C),
+                  color: AppColors.textDisabled,
                   letterSpacing: 1.0,
                 ),
               ),

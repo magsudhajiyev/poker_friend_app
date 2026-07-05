@@ -996,7 +996,7 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
             child: Container(
               padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
               decoration: BoxDecoration(
-                color: const Color(0xFF101115),
+                color: AppColors.surfaceDark,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color: isHero

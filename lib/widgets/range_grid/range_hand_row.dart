@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../../services/range_grid_service.dart';
+import '../../design_system/constants/colors.dart';
 
 /// Compact row for one logged hand behind a grid cell: relative date,
 /// preflop line, result. Tappable to open that hand's details.
@@ -80,7 +81,7 @@ class RangeHandRow extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
               decoration: BoxDecoration(
                 color: entry.won
-                    ? const Color(0xFF62E3BC).withValues(alpha: 0.14)
+                    ? AppColors.tealPrimary.withValues(alpha: 0.14)
                     : Colors.white.withValues(alpha: 0.06),
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -90,7 +91,7 @@ class RangeHandRow extends StatelessWidget {
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
                   color: entry.won
-                      ? const Color(0xFF62E3BC)
+                      ? AppColors.tealPrimary
                       : Colors.white.withValues(alpha: 0.5),
                 ),
               ),

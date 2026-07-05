@@ -9,6 +9,7 @@ import 'hand_actions_page_view.dart';
 import '../services/app_data_cache.dart';
 import '../widgets/global_bottom_nav_bar.dart';
 import '../services/currency_service.dart';
+import '../design_system/constants/colors.dart';
 
 class OpponentHandsScreen extends StatefulWidget {
   final Opponent opponent;
@@ -47,8 +48,8 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
   // Full filtered list built once, pages served from cache
   List<Map<String, dynamic>>? _allFilteredHands;
 
-  static const _cardColor = Color(0xFF131616);
-  static const _mint = Color(0xFF89F1EC);
+  static const _cardColor = AppColors.infoCardBg;
+  static const _mint = AppColors.buttonPrimary;
 
   @override
   void initState() {
@@ -314,7 +315,7 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
                 gradient: RadialGradient(
                   colors: [
                     const Color(0xFF1A4A4A).withValues(alpha: 0.6),
-                    const Color(0xFF133538).withValues(alpha: 0.3),
+                    AppColors.headerGradientTeal.withValues(alpha: 0.3),
                     Colors.transparent,
                   ],
                   stops: const [0.0, 0.4, 1.0],
@@ -337,7 +338,7 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
                           width: 44,
                           height: 44,
                           decoration: const BoxDecoration(
-                            color: Color(0xFF101115),
+                            color: AppColors.surfaceDark,
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(Icons.arrow_back, color: Colors.white, size: 22),

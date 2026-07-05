@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../widgets/looping_splash_logo.dart';
 import 'auth_wrapper.dart';
+import '../design_system/constants/colors.dart';
 
 /// Launch screen: loops the logo animation until the app is ready.
 ///
@@ -60,7 +61,7 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF02050B),
+      backgroundColor: AppColors.paper,
       body: LoopingSplashLogo(onLoopCompleted: _onLoopCompleted),
     );
   }

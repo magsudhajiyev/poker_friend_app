@@ -348,7 +348,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                     style: GoogleFonts.ibmPlexSans(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: const Color(0xFF89F1EC), // mint/300
+                      color: AppColors.buttonPrimary, // mint/300
                       height: 1.47,
                     ),
                   ),
@@ -552,13 +552,13 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF101115),
+        backgroundColor: AppColors.surfaceDark,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Row(
           children: [
             Icon(
               isResolved ? Icons.check_circle : Icons.cancel,
-              color: isResolved ? const Color(0xFF87ED81) : const Color(0xFFD55A41),
+              color: isResolved ? AppColors.limeGreen : AppColors.errorRed,
               size: 22,
             ),
             const SizedBox(width: 8),
@@ -590,7 +590,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             Text(
               request.category,
               style: GoogleFonts.ibmPlexSans(
-                color: const Color(0xFF8C8C8C),
+                color: AppColors.textDisabled,
                 fontSize: 13,
               ),
             ),
@@ -599,7 +599,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               Text(
                 AppLocalizations.of(context).notificationsScreenResponse,
                 style: GoogleFonts.ibmPlexSans(
-                  color: const Color(0xFF8C8C8C),
+                  color: AppColors.textDisabled,
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                   letterSpacing: 0.5,
@@ -611,8 +611,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: isResolved
-                      ? const Color(0xFF87ED81).withValues(alpha: 0.1)
-                      : const Color(0xFFD55A41).withValues(alpha: 0.1),
+                      ? AppColors.limeGreen.withValues(alpha: 0.1)
+                      : AppColors.errorRed.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
@@ -633,7 +633,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             child: Text(
               AppLocalizations.of(context).commonOk,
               style: GoogleFonts.ibmPlexSans(
-                color: const Color(0xFF89F1EC),
+                color: AppColors.buttonPrimary,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -1283,18 +1283,18 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     switch (type) {
       case NotificationType.eventCreated:
       case NotificationType.eventUpdated:
-        return const Color(0xFF89F1EC);
+        return AppColors.buttonPrimary;
       case NotificationType.eventStarting:
       case NotificationType.eventStarted:
-        return const Color(0xFF87ED81);
+        return AppColors.limeGreen;
       case NotificationType.eventCancelled:
       case NotificationType.clubRejected:
       case NotificationType.invitationDeclined:
-        return const Color(0xFFFF4444);
+        return AppColors.lossRed;
       case NotificationType.memberRSVP:
       case NotificationType.clubApproved:
       case NotificationType.invitationAccepted:
-        return const Color(0xFF87ED81);
+        return AppColors.limeGreen;
       case NotificationType.newClubRequest:
       case NotificationType.memberInvited:
         return const Color(0xFFFFD13F);
@@ -1302,7 +1302,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         return const Color(0xFF4A87F2);
       case NotificationType.newSupportRequest:
       case NotificationType.supportRequestUpdated:
-        return const Color(0xFFD3FFFD);
+        return AppColors.textMint;
     }
   }
 }

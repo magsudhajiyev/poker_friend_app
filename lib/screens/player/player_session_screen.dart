@@ -391,7 +391,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
         content: Text(
           AppLocalizations.of(context).playerSessionEndedBody,
           style: GoogleFonts.ibmPlexSans(
-            color: const Color(0xFF8C8C8C),
+            color: AppColors.textDisabled,
             fontSize: 15,
           ),
         ),
@@ -404,7 +404,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
             child: Text(
               AppLocalizations.of(context).commonOk,
               style: GoogleFonts.ibmPlexSans(
-                color: const Color(0xFF89F1EC),
+                color: AppColors.buttonPrimary,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -439,7 +439,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
         content: Text(
           AppLocalizations.of(context).playerSessionRemovedBody,
           style: GoogleFonts.ibmPlexSans(
-            color: const Color(0xFF8C8C8C),
+            color: AppColors.textDisabled,
             fontSize: 15,
           ),
         ),
@@ -452,7 +452,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
             child: Text(
               AppLocalizations.of(context).commonOk,
               style: GoogleFonts.ibmPlexSans(
-                color: const Color(0xFF89F1EC),
+                color: AppColors.buttonPrimary,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -472,7 +472,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
               : 'Seat $winnerId wins ${_formatAmount(pot)}',
           style: GoogleFonts.ibmPlexSans(color: Colors.white),
         ),
-        backgroundColor: isWinner ? const Color(0xFF87ED81) : AppColors.bgSurface,
+        backgroundColor: isWinner ? AppColors.limeGreen : AppColors.bgSurface,
         duration: const Duration(seconds: 3),
       ),
     );
@@ -580,7 +580,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
         content: Text(
           AppLocalizations.of(context).playerSessionLeaveTableBody,
           style: GoogleFonts.ibmPlexSans(
-            color: const Color(0xFF8C8C8C),
+            color: AppColors.textDisabled,
             fontSize: 15,
           ),
         ),
@@ -590,7 +590,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
             child: Text(
               AppLocalizations.of(context).commonCancel,
               style: GoogleFonts.ibmPlexSans(
-                color: const Color(0xFF8C8C8C),
+                color: AppColors.textDisabled,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -600,7 +600,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
             child: Text(
               AppLocalizations.of(context).commonLeave,
               style: GoogleFonts.ibmPlexSans(
-                color: const Color(0xFFD55A41),
+                color: AppColors.errorRed,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -627,7 +627,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
                 AppLocalizations.of(context).playerSessionFailedLeave(e.toString()),
                 style: GoogleFonts.ibmPlexSans(color: Colors.white),
               ),
-              backgroundColor: const Color(0xFFD55A41),
+              backgroundColor: AppColors.errorRed,
             ),
           );
         }
@@ -673,7 +673,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
               width: 44,
               height: 44,
               decoration: const BoxDecoration(
-                color: Color(0xFF101115),
+                color: AppColors.surfaceDark,
                 shape: BoxShape.circle,
               ),
               child: const Icon(
@@ -706,7 +706,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
                       AppLocalizations.of(context).playerSessionHandNumber(_handNumber),
                       style: GoogleFonts.ibmPlexSans(
                         fontSize: 13,
-                        color: const Color(0xFF8C8C8C),
+                        color: AppColors.textDisabled,
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -715,8 +715,8 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
                       height: 6,
                       decoration: BoxDecoration(
                         color: _isHandActive
-                            ? const Color(0xFF87ED81)
-                            : const Color(0xFF8C8C8C),
+                            ? AppColors.limeGreen
+                            : AppColors.textDisabled,
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -727,8 +727,8 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
                         color: _isHandActive
-                            ? const Color(0xFF87ED81)
-                            : const Color(0xFF8C8C8C),
+                            ? AppColors.limeGreen
+                            : AppColors.textDisabled,
                         letterSpacing: 0.5,
                       ),
                     ),
@@ -755,12 +755,12 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF62E3BC).withValues(alpha: 0.12),
+                  color: AppColors.tealPrimary.withValues(alpha: 0.12),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
                   Icons.leaderboard_rounded,
-                  color: Color(0xFF62E3BC),
+                  color: AppColors.tealPrimary,
                   size: 22,
                 ),
               ),
@@ -771,7 +771,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
             decoration: BoxDecoration(
-              color: const Color(0xFF89F1EC).withValues(alpha: 0.12),
+              color: AppColors.buttonPrimary.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(40),
             ),
             child: Row(
@@ -780,7 +780,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
                 const Icon(
                   Icons.person_rounded,
                   size: 11,
-                  color: Color(0xFF89F1EC),
+                  color: AppColors.buttonPrimary,
                 ),
                 const SizedBox(width: 3),
                 Text(
@@ -788,7 +788,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: 10,
                     fontWeight: FontWeight.w500,
-                    color: const Color(0xFF89F1EC),
+                    color: AppColors.buttonPrimary,
                   ),
                 ),
               ],
@@ -806,14 +806,14 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const CircularProgressIndicator(
-              color: Color(0xFF89F1EC),
+              color: AppColors.buttonPrimary,
               strokeWidth: 2,
             ),
             const SizedBox(height: 16),
             Text(
               AppLocalizations.of(context).playerSessionConnecting,
               style: GoogleFonts.ibmPlexSans(
-                color: const Color(0xFF8C8C8C),
+                color: AppColors.textDisabled,
                 fontSize: 15,
               ),
             ),
@@ -833,20 +833,20 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
                 width: 72,
                 height: 72,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFD55A41).withValues(alpha: 0.15),
+                  color: AppColors.errorRed.withValues(alpha: 0.15),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
                   Icons.error_outline_rounded,
                   size: 36,
-                  color: Color(0xFFD55A41),
+                  color: AppColors.errorRed,
                 ),
               ),
               const SizedBox(height: 20),
               Text(
                 _error!,
                 style: GoogleFonts.ibmPlexSans(
-                  color: const Color(0xFF8C8C8C),
+                  color: AppColors.textDisabled,
                   fontSize: 15,
                 ),
                 textAlign: TextAlign.center,
@@ -914,13 +914,13 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
       decoration: BoxDecoration(
         color: AppColors.bgSurface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFF1C1F21)),
+        border: Border.all(color: AppColors.separatorDark),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _buildStatusItem(AppLocalizations.of(context).playerSessionSeat, '#${widget.seatNumber}', const Color(0xFF89F1EC)),
-          _buildStatusItem(AppLocalizations.of(context).playerSessionStack, _formatAmount(_myStack), const Color(0xFF87ED81)),
+          _buildStatusItem(AppLocalizations.of(context).playerSessionSeat, '#${widget.seatNumber}', AppColors.buttonPrimary),
+          _buildStatusItem(AppLocalizations.of(context).playerSessionStack, _formatAmount(_myStack), AppColors.limeGreen),
           _buildStatusItem(AppLocalizations.of(context).playerSessionPot, _formatAmount(_potAmount), const Color(0xFFFFA726)),
         ],
       ),
@@ -942,7 +942,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
         Text(
           label,
           style: GoogleFonts.ibmPlexSans(
-            color: const Color(0xFF8C8C8C),
+            color: AppColors.textDisabled,
             fontSize: 11,
             fontWeight: FontWeight.w600,
             letterSpacing: 0.5,
@@ -966,22 +966,22 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: hasCards
-                ? const Color(0xFF89F1EC).withValues(alpha: 0.3)
-                : const Color(0xFF1C1F21),
+                ? AppColors.buttonPrimary.withValues(alpha: 0.3)
+                : AppColors.separatorDark,
           ),
         ),
         child: Row(
           children: [
             Icon(
               Icons.style_rounded,
-              color: hasCards ? const Color(0xFF89F1EC) : const Color(0xFF8C8C8C),
+              color: hasCards ? AppColors.buttonPrimary : AppColors.textDisabled,
               size: 18,
             ),
             const SizedBox(width: 8),
             Text(
               AppLocalizations.of(context).playerSessionHoleCardsLabel,
               style: GoogleFonts.ibmPlexSans(
-                color: hasCards ? const Color(0xFF89F1EC) : const Color(0xFF8C8C8C),
+                color: hasCards ? AppColors.buttonPrimary : AppColors.textDisabled,
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
               ),
@@ -996,13 +996,13 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               decoration: BoxDecoration(
-                color: const Color(0xFF89F1EC).withValues(alpha: 0.15),
+                color: AppColors.buttonPrimary.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(40),
               ),
               child: Text(
                 hasCards ? 'Edit' : 'Add',
                 style: GoogleFonts.ibmPlexSans(
-                  color: const Color(0xFF89F1EC),
+                  color: AppColors.buttonPrimary,
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                 ),
@@ -1030,7 +1030,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
         border: Border.all(
           color: hasCards
               ? const Color(0xFFFFA726).withValues(alpha: 0.3)
-              : const Color(0xFF1C1F21),
+              : AppColors.separatorDark,
         ),
       ),
       child: Row(
@@ -1063,7 +1063,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
             Text(
               AppLocalizations.of(context).playerSessionNoCardsDealt,
               style: GoogleFonts.ibmPlexSans(
-                color: const Color(0xFF8C8C8C),
+                color: AppColors.textDisabled,
                 fontSize: 13,
               ),
             ),
@@ -1115,13 +1115,13 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
         decoration: BoxDecoration(
           color: AppColors.bgSurface,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0xFF1C1F21)),
+          border: Border.all(color: AppColors.separatorDark),
         ),
         child: Center(
           child: Text(
             AppLocalizations.of(context).playerSessionWaitingForAction,
             style: GoogleFonts.ibmPlexSans(
-              color: const Color(0xFF8C8C8C),
+              color: AppColors.textDisabled,
               fontSize: 14,
             ),
           ),
@@ -1162,7 +1162,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
       decoration: BoxDecoration(
         color: AppColors.bgSurface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFF1C1F21)),
+        border: Border.all(color: AppColors.separatorDark),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1171,7 +1171,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
             padding: const EdgeInsets.all(16),
             child: Row(
               children: [
-                const Icon(Icons.history_rounded, color: Color(0xFF8C8C8C), size: 18),
+                const Icon(Icons.history_rounded, color: AppColors.textDisabled, size: 18),
                 const SizedBox(width: 8),
                 Text(
                   AppLocalizations.of(context).playerSessionActionsLabel,
@@ -1217,7 +1217,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
                 Text(
                   street.toUpperCase(),
                   style: GoogleFonts.ibmPlexSans(
-                    color: const Color(0xFF87ED81),
+                    color: AppColors.limeGreen,
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
                     letterSpacing: 1,
@@ -1227,7 +1227,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
                 Text(
                   '(${actions.length})',
                   style: GoogleFonts.ibmPlexSans(
-                    color: const Color(0xFF8C8C8C),
+                    color: AppColors.textDisabled,
                     fontSize: 10,
                     fontWeight: FontWeight.w500,
                   ),
@@ -1235,7 +1235,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
                 const Spacer(),
                 Icon(
                   isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-                  color: const Color(0xFF8C8C8C),
+                  color: AppColors.textDisabled,
                   size: 16,
                 ),
               ],
@@ -1260,23 +1260,23 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
     Color actionColor;
     switch (actionType.toLowerCase()) {
       case 'fold':
-        actionColor = const Color(0xFFD55A41);
+        actionColor = AppColors.errorRed;
         break;
       case 'check':
-        actionColor = const Color(0xFF8C8C8C);
+        actionColor = AppColors.textDisabled;
         break;
       case 'call':
-        actionColor = const Color(0xFF87ED81);
+        actionColor = AppColors.limeGreen;
         break;
       case 'bet':
       case 'raise':
         actionColor = const Color(0xFFFFA726);
         break;
       case 'all-in':
-        actionColor = const Color(0xFF89F1EC);
+        actionColor = AppColors.buttonPrimary;
         break;
       default:
-        actionColor = const Color(0xFF8C8C8C);
+        actionColor = AppColors.textDisabled;
     }
 
     String actionText = '$displayName ${actionType.toUpperCase()}';
@@ -1294,7 +1294,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
               height: 16,
               margin: const EdgeInsets.only(right: 8),
               decoration: BoxDecoration(
-                color: const Color(0xFF89F1EC),
+                color: AppColors.buttonPrimary,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -1329,7 +1329,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
       decoration: BoxDecoration(
         color: AppColors.bgSurface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFF1C1F21)),
+        border: Border.all(color: AppColors.separatorDark),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1339,7 +1339,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
             style: GoogleFonts.ibmPlexSans(
               fontSize: 12,
               fontWeight: FontWeight.w600,
-              color: const Color(0xFF87ED81),
+              color: AppColors.limeGreen,
               letterSpacing: 1.0,
             ),
           ),
@@ -1357,21 +1357,21 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
               hintText: AppLocalizations.of(context).playerSessionNotesHint,
               hintStyle: GoogleFonts.ibmPlexSans(
                 fontSize: 15,
-                color: const Color(0xFF8C8C8C),
+                color: AppColors.textDisabled,
               ),
               filled: false,
               contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Color(0xFF4E5054), width: 1),
+                borderSide: const BorderSide(color: AppColors.infoCardDateText, width: 1),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Color(0xFF4E5054), width: 1),
+                borderSide: const BorderSide(color: AppColors.infoCardDateText, width: 1),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Color(0xFF89F1EC), width: 1),
+                borderSide: const BorderSide(color: AppColors.buttonPrimary, width: 1),
               ),
             ),
             maxLines: 3,
@@ -1390,7 +1390,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
       decoration: BoxDecoration(
         color: AppColors.bgSurface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFF1C1F21)),
+        border: Border.all(color: AppColors.separatorDark),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1400,7 +1400,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
             style: GoogleFonts.ibmPlexSans(
               fontSize: 12,
               fontWeight: FontWeight.w600,
-              color: const Color(0xFF87ED81),
+              color: AppColors.limeGreen,
               letterSpacing: 1.0,
             ),
           ),
@@ -1424,19 +1424,19 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
         decoration: BoxDecoration(
           color: isSelected
-              ? const Color(0xFF89F1EC).withValues(alpha: 0.15)
+              ? AppColors.buttonPrimary.withValues(alpha: 0.15)
               : AppColors.bgPrimary,
           borderRadius: BorderRadius.circular(40),
           border: Border.all(
             color: isSelected
-                ? const Color(0xFF89F1EC)
-                : const Color(0xFF1C1F21),
+                ? AppColors.buttonPrimary
+                : AppColors.separatorDark,
           ),
         ),
         child: Text(
           tag,
           style: GoogleFonts.ibmPlexSans(
-            color: isSelected ? const Color(0xFF89F1EC) : const Color(0xFF8C8C8C),
+            color: isSelected ? AppColors.buttonPrimary : AppColors.textDisabled,
             fontSize: 13,
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
           ),
@@ -1452,7 +1452,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
       decoration: BoxDecoration(
         color: AppColors.bgSurface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFF1C1F21)),
+        border: Border.all(color: AppColors.separatorDark),
       ),
       child: Column(
         children: [
@@ -1465,7 +1465,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.history_rounded, color: Color(0xFF8C8C8C), size: 18),
+                      const Icon(Icons.history_rounded, color: AppColors.textDisabled, size: 18),
                       const SizedBox(width: 8),
                       Text(
                         'Hand History',
@@ -1480,13 +1480,13 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF89F1EC).withValues(alpha: 0.15),
+                            color: AppColors.buttonPrimary.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(40),
                           ),
                           child: Text(
                             '${_handHistory.length}',
                             style: GoogleFonts.ibmPlexSans(
-                              color: const Color(0xFF89F1EC),
+                              color: AppColors.buttonPrimary,
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
                             ),
@@ -1497,14 +1497,14 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
                   ),
                   Icon(
                     _isHistoryExpanded ? Icons.expand_less : Icons.expand_more,
-                    color: const Color(0xFF8C8C8C),
+                    color: AppColors.textDisabled,
                   ),
                 ],
               ),
             ),
           ),
           if (_isHistoryExpanded && _handHistory.isNotEmpty) ...[
-            Container(height: 1, color: const Color(0xFF1C1F21)),
+            Container(height: 1, color: AppColors.separatorDark),
             ..._handHistory.map((hand) => _buildHistoryItem(hand)),
           ],
           if (_isHistoryExpanded && _handHistory.isEmpty)
@@ -1513,7 +1513,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
               child: Text(
                 'No completed hands yet',
                 style: GoogleFonts.ibmPlexSans(
-                  color: const Color(0xFF8C8C8C),
+                  color: AppColors.textDisabled,
                   fontSize: 13,
                 ),
               ),
@@ -1552,7 +1552,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: const BoxDecoration(
           border: Border(
-            bottom: BorderSide(color: Color(0xFF1C1F21), width: 1),
+            bottom: BorderSide(color: AppColors.separatorDark, width: 1),
           ),
         ),
         child: Row(
@@ -1563,7 +1563,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
               height: 32,
               decoration: BoxDecoration(
                 color: isWinner
-                    ? const Color(0xFF87ED81).withValues(alpha: 0.15)
+                    ? AppColors.limeGreen.withValues(alpha: 0.15)
                     : AppColors.bgPrimary,
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -1571,7 +1571,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
                 child: Text(
                   '#$handNumber',
                   style: GoogleFonts.ibmPlexSans(
-                    color: isWinner ? const Color(0xFF87ED81) : const Color(0xFF8C8C8C),
+                    color: isWinner ? AppColors.limeGreen : AppColors.textDisabled,
                     fontSize: 10,
                     fontWeight: FontWeight.w600,
                   ),
@@ -1587,7 +1587,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
                   Text(
                     isWinner ? 'Won ${_formatAmount(pot)}' : 'Lost',
                     style: GoogleFonts.ibmPlexSans(
-                      color: isWinner ? const Color(0xFF87ED81) : const Color(0xFF8C8C8C),
+                      color: isWinner ? AppColors.limeGreen : AppColors.textDisabled,
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                     ),
@@ -1599,7 +1599,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
                           .map((tag) => Text(
                                 tag,
                                 style: GoogleFonts.ibmPlexSans(
-                                  color: const Color(0xFF89F1EC),
+                                  color: AppColors.buttonPrimary,
                                   fontSize: 10,
                                 ),
                               ))
@@ -1619,14 +1619,14 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
               children: [
                 Icon(
                   hasHoleCards ? Icons.style_rounded : Icons.edit_rounded,
-                  color: hasHoleCards ? const Color(0xFF89F1EC) : const Color(0xFF8C8C8C),
+                  color: hasHoleCards ? AppColors.buttonPrimary : AppColors.textDisabled,
                   size: 18,
                 ),
                 if (hasHoleCards)
                   Text(
                     '${playerHoleCards['card1']}${playerHoleCards['card2']}',
                     style: GoogleFonts.ibmPlexSans(
-                      color: const Color(0xFF8C8C8C),
+                      color: AppColors.textDisabled,
                       fontSize: 8,
                     ),
                   ),
@@ -1769,7 +1769,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(3),
-        border: Border.all(color: const Color(0xFF8C8C8C), width: 0.5),
+        border: Border.all(color: AppColors.textDisabled, width: 0.5),
       ),
       child: Center(
         child: Text(
@@ -1898,7 +1898,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
             Text(
               'Waiting for new dealer to take over...',
               style: GoogleFonts.ibmPlexSans(
-                color: const Color(0xFFD3FFFD),
+                color: AppColors.textMint,
                 fontSize: 15,
               ),
             ),
@@ -2001,7 +2001,7 @@ class _EditHandBottomSheetState extends State<_EditHandBottomSheet> {
               'Hand #${widget.handNumber} updated',
               style: GoogleFonts.ibmPlexSans(color: Colors.white),
             ),
-            backgroundColor: const Color(0xFF87ED81),
+            backgroundColor: AppColors.limeGreen,
             duration: const Duration(seconds: 1),
           ),
         );
@@ -2014,7 +2014,7 @@ class _EditHandBottomSheetState extends State<_EditHandBottomSheet> {
               'Error saving: $e',
               style: GoogleFonts.ibmPlexSans(color: Colors.white),
             ),
-            backgroundColor: const Color(0xFFD55A41),
+            backgroundColor: AppColors.errorRed,
           ),
         );
       }
@@ -2078,7 +2078,7 @@ class _EditHandBottomSheetState extends State<_EditHandBottomSheet> {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF8C8C8C),
+                    color: AppColors.textDisabled,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -2103,12 +2103,12 @@ class _EditHandBottomSheetState extends State<_EditHandBottomSheet> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.visibility_rounded, size: 16, color: Color(0xFF89F1EC)),
+                        const Icon(Icons.visibility_rounded, size: 16, color: AppColors.buttonPrimary),
                         const SizedBox(width: 4),
                         Text(
                           'View Details',
                           style: GoogleFonts.ibmPlexSans(
-                            color: const Color(0xFF89F1EC),
+                            color: AppColors.buttonPrimary,
                             fontSize: 13,
                             fontWeight: FontWeight.w500,
                           ),
@@ -2126,7 +2126,7 @@ class _EditHandBottomSheetState extends State<_EditHandBottomSheet> {
                 style: GoogleFonts.ibmPlexSans(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: const Color(0xFF87ED81),
+                  color: AppColors.limeGreen,
                   letterSpacing: 1.0,
                 ),
               ),
@@ -2140,8 +2140,8 @@ class _EditHandBottomSheetState extends State<_EditHandBottomSheet> {
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: hasCards
-                          ? const Color(0xFF89F1EC).withValues(alpha: 0.3)
-                          : const Color(0xFF1C1F21),
+                          ? AppColors.buttonPrimary.withValues(alpha: 0.3)
+                          : AppColors.separatorDark,
                     ),
                   ),
                   child: Row(
@@ -2152,12 +2152,12 @@ class _EditHandBottomSheetState extends State<_EditHandBottomSheet> {
                         const SizedBox(width: 8),
                         _buildCardDisplay(_card2!),
                       ] else ...[
-                        const Icon(Icons.add_rounded, color: Color(0xFF8C8C8C), size: 24),
+                        const Icon(Icons.add_rounded, color: AppColors.textDisabled, size: 24),
                         const SizedBox(width: 8),
                         Text(
                           'Tap to add hole cards',
                           style: GoogleFonts.ibmPlexSans(
-                            color: const Color(0xFF8C8C8C),
+                            color: AppColors.textDisabled,
                             fontSize: 14,
                           ),
                         ),
@@ -2174,7 +2174,7 @@ class _EditHandBottomSheetState extends State<_EditHandBottomSheet> {
                 style: GoogleFonts.ibmPlexSans(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: const Color(0xFF87ED81),
+                  color: AppColors.limeGreen,
                   letterSpacing: 1.0,
                 ),
               ),
@@ -2191,21 +2191,21 @@ class _EditHandBottomSheetState extends State<_EditHandBottomSheet> {
                   hintText: AppLocalizations.of(context).playerSessionNotesHint,
                   hintStyle: GoogleFonts.ibmPlexSans(
                     fontSize: 15,
-                    color: const Color(0xFF8C8C8C),
+                    color: AppColors.textDisabled,
                   ),
                   filled: false,
                   contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFF4E5054), width: 1),
+                    borderSide: const BorderSide(color: AppColors.infoCardDateText, width: 1),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFF4E5054), width: 1),
+                    borderSide: const BorderSide(color: AppColors.infoCardDateText, width: 1),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFF89F1EC), width: 1),
+                    borderSide: const BorderSide(color: AppColors.buttonPrimary, width: 1),
                   ),
                 ),
               ),
@@ -2217,7 +2217,7 @@ class _EditHandBottomSheetState extends State<_EditHandBottomSheet> {
                 style: GoogleFonts.ibmPlexSans(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: const Color(0xFF87ED81),
+                  color: AppColors.limeGreen,
                   letterSpacing: 1.0,
                 ),
               ),
@@ -2233,21 +2233,21 @@ class _EditHandBottomSheetState extends State<_EditHandBottomSheet> {
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
                       decoration: BoxDecoration(
                         color: isSelected
-                            ? const Color(0xFF89F1EC).withValues(alpha: 0.15)
+                            ? AppColors.buttonPrimary.withValues(alpha: 0.15)
                             : AppColors.bgPrimary,
                         borderRadius: BorderRadius.circular(40),
                         border: Border.all(
                           color: isSelected
-                              ? const Color(0xFF89F1EC)
-                              : const Color(0xFF1C1F21),
+                              ? AppColors.buttonPrimary
+                              : AppColors.separatorDark,
                         ),
                       ),
                       child: Text(
                         tag,
                         style: GoogleFonts.ibmPlexSans(
                           color: isSelected
-                              ? const Color(0xFF89F1EC)
-                              : const Color(0xFF8C8C8C),
+                              ? AppColors.buttonPrimary
+                              : AppColors.textDisabled,
                           fontSize: 13,
                           fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
                         ),

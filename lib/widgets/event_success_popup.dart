@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../l10n/app_localizations.dart';
+import '../design_system/constants/colors.dart';
 
 /// Success popup shown after successfully adding a calendar event.
 /// Slides up from the bottom of the screen with two action buttons.
@@ -43,7 +44,7 @@ class EventSuccessPopup extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF1B1E24),
+        color: AppColors.neutral800,
         borderRadius: BorderRadius.circular(16),
         boxShadow: const [
           BoxShadow(
@@ -80,7 +81,7 @@ class EventSuccessPopup extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(6),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF89F1EC),
+                      color: AppColors.buttonPrimary,
                       borderRadius: BorderRadius.circular(28),
                     ),
                     child: SvgPicture.asset(

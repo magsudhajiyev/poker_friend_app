@@ -54,7 +54,7 @@ class WelcomeStep extends StatelessWidget {
                       style: GoogleFonts.ibmPlexSans(
                         fontSize: 17,
                         fontWeight: FontWeight.w400,
-                        color: const Color(0xFF8C8C8C),
+                        color: AppColors.textDisabled,
                         height: 1.5,
                       ),
                     ),

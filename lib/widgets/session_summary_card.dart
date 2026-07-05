@@ -9,6 +9,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../models/game_types.dart';
 import '../services/currency_service.dart';
+import '../design_system/constants/colors.dart';
 
 /// Data needed to render the post-session summary card.
 class SessionSummaryData {
@@ -142,7 +143,7 @@ class _SessionSummaryCardState extends State<SessionSummaryCard> {
               child: Container(
                 width: cardWidth,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF101115),
+                  color: AppColors.surfaceDark,
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
                     color: Colors.white.withValues(alpha: 0.08),
@@ -189,7 +190,7 @@ class _SessionSummaryCardState extends State<SessionSummaryCard> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF62E3BC),
+                          color: AppColors.tealPrimary,
                           borderRadius: BorderRadius.circular(60),
                         ),
                         child: Center(
@@ -273,7 +274,7 @@ class _SessionSummaryCardState extends State<SessionSummaryCard> {
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
                             color: data.isCash
-                                ? const Color(0xFF62E3BC).withValues(alpha: 0.15)
+                                ? AppColors.tealPrimary.withValues(alpha: 0.15)
                                 : const Color(0xFFFFB74D).withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(40),
                           ),
@@ -283,7 +284,7 @@ class _SessionSummaryCardState extends State<SessionSummaryCard> {
                               fontSize: 10,
                               fontWeight: FontWeight.w700,
                               color: data.isCash
-                                  ? const Color(0xFF62E3BC)
+                                  ? AppColors.tealPrimary
                                   : const Color(0xFFFFB74D),
                               letterSpacing: 0.8,
                             ),
@@ -380,8 +381,8 @@ class _SessionSummaryCardState extends State<SessionSummaryCard> {
     final data = widget.data;
     final prefix = data.isProfit ? '+' : '';
     final color = data.isProfit
-        ? const Color(0xFF62E3BC)
-        : const Color(0xFFD55A41);
+        ? AppColors.tealPrimary
+        : AppColors.errorRed;
 
     return Center(
       child: FittedBox(
@@ -401,8 +402,8 @@ class _SessionSummaryCardState extends State<SessionSummaryCard> {
   Widget _buildTournamentHeroStat() {
     final data = widget.data;
     final color = data.isProfit
-        ? const Color(0xFF62E3BC)
-        : const Color(0xFFD55A41);
+        ? AppColors.tealPrimary
+        : AppColors.errorRed;
 
     return Center(
       child: Column(

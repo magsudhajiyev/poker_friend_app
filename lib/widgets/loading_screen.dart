@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../design_system/constants/colors.dart';
 
 class LoadingScreen extends StatelessWidget {
   final String? message;
@@ -8,7 +9,7 @@ class LoadingScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: const Color(0xFF02050B),
+      color: AppColors.paper,
     );
   }
 }

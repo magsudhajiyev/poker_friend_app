@@ -6,6 +6,7 @@ import '../l10n/app_localizations.dart';
 import '../services/currency_service.dart';
 import '../models/game_types.dart';
 import 'hand_actions_page_view.dart';
+import '../design_system/constants/colors.dart';
 
 /// Full-screen landscape stack chart with tap-to-view hand details
 class StackChartScreen extends StatefulWidget {
@@ -170,7 +171,7 @@ class _StackChartScreenState extends State<StackChartScreen> {
   @override
   Widget build(BuildContext context) {
     final lineColor = widget.profitLoss >= 0
-        ? const Color(0xFF89F1EC)
+        ? AppColors.buttonPrimary
         : const Color(0xFFFF6B6B);
 
     return Scaffold(
@@ -220,7 +221,7 @@ class _StackChartScreenState extends State<StackChartScreen> {
               width: 40,
               height: 40,
               decoration: const BoxDecoration(
-                color: Color(0xFF101115),
+                color: AppColors.surfaceDark,
                 shape: BoxShape.circle,
               ),
               child: const Icon(

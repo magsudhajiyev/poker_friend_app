@@ -9,6 +9,7 @@ import '../../services/range_grid_cloud_backfill.dart';
 import '../../services/range_grid_service.dart';
 import 'range_frequency_bar.dart';
 import 'range_hand_row.dart';
+import '../../design_system/constants/colors.dart';
 
 /// The hero's PREFLOP range chart, built purely from logged hands.
 ///
@@ -126,7 +127,7 @@ class _RangeGridViewState extends State<RangeGridView>
           duration: const Duration(milliseconds: 180),
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
           decoration: BoxDecoration(
-            color: selected ? const Color(0xFF62E3BC) : Colors.transparent,
+            color: selected ? AppColors.tealPrimary : Colors.transparent,
             borderRadius: BorderRadius.circular(999),
           ),
           child: Text(
@@ -176,11 +177,11 @@ class _RangeGridViewState extends State<RangeGridView>
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: active ? const Color(0xFF62E3BC) : const Color(0xFF161719),
+          color: active ? AppColors.tealPrimary : const Color(0xFF161719),
           borderRadius: BorderRadius.circular(999),
           border: Border.all(
             color: active
-                ? const Color(0xFF62E3BC)
+                ? AppColors.tealPrimary
                 : Colors.white.withValues(alpha: 0.08),
           ),
         ),
@@ -242,7 +243,7 @@ class _RangeGridViewState extends State<RangeGridView>
                         : Icons.radio_button_off,
                     size: 18,
                     color: selected
-                        ? const Color(0xFF62E3BC)
+                        ? AppColors.tealPrimary
                         : Colors.white.withValues(alpha: 0.3),
                   ),
                   const SizedBox(width: 12),
@@ -313,7 +314,7 @@ class _RangeGridViewState extends State<RangeGridView>
             duration: const Duration(milliseconds: 180),
             padding: const EdgeInsets.symmetric(vertical: 8),
             decoration: BoxDecoration(
-              color: selected ? const Color(0xFF62E3BC) : Colors.transparent,
+              color: selected ? AppColors.tealPrimary : Colors.transparent,
               borderRadius: BorderRadius.circular(999),
             ),
             child: Center(
@@ -401,7 +402,7 @@ class _RangeGridViewState extends State<RangeGridView>
           duration: const Duration(milliseconds: 180),
           padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
           decoration: BoxDecoration(
-            color: selected ? const Color(0xFF62E3BC) : Colors.transparent,
+            color: selected ? AppColors.tealPrimary : Colors.transparent,
             borderRadius: BorderRadius.circular(999),
           ),
           child: Text(
@@ -609,7 +610,7 @@ class _RangeGridViewState extends State<RangeGridView>
                     Container(color: Colors.white.withValues(alpha: 0.06)),
                     FractionallySizedBox(
                       widthFactor: (logged / 169).clamp(0.0, 1.0),
-                      child: Container(color: const Color(0xFF62E3BC)),
+                      child: Container(color: AppColors.tealPrimary),
                     ),
                   ],
                 ),
@@ -639,7 +640,7 @@ class _RangeGridViewState extends State<RangeGridView>
             width: 12,
             height: 12,
             child: CircularProgressIndicator(
-                strokeWidth: 1.5, color: Color(0xFF62E3BC)),
+                strokeWidth: 1.5, color: AppColors.tealPrimary),
           ),
           const SizedBox(width: 8),
           Text(
@@ -687,7 +688,7 @@ class _RangeGridViewState extends State<RangeGridView>
         await _syncCloudHistory(force: true);
         await _load();
       },
-      color: const Color(0xFF62E3BC),
+      color: AppColors.tealPrimary,
       backgroundColor: const Color(0xFF161719),
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
@@ -707,7 +708,7 @@ class _RangeGridViewState extends State<RangeGridView>
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
                 letterSpacing: 1.0,
-                color: const Color(0xFF87ED81),
+                color: AppColors.limeGreen,
               ),
             ),
           ),
@@ -720,7 +721,7 @@ class _RangeGridViewState extends State<RangeGridView>
                   width: 22,
                   height: 22,
                   child: CircularProgressIndicator(
-                      strokeWidth: 2, color: Color(0xFF62E3BC)),
+                      strokeWidth: 2, color: AppColors.tealPrimary),
                 ),
               ),
             )
@@ -833,7 +834,7 @@ class _CellDetailSheetState extends State<_CellDetailSheet> {
                 style: GoogleFonts.robotoMono(
                   fontSize: 24,
                   fontWeight: FontWeight.w700,
-                  color: const Color(0xFF62E3BC),
+                  color: AppColors.tealPrimary,
                 ),
               ),
               const SizedBox(width: 10),
@@ -869,7 +870,7 @@ class _CellDetailSheetState extends State<_CellDetailSheet> {
                         width: 18,
                         height: 18,
                         child: CircularProgressIndicator(
-                            strokeWidth: 2, color: Color(0xFF62E3BC)),
+                            strokeWidth: 2, color: AppColors.tealPrimary),
                       ),
                     ),
                   );

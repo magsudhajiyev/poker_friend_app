@@ -16,6 +16,7 @@ import '../widgets/global_bottom_nav_bar.dart';
 import '../design_system/design_system.dart';
 import '../design_system/components/cards/error_state_card.dart';
 import '../widgets/range_grid/range_grid_view.dart';
+import '../design_system/constants/colors.dart';
 
 class StatisticsScreen extends StatefulWidget {
   @override
@@ -658,7 +659,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
             style: GoogleFonts.ibmPlexSans(
               fontSize: 22,
               fontWeight: FontWeight.w600,
-              color: isNA ? const Color(0xFF4E4E4E) : const Color(0xFF89F1EC),
+              color: isNA ? const Color(0xFF4E4E4E) : AppColors.buttonPrimary,
             ),
           ),
         ],
@@ -686,7 +687,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
             style: GoogleFonts.ibmPlexSans(
               fontSize: 15,
               fontWeight: FontWeight.w600,
-              color: const Color(0xFF89F1EC),
+              color: AppColors.buttonPrimary,
               height: 1.0,
             ),
           ),
@@ -705,7 +706,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
       style: GoogleFonts.ibmPlexSans(
         fontSize: 12,
         fontWeight: FontWeight.w600,
-        color: const Color(0xFF87ED81),
+        color: AppColors.limeGreen,
         letterSpacing: 1.0,
       ),
     );
@@ -913,7 +914,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
   Widget _buildProfitRow(String label, double value) {
     final isPositive = value >= 0;
     final prefix = isPositive ? '+' : '';
-    final color = isPositive ? const Color(0xFF87ED81) : const Color(0xFFE85A5A);
+    final color = isPositive ? AppColors.limeGreen : const Color(0xFFE85A5A);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 12),
       child: Row(
@@ -971,7 +972,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
     }
     final isPositive = rate >= 0;
     final prefix = isPositive ? '+' : '';
-    final color = isPositive ? const Color(0xFF87ED81) : const Color(0xFFE85A5A);
+    final color = isPositive ? AppColors.limeGreen : const Color(0xFFE85A5A);
     final currency = CurrencyService.current;
     final formatted = rate.toStringAsFixed(0);
     final rateText = currency.position == SymbolPosition.prefix
@@ -1013,7 +1014,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
           style: GoogleFonts.ibmPlexSans(
             fontSize: 22,
             fontWeight: FontWeight.w600,
-            color: const Color(0xFF89F1EC),
+            color: AppColors.buttonPrimary,
           ),
         ),
         const SizedBox(height: 4),

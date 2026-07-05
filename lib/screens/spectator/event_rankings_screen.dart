@@ -8,6 +8,7 @@ import '../../services/table_service.dart';
 import '../../services/dealer_service.dart';
 import '../../utils/number_formatter.dart';
 import '../../l10n/app_localizations.dart';
+import '../../design_system/constants/colors.dart';
 
 /// Screen for spectators to view live rankings during an event
 class EventRankingsScreen extends StatefulWidget {
@@ -135,7 +136,7 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
                 gradient: RadialGradient(
                   colors: [
                     const Color(0xFF1A4A4A).withOpacity(0.6),
-                    const Color(0xFF133538).withOpacity(0.6),
+                    AppColors.headerGradientTeal.withOpacity(0.6),
                     Colors.transparent,
                   ],
                   stops: const [0.0, 0.4, 1.0],
@@ -152,7 +153,7 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
                   child: _isLoading
                       ? const Center(
                           child: CircularProgressIndicator(
-                            color: Color(0xFF89F1EC),
+                            color: AppColors.buttonPrimary,
                           ),
                         )
                       : _error != null
@@ -183,7 +184,7 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
                   width: 44,
                   height: 44,
                   decoration: const BoxDecoration(
-                    color: Color(0xFF101115),
+                    color: AppColors.surfaceDark,
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
@@ -211,7 +212,7 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
                       widget.event.name,
                       style: GoogleFonts.ibmPlexSans(
                         fontSize: 13,
-                        color: const Color(0xFF89F1EC),
+                        color: AppColors.buttonPrimary,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -224,7 +225,7 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
                   width: 44,
                   height: 44,
                   decoration: const BoxDecoration(
-                    color: Color(0xFF101115),
+                    color: AppColors.surfaceDark,
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
@@ -253,7 +254,7 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFF131616),
+        color: AppColors.infoCardBg,
         borderRadius: BorderRadius.circular(14),
       ),
       child: Row(
@@ -262,13 +263,13 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
           _buildStatItem(
             label: l10n.leaderboardPlayers,
             value: '$activePlayers / ${data.totalPlayers}',
-            color: const Color(0xFF89F1EC),
+            color: AppColors.buttonPrimary,
           ),
           Container(width: 1, height: 32, color: Colors.white.withOpacity(0.06)),
           _buildStatItem(
             label: l10n.leaderboardTotalChips,
             value: formatCompactNumber(data.totalChips),
-            color: const Color(0xFF89F1EC),
+            color: AppColors.buttonPrimary,
           ),
           if (_bigBlind > 0) ...[
             Container(width: 1, height: 32, color: Colors.white.withOpacity(0.06)),
@@ -377,7 +378,7 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
 
     return RefreshIndicator(
       onRefresh: () => _loadRankings(),
-      color: const Color(0xFF89F1EC),
+      color: AppColors.buttonPrimary,
       child: ListView(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         children: items,
@@ -422,7 +423,7 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
       margin: const EdgeInsets.only(bottom: 6),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFF131616),
+        color: AppColors.infoCardBg,
         borderRadius: BorderRadius.circular(14),
         border: isChipLeader
             ? Border.all(color: Colors.amber.withOpacity(0.4), width: 1.5)
@@ -562,13 +563,13 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
             width: 56,
             height: 56,
             decoration: BoxDecoration(
-              color: const Color(0xFF89F1EC).withOpacity(0.08),
+              color: AppColors.buttonPrimary.withOpacity(0.08),
               borderRadius: BorderRadius.circular(14),
             ),
             child: Icon(
               Icons.event_seat_outlined,
               size: 28,
-              color: const Color(0xFF89F1EC).withOpacity(0.5),
+              color: AppColors.buttonPrimary.withOpacity(0.5),
             ),
           ),
           const SizedBox(height: 14),
@@ -607,13 +608,13 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
             width: 56,
             height: 56,
             decoration: BoxDecoration(
-              color: const Color(0xFFFF4444).withOpacity(0.1),
+              color: AppColors.lossRed.withOpacity(0.1),
               borderRadius: BorderRadius.circular(14),
             ),
             child: const Icon(
               Icons.error_outline,
               size: 28,
-              color: Color(0xFFFF4444),
+              color: AppColors.lossRed,
             ),
           ),
           const SizedBox(height: 14),
@@ -643,7 +644,7 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
               decoration: BoxDecoration(
-                color: const Color(0xFF89F1EC),
+                color: AppColors.buttonPrimary,
                 borderRadius: BorderRadius.circular(60),
               ),
               child: Text(

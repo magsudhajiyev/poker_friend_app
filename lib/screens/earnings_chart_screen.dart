@@ -235,7 +235,7 @@ class _EarningsChartScreenState extends State<EarningsChartScreen> {
               width: 44,
               height: 44,
               decoration: const BoxDecoration(
-                color: Color(0xFF101115),
+                color: AppColors.surfaceDark,
                 shape: BoxShape.circle,
               ),
               child: const Icon(
@@ -310,7 +310,7 @@ class _EarningsChartScreenState extends State<EarningsChartScreen> {
 
   Widget _buildTotalBadge(double amount) {
     final isNegative = amount < 0;
-    final color = isNegative ? const Color(0xFFFF6B6B) : const Color(0xFF5AC95A);
+    final color = isNegative ? const Color(0xFFFF6B6B) : AppColors.profitGreen;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),

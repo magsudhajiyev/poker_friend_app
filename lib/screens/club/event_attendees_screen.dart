@@ -5,6 +5,7 @@ import '../../models/club.dart';
 import '../../models/club_event.dart';
 import '../../models/event_attendance.dart';
 import '../../services/event_attendance_service.dart';
+import '../../design_system/constants/colors.dart';
 
 /// Screen showing all attendees for an event
 class EventAttendeesScreen extends StatefulWidget {
@@ -103,7 +104,7 @@ class _EventAttendeesScreenState extends State<EventAttendeesScreen>
                 gradient: RadialGradient(
                   colors: [
                     const Color(0xFF1A4A4A).withOpacity(0.6),
-                    const Color(0xFF133538).withOpacity(0.6),
+                    AppColors.headerGradientTeal.withOpacity(0.6),
                     Colors.transparent,
                   ],
                   stops: const [0.0, 0.4, 1.0],
@@ -123,7 +124,7 @@ class _EventAttendeesScreenState extends State<EventAttendeesScreen>
                   child: _isLoading
                       ? const Center(
                           child: CircularProgressIndicator(
-                            color: Color(0xFF89F1EC),
+                            color: AppColors.buttonPrimary,
                           ),
                         )
                       : TabBarView(
@@ -154,7 +155,7 @@ class _EventAttendeesScreenState extends State<EventAttendeesScreen>
               width: 44,
               height: 44,
               decoration: const BoxDecoration(
-                color: Color(0xFF101115),
+                color: AppColors.surfaceDark,
                 shape: BoxShape.circle,
               ),
               child: const Icon(
@@ -199,13 +200,13 @@ class _EventAttendeesScreenState extends State<EventAttendeesScreen>
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        color: const Color(0xFF131616),
+        color: AppColors.infoCardBg,
         borderRadius: BorderRadius.circular(12),
       ),
       child: TabBar(
         controller: _tabController,
         indicator: BoxDecoration(
-          color: const Color(0xFF89F1EC),
+          color: AppColors.buttonPrimary,
           borderRadius: BorderRadius.circular(10),
         ),
         indicatorSize: TabBarIndicatorSize.tab,
@@ -267,7 +268,7 @@ class _EventAttendeesScreenState extends State<EventAttendeesScreen>
 
     return RefreshIndicator(
       onRefresh: _loadData,
-      color: const Color(0xFF89F1EC),
+      color: AppColors.buttonPrimary,
       child: ListView.builder(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         itemCount: attendees.length,
@@ -291,7 +292,7 @@ class _EventAttendeesScreenState extends State<EventAttendeesScreen>
       case AttendanceStatus.going:
         message = l10n.eventAttendeesNoConfirmed;
         icon = Icons.check_circle_outline;
-        color = const Color(0xFF89F1EC);
+        color = AppColors.buttonPrimary;
         break;
       case AttendanceStatus.maybe:
         message = l10n.eventAttendeesNoMaybes;
@@ -301,7 +302,7 @@ class _EventAttendeesScreenState extends State<EventAttendeesScreen>
       case AttendanceStatus.notGoing:
         message = l10n.eventAttendeesNoDeclines;
         icon = Icons.cancel_outlined;
-        color = const Color(0xFFFF4444);
+        color = AppColors.lossRed;
         break;
     }
 
@@ -343,13 +344,13 @@ class _EventAttendeesScreenState extends State<EventAttendeesScreen>
     Color statusColor;
     switch (status) {
       case AttendanceStatus.going:
-        statusColor = const Color(0xFF89F1EC);
+        statusColor = AppColors.buttonPrimary;
         break;
       case AttendanceStatus.maybe:
         statusColor = Colors.amber;
         break;
       case AttendanceStatus.notGoing:
-        statusColor = const Color(0xFFFF4444);
+        statusColor = AppColors.lossRed;
         break;
     }
 
@@ -357,7 +358,7 @@ class _EventAttendeesScreenState extends State<EventAttendeesScreen>
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFF131616),
+        color: AppColors.infoCardBg,
         borderRadius: BorderRadius.circular(14),
       ),
       child: Row(
@@ -413,13 +414,13 @@ class _EventAttendeesScreenState extends State<EventAttendeesScreen>
             Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: const Color(0xFF89F1EC).withOpacity(0.1),
+                color: AppColors.buttonPrimary.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Icon(
                 Icons.event_available,
                 size: 16,
-                color: Color(0xFF89F1EC),
+                color: AppColors.buttonPrimary,
               ),
             ),
         ],

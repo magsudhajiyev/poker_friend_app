@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../../models/observed_range.dart';
+import '../../design_system/constants/colors.dart';
 
 /// Compact 13×13 grid highlighting the hand classes an opponent has actually
 /// shown at showdown. Suited above the diagonal, pairs on it, offsuit below —
@@ -15,7 +16,7 @@ class ObservedRangeGrid extends StatelessWidget {
 
   static const _ranks = ['A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2'];
   static const _raiseColor = Color(0xFFFFC857);
-  static const _callColor = Color(0xFF89F1EC);
+  static const _callColor = AppColors.buttonPrimary;
 
   /// handClass -> (total, raiseCount) drawn from the observed combos.
   Map<String, List<int>> _byClass() {
@@ -114,7 +115,7 @@ class ObservedRangeSheet extends StatelessWidget {
   static Future<void> show(BuildContext context, ObservedRange range) {
     return showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF131616),
+      backgroundColor: AppColors.infoCardBg,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
@@ -152,12 +153,12 @@ class ObservedRangeSheet extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF87ED81).withOpacity(0.15),
+                        color: AppColors.limeGreen.withOpacity(0.15),
                         borderRadius: BorderRadius.circular(40),
                       ),
                       child: Text(range.shape.label,
                           style: GoogleFonts.ibmPlexSans(
-                              color: const Color(0xFF87ED81),
+                              color: AppColors.limeGreen,
                               fontSize: 12,
                               fontWeight: FontWeight.w600)),
                     ),
@@ -226,7 +227,7 @@ class ObservedRangeSheet extends StatelessWidget {
       runSpacing: 8,
       children: [
         chip(l10n.rangePremium, range.premiumCount, const Color(0xFF54E98A)),
-        chip(l10n.rangeStrong, range.strongCount, const Color(0xFF89F1EC)),
+        chip(l10n.rangeStrong, range.strongCount, AppColors.buttonPrimary),
         chip(l10n.rangeMedium, range.mediumCount, const Color(0xFFFFC857)),
         chip(l10n.rangeWeak, range.wideCount, const Color(0xFFE85D5D)),
       ],
@@ -248,7 +249,7 @@ class ObservedRangeSheet extends StatelessWidget {
       children: [
         dot(l10n.rangeRaisedLabel, const Color(0xFFFFC857)),
         const SizedBox(width: 16),
-        dot(l10n.rangeCalledLimped, const Color(0xFF89F1EC)),
+        dot(l10n.rangeCalledLimped, AppColors.buttonPrimary),
       ],
     );
   }

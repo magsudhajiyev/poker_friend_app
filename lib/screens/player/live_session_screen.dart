@@ -10,6 +10,7 @@ import '../../services/dealer_service.dart';
 import '../../services/websocket_service.dart';
 import '../../services/auth_service.dart';
 import '../../utils/number_formatter.dart';
+import '../../design_system/constants/colors.dart';
 
 /// Screen for players to view the live poker session
 class LiveSessionScreen extends StatefulWidget {
@@ -572,7 +573,7 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> {
 
     if (!isOccupied) {
       bgColor = const Color(0xFF2A2A2E);
-      borderColor = const Color(0xFF89F1EC).withValues(alpha: 0.3);
+      borderColor = AppColors.buttonPrimary.withValues(alpha: 0.3);
     } else if (isMySeat) {
       bgColor = Colors.black;
       borderColor = Colors.blue;
@@ -581,7 +582,7 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> {
       borderColor = Colors.amber;
     } else {
       bgColor = Colors.black;
-      borderColor = const Color(0xFF89F1EC);
+      borderColor = AppColors.buttonPrimary;
     }
 
     return Stack(

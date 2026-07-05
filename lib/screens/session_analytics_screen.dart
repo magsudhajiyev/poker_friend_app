@@ -18,6 +18,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'paywall_screen.dart';
 import '../l10n/app_localizations.dart';
 import '../services/currency_service.dart';
+import '../design_system/constants/colors.dart';
 
 
 class SessionAnalyticsScreen extends StatefulWidget {
@@ -176,7 +177,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
         showDialog(
           context: context,
           builder: (ctx) => AlertDialog(
-            backgroundColor: const Color(0xFF131616),
+            backgroundColor: AppColors.infoCardBg,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
             title: Text(
               l10n.quotaExportLimitTitle,
@@ -203,7 +204,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
                 child: Text(
                   l10n.quotaUpgradeToElite,
                   style: GoogleFonts.ibmPlexSans(
-                    color: const Color(0xFF89F1EC),
+                    color: AppColors.buttonPrimary,
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
@@ -214,7 +215,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
                 child: Text(
                   l10n.quotaOk,
                   style: GoogleFonts.ibmPlexSans(
-                    color: const Color(0xFF89F1EC),
+                    color: AppColors.buttonPrimary,
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
@@ -278,7 +279,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
             child: Text(
               AppLocalizations.of(ctx).sessionAnalyticsExport,
               style: GoogleFonts.ibmPlexSans(
-                color: const Color(0xFF89F1EC),
+                color: AppColors.buttonPrimary,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -544,8 +545,8 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
                     radius: 0.5,
                     colors: [
                       const Color(0xFF1A4A4A),
-                      const Color(0xFF133538).withOpacity(0.7),
-                      const Color(0xFF133538).withOpacity(0.3),
+                      AppColors.headerGradientTeal.withOpacity(0.7),
+                      AppColors.headerGradientTeal.withOpacity(0.3),
                       Colors.transparent,
                     ],
                     stops: const [0.0, 0.3, 0.6, 1.0],
@@ -568,7 +569,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
                           width: 44,
                           height: 44,
                           decoration: const BoxDecoration(
-                            color: Color(0xFF101115),
+                            color: AppColors.surfaceDark,
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(Icons.arrow_back, color: Colors.white, size: 22),
@@ -609,7 +610,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
                           width: 44,
                           height: 44,
                           decoration: BoxDecoration(
-                            color: const Color(0xFF101115),
+                            color: AppColors.surfaceDark,
                             shape: BoxShape.circle,
                           ),
                           child: _isExporting
@@ -619,7 +620,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
                                     valueColor: AlwaysStoppedAnimation<Color>(
-                                        Color(0xFF89F1EC)),
+                                        AppColors.buttonPrimary),
                                   ),
                                 )
                               : Icon(Icons.ios_share,
@@ -636,7 +637,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
                           width: 44,
                           height: 44,
                           decoration: const BoxDecoration(
-                            color: Color(0xFF101115),
+                            color: AppColors.surfaceDark,
                             shape: BoxShape.circle,
                           ),
                           child: _isDeleting
@@ -663,7 +664,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
                   child: _isLoading
                       ? Center(
                           child: CircularProgressIndicator(
-                            valueColor: AlwaysStoppedAnimation<Color>(const Color(0xFF89F1EC)),
+                            valueColor: AlwaysStoppedAnimation<Color>(AppColors.buttonPrimary),
                           ),
                         )
                       : SingleChildScrollView(
@@ -692,7 +693,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
     final l10n = AppLocalizations.of(context);
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF131616),
+        color: AppColors.infoCardBg,
         borderRadius: BorderRadius.circular(18),
       ),
       padding: const EdgeInsets.all(20),
@@ -756,7 +757,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
                       ? '${pl >= 0 ? '+' : ''}${CurrencyService.formatCash(pl)}'
                       : l10n.sessionAnalyticsNotAvailableFull,
                   valueColor: pl != null
-                      ? (pl >= 0 ? const Color(0xFF89F1EC) : const Color(0xFFFF6B6B))
+                      ? (pl >= 0 ? AppColors.buttonPrimary : const Color(0xFFFF6B6B))
                       : null,
                 );
               })),
@@ -787,7 +788,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
-                    color: const Color(0xFF89F1EC),
+                    color: AppColors.buttonPrimary,
                     height: 1.0,
                   ),
                 ),
@@ -835,7 +836,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
     final l10n = AppLocalizations.of(context);
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF131616),
+        color: AppColors.infoCardBg,
         borderRadius: BorderRadius.circular(18),
       ),
       padding: const EdgeInsets.all(20),
@@ -920,7 +921,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
         ? spots.length * pointWidth
         : screenWidth - 92;
 
-    final lineColor = _profitLoss >= 0 ? const Color(0xFF89F1EC) : const Color(0xFFFF6B6B);
+    final lineColor = _profitLoss >= 0 ? AppColors.buttonPrimary : const Color(0xFFFF6B6B);
 
     final minY = spots.isNotEmpty ? spots.map((e) => e.y).reduce((a, b) => a < b ? a : b) * 0.9 : 0.0;
     final maxY = spots.isNotEmpty ? spots.map((e) => e.y).reduce((a, b) => a > b ? a : b) * 1.1 : 100.0;
@@ -1216,7 +1217,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
         width: double.infinity,
         height: 52,
         decoration: BoxDecoration(
-          color: const Color(0xFF89F1EC),
+          color: AppColors.buttonPrimary,
           borderRadius: BorderRadius.circular(60),
         ),
         child: Center(
