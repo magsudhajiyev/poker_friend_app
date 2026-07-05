@@ -4,27 +4,40 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'auth_service.dart';
 
+/// Rollout state of one feature.
+enum FlagMode {
+  /// Visible to everyone.
+  on,
+
+  /// Visible only to the super admin (preview mode).
+  adminOnly,
+
+  /// Hidden for everyone, super admin included (full kill-switch).
+  off,
+}
+
 /// One remotely-toggleable feature.
 class FeatureFlag {
   final String key;
   final String title;
   final String description;
-  final bool defaultValue;
+  final FlagMode defaultMode;
   const FeatureFlag(this.key, this.title, this.description,
-      {required this.defaultValue});
+      {required this.defaultMode});
 }
 
 /// Global feature flags, controlled by the super admin from the Profile
 /// screen and applied to ALL users.
 ///
-/// - Source of truth: Firestore `app_config/feature_flags` (one bool per
-///   flag key). Firestore rules allow reads for signed-in users and writes
-///   only for `isSuperAdmin()` (request.auth.token.email) — the client-side
-///   email check here is UI convenience, not security.
-/// - Offline: last-known values are cached in SharedPreferences so gating
-///   works with zero network; unknown flags fall back to [FeatureFlag
-///   .defaultValue] (which always matches current behavior, so a fresh
-///   install without network changes nothing).
+/// - Source of truth: Firestore `app_config/feature_flags` — one value per
+///   flag key: 'on' | 'admin_only' | 'off' (legacy bools from the first
+///   version are still accepted: true='on', false='off'). Firestore rules
+///   allow reads for signed-in users and writes only for `isSuperAdmin()`
+///   (request.auth.token.email) — the client-side email check here is UI
+///   convenience, not security.
+/// - Offline: last-known modes are cached in SharedPreferences so gating
+///   works with zero network; unknown flags fall back to
+///   [FeatureFlag.defaultMode].
 /// - UI: listen via [revision] (ValueListenableBuilder) — it bumps whenever
 ///   flag values change.
 class FeatureFlagService {
@@ -45,21 +58,21 @@ class FeatureFlagService {
       trainingDrills,
       'Training Drills',
       'Preflop spot trainer (GTO + exploit grading) on the logging screen.',
-      defaultValue: true,
+      defaultMode: FlagMode.on,
     ),
     FeatureFlag(
       aiHandAnalysis,
       'AI Hand Analysis',
       'Per-hand AI analysis button on hand details. Kill-switch for backend '
       'outages.',
-      defaultValue: true,
+      defaultMode: FlagMode.on,
     ),
   ];
 
   // ── State ─────────────────────────────────────────────────────────────
 
-  static final Map<String, bool> _values = {};
-  static const String _cachePrefix = 'feature_flag_';
+  static final Map<String, FlagMode> _modes = {};
+  static const String _cachePrefix = 'feature_flag_mode_';
 
   /// Bumps whenever flag values change; rebuild gated UI off this.
   static final ValueNotifier<int> revision = ValueNotifier<int>(0);
@@ -68,13 +81,35 @@ class FeatureFlagService {
       AuthService.currentUser?.email?.toLowerCase() ==
       superAdminEmail.toLowerCase();
 
-  static bool isEnabled(String key) =>
-      _values[key] ??
+  static FlagMode modeOf(String key) =>
+      _modes[key] ??
       all
           .firstWhere((f) => f.key == key,
-              orElse: () =>
-                  const FeatureFlag('', '', '', defaultValue: true))
-          .defaultValue;
+              orElse: () => const FeatureFlag('', '', '',
+                  defaultMode: FlagMode.on))
+          .defaultMode;
+
+  /// Whether the feature is visible for the CURRENT user.
+  static bool isEnabled(String key) => switch (modeOf(key)) {
+        FlagMode.on => true,
+        FlagMode.off => false,
+        FlagMode.adminOnly => isSuperAdmin,
+      };
+
+  static String _encode(FlagMode m) => switch (m) {
+        FlagMode.on => 'on',
+        FlagMode.adminOnly => 'admin_only',
+        FlagMode.off => 'off',
+      };
+
+  static FlagMode? _decode(dynamic v) => switch (v) {
+        'on' => FlagMode.on,
+        'admin_only' => FlagMode.adminOnly,
+        'off' => FlagMode.off,
+        true => FlagMode.on, // legacy bool format
+        false => FlagMode.off,
+        _ => null,
+      };
 
   // ── Lifecycle ─────────────────────────────────────────────────────────
 
@@ -84,8 +119,8 @@ class FeatureFlagService {
     try {
       final prefs = await SharedPreferences.getInstance();
       for (final f in all) {
-        final cached = prefs.getBool('$_cachePrefix${f.key}');
-        if (cached != null) _values[f.key] = cached;
+        final m = _decode(prefs.getString('$_cachePrefix${f.key}'));
+        if (m != null) _modes[f.key] = m;
       }
       revision.value++;
     } catch (e) {
@@ -109,9 +144,9 @@ class FeatureFlagService {
     if (data == null) return;
     var changed = false;
     for (final f in all) {
-      final v = data[f.key];
-      if (v is bool && _values[f.key] != v) {
-        _values[f.key] = v;
+      final m = _decode(data[f.key]);
+      if (m != null && _modes[f.key] != m) {
+        _modes[f.key] = m;
         changed = true;
       }
     }
@@ -120,20 +155,22 @@ class FeatureFlagService {
       try {
         final prefs = await SharedPreferences.getInstance();
         for (final f in all) {
-          final v = _values[f.key];
-          if (v != null) await prefs.setBool('$_cachePrefix${f.key}', v);
+          final m = _modes[f.key];
+          if (m != null) {
+            await prefs.setString('$_cachePrefix${f.key}', _encode(m));
+          }
         }
       } catch (_) {}
     }
   }
 
   /// Super-admin toggle. Firestore rules reject the write for anyone else.
-  static Future<void> setFlag(String key, bool value) async {
-    _values[key] = value; // optimistic — snapshot listener confirms
+  static Future<void> setMode(String key, FlagMode mode) async {
+    _modes[key] = mode; // optimistic — snapshot listener confirms
     revision.value++;
     await FirebaseFirestore.instance
         .collection('app_config')
         .doc('feature_flags')
-        .set({key: value}, SetOptions(merge: true));
+        .set({key: _encode(mode)}, SetOptions(merge: true));
   }
 }

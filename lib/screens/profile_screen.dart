@@ -802,48 +802,78 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       color: AppColors.tealPrimary)),
             ]),
             const SizedBox(height: 4),
-            Text('Global toggles — apply to all users immediately.',
+            Text(
+                'Global — applies to all users immediately. '
+                '"Only me" hides the feature for users but keeps it live '
+                'for you (preview); "Off" hides it for everyone, you '
+                'included.',
                 style:
                     GoogleFonts.ibmPlexSans(fontSize: 12, color: _secondary)),
-            const SizedBox(height: 8),
-            for (final flag in FeatureFlagService.all)
+            const SizedBox(height: 12),
+            for (final flag in FeatureFlagService.all) ...[
+              Text(flag.title,
+                  style: GoogleFonts.ibmPlexSans(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.white)),
+              Text(flag.description,
+                  style: GoogleFonts.ibmPlexSans(
+                      fontSize: 12, color: _secondary)),
+              const SizedBox(height: 8),
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(flag.title,
-                            style: GoogleFonts.ibmPlexSans(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w500,
-                                color: Colors.white)),
-                        Text(flag.description,
-                            style: GoogleFonts.ibmPlexSans(
-                                fontSize: 12, color: _secondary)),
-                      ],
-                    ),
-                  ),
-                  Switch(
-                    value: FeatureFlagService.isEnabled(flag.key),
-                    onChanged: (v) async {
-                      try {
-                        await FeatureFlagService.setFlag(flag.key, v);
-                      } catch (e) {
-                        if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                              content: Text('Flag update failed: $e')));
-                        }
-                      }
-                    },
-                    activeColor: AppColors.tealPrimary,
-                    inactiveThumbColor: AppColors.textDisabled,
-                    inactiveTrackColor: AppColors.neutral700,
-                  ),
+                  _flagModeChip(flag.key, FlagMode.on, 'On'),
+                  const SizedBox(width: 8),
+                  _flagModeChip(flag.key, FlagMode.adminOnly, 'Only me'),
+                  const SizedBox(width: 8),
+                  _flagModeChip(flag.key, FlagMode.off, 'Off'),
                 ],
               ),
+              const SizedBox(height: 16),
+            ],
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _flagModeChip(String flagKey, FlagMode mode, String label) {
+    final selected = FeatureFlagService.modeOf(flagKey) == mode;
+    final accent = switch (mode) {
+      FlagMode.on => AppColors.tealPrimary,
+      FlagMode.adminOnly => AppColors.warningAmber, // preview state
+      FlagMode.off => AppColors.errorRed,
+    };
+    return Expanded(
+      child: GestureDetector(
+        onTap: selected
+            ? null
+            : () async {
+                try {
+                  await FeatureFlagService.setMode(flagKey, mode);
+                } catch (e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Flag update failed: $e')));
+                  }
+                }
+              },
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: selected
+                ? accent.withValues(alpha: 0.18)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(40),
+            border: Border.all(
+                color: selected ? accent : AppColors.neutral700),
+          ),
+          child: Text(label,
+              style: GoogleFonts.ibmPlexSans(
+                  fontSize: 13,
+                  fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+                  color: selected ? accent : _secondary)),
         ),
       ),
     );
@@ -910,11 +940,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 builder: (_) => const OnboardingFlow(skipNickname: true, testMode: true)));
           }),
           const SizedBox(height: 8),
-          _devButton('Open Latest Session Analytics', const Color(0xFFFFB74D), _openLatestSession),
+          _devButton('Open Latest Session Analytics', AppColors.warningAmber, _openLatestSession),
           const SizedBox(height: 8),
           _devButton('Seed Scouting Data (Aldante + Kulikor)', AppColors.limeGreen, _seedScoutingData),
           const SizedBox(height: 8),
-          _devButton('Diagnose Stats (Latest Session)', const Color(0xFFFFB74D), _diagnoseStats),
+          _devButton('Diagnose Stats (Latest Session)', AppColors.warningAmber, _diagnoseStats),
         ],
       ),
     );

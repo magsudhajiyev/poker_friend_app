@@ -76,8 +76,9 @@ class AppColors {
   static const Color paper       = Color(0xFF02050B);  // App background "Paper"
   static const Color surfaceDark = Color(0xFF101115);  // Card/sheet surface
   static const Color textMuted   = Color(0xFF9A9A9A);  // Tertiary/muted text
-  static const Color profitGreen = Color(0xFF5AC95A);  // Positive amounts
-  static const Color lossRed     = Color(0xFFFF4444);  // Negative amounts
+  static const Color profitGreen  = Color(0xFF5AC95A);  // Positive amounts
+  static const Color lossRed      = Color(0xFFFF4444);  // Negative amounts
+  static const Color warningAmber = Color(0xFFFFB74D);  // Caution/preview states
 
   // Navigation
   static const Color navBarBackground = Color(0xFF1E1E1E);

@@ -275,7 +275,7 @@ class _SessionSummaryCardState extends State<SessionSummaryCard> {
                           decoration: BoxDecoration(
                             color: data.isCash
                                 ? AppColors.tealPrimary.withValues(alpha: 0.15)
-                                : const Color(0xFFFFB74D).withValues(alpha: 0.15),
+                                : AppColors.warningAmber.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(40),
                           ),
                           child: Text(
@@ -285,7 +285,7 @@ class _SessionSummaryCardState extends State<SessionSummaryCard> {
                               fontWeight: FontWeight.w700,
                               color: data.isCash
                                   ? AppColors.tealPrimary
-                                  : const Color(0xFFFFB74D),
+                                  : AppColors.warningAmber,
                               letterSpacing: 0.8,
                             ),
                           ),
@@ -419,7 +419,7 @@ class _SessionSummaryCardState extends State<SessionSummaryCard> {
                 style: GoogleFonts.familjenGrotesk(
                   fontSize: 44,
                   fontWeight: FontWeight.w700,
-                  color: const Color(0xFFFFB74D),
+                  color: AppColors.warningAmber,
                 ),
               ),
             ),
