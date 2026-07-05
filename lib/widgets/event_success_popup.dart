@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../l10n/app_localizations.dart';
 import '../design_system/constants/colors.dart';
+import '../design_system/constants/typography.dart';
+import '../design_system/constants/decorations.dart';
 
 /// Success popup shown after successfully adding a calendar event.
 /// Slides up from the bottom of the screen with two action buttons.
@@ -45,7 +46,7 @@ class EventSuccessPopup extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.neutral800,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
         boxShadow: const [
           BoxShadow(
             color: Colors.black,
@@ -97,7 +98,7 @@ class EventSuccessPopup extends StatelessWidget {
                   Text(
                     l10n.eventSuccessTitle,
                     textAlign: TextAlign.center,
-                    style: GoogleFonts.ibmPlexSans(
+                    style: AppTypography.ibm(
                       color: Colors.white,
                       fontSize: 17,
                       fontWeight: FontWeight.w500,
@@ -110,7 +111,7 @@ class EventSuccessPopup extends StatelessWidget {
                   Text(
                     l10n.eventSuccessSubtitle,
                     textAlign: TextAlign.center,
-                    style: GoogleFonts.ibmPlexSans(
+                    style: AppTypography.ibm(
                       color: const Color(0xFFB3B4B6),
                       fontSize: 15,
                       fontWeight: FontWeight.w500,
@@ -136,7 +137,7 @@ class EventSuccessPopup extends StatelessWidget {
                           child: Text(
                             l10n.eventSuccessGoToCalendar,
                             textAlign: TextAlign.center,
-                            style: GoogleFonts.ibmPlexSans(
+                            style: AppTypography.ibm(
                               color: Colors.black,
                               fontSize: 17,
                               fontWeight: FontWeight.w600,
@@ -170,7 +171,7 @@ class EventSuccessPopup extends StatelessWidget {
                               const SizedBox(width: 8),
                               Text(
                                 l10n.eventSuccessAddAnother,
-                                style: GoogleFonts.ibmPlexSans(
+                                style: AppTypography.ibm(
                                   color: Colors.white,
                                   fontSize: 17,
                                   fontWeight: FontWeight.w600,

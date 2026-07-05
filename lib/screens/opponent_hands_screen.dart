@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../l10n/app_localizations.dart';
 import '../models/opponent.dart';
 import '../services/local_storage_service.dart';
@@ -10,6 +9,8 @@ import '../services/app_data_cache.dart';
 import '../widgets/global_bottom_nav_bar.dart';
 import '../services/currency_service.dart';
 import '../design_system/constants/colors.dart';
+import '../design_system/constants/typography.dart';
+import '../design_system/constants/decorations.dart';
 
 class OpponentHandsScreen extends StatefulWidget {
   final Opponent opponent;
@@ -352,7 +353,7 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
                           children: [
                             Text(
                               widget.opponent.name,
-                              style: GoogleFonts.ibmPlexSans(
+                              style: AppTypography.ibm(
                                 fontSize: 20,
                                 color: Colors.white,
                                 fontWeight: FontWeight.w600,
@@ -363,7 +364,7 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
                             const SizedBox(height: 2),
                             Text(
                               l10n.opponentHandsTitle,
-                              style: GoogleFonts.ibmPlexSans(
+                              style: AppTypography.ibm(
                                 fontSize: 14,
                                 color: Colors.white.withValues(alpha: 0.5),
                                 fontWeight: FontWeight.w500,
@@ -378,11 +379,11 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
                             color: Colors.white.withValues(alpha: 0.08),
-                            borderRadius: BorderRadius.circular(40),
+                            borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
                           ),
                           child: Text(
                             l10n.opponentHandsCount(totalHandsCount ?? hands.length),
-                            style: GoogleFonts.ibmPlexSans(
+                            style: AppTypography.ibm(
                               fontSize: 13,
                               color: Colors.white.withValues(alpha: 0.6),
                               fontWeight: FontWeight.w500,
@@ -427,7 +428,7 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
           const SizedBox(height: 16),
           Text(
             AppLocalizations.of(context).opponentHandsLoading,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               color: Colors.white.withValues(alpha: 0.5),
               fontSize: 14,
             ),
@@ -456,7 +457,7 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
             const SizedBox(height: 16),
             Text(
               AppLocalizations.of(context).opponentHandsError,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 color: Colors.white,
                 fontSize: 17,
                 fontWeight: FontWeight.w600,
@@ -465,7 +466,7 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
             const SizedBox(height: 8),
             Text(
               error!,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 color: Colors.white.withValues(alpha: 0.5),
                 fontSize: 14,
               ),
@@ -478,11 +479,11 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                 decoration: BoxDecoration(
                   color: _mint,
-                  borderRadius: BorderRadius.circular(60),
+                  borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
                 ),
                 child: Text(
                   AppLocalizations.of(context).opponentHandsRetry,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     fontSize: 15,
                     color: Colors.black,
                     fontWeight: FontWeight.w600,
@@ -508,7 +509,7 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
               height: 72,
               decoration: BoxDecoration(
                 color: _cardColor,
-                borderRadius: BorderRadius.circular(18),
+                borderRadius: BorderRadius.circular(AppDecorations.radius18),
               ),
               child: Icon(
                 Icons.style_outlined,
@@ -519,7 +520,7 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
             const SizedBox(height: 20),
             Text(
               AppLocalizations.of(context).opponentHandsNoHandsTitle,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 color: Colors.white,
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
@@ -528,7 +529,7 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
             const SizedBox(height: 8),
             Text(
               AppLocalizations.of(context).opponentHandsNoHandsSubtitle(widget.opponent.name),
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 color: Colors.white.withValues(alpha: 0.45),
                 fontSize: 14,
                 height: 1.5,
@@ -620,7 +621,7 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
       behavior: HitTestBehavior.opaque,
       child: Container(
         decoration: const BoxDecoration(
-          border: Border(bottom: BorderSide(color: Color(0xFF161719), width: 1)),
+          border: Border(bottom: BorderSide(color: AppColors.borderDefault, width: 1)),
         ),
         padding: const EdgeInsets.symmetric(vertical: 16),
         child: Column(
@@ -633,13 +634,13 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
                   width: 38,
                   height: 36,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF161719),
-                    borderRadius: BorderRadius.circular(8),
+                    color: AppColors.bgSurface,
+                    borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
                   ),
                   alignment: Alignment.center,
                   child: Text(
                     '#$handNumber',
-                    style: GoogleFonts.ibmPlexSans(
+                    style: AppTypography.ibm(
                       fontSize: 13,
                       fontWeight: FontWeight.w500,
                       color: Colors.white,
@@ -651,7 +652,7 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
                 Expanded(
                   child: Text(
                     sessionName,
-                    style: GoogleFonts.ibmPlexSans(
+                    style: AppTypography.ibm(
                       fontSize: 17,
                       fontWeight: FontWeight.w600,
                       color: Colors.white,
@@ -664,12 +665,12 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
                   Container(
                     padding: const EdgeInsets.all(4),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFF3B30),
-                      borderRadius: BorderRadius.circular(8),
+                      color: AppColors.accentDanger,
+                      borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
                     ),
                     child: Text(
                       l10n.opponentHandsOppWon,
-                      style: GoogleFonts.ibmPlexSans(
+                      style: AppTypography.ibm(
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
                         color: Colors.white,
@@ -698,23 +699,23 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF161719),
-                    borderRadius: BorderRadius.circular(8),
+                    color: AppColors.bgSurface,
+                    borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
                         potText,
-                        style: GoogleFonts.ibmPlexSans(
+                        style: AppTypography.ibm(
                           fontSize: 13,
                           fontWeight: FontWeight.w500,
-                          color: const Color(0xFF4CDE78),
+                          color: AppColors.accentPrimary,
                           height: 20 / 13,
                         ),
                       ),
                       const SizedBox(width: 4),
-                      const Icon(Icons.chevron_right, size: 12, color: Color(0xFF4CDE78)),
+                      const Icon(Icons.chevron_right, size: 12, color: AppColors.accentPrimary),
                     ],
                   ),
                 ),
@@ -730,8 +731,8 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: const Color(0xFF161719),
-        borderRadius: BorderRadius.circular(8),
+        color: AppColors.bgSurface,
+        borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -742,7 +743,7 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
             child: Center(
               child: Text(
                 label,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
                   color: Colors.white,
@@ -756,17 +757,17 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
             width: 38,
             height: 28,
             decoration: BoxDecoration(
-              color: const Color(0xFF0C0C0C),
-              borderRadius: BorderRadius.circular(8),
+              color: AppColors.bgPrimary,
+              borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
             ),
             alignment: Alignment.center,
             child: Text(
               position,
               textAlign: TextAlign.center,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
-                color: isHero ? const Color(0xFFA3FF78) : const Color(0xFFB9B9B9),
+                color: isHero ? AppColors.accentSecondary : AppColors.textSecondary,
                 height: 20 / 13,
               ),
             ),

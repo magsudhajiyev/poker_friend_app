@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../l10n/app_localizations.dart';
 import '../models/hand_state_machine.dart';
 import '../services/currency_service.dart';
 import '../design_system/constants/colors.dart';
+import '../design_system/constants/typography.dart';
+import '../design_system/constants/decorations.dart';
 
 /// Default number of data points visible in the viewport.
 const _defaultVisiblePoints = 7;
@@ -73,7 +74,7 @@ class _StackGrowthChartState extends State<StackGrowthChart> {
         child: Center(
           child: Text(
             l10n.stackChartNoData,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               color: Colors.white.withValues(alpha: 0.4),
               fontSize: 14,
             ),
@@ -172,7 +173,7 @@ class _StackGrowthChartState extends State<StackGrowthChart> {
                   getTitlesWidget: (double value, TitleMeta meta) {
                     return Text(
                       _formatAxisValue(value),
-                      style: GoogleFonts.robotoMono(
+                      style: AppTypography.mono(
                         color: Colors.white.withValues(alpha: 0.35),
                         fontSize: 10,
                       ),
@@ -213,7 +214,7 @@ class _StackGrowthChartState extends State<StackGrowthChart> {
                         padding: EdgeInsets.only(left: idx == 0 ? 8 : 0),
                         child: Text(
                           label,
-                          style: GoogleFonts.ibmPlexSans(
+                          style: AppTypography.ibm(
                             color: Colors.white.withValues(alpha: 0.3),
                             fontSize: 10,
                           ),
@@ -299,7 +300,7 @@ class _StackGrowthChartState extends State<StackGrowthChart> {
 
                       return LineTooltipItem(
                         detail,
-                        GoogleFonts.ibmPlexSans(
+                        AppTypography.ibm(
                           color: Colors.white,
                           fontSize: 13,
                           fontWeight: FontWeight.w500,
@@ -309,7 +310,7 @@ class _StackGrowthChartState extends State<StackGrowthChart> {
 
                     return LineTooltipItem(
                       stackValue,
-                      GoogleFonts.ibmPlexSans(
+                      AppTypography.ibm(
                         color: Colors.white,
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
@@ -426,7 +427,7 @@ class _StackGrowthChartState extends State<StackGrowthChart> {
         constraints: const BoxConstraints(maxHeight: 120),
         decoration: BoxDecoration(
           color: const Color(0xFF1C2926),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.4),
@@ -443,7 +444,7 @@ class _StackGrowthChartState extends State<StackGrowthChart> {
             children: [
               Text(
                 header,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   color: Colors.white,
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
@@ -452,7 +453,7 @@ class _StackGrowthChartState extends State<StackGrowthChart> {
               const SizedBox(height: 6),
               Text(
                 note,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   color: Colors.white.withValues(alpha: 0.7),
                   fontSize: 12,
                 ),
@@ -603,8 +604,8 @@ class _StackGrowthChartFullScreenState
             end: Alignment.bottomLeft,
             colors: [
               const Color(0xFF1A4A4A),
-              const Color(0xFF161618),
-              const Color(0xFF161618),
+              AppColors.surfaceVariant1,
+              AppColors.surfaceVariant1,
             ],
             stops: const [0.0, 0.3, 1.0],
           ),
@@ -668,7 +669,7 @@ class _StackGrowthChartFullScreenState
               children: [
                 Text(
                   l10n.stackChartTitle,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     fontSize: 17,
                     color: Colors.white,
                     fontWeight: FontWeight.w600,
@@ -676,7 +677,7 @@ class _StackGrowthChartFullScreenState
                 ),
                 Text(
                   widget.sessionName,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     fontSize: 12,
                     color: Colors.white.withValues(alpha: 0.5),
                   ),
@@ -713,7 +714,7 @@ class _StackGrowthChartFullScreenState
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.07),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppDecorations.radius20),
         border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
       ),
       child: Row(
@@ -721,7 +722,7 @@ class _StackGrowthChartFullScreenState
         children: [
           Text(
             '$label  ',
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               fontSize: 11,
               color: Colors.white.withValues(alpha: 0.5),
               fontWeight: FontWeight.w400,
@@ -729,7 +730,7 @@ class _StackGrowthChartFullScreenState
           ),
           Text(
             value,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               fontSize: 12,
               color: valueColor,
               fontWeight: FontWeight.w600,

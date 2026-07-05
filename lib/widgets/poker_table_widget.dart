@@ -2,8 +2,9 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../l10n/app_localizations.dart';
+import '../design_system/constants/typography.dart';
+import '../design_system/constants/colors.dart';
 
 /// Reusable poker table widget that renders a vertical oval table with
 /// seats positioned around it. Used across seat setup, dealer table,
@@ -213,19 +214,19 @@ class PokerTableWidget extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
       decoration: BoxDecoration(
-        color: const Color(0xFF161719),
+        color: AppColors.bgSurface,
         borderRadius: BorderRadius.circular(35),
         border: Border.all(
           color: isActive
-              ? const Color(0xFFA3FF78)
-              : const Color(0xFF2C2C2E),
+              ? AppColors.accentSecondary
+              : AppColors.borderOnInverse,
           width: 2,
         ),
       ),
       child: Text(
         '$seatNumber',
-        style: GoogleFonts.ibmPlexMono(
-          color: const Color(0xFFA3FF78),
+        style: AppTypography.plexMonoLegacy(
+          color: AppColors.accentSecondary,
           fontSize: 14,
           fontWeight: FontWeight.w500,
         ),
@@ -243,7 +244,7 @@ class PokerTableWidget extends StatelessWidget {
 
     return Text(
       displayName,
-      style: GoogleFonts.ibmPlexSans(
+      style: AppTypography.ibm(
         color: isActive ? Colors.white : Colors.white.withValues(alpha: 0.4),
         fontSize: 10,
         fontWeight: FontWeight.w500,
@@ -274,7 +275,7 @@ class PokerTableWidget extends StatelessWidget {
           child: Center(
             child: Text(
               truncated,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 fontSize: 10.0,
                 fontWeight: FontWeight.w500,
                 color: Colors.white,

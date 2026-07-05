@@ -12,6 +12,7 @@ import '../../services/waitlist_service.dart';
 import '../../l10n/app_localizations.dart';
 import 'member_table_view_screen.dart';
 import '../../design_system/constants/colors.dart';
+import '../../design_system/constants/decorations.dart';
 
 /// Screen for members to view all tables in a multi-table event
 /// Shows availability across all tables and allows joining shared waitlist
@@ -294,8 +295,8 @@ class _MemberEventTablesScreenState extends State<MemberEventTablesScreen> {
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                color: const Color(0xFF1F1F23),
-                borderRadius: BorderRadius.circular(12),
+                color: AppColors.surfaceVariant2,
+                borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
               ),
               child: const Icon(Icons.arrow_back, color: Colors.white, size: 22),
             ),
@@ -332,7 +333,7 @@ class _MemberEventTablesScreenState extends State<MemberEventTablesScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
                 color: PokerFriendColors.green.withOpacity(0.15),
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(AppDecorations.radius20),
               ),
               child: Text(
                 widget.event.stakes!,
@@ -381,12 +382,12 @@ class _MemberEventTablesScreenState extends State<MemberEventTablesScreen> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(0xFF1F1F23),
-          borderRadius: BorderRadius.circular(20),
+          color: AppColors.surfaceVariant2,
+          borderRadius: BorderRadius.circular(AppDecorations.radius20),
           border: Border.all(
             color: hasOpenSeats
                 ? PokerFriendColors.green.withOpacity(0.3)
-                : const Color(0xFF2A2A2E),
+                : AppColors.surfaceVariant3,
           ),
         ),
         child: Column(
@@ -465,7 +466,7 @@ class _MemberEventTablesScreenState extends State<MemberEventTablesScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: color.withOpacity(0.15),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -495,7 +496,7 @@ class _MemberEventTablesScreenState extends State<MemberEventTablesScreen> {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: PokerFriendColors.purple.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
           border: Border.all(
             color: PokerFriendColors.purple.withOpacity(0.3),
           ),
@@ -509,7 +510,7 @@ class _MemberEventTablesScreenState extends State<MemberEventTablesScreen> {
                   height: 40,
                   decoration: BoxDecoration(
                     color: PokerFriendColors.purple.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(AppDecorations.radius10),
                   ),
                   child: const Icon(
                     Icons.people,
@@ -550,7 +551,7 @@ class _MemberEventTablesScreenState extends State<MemberEventTablesScreen> {
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
                   color: PokerFriendColors.red.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                 ),
                 child: Center(
                   child: _isLeavingWaitlist
@@ -587,7 +588,7 @@ class _MemberEventTablesScreenState extends State<MemberEventTablesScreen> {
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: PokerFriendColors.purple,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -626,8 +627,8 @@ class _MemberEventTablesScreenState extends State<MemberEventTablesScreen> {
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF1F1F23),
-        borderRadius: BorderRadius.circular(16),
+        color: AppColors.surfaceVariant2,
+        borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
       ),
       child: Row(
         children: [
@@ -636,7 +637,7 @@ class _MemberEventTablesScreenState extends State<MemberEventTablesScreen> {
             height: 40,
             decoration: BoxDecoration(
               color: PokerFriendColors.red.withOpacity(0.15),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(AppDecorations.radius10),
             ),
             child: const Icon(
               Icons.event_busy,

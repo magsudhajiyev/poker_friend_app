@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../design_system/constants/colors.dart';
 import '../../design_system/components/backgrounds/gradient_background.dart';
 import '../../l10n/app_localizations.dart';
@@ -13,6 +12,8 @@ import '../../services/club_service.dart';
 import '../../services/table_service.dart';
 import '../../services/seat_service.dart';
 import 'player_session_screen.dart';
+import '../../design_system/constants/typography.dart';
+import '../../design_system/constants/decorations.dart';
 
 /// Screen for confirming and joining a poker table seat
 class QRJoinScreen extends StatefulWidget {
@@ -115,7 +116,7 @@ class _QRJoinScreenState extends State<QRJoinScreen> {
             SnackBar(
               content: Text(
                 AppLocalizations.of(context).qrJoinDeclined,
-                style: GoogleFonts.ibmPlexSans(color: Colors.white),
+                style: AppTypography.ibm(color: Colors.white),
               ),
               backgroundColor: AppColors.errorRed,
             ),
@@ -144,7 +145,7 @@ class _QRJoinScreenState extends State<QRJoinScreen> {
           SnackBar(
             content: Text(
               AppLocalizations.of(context).qrJoinFailed(e.toString()),
-              style: GoogleFonts.ibmPlexSans(color: Colors.white),
+              style: AppTypography.ibm(color: Colors.white),
             ),
             backgroundColor: AppColors.errorRed,
           ),
@@ -208,7 +209,7 @@ class _QRJoinScreenState extends State<QRJoinScreen> {
                       const SizedBox(width: 12),
                       Text(
                         AppLocalizations.of(context).qrJoinTable,
-                        style: GoogleFonts.ibmPlexSans(
+                        style: AppTypography.ibm(
                           fontSize: 24,
                           fontWeight: FontWeight.w600,
                           color: Colors.white,
@@ -246,7 +247,7 @@ class _QRJoinScreenState extends State<QRJoinScreen> {
             const SizedBox(height: 16),
             Text(
               AppLocalizations.of(context).qrJoinLoading,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 color: AppColors.textDisabled,
                 fontSize: 15,
               ),
@@ -290,7 +291,7 @@ class _QRJoinScreenState extends State<QRJoinScreen> {
             const SizedBox(height: 20),
             Text(
               AppLocalizations.of(context).qrJoinError,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 color: Colors.white,
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
@@ -301,7 +302,7 @@ class _QRJoinScreenState extends State<QRJoinScreen> {
             Text(
               _error!,
               textAlign: TextAlign.center,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 color: AppColors.textDisabled,
                 fontSize: 15,
                 height: 1.44,
@@ -314,11 +315,11 @@ class _QRJoinScreenState extends State<QRJoinScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(60),
+                  borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
                 ),
                 child: Text(
                   AppLocalizations.of(context).qrJoinGoBack,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     fontSize: 17,
                     fontWeight: FontWeight.w600,
                     color: Colors.black,
@@ -372,7 +373,7 @@ class _QRJoinScreenState extends State<QRJoinScreen> {
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 child: Text(
                   AppLocalizations.of(context).commonCancel,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     fontSize: 15,
                     fontWeight: FontWeight.w500,
                     color: AppColors.textDisabled,
@@ -388,14 +389,14 @@ class _QRJoinScreenState extends State<QRJoinScreen> {
 
   Widget _buildSeatHeroCard() {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(AppDecorations.radius20),
       child: BackdropFilter(
         filter: ui.ImageFilter.blur(sigmaX: 45, sigmaY: 45),
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 40),
           decoration: BoxDecoration(
             color: AppColors.glassyCardBase.withValues(alpha: 0.74),
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(AppDecorations.radius20),
             border: Border.all(
               color: Colors.white.withValues(alpha: 0.1),
               width: 1,
@@ -420,7 +421,7 @@ class _QRJoinScreenState extends State<QRJoinScreen> {
               const SizedBox(height: 16),
               Text(
                 AppLocalizations.of(context).qrJoinSeat(widget.qrData.seatNumber),
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   fontSize: 32,
                   fontWeight: FontWeight.w700,
                   color: Colors.white,
@@ -432,11 +433,11 @@ class _QRJoinScreenState extends State<QRJoinScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(40),
+                  borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
                 ),
                 child: Text(
                   _table?.name ?? AppLocalizations.of(context).qrJoinTableFallback,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
                     color: AppColors.textMint,
@@ -453,7 +454,7 @@ class _QRJoinScreenState extends State<QRJoinScreen> {
   Widget _buildSectionHeader(String title) {
     return Text(
       title,
-      style: GoogleFonts.ibmPlexSans(
+      style: AppTypography.ibm(
         fontSize: 12,
         fontWeight: FontWeight.w600,
         color: AppColors.limeGreen,
@@ -468,7 +469,7 @@ class _QRJoinScreenState extends State<QRJoinScreen> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.bgSurface,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
         border: Border.all(color: AppColors.separatorDark),
       ),
       child: Column(
@@ -529,7 +530,7 @@ class _QRJoinScreenState extends State<QRJoinScreen> {
           const SizedBox(width: 12),
           Text(
             label,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               fontSize: 15,
               fontWeight: FontWeight.w400,
               color: AppColors.textDisabled,
@@ -538,7 +539,7 @@ class _QRJoinScreenState extends State<QRJoinScreen> {
           const Spacer(),
           Text(
             value,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               fontSize: 15,
               fontWeight: FontWeight.w500,
               color: valueColor ?? Colors.white,
@@ -554,7 +555,7 @@ class _QRJoinScreenState extends State<QRJoinScreen> {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: const Color(0xFFFFA726).withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
         border: Border.all(
           color: const Color(0xFFFFA726).withValues(alpha: 0.25),
         ),
@@ -570,7 +571,7 @@ class _QRJoinScreenState extends State<QRJoinScreen> {
           Expanded(
             child: Text(
               AppLocalizations.of(context).qrJoinSeatOccupied,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 color: const Color(0xFFFFA726),
                 fontSize: 13,
                 height: 1.44,
@@ -611,7 +612,7 @@ class _QRJoinScreenState extends State<QRJoinScreen> {
             const SizedBox(height: 28),
             Text(
               AppLocalizations.of(context).qrJoinWaitingDealer,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 color: Colors.white,
                 fontSize: 24,
                 fontWeight: FontWeight.w600,
@@ -622,7 +623,7 @@ class _QRJoinScreenState extends State<QRJoinScreen> {
             Text(
               AppLocalizations.of(context).qrJoinRequestSent(widget.qrData.seatNumber),
               textAlign: TextAlign.center,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 color: AppColors.textMint,
                 fontSize: 15,
                 height: 1.44,
@@ -632,7 +633,7 @@ class _QRJoinScreenState extends State<QRJoinScreen> {
             Text(
               AppLocalizations.of(context).qrJoinDealerApproval,
               textAlign: TextAlign.center,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 color: AppColors.textDisabled,
                 fontSize: 14,
                 height: 1.44,
@@ -645,7 +646,7 @@ class _QRJoinScreenState extends State<QRJoinScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
                 color: AppColors.bgSurface,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                 border: Border.all(color: AppColors.separatorDark),
               ),
               child: Row(
@@ -659,7 +660,7 @@ class _QRJoinScreenState extends State<QRJoinScreen> {
                   const SizedBox(width: 10),
                   Text(
                     _table?.name ?? AppLocalizations.of(context).qrJoinTableFallback,
-                    style: GoogleFonts.ibmPlexSans(
+                    style: AppTypography.ibm(
                       color: Colors.white,
                       fontSize: 15,
                       fontWeight: FontWeight.w500,
@@ -670,11 +671,11 @@ class _QRJoinScreenState extends State<QRJoinScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
                       color: AppColors.buttonPrimary.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(40),
+                      borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
                     ),
                     child: Text(
                       AppLocalizations.of(context).qrJoinSeat(widget.qrData.seatNumber),
-                      style: GoogleFonts.ibmPlexSans(
+                      style: AppTypography.ibm(
                         color: AppColors.buttonPrimary,
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
@@ -695,7 +696,7 @@ class _QRJoinScreenState extends State<QRJoinScreen> {
               },
               child: Text(
                 AppLocalizations.of(context).qrJoinCancelRequest,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   color: AppColors.errorRed,
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
@@ -717,7 +718,7 @@ class _QRJoinScreenState extends State<QRJoinScreen> {
           color: _isJoining
               ? Colors.white.withValues(alpha: 0.5)
               : Colors.white,
-          borderRadius: BorderRadius.circular(60),
+          borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
         ),
         child: Center(
           child: _isJoining
@@ -731,7 +732,7 @@ class _QRJoinScreenState extends State<QRJoinScreen> {
                 )
               : Text(
                   AppLocalizations.of(context).qrJoinRequestButton,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     fontSize: 17,
                     fontWeight: FontWeight.w600,
                     color: Colors.black,

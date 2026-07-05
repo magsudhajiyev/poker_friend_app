@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../services/auth_service.dart';
 import '../services/deep_link_service.dart';
 import '../services/subscription_service.dart';
@@ -13,6 +12,8 @@ import 'intro_screen.dart';
 import 'home_screen.dart';
 import 'onboarding/onboarding_flow.dart';
 import '../design_system/constants/colors.dart';
+import '../design_system/constants/typography.dart';
+import '../design_system/constants/decorations.dart';
 
 class AuthWrapper extends StatefulWidget {
   const AuthWrapper({super.key});
@@ -237,7 +238,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
               const SizedBox(height: 24),
               Text(
                 l10n.authConnectionIssue,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   fontSize: 22,
                   fontWeight: FontWeight.w600,
                   color: Colors.white,
@@ -247,7 +248,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
               const SizedBox(height: 12),
               Text(
                 l10n.authConnectionIssueBody,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   fontSize: 15,
                   color: AppColors.textDisabled,
                   height: 1.5,
@@ -263,7 +264,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
                     vertical: 14,
                   ),
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(40),
+                    borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
                     border: Border.all(
                       color: AppColors.buttonPrimary.withValues(alpha: 0.5),
                       width: 1,
@@ -271,7 +272,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
                   ),
                   child: Text(
                     l10n.authTryAgain,
-                    style: GoogleFonts.ibmPlexSans(
+                    style: AppTypography.ibm(
                       fontSize: 17,
                       fontWeight: FontWeight.w600,
                       color: AppColors.buttonPrimary,

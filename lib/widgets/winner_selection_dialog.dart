@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../l10n/app_localizations.dart';
 import '../models/game_types.dart';
 import '../services/currency_service.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/decorations.dart';
+import '../design_system/constants/typography.dart';
 
 class WinnerSelectionDialog extends StatefulWidget {
   final List<int> activePlayers;
@@ -213,7 +213,7 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
             Expanded(
               child: Text(
                 playerDisplayName,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   fontSize: 17,
                   fontWeight: FontWeight.w400,
                   color: AppColors.textOnInverse,
@@ -273,7 +273,7 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
                         isChoppedPot
                             ? l10n.winnerSelectionWhoChopped
                             : l10n.winnerSelectionWhoWon,
-                        style: GoogleFonts.ibmPlexSans(
+                        style: AppTypography.ibm(
                           fontSize: 17,
                           fontWeight: FontWeight.w600,
                           color: AppColors.textOnInverse,
@@ -327,7 +327,7 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
                             const SizedBox(width: 10),
                             Text(
                               l10n.winnerSelectionChoppedPot,
-                              style: GoogleFonts.ibmPlexSans(
+                              style: AppTypography.ibm(
                                 fontSize: 15,
                                 fontWeight: FontWeight.w500,
                                 color: AppColors.textOnInverse,
@@ -354,7 +354,7 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
                           children: [
                             Text(
                               l10n.winnerSelectionIndividualShares,
-                              style: GoogleFonts.ibmPlexSans(
+                              style: AppTypography.ibm(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w500,
                                 color: AppColors.borderLight,
@@ -376,7 +376,7 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
                                     Expanded(
                                       child: Text(
                                         playerDisplayName,
-                                        style: GoogleFonts.ibmPlexSans(
+                                        style: AppTypography.ibm(
                                           fontSize: 14,
                                           color: AppColors.textOnInverse,
                                         ),
@@ -385,7 +385,7 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
                                     ),
                                     Text(
                                       _formatAmount(entry.value),
-                                      style: GoogleFonts.ibmPlexSans(
+                                      style: AppTypography.ibm(
                                         fontSize: 14,
                                         fontWeight: FontWeight.w600,
                                         color: AppColors.textOnInverse,
@@ -407,7 +407,7 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
                       isChoppedPot
                           ? l10n.winnerSelectionSelectAllWinners
                           : l10n.winnerSelectionTapTheWinner,
-                      style: GoogleFonts.ibmPlexSans(
+                      style: AppTypography.ibm(
                         fontSize: 15,
                         fontWeight: FontWeight.w500,
                         color: AppColors.textOnInverse,
@@ -419,7 +419,7 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
                         padding: const EdgeInsets.only(top: 4),
                         child: Text(
                           l10n.winnerSelectionLongPressHint,
-                          style: GoogleFonts.ibmPlexSans(
+                          style: AppTypography.ibm(
                             fontSize: 13,
                             fontWeight: FontWeight.w400,
                             color: AppColors.borderLight,
@@ -463,7 +463,7 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
                             isChoppedPot
                                 ? l10n.winnerSelectionConfirmChop
                                 : l10n.winnerSelectionConfirmWinner,
-                            style: GoogleFonts.ibmPlexSans(
+                            style: AppTypography.ibm(
                               fontSize: 15,
                               fontWeight: FontWeight.w600,
                               color: AppColors.bgInverse,
@@ -497,7 +497,7 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
                         child: Center(
                           child: Text(
                             l10n.winnerSelectionBackToSingle,
-                            style: GoogleFonts.ibmPlexSans(
+                            style: AppTypography.ibm(
                               fontSize: 15,
                               fontWeight: FontWeight.w600,
                               color: AppColors.textOnInverse,

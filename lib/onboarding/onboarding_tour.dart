@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/typography.dart';
 import '../l10n/app_localizations.dart';
 import 'onboarding_prefs.dart';
 import 'onboarding_state.dart';
+import '../design_system/constants/decorations.dart';
 
 // ---------------------------------------------------------------------------
 // Shared helpers
@@ -29,7 +29,7 @@ TutorialCoachMark _createCoachMark({
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(40),
+          borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
           border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
         ),
         child: Text(
@@ -55,7 +55,7 @@ Widget buildWelcomeCard({required VoidCallback onNext, required BuildContext con
     margin: const EdgeInsets.symmetric(horizontal: 24),
     decoration: BoxDecoration(
       color: AppColors.surfaceDark,
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(AppDecorations.radius20),
       border: Border.all(
         color: AppColors.buttonPrimary.withValues(alpha: 0.15),
         width: 1,
@@ -93,7 +93,7 @@ Widget buildWelcomeCard({required VoidCallback onNext, required BuildContext con
               backgroundColor: AppColors.buttonPrimary,
               padding: const EdgeInsets.symmetric(vertical: 14),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
               ),
             ),
             child: Text(
@@ -122,7 +122,7 @@ Widget buildTooltip({
     margin: const EdgeInsets.symmetric(horizontal: 24),
     decoration: BoxDecoration(
       color: AppColors.surfaceDark,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
       border: Border.all(
         color: AppColors.buttonPrimary.withValues(alpha: 0.15),
       ),
@@ -161,7 +161,7 @@ Widget buildTooltip({
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
                 color: AppColors.buttonPrimary.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(40),
+                borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
               ),
               child: Text(
                 isLast ? l10n.onboardingGotIt : l10n.onboardingNext,
@@ -776,7 +776,7 @@ class _OnboardingCompleteDialog extends StatelessWidget {
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
           color: AppColors.surfaceDark,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
           border: Border.all(color: AppColors.neutral800),
           boxShadow: const [
             BoxShadow(
@@ -797,7 +797,7 @@ class _OnboardingCompleteDialog extends StatelessWidget {
             const SizedBox(height: 16),
             Text(
               l10n.guidedTourCompleteTitle,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 color: Colors.white,
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
@@ -809,7 +809,7 @@ class _OnboardingCompleteDialog extends StatelessWidget {
             const SizedBox(height: 12),
             Text(
               l10n.guidedTourCompleteBody,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 color: AppColors.textDisabled,
                 fontSize: 15,
                 height: 1.44,
@@ -825,12 +825,12 @@ class _OnboardingCompleteDialog extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(60),
+                  borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
                 ),
                 child: Center(
                   child: Text(
                     l10n.commonDone,
-                    style: GoogleFonts.ibmPlexSans(
+                    style: AppTypography.ibm(
                       color: Colors.black,
                       fontSize: 17,
                       fontWeight: FontWeight.w600,

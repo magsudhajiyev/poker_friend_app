@@ -1,7 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../design_system/components/headers/top_nav_bar.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -31,6 +30,8 @@ import 'admin/club_requests_screen.dart';
 import 'admin/support_requests_screen.dart';
 import 'admin/notification_tester_screen.dart';
 import '../widgets/register_club_dialog.dart';
+import '../design_system/constants/typography.dart';
+import '../design_system/constants/decorations.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -47,11 +48,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
   List<Club> _clubs = [];
   bool _scoutingEnabled = false;
 
-  static const _bg = Color(0xFF0C0C0C);
-  static const _surface = Color(0xFF161719);
-  static const _sectionLabel = Color(0xFF3A3A3C);
-  static const _secondary = Color(0xFFB9B9B9);
-  static const _danger = Color(0xFFFF3B30);
+  static const _bg = AppColors.bgPrimary;
+  static const _surface = AppColors.bgSurface;
+  static const _sectionLabel = AppColors.bgOverlay;
+  static const _secondary = AppColors.contentInactive;
+  static const _danger = AppColors.accentDanger;
 
   @override
   void initState() {
@@ -144,7 +145,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       child: Center(
         child: Text(
           initials,
-          style: GoogleFonts.ibmPlexSans(
+          style: AppTypography.ibm(
             fontSize: size * 0.35,
             fontWeight: FontWeight.w600,
             color: AppColors.limeGreen,
@@ -185,8 +186,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
               decoration: const BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(24),
-                  topRight: Radius.circular(24),
+                  topLeft: Radius.circular(AppDecorations.radiusXl),
+                  topRight: Radius.circular(AppDecorations.radiusXl),
                 ),
               ),
               padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + bottomInset),
@@ -203,16 +204,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         children: [
                           Text(
                             l10n.settingsChooseLanguage,
-                            style: GoogleFonts.ibmPlexSans(
+                            style: AppTypography.ibm(
                               fontSize: 15,
                               fontWeight: FontWeight.w600,
-                              color: const Color(0xFF0C0C0C),
+                              color: AppColors.textInverse,
                               height: 20 / 15,
                             ),
                           ),
                           GestureDetector(
                             onTap: () => Navigator.pop(context),
-                            child: const Icon(Icons.close, size: 18, color: Color(0xFFB9B9B9)),
+                            child: const Icon(Icons.close, size: 18, color: AppColors.contentInactive),
                           ),
                         ],
                       ),
@@ -221,8 +222,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       Container(
                         width: double.infinity,
                         decoration: BoxDecoration(
-                          border: Border.all(color: const Color(0xFFEFEFEF)),
-                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: AppColors.borderOnInverseSubtle),
+                          borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
                         ),
                         padding: const EdgeInsets.all(16),
                         child: Column(
@@ -238,14 +239,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   child: Container(
                                     padding: const EdgeInsets.all(8),
                                     decoration: BoxDecoration(
-                                      color: isSelected ? const Color(0xFFEFEFEF) : Colors.transparent,
-                                      borderRadius: BorderRadius.circular(8),
+                                      color: isSelected ? AppColors.borderOnInverseSubtle : Colors.transparent,
+                                      borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
                                     ),
                                     child: Row(
                                       children: [
                                         // Icon: globe for system default, flag for others
                                         if (opt.flagAsset == null)
-                                          const Icon(Icons.public, size: 24, color: Color(0xFF0C0C0C))
+                                          const Icon(Icons.public, size: 24, color: AppColors.bgPrimary)
                                         else
                                           ClipRRect(
                                             borderRadius: BorderRadius.circular(2),
@@ -260,16 +261,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                         Expanded(
                                           child: Text(
                                             opt.label,
-                                            style: GoogleFonts.ibmPlexSans(
+                                            style: AppTypography.ibm(
                                               fontSize: 15,
                                               fontWeight: FontWeight.w400,
-                                              color: const Color(0xFF0C0C0C),
+                                              color: AppColors.textInverse,
                                               height: 22 / 15,
                                             ),
                                           ),
                                         ),
                                         if (isSelected)
-                                          const Icon(Icons.check, size: 18, color: Color(0xFFB9B9B9)),
+                                          const Icon(Icons.check, size: 18, color: AppColors.contentInactive),
                                       ],
                                     ),
                                   ),
@@ -285,13 +286,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       // Info row
                       Row(
                         children: [
-                          const Icon(Icons.public, size: 13, color: Color(0xFFB9B9B9)),
+                          const Icon(Icons.public, size: 13, color: AppColors.contentInactive),
                           const SizedBox(width: 4),
                           Text(
                             l10n.settingsMoreLanguagesLater,
-                            style: GoogleFonts.ibmPlexSans(
+                            style: AppTypography.ibm(
                               fontSize: 11,
-                              color: const Color(0xFFB9B9B9),
+                              color: AppColors.textSecondary,
                               height: 16 / 11,
                             ),
                           ),
@@ -307,16 +308,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               child: Container(
                                 padding: const EdgeInsets.symmetric(vertical: 12),
                                 decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(999),
-                                  border: Border.all(color: const Color(0xFFB9B9B9)),
+                                  borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
+                                  border: Border.all(color: AppColors.borderLight),
                                 ),
                                 child: Text(
                                   l10n.commonCancel,
                                   textAlign: TextAlign.center,
-                                  style: GoogleFonts.ibmPlexSans(
+                                  style: AppTypography.ibm(
                                     fontSize: 15,
                                     fontWeight: FontWeight.w600,
-                                    color: const Color(0xFF0C0C0C),
+                                    color: AppColors.textInverse,
                                     height: 20 / 15,
                                   ),
                                 ),
@@ -336,13 +337,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               child: Container(
                                 padding: const EdgeInsets.symmetric(vertical: 12),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFF0C0C0C),
-                                  borderRadius: BorderRadius.circular(999),
+                                  color: AppColors.bgPrimary,
+                                  borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
                                 ),
                                 child: Text(
                                   l10n.settingsChoose,
                                   textAlign: TextAlign.center,
-                                  style: GoogleFonts.ibmPlexSans(
+                                  style: AppTypography.ibm(
                                     fontSize: 15,
                                     fontWeight: FontWeight.w600,
                                     color: Colors.white,
@@ -408,8 +409,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
               decoration: const BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(24),
-                  topRight: Radius.circular(24),
+                  topLeft: Radius.circular(AppDecorations.radiusXl),
+                  topRight: Radius.circular(AppDecorations.radiusXl),
                 ),
               ),
               padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + bottomInset),
@@ -425,16 +426,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       children: [
                         Text(
                           l10n.settingsChooseCurrency,
-                          style: GoogleFonts.ibmPlexSans(
+                          style: AppTypography.ibm(
                             fontSize: 15,
                             fontWeight: FontWeight.w600,
-                            color: const Color(0xFF0C0C0C),
+                            color: AppColors.textInverse,
                             height: 20 / 15,
                           ),
                         ),
                         GestureDetector(
                           onTap: () => Navigator.pop(context),
-                          child: const Icon(Icons.close, size: 18, color: Color(0xFFB9B9B9)),
+                          child: const Icon(Icons.close, size: 18, color: AppColors.contentInactive),
                         ),
                       ],
                     ),
@@ -461,7 +462,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 padding: const EdgeInsets.all(8),
                                 decoration: BoxDecoration(
                                   color: isSelected ? const Color(0xFFF5F5F5) : Colors.transparent,
-                                  borderRadius: BorderRadius.circular(8),
+                                  borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
                                 ),
                                 child: Row(
                                   children: [
@@ -469,10 +470,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                       width: 32,
                                       child: Text(
                                         currency.symbol,
-                                        style: GoogleFonts.ibmPlexSans(
+                                        style: AppTypography.ibm(
                                           fontSize: 15,
                                           fontWeight: FontWeight.w500,
-                                          color: const Color(0xFF0C0C0C),
+                                          color: AppColors.textInverse,
                                         ),
                                       ),
                                     ),
@@ -480,12 +481,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                     Expanded(
                                       child: Text(
                                         displayName,
-                                        style: GoogleFonts.ibmPlexSans(
+                                        style: AppTypography.ibm(
                                           fontSize: 15,
                                           fontWeight: FontWeight.w400,
                                           color: isSelected
-                                              ? const Color(0xFF0C0C0C)
-                                              : const Color(0xFFB9B9B9),
+                                              ? AppColors.textInverse
+                                              : AppColors.contentInactive,
                                         ),
                                       ),
                                     ),
@@ -508,13 +509,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             // Info row
                             Row(
                               children: [
-                                const Icon(Icons.public, size: 13, color: Color(0xFFB9B9B9)),
+                                const Icon(Icons.public, size: 13, color: AppColors.contentInactive),
                                 const SizedBox(width: 4),
                                 Text(
                                   l10n.settingsMoreCurrenciesLater,
-                                  style: GoogleFonts.ibmPlexSans(
+                                  style: AppTypography.ibm(
                                     fontSize: 11,
-                                    color: const Color(0xFFB9B9B9),
+                                    color: AppColors.textSecondary,
                                     height: 16 / 11,
                                   ),
                                 ),
@@ -530,16 +531,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                     child: Container(
                                       padding: const EdgeInsets.symmetric(vertical: 12),
                                       decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(999),
-                                        border: Border.all(color: const Color(0xFFB9B9B9)),
+                                        borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
+                                        border: Border.all(color: AppColors.borderLight),
                                       ),
                                       child: Text(
                                         l10n.commonCancel,
                                         textAlign: TextAlign.center,
-                                        style: GoogleFonts.ibmPlexSans(
+                                        style: AppTypography.ibm(
                                           fontSize: 15,
                                           fontWeight: FontWeight.w600,
-                                          color: const Color(0xFF0C0C0C),
+                                          color: AppColors.textInverse,
                                           height: 20 / 15,
                                         ),
                                       ),
@@ -557,13 +558,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                     child: Container(
                                       padding: const EdgeInsets.symmetric(vertical: 12),
                                       decoration: BoxDecoration(
-                                        color: const Color(0xFF0C0C0C),
-                                        borderRadius: BorderRadius.circular(999),
+                                        color: AppColors.bgPrimary,
+                                        borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
                                       ),
                                       child: Text(
                                         l10n.settingsChoose,
                                         textAlign: TextAlign.center,
-                                        style: GoogleFonts.ibmPlexSans(
+                                        style: AppTypography.ibm(
                                           fontSize: 15,
                                           fontWeight: FontWeight.w600,
                                           color: Colors.white,
@@ -605,8 +606,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final l10n = AppLocalizations.of(context);
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF161719),
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      backgroundColor: AppColors.bgSurface,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(AppDecorations.radiusXl))),
       builder: (context) => Padding(
         padding: const EdgeInsets.fromLTRB(24, 24, 24, 40),
         child: Column(
@@ -615,11 +616,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const Icon(Icons.bar_chart_rounded, color: AppColors.buttonPrimary, size: 48),
             const SizedBox(height: 16),
             Text(l10n.navDrawerNoEarningsTitle,
-                style: GoogleFonts.ibmPlexSans(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white),
+                style: AppTypography.ibm(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white),
                 textAlign: TextAlign.center),
             const SizedBox(height: 8),
             Text(l10n.navDrawerNoEarningsBody,
-                style: GoogleFonts.ibmPlexSans(fontSize: 14, color: _secondary),
+                style: AppTypography.ibm(fontSize: 14, color: _secondary),
                 textAlign: TextAlign.center),
             const SizedBox(height: 24),
             SizedBox(
@@ -628,11 +629,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 onPressed: () => Navigator.pop(context),
                 style: TextButton.styleFrom(
                   backgroundColor: AppColors.separatorDark,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(60)),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDecorations.buttonRadius)),
                   padding: const EdgeInsets.symmetric(vertical: 14),
                 ),
                 child: Text(l10n.drillGotIt,
-                    style: GoogleFonts.ibmPlexSans(fontSize: 17, fontWeight: FontWeight.w600, color: Colors.white)),
+                    style: AppTypography.ibm(fontSize: 17, fontWeight: FontWeight.w600, color: Colors.white)),
               ),
             ),
           ],
@@ -668,7 +669,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               width: double.infinity,
               decoration: const BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(AppDecorations.radiusXl)),
               ),
               padding: EdgeInsets.fromLTRB(24, 24, 24, bottomInset + 32),
               child: Column(
@@ -685,7 +686,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           const Expanded(child: SizedBox()),
                           GestureDetector(
                             onTap: () => Navigator.pop(dialogContext),
-                            child: const Icon(Icons.close, size: 18, color: Color(0xFFB9B9B9)),
+                            child: const Icon(Icons.close, size: 18, color: AppColors.contentInactive),
                           ),
                         ],
                       ),
@@ -697,7 +698,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             'assets/icons/Club.svg',
                             width: 38,
                             height: 38,
-                            colorFilter: const ColorFilter.mode(Color(0xFF0C0C0C), BlendMode.srcIn),
+                            colorFilter: const ColorFilter.mode(AppColors.bgPrimary, BlendMode.srcIn),
                           ),
                           const SizedBox(height: 16),
                           // Title + body
@@ -706,10 +707,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               Text(
                                 l10n.settingsNoClubsYet,
                                 textAlign: TextAlign.center,
-                                style: GoogleFonts.ibmPlexSans(
+                                style: AppTypography.ibm(
                                   fontSize: 17,
                                   fontWeight: FontWeight.w600,
-                                  color: const Color(0xFF0C0C0C),
+                                  color: AppColors.textInverse,
                                   height: 20 / 17,
                                 ),
                               ),
@@ -717,10 +718,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               Text(
                                 l10n.settingsNoClubsHint,
                                 textAlign: TextAlign.center,
-                                style: GoogleFonts.ibmPlexSans(
+                                style: AppTypography.ibm(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w400,
-                                  color: const Color(0xFFB9B9B9),
+                                  color: AppColors.textSecondary,
                                   height: 22 / 15,
                                 ),
                               ),
@@ -741,13 +742,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF0C0C0C),
-                        borderRadius: BorderRadius.circular(999),
+                        color: AppColors.bgPrimary,
+                        borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
                       ),
                       child: Text(
                         l10n.settingsRegisterAClub,
                         textAlign: TextAlign.center,
-                        style: GoogleFonts.ibmPlexSans(
+                        style: AppTypography.ibm(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
                           color: Colors.white,
@@ -767,8 +768,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF161719),
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      backgroundColor: AppColors.bgSurface,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(AppDecorations.radiusXl))),
       builder: (context) => SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
@@ -777,7 +778,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(l10n.settingsYourClubs,
-                  style: GoogleFonts.ibmPlexSans(fontSize: 20, fontWeight: FontWeight.w600, color: Colors.white)),
+                  style: AppTypography.ibm(fontSize: 20, fontWeight: FontWeight.w600, color: Colors.white)),
               const SizedBox(height: 16),
               ..._clubs.map((club) => _buildClubRow(club)),
             ],
@@ -802,19 +803,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
               width: 40, height: 40,
               decoration: BoxDecoration(
                 color: const Color(0xFF2A5A30),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(AppDecorations.radius10),
               ),
               child: Center(
                 child: Text(
                   club.name.length >= 2 ? club.name.substring(0, 2).toUpperCase() : club.name.toUpperCase(),
-                  style: GoogleFonts.ibmPlexSans(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.limeGreen),
+                  style: AppTypography.ibm(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.limeGreen),
                 ),
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: Text(club.name,
-                  style: GoogleFonts.ibmPlexSans(fontSize: 17, color: Colors.white)),
+                  style: AppTypography.ibm(fontSize: 17, color: Colors.white)),
             ),
             const Icon(Icons.chevron_right, color: AppColors.contentInactive, size: 20),
           ],
@@ -829,8 +830,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final l10n = AppLocalizations.of(context);
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF161719),
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      backgroundColor: AppColors.bgSurface,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(AppDecorations.radiusXl))),
       builder: (context) => SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
@@ -839,9 +840,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(l10n.settingsGuidedTour,
-                  style: GoogleFonts.ibmPlexSans(fontSize: 20, fontWeight: FontWeight.w600, color: Colors.white)),
+                  style: AppTypography.ibm(fontSize: 20, fontWeight: FontWeight.w600, color: Colors.white)),
               const SizedBox(height: 8),
-              Text(l10n.settingsChooseTour, style: GoogleFonts.ibmPlexSans(fontSize: 14, color: _secondary)),
+              Text(l10n.settingsChooseTour, style: AppTypography.ibm(fontSize: 14, color: _secondary)),
               const SizedBox(height: 20),
               _buildTourOption(
                 icon: Icons.style_rounded,
@@ -882,7 +883,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           children: [
             Container(
               width: 40, height: 40,
-              decoration: BoxDecoration(color: AppColors.buttonPrimary.withOpacity(0.12), borderRadius: BorderRadius.circular(10)),
+              decoration: BoxDecoration(color: AppColors.buttonPrimary.withOpacity(0.12), borderRadius: BorderRadius.circular(AppDecorations.radius10)),
               child: Icon(icon, color: AppColors.buttonPrimary, size: 22),
             ),
             const SizedBox(width: 12),
@@ -890,8 +891,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: GoogleFonts.ibmPlexSans(fontSize: 16, color: Colors.white, fontWeight: FontWeight.w500)),
-                  Text(subtitle, style: GoogleFonts.ibmPlexSans(fontSize: 13, color: _secondary)),
+                  Text(title, style: AppTypography.ibm(fontSize: 16, color: Colors.white, fontWeight: FontWeight.w500)),
+                  Text(subtitle, style: AppTypography.ibm(fontSize: 13, color: _secondary)),
                 ],
               ),
             ),
@@ -909,17 +910,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1A1A1E),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        backgroundColor: AppColors.surfaceVariant4,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDecorations.radius20)),
         title: Text(l10n.navDrawerSignOutTitle,
-            style: GoogleFonts.ibmPlexSans(color: Colors.white, fontWeight: FontWeight.w600)),
+            style: AppTypography.ibm(color: Colors.white, fontWeight: FontWeight.w600)),
         content: Text(l10n.navDrawerSignOutMessage,
-            style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 14)),
+            style: AppTypography.ibm(color: Colors.white, fontSize: 14)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(l10n.commonCancel,
-                style: GoogleFonts.ibmPlexSans(color: Colors.white.withOpacity(0.7), fontWeight: FontWeight.w500)),
+                style: AppTypography.ibm(color: Colors.white.withOpacity(0.7), fontWeight: FontWeight.w500)),
           ),
           TextButton(
             onPressed: () async {
@@ -931,7 +932,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               }
             },
             child: Text(l10n.navDrawerSignOut,
-                style: GoogleFonts.ibmPlexSans(color: _danger, fontWeight: FontWeight.w500)),
+                style: AppTypography.ibm(color: _danger, fontWeight: FontWeight.w500)),
           ),
         ],
       ),
@@ -1113,7 +1114,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PaywallScreen())),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(color: _surface, borderRadius: BorderRadius.circular(16)),
+        decoration: BoxDecoration(color: _surface, borderRadius: BorderRadius.circular(AppDecorations.radiusLg)),
         child: Row(
           children: [
             // Logo placeholder
@@ -1121,12 +1122,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
               width: 40, height: 40,
               decoration: BoxDecoration(
                 color: AppColors.separatorDark,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: const Color(0xFF3A3A3C), width: 1),
+                borderRadius: BorderRadius.circular(AppDecorations.radius10),
+                border: Border.all(color: AppColors.borderStrong, width: 1),
               ),
               child: Center(
                 child: Text('FT',
-                    style: GoogleFonts.ibmPlexSans(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.buttonPrimary)),
+                    style: AppTypography.ibm(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.buttonPrimary)),
               ),
             ),
             const SizedBox(width: 12),
@@ -1135,9 +1136,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(AppLocalizations.of(context).settingsGetPlus,
-                      style: GoogleFonts.ibmPlexSans(fontSize: 17, fontWeight: FontWeight.w600, color: Colors.white, letterSpacing: 0)),
+                      style: AppTypography.ibm(fontSize: 17, fontWeight: FontWeight.w600, color: Colors.white, letterSpacing: 0)),
                   Text(AppLocalizations.of(context).settingsGetPlusSubtitle,
-                      style: GoogleFonts.ibmPlexSans(fontSize: 15, fontWeight: FontWeight.w500, color: _secondary)),
+                      style: AppTypography.ibm(fontSize: 15, fontWeight: FontWeight.w500, color: _secondary)),
                 ],
               ),
             ),
@@ -1157,7 +1158,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ProfileScreen())),
       child: Container(
         padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(color: _surface, borderRadius: BorderRadius.circular(16)),
+        decoration: BoxDecoration(color: _surface, borderRadius: BorderRadius.circular(AppDecorations.radiusLg)),
         child: Row(
           children: [
             _buildAvatar(64),
@@ -1170,19 +1171,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     children: [
                       Flexible(
                         child: Text(displayName,
-                            style: GoogleFonts.ibmPlexSans(fontSize: 15, fontWeight: FontWeight.w500, color: Colors.white),
+                            style: AppTypography.ibm(fontSize: 15, fontWeight: FontWeight.w500, color: Colors.white),
                             overflow: TextOverflow.ellipsis),
                       ),
                       if (handle.isNotEmpty) ...[
                         const SizedBox(width: 6),
                         Text(handle,
-                            style: GoogleFonts.ibmPlexSans(fontSize: 15, fontWeight: FontWeight.w500, color: _secondary)),
+                            style: AppTypography.ibm(fontSize: 15, fontWeight: FontWeight.w500, color: _secondary)),
                       ],
                     ],
                   ),
                   const SizedBox(height: 4),
                   Text(email,
-                      style: GoogleFonts.ibmPlexSans(fontSize: 15, fontWeight: FontWeight.w500, color: Colors.white),
+                      style: AppTypography.ibm(fontSize: 15, fontWeight: FontWeight.w500, color: Colors.white),
                       overflow: TextOverflow.ellipsis),
                 ],
               ),
@@ -1202,7 +1203,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         Padding(
           padding: const EdgeInsets.only(bottom: 12),
           child: Text(label,
-              style: GoogleFonts.ibmPlexSans(fontSize: 15, fontWeight: FontWeight.w500, color: _sectionLabel)),
+              style: AppTypography.ibm(fontSize: 15, fontWeight: FontWeight.w500, color: _sectionLabel)),
         ),
         ...children,
       ],
@@ -1232,12 +1233,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(title,
-                      style: GoogleFonts.ibmPlexSans(
+                      style: AppTypography.ibm(
                           fontSize: 17, fontWeight: FontWeight.w400,
                           color: titleColor ?? Colors.white, height: 26 / 17)),
                   if (subtitle != null)
                     Text(subtitle,
-                        style: GoogleFonts.ibmPlexSans(fontSize: 11, color: _secondary, height: 16 / 11)),
+                        style: AppTypography.ibm(fontSize: 11, color: _secondary, height: 16 / 11)),
                 ],
               ),
             ),
@@ -1270,12 +1271,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(title,
-                    style: GoogleFonts.ibmPlexSans(
+                    style: AppTypography.ibm(
                         fontSize: 17, fontWeight: FontWeight.w400,
                         color: Colors.white, height: 26 / 17)),
                 if (subtitle != null)
                   Text(subtitle,
-                      style: GoogleFonts.ibmPlexSans(fontSize: 11, color: _secondary, height: 16 / 11)),
+                      style: AppTypography.ibm(fontSize: 11, color: _secondary, height: 16 / 11)),
               ],
             ),
           ),

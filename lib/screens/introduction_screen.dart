@@ -9,6 +9,7 @@ import '../widgets/loading_screen.dart';
 import 'logging_mode_selection_screen.dart';
 import 'individual_session_setup_screen.dart';
 import '../design_system/constants/colors.dart';
+import '../design_system/constants/decorations.dart';
 
 class IntroductionScreen extends StatefulWidget {
   final LoggingMode? loggingMode;
@@ -36,7 +37,7 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
     }
 
     return Scaffold(
-      backgroundColor: Color(0xFF161618),
+      backgroundColor: AppColors.surfaceVariant1,
       body: SafeArea(
         child: SingleChildScrollView(
           child: Container(
@@ -78,8 +79,8 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
                         width: 44,
                         height: 44,
                         decoration: BoxDecoration(
-                          color: Color(0xFF1F1F23),
-                          borderRadius: BorderRadius.circular(14),
+                          color: AppColors.surfaceVariant2,
+                          borderRadius: BorderRadius.circular(AppDecorations.radius14),
                         ),
                         child: IconButton(
                           onPressed: () => Navigator.pop(context),
@@ -157,8 +158,8 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
                 Container(
                   padding: EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    color: Color(0xFF1F1F23),
-                    borderRadius: BorderRadius.circular(20),
+                    color: AppColors.surfaceVariant2,
+                    borderRadius: BorderRadius.circular(AppDecorations.radius20),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -211,8 +212,8 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
                   Container(
                     padding: EdgeInsets.all(24),
                     decoration: BoxDecoration(
-                      color: Color(0xFF1F1F23),
-                      borderRadius: BorderRadius.circular(20),
+                      color: AppColors.surfaceVariant2,
+                      borderRadius: BorderRadius.circular(AppDecorations.radius20),
                     ),
                     child: Row(
                       children: [
@@ -252,9 +253,9 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
                               bbAnteEnabled = value;
                             });
                           },
-                          activeColor: Color(0xFFcb5242),
+                          activeColor: AppColors.errorRedVariant,
                           inactiveThumbColor: Colors.white,
-                          inactiveTrackColor: Color(0xFF2A2A2E),
+                          inactiveTrackColor: AppColors.surfaceVariant3,
                         ),
                       ],
                     ),
@@ -269,11 +270,11 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
                   height: 60,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [Color(0xFFcb5242), Color(0xFFb8442f)],
+                      colors: [AppColors.errorRedVariant, Color(0xFFb8442f)],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(AppDecorations.radius20),
                   ),
                   child: ElevatedButton(
                     onPressed: () async {
@@ -318,7 +319,7 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
                       backgroundColor: Colors.transparent,
                       shadowColor: Colors.transparent,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(AppDecorations.radius20),
                       ),
                     ),
                     child: Row(
@@ -360,7 +361,7 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          backgroundColor: Color(0xFF1F1F23),
+          backgroundColor: AppColors.surfaceVariant2,
           title: Text(
             l10n.introEnterField(title),
             style: TextStyle(color: Colors.white, fontSize: 18),
@@ -374,10 +375,10 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
               hintText: l10n.introEnterAmount,
               hintStyle: TextStyle(color: AppColors.textMuted),
               enabledBorder: UnderlineInputBorder(
-                borderSide: BorderSide(color: Color(0xFFcb5242)),
+                borderSide: BorderSide(color: AppColors.errorRedVariant),
               ),
               focusedBorder: UnderlineInputBorder(
-                borderSide: BorderSide(color: Color(0xFFcb5242), width: 2),
+                borderSide: BorderSide(color: AppColors.errorRedVariant, width: 2),
               ),
             ),
           ),
@@ -396,12 +397,12 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(l10n.introPleaseEnterValidNumber),
-                      backgroundColor: Color(0xFFcb5242),
+                      backgroundColor: AppColors.errorRedVariant,
                     ),
                   );
                 }
               },
-              child: Text(l10n.commonOk, style: TextStyle(color: Color(0xFFcb5242))),
+              child: Text(l10n.commonOk, style: TextStyle(color: AppColors.errorRedVariant)),
             ),
           ],
         );
@@ -421,8 +422,8 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
     return Container(
       padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Color(0xFF1F1F23),
-        borderRadius: BorderRadius.circular(20),
+        color: AppColors.surfaceVariant2,
+        borderRadius: BorderRadius.circular(AppDecorations.radius20),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -449,7 +450,7 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
                       height: 36,
                       decoration: BoxDecoration(
                         color: AppColors.profitGreen.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(AppDecorations.radius10),
                       ),
                       child: Icon(
                         icon ?? Icons.help_outline,
@@ -466,7 +467,7 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
               padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: onValueTap != null ? BoxDecoration(
                 borderRadius: BorderRadius.circular(6),
-                border: Border.all(color: Color(0xFFcb5242).withOpacity(0.3)),
+                border: Border.all(color: AppColors.errorRedVariant.withOpacity(0.3)),
               ) : null,
               child: Text(
                 value,
@@ -487,8 +488,8 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
                   child: Container(
                     height: 32,
                     decoration: BoxDecoration(
-                      color: Color(0xFF161618),
-                      borderRadius: BorderRadius.circular(8),
+                      color: AppColors.surfaceVariant1,
+                      borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
                     ),
                     child: Icon(
                       Icons.remove,
@@ -505,8 +506,8 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
                   child: Container(
                     height: 32,
                     decoration: BoxDecoration(
-                      color: Color(0xFFcb5242),
-                      borderRadius: BorderRadius.circular(8),
+                      color: AppColors.errorRedVariant,
+                      borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
                     ),
                     child: Icon(
                       Icons.add,
@@ -546,10 +547,10 @@ class _GameTypeButton extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
         decoration: BoxDecoration(
-          color: isSelected ? Color(0xFFcb5242) : Color(0xFF161618),
-          borderRadius: BorderRadius.circular(12),
+          color: isSelected ? AppColors.errorRedVariant : AppColors.surfaceVariant1,
+          borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
           border: Border.all(
-            color: isSelected ? Color(0xFFcb5242) : Color(0xFF2A2A2E),
+            color: isSelected ? AppColors.errorRedVariant : AppColors.surfaceVariant3,
             width: 1,
           ),
         ),

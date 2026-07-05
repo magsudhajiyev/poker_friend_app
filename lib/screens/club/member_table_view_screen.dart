@@ -12,6 +12,7 @@ import '../../services/table_service.dart';
 import '../../services/seat_service.dart';
 import '../../widgets/poker_table_widget.dart';
 import '../../design_system/constants/colors.dart';
+import '../../design_system/constants/decorations.dart';
 
 /// Read-only screen for members to view who's seated at a table.
 /// Joining the waitlist is handled exclusively by the grouped cash game
@@ -167,8 +168,8 @@ class _MemberTableViewScreenState extends State<MemberTableViewScreen> {
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                color: const Color(0xFF1F1F23),
-                borderRadius: BorderRadius.circular(12),
+                color: AppColors.surfaceVariant2,
+                borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
               ),
               child: const Icon(Icons.arrow_back, color: Colors.white, size: 22),
             ),
@@ -205,7 +206,7 @@ class _MemberTableViewScreenState extends State<MemberTableViewScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
                 color: PokerFriendColors.green.withOpacity(0.15),
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(AppDecorations.radius20),
               ),
               child: Text(
                 widget.event.stakes!,
@@ -261,7 +262,7 @@ class _MemberTableViewScreenState extends State<MemberTableViewScreen> {
         ),
       ];
     } else if (isPending) {
-      bgColor = const Color(0xFF2A2A2E);
+      bgColor = AppColors.surfaceVariant3;
       borderColor = const Color(0xFFF59E0B);
       shadows = [
         BoxShadow(
@@ -271,7 +272,7 @@ class _MemberTableViewScreenState extends State<MemberTableViewScreen> {
         ),
       ];
     } else {
-      bgColor = const Color(0xFF2A2A2E);
+      bgColor = AppColors.surfaceVariant3;
       borderColor = AppColors.buttonPrimary.withValues(alpha: 0.3);
       shadows = null;
     }

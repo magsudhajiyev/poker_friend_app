@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
 import '../models/hand_state_machine.dart';
+import '../design_system/constants/decorations.dart';
 
 class ShowdownDialog extends StatefulWidget {
   final int playerCount;
@@ -86,7 +87,7 @@ class _ShowdownDialogState extends State<ShowdownDialog> {
       padding: EdgeInsets.all(12),
       decoration: BoxDecoration(
         border: Border.all(color: Colors.grey[300]!),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
         color: Colors.grey[50],
       ),
       child: Column(
@@ -158,7 +159,7 @@ class _ShowdownDialogState extends State<ShowdownDialog> {
       padding: EdgeInsets.all(12),
       decoration: BoxDecoration(
         border: Border.all(color: Colors.blue[300]!),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
         color: Colors.blue[50],
       ),
       child: Column(
@@ -278,7 +279,7 @@ class _CardPickerDialog extends StatelessWidget {
                 margin: EdgeInsets.all(2),
                 decoration: BoxDecoration(
                   border: Border.all(color: isExcluded ? Colors.grey[300]! : Colors.grey),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
                   color: isExcluded ? Colors.grey[200] : Colors.white,
                 ),
                 child: Center(

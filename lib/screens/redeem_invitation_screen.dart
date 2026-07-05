@@ -3,6 +3,7 @@ import '../design_system/poker_friend_theme.dart';
 import '../models/club_member.dart';
 import '../services/invitation_service.dart';
 import '../l10n/app_localizations.dart';
+import '../design_system/constants/decorations.dart';
 
 /// Screen for redeeming an invitation code to join a club
 class RedeemInvitationScreen extends StatefulWidget {
@@ -120,7 +121,7 @@ class _RedeemInvitationScreenState extends State<RedeemInvitationScreen> {
           alignment: Alignment.center,
           decoration: BoxDecoration(
             color: PokerFriendColors.purple.withOpacity(0.2),
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(AppDecorations.radius20),
           ),
           child: Icon(
             Icons.qr_code,
@@ -170,11 +171,11 @@ class _RedeemInvitationScreenState extends State<RedeemInvitationScreen> {
             filled: true,
             fillColor: PokerFriendColors.dark3,
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
               borderSide: BorderSide.none,
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
               borderSide: BorderSide(color: PokerFriendColors.purple, width: 2),
             ),
             counterText: '',
@@ -197,7 +198,7 @@ class _RedeemInvitationScreenState extends State<RedeemInvitationScreen> {
               backgroundColor: PokerFriendColors.purple,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
               ),
               disabledBackgroundColor: PokerFriendColors.purple.withOpacity(0.5),
             ),
@@ -271,7 +272,7 @@ class _RedeemInvitationScreenState extends State<RedeemInvitationScreen> {
               backgroundColor: PokerFriendColors.purple,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
               ),
             ),
             child: Text(

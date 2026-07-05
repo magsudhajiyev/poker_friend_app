@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../l10n/app_localizations.dart';
 import '../onboarding/onboarding_state.dart';
 import '../onboarding/onboarding_tour.dart';
@@ -9,6 +8,8 @@ import 'training/drill_setup_screen.dart';
 import 'unified_session_setup_screen.dart';
 import '../services/feature_flag_service.dart';
 import '../design_system/constants/colors.dart';
+import '../design_system/constants/typography.dart';
+import '../design_system/constants/decorations.dart';
 
 class LoggingModeSelectionScreen extends StatefulWidget {
   const LoggingModeSelectionScreen({super.key});
@@ -65,8 +66,8 @@ class _LoggingModeSelectionScreenState
             decoration: const BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(24),
-                topRight: Radius.circular(24),
+                topLeft: Radius.circular(AppDecorations.radiusXl),
+                topRight: Radius.circular(AppDecorations.radiusXl),
               ),
             ),
             child: SafeArea(
@@ -84,10 +85,10 @@ class _LoggingModeSelectionScreenState
                           child: Text(
                             l10n.loggingModeChooseMode,
                             textAlign: TextAlign.center,
-                            style: GoogleFonts.ibmPlexSans(
+                            style: AppTypography.ibm(
                               fontSize: 15,
                               fontWeight: FontWeight.w600,
-                              color: const Color(0xFF0C0C0C),
+                              color: AppColors.textInverse,
                               height: 20 / 15,
                             ),
                           ),
@@ -97,7 +98,7 @@ class _LoggingModeSelectionScreenState
                           child: const Icon(
                             Icons.close,
                             size: 18,
-                            color: Color(0xFFB9B9B9),
+                            color: AppColors.contentInactive,
                           ),
                         ),
                       ],
@@ -168,9 +169,9 @@ class _LoggingModeSelectionScreenState
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFFFDFDFD),
-        border: Border.all(color: const Color(0xFFEFEFEF)),
-        borderRadius: BorderRadius.circular(24),
+        color: AppColors.bgInputOnInverse,
+        border: Border.all(color: AppColors.borderOnInverseSubtle),
+        borderRadius: BorderRadius.circular(AppDecorations.radiusXl),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -178,20 +179,20 @@ class _LoggingModeSelectionScreenState
           // Title + subtitle
           Text(
             title,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               fontSize: 17,
               fontWeight: FontWeight.w600,
-              color: const Color(0xFF0C0C0C),
+              color: AppColors.textInverse,
               height: 22 / 17,
             ),
           ),
           const SizedBox(height: 2),
           Text(
             subtitle,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               fontSize: 15,
               fontWeight: FontWeight.w400,
-              color: const Color(0xFF0C0C0C),
+              color: AppColors.textInverse,
               height: 22 / 15,
             ),
           ),
@@ -212,13 +213,13 @@ class _LoggingModeSelectionScreenState
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               decoration: BoxDecoration(
-                color: const Color(0xFF0C0C0C),
-                borderRadius: BorderRadius.circular(999),
+                color: AppColors.bgPrimary,
+                borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
               ),
               child: Text(
                 l10n.loggingChoose,
                 textAlign: TextAlign.center,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
                   color: Colors.white,
@@ -245,9 +246,9 @@ class _LoggingModeSelectionScreenState
         width: double.infinity,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: const Color(0xFFFDFDFD),
-          border: Border.all(color: const Color(0xFFEFEFEF)),
-          borderRadius: BorderRadius.circular(24),
+          color: AppColors.bgInputOnInverse,
+          border: Border.all(color: AppColors.borderOnInverseSubtle),
+          borderRadius: BorderRadius.circular(AppDecorations.radiusXl),
         ),
         child: Row(
           children: [
@@ -257,16 +258,16 @@ class _LoggingModeSelectionScreenState
                 children: [
                   Text(
                     l10n.loggingTrainingDrills,
-                    style: GoogleFonts.ibmPlexSans(
+                    style: AppTypography.ibm(
                       fontSize: 17,
                       fontWeight: FontWeight.w600,
-                      color: const Color(0xFF0C0C0C),
+                      color: AppColors.textInverse,
                       height: 22 / 17,
                     ),
                   ),
                   Text(
                     l10n.loggingTrainingDrillsSubtitle,
-                    style: GoogleFonts.ibmPlexSans(
+                    style: AppTypography.ibm(
                       fontSize: 13,
                       fontWeight: FontWeight.w400,
                       color: const Color(0xFF6B6B6B),
@@ -280,12 +281,12 @@ class _LoggingModeSelectionScreenState
               padding:
                   const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: const Color(0xFF0C0C0C),
-                borderRadius: BorderRadius.circular(40),
+                color: AppColors.bgPrimary,
+                borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
               ),
               child: Text(
                 l10n.loggingPro,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 1.0,
@@ -297,7 +298,7 @@ class _LoggingModeSelectionScreenState
             const Icon(
               Icons.chevron_right,
               size: 20,
-              color: Color(0xFFB9B9B9),
+              color: AppColors.contentInactive,
             ),
           ],
         ),
@@ -309,15 +310,15 @@ class _LoggingModeSelectionScreenState
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
       decoration: BoxDecoration(
-        border: Border.all(color: const Color(0xFF2C2C2E)),
-        borderRadius: BorderRadius.circular(70),
+        border: Border.all(color: AppColors.borderOnInverse),
+        borderRadius: BorderRadius.circular(AppDecorations.navBarRadius),
       ),
       child: Text(
         text,
-        style: GoogleFonts.ibmPlexSans(
+        style: AppTypography.ibm(
           fontSize: 13,
           fontWeight: FontWeight.w400,
-          color: const Color(0xFF0C0C0C),
+          color: AppColors.textInverse,
           height: 20 / 13,
         ),
       ),

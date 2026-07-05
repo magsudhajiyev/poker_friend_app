@@ -16,6 +16,12 @@ class AppDecorations {
   static const double radiusXl   = 24.0;   // radius/xl   — mode cards (= modeCardRadius)
   static const double radiusFull = 999.0;  // radius/full — pills, fully rounded
 
+  // Observed scale (tokenized 2026-07; consolidate in phase 3)
+  static const double radius10 = 10.0;
+  static const double radius14 = 14.0;
+  static const double radius18 = 18.0;
+  static const double radius20 = 20.0;
+
   // Blur Values
   static const double blurLight = 45.0;    // For glassy cards
   static const double blurHeavy = 132.0;   // For gradient backgrounds

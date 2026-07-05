@@ -4,7 +4,6 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import '../services/currency_service.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/services.dart';
 import 'package:vibration/vibration.dart';
@@ -53,6 +52,8 @@ import '../onboarding/onboarding_progress_bar.dart';
 import '../onboarding/guided_hand_overlay.dart';
 import 'session_history_screen.dart';
 import '../design_system/constants/colors.dart';
+import '../design_system/constants/typography.dart';
+import '../design_system/constants/decorations.dart';
 
 class PokerHandScreen extends StatefulWidget {
   final double smallBlind;
@@ -567,23 +568,23 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1A1A1E),
+        backgroundColor: AppColors.surfaceVariant4,
         title: Text(
           l10n.handChangeTable,
-          style: GoogleFonts.ibmPlexSans(color: Colors.white, fontWeight: FontWeight.w600),
+          style: AppTypography.ibm(color: Colors.white, fontWeight: FontWeight.w600),
         ),
         content: Text(
           l10n.pokerHandMovingToTable(gameState.formatCurrency(heroStack)),
-          style: GoogleFonts.ibmPlexSans(color: AppColors.textDisabled, fontSize: 14),
+          style: AppTypography.ibm(color: AppColors.textDisabled, fontSize: 14),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text(l10n.commonCancel, style: GoogleFonts.ibmPlexSans(color: AppColors.textDisabled)),
+            child: Text(l10n.commonCancel, style: AppTypography.ibm(color: AppColors.textDisabled)),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: Text(l10n.handChangeTable, style: GoogleFonts.ibmPlexSans(color: AppColors.tealPrimary)),
+            child: Text(l10n.handChangeTable, style: AppTypography.ibm(color: AppColors.tealPrimary)),
           ),
         ],
       ),
@@ -641,7 +642,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               color: AppColors.surfaceDark,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
               border: Border.all(color: AppColors.neutral800),
               boxShadow: const [
                 BoxShadow(
@@ -676,7 +677,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                 const SizedBox(height: 8),
                 Text(
                   l10n.handStopSessionTitle,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     color: Colors.white,
                     fontSize: 17,
                     fontWeight: FontWeight.w500,
@@ -687,7 +688,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                 Text(
                   l10n.handStopSessionMessage,
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     color: AppColors.textDisabled,
                     fontSize: 15,
                     height: 1.44,
@@ -708,7 +709,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                           child: Center(
                             child: Text(
                               l10n.commonCancel,
-                              style: GoogleFonts.ibmPlexSans(
+                              style: AppTypography.ibm(
                                 color: Colors.white,
                                 fontSize: 17,
                                 fontWeight: FontWeight.w600,
@@ -733,7 +734,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                           child: Center(
                             child: Text(
                               l10n.handStop,
-                              style: GoogleFonts.ibmPlexSans(
+                              style: AppTypography.ibm(
                                 color: Colors.black,
                                 fontSize: 17,
                                 fontWeight: FontWeight.w600,
@@ -852,10 +853,10 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
             children: [
               Text(
                 label,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
-                  color: const Color(0xFFB9B9B9),
+                  color: AppColors.textSecondary,
                 ),
               ),
               const SizedBox(height: 4),
@@ -864,25 +865,25 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                 autofocus: autofocus,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[\d.]'))],
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   fontSize: 15,
-                  color: const Color(0xFF0C0C0C),
+                  color: AppColors.textInverse,
                 ),
                 decoration: InputDecoration(
                   filled: true,
-                  fillColor: const Color(0xFFFDFDFD),
+                  fillColor: AppColors.bgInputOnInverse,
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFFEFEFEF)),
+                    borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
+                    borderSide: const BorderSide(color: AppColors.borderOnInverseSubtle),
                   ),
                   enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFFEFEFEF)),
+                    borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
+                    borderSide: const BorderSide(color: AppColors.borderOnInverseSubtle),
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                     borderSide: const BorderSide(
-                        color: Color(0xFF0C0C0C), width: 1.5),
+                        color: AppColors.bgPrimary, width: 1.5),
                   ),
                   contentPadding: const EdgeInsets.symmetric(
                       horizontal: 16, vertical: 12),
@@ -899,7 +900,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(24),
+              borderRadius: BorderRadius.circular(AppDecorations.radiusXl),
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -912,10 +913,10 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                       child: Center(
                         child: Text(
                           l10n.handBlinds,
-                          style: GoogleFonts.ibmPlexSans(
+                          style: AppTypography.ibm(
                             fontSize: 15,
                             fontWeight: FontWeight.w600,
-                            color: const Color(0xFF0C0C0C),
+                            color: AppColors.textInverse,
                             height: 20 / 15,
                           ),
                         ),
@@ -932,7 +933,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                             width: 18,
                             height: 18,
                             colorFilter: const ColorFilter.mode(
-                                Color(0xFFB9B9B9), BlendMode.srcIn),
+                                AppColors.contentInactive, BlendMode.srcIn),
                           ),
                         ),
                       ),
@@ -944,10 +945,10 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                 Text(
                   l10n.handTakesEffectNextHand,
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     fontSize: 15,
                     fontWeight: FontWeight.w400,
-                    color: const Color(0xFFB9B9B9),
+                    color: AppColors.textSecondary,
                     height: 22 / 15,
                   ),
                 ),
@@ -978,17 +979,17 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                         child: Container(
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(999),
+                            borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
                             border:
-                                Border.all(color: const Color(0xFFB9B9B9)),
+                                Border.all(color: AppColors.borderLight),
                           ),
                           alignment: Alignment.center,
                           child: Text(
                             l10n.commonCancel,
-                            style: GoogleFonts.ibmPlexSans(
+                            style: AppTypography.ibm(
                               fontSize: 15,
                               fontWeight: FontWeight.w600,
-                              color: const Color(0xFF0C0C0C),
+                              color: AppColors.textInverse,
                               height: 20 / 15,
                             ),
                           ),
@@ -1009,13 +1010,13 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                         child: Container(
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF0C0C0C),
-                            borderRadius: BorderRadius.circular(999),
+                            color: AppColors.bgPrimary,
+                            borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
                           ),
                           alignment: Alignment.center,
                           child: Text(
                             l10n.commonApply,
-                            style: GoogleFonts.ibmPlexSans(
+                            style: AppTypography.ibm(
                               fontSize: 15,
                               fontWeight: FontWeight.w600,
                               color: Colors.white,
@@ -1110,9 +1111,9 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       barrierDismissible: true,
       builder: (BuildContext context) {
         return AlertDialog(
-          backgroundColor: const Color(0xFF161618),
+          backgroundColor: AppColors.surfaceVariant1,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
           ),
           title: Text(
             l10n.handInProgress,
@@ -1174,9 +1175,9 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       barrierDismissible: false,
       builder: (BuildContext context) {
         return AlertDialog(
-          backgroundColor: const Color(0xFF161618),
+          backgroundColor: AppColors.surfaceVariant1,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
           ),
           title: Text(
             l10n.handLeaveSession,
@@ -1409,19 +1410,19 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1A1A1E),
+        backgroundColor: AppColors.surfaceVariant4,
         title: Text(
           l10n.handAdjustStack,
-          style: GoogleFonts.ibmPlexSans(color: Colors.white, fontWeight: FontWeight.w600),
+          style: AppTypography.ibm(color: Colors.white, fontWeight: FontWeight.w600),
         ),
         content: TextField(
           controller: controller,
           keyboardType: TextInputType.number,
           autofocus: true,
-          style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 18),
+          style: AppTypography.ibm(color: Colors.white, fontSize: 18),
           decoration: InputDecoration(
             hintText: l10n.handEnterStackAmount,
-            hintStyle: GoogleFonts.ibmPlexSans(color: AppColors.textDisabled),
+            hintStyle: AppTypography.ibm(color: AppColors.textDisabled),
             enabledBorder: const UnderlineInputBorder(
               borderSide: BorderSide(color: AppColors.tealPrimary),
             ),
@@ -1433,7 +1434,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text(l10n.commonCancel, style: GoogleFonts.ibmPlexSans(color: AppColors.textDisabled)),
+            child: Text(l10n.commonCancel, style: AppTypography.ibm(color: AppColors.textDisabled)),
           ),
           TextButton(
             onPressed: () {
@@ -1445,7 +1446,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
               }
               Navigator.pop(ctx);
             },
-            child: Text(l10n.commonUpdate, style: GoogleFonts.ibmPlexSans(color: AppColors.tealPrimary)),
+            child: Text(l10n.commonUpdate, style: AppTypography.ibm(color: AppColors.tealPrimary)),
           ),
         ],
       ),
@@ -1502,7 +1503,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         }
       },
       child: Scaffold(
-        backgroundColor: const Color(0xFF0C0C0C),
+        backgroundColor: AppColors.bgPrimary,
         body: Stack(
         children: [
           Column(
@@ -1539,11 +1540,11 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                   child: Container(
                     key: _drawingAreaKey,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF161719),
-                      borderRadius: BorderRadius.circular(24),
+                      color: AppColors.bgSurface,
+                      borderRadius: BorderRadius.circular(AppDecorations.radiusXl),
                     ),
                     child: ClipRRect(
-                      borderRadius: BorderRadius.circular(24),
+                      borderRadius: BorderRadius.circular(AppDecorations.radiusXl),
                       child: Stack(
                   children: [
                     // Table background image
@@ -1604,7 +1605,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                                           angle: direction * -0.08 * progress,
                                           child: Text(
                                             l10n.handFoldLabel,
-                                            style: GoogleFonts.ibmPlexSans(
+                                            style: AppTypography.ibm(
                                               fontSize: 32,
                                               fontWeight: FontWeight.w800,
                                               color: Color(0xFFE85D5D),
@@ -1639,20 +1640,20 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                             child: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                               decoration: BoxDecoration(
-                                color: const Color(0xFF2C2C2E),
-                                borderRadius: BorderRadius.circular(999),
+                                color: AppColors.bgElevated,
+                                borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
                               ),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Text(l10n.handBbLabel, style: GoogleFonts.ibmPlexSans(fontSize: 10, fontWeight: FontWeight.w700, color: const Color(0xFFB9B9B9))),
+                                  Text(l10n.handBbLabel, style: AppTypography.ibm(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.textSecondary)),
                                   const SizedBox(width: 4),
                                   Text(
                                     '${formatBlindValue(gameState.smallBlind)}/${formatBlindValue(gameState.bigBlind)}',
-                                    style: GoogleFonts.ibmPlexSans(
+                                    style: AppTypography.ibm(
                                       fontSize: 11,
                                       fontWeight: FontWeight.w500,
-                                      color: const Color(0xFFB9B9B9),
+                                      color: AppColors.textSecondary,
                                       height: 16 / 11,
                                     ),
                                   ),
@@ -1670,11 +1671,11 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                                   width: 32,
                                   height: 32,
                                   decoration: const BoxDecoration(
-                                    color: Color(0xFF2C2C2E),
+                                    color: AppColors.bgElevated,
                                     shape: BoxShape.circle,
                                   ),
                                   child: const Center(
-                                    child: Icon(Icons.info_outline, color: Color(0xFFB9B9B9), size: 16),
+                                    child: Icon(Icons.info_outline, color: AppColors.contentInactive, size: 16),
                                   ),
                                 ),
                               ),
@@ -1687,15 +1688,15 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                                   child: Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFF0C0C0C),
-                                      borderRadius: BorderRadius.circular(999),
+                                      color: AppColors.bgPrimary,
+                                      borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
                                     ),
                                     child: Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
                                         Text(
                                           l10n.handNextHand,
-                                          style: GoogleFonts.ibmPlexSans(
+                                          style: AppTypography.ibm(
                                             fontSize: 13,
                                             color: Colors.white,
                                             fontWeight: FontWeight.w600,
@@ -1760,7 +1761,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                                 decoration: BoxDecoration(
                                   color: _actionFlashBgColor.withValues(alpha: 0.85),
-                                  borderRadius: BorderRadius.circular(20),
+                                  borderRadius: BorderRadius.circular(AppDecorations.radius20),
                                   border: Border.all(
                                     color: _actionFlashColor.withValues(alpha: 0.3),
                                     width: 1,
@@ -1768,7 +1769,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                                 ),
                                 child: Text(
                                   _actionFlashText!,
-                                  style: GoogleFonts.ibmPlexSans(
+                                  style: AppTypography.ibm(
                                     fontSize: 14,
                                     color: _actionFlashColor,
                                     fontWeight: FontWeight.w600,
@@ -1791,11 +1792,11 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                             decoration: BoxDecoration(
                               color: AppColors.tealPrimary.withValues(alpha: 0.9),
-                              borderRadius: BorderRadius.circular(40),
+                              borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
                             ),
                             child: Text(
                               l10n.handStreetComplete,
-                              style: GoogleFonts.ibmPlexSans(
+                              style: AppTypography.ibm(
                                 fontSize: 15,
                                 color: Colors.black,
                                 fontWeight: FontWeight.w600,
@@ -1840,7 +1841,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                                 if (_settlingWinnerName != null) ...[
                                   Text(
                                     _settlingWinnerName!,
-                                    style: GoogleFonts.ibmPlexSans(
+                                    style: AppTypography.ibm(
                                       fontSize: 22,
                                       color: AppColors.tealPrimary,
                                       fontWeight: FontWeight.w700,
@@ -1850,7 +1851,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                                   const SizedBox(height: 4),
                                   Text(
                                     'wins ${_settlingPotAmount != null ? (widget.gameType == GameType.cash ? CurrencyService.formatCash(_settlingPotAmount!) : _settlingPotAmount!.toStringAsFixed(0)) : l10n.handWinsThePot}',
-                                    style: GoogleFonts.ibmPlexSans(
+                                    style: AppTypography.ibm(
                                       fontSize: 16,
                                       color: Colors.white.withValues(alpha: 0.7),
                                       fontWeight: FontWeight.w400,
@@ -1859,7 +1860,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                                 ] else
                                   Text(
                                     l10n.handHandComplete,
-                                    style: GoogleFonts.ibmPlexSans(
+                                    style: AppTypography.ibm(
                                       fontSize: 20,
                                       color: AppColors.tealPrimary,
                                       fontWeight: FontWeight.w600,
@@ -1868,7 +1869,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                                 const SizedBox(height: 16),
                                 Text(
                                   l10n.handTapToContinue,
-                                  style: GoogleFonts.ibmPlexSans(
+                                  style: AppTypography.ibm(
                                     fontSize: 13,
                                     color: Colors.white.withValues(alpha: 0.4),
                                     fontWeight: FontWeight.w400,
@@ -1911,14 +1912,14 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                                   horizontal: 12, vertical: 8),
                               decoration: BoxDecoration(
                                 color: Colors.white,
-                                borderRadius: BorderRadius.circular(24),
+                                borderRadius: BorderRadius.circular(AppDecorations.radiusXl),
                               ),
                               child: Text(
                                 l10n.handFoldedToMe,
-                                style: GoogleFonts.ibmPlexSans(
+                                style: AppTypography.ibm(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w600,
-                                  color: const Color(0xFF0C0C0C),
+                                  color: AppColors.textInverse,
                                   letterSpacing: -0.15,
                                   height: 22 / 15,
                                 ),
@@ -1965,9 +1966,9 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF161719),
-                      borderRadius: BorderRadius.circular(999),
-                      border: Border.all(color: const Color(0xFF3A3A3C)),
+                      color: AppColors.bgSurface,
+                      borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
+                      border: Border.all(color: AppColors.borderStrong),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -1980,7 +1981,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                         const SizedBox(width: 8),
                         Text(
                           l10n.handUndoLastAction,
-                          style: GoogleFonts.ibmPlexSans(
+                          style: AppTypography.ibm(
                             fontSize: 15,
                             color: Colors.white,
                             fontWeight: FontWeight.w500,
@@ -2189,15 +2190,15 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     // Determine circle border color based on state
     Color borderColor;
     if (!isActive) {
-      borderColor = const Color(0xFF2C2C2E);
+      borderColor = AppColors.bgElevated;
     } else if (isFolded) {
-      borderColor = const Color(0xFFA3FF78).withValues(alpha: 0.3);
+      borderColor = AppColors.accentSecondary.withValues(alpha: 0.3);
     } else if (isCurrentPlayer) {
       borderColor = Colors.amber;
     } else if (isHero) {
-      borderColor = const Color(0xFF4CDE78);
+      borderColor = AppColors.accentPrimary;
     } else {
-      borderColor = const Color(0xFFA3FF78);
+      borderColor = AppColors.accentSecondary;
     }
 
     // Seat number pill — current player's glow "breathes" via the pulse
@@ -2205,7 +2206,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     Widget buildCircle(double glow) => Container(
           padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
           decoration: BoxDecoration(
-            color: const Color(0xFF161719),
+            color: AppColors.bgSurface,
             borderRadius: BorderRadius.circular(35),
             border: Border.all(color: borderColor, width: 2),
             boxShadow: isCurrentPlayer
@@ -2219,8 +2220,8 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
           ),
           child: Text(
             '$seatNumber',
-            style: GoogleFonts.ibmPlexMono(
-              color: isActive ? const Color(0xFFA3FF78) : AppColors.neutral500,
+            style: AppTypography.plexMonoLegacy(
+              color: isActive ? AppColors.accentSecondary : AppColors.neutral500,
               fontSize: 13,
               fontWeight: FontWeight.w500,
             ),
@@ -2243,7 +2244,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
           const SizedBox(height: 2),
           Text(
             AppLocalizations.of(context).pokerTablePlayerFallback,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               color: Colors.white.withValues(alpha: 0.4),
               fontSize: 10,
               fontWeight: FontWeight.w500,
@@ -2268,7 +2269,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         ),
         child: Text(
           displayName,
-          style: GoogleFonts.ibmPlexSans(
+          style: AppTypography.ibm(
             fontSize: 10,
             fontWeight: FontWeight.w500,
             color: isFolded ? Colors.white60 : Colors.white,
@@ -2279,7 +2280,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     } else {
       nameWidget = Text(
         displayName,
-        style: GoogleFonts.ibmPlexSans(
+        style: AppTypography.ibm(
           color: isFolded ? Colors.white38 : Colors.white,
           fontSize: 10,
           fontWeight: FontWeight.w500,
@@ -2293,7 +2294,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       value: stack,
       formatter: _formatCompactAmount,
       duration: const Duration(milliseconds: 350),
-      style: GoogleFonts.ibmPlexSans(
+      style: AppTypography.ibm(
         color: isFolded ? Colors.white38 : AppColors.buttonPrimary,
         fontSize: 11,
         fontWeight: FontWeight.w500,
@@ -2373,11 +2374,11 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
       decoration: BoxDecoration(
         color: bgColor,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppDecorations.radius20),
       ),
       child: Text(
         text,
-        style: GoogleFonts.ibmPlexSans(
+        style: AppTypography.ibm(
           color: textColor,
           fontSize: 9,
           fontWeight: isBold ? FontWeight.w600 : FontWeight.w500,
@@ -2647,7 +2648,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
             value: gameState.currentPot,
             formatter: gameState.formatCurrency,
             pulseOnIncrease: true,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               color: AppColors.textMint,
               fontSize: 13,
               fontWeight: FontWeight.w600,
@@ -2662,7 +2663,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
             value: gameState.currentPot,
             formatter: gameState.formatCurrency,
             pulseOnIncrease: true,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               color: AppColors.textMint,
               fontSize: 17,
               fontWeight: FontWeight.w600,
@@ -2672,7 +2673,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
           ),
           Text(
             'POT',
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               color: AppColors.mint500,
               fontSize: 11,
               fontWeight: FontWeight.w400,
@@ -2720,7 +2721,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
           Colors.transparent,
           isMain ? 0.0 : 0.3,
         ),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(AppDecorations.radius10),
         border: Border.all(
           color: AppColors.mint500.withOpacity(isMain ? 0.5 : 0.25),
           width: 1,
@@ -2731,7 +2732,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         children: [
           Text(
             label,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               color: AppColors.mint500.withOpacity(opacity),
               fontSize: 8,
               fontWeight: FontWeight.w500,
@@ -2741,7 +2742,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
           const SizedBox(width: 3),
           Text(
             gameState.formatCurrency(amount),
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               color: AppColors.textMint.withOpacity(opacity),
               fontSize: 10,
               fontWeight: FontWeight.w600,
@@ -2758,7 +2759,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
         color: const Color(0xFF1A3D3A).withOpacity(0.5),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(AppDecorations.radius10),
         border: Border.all(
           color: AppColors.mint500.withOpacity(0.15),
           width: 1,
@@ -2766,7 +2767,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       ),
       child: Text(
         '+$count more',
-        style: GoogleFonts.ibmPlexSans(
+        style: AppTypography.ibm(
           color: AppColors.mint500.withOpacity(0.5),
           fontSize: 8,
           fontWeight: FontWeight.w500,
@@ -2940,8 +2941,8 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         setState(() => _showMenuOverlay = false);
         _stopSession();
       },
-      textColor: const Color(0xFFFF3B30),
-      iconColor: const Color(0xFFFF3B30),
+      textColor: AppColors.accentDanger,
+      iconColor: AppColors.accentDanger,
     ));
 
     return Positioned(
@@ -2953,8 +2954,8 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
           width: 200,
           padding: const EdgeInsets.symmetric(vertical: 16),
           decoration: BoxDecoration(
-            color: const Color(0xFF0C0C0C),
-            borderRadius: BorderRadius.circular(16),
+            color: AppColors.bgPrimary,
+            borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -2985,7 +2986,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
           children: [
             Text(
               label,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 fontSize: 15,
                 fontWeight: FontWeight.w400,
                 color: textColor,
@@ -3002,7 +3003,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
   Widget _buildMenuSeparator() {
     return Container(
       height: 1,
-      color: const Color(0xFF3A3A3C),
+      color: AppColors.bgOverlay,
       margin: const EdgeInsets.symmetric(vertical: 5),
     );
   }
@@ -3018,9 +3019,9 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: const Color(0xFF161719),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFF161719)),
+        color: AppColors.bgSurface,
+        borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
+        border: Border.all(color: AppColors.borderDefault),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -3029,8 +3030,8 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
           Text(
             l10n.handStack,
             textAlign: TextAlign.center,
-            style: GoogleFonts.ibmPlexSans(
-              color: const Color(0xFFB9B9B9),
+            style: AppTypography.ibm(
+              color: AppColors.textSecondary,
               fontSize: 11,
               fontWeight: FontWeight.w500,
               height: 16 / 11,
@@ -3040,7 +3041,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
             Text(
               _getCurrentPlayerStackSafely(),
               textAlign: TextAlign.center,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 color: AppColors.tealPrimary,
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
@@ -3077,9 +3078,9 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: const Color(0xFF161719),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFF161719)),
+        color: AppColors.bgSurface,
+        borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
+        border: Border.all(color: AppColors.borderDefault),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -3088,8 +3089,8 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
           Text(
             label,
             textAlign: TextAlign.center,
-            style: GoogleFonts.ibmPlexSans(
-              color: const Color(0xFFB9B9B9),
+            style: AppTypography.ibm(
+              color: AppColors.textSecondary,
               fontSize: 11,
               fontWeight: FontWeight.w500,
               height: 16 / 11,
@@ -3098,8 +3099,8 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
           Text(
             value,
             textAlign: TextAlign.center,
-            style: GoogleFonts.ibmPlexSans(
-              color: const Color(0xFFB9B9B9),
+            style: AppTypography.ibm(
+              color: AppColors.textSecondary,
               fontSize: 15,
               fontWeight: FontWeight.w400,
               height: 22 / 15,
@@ -3119,13 +3120,13 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
         color: AppColors.surfaceDark,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
       ),
       child: Column(
         children: [
           Text(
             value,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               color: Colors.white,
               fontSize: 14,
               fontWeight: FontWeight.w500,
@@ -3134,7 +3135,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
           ),
           Text(
             label,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               color: AppColors.textDisabled,
               fontSize: 14,
               fontWeight: FontWeight.w500,
@@ -3239,7 +3240,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         height: 32,
         decoration: BoxDecoration(
           color: AppColors.surfaceDark,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
         ),
         child: Center(
           child: _buildIcon('icons/figma_icons/info.svg', 20, Color(0xFFADF9F5)),
@@ -3254,7 +3255,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       padding: EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
         color: AppColors.surfaceDark,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -3598,7 +3599,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
             constraints: BoxConstraints(maxWidth: 320),
             decoration: BoxDecoration(
               color: AppColors.surfaceDark,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
               border: Border.all(
                 color: AppColors.neutral800,
                 width: 1,
@@ -3621,7 +3622,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                     children: [
                       Text(
                         action == PlayerAction.raise ? l10n.handRaiseAmount : l10n.handBetAmount,
-                        style: GoogleFonts.ibmPlexSans(
+                        style: AppTypography.ibm(
                           fontSize: 17,
                           color: Colors.white,
                           fontWeight: FontWeight.w500,
@@ -3633,7 +3634,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                           widget.gameType == GameType.cash ? CurrencyService.formatCash(effectiveMinBet) : effectiveMinBet.toInt().toString(),
                           widget.gameType == GameType.cash ? CurrencyService.formatCash(maxBet) : maxBet.toInt().toString(),
                         ),
-                        style: GoogleFonts.ibmPlexSans(
+                        style: AppTypography.ibm(
                           fontSize: 13,
                           color: AppColors.textDisabled,
                         ),
@@ -3648,7 +3649,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                   child: Container(
                     decoration: BoxDecoration(
                       color: Colors.black.withOpacity(0.3),
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: BorderRadius.circular(AppDecorations.radius14),
                       border: Border.all(color: AppColors.infoCardDateText),
                     ),
                     child: TextField(
@@ -3657,7 +3658,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                       keyboardType: TextInputType.numberWithOptions(
                         decimal: widget.gameType == GameType.cash,
                       ),
-                      style: GoogleFonts.ibmPlexSans(
+                      style: AppTypography.ibm(
                         color: Colors.white,
                         fontSize: 24,
                         fontWeight: FontWeight.w600,
@@ -3665,12 +3666,12 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                       decoration: InputDecoration(
                         prefixText: widget.gameType == GameType.cash ? CurrencyService.prefixText : null,
                         suffixText: widget.gameType == GameType.cash ? CurrencyService.suffixText : null,
-                        prefixStyle: GoogleFonts.ibmPlexSans(
+                        prefixStyle: AppTypography.ibm(
                           color: AppColors.textDisabled,
                           fontSize: 24,
                           fontWeight: FontWeight.w600,
                         ),
-                        suffixStyle: GoogleFonts.ibmPlexSans(
+                        suffixStyle: AppTypography.ibm(
                           color: AppColors.textDisabled,
                           fontSize: 24,
                           fontWeight: FontWeight.w600,
@@ -3752,7 +3753,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                           child: Center(
                             child: Text(
                               action == PlayerAction.raise ? l10n.handRaiseAction : l10n.handBetAction,
-                              style: GoogleFonts.ibmPlexSans(
+                              style: AppTypography.ibm(
                                 color: Colors.black,
                                 fontSize: 17,
                                 fontWeight: FontWeight.w600,
@@ -3776,7 +3777,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                           child: Center(
                             child: Text(
                               l10n.commonCancel,
-                              style: GoogleFonts.ibmPlexSans(
+                              style: AppTypography.ibm(
                                 color: Colors.white,
                                 fontSize: 17,
                                 fontWeight: FontWeight.w600,
@@ -3871,12 +3872,12 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
           color: Colors.transparent,
-          borderRadius: BorderRadius.circular(40),
+          borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
           border: Border.all(color: AppColors.infoCardDateText),
         ),
         child: Text(
           label,
-          style: GoogleFonts.ibmPlexSans(
+          style: AppTypography.ibm(
             color: AppColors.buttonPrimary,
             fontSize: 13,
             fontWeight: FontWeight.w600,
@@ -3922,12 +3923,12 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
           color: Colors.transparent,
-          borderRadius: BorderRadius.circular(40),
+          borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
           border: Border.all(color: AppColors.infoCardDateText),
         ),
         child: Text(
           label,
-          style: GoogleFonts.ibmPlexSans(
+          style: AppTypography.ibm(
             color: AppColors.buttonPrimary,
             fontSize: 13,
             fontWeight: FontWeight.w600,
@@ -3954,12 +3955,12 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
           color: AppColors.errorRed,
-          borderRadius: BorderRadius.circular(40),
+          borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
         ),
         child: Builder(
           builder: (context) => Text(
             AppLocalizations.of(context).pokerHandAllInAction,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               color: Colors.white,
               fontSize: 13,
               fontWeight: FontWeight.w600,
@@ -4074,7 +4075,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(24),
+              borderRadius: BorderRadius.circular(AppDecorations.radiusXl),
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -4087,10 +4088,10 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                       child: Center(
                         child: Text(
                           l10n.handHandInProgress,
-                          style: GoogleFonts.ibmPlexSans(
+                          style: AppTypography.ibm(
                             fontSize: 15,
                             fontWeight: FontWeight.w600,
-                            color: const Color(0xFF0C0C0C),
+                            color: AppColors.textInverse,
                             height: 20 / 15,
                           ),
                         ),
@@ -4107,7 +4108,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                             width: 18,
                             height: 18,
                             colorFilter: const ColorFilter.mode(
-                                Color(0xFFB9B9B9), BlendMode.srcIn),
+                                AppColors.contentInactive, BlendMode.srcIn),
                           ),
                         ),
                       ),
@@ -4118,10 +4119,10 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                 // Body text
                 Text(
                   l10n.handHandInProgressMessage,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     fontSize: 15,
                     fontWeight: FontWeight.w400,
-                    color: const Color(0xFFB9B9B9),
+                    color: AppColors.textSecondary,
                     height: 22 / 15,
                   ),
                 ),
@@ -4135,16 +4136,16 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                         child: Container(
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(999),
-                            border: Border.all(color: const Color(0xFFB9B9B9)),
+                            borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
+                            border: Border.all(color: AppColors.borderLight),
                           ),
                           alignment: Alignment.center,
                           child: Text(
                             l10n.commonCancel,
-                            style: GoogleFonts.ibmPlexSans(
+                            style: AppTypography.ibm(
                               fontSize: 15,
                               fontWeight: FontWeight.w600,
-                              color: const Color(0xFF0C0C0C),
+                              color: AppColors.textInverse,
                               height: 20 / 15,
                             ),
                           ),
@@ -4158,13 +4159,13 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                         child: Container(
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF0C0C0C),
-                            borderRadius: BorderRadius.circular(999),
+                            color: AppColors.bgPrimary,
+                            borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
                           ),
                           alignment: Alignment.center,
                           child: Text(
                             l10n.handMoveToNextHand,
-                            style: GoogleFonts.ibmPlexSans(
+                            style: AppTypography.ibm(
                               fontSize: 15,
                               fontWeight: FontWeight.w600,
                               color: Colors.white,
@@ -5301,7 +5302,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         child: Container(
           decoration: BoxDecoration(
             color: Colors.black,
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(AppDecorations.radiusXl),
             border: Border.all(color: const Color(0xFF262626)),
             boxShadow: const [
               BoxShadow(
@@ -5320,7 +5321,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                 // Title
                 Text(
                   l10n.handConfirmRebuy,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     fontSize: 17,
                     fontWeight: FontWeight.w600,
                     color: Colors.white,
@@ -5330,7 +5331,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                 const SizedBox(height: 16),
                 Text(
                   l10n.pokerHandCurrentlyHaveRemaining(formatStackValue(currentStack)),
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     fontSize: 15,
                     color: Colors.white.withValues(alpha: 0.6),
                     height: 1.44,
@@ -5339,7 +5340,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                 const SizedBox(height: 8),
                 Text(
                   l10n.handRebuyReplaceStack,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     fontSize: 15,
                     color: Colors.white,
                     fontWeight: FontWeight.w500,
@@ -5364,7 +5365,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                           child: Center(
                             child: Text(
                               l10n.commonCancel,
-                              style: GoogleFonts.ibmPlexSans(
+                              style: AppTypography.ibm(
                                 fontSize: 17,
                                 fontWeight: FontWeight.w600,
                                 color: AppColors.textMint,
@@ -5388,7 +5389,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                           child: Center(
                             child: Text(
                               l10n.handProceed,
-                              style: GoogleFonts.ibmPlexSans(
+                              style: AppTypography.ibm(
                                 fontSize: 17,
                                 fontWeight: FontWeight.w600,
                                 color: Colors.black,
@@ -7136,7 +7137,7 @@ class _BustedPlayerDialogState extends State<_BustedPlayerDialog> {
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
           color: AppColors.surfaceDark,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
           border: Border.all(color: AppColors.neutral800),
           boxShadow: const [
             BoxShadow(
@@ -7159,7 +7160,7 @@ class _BustedPlayerDialogState extends State<_BustedPlayerDialog> {
             Text(
               '${widget.playerName} is busted!',
               textAlign: TextAlign.center,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 color: Colors.white,
                 fontSize: 17,
                 fontWeight: FontWeight.w500,
@@ -7170,7 +7171,7 @@ class _BustedPlayerDialogState extends State<_BustedPlayerDialog> {
             Text(
               l10n.pokerHandChooseOption,
               textAlign: TextAlign.center,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 color: AppColors.textDisabled,
                 fontSize: 15,
                 height: 1.44,
@@ -7180,20 +7181,20 @@ class _BustedPlayerDialogState extends State<_BustedPlayerDialog> {
             // Rebuy Chips input with floating label
             Container(
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(AppDecorations.radius14),
                 border: Border.all(color: AppColors.infoCardDateText),
               ),
               child: TextField(
                 controller: _amountController,
                 keyboardType: TextInputType.numberWithOptions(decimal: widget.isCashGame),
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   color: AppColors.textDisabled,
                   fontSize: 17,
                   height: 1.44,
                 ),
                 decoration: InputDecoration(
                   labelText: widget.isCashGame ? AppLocalizations.of(context).pokerHandRebuyAmountDollar : AppLocalizations.of(context).pokerHandRebuyChips,
-                  labelStyle: GoogleFonts.ibmPlexSans(
+                  labelStyle: AppTypography.ibm(
                     color: Colors.white,
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
@@ -7228,7 +7229,7 @@ class _BustedPlayerDialogState extends State<_BustedPlayerDialog> {
                       child: Center(
                         child: Text(
                           l10n.handRebuy,
-                          style: GoogleFonts.ibmPlexSans(
+                          style: AppTypography.ibm(
                             color: Colors.white,
                             fontSize: 17,
                             fontWeight: FontWeight.w600,
@@ -7257,7 +7258,7 @@ class _BustedPlayerDialogState extends State<_BustedPlayerDialog> {
                       child: Center(
                         child: Text(
                           AppLocalizations.of(context).commonLeave,
-                          style: GoogleFonts.ibmPlexSans(
+                          style: AppTypography.ibm(
                             color: Colors.black,
                             fontSize: 17,
                             fontWeight: FontWeight.w600,
@@ -7291,7 +7292,7 @@ class _BustedPlayerDialogState extends State<_BustedPlayerDialog> {
                 child: Center(
                   child: Text(
                     AppLocalizations.of(context).commonConfirm,
-                    style: GoogleFonts.ibmPlexSans(
+                    style: AppTypography.ibm(
                       color: Colors.black,
                       fontSize: 17,
                       fontWeight: FontWeight.w600,
@@ -7357,7 +7358,7 @@ class _RebuyBodyState extends State<_RebuyBody> {
         children: [
           Text(
             l10n.handEnterRebuyDetails,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               fontSize: 15,
               color: Colors.white.withValues(alpha: 0.6),
               fontWeight: FontWeight.w400,
@@ -7370,29 +7371,29 @@ class _RebuyBodyState extends State<_RebuyBody> {
           Container(
             decoration: BoxDecoration(
               color: AppColors.surfaceDark,
-              borderRadius: BorderRadius.circular(18),
+              borderRadius: BorderRadius.circular(AppDecorations.radius18),
             ),
             child: TextField(
               controller: widget.rebuyAmountController,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 fontSize: 17,
                 color: Colors.white,
                 fontWeight: FontWeight.w400,
               ),
               decoration: InputDecoration(
                 labelText: l10n.handRebuyAmount,
-                labelStyle: GoogleFonts.ibmPlexSans(
+                labelStyle: AppTypography.ibm(
                   fontSize: 15,
                   color: AppColors.textDisabled,
                 ),
                 prefixText: CurrencyService.prefixText,
                 suffixText: CurrencyService.suffixText,
-                prefixStyle: GoogleFonts.ibmPlexSans(
+                prefixStyle: AppTypography.ibm(
                   fontSize: 17,
                   color: Colors.white,
                 ),
-                suffixStyle: GoogleFonts.ibmPlexSans(
+                suffixStyle: AppTypography.ibm(
                   fontSize: 17,
                   color: Colors.white,
                 ),
@@ -7407,24 +7408,24 @@ class _RebuyBodyState extends State<_RebuyBody> {
           Container(
             decoration: BoxDecoration(
               color: AppColors.surfaceDark,
-              borderRadius: BorderRadius.circular(18),
+              borderRadius: BorderRadius.circular(AppDecorations.radius18),
             ),
             child: TextField(
               controller: widget.stackSizeController,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 fontSize: 17,
                 color: Colors.white,
                 fontWeight: FontWeight.w400,
               ),
               decoration: InputDecoration(
                 labelText: l10n.handNewStackSize,
-                labelStyle: GoogleFonts.ibmPlexSans(
+                labelStyle: AppTypography.ibm(
                   fontSize: 15,
                   color: AppColors.textDisabled,
                 ),
                 hintText: l10n.handChipCountAfterRebuy,
-                hintStyle: GoogleFonts.ibmPlexSans(
+                hintStyle: AppTypography.ibm(
                   fontSize: 15,
                   color: Colors.white.withValues(alpha: 0.3),
                 ),
@@ -7441,14 +7442,14 @@ class _RebuyBodyState extends State<_RebuyBody> {
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: AppColors.surfaceDark,
-              borderRadius: BorderRadius.circular(18),
+              borderRadius: BorderRadius.circular(AppDecorations.radius18),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   l10n.handSessionInfo,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     fontSize: 14,
                     color: AppColors.textDisabled,
                     fontWeight: FontWeight.w500,
@@ -7457,7 +7458,7 @@ class _RebuyBodyState extends State<_RebuyBody> {
                 const SizedBox(height: 8),
                 Text(
                   l10n.handTotalInvested(widget.sessionManager.totalBuyIn.toStringAsFixed(2)),
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     fontSize: 15,
                     color: Colors.white.withValues(alpha: 0.7),
                   ),
@@ -7465,7 +7466,7 @@ class _RebuyBodyState extends State<_RebuyBody> {
                 const SizedBox(height: 4),
                 Text(
                   l10n.handRebuysCount(widget.sessionManager.getRebuyCount()),
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     fontSize: 15,
                     color: Colors.white.withValues(alpha: 0.7),
                   ),
@@ -7653,7 +7654,7 @@ class _StackRingOverlayWidgetState extends State<_StackRingOverlayWidget>
                       child: Center(
                         child: Text(
                           StackBucketHelper.rangeLabel(hovered),
-                          style: GoogleFonts.ibmPlexSans(
+                          style: AppTypography.ibm(
                             fontSize: 16,
                             color: Colors.white,
                             fontWeight: FontWeight.w700,

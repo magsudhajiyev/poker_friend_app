@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../l10n/app_localizations.dart';
 import '../models/hand_state_machine.dart';
 import '../models/poker_game_state.dart';
 import 'card_keyboard.dart';
 import '../design_system/constants/colors.dart';
+import '../design_system/constants/typography.dart';
+import '../design_system/constants/decorations.dart';
 
 class BoardCardsDialog extends StatefulWidget {
   final BettingRound currentRound;
@@ -62,7 +63,7 @@ class _BoardCardsDialogState extends State<BoardCardsDialog> {
         constraints: const BoxConstraints(maxWidth: 400),
         decoration: BoxDecoration(
           color: AppColors.surfaceDark,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
           border: Border.all(color: AppColors.neutral800, width: 1),
         ),
         child: SingleChildScrollView(
@@ -110,7 +111,7 @@ class _BoardCardsDialogState extends State<BoardCardsDialog> {
         Expanded(
           child: Text(
             '${_getStreetName()} ${widget.currentRound == BettingRound.flop ? l10n.boardCardsCards : l10n.boardCardsCard}',
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               fontSize: 17,
               fontWeight: FontWeight.w600,
               color: Colors.white,
@@ -152,13 +153,13 @@ class _BoardCardsDialogState extends State<BoardCardsDialog> {
       height: 60,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
         border: Border.all(color: Colors.grey[400]!, width: 1),
       ),
       child: Center(
         child: Text(
           card,
-          style: GoogleFonts.ibmPlexSans(
+          style: AppTypography.ibm(
             fontSize: 14,
             fontWeight: FontWeight.bold,
             color: _getCardColor(card),
@@ -181,13 +182,13 @@ class _BoardCardsDialogState extends State<BoardCardsDialog> {
             style: TextButton.styleFrom(
               backgroundColor: valid ? AppColors.buttonPrimary : AppColors.neutral800,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(40),
+                borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
               ),
               padding: EdgeInsets.zero,
             ),
             child: Text(
               l10n.commonSave,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 color: valid ? Colors.black : AppColors.infoCardDateText,
                 fontSize: 17,
                 fontWeight: FontWeight.w600,
@@ -205,7 +206,7 @@ class _BoardCardsDialogState extends State<BoardCardsDialog> {
             style: TextButton.styleFrom(
               backgroundColor: Colors.transparent,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(40),
+                borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
                 side: BorderSide(
                   color: Colors.white.withValues(alpha: 0.3),
                   width: 1,
@@ -215,7 +216,7 @@ class _BoardCardsDialogState extends State<BoardCardsDialog> {
             ),
             child: Text(
               l10n.commonCancel,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 color: Colors.white.withValues(alpha: 0.6),
                 fontSize: 17,
                 fontWeight: FontWeight.w600,

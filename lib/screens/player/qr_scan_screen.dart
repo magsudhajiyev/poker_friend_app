@@ -3,6 +3,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import '../../l10n/app_localizations.dart';
 import '../../services/qr_service.dart';
 import 'qr_join_screen.dart';
+import '../../design_system/constants/decorations.dart';
 
 /// Screen for scanning QR codes to join a poker table
 class QRScanScreen extends StatefulWidget {
@@ -143,7 +144,7 @@ class _QRScanScreenState extends State<QRScanScreen> {
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: Colors.black54,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                   ),
                   child: Text(
                     AppLocalizations.of(context).qrScanInstructions,
@@ -199,7 +200,7 @@ class _QRScanScreenState extends State<QRScanScreen> {
                       height: scanAreaSize,
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                       ),
                     ),
                   ),
@@ -219,7 +220,7 @@ class _QRScanScreenState extends State<QRScanScreen> {
                     color: _isProcessing ? Colors.green : Colors.white,
                     width: 3,
                   ),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                 ),
               ),
             ),

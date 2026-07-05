@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../models/club_event.dart';
 import '../../models/event_ranking.dart';
 import '../../services/event_service.dart';
@@ -9,6 +8,8 @@ import '../../services/dealer_service.dart';
 import '../../utils/number_formatter.dart';
 import '../../l10n/app_localizations.dart';
 import '../../design_system/constants/colors.dart';
+import '../../design_system/constants/typography.dart';
+import '../../design_system/constants/decorations.dart';
 
 /// Screen for spectators to view live rankings during an event
 class EventRankingsScreen extends StatefulWidget {
@@ -201,7 +202,7 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
                   children: [
                     Text(
                       AppLocalizations.of(context).liveRankingsTitle,
-                      style: GoogleFonts.ibmPlexSans(
+                      style: AppTypography.ibm(
                         fontSize: 18,
                         color: Colors.white,
                         fontWeight: FontWeight.w600,
@@ -210,7 +211,7 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
                     const SizedBox(height: 2),
                     Text(
                       widget.event.name,
-                      style: GoogleFonts.ibmPlexSans(
+                      style: AppTypography.ibm(
                         fontSize: 13,
                         color: AppColors.buttonPrimary,
                         fontWeight: FontWeight.w500,
@@ -255,7 +256,7 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       decoration: BoxDecoration(
         color: AppColors.infoCardBg,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(AppDecorations.radius14),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -293,7 +294,7 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
       children: [
         Text(
           value,
-          style: GoogleFonts.ibmPlexSans(
+          style: AppTypography.ibm(
             fontSize: 16,
             color: color,
             fontWeight: FontWeight.w700,
@@ -302,7 +303,7 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
         const SizedBox(height: 2),
         Text(
           label,
-          style: GoogleFonts.ibmPlexSans(
+          style: AppTypography.ibm(
             fontSize: 11,
             color: Colors.white.withOpacity(0.4),
           ),
@@ -361,7 +362,7 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
           child: Builder(
             builder: (context) => Text(
               AppLocalizations.of(context).liveRankingsEliminated,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 fontSize: 15,
                 color: Colors.white.withOpacity(0.5),
                 fontWeight: FontWeight.w500,
@@ -401,7 +402,7 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 12),
             child: Text(
               '$avgText$bbText',
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 fontSize: 12,
                 color: Colors.white.withOpacity(0.45),
                 fontWeight: FontWeight.w600,
@@ -424,7 +425,7 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         color: AppColors.infoCardBg,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(AppDecorations.radius14),
         border: isChipLeader
             ? Border.all(color: Colors.amber.withOpacity(0.4), width: 1.5)
             : null,
@@ -436,7 +437,7 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
             width: 32,
             child: Text(
               _ordinal(ranking.rank),
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 fontSize: 13,
                 color: isChipLeader ? Colors.amber : Colors.white.withOpacity(0.5),
                 fontWeight: FontWeight.w600,
@@ -455,7 +456,7 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
                     Flexible(
                       child: Text(
                         ranking.playerName,
-                        style: GoogleFonts.ibmPlexSans(
+                        style: AppTypography.ibm(
                           fontSize: 15,
                           color: Colors.white,
                           fontWeight: FontWeight.w500,
@@ -473,7 +474,7 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
                   const SizedBox(height: 2),
                   Text(
                     '${_getTableDisplayName(ranking)} - Seat ${ranking.seatNumber}',
-                    style: GoogleFonts.ibmPlexSans(
+                    style: AppTypography.ibm(
                       fontSize: 12,
                       color: Colors.white.withOpacity(0.35),
                     ),
@@ -489,7 +490,7 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
             children: [
               Text(
                 formatCompactNumber(ranking.currentStack),
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   fontSize: 16,
                   color: Colors.white,
                   fontWeight: FontWeight.w700,
@@ -499,7 +500,7 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
                 const SizedBox(height: 2),
                 Text(
                   '$bbCount BBs',
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     fontSize: 12,
                     color: Colors.white.withOpacity(0.4),
                     fontWeight: FontWeight.w400,
@@ -519,7 +520,7 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.03),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(AppDecorations.radius14),
       ),
       child: Row(
         children: [
@@ -528,7 +529,7 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
             width: 32,
             child: Text(
               finishPosition != null ? _ordinal(finishPosition) : '-',
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 fontSize: 13,
                 color: Colors.white.withOpacity(0.25),
                 fontWeight: FontWeight.w600,
@@ -540,7 +541,7 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
           Expanded(
             child: Text(
               ranking.playerName,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 fontSize: 15,
                 color: Colors.white.withOpacity(0.3),
                 fontWeight: FontWeight.w400,
@@ -564,7 +565,7 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
             height: 56,
             decoration: BoxDecoration(
               color: AppColors.buttonPrimary.withOpacity(0.08),
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(AppDecorations.radius14),
             ),
             child: Icon(
               Icons.event_seat_outlined,
@@ -575,7 +576,7 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
           const SizedBox(height: 14),
           Text(
             l10n.liveRankingsWaiting,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               fontSize: 17,
               color: Colors.white,
               fontWeight: FontWeight.w600,
@@ -587,7 +588,7 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
             child: Text(
               l10n.liveRankingsWaitingHint,
               textAlign: TextAlign.center,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 fontSize: 14,
                 color: Colors.white.withOpacity(0.4),
               ),
@@ -609,7 +610,7 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
             height: 56,
             decoration: BoxDecoration(
               color: AppColors.lossRed.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(AppDecorations.radius14),
             ),
             child: const Icon(
               Icons.error_outline,
@@ -620,7 +621,7 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
           const SizedBox(height: 14),
           Text(
             l10n.liveRankingsError,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               fontSize: 17,
               color: Colors.white,
               fontWeight: FontWeight.w600,
@@ -632,7 +633,7 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
             child: Text(
               _error ?? 'Unknown error',
               textAlign: TextAlign.center,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 fontSize: 14,
                 color: Colors.white.withOpacity(0.4),
               ),
@@ -645,11 +646,11 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
               decoration: BoxDecoration(
                 color: AppColors.buttonPrimary,
-                borderRadius: BorderRadius.circular(60),
+                borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
               ),
               child: Text(
                 l10n.liveRankingsTryAgain,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   color: Colors.black,
                   fontWeight: FontWeight.w600,
                   fontSize: 15,

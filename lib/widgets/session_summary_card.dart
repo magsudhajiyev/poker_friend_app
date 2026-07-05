@@ -3,13 +3,14 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../models/game_types.dart';
 import '../services/currency_service.dart';
 import '../design_system/constants/colors.dart';
+import '../design_system/constants/typography.dart';
+import '../design_system/constants/decorations.dart';
 
 /// Data needed to render the post-session summary card.
 class SessionSummaryData {
@@ -144,7 +145,7 @@ class _SessionSummaryCardState extends State<SessionSummaryCard> {
                 width: cardWidth,
                 decoration: BoxDecoration(
                   color: AppColors.surfaceDark,
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(AppDecorations.radius20),
                   border: Border.all(
                     color: Colors.white.withValues(alpha: 0.08),
                     width: 1,
@@ -167,12 +168,12 @@ class _SessionSummaryCardState extends State<SessionSummaryCard> {
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.08),
-                          borderRadius: BorderRadius.circular(60),
+                          borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
                         ),
                         child: Center(
                           child: Text(
                             'Close',
-                            style: GoogleFonts.ibmPlexSans(
+                            style: AppTypography.ibm(
                               fontSize: 17,
                               fontWeight: FontWeight.w600,
                               color: Colors.white70,
@@ -191,7 +192,7 @@ class _SessionSummaryCardState extends State<SessionSummaryCard> {
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         decoration: BoxDecoration(
                           color: AppColors.tealPrimary,
-                          borderRadius: BorderRadius.circular(60),
+                          borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
                         ),
                         child: Center(
                           child: _isSharing
@@ -210,7 +211,7 @@ class _SessionSummaryCardState extends State<SessionSummaryCard> {
                                     const SizedBox(width: 6),
                                     Text(
                                       'Share',
-                                      style: GoogleFonts.ibmPlexSans(
+                                      style: AppTypography.ibm(
                                         fontSize: 17,
                                         fontWeight: FontWeight.w600,
                                         color: Colors.black,
@@ -245,7 +246,7 @@ class _SessionSummaryCardState extends State<SessionSummaryCard> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               ClipRRect(
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(AppDecorations.radius10),
                 child: Image.asset(
                   'assets/logo.png',
                   width: 48,
@@ -259,7 +260,7 @@ class _SessionSummaryCardState extends State<SessionSummaryCard> {
                   children: [
                     Text(
                       data.sessionName,
-                      style: GoogleFonts.ibmPlexSans(
+                      style: AppTypography.ibm(
                         fontSize: 17,
                         fontWeight: FontWeight.w600,
                         color: Colors.white,
@@ -276,11 +277,11 @@ class _SessionSummaryCardState extends State<SessionSummaryCard> {
                             color: data.isCash
                                 ? AppColors.tealPrimary.withValues(alpha: 0.15)
                                 : AppColors.warningAmber.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(40),
+                            borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
                           ),
                           child: Text(
                             data.isCash ? 'CASH' : 'TOURNAMENT',
-                            style: GoogleFonts.ibmPlexSans(
+                            style: AppTypography.ibm(
                               fontSize: 10,
                               fontWeight: FontWeight.w700,
                               color: data.isCash
@@ -299,7 +300,7 @@ class _SessionSummaryCardState extends State<SessionSummaryCard> {
                         const SizedBox(width: 3),
                         Text(
                           data.formattedDuration,
-                          style: GoogleFonts.ibmPlexSans(
+                          style: AppTypography.ibm(
                             fontSize: 12,
                             color: Colors.white.withValues(alpha: 0.4),
                           ),
@@ -365,7 +366,7 @@ class _SessionSummaryCardState extends State<SessionSummaryCard> {
           Center(
             child: Text(
               'Tracked with Final Table',
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 fontSize: 11,
                 color: Colors.white.withValues(alpha: 0.25),
                 letterSpacing: 0.5,
@@ -389,7 +390,7 @@ class _SessionSummaryCardState extends State<SessionSummaryCard> {
         fit: BoxFit.scaleDown,
         child: Text(
           '$prefix${CurrencyService.formatCash(data.profitLoss)}',
-          style: GoogleFonts.familjenGrotesk(
+          style: AppTypography.grotesk(
             fontSize: 44,
             fontWeight: FontWeight.w700,
             color: color,
@@ -416,7 +417,7 @@ class _SessionSummaryCardState extends State<SessionSummaryCard> {
                 data.fieldSize != null
                     ? '${_ordinal(data.finishedPlace!)} / ${data.fieldSize}'
                     : _ordinal(data.finishedPlace!),
-                style: GoogleFonts.familjenGrotesk(
+                style: AppTypography.grotesk(
                   fontSize: 44,
                   fontWeight: FontWeight.w700,
                   color: AppColors.warningAmber,
@@ -429,7 +430,7 @@ class _SessionSummaryCardState extends State<SessionSummaryCard> {
           if (data.prizeWon != null && data.prizeWon! > 0) ...[
             Text(
               'Prize: ${CurrencyService.formatCash(data.prizeWon!)}',
-              style: GoogleFonts.robotoMono(
+              style: AppTypography.mono(
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
                 color: Colors.white.withValues(alpha: 0.7),
@@ -440,7 +441,7 @@ class _SessionSummaryCardState extends State<SessionSummaryCard> {
           // Net profit/loss
           Text(
             'Net: ${data.isProfit ? '+' : ''}${CurrencyService.formatCash(data.profitLoss)}',
-            style: GoogleFonts.robotoMono(
+            style: AppTypography.mono(
               fontSize: 14,
               fontWeight: FontWeight.w500,
               color: color,
@@ -456,7 +457,7 @@ class _SessionSummaryCardState extends State<SessionSummaryCard> {
       children: [
         Text(
           label,
-          style: GoogleFonts.ibmPlexSans(
+          style: AppTypography.ibm(
             fontSize: 12,
             fontWeight: FontWeight.w500,
             color: Colors.white.withValues(alpha: 0.4),
@@ -465,7 +466,7 @@ class _SessionSummaryCardState extends State<SessionSummaryCard> {
         const SizedBox(height: 4),
         Text(
           value,
-          style: GoogleFonts.robotoMono(
+          style: AppTypography.mono(
             fontSize: 17,
             fontWeight: FontWeight.w600,
             color: Colors.white,

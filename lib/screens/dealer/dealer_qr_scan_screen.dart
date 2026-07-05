@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import '../../design_system/components/app_toggle.dart';
 import '../../design_system/poker_friend_theme.dart';
@@ -16,6 +15,8 @@ import '../../services/table_service.dart';
 import '../../l10n/app_localizations.dart';
 import 'dealer_table_screen.dart';
 import '../../design_system/constants/colors.dart';
+import '../../design_system/constants/typography.dart';
+import '../../design_system/constants/decorations.dart';
 
 /// Screen for dealers to scan a table QR code to start dealing at an event
 class DealerQRScanScreen extends StatefulWidget {
@@ -184,7 +185,7 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
           return Dialog(
           backgroundColor: AppColors.surfaceDark,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
             side: const BorderSide(color: AppColors.neutral800),
           ),
           child: Padding(
@@ -197,7 +198,7 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
                   // Title
                   Text(
                     l10n.dealerQrScanSessionSettings,
-                    style: GoogleFonts.ibmPlexSans(
+                    style: AppTypography.ibm(
                       fontSize: 17,
                       fontWeight: FontWeight.w500,
                       color: Colors.white,
@@ -208,7 +209,7 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
                   // Info lines
                   Text(
                     l10n.dealerQrScanTableNameLabel(table.name),
-                    style: GoogleFonts.ibmPlexSans(
+                    style: AppTypography.ibm(
                       fontSize: 15,
                       color: AppColors.textDisabled,
                       height: 1.44,
@@ -217,7 +218,7 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
                   const SizedBox(height: 4),
                   Text(
                     l10n.dealerQrScanEventNameLabel(widget.event.name),
-                    style: GoogleFonts.ibmPlexSans(
+                    style: AppTypography.ibm(
                       fontSize: 15,
                       color: AppColors.textDisabled,
                       height: 1.44,
@@ -229,7 +230,7 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
                   // Blinds section
                   Text(
                     l10n.dealerQrScanBlindsLabel,
-                    style: GoogleFonts.ibmPlexSans(
+                    style: AppTypography.ibm(
                       fontSize: 17,
                       fontWeight: FontWeight.w500,
                       color: Colors.white,
@@ -266,7 +267,7 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                     decoration: BoxDecoration(
                       color: AppColors.paper,
-                      borderRadius: BorderRadius.circular(18),
+                      borderRadius: BorderRadius.circular(AppDecorations.radius18),
                       border: Border.all(color: AppColors.neutral800),
                     ),
                     child: Row(
@@ -274,7 +275,7 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
                       children: [
                         Text(
                           l10n.dealerQrScanBbAnte,
-                          style: GoogleFonts.ibmPlexSans(
+                          style: AppTypography.ibm(
                             fontSize: 17,
                             color: Colors.white,
                             height: 1.44,
@@ -301,7 +302,7 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
                             alignment: Alignment.center,
                             child: Text(
                               l10n.commonCancel,
-                              style: GoogleFonts.ibmPlexSans(
+                              style: AppTypography.ibm(
                                 fontSize: 17,
                                 fontWeight: FontWeight.w600,
                                 color: Colors.white,
@@ -335,7 +336,7 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
                           ),
                           child: Text(
                             l10n.dealerQrScanStartDealingBtn,
-                            style: GoogleFonts.ibmPlexSans(
+                            style: AppTypography.ibm(
                               fontSize: 17,
                               fontWeight: FontWeight.w600,
                               color: Colors.black,
@@ -366,7 +367,7 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
       height: 124,
       decoration: BoxDecoration(
         color: AppColors.paper,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
         border: Border.all(color: AppColors.neutral800),
       ),
       padding: const EdgeInsets.all(24),
@@ -375,7 +376,7 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
         children: [
           Text(
             label,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               fontSize: 14,
               color: Colors.white,
             ),
@@ -385,7 +386,7 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
             controller: controller,
             keyboardType: TextInputType.number,
             textAlign: TextAlign.center,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               fontSize: 17,
               fontWeight: FontWeight.w500,
               color: AppColors.textDisabled,
@@ -396,26 +397,26 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
               isDense: true,
               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(AppDecorations.radius14),
                 borderSide: const BorderSide(color: AppColors.infoCardDateText),
               ),
               enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(AppDecorations.radius14),
                 borderSide: const BorderSide(color: AppColors.infoCardDateText),
               ),
               focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(AppDecorations.radius14),
                 borderSide: const BorderSide(color: AppColors.buttonPrimary),
               ),
               prefixText: showDollarSign ? CurrencyService.prefixText : null,
-              prefixStyle: GoogleFonts.ibmPlexSans(
+              prefixStyle: AppTypography.ibm(
                 fontSize: 17,
                 fontWeight: FontWeight.w500,
                 color: AppColors.textDisabled,
                 height: 1.44,
               ),
               suffixText: showDollarSign ? CurrencyService.suffixText : null,
-              suffixStyle: GoogleFonts.ibmPlexSans(
+              suffixStyle: AppTypography.ibm(
                 fontSize: 17,
                 fontWeight: FontWeight.w500,
                 color: AppColors.textDisabled,
@@ -493,7 +494,7 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
         return Dialog(
         backgroundColor: AppColors.surfaceDark,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
           side: const BorderSide(color: AppColors.neutral800),
         ),
         child: Padding(
@@ -522,7 +523,7 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
                   Expanded(
                     child: Text(
                       dialogL10n.dealerQrScanResumeSessionTitle,
-                      style: GoogleFonts.ibmPlexSans(
+                      style: AppTypography.ibm(
                         color: Colors.white,
                         fontSize: 19,
                         fontWeight: FontWeight.w600,
@@ -535,7 +536,7 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
               const SizedBox(height: 8),
               Text(
                 dialogL10n.dealerQrScanTakingOverFrom(session.dealerName ?? dialogL10n.dealerTableDealerFallback),
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   color: AppColors.textMint,
                   fontSize: 14,
                   fontWeight: FontWeight.w400,
@@ -560,7 +561,7 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
                         alignment: Alignment.center,
                         child: Text(
                           dialogL10n.commonCancel,
-                          style: GoogleFonts.ibmPlexSans(
+                          style: AppTypography.ibm(
                             color: Colors.white,
                             fontSize: 17,
                             fontWeight: FontWeight.w600,
@@ -577,11 +578,11 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
                           horizontal: 32, vertical: 12),
                       decoration: BoxDecoration(
                         color: AppColors.buttonPrimary,
-                        borderRadius: BorderRadius.circular(60),
+                        borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
                       ),
                       child: Text(
                         dialogL10n.dealerQrScanResumeBtn,
-                        style: GoogleFonts.ibmPlexSans(
+                        style: AppTypography.ibm(
                           color: Colors.black,
                           fontSize: 17,
                           fontWeight: FontWeight.w600,
@@ -606,8 +607,8 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: GoogleFonts.ibmPlexSans(color: AppColors.textDisabled, fontSize: 14)),
-          Text(value, style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500)),
+          Text(label, style: AppTypography.ibm(color: AppColors.textDisabled, fontSize: 14)),
+          Text(value, style: AppTypography.ibm(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500)),
         ],
       ),
     );
@@ -654,7 +655,7 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
       builder: (context) => AlertDialog(
         backgroundColor: PokerFriendColors.dark3,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(AppDecorations.radius20),
         ),
         title: Row(
           children: [
@@ -812,7 +813,7 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: Colors.black54,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                   ),
                   child: Column(
                     children: [
@@ -889,7 +890,7 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
                       height: scanAreaSize,
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                       ),
                     ),
                   ),
@@ -909,7 +910,7 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
                     color: _isProcessing ? PokerFriendColors.green : Colors.white,
                     width: 3,
                   ),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                 ),
               ),
             ),

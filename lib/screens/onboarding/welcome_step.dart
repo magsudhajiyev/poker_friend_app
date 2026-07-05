@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../design_system/constants/colors.dart';
 import '../../design_system/components/backgrounds/gradient_background.dart';
 import '../../l10n/app_localizations.dart';
+import '../../design_system/constants/typography.dart';
 
 class WelcomeStep extends StatelessWidget {
   final VoidCallback onContinue;
@@ -40,7 +40,7 @@ class WelcomeStep extends StatelessWidget {
                   children: [
                     Text(
                       l10n.onboardingWelcomeTitle,
-                      style: GoogleFonts.ibmPlexSans(
+                      style: AppTypography.ibm(
                         fontSize: 42,
                         fontWeight: FontWeight.w700,
                         color: Colors.white,
@@ -51,7 +51,7 @@ class WelcomeStep extends StatelessWidget {
                     const SizedBox(height: 16),
                     Text(
                       l10n.onboardingWelcomeSubtitle,
-                      style: GoogleFonts.ibmPlexSans(
+                      style: AppTypography.ibm(
                         fontSize: 17,
                         fontWeight: FontWeight.w400,
                         color: AppColors.textDisabled,
@@ -85,7 +85,7 @@ class WelcomeStep extends StatelessWidget {
                     ),
                     child: Text(
                       l10n.onboardingContinue,
-                      style: GoogleFonts.ibmPlexSans(
+                      style: AppTypography.ibm(
                         fontSize: 17,
                         fontWeight: FontWeight.w600,
                         color: AppColors.bgPrimary,

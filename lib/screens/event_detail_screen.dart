@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'dart:ui' as ui;
 import '../widgets/global_bottom_nav_bar.dart';
 import '../l10n/app_localizations.dart';
 import '../services/currency_service.dart';
 import '../design_system/constants/colors.dart';
+import '../design_system/constants/typography.dart';
+import '../design_system/constants/decorations.dart';
 
 /// Event detail screen matching Figma node 158:2943
 /// Shows event title, date/time, details card, and delete button
@@ -116,7 +117,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                       // Title
                       Text(
                         _title,
-                        style: GoogleFonts.ibmPlexSans(
+                        style: AppTypography.ibm(
                           fontSize: 32,
                           fontWeight: FontWeight.w600,
                           color: Colors.white,
@@ -128,7 +129,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                       // Date line
                       Text(
                         DateFormat('EEEE, d MMM yyyy').format(_date),
-                        style: GoogleFonts.ibmPlexSans(
+                        style: AppTypography.ibm(
                           fontSize: 17,
                           fontWeight: FontWeight.w400,
                           color: Colors.white,
@@ -139,7 +140,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                       // Time line
                       Text(
                         DateFormat('HH:mm').format(_date),
-                        style: GoogleFonts.ibmPlexSans(
+                        style: AppTypography.ibm(
                           fontSize: 17,
                           fontWeight: FontWeight.w400,
                           color: Colors.white,
@@ -153,7 +154,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                         padding: const EdgeInsets.symmetric(vertical: 8),
                         decoration: BoxDecoration(
                           color: AppColors.infoCardBg,
-                          borderRadius: BorderRadius.circular(18),
+                          borderRadius: BorderRadius.circular(AppDecorations.radius18),
                         ),
                         child: Builder(
                           builder: (context) {
@@ -200,7 +201,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                               padding: const EdgeInsets.fromLTRB(8, 6, 16, 6),
                               decoration: BoxDecoration(
                                 color: AppColors.neutral800,
-                                borderRadius: BorderRadius.circular(40),
+                                borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
                               ),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
@@ -223,7 +224,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                   ),
                                   Text(
                                     DateFormat('MMMM').format(_date),
-                                    style: GoogleFonts.ibmPlexSans(
+                                    style: AppTypography.ibm(
                                       fontSize: 17,
                                       fontWeight: FontWeight.w400,
                                       color: Colors.white,
@@ -245,12 +246,12 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                                   decoration: BoxDecoration(
                                     color: AppColors.neutral800,
-                                    borderRadius: BorderRadius.circular(40),
+                                    borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
                                   ),
                                   child: Center(
                                     child: Text(
                                       l10n.calendarEventEdit,
-                                      style: GoogleFonts.ibmPlexSans(
+                                      style: AppTypography.ibm(
                                         fontSize: 17,
                                         fontWeight: FontWeight.w400,
                                         color: Colors.white,
@@ -289,11 +290,11 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                           padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
                           decoration: BoxDecoration(
                             color: const Color(0xFFDA5B5E),
-                            borderRadius: BorderRadius.circular(70),
+                            borderRadius: BorderRadius.circular(AppDecorations.navBarRadius),
                           ),
                           child: Text(
                             l10n.calendarEventDelete,
-                            style: GoogleFonts.ibmPlexSans(
+                            style: AppTypography.ibm(
                               fontSize: 17,
                               fontWeight: FontWeight.w500,
                               color: Colors.white,
@@ -332,7 +333,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                   width: double.infinity,
                   decoration: BoxDecoration(
                     color: AppColors.surfaceDark,
-                    borderRadius: BorderRadius.circular(18),
+                    borderRadius: BorderRadius.circular(AppDecorations.radius18),
                   ),
                   child: Column(
                     children: [
@@ -342,7 +343,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                         child: Text(
                           sheetL10n.calendarEventDeleteConfirm(_title),
                           textAlign: TextAlign.center,
-                          style: GoogleFonts.ibmPlexSans(
+                          style: AppTypography.ibm(
                             fontSize: 17,
                             fontWeight: FontWeight.w600,
                             color: Colors.white,
@@ -355,7 +356,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                         child: Text(
                           sheetL10n.calendarEventDeleteBody(_title),
                           textAlign: TextAlign.center,
-                          style: GoogleFonts.ibmPlexSans(
+                          style: AppTypography.ibm(
                             fontSize: 14,
                             fontWeight: FontWeight.w400,
                             color: Colors.white,
@@ -371,7 +372,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                           child: Text(
                             sheetL10n.calendarEventDeleteButton,
                             textAlign: TextAlign.center,
-                            style: GoogleFonts.ibmPlexSans(
+                            style: AppTypography.ibm(
                               fontSize: 17,
                               fontWeight: FontWeight.w600,
                               color: const Color(0xFFDA5B5E),
@@ -396,7 +397,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                     child: Center(
                       child: Text(
                         sheetL10n.commonCancel,
-                        style: GoogleFonts.ibmPlexSans(
+                        style: AppTypography.ibm(
                           fontSize: 17,
                           fontWeight: FontWeight.w600,
                           color: Colors.white,
@@ -426,7 +427,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         children: [
           Text(
             label,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               fontSize: 17,
               fontWeight: FontWeight.w500,
               color: Colors.white,
@@ -435,7 +436,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           ),
           Text(
             value,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               fontSize: 17,
               fontWeight: FontWeight.w400,
               color: Colors.white,

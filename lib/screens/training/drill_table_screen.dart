@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../../design_system/constants/colors.dart';
@@ -383,13 +382,13 @@ class _DrillTableScreenState extends State<DrillTableScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(l10n.drillHandNumber(_engine.handNumber),
-                    style: GoogleFonts.ibmPlexSans(
+                    style: AppTypography.ibm(
                         color: AppColors.textPrimary,
                         fontSize: 16 * s,
                         fontWeight: FontWeight.w600)),
                 Text(
                   l10n.drillHandedLabel(widget.stackBB.toInt(), widget.seats.length),
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                       color: AppColors.textSecondary,
                       fontSize: 12 * s),
                 ),
@@ -410,7 +409,7 @@ class _DrillTableScreenState extends State<DrillTableScreen>
                 ),
                 child: Text(
                   '$_correct/$total',
-                  style: GoogleFonts.robotoMono(
+                  style: AppTypography.mono(
                       color: _green,
                       fontSize: 14 * s,
                       fontWeight: FontWeight.w600),
@@ -494,7 +493,7 @@ class _DrillTableScreenState extends State<DrillTableScreen>
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(l10n.drillPot,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
                 color: AppColors.textSecondary,
                 fontSize: 11 * s,
                 fontWeight: FontWeight.w600,
@@ -505,7 +504,7 @@ class _DrillTableScreenState extends State<DrillTableScreen>
           duration: const Duration(milliseconds: 300),
           pulseOnIncrease: true,
           formatter: (v) => '${v.toStringAsFixed(1)}BB',
-          style: GoogleFonts.robotoMono(
+          style: AppTypography.mono(
               color: AppColors.textPrimary,
               fontSize: 20 * s,
               fontWeight: FontWeight.w700),
@@ -556,7 +555,7 @@ class _DrillTableScreenState extends State<DrillTableScreen>
             Text(
               name,
               maxLines: 1,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 color: seat.isHero ? _accent : AppColors.textPrimary,
                 fontSize: 13 * s,
                 fontWeight: FontWeight.w600,
@@ -574,7 +573,7 @@ class _DrillTableScreenState extends State<DrillTableScreen>
                     ? stackText
                     : '$position · $stackText';
               },
-              style: GoogleFonts.robotoMono(
+              style: AppTypography.mono(
                 color: AppColors.textSecondary,
                 fontSize: 10 * s,
                 height: 1.2,
@@ -612,7 +611,7 @@ class _DrillTableScreenState extends State<DrillTableScreen>
           ),
           child: Text(
             action,
-            style: GoogleFonts.robotoMono(
+            style: AppTypography.mono(
               color: pillColor,
               fontSize: 10 * s,
               fontWeight: FontWeight.w700,
@@ -815,13 +814,13 @@ class _DrillTableScreenState extends State<DrillTableScreen>
             ],
             SizedBox(width: AppSpacing.xxs * s),
             Text(_engine.heroHandClass,
-                style: GoogleFonts.robotoMono(
+                style: AppTypography.mono(
                     color: AppColors.textPrimary,
                     fontSize: 17 * s,
                     fontWeight: FontWeight.w600)),
             SizedBox(width: AppSpacing.xxs * s),
             Text(_engine.heroPosition,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                     color: AppColors.textSecondary,
                     fontSize: 13 * s)),
           ],
@@ -846,7 +845,7 @@ class _DrillTableScreenState extends State<DrillTableScreen>
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(rank,
-              style: GoogleFonts.robotoMono(
+              style: AppTypography.mono(
                   color: color,
                   fontSize: 15 * s,
                   fontWeight: FontWeight.w700)),
@@ -872,7 +871,7 @@ class _DrillTableScreenState extends State<DrillTableScreen>
             key: ValueKey(text),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               color: _handOverNote.isNotEmpty
                   ? _accent.withOpacity(0.85)
                   : AppColors.textSecondary,
@@ -946,20 +945,20 @@ class _DrillTableScreenState extends State<DrillTableScreen>
           Row(
             children: [
               Text(label,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                       color: color,
                       fontSize: 13 * s,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 1.0)),
               SizedBox(width: AppSpacing.xxs * s),
               Text(l10n.drillYouChose(grade.heroAction),
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                       color: AppColors.textSecondary,
                       fontSize: 12 * s)),
               const Spacer(),
               Text(
                 '${_engine.heroHandClass} = ${l10n.drillTopPercent(grade.handTopPercent.round())}',
-                style: GoogleFonts.robotoMono(
+                style: AppTypography.mono(
                     color: AppColors.textSecondary, fontSize: 11 * s),
               ),
             ],
@@ -977,7 +976,7 @@ class _DrillTableScreenState extends State<DrillTableScreen>
               ),
               child: Text(
                 l10n.drillLineupChanges(grade.gtoAction, grade.exploitAction),
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                     color: _accent,
                     fontSize: 12 * s,
                     fontWeight: FontWeight.w600),
@@ -1034,7 +1033,7 @@ class _DrillTableScreenState extends State<DrillTableScreen>
                   (_lastUpdate?.awaitingHero ?? false)
                       ? l10n.drillContinue
                       : l10n.drillGotIt,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                       color: AppColors.textInverse,
                       fontSize: 15 * s,
                       fontWeight: FontWeight.w600),
@@ -1075,21 +1074,21 @@ class _DrillTableScreenState extends State<DrillTableScreen>
               SizedBox(
                 width: 64 * s,
                 child: Text(tag,
-                    style: GoogleFonts.ibmPlexSans(
+                    style: AppTypography.ibm(
                         color: tagColor,
                         fontSize: 11 * s,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 0.8)),
               ),
               Text(action.toUpperCase(),
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                       color: actionColor,
                       fontSize: 13 * s,
                       fontWeight: FontWeight.w700)),
               const Spacer(),
               if (rangePercent > 0 && rangePercent < 100)
                 Text(l10n.drillTopPercent(rangePercent.round()),
-                    style: GoogleFonts.robotoMono(
+                    style: AppTypography.mono(
                         color: AppColors.textSecondary,
                         fontSize: 10 * s)),
             ],
@@ -1097,7 +1096,7 @@ class _DrillTableScreenState extends State<DrillTableScreen>
           if (reason.isNotEmpty) ...[
             SizedBox(height: 3 * s),
             Text(reason,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                     color: AppColors.contentActive.withOpacity(0.7),
                     fontSize: 12 * s,
                     height: 1.35)),
@@ -1118,7 +1117,7 @@ class _DrillTableScreenState extends State<DrillTableScreen>
           Row(
             children: [
               Text(l10n.drillRaiseTo,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                       color: AppColors.textSecondary,
                       fontSize: 13 * s)),
               const Spacer(),
@@ -1157,7 +1156,7 @@ class _DrillTableScreenState extends State<DrillTableScreen>
       children: [
         Text(
           '${l10n.drillPotLabel(turn.potBB.toStringAsFixed(1))}${turn.toCallBB > 0 ? ' · ${l10n.drillToCall(turn.toCallBB.toStringAsFixed(1))}' : ''}',
-          style: GoogleFonts.robotoMono(
+          style: AppTypography.mono(
               color: AppColors.textSecondary, fontSize: 13 * s),
         ),
         SizedBox(height: 10 * s),
@@ -1200,7 +1199,7 @@ class _DrillTableScreenState extends State<DrillTableScreen>
         ),
         child: Center(
           child: Text(label,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                   color: color,
                   fontSize: 15 * s,
                   fontWeight: FontWeight.w700,
@@ -1222,7 +1221,7 @@ class _DrillTableScreenState extends State<DrillTableScreen>
         ),
         child: Center(
           child: Text(l10n.drillNextHand,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                   color: AppColors.textInverse,
                   fontSize: 17 * s,
                   fontWeight: FontWeight.w600)),
@@ -1277,7 +1276,7 @@ class _DrillSummarySheet extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(l10n.drillSummaryTitle,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                     color: AppColors.textPrimary,
                     fontSize: 20,
                     fontWeight: FontWeight.w600)),
@@ -1321,7 +1320,7 @@ class _DrillSummarySheet extends StatelessWidget {
                           const SizedBox(height: 2),
                           Text(
                             m.result.explanation,
-                            style: GoogleFonts.ibmPlexSans(
+                            style: AppTypography.ibm(
                                 color: AppColors.textSecondary,
                                 fontSize: 13,
                                 height: 1.35),
@@ -1366,7 +1365,7 @@ class _DrillSummarySheet extends StatelessWidget {
       child: Column(
         children: [
           Text(value,
-              style: GoogleFonts.robotoMono(
+              style: AppTypography.mono(
                   color: color, fontSize: 18, fontWeight: FontWeight.w700)),
           const SizedBox(height: 2),
           Text(label,

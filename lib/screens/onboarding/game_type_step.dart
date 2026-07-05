@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../design_system/constants/colors.dart';
 import '../../design_system/components/backgrounds/gradient_background.dart';
 import '../../l10n/app_localizations.dart';
+import '../../design_system/constants/typography.dart';
+import '../../design_system/constants/decorations.dart';
 
 class GameTypeStep extends StatefulWidget {
   final ValueChanged<String> onContinue;
@@ -56,7 +57,7 @@ class _GameTypeStepState extends State<GameTypeStep>
                       const SizedBox(height: 16),
                       Text(
                         l10n.onboardingGameTypeTitle,
-                        style: GoogleFonts.ibmPlexSans(
+                        style: AppTypography.ibm(
                           fontSize: 32,
                           fontWeight: FontWeight.w700,
                           color: Colors.white,
@@ -66,7 +67,7 @@ class _GameTypeStepState extends State<GameTypeStep>
                       const SizedBox(height: 8),
                       Text(
                         l10n.onboardingGameTypeSubtitle,
-                        style: GoogleFonts.ibmPlexSans(
+                        style: AppTypography.ibm(
                           fontSize: 17,
                           fontWeight: FontWeight.w400,
                           color: AppColors.textDisabled,
@@ -115,7 +116,7 @@ class _GameTypeStepState extends State<GameTypeStep>
                     ),
                     child: Text(
                       l10n.onboardingContinue,
-                      style: GoogleFonts.ibmPlexSans(
+                      style: AppTypography.ibm(
                         fontSize: 17,
                         fontWeight: FontWeight.w600,
                         color: AppColors.bgPrimary,
@@ -175,7 +176,7 @@ class _OptionCard extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16),
         decoration: BoxDecoration(
           color: AppColors.surfaceDark.withValues(alpha: 0.8),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
           border: Border.all(
             color: isSelected
                 ? AppColors.accentSecondary.withValues(alpha: 0.5)
@@ -188,7 +189,7 @@ class _OptionCard extends StatelessWidget {
             Expanded(
               child: Text(
                 label,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   fontSize: 17,
                   fontWeight: FontWeight.w500,
                   color: Colors.white,

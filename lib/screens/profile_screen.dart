@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -26,6 +25,8 @@ import '../services/test_data_seed_service.dart';
 import '../services/stats_calculator.dart';
 import '../l10n/app_localizations.dart';
 import '../services/feature_flag_service.dart';
+import '../design_system/constants/typography.dart';
+import '../design_system/constants/decorations.dart';
 
 class ProfileScreen extends StatefulWidget {
   @override
@@ -52,13 +53,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Timer? _usernameDebounce;
   String? _originalUsername;
 
-  static const _bg = Color(0xFF0C0C0C);
-  static const _surface = Color(0xFF161719);
-  static const _elevated = Color(0xFF2C2C2E);
-  static const _secondary = Color(0xFFB9B9B9);
-  static const _saveGreen = Color(0xFFA3FF78);
-  static const _danger = Color(0xFFFF3B30);
-  static const _grey = Color(0xFF3A3A3C);
+  static const _bg = AppColors.bgPrimary;
+  static const _surface = AppColors.bgSurface;
+  static const _elevated = AppColors.bgElevated;
+  static const _secondary = AppColors.contentInactive;
+  static const _saveGreen = AppColors.accentSecondary;
+  static const _danger = AppColors.accentDanger;
+  static const _grey = AppColors.bgOverlay;
 
   @override
   void initState() {
@@ -194,10 +195,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   void _showSnack(String msg, {bool isSuccess = false}) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(msg, style: GoogleFonts.ibmPlexSans(color: Colors.white)),
-      backgroundColor: isSuccess ? const Color(0xFF2C2C2E) : const Color(0xFF3A3A3C),
+      content: Text(msg, style: AppTypography.ibm(color: Colors.white)),
+      backgroundColor: isSuccess ? AppColors.bgElevated : AppColors.contentDisabled,
       behavior: SnackBarBehavior.floating,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDecorations.radiusMd)),
     ));
   }
 
@@ -208,15 +209,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1A1A1E),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(l10n.profileSignOut, style: GoogleFonts.ibmPlexSans(color: Colors.white, fontWeight: FontWeight.w600)),
+        backgroundColor: AppColors.surfaceVariant4,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDecorations.radius20)),
+        title: Text(l10n.profileSignOut, style: AppTypography.ibm(color: Colors.white, fontWeight: FontWeight.w600)),
         content: Text(l10n.profileSignOutConfirmation,
-            style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 14)),
+            style: AppTypography.ibm(color: Colors.white, fontSize: 14)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text(l10n.commonCancel, style: GoogleFonts.ibmPlexSans(color: _secondary, fontWeight: FontWeight.w500)),
+            child: Text(l10n.commonCancel, style: AppTypography.ibm(color: _secondary, fontWeight: FontWeight.w500)),
           ),
           TextButton(
             onPressed: () async {
@@ -227,7 +228,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     context, MaterialPageRoute(builder: (_) => IntroScreen()), (_) => false);
               }
             },
-            child: Text(l10n.profileSignOut, style: GoogleFonts.ibmPlexSans(color: _danger, fontWeight: FontWeight.w500)),
+            child: Text(l10n.profileSignOut, style: AppTypography.ibm(color: _danger, fontWeight: FontWeight.w500)),
           ),
         ],
       ),
@@ -307,7 +308,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
       child: Center(
         child: Text(initials,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
                 fontSize: size * 0.35, fontWeight: FontWeight.w600, color: AppColors.limeGreen)),
       ),
     );
@@ -358,7 +359,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         alignment: Alignment.centerRight,
                         child: Text(
                           l10n.commonSave,
-                          style: GoogleFonts.ibmPlexSans(
+                          style: AppTypography.ibm(
                             fontSize: 17,
                             fontWeight: FontWeight.w600,
                             color: _saveGreen,
@@ -395,10 +396,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
                                 decoration: BoxDecoration(
                                   color: _elevated,
-                                  borderRadius: BorderRadius.circular(999),
+                                  borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
                                 ),
                                 child: Text(l10n.profileEdit,
-                                    style: GoogleFonts.ibmPlexSans(
+                                    style: AppTypography.ibm(
                                         fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white)),
                               ),
                             ),
@@ -413,7 +414,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   // ── Nickname toggle card ────────────────────────────────
                   Container(
                     padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(color: _surface, borderRadius: BorderRadius.circular(16)),
+                    decoration: BoxDecoration(color: _surface, borderRadius: BorderRadius.circular(AppDecorations.radiusLg)),
                     child: Row(
                       children: [
                         Expanded(
@@ -421,12 +422,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(l10n.profileUseNicknameInGames,
-                                  style: GoogleFonts.ibmPlexSans(
+                                  style: AppTypography.ibm(
                                       fontSize: 15, fontWeight: FontWeight.w500, color: Colors.white)),
                               const SizedBox(height: 4),
                               Text(
                                 'Show @${_usernameCtrl.text.replaceAll('@', '').isNotEmpty ? _usernameCtrl.text.replaceAll('@', '') : 'username'} ${l10n.profileInsteadOfName}',
-                                style: GoogleFonts.ibmPlexSans(fontSize: 13, color: _secondary, height: 20 / 13),
+                                style: AppTypography.ibm(fontSize: 13, color: _secondary, height: 20 / 13),
                               ),
                             ],
                           ),
@@ -537,19 +538,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final isFocused = focusNode?.hasFocus ?? false;
     final isFilled = controller.text.isNotEmpty;
     final borderColor = isFocused
-        ? const Color(0xFF4CDE78)
+        ? AppColors.accentPrimary
         : Colors.transparent;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label,
-            style: GoogleFonts.ibmPlexSans(fontSize: 13, fontWeight: FontWeight.w500, color: _secondary)),
+            style: AppTypography.ibm(fontSize: 13, fontWeight: FontWeight.w500, color: _secondary)),
         const SizedBox(height: 8),
         Container(
           decoration: BoxDecoration(
             color: _surface,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
             border: Border.all(color: borderColor, width: 1.5),
           ),
           child: TextField(
@@ -558,13 +559,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
             readOnly: readOnly,
             onTap: onTap,
             keyboardType: keyboardType,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               fontSize: 15,
               color: readOnly ? _secondary : Colors.white,
             ),
             decoration: InputDecoration(
               hintText: placeholder,
-              hintStyle: GoogleFonts.ibmPlexSans(fontSize: 15, color: _secondary),
+              hintStyle: AppTypography.ibm(fontSize: 15, color: _secondary),
               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               border: InputBorder.none,
               enabledBorder: InputBorder.none,
@@ -591,30 +592,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final borderColor = hasError
         ? _danger
         : isFocused
-            ? const Color(0xFF4CDE78)
+            ? AppColors.accentPrimary
             : Colors.transparent;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(AppLocalizations.of(context).profileEditUsername,
-            style: GoogleFonts.ibmPlexSans(fontSize: 13, fontWeight: FontWeight.w500, color: _secondary)),
+            style: AppTypography.ibm(fontSize: 13, fontWeight: FontWeight.w500, color: _secondary)),
         const SizedBox(height: 8),
         Container(
           decoration: BoxDecoration(
             color: _surface,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
             border: Border.all(color: borderColor, width: 1.5),
           ),
           child: TextField(
             controller: _usernameCtrl,
             focusNode: _usernameFocus,
-            style: GoogleFonts.ibmPlexSans(fontSize: 15, color: Colors.white),
+            style: AppTypography.ibm(fontSize: 15, color: Colors.white),
             decoration: InputDecoration(
               hintText: AppLocalizations.of(context).profileUsernameHint,
-              hintStyle: GoogleFonts.ibmPlexSans(fontSize: 15, color: _secondary),
+              hintStyle: AppTypography.ibm(fontSize: 15, color: _secondary),
               prefixText: '@',
-              prefixStyle: GoogleFonts.ibmPlexSans(fontSize: 15, color: Colors.white),
+              prefixStyle: AppTypography.ibm(fontSize: 15, color: Colors.white),
               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               border: InputBorder.none,
               enabledBorder: InputBorder.none,
@@ -645,7 +646,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Padding(
             padding: const EdgeInsets.only(top: 6, left: 4),
             child: Text(_usernameError!,
-                style: GoogleFonts.ibmPlexSans(fontSize: 11, color: _danger)),
+                style: AppTypography.ibm(fontSize: 11, color: _danger)),
           ),
       ],
     );
@@ -669,7 +670,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: Container(
                 width: 18, height: 18,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF0C0C0C),
+                  color: AppColors.bgPrimary,
                   borderRadius: BorderRadius.circular(42),
                 ),
               ),
@@ -702,7 +703,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ],
             Expanded(
               child: Text(title,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                       fontSize: 17, fontWeight: FontWeight.w400,
                       color: titleColor ?? Colors.white, height: 26 / 17)),
             ),
@@ -729,7 +730,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     showModalBottomSheet(
       context: context,
       backgroundColor: _surface,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(AppDecorations.radiusXl))),
       builder: (ctx) => SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
@@ -737,10 +738,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(l10n.profileChangePasswordTitle,
-                  style: GoogleFonts.ibmPlexSans(fontSize: 20, fontWeight: FontWeight.w600, color: Colors.white)),
+                  style: AppTypography.ibm(fontSize: 20, fontWeight: FontWeight.w600, color: Colors.white)),
               const SizedBox(height: 8),
               Text(l10n.profileChangePasswordMessage,
-                  style: GoogleFonts.ibmPlexSans(fontSize: 14, color: _secondary), textAlign: TextAlign.center),
+                  style: AppTypography.ibm(fontSize: 14, color: _secondary), textAlign: TextAlign.center),
               const SizedBox(height: 24),
               SizedBox(
                 width: double.infinity,
@@ -760,10 +761,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     decoration: BoxDecoration(
-                        color: _elevated, borderRadius: BorderRadius.circular(60)),
+                        color: _elevated, borderRadius: BorderRadius.circular(AppDecorations.buttonRadius)),
                     child: Text(l10n.profileSendResetEmail,
                         textAlign: TextAlign.center,
-                        style: GoogleFonts.ibmPlexSans(
+                        style: AppTypography.ibm(
                             fontSize: 17, fontWeight: FontWeight.w600, color: Colors.white)),
                   ),
                 ),
@@ -784,7 +785,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: AppColors.surfaceDark,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
           border: Border.all(
               color: AppColors.tealPrimary.withValues(alpha: 0.3)),
         ),
@@ -796,7 +797,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   color: AppColors.tealPrimary, size: 20),
               const SizedBox(width: 8),
               Text('Feature Flags',
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                       fontSize: 17,
                       fontWeight: FontWeight.w600,
                       color: AppColors.tealPrimary)),
@@ -808,16 +809,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 'for you (preview); "Off" hides it for everyone, you '
                 'included.',
                 style:
-                    GoogleFonts.ibmPlexSans(fontSize: 12, color: _secondary)),
+                    AppTypography.ibm(fontSize: 12, color: _secondary)),
             const SizedBox(height: 12),
             for (final flag in FeatureFlagService.all) ...[
               Text(flag.title,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                       fontSize: 15,
                       fontWeight: FontWeight.w500,
                       color: Colors.white)),
               Text(flag.description,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                       fontSize: 12, color: _secondary)),
               const SizedBox(height: 8),
               Row(
@@ -865,12 +866,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
             color: selected
                 ? accent.withValues(alpha: 0.18)
                 : Colors.transparent,
-            borderRadius: BorderRadius.circular(40),
+            borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
             border: Border.all(
                 color: selected ? accent : AppColors.neutral700),
           ),
           child: Text(label,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                   fontSize: 13,
                   fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
                   color: selected ? accent : _secondary)),
@@ -887,7 +888,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: const Color(0xFF1A0000),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
         border: Border.all(color: const Color(0xFFFF6B6B).withValues(alpha: 0.3)),
       ),
       child: Column(
@@ -896,7 +897,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Row(children: [
             const Icon(Icons.bug_report, color: Color(0xFFFF6B6B), size: 20),
             const SizedBox(width: 8),
-            Text(AppLocalizations.of(context).profileDevTools, style: GoogleFonts.ibmPlexSans(
+            Text(AppLocalizations.of(context).profileDevTools, style: AppTypography.ibm(
                 fontSize: 17, fontWeight: FontWeight.w600, color: const Color(0xFFFF6B6B))),
           ]),
           const SizedBox(height: 16),
@@ -904,12 +905,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(AppLocalizations.of(context).profilePremiumOverride, style: GoogleFonts.ibmPlexSans(fontSize: 15, fontWeight: FontWeight.w500, color: Colors.white)),
+                Text(AppLocalizations.of(context).profilePremiumOverride, style: AppTypography.ibm(fontSize: 15, fontWeight: FontWeight.w500, color: Colors.white)),
                 Text(
                   override == null
                       ? 'Real: ${SubscriptionService.isPremium ? 'Premium' : 'Free'}'
                       : 'Overridden: ${override ? 'Premium' : 'Free'}',
-                  style: GoogleFonts.ibmPlexSans(fontSize: 12, color: _secondary),
+                  style: AppTypography.ibm(fontSize: 12, color: _secondary),
                 ),
               ]),
               Switch(
@@ -924,7 +925,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           if (override != null) ...[
             GestureDetector(
               onTap: () async { await SubscriptionService.setDebugPremiumOverride(null); setState(() {}); },
-              child: Text('Reset to real', style: GoogleFonts.ibmPlexSans(
+              child: Text('Reset to real', style: AppTypography.ibm(
                   fontSize: 13, color: AppColors.buttonPrimary,
                   decoration: TextDecoration.underline, decorationColor: AppColors.buttonPrimary)),
             ),
@@ -958,11 +959,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
           border: Border.all(color: color.withValues(alpha: 0.24)),
         ),
         child: Center(
-          child: Text(label, style: GoogleFonts.ibmPlexSans(
+          child: Text(label, style: AppTypography.ibm(
               fontSize: 14, fontWeight: FontWeight.w600, color: color)),
         ),
       ),

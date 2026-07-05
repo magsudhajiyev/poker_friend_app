@@ -3,6 +3,7 @@ import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import '../design_system/constants/colors.dart';
 
 class NotificationService {
   static final FlutterLocalNotificationsPlugin _notifications =
@@ -168,7 +169,7 @@ class NotificationService {
             icon: '@mipmap/ic_launcher',
             largeIcon: const DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
             styleInformation: const BigTextStyleInformation(''),
-            color: Color(0xFFcb5242), // App's red color for the small icon
+            color: AppColors.errorRedVariant, // App's red color for the small icon
           ),
           iOS: DarwinNotificationDetails(
             presentAlert: true,
@@ -279,7 +280,7 @@ class NotificationService {
             icon: '@mipmap/ic_launcher',
             largeIcon: const DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
             styleInformation: const BigTextStyleInformation(''),
-            color: Color(0xFFcb5242), // App's red color for the small icon
+            color: AppColors.errorRedVariant, // App's red color for the small icon
           ),
           iOS: DarwinNotificationDetails(
             presentAlert: true,

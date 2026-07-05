@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
 import '../models/poker_game_state.dart';
+import '../design_system/constants/decorations.dart';
 
 class ActionButtonGrid extends StatelessWidget {
   final Function(PlayerAction) onActionSelected;
@@ -100,14 +101,14 @@ class ActionButtonGrid extends StatelessWidget {
   }) {
     return Material(
       elevation: 4,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
         child: Container(
           decoration: BoxDecoration(
             color: color,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,

@@ -5,6 +5,7 @@ import '../l10n/app_localizations.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/spacing.dart';
 import '../services/subscription_service.dart';
+import '../design_system/constants/decorations.dart';
 
 /// Paywall screen showing subscription plan selection.
 ///
@@ -161,7 +162,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
     final bottomPadding = MediaQuery.of(context).padding.bottom;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0C0C0C),
+      backgroundColor: AppColors.bgPrimary,
       body: Column(
         children: [
           _buildTopBar(l10n),
@@ -195,7 +196,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
   Widget _buildTopBar(AppLocalizations l10n) {
     final topPadding = MediaQuery.of(context).padding.top;
     return Container(
-      color: const Color(0xFF161719),
+      color: AppColors.bgSurface,
       padding: EdgeInsets.only(top: topPadding, bottom: 12),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -270,7 +271,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
             fontSize: 15,
             fontWeight: FontWeight.w400,
             height: 22 / 15,
-            color: Color(0xFFB9B9B9),
+            color: AppColors.textSecondary,
           ),
         ),
       ],
@@ -281,7 +282,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.separatorDark,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
       ),
       padding: const EdgeInsets.all(4),
       child: Row(
@@ -294,7 +295,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 decoration: BoxDecoration(
                   color: !_isAnnual ? Colors.white : Colors.transparent,
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
                 ),
                 child: Center(
                   child: Text(
@@ -304,8 +305,8 @@ class _PaywallScreenState extends State<PaywallScreen> {
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                       color: !_isAnnual
-                          ? const Color(0xFF0C0C0C)
-                          : const Color(0xFFB9B9B9),
+                          ? AppColors.textInverse
+                          : AppColors.textSecondary,
                     ),
                   ),
                 ),
@@ -320,7 +321,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 decoration: BoxDecoration(
                   color: _isAnnual ? Colors.white : Colors.transparent,
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
                 ),
                 child: Center(
                   child: Text(
@@ -330,8 +331,8 @@ class _PaywallScreenState extends State<PaywallScreen> {
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                       color: _isAnnual
-                          ? const Color(0xFF0C0C0C)
-                          : const Color(0xFFB9B9B9),
+                          ? AppColors.textInverse
+                          : AppColors.textSecondary,
                     ),
                   ),
                 ),
@@ -454,7 +455,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                   height: 20,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    color: Color(0xFFB9B9B9),
+                    color: AppColors.contentInactive,
                   ),
                 )
               : Text(
@@ -464,9 +465,9 @@ class _PaywallScreenState extends State<PaywallScreen> {
                     fontSize: 15,
                     fontWeight: FontWeight.w500,
                     height: 22 / 15,
-                    color: Color(0xFFB9B9B9),
+                    color: AppColors.textSecondary,
                     decoration: TextDecoration.underline,
-                    decorationColor: Color(0xFFB9B9B9),
+                    decorationColor: AppColors.textSecondary,
                   ),
                 ),
         ),
@@ -483,9 +484,9 @@ class _PaywallScreenState extends State<PaywallScreen> {
                   fontSize: 15,
                   fontWeight: FontWeight.w400,
                   height: 22 / 15,
-                  color: Color(0xFFB9B9B9),
+                  color: AppColors.textSecondary,
                   decoration: TextDecoration.underline,
-                  decorationColor: Color(0xFFB9B9B9),
+                  decorationColor: AppColors.textSecondary,
                 ),
               ),
             ),
@@ -495,7 +496,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                 '\u2022',
                 style: TextStyle(
                   fontSize: 15,
-                  color: Color(0xFFB9B9B9),
+                  color: AppColors.textSecondary,
                 ),
               ),
             ),
@@ -508,9 +509,9 @@ class _PaywallScreenState extends State<PaywallScreen> {
                   fontSize: 15,
                   fontWeight: FontWeight.w400,
                   height: 22 / 15,
-                  color: Color(0xFFB9B9B9),
+                  color: AppColors.textSecondary,
                   decoration: TextDecoration.underline,
-                  decorationColor: Color(0xFFB9B9B9),
+                  decorationColor: AppColors.textSecondary,
                 ),
               ),
             ),
@@ -523,7 +524,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
   Widget _buildBottomButton(AppLocalizations l10n, double bottomPadding) {
     final isLoading = _isPurchasing || _isRestoring;
     return Container(
-      color: const Color(0xFF0C0C0C),
+      color: AppColors.bgPrimary,
       padding: EdgeInsets.only(
         top: 24,
         bottom: bottomPadding > 0 ? bottomPadding : 24,
@@ -537,7 +538,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
             decoration: BoxDecoration(
               color: isLoading ? Colors.white.withValues(alpha: 0.6) : Colors.white,
-              borderRadius: BorderRadius.circular(999),
+              borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
             ),
             child: Center(
               child: _isPurchasing
@@ -546,7 +547,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                       height: 20,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: Color(0xFF0C0C0C),
+                        color: AppColors.bgPrimary,
                       ),
                     )
                   : Text(
@@ -556,7 +557,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
                         height: 20 / 15,
-                        color: Color(0xFF0C0C0C),
+                        color: AppColors.textInverse,
                       ),
                     ),
             ),
@@ -599,8 +600,8 @@ class _PlanCard extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         curve: Curves.easeInOut,
         decoration: BoxDecoration(
-          color: const Color(0xFF161719),
-          borderRadius: BorderRadius.circular(16),
+          color: AppColors.bgSurface,
+          borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
           border: Border.all(
             color: isSelected ? AppColors.accentSecondary : Colors.transparent,
             width: 2,
@@ -633,7 +634,7 @@ class _PlanCard extends StatelessWidget {
                     ),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(999),
+                      borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -641,7 +642,7 @@ class _PlanCard extends StatelessWidget {
                         const Icon(
                           Icons.timer_outlined,
                           size: 12,
-                          color: Color(0xFF0C0C0C),
+                          color: AppColors.bgPrimary,
                         ),
                         const SizedBox(width: 4),
                         Text(
@@ -651,7 +652,7 @@ class _PlanCard extends StatelessWidget {
                             fontSize: 11,
                             fontWeight: FontWeight.w500,
                             height: 16 / 11,
-                            color: Color(0xFF0C0C0C),
+                            color: AppColors.textInverse,
                           ),
                         ),
                       ],
@@ -669,7 +670,7 @@ class _PlanCard extends StatelessWidget {
                 fontSize: 17,
                 fontWeight: FontWeight.w600,
                 height: 22 / 17,
-                color: Color(0xFFB9B9B9),
+                color: AppColors.textSecondary,
               ),
             ),
             const SizedBox(height: 24),
@@ -695,7 +696,7 @@ class _PlanCard extends StatelessWidget {
                 fontSize: 13,
                 fontWeight: FontWeight.w400,
                 height: 20 / 13,
-                color: Color(0xFFB9B9B9),
+                color: AppColors.textSecondary,
               ),
             ),
             const SizedBox(height: 24),
@@ -734,7 +735,7 @@ class _PlanCard extends StatelessWidget {
                 fontSize: 15,
                 fontWeight: FontWeight.w400,
                 height: 22 / 15,
-                color: Color(0xFFB9B9B9),
+                color: AppColors.textSecondary,
               ),
             ),
           ),

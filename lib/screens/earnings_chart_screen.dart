@@ -1,7 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -9,6 +8,8 @@ import '../l10n/app_localizations.dart';
 import '../services/session_result_service.dart';
 import '../design_system/constants/colors.dart';
 import '../services/currency_service.dart';
+import '../design_system/constants/typography.dart';
+import '../design_system/constants/decorations.dart';
 
 /// Full-screen landscape earnings chart with zoom/pan
 /// Shows all-time cumulative earnings for tournament and cash games
@@ -150,8 +151,8 @@ class _EarningsChartScreenState extends State<EarningsChartScreen> {
             end: Alignment.bottomLeft,
             colors: [
               AppColors.headerGradientTeal,
-              const Color(0xFF161618),
-              const Color(0xFF161618),
+              AppColors.surfaceVariant1,
+              AppColors.surfaceVariant1,
             ],
             stops: const [0.0, 0.3, 1.0],
           ),
@@ -201,7 +202,7 @@ class _EarningsChartScreenState extends State<EarningsChartScreen> {
                 const SizedBox(height: 16),
                 Text(
                   l10n.earningsChartNoData,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     color: Colors.white.withValues(alpha: 0.5),
                     fontSize: 18,
                   ),
@@ -209,7 +210,7 @@ class _EarningsChartScreenState extends State<EarningsChartScreen> {
                 const SizedBox(height: 8),
                 Text(
                   l10n.earningsChartNoDataSubtitle,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     color: Colors.white.withValues(alpha: 0.3),
                     fontSize: 14,
                   ),
@@ -254,7 +255,7 @@ class _EarningsChartScreenState extends State<EarningsChartScreen> {
               children: [
                 Text(
                   l10n.earningsChartAllTimeEarnings,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     fontSize: 18,
                     color: Colors.white,
                     fontWeight: FontWeight.w600,
@@ -263,7 +264,7 @@ class _EarningsChartScreenState extends State<EarningsChartScreen> {
                 if (_firstSessionDate != null)
                   Text(
                     l10n.earningsChartSinceDate(DateFormat('MMM d, yyyy').format(_firstSessionDate!)),
-                    style: GoogleFonts.ibmPlexSans(
+                    style: AppTypography.ibm(
                       fontSize: 12,
                       color: Colors.white.withValues(alpha: 0.6),
                     ),
@@ -298,7 +299,7 @@ class _EarningsChartScreenState extends State<EarningsChartScreen> {
         const SizedBox(width: 6),
         Text(
           label,
-          style: GoogleFonts.ibmPlexSans(
+          style: AppTypography.ibm(
             fontSize: 12,
             color: Colors.white.withValues(alpha: 0.7),
             fontWeight: FontWeight.w400,
@@ -316,12 +317,12 @@ class _EarningsChartScreenState extends State<EarningsChartScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppDecorations.radius20),
         border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Text(
         '${isNegative ? "-" : ""}${CurrencyService.formatCash(amount.abs())}',
-        style: GoogleFonts.ibmPlexSans(
+        style: AppTypography.ibm(
           fontSize: 16,
           color: color,
           fontWeight: FontWeight.w600,
@@ -421,7 +422,7 @@ class _EarningsChartScreenState extends State<EarningsChartScreen> {
                 getTitlesWidget: (double value, TitleMeta meta) {
                   return Text(
                     _formatYAxisValue(value),
-                    style: GoogleFonts.robotoMono(
+                    style: AppTypography.mono(
                       color: Colors.white.withValues(alpha: 0.35),
                       fontSize: 10,
                     ),
@@ -454,7 +455,7 @@ class _EarningsChartScreenState extends State<EarningsChartScreen> {
                     space: 6.0,
                     child: Text(
                       data[idx]['dateLabel'] as String,
-                      style: GoogleFonts.ibmPlexSans(
+                      style: AppTypography.ibm(
                         color: Colors.white.withValues(alpha: 0.3),
                         fontSize: 10,
                       ),
@@ -490,7 +491,7 @@ class _EarningsChartScreenState extends State<EarningsChartScreen> {
                   }
                   return LineTooltipItem(
                     '$dateLabel$label: ${CurrencyService.formatCash(value)}',
-                    GoogleFonts.ibmPlexSans(
+                    AppTypography.ibm(
                       color: color,
                       fontSize: 12,
                       fontWeight: FontWeight.w500,

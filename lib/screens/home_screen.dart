@@ -5,7 +5,6 @@ import 'dart:async';
 import 'dart:ui' as ui;
 import 'dart:math' as math;
 import 'package:intl/intl.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../screens/introduction_screen.dart';
@@ -68,6 +67,7 @@ import '../services/app_data_cache.dart';
 import '../services/display_identity_service.dart';
 import '../services/logger_service.dart';
 import '../l10n/app_localizations.dart';
+import '../design_system/constants/decorations.dart';
 
 /// Home screen
 class HomeScreen extends StatefulWidget {
@@ -493,8 +493,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       width: 280,
       constraints: const BoxConstraints(maxHeight: 300),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1E),
-        borderRadius: BorderRadius.circular(16),
+        color: AppColors.surfaceVariant4,
+        borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
         border: Border.all(
           color: Colors.white.withValues(alpha: 0.1),
           width: 1,
@@ -590,7 +590,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               height: 44,
               decoration: BoxDecoration(
                 color: AppColors.profitGreen.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
               ),
               child: const Icon(
                 Icons.casino,
@@ -715,7 +715,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.surfaceDark,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDecorations.radius20)),
         title: Row(
           children: [
             Icon(
@@ -727,7 +727,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             Expanded(
               child: Text(
                 isResolved ? AppLocalizations.of(context).homeRequestResolved : AppLocalizations.of(context).homeRequestClosed,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   color: Colors.white,
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
@@ -742,7 +742,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           children: [
             Text(
               request.subject,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 color: Colors.white,
                 fontSize: 15,
                 fontWeight: FontWeight.w500,
@@ -751,7 +751,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             const SizedBox(height: 4),
             Text(
               request.category,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 color: AppColors.textDisabled,
                 fontSize: 13,
               ),
@@ -760,7 +760,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               const SizedBox(height: 16),
               Text(
                 AppLocalizations.of(context).homeResponse,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   color: AppColors.textDisabled,
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
@@ -775,11 +775,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   color: isResolved
                       ? AppColors.limeGreen.withValues(alpha: 0.1)
                       : AppColors.errorRed.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(AppDecorations.radius10),
                 ),
                 child: Text(
                   request.adminResponse!,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     color: Colors.white,
                     fontSize: 14,
                     height: 1.5,
@@ -794,7 +794,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             onPressed: () => Navigator.pop(context),
             child: Text(
               'OK',
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 color: AppColors.buttonPrimary,
                 fontWeight: FontWeight.w600,
               ),
@@ -858,7 +858,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       context: context,
       builder: (dialogContext) => AlertDialog(
         backgroundColor: const Color(0xFF1A1A2E),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDecorations.radius20)),
         title: Text(
           AppLocalizations.of(context).homeClubInvitation,
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
@@ -930,7 +930,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               backgroundColor: const Color(0xFF4CAF50),
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
               ),
             ),
             child: Text(AppLocalizations.of(context).homeAccept),
@@ -1298,7 +1298,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           builder: (context) => AlertDialog(
             backgroundColor: PokerFriendColors.dark2,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
             ),
             title: Row(
               children: [
@@ -1347,7 +1347,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: PokerFriendColors.purple,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
                   ),
                 ),
                 child: Text(
@@ -1546,7 +1546,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               padding: const EdgeInsets.only(bottom: 64),
               child: Text(
                 AppLocalizations.of(context).homeLoadingPokerData,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   fontSize: 13,
                   color: Colors.white.withValues(alpha: 0.45),
                 ),
@@ -1940,7 +1940,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: Text(
             l10n.homeRecentActivity,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               fontSize: 17,
               fontWeight: FontWeight.w600,
               color: Colors.white,
@@ -2036,7 +2036,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         border: Border.all(color: AppColors.borderDefault, width: 1),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
       ),
       child: Stack(
         clipBehavior: Clip.none,
@@ -2049,7 +2049,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 height: 28,
                 decoration: BoxDecoration(
                   color: iconBg,
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(AppDecorations.radius10),
                 ),
                 child: Center(child: icon),
               ),
@@ -2059,7 +2059,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 children: [
                   Text(
                     label,
-                    style: GoogleFonts.ibmPlexSans(
+                    style: AppTypography.ibm(
                       fontSize: 13,
                       fontWeight: FontWeight.w500,
                       color: AppColors.textSecondary,
@@ -2068,7 +2068,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   const SizedBox(height: 6),
                   Text(
                     value,
-                    style: GoogleFonts.ibmPlexSans(
+                    style: AppTypography.ibm(
                       fontSize: 17,
                       fontWeight: FontWeight.w500,
                       color: Colors.white,
@@ -2136,8 +2136,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF2C2C2E),
-                        borderRadius: BorderRadius.circular(12),
+                        color: AppColors.bgElevated,
+                        borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                       ),
                       child: Row(
                         children: [
@@ -2146,16 +2146,16 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             width: 12,
                             height: 12,
                             colorFilter: const ColorFilter.mode(
-                              Color(0xFFB9B9B9), BlendMode.srcIn),
+                              AppColors.contentInactive, BlendMode.srcIn),
                           ),
                           const SizedBox(width: 4),
                           Expanded(
                             child: Text(
                               l10n.homePlayStyleTooltip,
-                              style: GoogleFonts.ibmPlexSans(
+                              style: AppTypography.ibm(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w500,
-                                color: const Color(0xFFB9B9B9),
+                                color: AppColors.textSecondary,
                                 height: 16 / 11,
                               ),
                             ),
@@ -2297,7 +2297,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             // "Total Bankroll" label
             Text(
               'Total Bankroll',
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 fontSize: 10, fontWeight: FontWeight.w600,
                 color: AppColors.textSecondary,
               ),
@@ -2320,14 +2320,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           children: [
                             TextSpan(
                               text: CurrencyService.formatBankroll(currentBankroll),
-                              style: GoogleFonts.familjenGrotesk(
+                              style: AppTypography.grotesk(
                                 fontSize: 64, fontWeight: FontWeight.w600,
                                 color: Colors.white, height: 1.0,
                               ),
                             ),
                             TextSpan(
                               text: '  of ${CurrencyService.formatBankroll(bankrollGoal)}',
-                              style: GoogleFonts.familjenGrotesk(
+                              style: AppTypography.grotesk(
                                 fontSize: 24, fontWeight: FontWeight.w400,
                                 color: AppColors.textSecondary, height: 1.0,
                               ),
@@ -2412,14 +2412,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       children: [
                         Text(
                           '${CurrencyService.formatBankroll(remaining)} left',
-                          style: GoogleFonts.ibmPlexSans(
+                          style: AppTypography.ibm(
                             fontSize: 13, fontWeight: FontWeight.w600,
                             color: Colors.white,
                           ),
                         ),
                         Text(
                           '$progressPct%',
-                          style: GoogleFonts.ibmPlexSans(
+                          style: AppTypography.ibm(
                             fontSize: 13, fontWeight: FontWeight.w600,
                             color: Colors.white,
                           ),
@@ -2431,7 +2431,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   ImageFiltered(
                     imageFilter: blurFilter,
                     child: ClipRRect(
-                      borderRadius: BorderRadius.circular(70),
+                      borderRadius: BorderRadius.circular(AppDecorations.navBarRadius),
                       child: LinearProgressIndicator(
                         value: progress,
                         minHeight: 6,
@@ -2458,7 +2458,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       children: [
         Text(
           label,
-          style: GoogleFonts.ibmPlexSans(
+          style: AppTypography.ibm(
             fontSize: 11, fontWeight: FontWeight.w500,
             color: AppColors.textSecondary,
           ),
@@ -2475,16 +2475,16 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             controller: controller,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             textAlign: TextAlign.left,
-            style: GoogleFonts.robotoMono(
+            style: AppTypography.mono(
               fontSize: 15, fontWeight: FontWeight.w500, color: Colors.white,
             ),
             decoration: InputDecoration(
               prefixText: CurrencyService.prefixText,
               suffixText: CurrencyService.suffixText,
-              prefixStyle: GoogleFonts.robotoMono(
+              prefixStyle: AppTypography.mono(
                 fontSize: 15, color: AppColors.contentInactive,
               ),
-              suffixStyle: GoogleFonts.robotoMono(
+              suffixStyle: AppTypography.mono(
                 fontSize: 15, color: AppColors.contentInactive,
               ),
               border: InputBorder.none,
@@ -2521,7 +2521,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       children: [
                         Text(
                           l10n.bankrollSheetTitle,
-                          style: GoogleFonts.ibmPlexSans(
+                          style: AppTypography.ibm(
                             fontSize: 15, fontWeight: FontWeight.w600,
                             color: Colors.white, letterSpacing: -0.3,
                           ),
@@ -2548,7 +2548,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           height: 32,
                           decoration: BoxDecoration(
                             color: Colors.white.withValues(alpha: 0.08),
-                            borderRadius: BorderRadius.circular(16),
+                            borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
                           ),
                           child: Row(
                             children: [
@@ -2570,18 +2570,18 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       height: 44,
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.06),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                       ),
                       child: TextField(
                         controller: _resultController,
                         keyboardType: const TextInputType.numberWithOptions(signed: true, decimal: true),
-                        style: GoogleFonts.robotoMono(
+                        style: AppTypography.mono(
                           fontSize: 20, fontWeight: FontWeight.w600, color: Colors.white,
                         ),
                         textAlign: TextAlign.center,
                         decoration: InputDecoration(
                           hintText: l10n.profileSessionResultHint,
-                          hintStyle: GoogleFonts.ibmPlexSans(
+                          hintStyle: AppTypography.ibm(
                             fontSize: 13, color: Colors.white.withValues(alpha: 0.3),
                           ),
                           border: InputBorder.none,
@@ -2608,7 +2608,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         children: [
                           Text(
                             l10n.bankrollSheetEditSection,
-                            style: GoogleFonts.ibmPlexSans(
+                            style: AppTypography.ibm(
                               fontSize: 12, fontWeight: FontWeight.w500,
                               color: Colors.white.withValues(alpha: 0.4),
                             ),
@@ -2665,13 +2665,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           height: 32,
           decoration: BoxDecoration(
             color: isSelected ? AppColors.accentPrimary.withValues(alpha: 0.15) : Colors.transparent,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
             border: isSelected ? Border.all(color: AppColors.accentPrimary.withValues(alpha: 0.4), width: 1) : null,
           ),
           child: Center(
             child: Text(
               label,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 fontSize: 12, fontWeight: FontWeight.w500,
                 color: isSelected ? AppColors.accentPrimary : AppColors.contentInactive,
               ),
@@ -2689,7 +2689,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         children: [
           Text(
             label,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               fontSize: 13, fontWeight: FontWeight.w400,
               color: AppColors.textSecondary,
             ),
@@ -2706,13 +2706,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               controller: controller,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
               textAlign: TextAlign.right,
-              style: GoogleFonts.robotoMono(
+              style: AppTypography.mono(
                 fontSize: 14, fontWeight: FontWeight.w500, color: Colors.white,
               ),
               decoration: InputDecoration(
                 prefixText: CurrencyService.prefixText,
                 suffixText: CurrencyService.suffixText,
-                prefixStyle: GoogleFonts.robotoMono(
+                prefixStyle: AppTypography.mono(
                   fontSize: 14, color: AppColors.contentInactive,
                 ),
                 border: InputBorder.none,
@@ -2768,7 +2768,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   alignment: Alignment.centerLeft,
                   child: Text(
                     l10n.homeEarnings,
-                    style: GoogleFonts.ibmPlexSans(
+                    style: AppTypography.ibm(
                       fontSize: 17,
                       fontWeight: FontWeight.w500,
                       color: Colors.white,
@@ -2781,7 +2781,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   children: [
                     Text(
                       CurrencyService.formatCash(netProfit),
-                      style: GoogleFonts.ibmPlexSans(
+                      style: AppTypography.ibm(
                         fontSize: 20,
                         fontWeight: FontWeight.w600,
                         color: AppColors.accentPrimary,
@@ -2791,7 +2791,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     const SizedBox(height: 4),
                     Text(
                       'Net Profit',
-                      style: GoogleFonts.ibmPlexSans(
+                      style: AppTypography.ibm(
                         fontSize: 11,
                         fontWeight: FontWeight.w400,
                         color: AppColors.textSecondary,
@@ -2854,7 +2854,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(AppDecorations.radiusXl),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -2865,7 +2865,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 alignment: Alignment.centerRight,
                 child: GestureDetector(
                   onTap: () => Navigator.of(ctx).pop(),
-                  child: const Icon(Icons.close, size: 18, color: Color(0xFFB9B9B9)),
+                  child: const Icon(Icons.close, size: 18, color: AppColors.contentInactive),
                 ),
               ),
               const SizedBox(height: 16),
@@ -2878,8 +2878,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       width: 38,
                       height: 38,
                       decoration: BoxDecoration(
-                        color: const Color(0xFF161719),
-                        borderRadius: BorderRadius.circular(12),
+                        color: AppColors.bgSurface,
+                        borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                       ),
                       child: Center(
                         child: SvgPicture.string(
@@ -2898,10 +2898,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   Text(
                     'No earning data yet',
                     textAlign: TextAlign.center,
-                    style: GoogleFonts.ibmPlexSans(
+                    style: AppTypography.ibm(
                       fontSize: 17,
                       fontWeight: FontWeight.w500,
-                      color: const Color(0xFF0C0C0C),
+                      color: AppColors.textInverse,
                       height: 1.44,
                     ),
                   ),
@@ -2909,10 +2909,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   Text(
                     'Add some session results first to view your earnings chart. You can add results from the Profile page.',
                     textAlign: TextAlign.center,
-                    style: GoogleFonts.ibmPlexSans(
+                    style: AppTypography.ibm(
                       fontSize: 15,
                       fontWeight: FontWeight.w400,
-                      color: const Color(0xFFB9B9B9),
+                      color: AppColors.textSecondary,
                       height: 22 / 15,
                     ),
                   ),
@@ -2922,13 +2922,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF0C0C0C),
-                        borderRadius: BorderRadius.circular(999),
+                        color: AppColors.bgPrimary,
+                        borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
                       ),
                       child: Text(
                         'Ok',
                         textAlign: TextAlign.center,
-                        style: GoogleFonts.ibmPlexSans(
+                        style: AppTypography.ibm(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
                           color: Colors.white,
@@ -3016,7 +3016,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 }
                 return Text(
                   CurrencyService.formatCash(value),
-                  style: GoogleFonts.robotoMono(
+                  style: AppTypography.mono(
                     color: Colors.white.withValues(alpha: 0.45),
                     fontSize: 11,
                     fontWeight: FontWeight.w300,
@@ -3040,7 +3040,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   space: 4,
                   child: Text(
                     earningsChartData[idx]['date'] ?? '',
-                    style: GoogleFonts.robotoMono(
+                    style: AppTypography.mono(
                       color: Colors.white.withValues(alpha: 0.45),
                       fontSize: 11,
                       fontWeight: FontWeight.w300,
@@ -3113,7 +3113,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               children: [
                 Text(
                   AppLocalizations.of(context).homeRecentSessions,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     fontSize: 17,
                     fontWeight: FontWeight.w500,
                     color: Colors.white,
@@ -3131,10 +3131,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                     child: Text(
                       AppLocalizations.of(context).homeViewAll,
-                      style: GoogleFonts.ibmPlexSans(
+                      style: AppTypography.ibm(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
-                        color: const Color(0xFF4CDE78),
+                        color: AppColors.accentPrimary,
                       ),
                     ),
                   ),
@@ -3175,7 +3175,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.surfaceDark,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
         border: Border.all(color: Colors.black, width: 1),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 24),
@@ -3189,7 +3189,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               children: [
                 Text(
                   title,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     color: Colors.white,
                     fontSize: 17,
                     fontWeight: FontWeight.w400,
@@ -3199,7 +3199,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 const SizedBox(height: 2),
                 Text(
                   subtitle,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     color: const Color(0xFFB3B4B6),
                     fontSize: 13,
                     fontWeight: FontWeight.w400,
@@ -3215,7 +3215,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             child: Container(
               decoration: BoxDecoration(
                 color: const Color(0xFF62D5B6).withValues(alpha: 0.14),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(AppDecorations.radius10),
               ),
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
               child: Row(
@@ -3223,7 +3223,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 children: [
                   Text(
                     AppLocalizations.of(context).homeAddNew,
-                    style: GoogleFonts.ibmPlexSans(
+                    style: AppTypography.ibm(
                       color: Colors.white,
                       fontSize: 15,
                       fontWeight: FontWeight.w500,
@@ -3339,7 +3339,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       child: Container(
         decoration: const BoxDecoration(
           border: Border(
-            bottom: BorderSide(color: Color(0xFF161719), width: 1),
+            bottom: BorderSide(color: AppColors.borderDefault, width: 1),
           ),
         ),
         padding: const EdgeInsets.symmetric(vertical: 16),
@@ -3350,8 +3350,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               width: 38,
               height: 38,
               decoration: BoxDecoration(
-                color: const Color(0xFFA3FF78),
-                borderRadius: BorderRadius.circular(12),
+                color: AppColors.accentSecondary,
+                borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
               ),
               child: Center(
                 child: SvgPicture.asset(
@@ -3370,7 +3370,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 children: [
                   Text(
                     sessionName,
-                    style: GoogleFonts.ibmPlexSans(
+                    style: AppTypography.ibm(
                       fontSize: 17,
                       fontWeight: FontWeight.w600,
                       color: Colors.white,
@@ -3404,15 +3404,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: const Color(0xFF2C2C2E),
-        borderRadius: BorderRadius.circular(999),
+        color: AppColors.bgElevated,
+        borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
       ),
       child: Text(
         text,
-        style: GoogleFonts.ibmPlexSans(
+        style: AppTypography.ibm(
           fontSize: 11,
           fontWeight: FontWeight.w500,
-          color: const Color(0xFFB9B9B9),
+          color: AppColors.textSecondary,
           height: 16 / 11,
         ),
       ),
@@ -3511,7 +3511,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 children: [
                   Text(
                     event['title'] ?? AppLocalizations.of(context).homeEventFallback,
-                    style: GoogleFonts.ibmPlexSans(
+                    style: AppTypography.ibm(
                       fontSize: 20,
                       color: Color(0xFFF8FFF7),
                       fontWeight: FontWeight.w600,
@@ -3524,7 +3524,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     children: [
                       Text(
                         formattedDate,
-                        style: GoogleFonts.ibmPlexSans(
+                        style: AppTypography.ibm(
                           fontSize: 12,
                           color: Color(0xFFF8FFF7),
                           fontWeight: FontWeight.w500,
@@ -3538,7 +3538,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                           decoration: BoxDecoration(
                             color: PokerFriendColors.green.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(AppDecorations.radius10),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
@@ -3551,7 +3551,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               const SizedBox(width: 4),
                               Text(
                                 AppLocalizations.of(context).homeGoingCount(goingCount),
-                                style: GoogleFonts.ibmPlexSans(
+                                style: AppTypography.ibm(
                                   fontSize: 11,
                                   color: PokerFriendColors.green,
                                   fontWeight: FontWeight.w600,
@@ -3570,7 +3570,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             if (buyIn.isNotEmpty)
               Text(
                 buyIn,
-                style: GoogleFonts.robotoMono(
+                style: AppTypography.mono(
                   fontSize: 22,
                   color: AppColors.limeGreen,
                   fontWeight: FontWeight.w600,
@@ -3620,7 +3620,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         width: double.infinity,
         decoration: BoxDecoration(
           color: AppColors.bgSurface,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
           border: Border.all(color: Colors.black),
         ),
         padding: const EdgeInsets.all(18),
@@ -3662,7 +3662,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     ),
                     child: Text(
                       buyIn,
-                      style: GoogleFonts.ibmPlexSans(
+                      style: AppTypography.ibm(
                         fontSize: 17,
                         fontWeight: FontWeight.w700,
                         color: AppColors.eventBuyInText,
@@ -3780,7 +3780,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           width: 184,
           decoration: BoxDecoration(
             color: Color(0xFF131613),
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(AppDecorations.radius18),
           ),
           padding: EdgeInsets.all(16),
           child: Column(
@@ -3790,7 +3790,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               // Event title
               Text(
                 eventTitle,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   fontSize: 16,
                   color: Colors.white,
                   fontWeight: FontWeight.w700,
@@ -3821,7 +3821,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         children: [
                           Text(
                             AppLocalizations.of(context).homeEditEvent,
-                            style: GoogleFonts.ibmPlexSans(
+                            style: AppTypography.ibm(
                               fontSize: 14,
                               color: Color(0xFFEBFFEF),
                               fontWeight: FontWeight.w400,
@@ -3872,7 +3872,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         children: [
                           Text(
                             AppLocalizations.of(context).homeDeleteEvent,
-                            style: GoogleFonts.ibmPlexSans(
+                            style: AppTypography.ibm(
                               fontSize: 14,
                               color: Color(0xFFEBFFEF),
                               fontWeight: FontWeight.w400,
@@ -3956,7 +3956,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     ),
                     decoration: BoxDecoration(
                       color: Color(0xFF000300),
-                      borderRadius: BorderRadius.circular(18),
+                      borderRadius: BorderRadius.circular(AppDecorations.radius18),
                     ),
                     padding: EdgeInsets.fromLTRB(24, 32, 24, 32),
                     child: SingleChildScrollView(
@@ -3970,7 +3970,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             children: [
                               Text(
                                 AppLocalizations.of(context).homeEditEvent,
-                                style: GoogleFonts.ibmPlexSans(
+                                style: AppTypography.ibm(
                                   color: Colors.white,
                                   fontSize: 20,
                                   fontWeight: FontWeight.w700,
@@ -4004,7 +4004,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 value: selectedType,
                                 dropdownColor: Color(0xFF000300),
                                 icon: Icon(Icons.keyboard_arrow_down, color: Color(0x99EBFFEF), size: 18),
-                                style: GoogleFonts.ibmPlexSans(
+                                style: AppTypography.ibm(
                                   color: Color(0x99EBFFEF),
                                   fontSize: 14,
                                   fontWeight: FontWeight.w400,
@@ -4033,14 +4033,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           // Event Name Field
                           TextField(
                             controller: titleController,
-                            style: GoogleFonts.ibmPlexSans(
+                            style: AppTypography.ibm(
                               color: Color(0x99EBFFEF),
                               fontSize: 14,
                               fontWeight: FontWeight.w400,
                             ),
                             decoration: InputDecoration(
                               hintText: AppLocalizations.of(context).homeEventName,
-                              hintStyle: GoogleFonts.ibmPlexSans(
+                              hintStyle: AppTypography.ibm(
                                 color: Color(0x99EBFFEF),
                                 fontSize: 14,
                                 fontWeight: FontWeight.w400,
@@ -4067,14 +4067,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           // Location/Venue Field
                           TextField(
                             controller: locationController,
-                            style: GoogleFonts.ibmPlexSans(
+                            style: AppTypography.ibm(
                               color: Color(0x99EBFFEF),
                               fontSize: 14,
                               fontWeight: FontWeight.w400,
                             ),
                             decoration: InputDecoration(
                               hintText: AppLocalizations.of(context).homeLocationVenue,
-                              hintStyle: GoogleFonts.ibmPlexSans(
+                              hintStyle: AppTypography.ibm(
                                 color: Color(0x99EBFFEF),
                                 fontSize: 14,
                                 fontWeight: FontWeight.w400,
@@ -4102,14 +4102,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           TextField(
                             controller: buyInController,
                             keyboardType: TextInputType.number,
-                            style: GoogleFonts.ibmPlexSans(
+                            style: AppTypography.ibm(
                               color: Color(0x99EBFFEF),
                               fontSize: 14,
                               fontWeight: FontWeight.w400,
                             ),
                             decoration: InputDecoration(
                               hintText: AppLocalizations.of(context).homeBuyInAmount,
-                              hintStyle: GoogleFonts.ibmPlexSans(
+                              hintStyle: AppTypography.ibm(
                                 color: Color(0x99EBFFEF),
                                 fontSize: 14,
                                 fontWeight: FontWeight.w400,
@@ -4161,7 +4161,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                   SizedBox(width: 8),
                                   Text(
                                     DateFormat('MMM dd, yyyy').format(dialogSelectedDate),
-                                    style: GoogleFonts.ibmPlexSans(
+                                    style: AppTypography.ibm(
                                       color: Color(0x99EBFFEF),
                                       fontSize: 14,
                                       fontWeight: FontWeight.w400,
@@ -4203,7 +4203,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                   SizedBox(width: 8),
                                   Text(
                                     selectedTime.format(context),
-                                    style: GoogleFonts.ibmPlexSans(
+                                    style: AppTypography.ibm(
                                       color: Color(0x99EBFFEF),
                                       fontSize: 14,
                                       fontWeight: FontWeight.w400,
@@ -4254,13 +4254,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               height: 48,
                               decoration: BoxDecoration(
                                 color: Color(0xFFBAFF9A),
-                                borderRadius: BorderRadius.circular(10),
+                                borderRadius: BorderRadius.circular(AppDecorations.radius10),
                               ),
                               padding: EdgeInsets.symmetric(horizontal: 32, vertical: 12),
                               child: Center(
                                 child: Text(
                                   AppLocalizations.of(context).homeSaveChanges,
-                                  style: GoogleFonts.ibmPlexSans(
+                                  style: AppTypography.ibm(
                                     color: Colors.black,
                                     fontSize: 16,
                                     fontWeight: FontWeight.w400,
@@ -4325,7 +4325,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       decoration: BoxDecoration(
                         color: Color(0xFF000300),
                         border: Border.all(color: Color(0x4CFFFFFF)),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
                       ),
                       padding: EdgeInsets.all(8),
                       child: Column(
@@ -4338,7 +4338,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               children: [
                                 Text(
                                   AppLocalizations.of(context).homeSelectDate,
-                                  style: GoogleFonts.ibmPlexSans(
+                                  style: AppTypography.ibm(
                                     color: Color(0xFFBDBDBD),
                                     fontSize: 14,
                                     fontWeight: FontWeight.w500,
@@ -4362,7 +4362,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                         SizedBox(width: 4),
                                         Text(
                                           AppLocalizations.of(context).commonClear,
-                                          style: GoogleFonts.ibmPlexSans(
+                                          style: AppTypography.ibm(
                                             color: AppColors.errorRed,
                                             fontSize: 10,
                                             fontWeight: FontWeight.w500,
@@ -4386,7 +4386,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                     padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                     decoration: BoxDecoration(
                                       border: Border.all(color: Color(0xFFFFFFFF).withOpacity(0.3)),
-                                      borderRadius: BorderRadius.circular(8),
+                                      borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
                                     ),
                                     child: Row(
                                       mainAxisSize: MainAxisSize.min,
@@ -4395,7 +4395,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                         SizedBox(width: 4),
                                         Text(
                                           AppLocalizations.of(context).commonToday,
-                                          style: GoogleFonts.ibmPlexSans(
+                                          style: AppTypography.ibm(
                                             color: Color(0xFFFAFAFA),
                                             fontSize: 10,
                                             fontWeight: FontWeight.w500,
@@ -4422,7 +4422,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             width: 296,
                             decoration: BoxDecoration(
                               color: Color(0xFF171C19),
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
                             ),
                             padding: EdgeInsets.all(8),
                             child: Column(
@@ -4442,7 +4442,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                         children: [
                                           Text(
                                             '${displayMonth.year}',
-                                            style: GoogleFonts.ibmPlexSans(
+                                            style: AppTypography.ibm(
                                               color: Color(0xFFFAFAFA),
                                               fontSize: 12,
                                               fontWeight: FontWeight.w500,
@@ -4469,7 +4469,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                         ),
                                         Text(
                                           DateFormat('MMMM').format(displayMonth),
-                                          style: GoogleFonts.ibmPlexSans(
+                                          style: AppTypography.ibm(
                                             color: Color(0xFFFAFAFA),
                                             fontSize: 12,
                                             fontWeight: FontWeight.w500,
@@ -4495,11 +4495,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
                                 // Week day labels
                                 ClipRRect(
-                                  borderRadius: BorderRadius.circular(8),
+                                  borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
                                   child: Container(
                                     decoration: BoxDecoration(
                                       color: Color(0xFF191F1B),
-                                      borderRadius: BorderRadius.circular(8),
+                                      borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
                                     ),
                                     child: Row(
                                       children: [AppLocalizations.of(context).weekdaySun, AppLocalizations.of(context).weekdayMon, AppLocalizations.of(context).weekdayTue, AppLocalizations.of(context).weekdayWed, AppLocalizations.of(context).weekdayThu, AppLocalizations.of(context).weekdayFri, AppLocalizations.of(context).weekdaySat]
@@ -4512,7 +4512,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                                   child: Center(
                                                     child: Text(
                                                       day,
-                                                      style: GoogleFonts.ibmPlexSans(
+                                                      style: AppTypography.ibm(
                                                         color: Color(0xFFBDBDBD),
                                                         fontSize: 10,
                                                         fontWeight: FontWeight.w400,
@@ -4550,7 +4550,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                         child: Center(
                                           child: Text(
                                             prevMonthDay.toString(),
-                                            style: GoogleFonts.ibmPlexSans(
+                                            style: AppTypography.ibm(
                                               color: Color(0x66FAFAFA), // Grayed out
                                               fontSize: 12,
                                               fontWeight: FontWeight.w400,
@@ -4584,8 +4584,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                         decoration: BoxDecoration(
                                           color: isSelected
                                               ? AppColors.profitGreen
-                                              : (isToday ? Color(0xFF2A2A2E) : Colors.transparent),
-                                          borderRadius: BorderRadius.circular(8),
+                                              : (isToday ? AppColors.surfaceVariant3 : Colors.transparent),
+                                          borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
                                           border: isToday && !isSelected
                                               ? Border.all(color: AppColors.profitGreen, width: 1)
                                               : null,
@@ -4593,7 +4593,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                         child: Center(
                                           child: Text(
                                             dayNumber.toString(),
-                                            style: GoogleFonts.ibmPlexSans(
+                                            style: AppTypography.ibm(
                                               color: isSelected ? Colors.black : Color(0xFFFAFAFA),
                                               fontSize: 12,
                                               fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
@@ -4623,12 +4623,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                     padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                                     decoration: BoxDecoration(
                                       border: Border.all(color: Color(0xFFFFFFFF).withOpacity(0.3)),
-                                      borderRadius: BorderRadius.circular(8),
+                                      borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
                                     ),
                                     child: Center(
                                       child: Text(
                                         AppLocalizations.of(context).commonCancel,
-                                        style: GoogleFonts.ibmPlexSans(
+                                        style: AppTypography.ibm(
                                           color: Color(0xFFFAFAFA),
                                           fontSize: 12,
                                           fontWeight: FontWeight.w600,
@@ -4646,12 +4646,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                       padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                                       decoration: BoxDecoration(
                                         color: Color(0xFFBAFF9A),
-                                        borderRadius: BorderRadius.circular(8),
+                                        borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
                                       ),
                                       child: Center(
                                         child: Text(
                                           AppLocalizations.of(context).commonDone,
-                                          style: GoogleFonts.ibmPlexSans(
+                                          style: AppTypography.ibm(
                                             color: Colors.black,
                                             fontSize: 12,
                                             fontWeight: FontWeight.w600,
@@ -4728,7 +4728,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               Container(
                 decoration: BoxDecoration(
                   color: Color(0xFF131613),
-                  borderRadius: BorderRadius.circular(18),
+                  borderRadius: BorderRadius.circular(AppDecorations.radius18),
                 ),
                 padding: EdgeInsets.only(top: 24),
                 child: Column(
@@ -4738,7 +4738,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       padding: EdgeInsets.symmetric(horizontal: 24),
                       child: Text(
                         AppLocalizations.of(context).homeDeleteEventConfirm(eventName),
-                        style: GoogleFonts.ibmPlexSans(
+                        style: AppTypography.ibm(
                           fontSize: 16,
                           color: Colors.white,
                           fontWeight: FontWeight.w600,
@@ -4757,7 +4757,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       padding: EdgeInsets.symmetric(horizontal: 24),
                       child: Text(
                         AppLocalizations.of(context).homeDeleteEventDescription(eventName),
-                        style: GoogleFonts.ibmPlexSans(
+                        style: AppTypography.ibm(
                           fontSize: 12,
                           color: Colors.white,
                           fontWeight: FontWeight.w500,
@@ -4790,7 +4790,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         padding: EdgeInsets.symmetric(vertical: 16, horizontal: 10),
                         child: Text(
                           AppLocalizations.of(context).commonDelete,
-                          style: GoogleFonts.ibmPlexSans(
+                          style: AppTypography.ibm(
                             fontSize: 16,
                             color: AppColors.errorRed, // Red color
                             fontWeight: FontWeight.w600,
@@ -4816,13 +4816,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 child: Container(
                   decoration: BoxDecoration(
                     color: Color(0xFF131613),
-                    borderRadius: BorderRadius.circular(18),
+                    borderRadius: BorderRadius.circular(AppDecorations.radius18),
                   ),
                   padding: EdgeInsets.symmetric(vertical: 12, horizontal: 10),
                   width: double.infinity,
                   child: Text(
                     AppLocalizations.of(context).commonCancel,
-                    style: GoogleFonts.ibmPlexSans(
+                    style: AppTypography.ibm(
                       fontSize: 16,
                       color: Colors.white,
                       fontWeight: FontWeight.w600,
@@ -4918,7 +4918,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     Container(
                       decoration: BoxDecoration(
                         color: const Color(0xFF131613),
-                        borderRadius: BorderRadius.circular(18),
+                        borderRadius: BorderRadius.circular(AppDecorations.radius18),
                       ),
                       padding: const EdgeInsets.only(top: 24),
                       child: Column(
@@ -4937,7 +4937,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             padding: const EdgeInsets.symmetric(horizontal: 24),
                             child: Text(
                               AppLocalizations.of(context).homeNoEarningsDataTitle,
-                              style: GoogleFonts.ibmPlexSans(
+                              style: AppTypography.ibm(
                                 fontSize: 16,
                                 color: Colors.white,
                                 fontWeight: FontWeight.w600,
@@ -4956,7 +4956,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             padding: const EdgeInsets.symmetric(horizontal: 24),
                             child: Text(
                               AppLocalizations.of(context).homeNoEarningsDataDescription,
-                              style: GoogleFonts.ibmPlexSans(
+                              style: AppTypography.ibm(
                                 fontSize: 12,
                                 color: Colors.white.withOpacity(0.6),
                                 fontWeight: FontWeight.w400,
@@ -4984,7 +4984,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 10),
                               child: Text(
                                 'OK',
-                                style: GoogleFonts.ibmPlexSans(
+                                style: AppTypography.ibm(
                                   fontSize: 16,
                                   color: AppColors.buttonPrimary,
                                   fontWeight: FontWeight.w600,
@@ -5052,7 +5052,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         const SizedBox(width: 6),
         Text(
           label,
-          style: GoogleFonts.ibmPlexSans(
+          style: AppTypography.ibm(
             color: Colors.white,
             fontSize: 13,
             fontWeight: FontWeight.w500,
@@ -5125,7 +5125,7 @@ class _DownArrowPainter extends CustomPainter {
         ..lineTo(size.width, 0)
         ..lineTo(size.width / 2, size.height)
         ..close(),
-      Paint()..color = const Color(0xFF2C2C2E),
+      Paint()..color = AppColors.bgElevated,
     );
   }
 

@@ -80,6 +80,15 @@ class AppColors {
   static const Color lossRed      = Color(0xFFFF4444);  // Negative amounts
   static const Color warningAmber = Color(0xFFFFB74D);  // Caution/preview states
 
+  // Near-duplicate values found across screens — tokenized as-is (pixel
+  // identical). Candidates for visual consolidation in phase 2b; see
+  // lib/design_system/README.md.
+  static const Color surfaceVariant1 = Color(0xFF161618);  // ~bgSurface
+  static const Color surfaceVariant2 = Color(0xFF1F1F23);  // ~bgElevated
+  static const Color surfaceVariant3 = Color(0xFF2A2A2E);  // ~bgElevated
+  static const Color surfaceVariant4 = Color(0xFF1A1A1E);  // dialogs
+  static const Color errorRedVariant = Color(0xFFCB5242);  // ~errorRed
+
   // Navigation
   static const Color navBarBackground = Color(0xFF1E1E1E);
   static const Color navBarBorder     = Color(0xFF292F29);

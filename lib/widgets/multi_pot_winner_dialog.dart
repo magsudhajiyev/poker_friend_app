@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../design_system/components/app_toggle.dart';
 import '../l10n/app_localizations.dart';
 import '../models/game_types.dart';
 import '../models/poker_game_state.dart';
 import '../services/currency_service.dart';
 import '../design_system/constants/colors.dart';
+import '../design_system/constants/typography.dart';
+import '../design_system/constants/decorations.dart';
 
 class MultiPotWinnerDialog extends StatefulWidget {
   final List<SidePot> sidePots;
@@ -238,7 +239,7 @@ class _MultiPotWinnerDialogState extends State<MultiPotWinnerDialog> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
         decoration: BoxDecoration(
           color: isSelected ? AppColors.surfaceDark : Colors.transparent,
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(AppDecorations.radius18),
           border: Border.all(
             color: isSelected ? const Color(0xFF73D4CF) : AppColors.neutral800,
             width: 1,
@@ -275,7 +276,7 @@ class _MultiPotWinnerDialogState extends State<MultiPotWinnerDialog> {
             Expanded(
               child: Text(
                 playerName,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   fontSize: 17,
                   color: Colors.white,
                   fontWeight: FontWeight.w400,
@@ -308,7 +309,7 @@ class _MultiPotWinnerDialogState extends State<MultiPotWinnerDialog> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
         decoration: BoxDecoration(
           color: isSelected ? AppColors.surfaceDark : Colors.transparent,
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(AppDecorations.radius18),
           border: Border.all(
             color: isSelected ? const Color(0xFF73D4CF) : AppColors.neutral800,
             width: 1,
@@ -338,7 +339,7 @@ class _MultiPotWinnerDialogState extends State<MultiPotWinnerDialog> {
             Expanded(
               child: Text(
                 playerName,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   fontSize: 17,
                   color: Colors.white,
                   fontWeight: FontWeight.w400,
@@ -357,7 +358,7 @@ class _MultiPotWinnerDialogState extends State<MultiPotWinnerDialog> {
                       choppedWinners[potIndex]!,
                     )[playerId] ?? 0,
                   ),
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     fontSize: 14,
                     color: AppColors.buttonPrimary,
                     fontWeight: FontWeight.w500,
@@ -390,7 +391,7 @@ class _MultiPotWinnerDialogState extends State<MultiPotWinnerDialog> {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: AppColors.surfaceDark,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -400,7 +401,7 @@ class _MultiPotWinnerDialogState extends State<MultiPotWinnerDialog> {
               children: [
                 Text(
                   potName,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     fontSize: 15,
                     color: Colors.white,
                     fontWeight: FontWeight.w500,
@@ -409,7 +410,7 @@ class _MultiPotWinnerDialogState extends State<MultiPotWinnerDialog> {
                 ),
                 Text(
                   _formatAmount(sidePot.amount),
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     fontSize: 15,
                     color: Colors.white,
                     fontWeight: FontWeight.w500,
@@ -421,7 +422,7 @@ class _MultiPotWinnerDialogState extends State<MultiPotWinnerDialog> {
             const SizedBox(height: 8),
             Text(
               l10n.multiPotAutoAwarded(winnerName, awardReason),
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 fontSize: 13,
                 color: AppColors.textDisabled,
               ),
@@ -436,7 +437,7 @@ class _MultiPotWinnerDialogState extends State<MultiPotWinnerDialog> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
       decoration: BoxDecoration(
         color: AppColors.surfaceDark,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -447,7 +448,7 @@ class _MultiPotWinnerDialogState extends State<MultiPotWinnerDialog> {
             children: [
               Text(
                 potName,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   fontSize: 15,
                   color: Colors.white,
                   fontWeight: FontWeight.w500,
@@ -456,7 +457,7 @@ class _MultiPotWinnerDialogState extends State<MultiPotWinnerDialog> {
               ),
               Text(
                 _formatAmount(sidePot.amount),
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   fontSize: 15,
                   color: Colors.white,
                   fontWeight: FontWeight.w500,
@@ -472,7 +473,7 @@ class _MultiPotWinnerDialogState extends State<MultiPotWinnerDialog> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             decoration: BoxDecoration(
               color: AppColors.paper,
-              borderRadius: BorderRadius.circular(18),
+              borderRadius: BorderRadius.circular(AppDecorations.radius18),
               border: Border.all(color: AppColors.neutral800),
             ),
             child: Row(
@@ -480,7 +481,7 @@ class _MultiPotWinnerDialogState extends State<MultiPotWinnerDialog> {
               children: [
                 Text(
                   isChopped ? l10n.multiPotChoppedPot : l10n.multiPotSingleWinner,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     fontSize: 17,
                     color: Colors.white,
                     fontWeight: FontWeight.w400,
@@ -506,7 +507,7 @@ class _MultiPotWinnerDialogState extends State<MultiPotWinnerDialog> {
           // Winner selection label
           Text(
             isChopped ? l10n.multiPotSelectAllWinners : l10n.multiPotSelectTheWinner,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               fontSize: 15,
               color: Colors.white,
               fontWeight: FontWeight.w500,
@@ -583,7 +584,7 @@ class _MultiPotWinnerDialogState extends State<MultiPotWinnerDialog> {
                 // Title
                 Text(
                   l10n.multiPotSelectWinnersTitle,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     fontSize: 17,
                     color: Colors.white,
                     fontWeight: FontWeight.w600,
@@ -635,7 +636,7 @@ class _MultiPotWinnerDialogState extends State<MultiPotWinnerDialog> {
                     // Description
                     Text(
                       l10n.multiPotMultiplePots,
-                      style: GoogleFonts.ibmPlexSans(
+                      style: AppTypography.ibm(
                         fontSize: 17,
                         color: Colors.white,
                         fontWeight: FontWeight.w400,
@@ -671,7 +672,7 @@ class _MultiPotWinnerDialogState extends State<MultiPotWinnerDialog> {
                               child: Center(
                                 child: Text(
                                   l10n.commonSave,
-                                  style: GoogleFonts.ibmPlexSans(
+                                  style: AppTypography.ibm(
                                     fontSize: 17,
                                     color: _isFormValid()
                                         ? Colors.black
@@ -701,7 +702,7 @@ class _MultiPotWinnerDialogState extends State<MultiPotWinnerDialog> {
                               child: Center(
                                 child: Text(
                                   l10n.commonCancel,
-                                  style: GoogleFonts.ibmPlexSans(
+                                  style: AppTypography.ibm(
                                     fontSize: 17,
                                     color: AppColors.textMint,
                                     fontWeight: FontWeight.w600,

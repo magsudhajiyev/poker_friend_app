@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../services/currency_service.dart';
 import 'dart:ui' as ui;
@@ -18,6 +17,8 @@ import 'club/event_detail_screen.dart' as club_detail;
 import 'event_detail_screen.dart';
 import '../l10n/app_localizations.dart';
 import '../design_system/constants/colors.dart';
+import '../design_system/constants/typography.dart';
+import '../design_system/constants/decorations.dart';
 
 class CalendarScreen extends StatefulWidget {
   @override
@@ -176,7 +177,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
           child: Container(
             decoration: BoxDecoration(
               color: AppColors.surfaceDark,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
             ),
             padding: const EdgeInsets.symmetric(vertical: 8),
             child: Column(
@@ -196,7 +197,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                       children: [
                         Text(
                           l10n.calendarEventType,
-                          style: GoogleFonts.ibmPlexSans(
+                          style: AppTypography.ibm(
                             color: AppColors.textMint,
                             fontSize: 17,
                             fontWeight: FontWeight.w500,
@@ -207,7 +208,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                           children: [
                             Text(
                               selectedType,
-                              style: GoogleFonts.ibmPlexSans(
+                              style: AppTypography.ibm(
                                 color: Colors.white,
                                 fontSize: 17,
                                 fontWeight: FontWeight.w500,
@@ -230,7 +231,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 // Title Input
                 TextField(
                   controller: titleController,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     color: Colors.white,
                     fontSize: 17,
                     fontWeight: FontWeight.w500,
@@ -238,7 +239,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                   ),
                   decoration: InputDecoration(
                     hintText: l10n.calendarEventTitle,
-                    hintStyle: GoogleFonts.ibmPlexSans(
+                    hintStyle: AppTypography.ibm(
                       color: AppColors.textDisabled,
                       fontSize: 17,
                       fontWeight: FontWeight.w500,
@@ -255,7 +256,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 // Location Input
                 TextField(
                   controller: locationController,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     color: Colors.white,
                     fontSize: 17,
                     fontWeight: FontWeight.w500,
@@ -263,7 +264,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                   ),
                   decoration: InputDecoration(
                     hintText: l10n.calendarLocation,
-                    hintStyle: GoogleFonts.ibmPlexSans(
+                    hintStyle: AppTypography.ibm(
                       color: AppColors.textDisabled,
                       fontSize: 17,
                       fontWeight: FontWeight.w500,
@@ -281,7 +282,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 TextField(
                   controller: buyInController,
                   keyboardType: TextInputType.number,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     color: Colors.white,
                     fontSize: 17,
                     fontWeight: FontWeight.w500,
@@ -289,7 +290,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                   ),
                   decoration: InputDecoration(
                     hintText: l10n.calendarBuyInAmount,
-                    hintStyle: GoogleFonts.ibmPlexSans(
+                    hintStyle: AppTypography.ibm(
                       color: AppColors.textDisabled,
                       fontSize: 17,
                       fontWeight: FontWeight.w500,
@@ -313,7 +314,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
           child: Container(
             decoration: BoxDecoration(
               color: AppColors.surfaceDark,
-              borderRadius: BorderRadius.circular(18),
+              borderRadius: BorderRadius.circular(AppDecorations.radius18),
             ),
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
             child: Column(
@@ -321,7 +322,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
               children: [
                 Text(
                   l10n.calendarEventDateTime,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     color: Colors.white,
                     fontSize: 17,
                     fontWeight: FontWeight.w600,
@@ -338,7 +339,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                   children: [
                     Text(
                       l10n.calendarStarts,
-                      style: GoogleFonts.ibmPlexSans(
+                      style: AppTypography.ibm(
                         color: Colors.white,
                         fontSize: 17,
                         fontWeight: FontWeight.w400,
@@ -360,11 +361,11 @@ class _CalendarScreenState extends State<CalendarScreen> {
                         padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
                         decoration: BoxDecoration(
                           color: AppColors.neutral800,
-                          borderRadius: BorderRadius.circular(40),
+                          borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
                         ),
                         child: Text(
                           DateFormat('d MMM yyyy').format(dialogSelectedDate),
-                          style: GoogleFonts.ibmPlexSans(
+                          style: AppTypography.ibm(
                             color: Colors.white,
                             fontSize: 13,
                             fontWeight: FontWeight.w400,
@@ -398,11 +399,11 @@ class _CalendarScreenState extends State<CalendarScreen> {
                         padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
                         decoration: BoxDecoration(
                           color: AppColors.neutral800,
-                          borderRadius: BorderRadius.circular(40),
+                          borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
                         ),
                         child: Text(
                           dialogSelectedTime.format(context),
-                          style: GoogleFonts.ibmPlexSans(
+                          style: AppTypography.ibm(
                             color: Colors.white,
                             fontSize: 13,
                             fontWeight: FontWeight.w400,
@@ -461,7 +462,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                   width: 184,
                   decoration: BoxDecoration(
                     color: const Color(0xFF161619),
-                    borderRadius: BorderRadius.circular(18),
+                    borderRadius: BorderRadius.circular(AppDecorations.radius18),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withOpacity(0.45),
@@ -635,7 +636,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                         width: cardWidth,
                         decoration: BoxDecoration(
                           color: AppColors.bgSurface,
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
                           border: Border.all(
                             color: AppColors.whiteBorder(opacity: 0.10),
                             width: 1,
@@ -710,7 +711,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                               children: [
                                 Text(
                                   DateFormat('MMMM yyyy').format(displayMonth),
-                                  style: GoogleFonts.ibmPlexSans(
+                                  style: AppTypography.ibm(
                                     color: Colors.white,
                                     fontSize: monthFontSize,
                                     fontWeight: FontWeight.w600,
@@ -760,7 +761,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                                   child: Center(
                                     child: Text(
                                       day,
-                                      style: GoogleFonts.ibmPlexSans(
+                                      style: AppTypography.ibm(
                                         color: AppColors.labelTertiary,
                                         fontSize: dayHeaderFontSize,
                                         fontWeight: FontWeight.w600,
@@ -855,7 +856,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                   color: AppColors.whiteBorder(opacity: 0.3),
                   width: 1,
                 ),
-                borderRadius: BorderRadius.circular(60),
+                borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
               )
             : null,
         child: Row(
@@ -865,7 +866,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
             const SizedBox(width: 4),
             Text(
               label,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 color: color,
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
@@ -889,7 +890,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
         child: Text(
           char,
           textAlign: TextAlign.center,
-          style: GoogleFonts.ibmPlexSans(
+          style: AppTypography.ibm(
             fontSize: 28,
             fontWeight: FontWeight.w500,
             color: AppColors.accentPrimary,
@@ -914,14 +915,14 @@ class _CalendarScreenState extends State<CalendarScreen> {
         alignment: Alignment.center,
         decoration: BoxDecoration(
           color: filled ? AppColors.buttonPrimary : Colors.transparent,
-          borderRadius: BorderRadius.circular(60),
+          borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
           border: filled
               ? null
               : Border.all(color: AppColors.buttonPrimary, width: 1),
         ),
         child: Text(
           label,
-          style: GoogleFonts.ibmPlexSans(
+          style: AppTypography.ibm(
             color: filled ? Colors.black : AppColors.buttonPrimary,
             fontSize: 15,
             fontWeight: FontWeight.w600,
@@ -1144,7 +1145,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
           padding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
           decoration: BoxDecoration(
             color: AppColors.surfaceDark,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
             border: Border.all(color: Colors.black),
           ),
           child: Column(
@@ -1159,7 +1160,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
               // Title
               Text(
                 l10n.calendarNoRecentEvents,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   fontSize: 17,
                   fontWeight: FontWeight.w400,
                   color: Colors.white,
@@ -1170,7 +1171,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
               // Subtitle
               Text(
                 l10n.calendarAddFirstEvent,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   fontSize: 17,
                   fontWeight: FontWeight.w400,
                   color: AppColors.textMint,
@@ -1196,7 +1197,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                       const SizedBox(width: 8),
                       Text(
                         l10n.calendarAddNewEvent,
-                        style: GoogleFonts.ibmPlexSans(
+                        style: AppTypography.ibm(
                           fontSize: 17,
                           fontWeight: FontWeight.w600,
                           color: Colors.black,
@@ -1231,7 +1232,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
         height: 400,
         decoration: BoxDecoration(
           color: Color(0xFF000300),
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
           border: Border.all(color: Color(0x4CFFFFFF)),
         ),
         padding: EdgeInsets.all(16),
@@ -1239,7 +1240,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
           children: [
             Text(
               l10n.calendarSelectYear,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 color: Color(0xFFEBEBEB),
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
@@ -1263,13 +1264,13 @@ class _CalendarScreenState extends State<CalendarScreen> {
                     onTap: () => Navigator.pop(context, year),
                     child: Container(
                       decoration: BoxDecoration(
-                        color: isCurrentYear ? Color(0xFFB6FF99) : Color(0xFF1F1F23),
-                        borderRadius: BorderRadius.circular(8),
+                        color: isCurrentYear ? Color(0xFFB6FF99) : AppColors.surfaceVariant2,
+                        borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
                       ),
                       child: Center(
                         child: Text(
                           year.toString(),
-                          style: GoogleFonts.ibmPlexSans(
+                          style: AppTypography.ibm(
                             color: isCurrentYear ? Colors.black : Color(0xFFEBEBEB),
                             fontSize: 14,
                             fontWeight: isCurrentYear ? FontWeight.w600 : FontWeight.w400,
@@ -1296,7 +1297,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
           decoration: BoxDecoration(
             color: AppColors.surfaceDark,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
             border: Border.all(color: Colors.black),
           ),
           child: Column(
@@ -1310,7 +1311,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                     Expanded(
                       child: Text(
                         event.title,
-                        style: GoogleFonts.ibmPlexSans(
+                        style: AppTypography.ibm(
                           fontSize: 17,
                           fontWeight: FontWeight.w400,
                           color: Colors.white,
@@ -1345,7 +1346,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                         padding: const EdgeInsets.symmetric(vertical: 4),
                         child: Text(
                           DateFormat('MMM d, h:mm a').format(event.date).toLowerCase(),
-                          style: GoogleFonts.ibmPlexSans(
+                          style: AppTypography.ibm(
                             fontSize: 15,
                             fontWeight: FontWeight.w500,
                             color: const Color(0xFFB3B4B6),
@@ -1359,7 +1360,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                         padding: const EdgeInsets.symmetric(vertical: 4),
                         child: Text(
                           CurrencyService.formatCash(event.buyIn),
-                          style: GoogleFonts.ibmPlexSans(
+                          style: AppTypography.ibm(
                             fontSize: 17,
                             fontWeight: FontWeight.w500,
                             color: AppColors.textMint,
@@ -1410,7 +1411,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: AppColors.paper,
-                    borderRadius: BorderRadius.circular(18),
+                    borderRadius: BorderRadius.circular(AppDecorations.radius18),
                     boxShadow: const [
                       BoxShadow(
                         color: Color(0x73000000),
@@ -1445,7 +1446,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                                 padding: const EdgeInsets.symmetric(vertical: 12),
                                 child: Text(
                                   l10n.calendarEditEvent,
-                                  style: GoogleFonts.ibmPlexSans(
+                                  style: AppTypography.ibm(
                                     fontSize: 15,
                                     fontWeight: FontWeight.w500,
                                     color: Colors.white,
@@ -1485,7 +1486,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                                 padding: const EdgeInsets.symmetric(vertical: 12),
                                 child: Text(
                                   l10n.calendarDeleteEvent,
-                                  style: GoogleFonts.ibmPlexSans(
+                                  style: AppTypography.ibm(
                                     fontSize: 15,
                                     fontWeight: FontWeight.w500,
                                     color: Colors.white,
@@ -1770,7 +1771,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 width: double.infinity,
                 decoration: BoxDecoration(
                   color: AppColors.surfaceDark,
-                  borderRadius: BorderRadius.circular(18),
+                  borderRadius: BorderRadius.circular(AppDecorations.radius18),
                 ),
                 child: Column(
                   children: [
@@ -1781,7 +1782,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                       child: Text(
                         l10n.calendarDeleteConfirmTitle(eventTitle),
                         textAlign: TextAlign.center,
-                        style: GoogleFonts.ibmPlexSans(
+                        style: AppTypography.ibm(
                           fontSize: 17,
                           fontWeight: FontWeight.w600,
                           color: Colors.white,
@@ -1795,7 +1796,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                       child: Text(
                         l10n.calendarDeleteConfirmMessage(eventTitle),
                         textAlign: TextAlign.center,
-                        style: GoogleFonts.ibmPlexSans(
+                        style: AppTypography.ibm(
                           fontSize: 14,
                           fontWeight: FontWeight.w400,
                           color: Colors.white,
@@ -1812,7 +1813,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                         child: Text(
                           l10n.commonDelete,
                           textAlign: TextAlign.center,
-                          style: GoogleFonts.ibmPlexSans(
+                          style: AppTypography.ibm(
                             fontSize: 17,
                             fontWeight: FontWeight.w600,
                             color: const Color(0xFFDA5B5E),
@@ -1837,7 +1838,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                   child: Center(
                     child: Text(
                       l10n.commonCancel,
-                      style: GoogleFonts.ibmPlexSans(
+                      style: AppTypography.ibm(
                         fontSize: 17,
                         fontWeight: FontWeight.w600,
                         color: Colors.white,

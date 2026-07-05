@@ -1,8 +1,8 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../models/stack_bucket.dart';
+import '../design_system/constants/typography.dart';
 
 /// Segmented ring widget showing a player's stack range.
 /// Long-press and drag to select a range without lifting finger.
@@ -133,7 +133,7 @@ class _StackRangeCircleState extends State<StackRangeCircle> {
     if (widget.isHero) {
       return Text(
         widget.formatCurrency(widget.currentStack),
-        style: GoogleFonts.ibmPlexSans(
+        style: AppTypography.ibm(
           color: Colors.white,
           fontSize: 14,
           fontWeight: FontWeight.w500,
@@ -170,7 +170,7 @@ class _StackRangeCircleState extends State<StackRangeCircle> {
           const SizedBox(height: 2),
           Text(
             label,
-            style: GoogleFonts.robotoMono(
+            style: AppTypography.mono(
               fontSize: 11,
               color: _activeLilac.withValues(alpha: _confidenceAlpha(widget.confidence)),
               fontWeight: FontWeight.w500,
@@ -348,7 +348,7 @@ class _ExpandedRangeOverlayState extends State<_ExpandedRangeOverlay>
                       child: Center(
                         child: Text(
                           StackBucketHelper.rangeLabel(hovered),
-                          style: GoogleFonts.ibmPlexSans(
+                          style: AppTypography.ibm(
                             fontSize: 16,
                             color: Colors.white,
                             fontWeight: FontWeight.w700,

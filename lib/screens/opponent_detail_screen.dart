@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../models/opponent.dart';
 import '../models/opponent_stats.dart';
@@ -14,6 +13,8 @@ import '../design_system/components/drawer_dots.dart';
 import '../design_system/components/modals/confirm_dialog.dart';
 import '../l10n/app_localizations.dart';
 import '../design_system/constants/colors.dart';
+import '../design_system/constants/typography.dart';
+import '../design_system/constants/decorations.dart';
 
 class OpponentDetailScreen extends StatefulWidget {
   final Opponent opponent;
@@ -455,7 +456,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
   Widget build(BuildContext context) {
     final bottomPad = MediaQuery.of(context).padding.bottom;
     return Scaffold(
-      backgroundColor: const Color(0xFF0C0C0C),
+      backgroundColor: AppColors.bgPrimary,
       body: Stack(
         children: [
           Column(
@@ -502,7 +503,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
         : l10n.opponentDetailNoDataYet;
 
     return Container(
-      color: const Color(0xFF161719),
+      color: AppColors.bgSurface,
       padding: EdgeInsets.fromLTRB(16, topPad + 16, 16, 16),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -512,13 +513,13 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: const Color(0xFF763EED),
-              borderRadius: BorderRadius.circular(10),
+              color: AppColors.accentPurple,
+              borderRadius: BorderRadius.circular(AppDecorations.radius10),
             ),
             alignment: Alignment.center,
             child: Text(
               _getInitials(_opponent.name),
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
                 color: Colors.white,
@@ -534,7 +535,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
               children: [
                 Text(
                   _opponent.name,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     fontSize: 17,
                     fontWeight: FontWeight.w600,
                     color: Colors.white,
@@ -543,10 +544,10 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                 ),
                 Text(
                   handsText,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     fontSize: 15,
                     fontWeight: FontWeight.w400,
-                    color: const Color(0xFFA3FF78),
+                    color: AppColors.accentSecondary,
                     height: 22 / 15,
                   ),
                 ),
@@ -588,9 +589,9 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
           // Action pill (Edit + Delete)
           Container(
             decoration: BoxDecoration(
-              color: const Color(0xFF161719),
-              border: Border.all(color: const Color(0xFF3A3A3C)),
-              borderRadius: BorderRadius.circular(999),
+              color: AppColors.bgSurface,
+              border: Border.all(color: AppColors.borderStrong),
+              borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
             ),
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: Row(
@@ -606,7 +607,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                         width: 24,
                         height: 24,
                         decoration: const BoxDecoration(
-                          color: Color(0xFFFF8A54),
+                          color: AppColors.accentTertiary,
                           shape: BoxShape.circle,
                         ),
                         alignment: Alignment.center,
@@ -615,7 +616,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                       const SizedBox(width: 8),
                       Text(
                         'Edit',
-                        style: GoogleFonts.ibmPlexSans(
+                        style: AppTypography.ibm(
                           fontSize: 15,
                           fontWeight: FontWeight.w400,
                           color: Colors.white,
@@ -635,7 +636,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                         width: 24,
                         height: 24,
                         decoration: const BoxDecoration(
-                          color: Color(0xFFFF3B30),
+                          color: AppColors.accentDanger,
                           shape: BoxShape.circle,
                         ),
                         alignment: Alignment.center,
@@ -644,7 +645,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                       const SizedBox(width: 8),
                       Text(
                         'Delete',
-                        style: GoogleFonts.ibmPlexSans(
+                        style: AppTypography.ibm(
                           fontSize: 15,
                           fontWeight: FontWeight.w400,
                           color: Colors.white,
@@ -682,15 +683,15 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
         child: Container(
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(999),
+            borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
           child: Text(
             l10n.opponentDetailViewHandHistory,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               fontSize: 15,
               fontWeight: FontWeight.w600,
-              color: const Color(0xFF0C0C0C),
+              color: AppColors.textInverse,
             ),
           ),
         ),
@@ -706,7 +707,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.surfaceDark,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
         border: Border.all(color: Colors.black),
       ),
       child: Padding(
@@ -732,7 +733,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                     padding: EdgeInsets.symmetric(vertical: 4),
                     child: Text(
                       _opponent.name,
-                      style: GoogleFonts.ibmPlexSans(
+                      style: AppTypography.ibm(
                         fontSize: 17,
                         color: Colors.white,
                         fontWeight: FontWeight.w400,
@@ -769,7 +770,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                   padding: EdgeInsets.symmetric(vertical: 4),
                   child: Text(
                     l10n.opponentDetailHands,
-                    style: GoogleFonts.ibmPlexSans(
+                    style: AppTypography.ibm(
                       fontSize: 17,
                       color: Color(0xFFB3B4B6),
                       fontWeight: FontWeight.w500,
@@ -781,7 +782,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                   padding: EdgeInsets.symmetric(vertical: 4),
                   child: Text(
                     '${OpponentHandsScreen.filteredHandCounts[_opponent.id] ?? _statistics?['totalHands'] ?? 0}',
-                    style: GoogleFonts.ibmPlexSans(
+                    style: AppTypography.ibm(
                       fontSize: 17,
                       color: AppColors.textMint,
                       fontWeight: FontWeight.w500,
@@ -810,7 +811,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                       padding: EdgeInsets.symmetric(vertical: 4),
                       child: Text(
                         l10n.opponentDetailLastSeen,
-                        style: GoogleFonts.ibmPlexSans(
+                        style: AppTypography.ibm(
                           fontSize: 13,
                           color: Color(0xFF808285),
                           fontWeight: FontWeight.w500,
@@ -823,7 +824,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                     padding: EdgeInsets.symmetric(vertical: 4),
                     child: Text(
                       DateFormat('MMM dd, yyyy').format(_opponent.lastSeenAt),
-                      style: GoogleFonts.ibmPlexSans(
+                      style: AppTypography.ibm(
                         fontSize: 13,
                         color: Color(0xFFE6E6E7),
                         fontWeight: FontWeight.w500,
@@ -846,7 +847,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
       width: double.infinity,
       decoration: BoxDecoration(
         color: AppColors.surfaceDark,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
         border: Border.all(color: Colors.black),
       ),
       padding: EdgeInsets.all(16),
@@ -864,7 +865,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
               SizedBox(width: 8),
               Text(
                 l10n.opponentDetailNotes,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   fontSize: 13,
                   color: Color(0xFF808285),
                   fontWeight: FontWeight.w500,
@@ -877,7 +878,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
           // Notes content
           Text(
             _opponent.notes!,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               fontSize: 15,
               color: Colors.white,
               fontWeight: FontWeight.w400,
@@ -923,7 +924,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                 width: 184,
                 decoration: BoxDecoration(
                   color: AppColors.paper,
-                  borderRadius: BorderRadius.circular(18),
+                  borderRadius: BorderRadius.circular(AppDecorations.radius18),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withOpacity(0.45),
@@ -957,7 +958,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                               padding: EdgeInsets.symmetric(vertical: 12),
                               child: Text(
                                 l10n.opponentDetailEditOpponent,
-                                style: GoogleFonts.ibmPlexSans(
+                                style: AppTypography.ibm(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w500,
                                   color: Colors.white,
@@ -994,7 +995,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                               padding: EdgeInsets.symmetric(vertical: 12),
                               child: Text(
                                 l10n.opponentDetailDeleteOpponent,
-                                style: GoogleFonts.ibmPlexSans(
+                                style: AppTypography.ibm(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w500,
                                   color: Colors.white,
@@ -1031,8 +1032,8 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
         padding: const EdgeInsets.symmetric(vertical: 20),
         child: Text(
           l10n.opponentDetailNoStatisticsAvailable,
-          style: GoogleFonts.ibmPlexSans(
-            color: const Color(0xFFB9B9B9),
+          style: AppTypography.ibm(
+            color: AppColors.textSecondary,
             fontSize: 15,
           ),
         ),
@@ -1045,7 +1046,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
         // Section title
         Text(
           l10n.opponentDetailStatistics,
-          style: GoogleFonts.ibmPlexSans(
+          style: AppTypography.ibm(
             fontSize: 17,
             fontWeight: FontWeight.w600,
             color: Colors.white,
@@ -1056,10 +1057,10 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
         // Disclaimer
         Text(
           l10n.opponentDetailStatsDisclaimer,
-          style: GoogleFonts.ibmPlexSans(
+          style: AppTypography.ibm(
             fontSize: 15,
             fontWeight: FontWeight.w400,
-            color: const Color(0xFFB9B9B9),
+            color: AppColors.textSecondary,
             height: 22 / 15,
           ),
         ),
@@ -1103,18 +1104,18 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
         children: [
           Text(
             label,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               fontSize: 15,
               fontWeight: FontWeight.w400,
-              color: const Color(0xFFB9B9B9),
+              color: AppColors.textSecondary,
             ),
           ),
           Text(
             value,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               fontSize: 15,
               fontWeight: FontWeight.w500,
-              color: const Color(0xFFA3FF78),
+              color: AppColors.accentSecondary,
             ),
           ),
         ],
@@ -1125,7 +1126,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
   Widget _buildDivider() {
     return Container(
       height: 1,
-      color: const Color(0xFF2C2C2E),
+      color: AppColors.bgElevated,
     );
   }
 
@@ -1143,7 +1144,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
               // Title
               Text(
                 l10n.opponentDetailHandHistory,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   fontSize: 17,
                   fontWeight: FontWeight.w500,
                   color: AppColors.textDisabled,
@@ -1153,7 +1154,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
               // Subtitle
               Text(
                 l10n.opponentDetailViewAllHands,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   fontSize: 15,
                   fontWeight: FontWeight.w500,
                   color: AppColors.textDisabled,
@@ -1196,7 +1197,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
             ),
             child: Text(
               l10n.opponentDetailViewHandHistory,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 fontSize: 17,
                 fontWeight: FontWeight.w600,
                 color: Colors.black,
@@ -1221,7 +1222,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
         child: Container(
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(AppDecorations.radiusXl),
           ),
           padding: const EdgeInsets.all(24),
           child: Column(
@@ -1242,7 +1243,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                         width: 18,
                         height: 18,
                         colorFilter: const ColorFilter.mode(
-                          Color(0xFFB9B9B9),
+                          AppColors.contentInactive,
                           BlendMode.srcIn,
                         ),
                       ),
@@ -1256,8 +1257,8 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                 width: 38,
                 height: 38,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFEFEFEF),
-                  borderRadius: BorderRadius.circular(12),
+                  color: AppColors.borderOnInverseSubtle,
+                  borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                 ),
                 child: Center(
                   child: SvgPicture.asset(
@@ -1265,7 +1266,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                     width: 24,
                     height: 24,
                     colorFilter: const ColorFilter.mode(
-                      Color(0xFF0C0C0C),
+                      AppColors.bgPrimary,
                       BlendMode.srcIn,
                     ),
                   ),
@@ -1276,10 +1277,10 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
               Text(
                 l10n.opponentDetailNoHandsFound,
                 textAlign: TextAlign.center,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   fontSize: 17,
                   fontWeight: FontWeight.w600,
-                  color: const Color(0xFF0C0C0C),
+                  color: AppColors.textInverse,
                   height: 20 / 17,
                 ),
               ),
@@ -1288,10 +1289,10 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
               Text(
                 l10n.opponentDetailNoHandsMessage(_opponent.name),
                 textAlign: TextAlign.center,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   fontSize: 15,
                   fontWeight: FontWeight.w400,
-                  color: const Color(0xFFB9B9B9),
+                  color: AppColors.textSecondary,
                   height: 22 / 15,
                 ),
               ),
@@ -1303,13 +1304,13 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF0C0C0C),
-                    borderRadius: BorderRadius.circular(999),
+                    color: AppColors.bgPrimary,
+                    borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
                   ),
                   child: Text(
                     l10n.commonClose,
                     textAlign: TextAlign.center,
-                    style: GoogleFonts.ibmPlexSans(
+                    style: AppTypography.ibm(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
                       color: Colors.white,
@@ -1344,9 +1345,9 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
 
     const colorSwatches = [
       (OpponentColor.green,  Color(0xFF39FF14)),
-      (OpponentColor.orange, Color(0xFFFF8A54)),
-      (OpponentColor.red,    Color(0xFFFF3B30)),
-      (OpponentColor.blue,   Color(0xFF007AFF)),
+      (OpponentColor.orange, AppColors.accentTertiary),
+      (OpponentColor.red,    AppColors.accentDanger),
+      (OpponentColor.blue,   AppColors.accentInfo),
       (OpponentColor.purple, Color(0xFFBF5AF2)),
       (OpponentColor.teal,   Color(0xFFFFD60A)),
     ];
@@ -1412,8 +1413,8 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
               decoration: const BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(24),
-                  topRight: Radius.circular(24),
+                  topLeft: Radius.circular(AppDecorations.radiusXl),
+                  topRight: Radius.circular(AppDecorations.radiusXl),
                 ),
               ),
               padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + bottomInset),
@@ -1431,10 +1432,10 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                         children: [
                           Text(
                             l10n.opponentDetailEditOpponent,
-                            style: GoogleFonts.ibmPlexSans(
+                            style: AppTypography.ibm(
                               fontSize: 15,
                               fontWeight: FontWeight.w600,
-                              color: const Color(0xFF0C0C0C),
+                              color: AppColors.textInverse,
                               height: 20 / 15,
                             ),
                           ),
@@ -1442,7 +1443,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                             alignment: Alignment.centerRight,
                             child: GestureDetector(
                               onTap: () => Navigator.pop(context),
-                              child: const Icon(Icons.close, color: Color(0xFFB9B9B9), size: 18),
+                              child: const Icon(Icons.close, color: AppColors.contentInactive, size: 18),
                             ),
                           ),
                         ],
@@ -1452,23 +1453,23 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                     // Name label
                     Text(
                       l10n.opponentsNameHint,
-                      style: GoogleFonts.ibmPlexSans(
+                      style: AppTypography.ibm(
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
                         color: nameFocusNode.hasFocus
-                            ? const Color(0xFF0C0C0C)
-                            : const Color(0xFFB9B9B9),
+                            ? AppColors.textInverse
+                            : AppColors.contentInactive,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Container(
                       decoration: BoxDecoration(
-                        color: const Color(0xFFFDFDFD),
-                        borderRadius: BorderRadius.circular(12),
+                        color: AppColors.bgInputOnInverse,
+                        borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                         border: Border.all(
                           color: nameFocusNode.hasFocus
-                              ? const Color(0xFF4CDE78)
-                              : const Color(0xFFEFEFEF),
+                              ? AppColors.accentPrimary
+                              : AppColors.borderOnInverseSubtle,
                           width: nameFocusNode.hasFocus ? 1.5 : 1.0,
                         ),
                       ),
@@ -1480,15 +1481,15 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                               controller: nameController,
                               focusNode: nameFocusNode,
                               textInputAction: TextInputAction.next,
-                              style: GoogleFonts.ibmPlexSans(
+                              style: AppTypography.ibm(
                                 fontSize: 15,
-                                color: const Color(0xFF0C0C0C),
+                                color: AppColors.textInverse,
                               ),
                               decoration: InputDecoration(
                                 hintText: l10n.opponentsEnterName,
-                                hintStyle: GoogleFonts.ibmPlexSans(
+                                hintStyle: AppTypography.ibm(
                                   fontSize: 15,
-                                  color: const Color(0xFFB9B9B9),
+                                  color: AppColors.textSecondary,
                                 ),
                                 filled: true,
                                 fillColor: Colors.transparent,
@@ -1503,7 +1504,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                           if (nameController.text.isNotEmpty)
                             GestureDetector(
                               onTap: () => nameController.clear(),
-                              child: const Icon(Icons.cancel, color: Color(0xFFB9B9B9), size: 16),
+                              child: const Icon(Icons.cancel, color: AppColors.contentInactive, size: 16),
                             ),
                         ],
                       ),
@@ -1512,7 +1513,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                       const SizedBox(height: 4),
                       Text(
                         nameError!,
-                        style: GoogleFonts.ibmPlexSans(
+                        style: AppTypography.ibm(
                           fontSize: 12,
                           color: const Color(0xFFE85A5A),
                         ),
@@ -1522,23 +1523,23 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                     // Notes label
                     Text(
                       'Notes (Optional)',
-                      style: GoogleFonts.ibmPlexSans(
+                      style: AppTypography.ibm(
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
                         color: notesFocusNode.hasFocus
-                            ? const Color(0xFF0C0C0C)
-                            : const Color(0xFFB9B9B9),
+                            ? AppColors.textInverse
+                            : AppColors.contentInactive,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Container(
                       decoration: BoxDecoration(
-                        color: const Color(0xFFFDFDFD),
-                        borderRadius: BorderRadius.circular(12),
+                        color: AppColors.bgInputOnInverse,
+                        borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                         border: Border.all(
                           color: notesFocusNode.hasFocus
-                              ? const Color(0xFF4CDE78)
-                              : const Color(0xFFEFEFEF),
+                              ? AppColors.accentPrimary
+                              : AppColors.borderOnInverseSubtle,
                           width: notesFocusNode.hasFocus ? 1.5 : 1.0,
                         ),
                       ),
@@ -1550,15 +1551,15 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                             child: TextField(
                               controller: notesController,
                               focusNode: notesFocusNode,
-                              style: GoogleFonts.ibmPlexSans(
+                              style: AppTypography.ibm(
                                 fontSize: 15,
-                                color: const Color(0xFF0C0C0C),
+                                color: AppColors.textInverse,
                               ),
                               decoration: InputDecoration(
                                 hintText: l10n.opponentsAddNotes,
-                                hintStyle: GoogleFonts.ibmPlexSans(
+                                hintStyle: AppTypography.ibm(
                                   fontSize: 15,
-                                  color: const Color(0xFFB9B9B9),
+                                  color: AppColors.textSecondary,
                                 ),
                                 filled: true,
                                 fillColor: Colors.transparent,
@@ -1575,7 +1576,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                           if (notesController.text.isNotEmpty)
                             GestureDetector(
                               onTap: () => notesController.clear(),
-                              child: const Icon(Icons.cancel, color: Color(0xFFB9B9B9), size: 16),
+                              child: const Icon(Icons.cancel, color: AppColors.contentInactive, size: 16),
                             ),
                         ],
                       ),
@@ -1584,10 +1585,10 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                     // Color picker label
                     Text(
                       l10n.opponentsPickColor,
-                      style: GoogleFonts.ibmPlexSans(
+                      style: AppTypography.ibm(
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
-                        color: const Color(0xFFB9B9B9),
+                        color: AppColors.textSecondary,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -1605,7 +1606,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               border: isSelected
-                                  ? Border.all(color: const Color(0xFF0C0C0C), width: 2)
+                                  ? Border.all(color: AppColors.bgPrimary, width: 2)
                                   : null,
                             ),
                             child: Center(
@@ -1632,16 +1633,16 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                             child: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                               decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(999),
-                                border: Border.all(color: const Color(0xFFB9B9B9)),
+                                borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
+                                border: Border.all(color: AppColors.borderLight),
                               ),
                               child: Text(
                                 'Back',
                                 textAlign: TextAlign.center,
-                                style: GoogleFonts.ibmPlexSans(
+                                style: AppTypography.ibm(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w600,
-                                  color: const Color(0xFF0C0C0C),
+                                  color: AppColors.textInverse,
                                 ),
                               ),
                             ),
@@ -1654,13 +1655,13 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                             child: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                               decoration: BoxDecoration(
-                                color: const Color(0xFF0C0C0C),
-                                borderRadius: BorderRadius.circular(999),
+                                color: AppColors.bgPrimary,
+                                borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
                               ),
                               child: Text(
                                 'Save',
                                 textAlign: TextAlign.center,
-                                style: GoogleFonts.ibmPlexSans(
+                                style: AppTypography.ibm(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w600,
                                   color: Colors.white,

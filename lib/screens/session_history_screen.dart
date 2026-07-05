@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../l10n/app_localizations.dart';
 import '../services/firebase_service.dart';
@@ -19,6 +18,7 @@ import '../screens/paywall_screen.dart';
 import 'session_analytics_screen.dart';
 import '../services/currency_service.dart';
 import '../services/logger_service.dart';
+import '../design_system/constants/decorations.dart';
 
 class SessionHistoryScreen extends StatefulWidget {
   final String? targetSessionId;
@@ -163,7 +163,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
 
   Widget _buildFreeTierStatusIndicator() {
     final l10n = AppLocalizations.of(context);
-    const redColor = Color(0xFFFF3B30);
+    const redColor = AppColors.accentDanger;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: GestureDetector(
@@ -179,8 +179,8 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
           width: double.infinity,
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: const Color(0xFFFF3B30).withValues(alpha: 0.06),
-            borderRadius: BorderRadius.circular(999),
+            color: AppColors.accentDanger.withValues(alpha: 0.06),
+            borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
             border: Border.all(color: redColor, width: 1),
           ),
           child: Row(
@@ -199,7 +199,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
                   const SizedBox(width: 4),
                   Text(
                     l10n.sessionLast30Days,
-                    style: GoogleFonts.ibmPlexSans(
+                    style: AppTypography.ibm(
                       fontSize: 15,
                       fontWeight: FontWeight.w400,
                       color: redColor,
@@ -221,7 +221,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
               // Upgrade link
               Text(
                 l10n.sessionUpgradeForFullHistory,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   fontSize: 15,
                   fontWeight: FontWeight.w700,
                   color: Colors.white,
@@ -241,7 +241,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
     final l10n = AppLocalizations.of(context);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0C0C0C),
+      backgroundColor: AppColors.bgPrimary,
       extendBody: true,
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -266,7 +266,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
                   padding: const EdgeInsets.all(2),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(999),
+                    borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
                   ),
                   child: Row(
                     children: [
@@ -279,17 +279,17 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
                             duration: const Duration(milliseconds: 200),
                             padding: const EdgeInsets.symmetric(vertical: 10),
                             decoration: BoxDecoration(
-                              color: Color.lerp(const Color(0xFF161719), Colors.transparent, t),
-                              borderRadius: BorderRadius.circular(999),
+                              color: Color.lerp(AppColors.bgSurface, Colors.transparent, t),
+                              borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
                             ),
                             child: Center(
                               child: Text(
                                 l10n.sessionHistoryCash,
-                                style: GoogleFonts.ibmPlexSans(
+                                style: AppTypography.ibm(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w500,
                                   letterSpacing: -0.5,
-                                  color: Color.lerp(Colors.white, const Color(0xFF0C0C0C), t),
+                                  color: Color.lerp(Colors.white, AppColors.textInverse, t),
                                   height: 24 / 15,
                                 ),
                               ),
@@ -306,17 +306,17 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
                             duration: const Duration(milliseconds: 200),
                             padding: const EdgeInsets.symmetric(vertical: 10),
                             decoration: BoxDecoration(
-                              color: Color.lerp(Colors.transparent, const Color(0xFF161719), t),
-                              borderRadius: BorderRadius.circular(999),
+                              color: Color.lerp(Colors.transparent, AppColors.bgSurface, t),
+                              borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
                             ),
                             child: Center(
                               child: Text(
                                 l10n.sessionHistoryTournament,
-                                style: GoogleFonts.ibmPlexSans(
+                                style: AppTypography.ibm(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w500,
                                   letterSpacing: -0.5,
-                                  color: Color.lerp(const Color(0xFF0C0C0C), Colors.white, t),
+                                  color: Color.lerp(AppColors.textInverse, Colors.white, t),
                                   height: 24 / 15,
                                 ),
                               ),
@@ -376,7 +376,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
             const SizedBox(height: 4),
             Text(
               l10n.sessionNoSessions(gameType),
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 color: Colors.white,
                 fontSize: 17,
                 fontWeight: FontWeight.w600,
@@ -388,8 +388,8 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
             Text(
               l10n.sessionPlayToSee(gameType),
               textAlign: TextAlign.center,
-              style: GoogleFonts.ibmPlexSans(
-                color: const Color(0xFFB9B9B9),
+              style: AppTypography.ibm(
+                color: AppColors.textSecondary,
                 fontSize: 15,
                 fontWeight: FontWeight.w400,
                 height: 22 / 15,
@@ -459,10 +459,10 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
     final plColor = profitLoss == null
         ? AppColors.textDisabled
         : profitLoss > 0
-            ? const Color(0xFFA3FF78)
+            ? AppColors.accentSecondary
             : profitLoss < 0
-                ? const Color(0xFFFF3B30)
-                : const Color(0xFFFF8A54);
+                ? AppColors.accentDanger
+                : AppColors.accentTertiary;
     final plText = profitLoss == null
         ? '—'
         : profitLoss > 0
@@ -489,7 +489,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: const BoxDecoration(
           border: Border(
-            bottom: BorderSide(color: Color(0xFF161719), width: 1),
+            bottom: BorderSide(color: AppColors.borderDefault, width: 1),
           ),
         ),
         child: Row(
@@ -499,8 +499,8 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
               width: 38,
               height: 38,
               decoration: BoxDecoration(
-                color: const Color(0xFFA3FF78),
-                borderRadius: BorderRadius.circular(12),
+                color: AppColors.accentSecondary,
+                borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
               ),
               child: Center(
                 child: SvgPicture.asset(
@@ -522,7 +522,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
                       Expanded(
                         child: Text(
                           sessionName,
-                          style: GoogleFonts.ibmPlexSans(
+                          style: AppTypography.ibm(
                             fontSize: 17,
                             fontWeight: FontWeight.w600,
                             color: Colors.white,
@@ -534,7 +534,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
                       const SizedBox(width: 8),
                       Text(
                         plText,
-                        style: GoogleFonts.ibmPlexSans(
+                        style: AppTypography.ibm(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
                           color: plColor,
@@ -559,7 +559,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
               'assets/icons/CaretRight.svg',
               width: 16,
               height: 16,
-              colorFilter: const ColorFilter.mode(Color(0xFFB9B9B9), BlendMode.srcIn),
+              colorFilter: const ColorFilter.mode(AppColors.contentInactive, BlendMode.srcIn),
             ),
           ],
         ),
@@ -571,8 +571,8 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: const Color(0xFF2C2C2E),
-        borderRadius: BorderRadius.circular(999),
+        color: AppColors.bgElevated,
+        borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -581,15 +581,15 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
             iconPath,
             width: 12,
             height: 12,
-            colorFilter: const ColorFilter.mode(Color(0xFFB9B9B9), BlendMode.srcIn),
+            colorFilter: const ColorFilter.mode(AppColors.contentInactive, BlendMode.srcIn),
           ),
           const SizedBox(width: 4),
           Text(
             text,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               fontSize: 11,
               fontWeight: FontWeight.w500,
-              color: const Color(0xFFB9B9B9),
+              color: AppColors.textSecondary,
               height: 16 / 11,
             ),
           ),
@@ -823,7 +823,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        backgroundColor: Color(0xFF1F1F23),
+        backgroundColor: AppColors.surfaceVariant2,
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [

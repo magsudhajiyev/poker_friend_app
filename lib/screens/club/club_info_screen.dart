@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../design_system/constants/colors.dart';
 import '../../models/club.dart';
 import '../../models/club_member.dart';
 import '../../services/club_service.dart';
 import '../../l10n/app_localizations.dart';
+import '../../design_system/constants/typography.dart';
+import '../../design_system/constants/decorations.dart';
 
 /// Club info screen for regular members (read-only view)
 class ClubInfoScreen extends StatefulWidget {
@@ -131,7 +132,7 @@ class _ClubInfoScreenState extends State<ClubInfoScreen> {
         Expanded(
           child: Text(
             l10n.clubInfoTitle,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               fontSize: 24,
               color: Colors.white,
               fontWeight: FontWeight.w600,
@@ -151,7 +152,7 @@ class _ClubInfoScreenState extends State<ClubInfoScreen> {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: AppColors.bgSurface,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -164,7 +165,7 @@ class _ClubInfoScreenState extends State<ClubInfoScreen> {
                 height: 52,
                 decoration: BoxDecoration(
                   color: AppColors.buttonPrimary.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(AppDecorations.radius14),
                 ),
                 child: const Icon(
                   Icons.home_rounded,
@@ -176,7 +177,7 @@ class _ClubInfoScreenState extends State<ClubInfoScreen> {
               Expanded(
                 child: Text(
                   club.name,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     fontSize: 20,
                     color: Colors.white,
                     fontWeight: FontWeight.w600,
@@ -191,7 +192,7 @@ class _ClubInfoScreenState extends State<ClubInfoScreen> {
             const SizedBox(height: 18),
             Text(
               club.description!,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 fontSize: 15,
                 color: AppColors.textDisabled,
                 height: 1.5,
@@ -229,7 +230,7 @@ class _ClubInfoScreenState extends State<ClubInfoScreen> {
         Expanded(
           child: Text(
             text,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               fontSize: 15,
               color: AppColors.textDisabled,
             ),
@@ -246,7 +247,7 @@ class _ClubInfoScreenState extends State<ClubInfoScreen> {
       children: [
         Text(
           l10n.clubInfoMembersCount(_members.length),
-          style: GoogleFonts.ibmPlexSans(
+          style: AppTypography.ibm(
             fontSize: 17,
             color: Colors.white,
             fontWeight: FontWeight.w600,
@@ -259,11 +260,11 @@ class _ClubInfoScreenState extends State<ClubInfoScreen> {
             padding: const EdgeInsets.all(32),
             decoration: BoxDecoration(
               color: AppColors.bgSurface,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
             ),
             child: Text(
               l10n.clubInfoNoMembers,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 color: AppColors.textDisabled,
               ),
               textAlign: TextAlign.center,
@@ -273,7 +274,7 @@ class _ClubInfoScreenState extends State<ClubInfoScreen> {
           Container(
             decoration: BoxDecoration(
               color: AppColors.bgSurface,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
             ),
             child: Column(
               children: List.generate(_members.length, (index) {
@@ -313,7 +314,7 @@ class _ClubInfoScreenState extends State<ClubInfoScreen> {
             child: Center(
               child: Text(
                 (member.displayName ?? 'U')[0].toUpperCase(),
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   fontSize: 17,
                   color: roleColor,
                   fontWeight: FontWeight.w600,
@@ -325,7 +326,7 @@ class _ClubInfoScreenState extends State<ClubInfoScreen> {
           Expanded(
             child: Text(
               member.displayName ?? 'Unknown',
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 fontSize: 15,
                 color: Colors.white,
                 fontWeight: FontWeight.w500,
@@ -336,11 +337,11 @@ class _ClubInfoScreenState extends State<ClubInfoScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
               color: roleColor.withOpacity(0.12),
-              borderRadius: BorderRadius.circular(40),
+              borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
             ),
             child: Text(
               member.role.name.toUpperCase(),
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 fontSize: 11,
                 color: roleColor,
                 fontWeight: FontWeight.w600,

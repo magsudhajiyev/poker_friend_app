@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../design_system/constants/colors.dart';
 import '../../design_system/components/backgrounds/gradient_background.dart';
 import '../../models/dealer_session.dart';
@@ -16,6 +15,8 @@ import '../../models/club_event.dart';
 import '../../l10n/app_localizations.dart';
 import '../hand_actions_page_view.dart';
 import '../spectator/event_rankings_screen.dart';
+import '../../design_system/constants/typography.dart';
+import '../../design_system/constants/decorations.dart';
 
 /// Player session screen for participating in dealer-assisted sessions.
 /// Shows real-time hand updates, allows player to input hole cards, notes, and tags.
@@ -379,10 +380,10 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
       barrierDismissible: false,
       builder: (dialogContext) => AlertDialog(
         backgroundColor: AppColors.bgSurface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDecorations.radius20)),
         title: Text(
           AppLocalizations.of(context).playerSessionEndedTitle,
-          style: GoogleFonts.ibmPlexSans(
+          style: AppTypography.ibm(
             color: Colors.white,
             fontSize: 18,
             fontWeight: FontWeight.w600,
@@ -390,7 +391,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
         ),
         content: Text(
           AppLocalizations.of(context).playerSessionEndedBody,
-          style: GoogleFonts.ibmPlexSans(
+          style: AppTypography.ibm(
             color: AppColors.textDisabled,
             fontSize: 15,
           ),
@@ -403,7 +404,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
             },
             child: Text(
               AppLocalizations.of(context).commonOk,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 color: AppColors.buttonPrimary,
                 fontWeight: FontWeight.w600,
               ),
@@ -427,10 +428,10 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
       barrierDismissible: false,
       builder: (dialogContext) => AlertDialog(
         backgroundColor: AppColors.bgSurface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDecorations.radius20)),
         title: Text(
           AppLocalizations.of(context).playerSessionRemovedTitle,
-          style: GoogleFonts.ibmPlexSans(
+          style: AppTypography.ibm(
             color: Colors.white,
             fontSize: 18,
             fontWeight: FontWeight.w600,
@@ -438,7 +439,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
         ),
         content: Text(
           AppLocalizations.of(context).playerSessionRemovedBody,
-          style: GoogleFonts.ibmPlexSans(
+          style: AppTypography.ibm(
             color: AppColors.textDisabled,
             fontSize: 15,
           ),
@@ -451,7 +452,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
             },
             child: Text(
               AppLocalizations.of(context).commonOk,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 color: AppColors.buttonPrimary,
                 fontWeight: FontWeight.w600,
               ),
@@ -470,7 +471,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
           isWinner
               ? 'You won ${_formatAmount(pot)}!'
               : 'Seat $winnerId wins ${_formatAmount(pot)}',
-          style: GoogleFonts.ibmPlexSans(color: Colors.white),
+          style: AppTypography.ibm(color: Colors.white),
         ),
         backgroundColor: isWinner ? AppColors.limeGreen : AppColors.bgSurface,
         duration: const Duration(seconds: 3),
@@ -568,10 +569,10 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.bgSurface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDecorations.radius20)),
         title: Text(
           AppLocalizations.of(context).playerSessionLeaveTableTitle,
-          style: GoogleFonts.ibmPlexSans(
+          style: AppTypography.ibm(
             color: Colors.white,
             fontSize: 18,
             fontWeight: FontWeight.w600,
@@ -579,7 +580,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
         ),
         content: Text(
           AppLocalizations.of(context).playerSessionLeaveTableBody,
-          style: GoogleFonts.ibmPlexSans(
+          style: AppTypography.ibm(
             color: AppColors.textDisabled,
             fontSize: 15,
           ),
@@ -589,7 +590,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
             onPressed: () => Navigator.pop(context, false),
             child: Text(
               AppLocalizations.of(context).commonCancel,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 color: AppColors.textDisabled,
                 fontWeight: FontWeight.w600,
               ),
@@ -599,7 +600,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
             onPressed: () => Navigator.pop(context, true),
             child: Text(
               AppLocalizations.of(context).commonLeave,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 color: AppColors.errorRed,
                 fontWeight: FontWeight.w600,
               ),
@@ -625,7 +626,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
             SnackBar(
               content: Text(
                 AppLocalizations.of(context).playerSessionFailedLeave(e.toString()),
-                style: GoogleFonts.ibmPlexSans(color: Colors.white),
+                style: AppTypography.ibm(color: Colors.white),
               ),
               backgroundColor: AppColors.errorRed,
             ),
@@ -691,7 +692,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
               children: [
                 Text(
                   _eventName ?? 'Table Session',
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     fontSize: 20,
                     fontWeight: FontWeight.w600,
                     color: Colors.white,
@@ -704,7 +705,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
                   children: [
                     Text(
                       AppLocalizations.of(context).playerSessionHandNumber(_handNumber),
-                      style: GoogleFonts.ibmPlexSans(
+                      style: AppTypography.ibm(
                         fontSize: 13,
                         color: AppColors.textDisabled,
                       ),
@@ -723,7 +724,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
                     const SizedBox(width: 4),
                     Text(
                       _isHandActive ? 'LIVE' : 'WAITING',
-                      style: GoogleFonts.ibmPlexSans(
+                      style: AppTypography.ibm(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
                         color: _isHandActive
@@ -772,7 +773,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
             decoration: BoxDecoration(
               color: AppColors.buttonPrimary.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(40),
+              borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -785,7 +786,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
                 const SizedBox(width: 3),
                 Text(
                   dealerName,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     fontSize: 10,
                     fontWeight: FontWeight.w500,
                     color: AppColors.buttonPrimary,
@@ -812,7 +813,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
             const SizedBox(height: 16),
             Text(
               AppLocalizations.of(context).playerSessionConnecting,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 color: AppColors.textDisabled,
                 fontSize: 15,
               ),
@@ -845,7 +846,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
               const SizedBox(height: 20),
               Text(
                 _error!,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   color: AppColors.textDisabled,
                   fontSize: 15,
                 ),
@@ -858,11 +859,11 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(60),
+                    borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
                   ),
                   child: Text(
                     AppLocalizations.of(context).playerSessionGoBackBtn,
-                    style: GoogleFonts.ibmPlexSans(
+                    style: AppTypography.ibm(
                       fontSize: 17,
                       fontWeight: FontWeight.w600,
                       color: Colors.black,
@@ -913,7 +914,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
         color: AppColors.bgSurface,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
         border: Border.all(color: AppColors.separatorDark),
       ),
       child: Row(
@@ -932,7 +933,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
       children: [
         Text(
           value,
-          style: GoogleFonts.robotoMono(
+          style: AppTypography.mono(
             color: color,
             fontSize: 18,
             fontWeight: FontWeight.w700,
@@ -941,7 +942,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
         const SizedBox(height: 4),
         Text(
           label,
-          style: GoogleFonts.ibmPlexSans(
+          style: AppTypography.ibm(
             color: AppColors.textDisabled,
             fontSize: 11,
             fontWeight: FontWeight.w600,
@@ -963,7 +964,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
           color: AppColors.bgSurface,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
           border: Border.all(
             color: hasCards
                 ? AppColors.buttonPrimary.withValues(alpha: 0.3)
@@ -980,7 +981,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
             const SizedBox(width: 8),
             Text(
               AppLocalizations.of(context).playerSessionHoleCardsLabel,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 color: hasCards ? AppColors.buttonPrimary : AppColors.textDisabled,
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
@@ -997,11 +998,11 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               decoration: BoxDecoration(
                 color: AppColors.buttonPrimary.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(40),
+                borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
               ),
               child: Text(
                 hasCards ? 'Edit' : 'Add',
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   color: AppColors.buttonPrimary,
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
@@ -1026,7 +1027,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
         color: AppColors.bgSurface,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
         border: Border.all(
           color: hasCards
               ? const Color(0xFFFFA726).withValues(alpha: 0.3)
@@ -1039,7 +1040,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
           const SizedBox(width: 8),
           Text(
             AppLocalizations.of(context).playerSessionBoardLabel,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               color: const Color(0xFFFFA726),
               fontSize: 14,
               fontWeight: FontWeight.w600,
@@ -1062,7 +1063,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
           ] else
             Text(
               AppLocalizations.of(context).playerSessionNoCardsDealt,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 color: AppColors.textDisabled,
                 fontSize: 13,
               ),
@@ -1114,13 +1115,13 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: AppColors.bgSurface,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
           border: Border.all(color: AppColors.separatorDark),
         ),
         child: Center(
           child: Text(
             AppLocalizations.of(context).playerSessionWaitingForAction,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               color: AppColors.textDisabled,
               fontSize: 14,
             ),
@@ -1161,7 +1162,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.bgSurface,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
         border: Border.all(color: AppColors.separatorDark),
       ),
       child: Column(
@@ -1175,7 +1176,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
                 const SizedBox(width: 8),
                 Text(
                   AppLocalizations.of(context).playerSessionActionsLabel,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     color: Colors.white,
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
@@ -1216,7 +1217,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
               children: [
                 Text(
                   street.toUpperCase(),
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     color: AppColors.limeGreen,
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
@@ -1226,7 +1227,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
                 const SizedBox(width: 4),
                 Text(
                   '(${actions.length})',
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     color: AppColors.textDisabled,
                     fontSize: 10,
                     fontWeight: FontWeight.w500,
@@ -1301,7 +1302,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
           Expanded(
             child: Text(
               actionText,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 color: isMe ? Colors.white : const Color(0xFFB3B4B6),
                 fontSize: 13,
                 fontWeight: isMe ? FontWeight.w600 : FontWeight.w400,
@@ -1310,7 +1311,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
           ),
           Text(
             actionType.toUpperCase(),
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               color: actionColor,
               fontSize: 11,
               fontWeight: FontWeight.w600,
@@ -1328,7 +1329,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.bgSurface,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
         border: Border.all(color: AppColors.separatorDark),
       ),
       child: Column(
@@ -1336,7 +1337,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
         children: [
           Text(
             AppLocalizations.of(context).playerSessionHandNotesLabel,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               fontSize: 12,
               fontWeight: FontWeight.w600,
               color: AppColors.limeGreen,
@@ -1347,7 +1348,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
           TextField(
             onChanged: (value) => setState(() => _handNotes = value),
             onEditingComplete: () => _savePlayerData(),
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               fontSize: 15,
               fontWeight: FontWeight.w400,
               color: Colors.white,
@@ -1355,22 +1356,22 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
             ),
             decoration: InputDecoration(
               hintText: AppLocalizations.of(context).playerSessionNotesHint,
-              hintStyle: GoogleFonts.ibmPlexSans(
+              hintStyle: AppTypography.ibm(
                 fontSize: 15,
                 color: AppColors.textDisabled,
               ),
               filled: false,
               contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                 borderSide: const BorderSide(color: AppColors.infoCardDateText, width: 1),
               ),
               enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                 borderSide: const BorderSide(color: AppColors.infoCardDateText, width: 1),
               ),
               focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                 borderSide: const BorderSide(color: AppColors.buttonPrimary, width: 1),
               ),
             ),
@@ -1389,7 +1390,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.bgSurface,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
         border: Border.all(color: AppColors.separatorDark),
       ),
       child: Column(
@@ -1397,7 +1398,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
         children: [
           Text(
             'TAGS',
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               fontSize: 12,
               fontWeight: FontWeight.w600,
               color: AppColors.limeGreen,
@@ -1426,7 +1427,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
           color: isSelected
               ? AppColors.buttonPrimary.withValues(alpha: 0.15)
               : AppColors.bgPrimary,
-          borderRadius: BorderRadius.circular(40),
+          borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
           border: Border.all(
             color: isSelected
                 ? AppColors.buttonPrimary
@@ -1435,7 +1436,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
         ),
         child: Text(
           tag,
-          style: GoogleFonts.ibmPlexSans(
+          style: AppTypography.ibm(
             color: isSelected ? AppColors.buttonPrimary : AppColors.textDisabled,
             fontSize: 13,
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
@@ -1451,7 +1452,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.bgSurface,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
         border: Border.all(color: AppColors.separatorDark),
       ),
       child: Column(
@@ -1469,7 +1470,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
                       const SizedBox(width: 8),
                       Text(
                         'Hand History',
-                        style: GoogleFonts.ibmPlexSans(
+                        style: AppTypography.ibm(
                           color: Colors.white,
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
@@ -1481,11 +1482,11 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                           decoration: BoxDecoration(
                             color: AppColors.buttonPrimary.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(40),
+                            borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
                           ),
                           child: Text(
                             '${_handHistory.length}',
-                            style: GoogleFonts.ibmPlexSans(
+                            style: AppTypography.ibm(
                               color: AppColors.buttonPrimary,
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
@@ -1512,7 +1513,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
               padding: const EdgeInsets.all(16),
               child: Text(
                 'No completed hands yet',
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   color: AppColors.textDisabled,
                   fontSize: 13,
                 ),
@@ -1565,12 +1566,12 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
                 color: isWinner
                     ? AppColors.limeGreen.withValues(alpha: 0.15)
                     : AppColors.bgPrimary,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
               ),
               child: Center(
                 child: Text(
                   '#$handNumber',
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     color: isWinner ? AppColors.limeGreen : AppColors.textDisabled,
                     fontSize: 10,
                     fontWeight: FontWeight.w600,
@@ -1586,7 +1587,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
                 children: [
                   Text(
                     isWinner ? 'Won ${_formatAmount(pot)}' : 'Lost',
-                    style: GoogleFonts.ibmPlexSans(
+                    style: AppTypography.ibm(
                       color: isWinner ? AppColors.limeGreen : AppColors.textDisabled,
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -1598,7 +1599,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
                       children: playerTags
                           .map((tag) => Text(
                                 tag,
-                                style: GoogleFonts.ibmPlexSans(
+                                style: AppTypography.ibm(
                                   color: AppColors.buttonPrimary,
                                   fontSize: 10,
                                 ),
@@ -1625,7 +1626,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
                 if (hasHoleCards)
                   Text(
                     '${playerHoleCards['card1']}${playerHoleCards['card2']}',
-                    style: GoogleFonts.ibmPlexSans(
+                    style: AppTypography.ibm(
                       color: AppColors.textDisabled,
                       fontSize: 8,
                     ),
@@ -1887,7 +1888,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
             const SizedBox(height: 24),
             Text(
               'Dealer Change',
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 color: Colors.white,
                 fontSize: 24,
                 fontWeight: FontWeight.w600,
@@ -1897,7 +1898,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
             const SizedBox(height: 8),
             Text(
               'Waiting for new dealer to take over...',
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 color: AppColors.textMint,
                 fontSize: 15,
               ),
@@ -1999,7 +2000,7 @@ class _EditHandBottomSheetState extends State<_EditHandBottomSheet> {
           SnackBar(
             content: Text(
               'Hand #${widget.handNumber} updated',
-              style: GoogleFonts.ibmPlexSans(color: Colors.white),
+              style: AppTypography.ibm(color: Colors.white),
             ),
             backgroundColor: AppColors.limeGreen,
             duration: const Duration(seconds: 1),
@@ -2012,7 +2013,7 @@ class _EditHandBottomSheetState extends State<_EditHandBottomSheet> {
           SnackBar(
             content: Text(
               'Error saving: $e',
-              style: GoogleFonts.ibmPlexSans(color: Colors.white),
+              style: AppTypography.ibm(color: Colors.white),
             ),
             backgroundColor: AppColors.errorRed,
           ),
@@ -2060,7 +2061,7 @@ class _EditHandBottomSheetState extends State<_EditHandBottomSheet> {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.bgSurface,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(AppDecorations.radius20)),
       ),
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
@@ -2090,7 +2091,7 @@ class _EditHandBottomSheetState extends State<_EditHandBottomSheet> {
                 children: [
                   Text(
                     'Edit Hand #${widget.handNumber}',
-                    style: GoogleFonts.ibmPlexSans(
+                    style: AppTypography.ibm(
                       color: Colors.white,
                       fontSize: 20,
                       fontWeight: FontWeight.w600,
@@ -2107,7 +2108,7 @@ class _EditHandBottomSheetState extends State<_EditHandBottomSheet> {
                         const SizedBox(width: 4),
                         Text(
                           'View Details',
-                          style: GoogleFonts.ibmPlexSans(
+                          style: AppTypography.ibm(
                             color: AppColors.buttonPrimary,
                             fontSize: 13,
                             fontWeight: FontWeight.w500,
@@ -2123,7 +2124,7 @@ class _EditHandBottomSheetState extends State<_EditHandBottomSheet> {
               // Hole Cards
               Text(
                 'HOLE CARDS',
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                   color: AppColors.limeGreen,
@@ -2137,7 +2138,7 @@ class _EditHandBottomSheetState extends State<_EditHandBottomSheet> {
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: AppColors.bgPrimary,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                     border: Border.all(
                       color: hasCards
                           ? AppColors.buttonPrimary.withValues(alpha: 0.3)
@@ -2156,7 +2157,7 @@ class _EditHandBottomSheetState extends State<_EditHandBottomSheet> {
                         const SizedBox(width: 8),
                         Text(
                           'Tap to add hole cards',
-                          style: GoogleFonts.ibmPlexSans(
+                          style: AppTypography.ibm(
                             color: AppColors.textDisabled,
                             fontSize: 14,
                           ),
@@ -2171,7 +2172,7 @@ class _EditHandBottomSheetState extends State<_EditHandBottomSheet> {
               // Notes
               Text(
                 'NOTES',
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                   color: AppColors.limeGreen,
@@ -2182,29 +2183,29 @@ class _EditHandBottomSheetState extends State<_EditHandBottomSheet> {
               TextField(
                 controller: _notesController,
                 maxLines: 3,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   fontSize: 15,
                   color: Colors.white,
                   height: 1.44,
                 ),
                 decoration: InputDecoration(
                   hintText: AppLocalizations.of(context).playerSessionNotesHint,
-                  hintStyle: GoogleFonts.ibmPlexSans(
+                  hintStyle: AppTypography.ibm(
                     fontSize: 15,
                     color: AppColors.textDisabled,
                   ),
                   filled: false,
                   contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                     borderSide: const BorderSide(color: AppColors.infoCardDateText, width: 1),
                   ),
                   enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                     borderSide: const BorderSide(color: AppColors.infoCardDateText, width: 1),
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                     borderSide: const BorderSide(color: AppColors.buttonPrimary, width: 1),
                   ),
                 ),
@@ -2214,7 +2215,7 @@ class _EditHandBottomSheetState extends State<_EditHandBottomSheet> {
               // Tags
               Text(
                 'TAGS',
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                   color: AppColors.limeGreen,
@@ -2235,7 +2236,7 @@ class _EditHandBottomSheetState extends State<_EditHandBottomSheet> {
                         color: isSelected
                             ? AppColors.buttonPrimary.withValues(alpha: 0.15)
                             : AppColors.bgPrimary,
-                        borderRadius: BorderRadius.circular(40),
+                        borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
                         border: Border.all(
                           color: isSelected
                               ? AppColors.buttonPrimary
@@ -2244,7 +2245,7 @@ class _EditHandBottomSheetState extends State<_EditHandBottomSheet> {
                       ),
                       child: Text(
                         tag,
-                        style: GoogleFonts.ibmPlexSans(
+                        style: AppTypography.ibm(
                           color: isSelected
                               ? AppColors.buttonPrimary
                               : AppColors.textDisabled,
@@ -2268,7 +2269,7 @@ class _EditHandBottomSheetState extends State<_EditHandBottomSheet> {
                     color: _isSaving
                         ? Colors.white.withValues(alpha: 0.5)
                         : Colors.white,
-                    borderRadius: BorderRadius.circular(60),
+                    borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
                   ),
                   child: Center(
                     child: _isSaving
@@ -2282,7 +2283,7 @@ class _EditHandBottomSheetState extends State<_EditHandBottomSheet> {
                           )
                         : Text(
                             'Save Changes',
-                            style: GoogleFonts.ibmPlexSans(
+                            style: AppTypography.ibm(
                               fontSize: 17,
                               fontWeight: FontWeight.w600,
                               color: Colors.black,

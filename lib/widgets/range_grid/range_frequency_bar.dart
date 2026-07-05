@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../../design_system/constants/colors.dart';
+import '../../design_system/constants/typography.dart';
 
 /// Stacked raise/call/check/fold frequency bar with a legend.
 /// Colors follow the action-flash palette used during hand logging.
@@ -109,7 +109,7 @@ class RangeFrequencyBar extends StatelessWidget {
         const SizedBox(width: 5),
         Text(
           '$label $count',
-          style: GoogleFonts.ibmPlexSans(
+          style: AppTypography.ibm(
             fontSize: 12,
             fontWeight: FontWeight.w500,
             color: Colors.white.withValues(alpha: 0.7),

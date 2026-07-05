@@ -23,9 +23,22 @@ Baseline (2026-07-05, before phase 1): **2,379 hardcoded `Color(0x…)` across
 - Auto-replaced **1,235 hardcoded hexes in 81 files** with their exact
   AppColors token (value-identical).
 
-## Phase 2 — semantic color pass (needs design judgment)
+## Phase 2 — DONE (mechanical, zero visual change, 2026-07-05)
 
-~1,144 hardcoded values remain, in two classes:
+2,904 replacements across 108 files via `tool/design_migrate_phase2.py`:
+- **Fonts (1,484)**: every inline `GoogleFonts.*` call now routes through
+  `AppTypography.ibm/mono/grotesk(...)` wrappers (pure name swap — pixel
+  identical). Off-system fonts surfaced: `interLegacy` (10 uses),
+  `plexMonoLegacy` (6) — consolidate in phase 3.
+- **Colors (570)**: multi-alias hexes resolved by role from source context
+  (text / border / other), e.g. #B9B9B9 → textSecondary vs borderLight.
+  Near-duplicate greys tokenized as `surfaceVariant1..4` / `errorRedVariant`
+  (pixel identical, marked for consolidation). 2,379 → 569 hardcoded colors.
+- **Radius (850)**: `circular(<n>)` literals → AppDecorations tokens.
+
+## Phase 2b — remaining color pass (needs design judgment)
+
+~569 hardcoded values remain (149 distinct, none above 25 uses):
 
 1. **Shared-value hexes** the lint deliberately skips because one value has
    several semantic tokens: `#0C0C0C` (bgPrimary vs textInverse, ×102),

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../design_system/constants/colors.dart';
+import '../design_system/constants/typography.dart';
+import '../design_system/constants/decorations.dart';
 
 /// Shared card selection keyboard with three input paths:
 /// - Path A: Drag from rank button to suit button
@@ -227,7 +228,7 @@ class _CardKeyboardState extends State<CardKeyboard> {
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
               color: AppColors.paper,
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(AppDecorations.radius14),
               border: Border.all(color: AppColors.neutral800, width: 1),
             ),
             child: Column(
@@ -286,7 +287,7 @@ class _CardKeyboardState extends State<CardKeyboard> {
               : isEmpty
                   ? AppColors.neutral800
                   : Colors.white,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(AppDecorations.radius10),
           border: Border.all(
             color: isActive
                 ? AppColors.buttonPrimary
@@ -302,7 +303,7 @@ class _CardKeyboardState extends State<CardKeyboard> {
             ? Center(
                 child: Text(
                   '${index + 1}',
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     color: AppColors.infoCardDateText,
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
@@ -314,7 +315,7 @@ class _CardKeyboardState extends State<CardKeyboard> {
                   Center(
                     child: Text(
                       card,
-                      style: GoogleFonts.ibmPlexSans(
+                      style: AppTypography.ibm(
                         color: _getCardColor(card),
                         fontSize: 15,
                         fontWeight: FontWeight.bold,
@@ -387,12 +388,12 @@ class _CardKeyboardState extends State<CardKeyboard> {
                     : AppColors.neutral700,
             width: 1,
           ),
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
         ),
         child: Center(
           child: Text(
             rank,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               fontSize: 16,
               fontWeight: FontWeight.w600,
               color: (isArmed || isDragging)
@@ -443,7 +444,7 @@ class _CardKeyboardState extends State<CardKeyboard> {
                                 : AppColors.neutral700,
                     width: isHovered ? 2 : 1,
                   ),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
                 ),
                 child: Center(
                   child: Text(

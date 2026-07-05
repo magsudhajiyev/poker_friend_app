@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../../design_system/poker_friend_theme.dart';
 import '../../design_system/constants/colors.dart';
@@ -28,6 +27,8 @@ import 'create_event_screen.dart';
 import 'club_settings_screen.dart';
 import 'club_info_screen.dart';
 import 'grouped_cash_game_screen.dart';
+import '../../design_system/constants/typography.dart';
+import '../../design_system/constants/decorations.dart';
 
 /// Club dashboard showing events with segmented tabs for Upcoming, Live, Past, Dealers
 /// Matches Figma node 357:3862
@@ -482,7 +483,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
                   children: [
                     Text(
                       widget.club.name,
-                      style: GoogleFonts.ibmPlexSans(
+                      style: AppTypography.ibm(
                         fontSize: 27,
                         fontWeight: FontWeight.w600,
                         color: Colors.white,
@@ -503,7 +504,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
                         const SizedBox(width: 6),
                         Text(
                           AppLocalizations.of(context).clubDashboardMemberCount(_memberCount),
-                          style: GoogleFonts.ibmPlexSans(
+                          style: AppTypography.ibm(
                             fontSize: 13,
                             fontWeight: FontWeight.w400,
                             color: AppColors.textMint,
@@ -525,7 +526,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
                   padding: const EdgeInsets.symmetric(horizontal: 11),
                   decoration: BoxDecoration(
                     color: AppColors.paper,
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(AppDecorations.radius20),
                     border: Border.all(
                       color: AppColors.buttonPrimary,
                       width: 1,
@@ -542,7 +543,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
                       const SizedBox(width: 5),
                       Text(
                         AppLocalizations.of(context).clubDashboardAdmin,
-                        style: GoogleFonts.ibmPlexSans(
+                        style: AppTypography.ibm(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
                           color: Colors.white,
@@ -637,7 +638,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
                         height: 30,
                         decoration: BoxDecoration(
                           color: AppColors.buttonPrimary,
-                          borderRadius: BorderRadius.circular(20),
+                          borderRadius: BorderRadius.circular(AppDecorations.radius20),
                         ),
                       ),
                     ),
@@ -663,7 +664,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
                                   children: [
                                     Text(
                                       label,
-                                      style: GoogleFonts.ibmPlexSans(
+                                      style: AppTypography.ibm(
                                         fontSize: lerpDouble(17, 15, selected)!,
                                         fontWeight: selected > 0.5 ? FontWeight.w500 : FontWeight.w400,
                                         color: Color.lerp(
@@ -796,7 +797,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         color: AppColors.surfaceDark,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
         border: Border.all(
           color: AppColors.lossRed.withValues(alpha: 0.5),
           width: 1.5,
@@ -806,7 +807,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
         color: Colors.transparent,
         child: InkWell(
           onTap: () => _navigateToGroupedCashGame(stakes, events),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
           child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
               child: Column(
@@ -835,7 +836,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
                           padding: const EdgeInsets.symmetric(vertical: 4),
                           child: Text(
                             AppLocalizations.of(context).clubDashboardCashGameStakes(stakes),
-                            style: GoogleFonts.ibmPlexSans(
+                            style: AppTypography.ibm(
                               fontSize: 17,
                               color: Colors.white,
                               fontWeight: FontWeight.w400,
@@ -848,11 +849,11 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
                           color: AppColors.mint900,
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(AppDecorations.radius10),
                         ),
                         child: Text(
                           AppLocalizations.of(context).clubDashboardCash,
-                          style: GoogleFonts.ibmPlexSans(
+                          style: AppTypography.ibm(
                             fontSize: 11,
                             color: AppColors.buttonPrimary,
                             fontWeight: FontWeight.w600,
@@ -892,7 +893,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
                             padding: const EdgeInsets.symmetric(vertical: 4),
                             child: Text(
                               AppLocalizations.of(context).clubDashboardPlayingCount(totalPlaying),
-                              style: GoogleFonts.ibmPlexSans(
+                              style: AppTypography.ibm(
                                 fontSize: 13,
                                 color: const Color(0xFF808285),
                                 fontWeight: FontWeight.w500,
@@ -920,7 +921,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
           padding: const EdgeInsets.symmetric(vertical: 4),
           child: Text(
             label,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               fontSize: 17,
               color: const Color(0xFFB3B4B6),
               fontWeight: FontWeight.w500,
@@ -932,7 +933,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
           padding: const EdgeInsets.symmetric(vertical: 4),
           child: Text(
             value,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               fontSize: 17,
               color: AppColors.textMint,
               fontWeight: FontWeight.w500,
@@ -987,7 +988,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
           height: 72,
           decoration: BoxDecoration(
             color: AppColors.neutral800,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(AppDecorations.radius20),
           ),
           child: Center(
             child: SvgPicture.asset(
@@ -1003,7 +1004,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
         Text(
           message,
           textAlign: TextAlign.center,
-          style: GoogleFonts.ibmPlexSans(
+          style: AppTypography.ibm(
             fontSize: 22,
             fontWeight: FontWeight.w600,
             color: Colors.white,
@@ -1016,7 +1017,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
         Text(
           subtitle,
           textAlign: TextAlign.center,
-          style: GoogleFonts.ibmPlexSans(
+          style: AppTypography.ibm(
             fontSize: 15,
             fontWeight: FontWeight.w400,
             color: AppColors.textDisabled,
@@ -1056,7 +1057,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
                   const SizedBox(width: 8),
                   Text(
                     AppLocalizations.of(context).eventManagementCreateEvent,
-                    style: GoogleFonts.ibmPlexSans(
+                    style: AppTypography.ibm(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                       color: Colors.white,
@@ -1107,7 +1108,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
         margin: const EdgeInsets.only(bottom: 16),
         decoration: BoxDecoration(
           color: AppColors.surfaceDark,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
           border: Border.all(
             color: isLive ? AppColors.lossRed.withValues(alpha: 0.5) : Colors.black,
             width: isLive ? 1.5 : 1,
@@ -1117,7 +1118,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
           color: Colors.transparent,
           child: InkWell(
             onTap: () => _navigateToEventDetail(event),
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
               child: Column(
@@ -1149,7 +1150,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
                           padding: const EdgeInsets.symmetric(vertical: 4),
                           child: Text(
                             event.name,
-                            style: GoogleFonts.ibmPlexSans(
+                            style: AppTypography.ibm(
                               fontSize: 17,
                               color: Colors.white,
                               fontWeight: FontWeight.w400,
@@ -1163,11 +1164,11 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
                           color: AppColors.mint900,
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(AppDecorations.radius10),
                         ),
                         child: Text(
                           event.gameType == 'cash' ? AppLocalizations.of(context).clubDashboardCash : AppLocalizations.of(context).setupTournament,
-                          style: GoogleFonts.ibmPlexSans(
+                          style: AppTypography.ibm(
                             fontSize: 11,
                             color: AppColors.buttonPrimary,
                             fontWeight: FontWeight.w600,
@@ -1195,7 +1196,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
                         padding: const EdgeInsets.symmetric(vertical: 4),
                         child: Text(
                           AppLocalizations.of(context).clubDashboardDateLabel,
-                          style: GoogleFonts.ibmPlexSans(
+                          style: AppTypography.ibm(
                             fontSize: 17,
                             color: const Color(0xFFB3B4B6),
                             fontWeight: FontWeight.w500,
@@ -1207,7 +1208,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
                         padding: const EdgeInsets.symmetric(vertical: 4),
                         child: Text(
                           dateStr,
-                          style: GoogleFonts.ibmPlexSans(
+                          style: AppTypography.ibm(
                             fontSize: 17,
                             color: AppColors.textMint,
                             fontWeight: FontWeight.w500,
@@ -1228,7 +1229,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
                           padding: const EdgeInsets.symmetric(vertical: 4),
                           child: Text(
                             event.gameType == 'cash' ? AppLocalizations.of(context).eventDetailStakes : AppLocalizations.of(context).eventDetailBuyIn,
-                            style: GoogleFonts.ibmPlexSans(
+                            style: AppTypography.ibm(
                               fontSize: 17,
                               color: const Color(0xFFB3B4B6),
                               fontWeight: FontWeight.w500,
@@ -1240,7 +1241,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
                           padding: const EdgeInsets.symmetric(vertical: 4),
                           child: Text(
                             buyInDisplay,
-                            style: GoogleFonts.ibmPlexSans(
+                            style: AppTypography.ibm(
                               fontSize: 17,
                               color: AppColors.textMint,
                               fontWeight: FontWeight.w500,
@@ -1270,7 +1271,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
                             padding: const EdgeInsets.symmetric(vertical: 4),
                             child: Text(
                               playerLabel,
-                              style: GoogleFonts.ibmPlexSans(
+                              style: AppTypography.ibm(
                                 fontSize: 13,
                                 color: const Color(0xFF808285),
                                 fontWeight: FontWeight.w500,
@@ -1289,7 +1290,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
                           const SizedBox(width: 4),
                           Text(
                             event.location!,
-                            style: GoogleFonts.ibmPlexSans(
+                            style: AppTypography.ibm(
                               fontSize: 13,
                               color: const Color(0xFF808285),
                               fontWeight: FontWeight.w500,
@@ -1343,7 +1344,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
       children: [
         Text(
           title,
-          style: GoogleFonts.ibmPlexSans(
+          style: AppTypography.ibm(
             fontSize: 16,
             color: Colors.white,
             fontWeight: FontWeight.w600,
@@ -1354,11 +1355,11 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
           decoration: BoxDecoration(
             color: AppColors.neutral800,
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(AppDecorations.radius10),
           ),
           child: Text(
             '$count',
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               fontSize: 12,
               fontWeight: FontWeight.w600,
               color: AppColors.textDisabled,
@@ -1377,7 +1378,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.surfaceDark,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
         border: isActive
             ? Border.all(color: const Color(0xFF54E98A).withValues(alpha: 0.5))
             : null,
@@ -1394,7 +1395,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
             child: Center(
               child: Text(
                 (dealer.displayName ?? 'D')[0].toUpperCase(),
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   fontSize: 20,
                   color: AppColors.buttonPrimary,
                   fontWeight: FontWeight.bold,
@@ -1409,7 +1410,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
               children: [
                 Text(
                   dealer.displayName ?? AppLocalizations.of(context).clubDashboardUnknownLabel,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     fontSize: 16,
                     color: Colors.white,
                     fontWeight: FontWeight.w600,
@@ -1418,7 +1419,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
                 const SizedBox(height: 2),
                 Text(
                   dealer.email ?? '',
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     fontSize: 13,
                     color: AppColors.textDisabled,
                   ),
@@ -1432,7 +1433,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
               color: isActive
                   ? const Color(0xFF54E98A).withValues(alpha: 0.15)
                   : AppColors.neutral800,
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -1448,7 +1449,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
                 const SizedBox(width: 6),
                 Text(
                   isActive ? AppLocalizations.of(context).clubDashboardActiveLabel : AppLocalizations.of(context).clubDashboardIdleLabel,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     fontSize: 12,
                     color: isActive ? const Color(0xFF54E98A) : AppColors.textDisabled,
                     fontWeight: FontWeight.w600,
@@ -1468,7 +1469,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.surfaceDark,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
         border: Border.all(color: const Color(0xFFFFD60A).withValues(alpha: 0.3)),
       ),
       child: Row(
@@ -1493,7 +1494,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
               children: [
                 Text(
                   invitation.email,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     fontSize: 15,
                     color: Colors.white,
                     fontWeight: FontWeight.w500,
@@ -1502,7 +1503,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
                 const SizedBox(height: 2),
                 Text(
                   AppLocalizations.of(context).clubDashboardInvitedTimeAgo(_formatTimeAgo(invitation.createdAt)),
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     fontSize: 12,
                     color: AppColors.textDisabled,
                   ),
@@ -1514,11 +1515,11 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
               color: const Color(0xFFFFD60A).withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
             ),
             child: Text(
               AppLocalizations.of(context).clubDashboardPendingLabel,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 fontSize: 12,
                 color: const Color(0xFFFFD60A),
                 fontWeight: FontWeight.w600,
@@ -1533,7 +1534,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
               height: 32,
               decoration: BoxDecoration(
                 color: const Color(0xFFDA5B5E).withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
               ),
               child: const Icon(
                 Icons.close,
@@ -1557,7 +1558,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
             height: 72,
             decoration: BoxDecoration(
               color: AppColors.neutral800,
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(AppDecorations.radius20),
             ),
             child: const Center(
               child: Icon(
@@ -1570,7 +1571,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
           const SizedBox(height: 16),
           Text(
             AppLocalizations.of(context).clubDashboardNoDealersYet,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               fontSize: 22,
               color: Colors.white,
               fontWeight: FontWeight.w600,
@@ -1580,7 +1581,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
           const SizedBox(height: 8),
           Text(
             AppLocalizations.of(context).clubDashboardInviteDealersHint,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               fontSize: 15,
               color: AppColors.textDisabled,
               fontWeight: FontWeight.w400,
@@ -1613,10 +1614,10 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.surfaceDark,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDecorations.radius20)),
         title: Text(
           AppLocalizations.of(context).clubDashboardInviteDealer,
-          style: GoogleFonts.ibmPlexSans(
+          style: AppTypography.ibm(
             color: Colors.white,
             fontWeight: FontWeight.bold,
           ),
@@ -1627,7 +1628,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
           children: [
             Text(
               AppLocalizations.of(context).clubDashboardInviteDealerBody,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 color: AppColors.textDisabled,
                 fontSize: 14,
               ),
@@ -1636,14 +1637,14 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
             TextField(
               controller: emailController,
               keyboardType: TextInputType.emailAddress,
-              style: GoogleFonts.ibmPlexSans(color: Colors.white),
+              style: AppTypography.ibm(color: Colors.white),
               decoration: InputDecoration(
                 hintText: AppLocalizations.of(context).clubDashboardDealerEmailHint,
-                hintStyle: GoogleFonts.ibmPlexSans(color: AppColors.textDisabled),
+                hintStyle: AppTypography.ibm(color: AppColors.textDisabled),
                 filled: true,
                 fillColor: AppColors.neutral800,
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                   borderSide: BorderSide.none,
                 ),
                 prefixIcon: const Icon(Icons.email_outlined, color: AppColors.textDisabled),
@@ -1656,7 +1657,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
             onPressed: () => Navigator.pop(context),
             child: Text(
               AppLocalizations.of(context).commonCancel,
-              style: GoogleFonts.ibmPlexSans(color: AppColors.textDisabled),
+              style: AppTypography.ibm(color: AppColors.textDisabled),
             ),
           ),
           ElevatedButton(
@@ -1669,11 +1670,11 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.buttonPrimary,
               foregroundColor: Colors.black,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDecorations.radius10)),
             ),
             child: Text(
               AppLocalizations.of(context).clubDashboardSendInvitationBtn,
-              style: GoogleFonts.ibmPlexSans(fontWeight: FontWeight.w600),
+              style: AppTypography.ibm(fontWeight: FontWeight.w600),
             ),
           ),
         ],
@@ -1722,18 +1723,18 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
         backgroundColor: AppColors.surfaceDark,
         title: Text(
           AppLocalizations.of(context).clubDashboardCancelInvitationTitle,
-          style: GoogleFonts.ibmPlexSans(color: Colors.white),
+          style: AppTypography.ibm(color: Colors.white),
         ),
         content: Text(
           AppLocalizations.of(context).clubDashboardCancelInvitationBody(invitation.email),
-          style: GoogleFonts.ibmPlexSans(color: AppColors.textDisabled),
+          style: AppTypography.ibm(color: AppColors.textDisabled),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
             child: Text(
               AppLocalizations.of(context).clubDashboardKeepBtn,
-              style: GoogleFonts.ibmPlexSans(color: AppColors.textDisabled),
+              style: AppTypography.ibm(color: AppColors.textDisabled),
             ),
           ),
           TextButton(
@@ -1741,7 +1742,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
             style: TextButton.styleFrom(foregroundColor: const Color(0xFFDA5B5E)),
             child: Text(
               AppLocalizations.of(context).clubDashboardCancelInvitationBtn,
-              style: GoogleFonts.ibmPlexSans(),
+              style: AppTypography.ibm(),
             ),
           ),
         ],

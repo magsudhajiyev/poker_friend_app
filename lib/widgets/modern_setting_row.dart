@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../design_system/constants/decorations.dart';
 
 class ModernSettingRow extends StatelessWidget {
   final IconData icon;
@@ -24,7 +25,7 @@ class ModernSettingRow extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
         border: Border.all(color: theme.colorScheme.outline.withOpacity(0.2)),
       ),
       child: Column(
@@ -62,7 +63,7 @@ class ModernSettingRow extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                 decoration: BoxDecoration(
                   color: theme.colorScheme.primary.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
                   border: Border.all(color: theme.colorScheme.primary.withOpacity(0.3)),
                 ),
                 child: Text(
@@ -95,10 +96,10 @@ class ModernSettingRow extends StatelessWidget {
   ) {
     return Material(
       color: color.withOpacity(0.1),
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
       child: InkWell(
         onTap: onPressed,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
         child: Container(
           padding: const EdgeInsets.all(12),
           child: Icon(

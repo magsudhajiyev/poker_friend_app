@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../l10n/app_localizations.dart';
 import '../models/club.dart';
 import '../models/club_member.dart';
@@ -10,6 +9,8 @@ import '../services/club_notification_service.dart';
 import '../services/email_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../design_system/constants/colors.dart';
+import '../design_system/constants/typography.dart';
+import '../design_system/constants/decorations.dart';
 
 /// Dialog for club admins to invite dealers or other admins
 class InviteMemberDialog extends StatefulWidget {
@@ -169,7 +170,7 @@ class _InviteMemberDialogState extends State<InviteMemberDialog> {
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.infoCardBg,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(AppDecorations.radius18),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -190,7 +191,7 @@ class _InviteMemberDialogState extends State<InviteMemberDialog> {
             const SizedBox(height: 14),
             Text(
               title,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
                 color: Colors.white,
@@ -200,7 +201,7 @@ class _InviteMemberDialogState extends State<InviteMemberDialog> {
             Text(
               message,
               textAlign: TextAlign.center,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 fontSize: 14,
                 color: Colors.white.withOpacity(0.5),
               ),
@@ -212,7 +213,7 @@ class _InviteMemberDialogState extends State<InviteMemberDialog> {
             onPressed: () => Navigator.pop(context),
             child: Text(
               AppLocalizations.of(context).commonDone,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 color: AppColors.buttonPrimary,
                 fontWeight: FontWeight.w600,
               ),
@@ -228,7 +229,7 @@ class _InviteMemberDialogState extends State<InviteMemberDialog> {
     return Dialog(
       backgroundColor: AppColors.infoCardBg,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(AppDecorations.radius18),
       ),
       child: SingleChildScrollView(
         child: Padding(
@@ -255,7 +256,7 @@ class _InviteMemberDialogState extends State<InviteMemberDialog> {
                 height: 38,
                 decoration: BoxDecoration(
                   color: AppColors.buttonPrimary.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(AppDecorations.radius10),
                 ),
                 child: const Icon(
                   Icons.person_add,
@@ -270,7 +271,7 @@ class _InviteMemberDialogState extends State<InviteMemberDialog> {
                   children: [
                     Text(
                       l10n.inviteMemberTitle,
-                      style: GoogleFonts.ibmPlexSans(
+                      style: AppTypography.ibm(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
                         color: Colors.white,
@@ -278,7 +279,7 @@ class _InviteMemberDialogState extends State<InviteMemberDialog> {
                     ),
                     Text(
                       widget.club.name,
-                      style: GoogleFonts.ibmPlexSans(
+                      style: AppTypography.ibm(
                         fontSize: 13,
                         color: Colors.white.withOpacity(0.5),
                       ),
@@ -302,7 +303,7 @@ class _InviteMemberDialogState extends State<InviteMemberDialog> {
           // Email field
           Text(
             l10n.inviteMemberEmailLabel,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               fontSize: 12,
               fontWeight: FontWeight.w600,
               color: Colors.white.withOpacity(0.5),
@@ -313,10 +314,10 @@ class _InviteMemberDialogState extends State<InviteMemberDialog> {
           TextFormField(
             controller: _emailController,
             keyboardType: TextInputType.emailAddress,
-            style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 15),
+            style: AppTypography.ibm(color: Colors.white, fontSize: 15),
             decoration: InputDecoration(
               hintText: l10n.inviteMemberEmailHint,
-              hintStyle: GoogleFonts.ibmPlexSans(
+              hintStyle: AppTypography.ibm(
                 color: Colors.white.withOpacity(0.25),
                 fontSize: 15,
               ),
@@ -324,26 +325,26 @@ class _InviteMemberDialogState extends State<InviteMemberDialog> {
               fillColor: Colors.white.withOpacity(0.05),
               contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                 borderSide: BorderSide.none,
               ),
               enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                 borderSide: BorderSide.none,
               ),
               focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                 borderSide: const BorderSide(color: AppColors.buttonPrimary, width: 1),
               ),
               errorBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                 borderSide: const BorderSide(color: AppColors.lossRed, width: 1),
               ),
               focusedErrorBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                 borderSide: const BorderSide(color: AppColors.lossRed, width: 1),
               ),
-              errorStyle: GoogleFonts.ibmPlexSans(
+              errorStyle: AppTypography.ibm(
                 fontSize: 12,
                 color: AppColors.lossRed,
               ),
@@ -364,7 +365,7 @@ class _InviteMemberDialogState extends State<InviteMemberDialog> {
           // Role selector
           Text(
             l10n.inviteMemberRoleLabel,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               fontSize: 12,
               fontWeight: FontWeight.w600,
               color: Colors.white.withOpacity(0.5),
@@ -403,13 +404,13 @@ class _InviteMemberDialogState extends State<InviteMemberDialog> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 13),
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(60),
+                      borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
                       color: Colors.white.withOpacity(0.05),
                     ),
                     child: Center(
                       child: Text(
                         l10n.commonCancel,
-                        style: GoogleFonts.ibmPlexSans(
+                        style: AppTypography.ibm(
                           color: Colors.white.withOpacity(0.5),
                           fontWeight: FontWeight.w600,
                           fontSize: 15,
@@ -426,7 +427,7 @@ class _InviteMemberDialogState extends State<InviteMemberDialog> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 13),
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(60),
+                      borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
                       color: AppColors.buttonPrimary,
                     ),
                     child: Center(
@@ -441,7 +442,7 @@ class _InviteMemberDialogState extends State<InviteMemberDialog> {
                             )
                           : Text(
                               l10n.inviteMemberSendInvite,
-                              style: GoogleFonts.ibmPlexSans(
+                              style: AppTypography.ibm(
                                 color: Colors.black,
                                 fontWeight: FontWeight.w600,
                                 fontSize: 15,
@@ -476,7 +477,7 @@ class _InviteMemberDialogState extends State<InviteMemberDialog> {
         padding: const EdgeInsets.symmetric(vertical: 14),
         decoration: BoxDecoration(
           color: isSelected ? mint.withOpacity(0.1) : Colors.white.withOpacity(0.05),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
           border: Border.all(
             color: isSelected ? mint : Colors.white.withOpacity(0.06),
             width: isSelected ? 1.5 : 1,
@@ -492,7 +493,7 @@ class _InviteMemberDialogState extends State<InviteMemberDialog> {
             const SizedBox(height: 6),
             Text(
               label,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 fontSize: 13,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
                 color: isSelected ? mint : Colors.white.withOpacity(0.5),

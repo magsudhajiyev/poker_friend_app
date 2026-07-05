@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../l10n/app_localizations.dart';
 import '../services/currency_service.dart';
 import '../services/opponent_service.dart';
 import '../models/opponent.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/decorations.dart';
+import '../design_system/constants/typography.dart';
 
 class SeatConfigSheet extends StatefulWidget {
   final int seatNumber;
@@ -259,7 +259,7 @@ class _SeatConfigSheetState extends State<SeatConfigSheet> {
                     child: Center(
                       child: Text(
                         widget.titleOverride ?? l10n.seatConfigSeatTitle(widget.seatNumber),
-                        style: GoogleFonts.ibmPlexSans(
+                        style: AppTypography.ibm(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
                           color: AppColors.textOnInverse,
@@ -330,7 +330,7 @@ class _SeatConfigSheetState extends State<SeatConfigSheet> {
                     const SizedBox(width: 8),
                     Text(
                       l10n.seatConfigThisIsMe,
-                      style: GoogleFonts.ibmPlexSans(
+                      style: AppTypography.ibm(
                         fontSize: 15,
                         fontWeight: FontWeight.w400,
                         color: AppColors.textOnInverse,
@@ -345,7 +345,7 @@ class _SeatConfigSheetState extends State<SeatConfigSheet> {
               // ─── PLAYER NAME ──────────────────────────────────────
               Text(
                 l10n.seatConfigNameLabel,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
                   color: _nameFocusNode.hasFocus
@@ -374,11 +374,11 @@ class _SeatConfigSheetState extends State<SeatConfigSheet> {
                         focusNode: _nameFocusNode,
                         textInputAction: TextInputAction.next,
                         textCapitalization: TextCapitalization.words,
-                        style: GoogleFonts.ibmPlexSans(
+                        style: AppTypography.ibm(
                             fontSize: 15, color: AppColors.textOnInverse),
                         decoration: InputDecoration(
                           hintText: l10n.seatConfigSearchOrEnterName,
-                          hintStyle: GoogleFonts.ibmPlexSans(
+                          hintStyle: AppTypography.ibm(
                               fontSize: 15, color: AppColors.borderLight),
                           filled: true,
                           fillColor: Colors.transparent,
@@ -427,7 +427,7 @@ class _SeatConfigSheetState extends State<SeatConfigSheet> {
                             child: Center(
                               child: Text(
                                 _initials(opponent.name),
-                                style: GoogleFonts.ibmPlexSans(
+                                style: AppTypography.ibm(
                                   fontSize: 7.5,
                                   fontWeight: FontWeight.w600,
                                   color: AppColors.textPrimary,
@@ -438,7 +438,7 @@ class _SeatConfigSheetState extends State<SeatConfigSheet> {
                           const SizedBox(width: 4),
                           Text(
                             opponent.name,
-                            style: GoogleFonts.ibmPlexSans(
+                            style: AppTypography.ibm(
                               fontSize: 13,
                               fontWeight: FontWeight.w500,
                               color: AppColors.textPrimary,
@@ -456,7 +456,7 @@ class _SeatConfigSheetState extends State<SeatConfigSheet> {
                               ),
                               child: Text(
                                 l10n.seatConfigSeatTitle(seatedAt),
-                                style: GoogleFonts.ibmPlexSans(
+                                style: AppTypography.ibm(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w500,
                                   color: AppColors.textOnInverse,
@@ -496,7 +496,7 @@ class _SeatConfigSheetState extends State<SeatConfigSheet> {
                     children: [
                       Text(
                         'Save as opponent',
-                        style: GoogleFonts.ibmPlexSans(
+                        style: AppTypography.ibm(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
                           color: AppColors.borderLight,
@@ -514,7 +514,7 @@ class _SeatConfigSheetState extends State<SeatConfigSheet> {
               // ─── STACK ────────────────────────────────────────────
               Text(
                 l10n.seatConfigStackLabel,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
                   color: _stackFocusNode.hasFocus
@@ -540,7 +540,7 @@ class _SeatConfigSheetState extends State<SeatConfigSheet> {
                     if (widget.isCash && CurrencyService.prefixText != null) ...[
                       Text(
                         CurrencyService.prefixText!,
-                        style: GoogleFonts.ibmPlexSans(
+                        style: AppTypography.ibm(
                           fontSize: 15,
                           fontWeight: FontWeight.w400,
                           color: _stackFocusNode.hasFocus
@@ -558,11 +558,11 @@ class _SeatConfigSheetState extends State<SeatConfigSheet> {
                         inputFormatters: [
                           FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
                         ],
-                        style: GoogleFonts.ibmPlexSans(
+                        style: AppTypography.ibm(
                             fontSize: 15, color: AppColors.textOnInverse),
                         decoration: InputDecoration(
                           hintText: '',
-                          hintStyle: GoogleFonts.ibmPlexSans(
+                          hintStyle: AppTypography.ibm(
                               fontSize: 15, color: AppColors.borderLight),
                           filled: true,
                           fillColor: Colors.transparent,
@@ -577,7 +577,7 @@ class _SeatConfigSheetState extends State<SeatConfigSheet> {
                     if (widget.isCash && CurrencyService.suffixText != null) ...[
                       Text(
                         CurrencyService.suffixText!,
-                        style: GoogleFonts.ibmPlexSans(
+                        style: AppTypography.ibm(
                           fontSize: 15,
                           fontWeight: FontWeight.w400,
                           color: _stackFocusNode.hasFocus
@@ -608,7 +608,7 @@ class _SeatConfigSheetState extends State<SeatConfigSheet> {
                       widget.isHero
                           ? l10n.seatConfigRemoveMe
                           : l10n.seatConfigRemove,
-                      style: GoogleFonts.ibmPlexSans(
+                      style: AppTypography.ibm(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
                         color: AppColors.accentDanger,
@@ -637,7 +637,7 @@ class _SeatConfigSheetState extends State<SeatConfigSheet> {
                         child: Center(
                           child: Text(
                             'Back',
-                            style: GoogleFonts.ibmPlexSans(
+                            style: AppTypography.ibm(
                               fontSize: 15,
                               fontWeight: FontWeight.w600,
                               color: AppColors.textOnInverse,
@@ -662,7 +662,7 @@ class _SeatConfigSheetState extends State<SeatConfigSheet> {
                         child: Center(
                           child: Text(
                             'Save',
-                            style: GoogleFonts.ibmPlexSans(
+                            style: AppTypography.ibm(
                               fontSize: 15,
                               fontWeight: FontWeight.w600,
                               color: AppColors.bgInverse,

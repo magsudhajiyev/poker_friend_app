@@ -13,6 +13,7 @@ import '../../services/event_service.dart';
 import '../../l10n/app_localizations.dart';
 import 'admin_table_management_screen.dart';
 import '../../design_system/constants/colors.dart';
+import '../../design_system/constants/decorations.dart';
 
 /// Screen for admin to view all tables in an event with shared waitlist
 /// Used when event has multiple tables
@@ -161,8 +162,8 @@ class _AdminEventTablesScreenState extends State<AdminEventTablesScreen> {
     final selectedTable = await showDialog<PokerTable>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF161618),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        backgroundColor: AppColors.surfaceVariant1,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDecorations.radiusLg)),
         title: Text(AppLocalizations.of(context).adminEventTablesAddTable, style: const TextStyle(color: Colors.white)),
         content: SizedBox(
           width: double.maxFinite,
@@ -177,8 +178,8 @@ class _AdminEventTablesScreenState extends State<AdminEventTablesScreen> {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF2A2A2E),
-                    borderRadius: BorderRadius.circular(10),
+                    color: AppColors.surfaceVariant3,
+                    borderRadius: BorderRadius.circular(AppDecorations.radius10),
                   ),
                   child: Center(
                     child: Text(
@@ -245,8 +246,8 @@ class _AdminEventTablesScreenState extends State<AdminEventTablesScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF161618),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        backgroundColor: AppColors.surfaceVariant1,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDecorations.radiusLg)),
         title: Text(AppLocalizations.of(context).adminEventTablesCloseConfirm(tableData.table.name), style: const TextStyle(color: Colors.white)),
         content: Text(
           occupiedCount > 0
@@ -357,8 +358,8 @@ class _AdminEventTablesScreenState extends State<AdminEventTablesScreen> {
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                color: const Color(0xFF1F1F23),
-                borderRadius: BorderRadius.circular(12),
+                color: AppColors.surfaceVariant2,
+                borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
               ),
               child: const Icon(Icons.arrow_back, color: Colors.white, size: 22),
             ),
@@ -395,7 +396,7 @@ class _AdminEventTablesScreenState extends State<AdminEventTablesScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
                 color: PokerFriendColors.green.withOpacity(0.15),
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(AppDecorations.radius20),
               ),
               child: Text(
                 widget.event.stakes!,
@@ -416,7 +417,7 @@ class _AdminEventTablesScreenState extends State<AdminEventTablesScreen> {
               height: 44,
               decoration: BoxDecoration(
                 color: PokerFriendColors.purple.withOpacity(0.15),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
               ),
               child: const Icon(Icons.add, color: PokerFriendColors.purple, size: 24),
             ),
@@ -459,12 +460,12 @@ class _AdminEventTablesScreenState extends State<AdminEventTablesScreen> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(0xFF1F1F23),
-          borderRadius: BorderRadius.circular(20),
+          color: AppColors.surfaceVariant2,
+          borderRadius: BorderRadius.circular(AppDecorations.radius20),
           border: Border.all(
             color: hasOpenSeats
                 ? PokerFriendColors.green.withOpacity(0.3)
-                : const Color(0xFF2A2A2E),
+                : AppColors.surfaceVariant3,
           ),
         ),
         child: Stack(
@@ -481,7 +482,7 @@ class _AdminEventTablesScreenState extends State<AdminEventTablesScreen> {
                     height: 28,
                     decoration: BoxDecoration(
                       color: PokerFriendColors.red.withOpacity(0.15),
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
                     ),
                     child: const Icon(
                       Icons.close,
@@ -571,7 +572,7 @@ class _AdminEventTablesScreenState extends State<AdminEventTablesScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: color.withOpacity(0.15),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -597,8 +598,8 @@ class _AdminEventTablesScreenState extends State<AdminEventTablesScreen> {
         margin: const EdgeInsets.all(16),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(0xFF1F1F23),
-          borderRadius: BorderRadius.circular(16),
+          color: AppColors.surfaceVariant2,
+          borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
         ),
         child: Row(
           children: [
@@ -606,8 +607,8 @@ class _AdminEventTablesScreenState extends State<AdminEventTablesScreen> {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: const Color(0xFF2A2A2E),
-                borderRadius: BorderRadius.circular(10),
+                color: AppColors.surfaceVariant3,
+                borderRadius: BorderRadius.circular(AppDecorations.radius10),
               ),
               child: const Icon(
                 Icons.people_outline,
@@ -635,7 +636,7 @@ class _AdminEventTablesScreenState extends State<AdminEventTablesScreen> {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: PokerFriendColors.purple.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
           border: Border.all(
             color: PokerFriendColors.purple.withOpacity(0.3),
           ),
@@ -647,7 +648,7 @@ class _AdminEventTablesScreenState extends State<AdminEventTablesScreen> {
               height: 40,
               decoration: BoxDecoration(
                 color: PokerFriendColors.purple.withOpacity(0.15),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(AppDecorations.radius10),
               ),
               child: const Icon(
                 Icons.people,
@@ -688,9 +689,9 @@ class _AdminEventTablesScreenState extends State<AdminEventTablesScreen> {
   void _showWaitlistSheet() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF161618),
+      backgroundColor: AppColors.surfaceVariant1,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppDecorations.radius20)),
       ),
       builder: (context) => _WaitlistSheet(
         waitlist: _waitlist,
@@ -855,7 +856,7 @@ class _WaitlistSheet extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: PokerFriendColors.purple.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                 ),
                 child: Text(
                   '${waitlist.length}',
@@ -877,8 +878,8 @@ class _WaitlistSheet extends StatelessWidget {
               margin: const EdgeInsets.only(bottom: 8),
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: const Color(0xFF1F1F23),
-                borderRadius: BorderRadius.circular(12),
+                color: AppColors.surfaceVariant2,
+                borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                 border: isNotified
                     ? Border.all(color: const Color(0xFFF59E0B).withOpacity(0.5), width: 1)
                     : null,
@@ -894,7 +895,7 @@ class _WaitlistSheet extends StatelessWidget {
                           ? const Color(0xFFF59E0B).withOpacity(0.15)
                           : isFirstWaiting
                               ? PokerFriendColors.green.withOpacity(0.15)
-                              : const Color(0xFF2A2A2E),
+                              : AppColors.surfaceVariant3,
                       shape: BoxShape.circle,
                     ),
                     child: Center(
@@ -938,7 +939,7 @@ class _WaitlistSheet extends StatelessWidget {
                         margin: const EdgeInsets.only(right: 8),
                         decoration: BoxDecoration(
                           color: PokerFriendColors.purple.withOpacity(0.15),
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
                         ),
                         child: Text(
                           AppLocalizations.of(context).adminEventTablesNotify,
@@ -955,9 +956,9 @@ class _WaitlistSheet extends StatelessWidget {
                   if (tablesWithOpenSeats.isNotEmpty)
                     PopupMenuButton<_TableData>(
                       onSelected: (table) => onSeatPlayer(entry, table),
-                      color: const Color(0xFF2A2A2E),
+                      color: AppColors.surfaceVariant3,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                       ),
                       itemBuilder: (context) => tablesWithOpenSeats.map((t) {
                         int openCount = 0;
@@ -976,7 +977,7 @@ class _WaitlistSheet extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
                           color: PokerFriendColors.green.withOpacity(0.15),
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,

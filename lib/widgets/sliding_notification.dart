@@ -1,9 +1,10 @@
 import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../l10n/app_localizations.dart';
 import '../design_system/constants/colors.dart';
+import '../design_system/constants/typography.dart';
+import '../design_system/constants/decorations.dart';
 
 /// A sliding in-app notification that appears from the top of the screen.
 /// Swipe up to dismiss, or tap to trigger an action.
@@ -159,13 +160,13 @@ class _SlidingNotificationState extends State<SlidingNotification>
 
   Widget _buildNotificationCard() {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 27, sigmaY: 27),
         child: Container(
           decoration: BoxDecoration(
             color: const Color(0xFFDFE7FF).withValues(alpha: 0.22),
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.25),
@@ -186,7 +187,7 @@ class _SlidingNotificationState extends State<SlidingNotification>
                   children: [
                     Text(
                       AppLocalizations.of(context).slidingNotificationHeader,
-                      style: GoogleFonts.ibmPlexSans(
+                      style: AppTypography.ibm(
                         fontSize: 13,
                         fontWeight: FontWeight.w400,
                         color: const Color(0xFFE6E6E7),
@@ -213,7 +214,7 @@ class _SlidingNotificationState extends State<SlidingNotification>
                       height: 44,
                       decoration: BoxDecoration(
                         color: AppColors.mint800,
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
                       ),
                       child: Icon(
                         widget.icon,
@@ -228,7 +229,7 @@ class _SlidingNotificationState extends State<SlidingNotification>
                         children: [
                           Text(
                             widget.title,
-                            style: GoogleFonts.ibmPlexSans(
+                            style: AppTypography.ibm(
                               fontSize: 15,
                               fontWeight: FontWeight.w400,
                               color: Colors.white,
@@ -238,7 +239,7 @@ class _SlidingNotificationState extends State<SlidingNotification>
                           ),
                           Text(
                             widget.subtitle,
-                            style: GoogleFonts.ibmPlexSans(
+                            style: AppTypography.ibm(
                               fontSize: 13,
                               fontWeight: FontWeight.w500,
                               color: const Color(0xFFE6E6E7),
@@ -249,7 +250,7 @@ class _SlidingNotificationState extends State<SlidingNotification>
                           if (widget.detail != null)
                             Text(
                               widget.detail!,
-                              style: GoogleFonts.ibmPlexSans(
+                              style: AppTypography.ibm(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w500,
                                 color: const Color(0xFFE6E6E7),

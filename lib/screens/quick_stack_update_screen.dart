@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../services/currency_service.dart';
 import '../utils/poker_positions.dart';
 import '../services/free_tier_limits.dart';
@@ -13,6 +12,8 @@ import '../onboarding/onboarding_state.dart';
 import '../onboarding/onboarding_tour.dart';
 import '../onboarding/onboarding_progress_bar.dart';
 import '../design_system/constants/colors.dart';
+import '../design_system/constants/typography.dart';
+import '../design_system/constants/decorations.dart';
 
 class QuickStackUpdateScreen extends StatefulWidget {
   final double smallBlind;
@@ -236,7 +237,7 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
           return Dialog(
             backgroundColor: _cardColor,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(18),
+              borderRadius: BorderRadius.circular(AppDecorations.radius18),
             ),
             child: Padding(
               padding: const EdgeInsets.all(20),
@@ -249,7 +250,7 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
                     children: [
                       Text(
                         l10n.quickStackSelectPlayer,
-                        style: GoogleFonts.ibmPlexSans(
+                        style: AppTypography.ibm(
                           fontSize: 18,
                           color: Colors.white,
                           fontWeight: FontWeight.w600,
@@ -264,11 +265,11 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                             decoration: BoxDecoration(
                               color: Colors.red.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
                             ),
                             child: Text(
                               l10n.commonClear,
-                              style: GoogleFonts.ibmPlexSans(
+                              style: AppTypography.ibm(
                                 fontSize: 13,
                                 color: Colors.red,
                                 fontWeight: FontWeight.w500,
@@ -283,10 +284,10 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
                   // Search bar — plain TextField, no outer Container
                   TextField(
                     textInputAction: TextInputAction.done,
-                    style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 15),
+                    style: AppTypography.ibm(color: Colors.white, fontSize: 15),
                     decoration: InputDecoration(
                       hintText: l10n.quickStackSearchHint,
-                      hintStyle: GoogleFonts.ibmPlexSans(
+                      hintStyle: AppTypography.ibm(
                         color: Colors.white.withValues(alpha: 0.35),
                         fontSize: 15,
                       ),
@@ -302,7 +303,7 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
                       filled: true,
                       fillColor: Colors.white.withValues(alpha: 0.05),
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                         borderSide: BorderSide.none,
                       ),
                       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
@@ -353,7 +354,7 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
                                         children: [
                                           Text(
                                             l10n.quickStackAddPlayer(queryTrimmed),
-                                            style: GoogleFonts.ibmPlexSans(
+                                            style: AppTypography.ibm(
                                               fontSize: 14,
                                               color: _mint,
                                               fontWeight: FontWeight.w600,
@@ -361,7 +362,7 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
                                           ),
                                           Text(
                                             l10n.quickStackSaveToOpponents,
-                                            style: GoogleFonts.ibmPlexSans(
+                                            style: AppTypography.ibm(
                                               fontSize: 12,
                                               color: Colors.white.withValues(alpha: 0.4),
                                             ),
@@ -401,7 +402,7 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
                                         children: [
                                           Text(
                                             userName,
-                                            style: GoogleFonts.ibmPlexSans(
+                                            style: AppTypography.ibm(
                                               fontSize: 14,
                                               color: Colors.white,
                                               fontWeight: FontWeight.w600,
@@ -409,7 +410,7 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
                                           ),
                                           Text(
                                             l10n.quickStackYou,
-                                            style: GoogleFonts.ibmPlexSans(
+                                            style: AppTypography.ibm(
                                               fontSize: 11,
                                               color: Colors.white.withValues(alpha: 0.4),
                                             ),
@@ -436,7 +437,7 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
                               child: Text(
                                 l10n.quickStackNoPlayersFound,
                                 textAlign: TextAlign.center,
-                                style: GoogleFonts.ibmPlexSans(
+                                style: AppTypography.ibm(
                                   color: Colors.white.withValues(alpha: 0.4),
                                   fontSize: 14,
                                 ),
@@ -456,7 +457,7 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
                                         backgroundColor: _getOpponentColor(opponent.color),
                                         child: Text(
                                           opponent.name[0].toUpperCase(),
-                                          style: GoogleFonts.ibmPlexSans(
+                                          style: AppTypography.ibm(
                                             color: Colors.white,
                                             fontSize: 13,
                                             fontWeight: FontWeight.w600,
@@ -466,7 +467,7 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
                                       const SizedBox(width: 10),
                                       Text(
                                         opponent.name,
-                                        style: GoogleFonts.ibmPlexSans(
+                                        style: AppTypography.ibm(
                                           fontSize: 14,
                                           color: Colors.white,
                                           fontWeight: FontWeight.w500,
@@ -490,7 +491,7 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
                       onTap: () => Navigator.pop(context),
                       child: Text(
                         l10n.commonCancel,
-                        style: GoogleFonts.ibmPlexSans(
+                        style: AppTypography.ibm(
                           fontSize: 14,
                           color: Colors.white.withValues(alpha: 0.5),
                           fontWeight: FontWeight.w500,
@@ -596,7 +597,7 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
           return Dialog(
             backgroundColor: _cardColor,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(18),
+              borderRadius: BorderRadius.circular(AppDecorations.radius18),
             ),
             child: Padding(
               padding: const EdgeInsets.all(20),
@@ -606,7 +607,7 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
                 children: [
                   Text(
                     l10n.quickStackEditStack,
-                    style: GoogleFonts.ibmPlexSans(
+                    style: AppTypography.ibm(
                       fontSize: 18,
                       color: Colors.white,
                       fontWeight: FontWeight.w600,
@@ -616,22 +617,22 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
                   Container(
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.05),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                     ),
                     child: TextField(
                       controller: controller,
                       autofocus: true,
                       keyboardType: TextInputType.number,
                       textInputAction: TextInputAction.done,
-                      style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 17),
+                      style: AppTypography.ibm(color: Colors.white, fontSize: 17),
                       onChanged: (_) => setDialogState(() {}),
                       decoration: InputDecoration(
                         labelText: l10n.quickStackStackInBb,
-                        labelStyle: GoogleFonts.ibmPlexSans(
+                        labelStyle: AppTypography.ibm(
                           color: Colors.white.withValues(alpha: 0.5),
                         ),
                         suffixText: 'BB',
-                        suffixStyle: GoogleFonts.ibmPlexSans(
+                        suffixStyle: AppTypography.ibm(
                           color: Colors.white.withValues(alpha: 0.5),
                         ),
                         border: InputBorder.none,
@@ -645,7 +646,7 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
                       '${typedBB.toInt()}',
                       chipDisplay,
                     ),
-                    style: GoogleFonts.ibmPlexSans(
+                    style: AppTypography.ibm(
                       color: Colors.white.withValues(alpha: 0.5),
                       fontSize: 13,
                     ),
@@ -660,7 +661,7 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                       child: Text(
                         l10n.commonCancel,
-                        style: GoogleFonts.ibmPlexSans(
+                        style: AppTypography.ibm(
                           fontSize: 15,
                           color: Colors.white.withValues(alpha: 0.5),
                           fontWeight: FontWeight.w500,
@@ -687,11 +688,11 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                       decoration: BoxDecoration(
                         color: _mint,
-                        borderRadius: BorderRadius.circular(60),
+                        borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
                       ),
                       child: Text(
                         l10n.commonSave,
-                        style: GoogleFonts.ibmPlexSans(
+                        style: AppTypography.ibm(
                           fontSize: 15,
                           color: Colors.black,
                           fontWeight: FontWeight.w600,
@@ -852,7 +853,7 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
                               children: [
                                 Text(
                                   l10n.quickStackTitle,
-                                  style: GoogleFonts.ibmPlexSans(
+                                  style: AppTypography.ibm(
                                     fontSize: 20,
                                     color: Colors.white,
                                     fontWeight: FontWeight.w600,
@@ -866,7 +867,7 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
                                         ? '${CurrencyService.formatCash(widget.smallBlind)}/${CurrencyService.formatCash(widget.bigBlind)}'
                                         : '${widget.smallBlind}/${widget.bigBlind}',
                                   ),
-                                  style: GoogleFonts.ibmPlexSans(
+                                  style: AppTypography.ibm(
                                     fontSize: 14,
                                     color: Colors.white.withValues(alpha: 0.5),
                                     fontWeight: FontWeight.w500,
@@ -883,7 +884,7 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
                           color: _mint.withValues(alpha: 0.08),
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                           border: Border.all(
                             color: _mint.withValues(alpha: 0.2),
                             width: 1,
@@ -900,7 +901,7 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
                             Expanded(
                               child: Text(
                                 l10n.quickStackInstruction,
-                                style: GoogleFonts.ibmPlexSans(
+                                style: AppTypography.ibm(
                                   fontSize: 13,
                                   color: Colors.white.withValues(alpha: 0.8),
                                   fontWeight: FontWeight.w500,
@@ -936,7 +937,7 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       decoration: BoxDecoration(
                         color: _mint,
-                        borderRadius: BorderRadius.circular(60),
+                        borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -949,7 +950,7 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
                           const SizedBox(width: 10),
                           Text(
                             l10n.quickStackContinue,
-                            style: GoogleFonts.ibmPlexSans(
+                            style: AppTypography.ibm(
                               fontSize: 15,
                               fontWeight: FontWeight.w700,
                               color: Colors.black,
@@ -986,7 +987,7 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
           color: _cardColor,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(AppDecorations.radius14),
         ),
         child: Row(
           children: [
@@ -1009,7 +1010,7 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
             const SizedBox(width: 10),
             Text(
               l10n.quickStackSeat(playerId),
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 fontSize: 14,
                 color: Colors.white.withValues(alpha: 0.3),
                 fontWeight: FontWeight.w500,
@@ -1018,7 +1019,7 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
             const Spacer(),
             Text(
               l10n.quickStackEmpty,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 fontSize: 13,
                 color: Colors.white.withValues(alpha: 0.25),
                 fontWeight: FontWeight.w400,
@@ -1034,7 +1035,7 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
       padding: const EdgeInsets.fromLTRB(12, 10, 12, 6),
       decoration: BoxDecoration(
         color: _cardColor,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(AppDecorations.radius14),
         border: isButton
             ? Border.all(color: const Color(0xFFFFD700).withValues(alpha: 0.35), width: 1.5)
             : null,
@@ -1081,7 +1082,7 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
                   child: Center(
                     child: Text(
                       'D',
-                      style: GoogleFonts.ibmPlexSans(
+                      style: AppTypography.ibm(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
                         color: isButton ? const Color(0xFFFFD700) : Colors.white.withValues(alpha: 0.3),
@@ -1111,7 +1112,7 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
                         ),
                         child: Text(
                           positionLabel,
-                          style: GoogleFonts.ibmPlexSans(
+                          style: AppTypography.ibm(
                             fontSize: 11,
                             color: isButton ? const Color(0xFFFFD700) : const Color(0xFFFF5252),
                             fontWeight: FontWeight.w600,
@@ -1122,7 +1123,7 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
                       Expanded(
                         child: Text(
                           playerName,
-                          style: GoogleFonts.ibmPlexSans(
+                          style: AppTypography.ibm(
                             fontSize: 14,
                             color: Colors.white,
                             fontWeight: FontWeight.w500,
@@ -1152,7 +1153,7 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
                       children: [
                         Text(
                           '${bbValue.toInt()} BB',
-                          style: GoogleFonts.ibmPlexSans(
+                          style: AppTypography.ibm(
                             fontSize: 17,
                             color: Colors.white,
                             fontWeight: FontWeight.w700,
@@ -1160,7 +1161,7 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
                         ),
                         Text(
                           isCashGame ? CurrencyService.formatCash(chipAmount.toDouble()) : '$chipAmount',
-                          style: GoogleFonts.ibmPlexSans(
+                          style: AppTypography.ibm(
                             fontSize: 12,
                             color: Colors.white.withValues(alpha: 0.4),
                             fontWeight: FontWeight.w500,

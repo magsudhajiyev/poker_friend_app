@@ -17,6 +17,7 @@ import '../../services/event_service.dart';
 import '../../widgets/poker_table_widget.dart';
 import '../../l10n/app_localizations.dart';
 import '../../design_system/constants/colors.dart';
+import '../../design_system/constants/decorations.dart';
 
 /// Full-screen elliptic table view for admin seat management
 /// Uses the same visual design as seat_setup_screen.dart
@@ -228,8 +229,8 @@ class _AdminTableManagementScreenState
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                color: const Color(0xFF1F1F23),
-                borderRadius: BorderRadius.circular(12),
+                color: AppColors.surfaceVariant2,
+                borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
               ),
               child: const Icon(Icons.arrow_back, color: Colors.white, size: 22),
             ),
@@ -266,7 +267,7 @@ class _AdminTableManagementScreenState
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
                 color: PokerFriendColors.green.withOpacity(0.15),
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(AppDecorations.radius20),
               ),
               child: Text(
                 widget.event.stakes!,
@@ -288,7 +289,7 @@ class _AdminTableManagementScreenState
                 height: 44,
                 decoration: BoxDecoration(
                   color: PokerFriendColors.red.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                 ),
                 child: const Icon(Icons.close, color: PokerFriendColors.red, size: 20),
               ),
@@ -305,8 +306,8 @@ class _AdminTableManagementScreenState
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF161618),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        backgroundColor: AppColors.surfaceVariant1,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDecorations.radiusLg)),
         title: Text(AppLocalizations.of(context).adminEventTablesCloseConfirm(_table?.name ?? 'Table'), style: const TextStyle(color: Colors.white)),
         content: Text(
           occupiedCount > 0
@@ -402,7 +403,7 @@ class _AdminTableManagementScreenState
         ),
       ];
     } else if (isPending) {
-      bgColor = const Color(0xFF2A2A2E);
+      bgColor = AppColors.surfaceVariant3;
       borderColor = const Color(0xFFF59E0B);
       shadows = [
         BoxShadow(
@@ -412,7 +413,7 @@ class _AdminTableManagementScreenState
         ),
       ];
     } else {
-      bgColor = const Color(0xFF2A2A2E);
+      bgColor = AppColors.surfaceVariant3;
       borderColor = AppColors.buttonPrimary.withValues(alpha: 0.3);
       shadows = null;
     }
@@ -494,7 +495,7 @@ class _AdminTableManagementScreenState
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: PokerFriendColors.purple.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
           border: Border.all(
             color: PokerFriendColors.purple.withOpacity(0.3),
           ),
@@ -506,7 +507,7 @@ class _AdminTableManagementScreenState
               height: 40,
               decoration: BoxDecoration(
                 color: PokerFriendColors.purple.withOpacity(0.15),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(AppDecorations.radius10),
               ),
               child: const Icon(
                 Icons.people,
@@ -569,9 +570,9 @@ class _AdminTableManagementScreenState
   void _showSeatPlayerSheet(int seatNumber) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF161618),
+      backgroundColor: AppColors.surfaceVariant1,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppDecorations.radius20)),
       ),
       builder: (context) => _SeatPlayerSheet(
         seatNumber: seatNumber,
@@ -588,9 +589,9 @@ class _AdminTableManagementScreenState
   void _showWaitlistSheet() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF161618),
+      backgroundColor: AppColors.surfaceVariant1,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppDecorations.radius20)),
       ),
       builder: (context) => _WaitlistSheet(
         waitlist: _waitlist,
@@ -640,8 +641,8 @@ class _AdminTableManagementScreenState
     final action = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF161618),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        backgroundColor: AppColors.surfaceVariant1,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDecorations.radiusLg)),
         title: Text(
           assignment.playerName ?? 'Player',
           style: const TextStyle(color: Colors.white),
@@ -681,8 +682,8 @@ class _AdminTableManagementScreenState
     final action = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF161618),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        backgroundColor: AppColors.surfaceVariant1,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDecorations.radiusLg)),
         title: Text(
           assignment.playerName ?? 'Player',
           style: const TextStyle(color: Colors.white, fontSize: 20),
@@ -725,8 +726,8 @@ class _AdminTableManagementScreenState
     final seatNumber = await showDialog<int>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF161618),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        backgroundColor: AppColors.surfaceVariant1,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDecorations.radiusLg)),
         title: Text(AppLocalizations.of(context).adminTableSeatPlayerName(entry.userDisplayName), style: const TextStyle(color: Colors.white)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -743,8 +744,8 @@ class _AdminTableManagementScreenState
                     width: 52,
                     height: 52,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF2A2A2E),
-                      borderRadius: BorderRadius.circular(12),
+                      color: AppColors.surfaceVariant3,
+                      borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                       border: Border.all(color: const Color(0xFF4A4A4E)),
                     ),
                     child: Center(
@@ -1019,14 +1020,14 @@ class _SeatPlayerSheet extends StatelessWidget {
                 width: 36,
                 height: 36,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFcb5242).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(10),
+                  color: AppColors.errorRedVariant.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(AppDecorations.radius10),
                 ),
                 child: Center(
                   child: Text(
                     '$seatNumber',
                     style: const TextStyle(
-                      color: Color(0xFFcb5242),
+                      color: AppColors.errorRedVariant,
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
                     ),
@@ -1094,8 +1095,8 @@ class _SeatPlayerSheet extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(0xFF1F1F23),
-          borderRadius: BorderRadius.circular(12),
+          color: AppColors.surfaceVariant2,
+          borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
         ),
         child: Row(
           children: [
@@ -1104,7 +1105,7 @@ class _SeatPlayerSheet extends StatelessWidget {
               height: 44,
               decoration: BoxDecoration(
                 color: iconColor.withOpacity(0.15),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(AppDecorations.radius10),
               ),
               child: Icon(icon, color: iconColor, size: 22),
             ),
@@ -1129,10 +1130,10 @@ class _SeatPlayerSheet extends StatelessWidget {
     Navigator.pop(context);
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF161618),
+      backgroundColor: AppColors.surfaceVariant1,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppDecorations.radius20)),
       ),
       builder: (context) => DraggableScrollableSheet(
         initialChildSize: 0.7,
@@ -1157,8 +1158,8 @@ class _SeatPlayerSheet extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF161618),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        backgroundColor: AppColors.surfaceVariant1,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDecorations.radiusLg)),
         title: Text(AppLocalizations.of(context).adminTableWalkUpPlayer, style: const TextStyle(color: Colors.white)),
         content: TextField(
           controller: controller,
@@ -1167,9 +1168,9 @@ class _SeatPlayerSheet extends StatelessWidget {
             hintText: AppLocalizations.of(context).adminTablePlayerName,
             hintStyle: const TextStyle(color: Color(0xFF4A4A4E)),
             filled: true,
-            fillColor: const Color(0xFF2A2A2E),
+            fillColor: AppColors.surfaceVariant3,
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
               borderSide: BorderSide.none,
             ),
           ),
@@ -1248,9 +1249,9 @@ class _MemberSearchSheetState extends State<_MemberSearchSheet> {
               hintStyle: const TextStyle(color: Color(0xFF4A4A4E)),
               prefixIcon: const Icon(Icons.search, color: Color(0xFF4A4A4E)),
               filled: true,
-              fillColor: const Color(0xFF1F1F23),
+              fillColor: AppColors.surfaceVariant2,
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                 borderSide: BorderSide.none,
               ),
             ),
@@ -1270,7 +1271,7 @@ class _MemberSearchSheetState extends State<_MemberSearchSheet> {
                     onTap: isSeated ? null : () => widget.onMemberSelected(member),
                     enabled: !isSeated,
                     leading: CircleAvatar(
-                      backgroundColor: const Color(0xFF2A2A2E),
+                      backgroundColor: AppColors.surfaceVariant3,
                       child: Text(
                         name.isNotEmpty ? name[0].toUpperCase() : '?',
                         style: const TextStyle(color: Colors.white),
@@ -1339,7 +1340,7 @@ class _WaitlistSheet extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: PokerFriendColors.purple.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                 ),
                 child: Text(
                   '${waitlist.length}',
@@ -1358,8 +1359,8 @@ class _WaitlistSheet extends StatelessWidget {
               margin: const EdgeInsets.only(bottom: 8),
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: const Color(0xFF1F1F23),
-                borderRadius: BorderRadius.circular(12),
+                color: AppColors.surfaceVariant2,
+                borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                 border: isNotified
                     ? Border.all(color: const Color(0xFFF59E0B).withOpacity(0.5), width: 1)
                     : null,
@@ -1374,7 +1375,7 @@ class _WaitlistSheet extends StatelessWidget {
                           ? const Color(0xFFF59E0B).withOpacity(0.15)
                           : isFirstWaiting
                               ? PokerFriendColors.green.withOpacity(0.15)
-                              : const Color(0xFF2A2A2E),
+                              : AppColors.surfaceVariant3,
                       shape: BoxShape.circle,
                     ),
                     child: Center(
@@ -1415,7 +1416,7 @@ class _WaitlistSheet extends StatelessWidget {
                         margin: const EdgeInsets.only(right: 8),
                         decoration: BoxDecoration(
                           color: PokerFriendColors.purple.withOpacity(0.15),
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
                         ),
                         child: Text(
                           AppLocalizations.of(context).adminEventTablesNotify,
@@ -1434,7 +1435,7 @@ class _WaitlistSheet extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
                         color: PokerFriendColors.green.withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
                       ),
                       child: Text(
                         AppLocalizations.of(context).adminEventTablesSeat,

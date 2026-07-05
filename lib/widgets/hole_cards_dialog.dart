@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../l10n/app_localizations.dart';
 import '../models/hand_state_machine.dart';
 import 'card_keyboard.dart';
 import '../design_system/constants/colors.dart';
+import '../design_system/constants/typography.dart';
+import '../design_system/constants/decorations.dart';
 
 class HoleCardsDialog extends StatefulWidget {
   final HoleCards? existingCards;
@@ -53,7 +54,7 @@ class _HoleCardsDialogState extends State<HoleCardsDialog> {
         constraints: const BoxConstraints(maxWidth: 400),
         decoration: BoxDecoration(
           color: AppColors.surfaceDark,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
           border: Border.all(color: AppColors.neutral800, width: 1),
         ),
         child: Column(
@@ -122,7 +123,7 @@ class _HoleCardsDialogState extends State<HoleCardsDialog> {
                       Flexible(
                         child: Text(
                           widget.playerName!,
-                          style: GoogleFonts.ibmPlexSans(
+                          style: AppTypography.ibm(
                             fontSize: 17,
                             color: AppColors.buttonPrimary,
                             fontWeight: FontWeight.w600,
@@ -136,7 +137,7 @@ class _HoleCardsDialogState extends State<HoleCardsDialog> {
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
                             color: const Color(0xFF54E98A).withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(40),
+                            borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
                             border: Border.all(
                               color: const Color(0xFF54E98A).withValues(alpha: 0.4),
                               width: 1,
@@ -144,7 +145,7 @@ class _HoleCardsDialogState extends State<HoleCardsDialog> {
                           ),
                           child: Text(
                             l10n.holeCardsWinnerBadge,
-                            style: GoogleFonts.ibmPlexSans(
+                            style: AppTypography.ibm(
                               fontSize: 10,
                               color: const Color(0xFF54E98A),
                               fontWeight: FontWeight.w700,
@@ -158,7 +159,7 @@ class _HoleCardsDialogState extends State<HoleCardsDialog> {
                   const SizedBox(height: 2),
                   Text(
                     l10n.holeCardsSubtitle,
-                    style: GoogleFonts.ibmPlexSans(
+                    style: AppTypography.ibm(
                       fontSize: 13,
                       color: AppColors.textDisabled,
                     ),
@@ -166,7 +167,7 @@ class _HoleCardsDialogState extends State<HoleCardsDialog> {
                 ] else ...[
                   Text(
                     widget.title ?? l10n.holeCardsTitle,
-                    style: GoogleFonts.ibmPlexSans(
+                    style: AppTypography.ibm(
                       fontSize: 17,
                       color: Colors.white,
                       fontWeight: FontWeight.w600,
@@ -194,13 +195,13 @@ class _HoleCardsDialogState extends State<HoleCardsDialog> {
             style: TextButton.styleFrom(
               backgroundColor: AppColors.buttonPrimary,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(40),
+                borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
               ),
               padding: EdgeInsets.zero,
             ),
             child: Text(
               l10n.holeCardsSave,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 color: Colors.black,
                 fontSize: 17,
                 fontWeight: FontWeight.w600,
@@ -219,7 +220,7 @@ class _HoleCardsDialogState extends State<HoleCardsDialog> {
             style: TextButton.styleFrom(
               backgroundColor: Colors.transparent,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(40),
+                borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
                 side: BorderSide(
                   color: Colors.white.withValues(alpha: 0.3),
                   width: 1,
@@ -229,7 +230,7 @@ class _HoleCardsDialogState extends State<HoleCardsDialog> {
             ),
             child: Text(
               l10n.holeCardsSkip,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 color: Colors.white.withValues(alpha: 0.6),
                 fontSize: 17,
                 fontWeight: FontWeight.w600,
@@ -251,7 +252,7 @@ class _HoleCardsDialogState extends State<HoleCardsDialog> {
               style: TextButton.styleFrom(
                 backgroundColor: Colors.transparent,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(40),
+                  borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
                   side: BorderSide(
                     color: AppColors.errorRed.withValues(alpha: 0.5),
                     width: 1,
@@ -261,7 +262,7 @@ class _HoleCardsDialogState extends State<HoleCardsDialog> {
               ),
               child: Text(
                 l10n.holeCardsSkipAllRemaining,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   color: AppColors.errorRed,
                   fontSize: 17,
                   fontWeight: FontWeight.w600,

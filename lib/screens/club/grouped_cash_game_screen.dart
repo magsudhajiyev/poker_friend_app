@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../design_system/constants/colors.dart';
 import '../../design_system/constants/spacing.dart';
 import '../../models/club.dart';
@@ -17,6 +16,8 @@ import '../../services/waitlist_service.dart';
 import '../../l10n/app_localizations.dart';
 import 'admin_table_management_screen.dart';
 import 'member_table_view_screen.dart';
+import '../../design_system/constants/typography.dart';
+import '../../design_system/constants/decorations.dart';
 
 /// Grouped Cash Game screen — collapses multiple live cash events sharing the
 /// same stakes into a single 2-column table grid. Tapping a table card goes
@@ -400,7 +401,7 @@ class _GroupedCashGameScreenState extends State<GroupedCashGameScreen> {
                         child: Text(
                           _error!,
                           textAlign: TextAlign.center,
-                          style: GoogleFonts.ibmPlexSans(
+                          style: AppTypography.ibm(
                             color: AppColors.textDisabled,
                             fontSize: 14,
                           ),
@@ -457,7 +458,7 @@ class _GroupedCashGameScreenState extends State<GroupedCashGameScreen> {
               children: [
                 Text(
                   AppLocalizations.of(context).clubCashGameStakes(widget.stakes),
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     fontSize: 27,
                     fontWeight: FontWeight.w600,
                     color: Colors.white,
@@ -468,7 +469,7 @@ class _GroupedCashGameScreenState extends State<GroupedCashGameScreen> {
                 const SizedBox(height: AppSpacing.xxxs),
                 Text(
                   AppLocalizations.of(context).clubCashGameTablesSummary(_tables.length, _totalOccupied, _totalOpen),
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     fontSize: 13,
                     fontWeight: FontWeight.w400,
                     color: AppColors.textMint,
@@ -584,7 +585,7 @@ class _GroupedCashGameScreenState extends State<GroupedCashGameScreen> {
       return Center(
         child: Text(
           AppLocalizations.of(context).clubCashGameNoTables,
-          style: GoogleFonts.ibmPlexSans(
+          style: AppTypography.ibm(
             color: AppColors.textDisabled,
             fontSize: 14,
           ),
@@ -626,7 +627,7 @@ class _GroupedCashGameScreenState extends State<GroupedCashGameScreen> {
       child: Container(
         decoration: BoxDecoration(
           color: AppColors.surfaceDark,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
           border: Border.all(color: const Color(0xFF161A14), width: 1),
         ),
         padding: const EdgeInsets.all(24),
@@ -647,7 +648,7 @@ class _GroupedCashGameScreenState extends State<GroupedCashGameScreen> {
                 const SizedBox(height: 10),
                 Text(
                   AppLocalizations.of(context).clubCashGameTableNumber(t.table.tableNumber),
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     fontSize: 14,
                     fontWeight: FontWeight.w400,
                     color: Colors.white,
@@ -738,7 +739,7 @@ class _GroupedCashGameScreenState extends State<GroupedCashGameScreen> {
               quarterTurns: -1,
               child: Text(
                 widget.stakes,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   fontSize: labelSize,
                   fontWeight: FontWeight.w500,
                   height: 1.44,
@@ -758,7 +759,7 @@ class _GroupedCashGameScreenState extends State<GroupedCashGameScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
       decoration: BoxDecoration(
         color: t.isFull ? AppColors.errorRed : AppColors.mint800,
-        borderRadius: BorderRadius.circular(40),
+        borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -767,7 +768,7 @@ class _GroupedCashGameScreenState extends State<GroupedCashGameScreen> {
           const SizedBox(width: 4),
           Text(
             '${t.occupied}',
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               fontSize: 14,
               fontWeight: FontWeight.w500,
               color: fg,
@@ -783,7 +784,7 @@ class _GroupedCashGameScreenState extends State<GroupedCashGameScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
       decoration: BoxDecoration(
         color: AppColors.neutral700,
-        borderRadius: BorderRadius.circular(40),
+        borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -792,7 +793,7 @@ class _GroupedCashGameScreenState extends State<GroupedCashGameScreen> {
           const SizedBox(width: 4),
           Text(
             '${t.open}',
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               fontSize: 14,
               fontWeight: FontWeight.w500,
               color: Colors.white,
@@ -849,7 +850,7 @@ class _GroupedCashGameScreenState extends State<GroupedCashGameScreen> {
                     const SizedBox(width: 8),
                     Text(
                       label,
-                      style: GoogleFonts.ibmPlexSans(
+                      style: AppTypography.ibm(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
                         color: Colors.white,
@@ -866,11 +867,11 @@ class _GroupedCashGameScreenState extends State<GroupedCashGameScreen> {
                         ),
                         decoration: BoxDecoration(
                           color: AppColors.mint900,
-                          borderRadius: BorderRadius.circular(20),
+                          borderRadius: BorderRadius.circular(AppDecorations.radius20),
                         ),
                         child: Text(
                           '$_adminWaitlistCount',
-                          style: GoogleFonts.ibmPlexSans(
+                          style: AppTypography.ibm(
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
                             color: AppColors.buttonPrimary,
@@ -913,25 +914,25 @@ class _GroupedCashGameScreenState extends State<GroupedCashGameScreen> {
         backgroundColor: AppColors.bgSurface,
         title: Text(
           AppLocalizations.of(context).clubCashGameLeaveWaitlistConfirm,
-          style: GoogleFonts.ibmPlexSans(color: Colors.white),
+          style: AppTypography.ibm(color: Colors.white),
         ),
         content: Text(
           AppLocalizations.of(context).clubCashGameLosePosition,
-          style: GoogleFonts.ibmPlexSans(color: AppColors.textDisabled),
+          style: AppTypography.ibm(color: AppColors.textDisabled),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
             child: Text(
               AppLocalizations.of(context).clubCashGameKeep,
-              style: GoogleFonts.ibmPlexSans(color: AppColors.textMint),
+              style: AppTypography.ibm(color: AppColors.textMint),
             ),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             child: Text(
               AppLocalizations.of(context).clubCashGameLeave,
-              style: GoogleFonts.ibmPlexSans(color: AppColors.errorRed),
+              style: AppTypography.ibm(color: AppColors.errorRed),
             ),
           ),
         ],
@@ -1045,7 +1046,7 @@ class _AdminWaitlistSheetState extends State<_AdminWaitlistSheet> {
         SnackBar(
           content: Text(
             AppLocalizations.of(context).clubCashGameNotified(entry.userDisplayName),
-            style: GoogleFonts.ibmPlexSans(),
+            style: AppTypography.ibm(),
           ),
           backgroundColor: AppColors.mint700,
         ),
@@ -1056,7 +1057,7 @@ class _AdminWaitlistSheetState extends State<_AdminWaitlistSheet> {
         SnackBar(
           content: Text(
             AppLocalizations.of(context).clubCashGameNotifyFailed('$e'),
-            style: GoogleFonts.ibmPlexSans(),
+            style: AppTypography.ibm(),
           ),
           backgroundColor: AppColors.errorRed,
         ),
@@ -1111,7 +1112,7 @@ class _AdminWaitlistSheetState extends State<_AdminWaitlistSheet> {
                   children: [
                     Text(
                       AppLocalizations.of(context).clubCashGameStakes(widget.stakesDisplay),
-                      style: GoogleFonts.ibmPlexSans(
+                      style: AppTypography.ibm(
                         fontSize: 13,
                         fontWeight: FontWeight.w400,
                         color: AppColors.textMint,
@@ -1125,11 +1126,11 @@ class _AdminWaitlistSheetState extends State<_AdminWaitlistSheet> {
                       ),
                       decoration: BoxDecoration(
                         color: AppColors.mint900,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                       ),
                       child: Text(
                         '${entries.length}',
-                        style: GoogleFonts.ibmPlexSans(
+                        style: AppTypography.ibm(
                           color: AppColors.buttonPrimary,
                           fontWeight: FontWeight.bold,
                           fontSize: 13,
@@ -1182,7 +1183,7 @@ class _AdminWaitlistSheetState extends State<_AdminWaitlistSheet> {
           // Title — center
           Text(
             AppLocalizations.of(context).clubCashGameWaitlistTitle,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               color: Colors.white,
               fontSize: 17,
               fontWeight: FontWeight.w600,
@@ -1216,7 +1217,7 @@ class _AdminWaitlistSheetState extends State<_AdminWaitlistSheet> {
         padding: const EdgeInsets.all(32),
         child: Text(
           AppLocalizations.of(context).clubCashGameCouldNotLoad,
-          style: GoogleFonts.ibmPlexSans(color: AppColors.errorRed),
+          style: AppTypography.ibm(color: AppColors.errorRed),
         ),
       );
     }
@@ -1234,7 +1235,7 @@ class _AdminWaitlistSheetState extends State<_AdminWaitlistSheet> {
             const SizedBox(height: 12),
             Text(
               AppLocalizations.of(context).clubCashGameNoOneOnWaitlist,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 fontSize: 15,
                 color: AppColors.textDisabled,
               ),
@@ -1260,8 +1261,8 @@ class _AdminWaitlistSheetState extends State<_AdminWaitlistSheet> {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFF1F1F23),
-        borderRadius: BorderRadius.circular(12),
+        color: AppColors.surfaceVariant2,
+        borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
         border: isNotified
             ? Border.all(color: AppColors.buttonPrimary, width: 1)
             : null,
@@ -1277,7 +1278,7 @@ class _AdminWaitlistSheetState extends State<_AdminWaitlistSheet> {
                   ? AppColors.mint900
                   : (position == 1
                       ? AppColors.mint900
-                      : const Color(0xFF2A2A2E)),
+                      : AppColors.surfaceVariant3),
               shape: BoxShape.circle,
             ),
             child: Center(
@@ -1289,7 +1290,7 @@ class _AdminWaitlistSheetState extends State<_AdminWaitlistSheet> {
                     )
                   : Text(
                       '$position',
-                      style: GoogleFonts.ibmPlexSans(
+                      style: AppTypography.ibm(
                         color: position == 1
                             ? AppColors.buttonPrimary
                             : Colors.white,
@@ -1309,7 +1310,7 @@ class _AdminWaitlistSheetState extends State<_AdminWaitlistSheet> {
                   entry.userDisplayName.isEmpty
                       ? AppLocalizations.of(context).clubCashGamePlayer
                       : entry.userDisplayName,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     color: Colors.white,
                     fontSize: 15,
                   ),
@@ -1321,7 +1322,7 @@ class _AdminWaitlistSheetState extends State<_AdminWaitlistSheet> {
                   isNotified
                       ? AppLocalizations.of(context).clubCashGameNotifiedStatus(_formatJoinedAt(context, entry.joinedAt))
                       : AppLocalizations.of(context).clubCashGameJoinedTime(_formatJoinedAt(context, entry.joinedAt)),
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     fontSize: 11,
                     color: isNotified
                         ? AppColors.buttonPrimary
@@ -1342,7 +1343,7 @@ class _AdminWaitlistSheetState extends State<_AdminWaitlistSheet> {
                 color: isNotified
                     ? AppColors.mint900
                     : AppColors.mint900.withOpacity(0.4),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(AppDecorations.radius10),
               ),
               alignment: Alignment.center,
               child: isBusy
@@ -1582,7 +1583,7 @@ class _AddTableSheetState extends State<_AddTableSheet> {
               children: [
                 Text(
                   AppLocalizations.of(context).clubCashGameStakes(widget.stakes),
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     fontSize: 13,
                     fontWeight: FontWeight.w400,
                     color: AppColors.textMint,
@@ -1625,7 +1626,7 @@ class _AddTableSheetState extends State<_AddTableSheet> {
           ),
           Text(
             AppLocalizations.of(context).clubCashGameAddTable,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               color: Colors.white,
               fontSize: 17,
               fontWeight: FontWeight.w600,
@@ -1648,7 +1649,7 @@ class _AddTableSheetState extends State<_AddTableSheet> {
       return Center(
         child: Text(
           _error!,
-          style: GoogleFonts.ibmPlexSans(color: AppColors.errorRed),
+          style: AppTypography.ibm(color: AppColors.errorRed),
         ),
       );
     }
@@ -1698,21 +1699,21 @@ class _AddTableSheetState extends State<_AddTableSheet> {
             height: 48,
             padding: const EdgeInsets.symmetric(horizontal: 14),
             decoration: BoxDecoration(
-              color: const Color(0xFF1F1F23),
-              borderRadius: BorderRadius.circular(12),
+              color: AppColors.surfaceVariant2,
+              borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
             ),
             alignment: Alignment.center,
             child: TextField(
               controller: _nameController,
               enabled: !_isCreating,
               cursorColor: AppColors.buttonPrimary,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 color: Colors.white,
                 fontSize: 14,
               ),
               decoration: InputDecoration(
                 hintText: AppLocalizations.of(context).clubCashGameNewTableName,
-                hintStyle: GoogleFonts.ibmPlexSans(
+                hintStyle: AppTypography.ibm(
                   color: AppColors.textDisabled,
                   fontSize: 14,
                 ),
@@ -1736,7 +1737,7 @@ class _AddTableSheetState extends State<_AddTableSheet> {
               color: _isCreating
                   ? AppColors.mint900
                   : AppColors.buttonPrimary,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
             ),
             alignment: Alignment.center,
             child: _isCreating
@@ -1750,7 +1751,7 @@ class _AddTableSheetState extends State<_AddTableSheet> {
                   )
                 : Text(
                     AppLocalizations.of(context).clubCashGameAdd,
-                    style: GoogleFonts.ibmPlexSans(
+                    style: AppTypography.ibm(
                       color: AppColors.paper,
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
@@ -1765,7 +1766,7 @@ class _AddTableSheetState extends State<_AddTableSheet> {
   Widget _buildSectionLabel(String text) {
     return Text(
       text.toUpperCase(),
-      style: GoogleFonts.ibmPlexSans(
+      style: AppTypography.ibm(
         color: AppColors.textDisabled,
         fontSize: 11,
         fontWeight: FontWeight.w600,
@@ -1778,12 +1779,12 @@ class _AddTableSheetState extends State<_AddTableSheet> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF1F1F23),
-        borderRadius: BorderRadius.circular(12),
+        color: AppColors.surfaceVariant2,
+        borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
       ),
       child: Text(
         text,
-        style: GoogleFonts.ibmPlexSans(
+        style: AppTypography.ibm(
           color: AppColors.textDisabled,
           fontSize: 14,
         ),
@@ -1806,8 +1807,8 @@ class _AddTableSheetState extends State<_AddTableSheet> {
           margin: const EdgeInsets.only(bottom: 8),
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: const Color(0xFF1F1F23),
-            borderRadius: BorderRadius.circular(12),
+            color: AppColors.surfaceVariant2,
+            borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
           ),
           child: Row(
             children: [
@@ -1815,13 +1816,13 @@ class _AddTableSheetState extends State<_AddTableSheet> {
                 width: 32,
                 height: 32,
                 decoration: const BoxDecoration(
-                  color: Color(0xFF2A2A2E),
+                  color: AppColors.surfaceVariant3,
                   shape: BoxShape.circle,
                 ),
                 alignment: Alignment.center,
                 child: Text(
                   '${table.tableNumber}',
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
                     fontSize: 13,
@@ -1836,7 +1837,7 @@ class _AddTableSheetState extends State<_AddTableSheet> {
                   children: [
                     Text(
                       table.name,
-                      style: GoogleFonts.ibmPlexSans(
+                      style: AppTypography.ibm(
                         color: Colors.white,
                         fontSize: 15,
                       ),
@@ -1846,7 +1847,7 @@ class _AddTableSheetState extends State<_AddTableSheet> {
                     const SizedBox(height: 2),
                     Text(
                       subtitle,
-                      style: GoogleFonts.ibmPlexSans(
+                      style: AppTypography.ibm(
                         color: AppColors.textDisabled,
                         fontSize: 11,
                       ),

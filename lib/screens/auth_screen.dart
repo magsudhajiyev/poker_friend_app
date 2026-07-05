@@ -3,6 +3,7 @@ import '../l10n/app_localizations.dart';
 import '../services/auth_service.dart';
 import 'home_screen.dart';
 import '../design_system/constants/colors.dart';
+import '../design_system/constants/decorations.dart';
 
 class AuthScreen extends StatefulWidget {
   @override
@@ -112,7 +113,7 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     return Scaffold(
-      backgroundColor: Color(0xFF161618),
+      backgroundColor: AppColors.surfaceVariant1,
       body: SafeArea(
         child: Column(
           children: [
@@ -145,10 +146,10 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
             Expanded(
               child: Container(
                 decoration: BoxDecoration(
-                  color: Color(0xFF1F1F23),
+                  color: AppColors.surfaceVariant2,
                   borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(24),
-                    topRight: Radius.circular(24),
+                    topLeft: Radius.circular(AppDecorations.radiusXl),
+                    topRight: Radius.circular(AppDecorations.radiusXl),
                   ),
                 ),
                 child: Column(
@@ -158,7 +159,7 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
                       decoration: BoxDecoration(
                         border: Border(
                           bottom: BorderSide(
-                            color: Color(0xFF2A2A2E),
+                            color: AppColors.surfaceVariant3,
                             width: 1,
                           ),
                         ),
@@ -167,7 +168,7 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
                         controller: _tabController,
                         labelColor: Colors.white,
                         unselectedLabelColor: AppColors.textMuted,
-                        indicatorColor: Color(0xFFcb5242),
+                        indicatorColor: AppColors.errorRedVariant,
                         indicatorWeight: 3,
                         labelStyle: TextStyle(
                           fontSize: 16,
@@ -220,21 +221,21 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
                 labelStyle: TextStyle(color: AppColors.textMuted),
                 prefixIcon: Icon(Icons.email, color: AppColors.textMuted),
                 filled: true,
-                fillColor: Color(0xFF2A2A2E),
+                fillColor: AppColors.surfaceVariant3,
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                   borderSide: BorderSide.none,
                 ),
                 enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Color(0xFF2A2A2E)),
+                  borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
+                  borderSide: BorderSide(color: AppColors.surfaceVariant3),
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Color(0xFFcb5242)),
+                  borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
+                  borderSide: BorderSide(color: AppColors.errorRedVariant),
                 ),
                 errorBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                   borderSide: BorderSide(color: Colors.red),
                 ),
               ),
@@ -267,21 +268,21 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
                   onPressed: () => setState(() => _obscureLoginPassword = !_obscureLoginPassword),
                 ),
                 filled: true,
-                fillColor: Color(0xFF2A2A2E),
+                fillColor: AppColors.surfaceVariant3,
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                   borderSide: BorderSide.none,
                 ),
                 enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Color(0xFF2A2A2E)),
+                  borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
+                  borderSide: BorderSide(color: AppColors.surfaceVariant3),
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Color(0xFFcb5242)),
+                  borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
+                  borderSide: BorderSide(color: AppColors.errorRedVariant),
                 ),
                 errorBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                   borderSide: BorderSide(color: Colors.red),
                 ),
               ),
@@ -298,11 +299,11 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
             ElevatedButton(
               onPressed: _isLoading ? null : _signIn,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFFcb5242),
+                backgroundColor: AppColors.errorRedVariant,
                 foregroundColor: Colors.white,
                 padding: EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                 ),
                 disabledBackgroundColor: Colors.grey[600],
               ),
@@ -355,21 +356,21 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
                 labelStyle: TextStyle(color: AppColors.textMuted),
                 prefixIcon: Icon(Icons.person, color: AppColors.textMuted),
                 filled: true,
-                fillColor: Color(0xFF2A2A2E),
+                fillColor: AppColors.surfaceVariant3,
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                   borderSide: BorderSide.none,
                 ),
                 enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Color(0xFF2A2A2E)),
+                  borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
+                  borderSide: BorderSide(color: AppColors.surfaceVariant3),
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Color(0xFFcb5242)),
+                  borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
+                  borderSide: BorderSide(color: AppColors.errorRedVariant),
                 ),
                 errorBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                   borderSide: BorderSide(color: Colors.red),
                 ),
               ),
@@ -395,21 +396,21 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
                 labelStyle: TextStyle(color: AppColors.textMuted),
                 prefixIcon: Icon(Icons.email, color: AppColors.textMuted),
                 filled: true,
-                fillColor: Color(0xFF2A2A2E),
+                fillColor: AppColors.surfaceVariant3,
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                   borderSide: BorderSide.none,
                 ),
                 enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Color(0xFF2A2A2E)),
+                  borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
+                  borderSide: BorderSide(color: AppColors.surfaceVariant3),
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Color(0xFFcb5242)),
+                  borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
+                  borderSide: BorderSide(color: AppColors.errorRedVariant),
                 ),
                 errorBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                   borderSide: BorderSide(color: Colors.red),
                 ),
               ),
@@ -442,21 +443,21 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
                   onPressed: () => setState(() => _obscureRegisterPassword = !_obscureRegisterPassword),
                 ),
                 filled: true,
-                fillColor: Color(0xFF2A2A2E),
+                fillColor: AppColors.surfaceVariant3,
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                   borderSide: BorderSide.none,
                 ),
                 enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Color(0xFF2A2A2E)),
+                  borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
+                  borderSide: BorderSide(color: AppColors.surfaceVariant3),
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Color(0xFFcb5242)),
+                  borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
+                  borderSide: BorderSide(color: AppColors.errorRedVariant),
                 ),
                 errorBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                   borderSide: BorderSide(color: Colors.red),
                 ),
               ),
@@ -489,21 +490,21 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
                   onPressed: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
                 ),
                 filled: true,
-                fillColor: Color(0xFF2A2A2E),
+                fillColor: AppColors.surfaceVariant3,
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                   borderSide: BorderSide.none,
                 ),
                 enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Color(0xFF2A2A2E)),
+                  borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
+                  borderSide: BorderSide(color: AppColors.surfaceVariant3),
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Color(0xFFcb5242)),
+                  borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
+                  borderSide: BorderSide(color: AppColors.errorRedVariant),
                 ),
                 errorBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                   borderSide: BorderSide(color: Colors.red),
                 ),
               ),
@@ -523,11 +524,11 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
             ElevatedButton(
               onPressed: _isLoading ? null : _register,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFFcb5242),
+                backgroundColor: AppColors.errorRedVariant,
                 foregroundColor: Colors.white,
                 padding: EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                 ),
                 disabledBackgroundColor: Colors.grey[600],
               ),
@@ -558,7 +559,7 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: Color(0xFF1F1F23),
+        backgroundColor: AppColors.surfaceVariant2,
         title: Text(
           l10n.authResetPassword,
           style: TextStyle(color: Colors.white),
@@ -579,18 +580,18 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
                 labelText: l10n.authEmail,
                 labelStyle: TextStyle(color: AppColors.textMuted),
                 filled: true,
-                fillColor: Color(0xFF2A2A2E),
+                fillColor: AppColors.surfaceVariant3,
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                   borderSide: BorderSide.none,
                 ),
                 enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Color(0xFF2A2A2E)),
+                  borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
+                  borderSide: BorderSide(color: AppColors.surfaceVariant3),
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Color(0xFFcb5242)),
+                  borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
+                  borderSide: BorderSide(color: AppColors.errorRedVariant),
                 ),
               ),
             ),
@@ -613,7 +614,7 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(l10n.authPasswordResetSent),
-                      backgroundColor: Color(0xFFcb5242),
+                      backgroundColor: AppColors.errorRedVariant,
                     ),
                   );
                 } catch (e) {

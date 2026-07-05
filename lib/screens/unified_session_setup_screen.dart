@@ -2,7 +2,6 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../services/currency_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../l10n/app_localizations.dart';
@@ -16,6 +15,9 @@ import '../onboarding/onboarding_state.dart';
 import '../onboarding/onboarding_tour.dart';
 import '../onboarding/onboarding_progress_bar.dart';
 import 'poker_hand_screen.dart';
+import '../design_system/constants/typography.dart';
+import '../design_system/constants/colors.dart';
+import '../design_system/constants/decorations.dart';
 
 class UnifiedSessionSetupScreen extends StatefulWidget {
   const UnifiedSessionSetupScreen({super.key});
@@ -356,7 +358,7 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
     final l10n = AppLocalizations.of(context);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0C0C0C),
+      backgroundColor: AppColors.bgPrimary,
       body: Column(
         children: [
           _buildHeader(l10n),
@@ -387,7 +389,7 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
 
   Widget _buildHeader(AppLocalizations l10n) {
     return Container(
-      color: const Color(0xFF161719),
+      color: AppColors.bgSurface,
       child: SafeArea(
         bottom: false,
         child: Column(
@@ -415,7 +417,7 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
                       child: Text(
                         l10n.setupSessionSetup,
                         textAlign: TextAlign.center,
-                        style: GoogleFonts.ibmPlexSans(
+                        style: AppTypography.ibm(
                           fontSize: 17,
                           fontWeight: FontWeight.w600,
                           color: Colors.white,
@@ -490,10 +492,10 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF161719),
-                  borderRadius: BorderRadius.circular(12),
+                  color: AppColors.bgSurface,
+                  borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                   border: Border.all(
-                    color: _isBuyInFocused ? const Color(0xFF4CDE78) : const Color(0xFF161719),
+                    color: _isBuyInFocused ? AppColors.accentPrimary : AppColors.borderDefault,
                     width: _isBuyInFocused ? 1.5 : 1.0,
                   ),
                 ),
@@ -502,8 +504,8 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
                     if (CurrencyService.prefixText != null) ...[
                       Text(
                         CurrencyService.prefixText!,
-                        style: GoogleFonts.ibmPlexSans(
-                          color: _isBuyInFocused ? Colors.white : const Color(0xFFB9B9B9),
+                        style: AppTypography.ibm(
+                          color: _isBuyInFocused ? Colors.white : AppColors.textSecondary,
                           fontSize: 15,
                           fontWeight: FontWeight.w400,
                           height: 22 / 15,
@@ -520,7 +522,7 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
                         inputFormatters: [
                           FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
                         ],
-                        style: GoogleFonts.ibmPlexSans(
+                        style: AppTypography.ibm(
                           color: Colors.white,
                           fontSize: 15,
                           fontWeight: FontWeight.w400,
@@ -528,8 +530,8 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
                         ),
                         decoration: InputDecoration(
                           hintText: l10n.setupEnterAmount,
-                          hintStyle: GoogleFonts.ibmPlexSans(
-                            color: const Color(0xFFB9B9B9),
+                          hintStyle: AppTypography.ibm(
+                            color: AppColors.textSecondary,
                             fontSize: 15,
                             fontWeight: FontWeight.w400,
                             height: 22 / 15,
@@ -549,8 +551,8 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
                       const SizedBox(width: 4),
                       Text(
                         CurrencyService.suffixText!,
-                        style: GoogleFonts.ibmPlexSans(
-                          color: _isBuyInFocused ? Colors.white : const Color(0xFFB9B9B9),
+                        style: AppTypography.ibm(
+                          color: _isBuyInFocused ? Colors.white : AppColors.textSecondary,
                           fontSize: 15,
                           fontWeight: FontWeight.w400,
                           height: 22 / 15,
@@ -617,14 +619,14 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF161719),
-                      borderRadius: BorderRadius.circular(12),
+                      color: AppColors.bgSurface,
+                      borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                       border: Border.all(
                         color: hasError
-                            ? const Color(0xFFFF3B30)
+                            ? AppColors.accentDanger
                             : _isStartingStackFocused
-                                ? const Color(0xFF4CDE78)
-                                : const Color(0xFF161719),
+                                ? AppColors.accentPrimary
+                                : AppColors.bgSurface,
                         width: (hasError || _isStartingStackFocused) ? 1.5 : 1.0,
                       ),
                     ),
@@ -636,7 +638,7 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
                       inputFormatters: [
                         FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
                       ],
-                      style: GoogleFonts.ibmPlexSans(
+                      style: AppTypography.ibm(
                         color: Colors.white,
                         fontSize: 15,
                         fontWeight: FontWeight.w400,
@@ -644,8 +646,8 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
                       ),
                       decoration: InputDecoration(
                         hintText: l10n.setupEnterChipStack,
-                        hintStyle: GoogleFonts.ibmPlexSans(
-                          color: const Color(0xFFB9B9B9),
+                        hintStyle: AppTypography.ibm(
+                          color: AppColors.textSecondary,
                           fontSize: 15,
                           fontWeight: FontWeight.w400,
                           height: 22 / 15,
@@ -665,9 +667,9 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
                     const SizedBox(height: 8),
                     Text(
                       'Must be at least the Big Blind ($_bigBlind)',
-                      style: GoogleFonts.ibmPlexSans(
+                      style: AppTypography.ibm(
                         fontSize: 12,
-                        color: const Color(0xFFFF3B30),
+                        color: AppColors.accentDanger,
                         height: 16 / 12,
                       ),
                     ),
@@ -705,7 +707,7 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
             width: 80,
             child: Text(
               label,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
                 color: Colors.white,
@@ -724,7 +726,7 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
     return const Divider(
       height: 1,
       thickness: 1,
-      color: Color(0xFF2C2C2E),
+      color: AppColors.bgElevated,
     );
   }
 
@@ -742,48 +744,48 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
       controller: controller,
       keyboardType: keyboardType,
       textInputAction: TextInputAction.done,
-      style: GoogleFonts.ibmPlexSans(
+      style: AppTypography.ibm(
         color: Colors.white,
         fontSize: 15,
         fontWeight: FontWeight.w400,
       ),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: GoogleFonts.ibmPlexSans(
-          color: const Color(0xFFB9B9B9),
+        hintStyle: AppTypography.ibm(
+          color: AppColors.textSecondary,
           fontSize: 15,
           fontWeight: FontWeight.w400,
         ),
         prefixText: prefixText,
-        prefixStyle: GoogleFonts.ibmPlexSans(
+        prefixStyle: AppTypography.ibm(
           color: Colors.white,
           fontSize: 15,
           fontWeight: FontWeight.w400,
         ),
         suffixText: suffixText,
-        suffixStyle: GoogleFonts.ibmPlexSans(
+        suffixStyle: AppTypography.ibm(
           color: Colors.white,
           fontSize: 15,
           fontWeight: FontWeight.w400,
         ),
         filled: true,
-        fillColor: const Color(0xFF161719),
+        fillColor: AppColors.bgSurface,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
           borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
           borderSide: hasError
-              ? const BorderSide(color: Color(0xFFFF3B30), width: 1.5)
+              ? const BorderSide(color: AppColors.accentDanger, width: 1.5)
               : BorderSide.none,
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
           borderSide: BorderSide(
             color: hasError
-                ? const Color(0xFFFF3B30)
-                : const Color(0xFF4CDE78),
+                ? AppColors.accentDanger
+                : AppColors.accentPrimary,
             width: 1.5,
           ),
         ),
@@ -808,12 +810,12 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
               width: 22,
               height: 22,
               decoration: BoxDecoration(
-                color: const Color(0xFF161719),
+                color: AppColors.bgSurface,
                 shape: BoxShape.circle,
                 border: Border.all(
                   color: isSelected
-                      ? const Color(0xFF4CDE78)
-                      : const Color(0xFF161719),
+                      ? AppColors.accentPrimary
+                      : AppColors.borderDefault,
                   width: 1.5,
                 ),
               ),
@@ -823,7 +825,7 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
                         width: 10,
                         height: 10,
                         decoration: const BoxDecoration(
-                          color: Color(0xFF4CDE78),
+                          color: AppColors.accentPrimary,
                           shape: BoxShape.circle,
                         ),
                       ),
@@ -833,7 +835,7 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
             const SizedBox(width: 8),
             Text(
               label,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 fontSize: 15,
                 fontWeight: FontWeight.w400,
                 color: Colors.white,
@@ -859,20 +861,20 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
       children: [
         Text(
           label,
-          style: GoogleFonts.ibmPlexSans(
+          style: AppTypography.ibm(
             fontSize: 13,
             fontWeight: FontWeight.w500,
-            color: const Color(0xFFB9B9B9),
+            color: AppColors.textSecondary,
           ),
         ),
         const SizedBox(height: 4),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
           decoration: BoxDecoration(
-            color: const Color(0xFF161719),
-            borderRadius: BorderRadius.circular(12),
+            color: AppColors.bgSurface,
+            borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
             border: Border.all(
-              color: isFocused ? const Color(0xFF4CDE78) : const Color(0xFF161719),
+              color: isFocused ? AppColors.accentPrimary : AppColors.borderDefault,
               width: isFocused ? 1.5 : 1.0,
             ),
           ),
@@ -881,8 +883,8 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
               if (showCurrencyPrefix) ...[
                 Text(
                   CurrencyService.symbol,
-                  style: GoogleFonts.ibmPlexSans(
-                    color: isFocused ? Colors.white : const Color(0xFFB9B9B9),
+                  style: AppTypography.ibm(
+                    color: isFocused ? Colors.white : AppColors.textSecondary,
                     fontSize: 15,
                     fontWeight: FontWeight.w400,
                     height: 22 / 15,
@@ -903,7 +905,7 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
                         ? FilteringTextInputFormatter.allow(RegExp(r'[\d.]'))
                         : FilteringTextInputFormatter.digitsOnly,
                   ],
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     color: Colors.white,
                     fontSize: 15,
                     fontWeight: FontWeight.w400,
@@ -911,8 +913,8 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
                   ),
                   decoration: InputDecoration(
                     hintText: '0',
-                    hintStyle: GoogleFonts.ibmPlexSans(
-                      color: const Color(0xFFB9B9B9),
+                    hintStyle: AppTypography.ibm(
+                      color: AppColors.textSecondary,
                       fontSize: 15,
                       fontWeight: FontWeight.w400,
                       height: 22 / 15,
@@ -946,16 +948,16 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
         const Padding(
           padding: EdgeInsets.only(top: 1),
           child: Icon(Icons.info_outline,
-              color: Color(0xFF4CDE78), size: 16),
+              color: AppColors.accentPrimary, size: 16),
         ),
         const SizedBox(width: 4),
         Expanded(
           child: Text(
             text,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               fontSize: 11,
               fontWeight: FontWeight.w400,
-              color: const Color(0xFFB9B9B9),
+              color: AppColors.textSecondary,
               height: 16 / 11,
             ),
           ),
@@ -973,12 +975,12 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
         padding: const EdgeInsets.all(2),
         decoration: BoxDecoration(
           color: value
-              ? const Color(0xFF4CDE78)
-              : const Color(0xFF161719),
-          borderRadius: BorderRadius.circular(16),
+              ? AppColors.accentPrimary
+              : AppColors.bgSurface,
+          borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
           border: value
               ? null
-              : Border.all(color: const Color(0xFF2C2C2E)),
+              : Border.all(color: AppColors.borderOnInverse),
         ),
         child: AnimatedAlign(
           duration: const Duration(milliseconds: 200),
@@ -1001,18 +1003,18 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
 
   Widget _buildTableCard(AppLocalizations l10n) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(24),
+      borderRadius: BorderRadius.circular(AppDecorations.radiusXl),
       child: Container(
         key: _tableSectionKey,
         width: double.infinity,
-        color: const Color(0xFF161719),
+        color: AppColors.bgSurface,
         child: Column(
           children: [
             const SizedBox(height: 18),
             Text(
               l10n.setupTableInstructions,
               textAlign: TextAlign.center,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 fontSize: 15,
                 fontWeight: FontWeight.w400,
                 color: Colors.white,
@@ -1071,16 +1073,16 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
           decoration: BoxDecoration(
             color: isValid
-                ? const Color(0xFF4CDE78)
-                : const Color(0xFF4CDE78).withValues(alpha: 0.35),
-            borderRadius: BorderRadius.circular(999),
+                ? AppColors.accentPrimary
+                : AppColors.accentPrimary.withValues(alpha: 0.35),
+            borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
           ),
           child: Text(
             l10n.setupStartSession,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               fontSize: 15,
               fontWeight: FontWeight.w600,
-              color: const Color(0xFF0C0C0C),
+              color: AppColors.textInverse,
             ),
           ),
         ),
@@ -1104,22 +1106,22 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
             : '');
 
     final borderColor = (isHero || isActive)
-        ? const Color(0xFFA3FF78)
-        : const Color(0xFF2C2C2E);
+        ? AppColors.accentSecondary
+        : AppColors.bgElevated;
 
     final chip = GestureDetector(
       onTap: () => _onSeatTap(seatNumber),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
         decoration: BoxDecoration(
-          color: const Color(0xFF161719),
+          color: AppColors.bgSurface,
           borderRadius: BorderRadius.circular(35),
           border: Border.all(color: borderColor, width: 2),
         ),
         child: Text(
           '$seatNumber',
-          style: GoogleFonts.ibmPlexMono(
-            color: const Color(0xFFA3FF78),
+          style: AppTypography.plexMonoLegacy(
+            color: AppColors.accentSecondary,
             fontSize: 14,
             fontWeight: FontWeight.w500,
           ),
@@ -1169,7 +1171,7 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
       child: Center(
         child: Text(
           truncated,
-          style: GoogleFonts.ibmPlexSans(
+          style: AppTypography.ibm(
             fontSize: 10.0,
             fontWeight: FontWeight.w500,
             color: textColor,

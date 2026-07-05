@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../services/currency_service.dart';
 import '../l10n/app_localizations.dart';
@@ -11,6 +10,8 @@ import '../widgets/loading_screen.dart';
 import 'hand_actions_page_view.dart';
 import '../widgets/global_bottom_nav_bar.dart';
 import '../design_system/constants/colors.dart';
+import '../design_system/constants/typography.dart';
+import '../design_system/constants/decorations.dart';
 
 class SessionHandsScreen extends StatefulWidget {
   final Map<String, dynamic> session;
@@ -190,7 +191,7 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
                               widget.session['sessionName'].isNotEmpty
                                   ? widget.session['sessionName']
                                   : AppLocalizations.of(context).sessionHistorySessionId(widget.session['id'].substring(0, 8)),
-                              style: GoogleFonts.ibmPlexSans(
+                              style: AppTypography.ibm(
                                 fontSize: 20,
                                 color: Colors.white,
                                 fontWeight: FontWeight.w600,
@@ -199,7 +200,7 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
                             const SizedBox(height: 2),
                             Text(
                               AppLocalizations.of(context).sessionHandsHandsLogged(hands.length),
-                              style: GoogleFonts.ibmPlexSans(
+                              style: AppTypography.ibm(
                                 fontSize: 13,
                                 color: Colors.white.withOpacity(0.5),
                                 fontWeight: FontWeight.w400,
@@ -238,7 +239,7 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
             const SizedBox(height: 16),
             Text(
               AppLocalizations.of(context).sessionHandsError,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 color: Colors.white,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -247,7 +248,7 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
             const SizedBox(height: 8),
             Text(
               error!,
-              style: GoogleFonts.ibmPlexSans(color: Colors.white.withOpacity(0.5)),
+              style: AppTypography.ibm(color: Colors.white.withOpacity(0.5)),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
@@ -257,11 +258,11 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                 decoration: BoxDecoration(
                   color: AppColors.buttonPrimary,
-                  borderRadius: BorderRadius.circular(60),
+                  borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
                 ),
                 child: Text(
                   AppLocalizations.of(context).commonRetry,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     color: Colors.black,
                     fontWeight: FontWeight.w600,
                   ),
@@ -283,7 +284,7 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
               height: 80,
               decoration: BoxDecoration(
                 color: AppColors.infoCardBg,
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(AppDecorations.radius20),
               ),
               child: Image.asset(
                 'assets/logo.png',
@@ -295,7 +296,7 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
             const SizedBox(height: 24),
             Text(
               AppLocalizations.of(context).sessionHandsNoHandsTitle,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 color: Colors.white,
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
@@ -304,7 +305,7 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
             const SizedBox(height: 8),
             Text(
               AppLocalizations.of(context).sessionHandsNoHandsSubtitle,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 color: Colors.white.withOpacity(0.5),
                 fontSize: 14,
               ),
@@ -354,7 +355,7 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
       child: Container(
         decoration: const BoxDecoration(
           border: Border(
-              bottom: BorderSide(color: Color(0xFF161719), width: 1)),
+              bottom: BorderSide(color: AppColors.borderDefault, width: 1)),
         ),
         padding: const EdgeInsets.symmetric(vertical: 16),
         child: Column(
@@ -367,8 +368,8 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
                   width: 38,
                   height: 36,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF161719),
-                    borderRadius: BorderRadius.circular(8),
+                    color: AppColors.bgSurface,
+                    borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
                   ),
                   alignment: Alignment.center,
                   child: Row(
@@ -377,7 +378,7 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
                     children: [
                       Text(
                         '#$handNumber',
-                        style: GoogleFonts.ibmPlexSans(
+                        style: AppTypography.ibm(
                           fontSize: 13,
                           fontWeight: FontWeight.w500,
                           color: Colors.white,
@@ -395,7 +396,7 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
                 Expanded(
                   child: Text(
                     timeInfo,
-                    style: GoogleFonts.ibmPlexSans(
+                    style: AppTypography.ibm(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
                       color: Colors.white.withValues(alpha: 0.5),
@@ -409,11 +410,11 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
                     padding: const EdgeInsets.all(4),
                     decoration: BoxDecoration(
                       color: _mint.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
                     ),
                     child: Text(
                       l10n.sessionHandsWon,
-                      style: GoogleFonts.ibmPlexSans(
+                      style: AppTypography.ibm(
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
                         color: _mint,
@@ -440,24 +441,24 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF161719),
-                    borderRadius: BorderRadius.circular(8),
+                    color: AppColors.bgSurface,
+                    borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
                         potText,
-                        style: GoogleFonts.ibmPlexSans(
+                        style: AppTypography.ibm(
                           fontSize: 13,
                           fontWeight: FontWeight.w500,
-                          color: const Color(0xFF4CDE78),
+                          color: AppColors.accentPrimary,
                           height: 20 / 13,
                         ),
                       ),
                       const SizedBox(width: 4),
                       const Icon(Icons.chevron_right,
-                          size: 12, color: Color(0xFF4CDE78)),
+                          size: 12, color: AppColors.accentPrimary),
                     ],
                   ),
                 ),
@@ -474,8 +475,8 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: const Color(0xFF161719),
-        borderRadius: BorderRadius.circular(8),
+        color: AppColors.bgSurface,
+        borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -486,7 +487,7 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
             child: Center(
               child: Text(
                 label,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
                   color: Colors.white,
@@ -500,19 +501,19 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
             width: 38,
             height: 28,
             decoration: BoxDecoration(
-              color: const Color(0xFF0C0C0C),
-              borderRadius: BorderRadius.circular(8),
+              color: AppColors.bgPrimary,
+              borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
             ),
             alignment: Alignment.center,
             child: Text(
               position,
               textAlign: TextAlign.center,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
                 color: isHero
-                    ? const Color(0xFFA3FF78)
-                    : const Color(0xFFB9B9B9),
+                    ? AppColors.accentSecondary
+                    : AppColors.textSecondary,
                 height: 20 / 13,
               ),
             ),

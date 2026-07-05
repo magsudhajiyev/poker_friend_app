@@ -27,7 +27,7 @@ class GlobalBottomNavBar extends StatefulWidget {
     this.sessionsKey,
   }) : super(key: key);
 
-  static const Color _activeColor = Color(0xFF4CDE78);
+  static const Color _activeColor = AppColors.accentPrimary;
   static const Color _inactiveColor = Color(0xFF808285);
 
   @override

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/decorations.dart';
 import '../design_system/constants/typography.dart';
@@ -70,7 +69,7 @@ class _IntroScreenState extends State<IntroScreen> {
                           onTap: () => _goToPage(_totalPages - 1),
                           child: Text(
                             l10n.onboardingSkip,
-                            style: GoogleFonts.ibmPlexSans(
+                            style: AppTypography.ibm(
                               fontSize: 15,
                               fontWeight: FontWeight.w500,
                               color: AppColors.textDisabled,
@@ -158,7 +157,7 @@ class _IntroScreenState extends State<IntroScreen> {
           const SizedBox(height: 16),
           Text(
             subtitle,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               fontSize: 17,
               fontWeight: FontWeight.w400,
               color: AppColors.textDisabled,
@@ -191,7 +190,7 @@ class _IntroScreenState extends State<IntroScreen> {
           const SizedBox(height: 16),
           Text(
             l10n.onboardingReadSubtitle,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               fontSize: 17,
               fontWeight: FontWeight.w400,
               color: AppColors.textDisabled,

@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../design_system/constants/colors.dart';
 import '../../design_system/components/backgrounds/gradient_background.dart';
 import '../../models/club_notification.dart';
 import '../../widgets/sliding_notification.dart';
+import '../../design_system/constants/typography.dart';
+import '../../design_system/constants/decorations.dart';
 
 /// Debug screen to preview and trigger all notification types.
 /// Shows both the sliding overlay and how each notification renders
@@ -182,7 +183,7 @@ class NotificationTesterScreen extends StatelessWidget {
                       const SizedBox(width: 12),
                       Text(
                         'Notification Tester',
-                        style: GoogleFonts.ibmPlexSans(
+                        style: AppTypography.ibm(
                           fontSize: 24,
                           fontWeight: FontWeight.w600,
                           color: Colors.white,
@@ -203,7 +204,7 @@ class NotificationTesterScreen extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                     decoration: BoxDecoration(
                       color: AppColors.buttonPrimary.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                       border: Border.all(
                         color: AppColors.buttonPrimary.withValues(alpha: 0.2),
                       ),
@@ -211,7 +212,7 @@ class NotificationTesterScreen extends StatelessWidget {
                     child: Text(
                       'Tap any notification to trigger the sliding overlay. '
                       'Tap the list icon to preview it as a notification list item.',
-                      style: GoogleFonts.ibmPlexSans(
+                      style: AppTypography.ibm(
                         fontSize: 13,
                         color: AppColors.buttonPrimary,
                         height: 1.4,
@@ -259,7 +260,7 @@ class NotificationTesterScreen extends StatelessWidget {
               height: 40,
               decoration: BoxDecoration(
                 color: mock.iconColor.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
               ),
               child: Icon(
                 mock.icon,
@@ -277,7 +278,7 @@ class NotificationTesterScreen extends StatelessWidget {
                 children: [
                   Text(
                     mock.type.displayName,
-                    style: GoogleFonts.ibmPlexSans(
+                    style: AppTypography.ibm(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
                       color: Colors.white,
@@ -286,7 +287,7 @@ class NotificationTesterScreen extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     mock.title,
-                    style: GoogleFonts.ibmPlexSans(
+                    style: AppTypography.ibm(
                       fontSize: 13,
                       color: AppColors.textDisabled,
                     ),
@@ -303,7 +304,7 @@ class NotificationTesterScreen extends StatelessWidget {
                 height: 36,
                 decoration: BoxDecoration(
                   color: AppColors.surfaceDark,
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(AppDecorations.radius10),
                 ),
                 child: const Icon(
                   Icons.list_alt,
@@ -324,7 +325,7 @@ class NotificationTesterScreen extends StatelessWidget {
       context: context,
       backgroundColor: AppColors.surfaceDark,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppDecorations.radius20)),
       ),
       builder: (context) {
         return Padding(
@@ -347,7 +348,7 @@ class NotificationTesterScreen extends StatelessWidget {
               const SizedBox(height: 16),
               Text(
                 'List Item Preview',
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   fontSize: 17,
                   fontWeight: FontWeight.w600,
                   color: Colors.white,
@@ -356,7 +357,7 @@ class NotificationTesterScreen extends StatelessWidget {
               const SizedBox(height: 4),
               Text(
                 mock.type.displayName,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   fontSize: 13,
                   color: AppColors.textDisabled,
                 ),
@@ -366,7 +367,7 @@ class NotificationTesterScreen extends StatelessWidget {
               // Unread version
               Text(
                 'UNREAD',
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                   color: AppColors.limeGreen,
@@ -381,7 +382,7 @@ class NotificationTesterScreen extends StatelessWidget {
               // Read version
               Text(
                 'READ',
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                   color: AppColors.textDisabled,
@@ -421,7 +422,7 @@ class NotificationTesterScreen extends StatelessWidget {
             children: [
               Text(
                 mock.title,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   fontSize: 17,
                   fontWeight: FontWeight.w500,
                   color: Colors.white,
@@ -431,7 +432,7 @@ class NotificationTesterScreen extends StatelessWidget {
               const SizedBox(height: 3),
               Text(
                 mock.body,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   fontSize: 13,
                   fontWeight: FontWeight.w400,
                   color: const Color(0xFFB3B4B6),
@@ -453,7 +454,7 @@ class NotificationTesterScreen extends StatelessWidget {
             ),
             child: Text(
               'Mark as read',
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
                 color: Colors.black,

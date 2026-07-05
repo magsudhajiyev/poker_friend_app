@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../../services/range_grid_service.dart';
 import '../../design_system/constants/colors.dart';
+import '../../design_system/constants/typography.dart';
+import '../../design_system/constants/decorations.dart';
 
 /// Compact row for one logged hand behind a grid cell: relative date,
 /// preflop line, result. Tappable to open that hand's details.
@@ -38,7 +39,7 @@ class RangeHandRow extends StatelessWidget {
               width: 64,
               child: Text(
                 _relativeDate(l10n),
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
                   color: Colors.white.withValues(alpha: 0.45),
@@ -55,7 +56,7 @@ class RangeHandRow extends StatelessWidget {
               ),
               child: Text(
                 entry.position,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   fontSize: 10,
                   fontWeight: FontWeight.w600,
                   color: Colors.white.withValues(alpha: 0.6),
@@ -66,7 +67,7 @@ class RangeHandRow extends StatelessWidget {
             Expanded(
               child: Text(
                 entry.preflopLine,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                   color: Colors.white,
@@ -83,11 +84,11 @@ class RangeHandRow extends StatelessWidget {
                 color: entry.won
                     ? AppColors.tealPrimary.withValues(alpha: 0.14)
                     : Colors.white.withValues(alpha: 0.06),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
               ),
               child: Text(
                 entry.won ? l10n.rangeWonBB(entry.potBB.round()) : l10n.rangeLostBB(entry.potBB.round()),
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
                   color: entry.won

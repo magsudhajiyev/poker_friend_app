@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../../l10n/app_localizations.dart';
 import '../../design_system/constants/colors.dart';
 import '../../design_system/components/backgrounds/gradient_background.dart';
 import '../../models/support_request.dart';
 import '../../services/support_request_service.dart';
+import '../../design_system/constants/typography.dart';
+import '../../design_system/constants/decorations.dart';
 
 class SupportRequestsScreen extends StatefulWidget {
   const SupportRequestsScreen({super.key});
@@ -67,10 +68,10 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.bgSurface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDecorations.radius20)),
         title: Text(
           l10n.supportRequestsResolveTitle,
-          style: GoogleFonts.ibmPlexSans(color: Colors.white, fontWeight: FontWeight.w600),
+          style: AppTypography.ibm(color: Colors.white, fontWeight: FontWeight.w600),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -78,20 +79,20 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
           children: [
             Text(
               l10n.supportRequestsResolveBody,
-              style: GoogleFonts.ibmPlexSans(color: AppColors.textDisabled, fontSize: 14),
+              style: AppTypography.ibm(color: AppColors.textDisabled, fontSize: 14),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: responseController,
               maxLines: 3,
-              style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 15),
+              style: AppTypography.ibm(color: Colors.white, fontSize: 15),
               decoration: InputDecoration(
                 hintText: l10n.supportRequestsResponseHint,
-                hintStyle: GoogleFonts.ibmPlexSans(color: AppColors.textDisabled),
+                hintStyle: AppTypography.ibm(color: AppColors.textDisabled),
                 filled: true,
                 fillColor: AppColors.bgPrimary,
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                   borderSide: BorderSide.none,
                 ),
               ),
@@ -103,7 +104,7 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
             onPressed: () => Navigator.pop(context, null),
             child: Text(
               l10n.commonCancel,
-              style: GoogleFonts.ibmPlexSans(color: AppColors.textDisabled),
+              style: AppTypography.ibm(color: AppColors.textDisabled),
             ),
           ),
           ElevatedButton(
@@ -111,9 +112,9 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.limeGreen,
               foregroundColor: Colors.black,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDecorations.radius10)),
             ),
-            child: Text(l10n.supportRequestsResolve, style: GoogleFonts.ibmPlexSans(fontWeight: FontWeight.w600)),
+            child: Text(l10n.supportRequestsResolve, style: AppTypography.ibm(fontWeight: FontWeight.w600)),
           ),
         ],
       ),
@@ -131,7 +132,7 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
       _loadRequests();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(l10n.supportRequestsResolved, style: GoogleFonts.ibmPlexSans(color: Colors.white)),
+          content: Text(l10n.supportRequestsResolved, style: AppTypography.ibm(color: Colors.white)),
           backgroundColor: AppColors.limeGreen,
         ),
       );
@@ -139,7 +140,7 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(AppLocalizations.of(context).commonErrorGeneric('$e'), style: GoogleFonts.ibmPlexSans(color: Colors.white)),
+          content: Text(AppLocalizations.of(context).commonErrorGeneric('$e'), style: AppTypography.ibm(color: Colors.white)),
           backgroundColor: AppColors.errorRed,
         ),
       );
@@ -154,10 +155,10 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.bgSurface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDecorations.radius20)),
         title: Text(
           l10n.supportRequestsRejectTitle,
-          style: GoogleFonts.ibmPlexSans(color: Colors.white, fontWeight: FontWeight.w600),
+          style: AppTypography.ibm(color: Colors.white, fontWeight: FontWeight.w600),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -165,20 +166,20 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
           children: [
             Text(
               l10n.supportRequestsRejectBody,
-              style: GoogleFonts.ibmPlexSans(color: AppColors.textDisabled, fontSize: 14),
+              style: AppTypography.ibm(color: AppColors.textDisabled, fontSize: 14),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: reasonController,
               maxLines: 3,
-              style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 15),
+              style: AppTypography.ibm(color: Colors.white, fontSize: 15),
               decoration: InputDecoration(
                 hintText: l10n.supportRequestsRejectHint,
-                hintStyle: GoogleFonts.ibmPlexSans(color: AppColors.textDisabled),
+                hintStyle: AppTypography.ibm(color: AppColors.textDisabled),
                 filled: true,
                 fillColor: AppColors.bgPrimary,
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                   borderSide: BorderSide.none,
                 ),
               ),
@@ -190,7 +191,7 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
             onPressed: () => Navigator.pop(context, null),
             child: Text(
               l10n.commonCancel,
-              style: GoogleFonts.ibmPlexSans(color: AppColors.textDisabled),
+              style: AppTypography.ibm(color: AppColors.textDisabled),
             ),
           ),
           ElevatedButton(
@@ -202,9 +203,9 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.errorRed,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDecorations.radius10)),
             ),
-            child: Text(l10n.supportRequestsReject, style: GoogleFonts.ibmPlexSans(fontWeight: FontWeight.w600)),
+            child: Text(l10n.supportRequestsReject, style: AppTypography.ibm(fontWeight: FontWeight.w600)),
           ),
         ],
       ),
@@ -219,7 +220,7 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
       _loadRequests();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(l10n.supportRequestsRejected, style: GoogleFonts.ibmPlexSans(color: Colors.white)),
+          content: Text(l10n.supportRequestsRejected, style: AppTypography.ibm(color: Colors.white)),
           backgroundColor: AppColors.errorRed,
         ),
       );
@@ -227,7 +228,7 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(AppLocalizations.of(context).commonErrorGeneric('$e'), style: GoogleFonts.ibmPlexSans(color: Colors.white)),
+          content: Text(AppLocalizations.of(context).commonErrorGeneric('$e'), style: AppTypography.ibm(color: Colors.white)),
           backgroundColor: AppColors.errorRed,
         ),
       );
@@ -250,13 +251,13 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.bgSurface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDecorations.radius20)),
         title: Row(
           children: [
             Expanded(
               child: Text(
                 request.subject,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   color: Colors.white,
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
@@ -281,7 +282,7 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
               const SizedBox(height: 12),
               Text(
                 l10n.supportRequestsDescription,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   color: AppColors.textDisabled,
                   fontSize: 12,
                 ),
@@ -292,11 +293,11 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: AppColors.bgPrimary,
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
                 ),
                 child: Text(
                   request.description,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     color: Colors.white,
                     fontSize: 14,
                     height: 1.5,
@@ -307,7 +308,7 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
                 const SizedBox(height: 12),
                 Text(
                   l10n.supportRequestsAdminResponse,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     color: AppColors.textDisabled,
                     fontSize: 12,
                   ),
@@ -320,11 +321,11 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
                     color: request.isResolved
                         ? AppColors.limeGreen.withValues(alpha: 0.1)
                         : AppColors.errorRed.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
                   ),
                   child: Text(
                     request.adminResponse!,
-                    style: GoogleFonts.ibmPlexSans(
+                    style: AppTypography.ibm(
                       color: request.isResolved
                           ? AppColors.limeGreen
                           : AppColors.errorRed,
@@ -341,7 +342,7 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
             onPressed: () => Navigator.pop(context),
             child: Text(
               l10n.commonClose,
-              style: GoogleFonts.ibmPlexSans(color: AppColors.buttonPrimary),
+              style: AppTypography.ibm(color: AppColors.buttonPrimary),
             ),
           ),
           if (request.isPending) ...[
@@ -353,9 +354,9 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.errorRed,
                 foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDecorations.radius10)),
               ),
-              child: Text(l10n.supportRequestsReject, style: GoogleFonts.ibmPlexSans(fontWeight: FontWeight.w600)),
+              child: Text(l10n.supportRequestsReject, style: AppTypography.ibm(fontWeight: FontWeight.w600)),
             ),
             ElevatedButton(
               onPressed: () {
@@ -365,9 +366,9 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.limeGreen,
                 foregroundColor: Colors.black,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDecorations.radius10)),
               ),
-              child: Text(l10n.supportRequestsResolve, style: GoogleFonts.ibmPlexSans(fontWeight: FontWeight.w600)),
+              child: Text(l10n.supportRequestsResolve, style: AppTypography.ibm(fontWeight: FontWeight.w600)),
             ),
           ],
         ],
@@ -385,7 +386,7 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
             width: 80,
             child: Text(
               label,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 color: AppColors.textDisabled,
                 fontSize: 13,
               ),
@@ -394,7 +395,7 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
           Expanded(
             child: Text(
               value,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 color: Colors.white,
                 fontSize: 13,
               ),
@@ -468,7 +469,7 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
           const SizedBox(width: 12),
           Text(
             AppLocalizations.of(context).supportRequestsTitle,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               fontSize: 24,
               fontWeight: FontWeight.w600,
               color: Colors.white,
@@ -487,22 +488,22 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
       margin: const EdgeInsets.fromLTRB(20, 20, 20, 0),
       decoration: BoxDecoration(
         color: AppColors.bgSurface,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
       ),
       child: TabBar(
         controller: _tabController,
         indicator: BoxDecoration(
           color: AppColors.buttonPrimary,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(AppDecorations.radius10),
         ),
         indicatorSize: TabBarIndicatorSize.tab,
         labelColor: Colors.black,
         unselectedLabelColor: AppColors.textDisabled,
-        labelStyle: GoogleFonts.ibmPlexSans(
+        labelStyle: AppTypography.ibm(
           fontSize: 13,
           fontWeight: FontWeight.w600,
         ),
-        unselectedLabelStyle: GoogleFonts.ibmPlexSans(
+        unselectedLabelStyle: AppTypography.ibm(
           fontSize: 13,
           fontWeight: FontWeight.w500,
         ),
@@ -527,7 +528,7 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
                     ),
                     child: Text(
                       '$pendingCount',
-                      style: GoogleFonts.ibmPlexSans(
+                      style: AppTypography.ibm(
                         fontSize: 10,
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
@@ -560,7 +561,7 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
             const SizedBox(height: 16),
             Text(
               AppLocalizations.of(context).supportRequestsNoRequests,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 color: AppColors.textDisabled,
                 fontSize: 16,
               ),
@@ -585,7 +586,7 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: AppColors.bgSurface,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
           border: Border.all(color: AppColors.separatorDark, width: 1),
         ),
         child: Column(
@@ -601,7 +602,7 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
             const SizedBox(height: 10),
             Text(
               request.subject,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 color: Colors.white,
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
@@ -612,7 +613,7 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
             const SizedBox(height: 4),
             Text(
               request.description,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 color: AppColors.textDisabled,
                 fontSize: 13,
                 height: 1.4,
@@ -627,7 +628,7 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
                 const SizedBox(width: 4),
                 Text(
                   request.userName,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     color: AppColors.textDisabled,
                     fontSize: 12,
                   ),
@@ -635,7 +636,7 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
                 const Spacer(),
                 Text(
                   DateFormat('MMM d, HH:mm').format(request.submittedAt),
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     color: AppColors.textDisabled,
                     fontSize: 12,
                   ),
@@ -652,13 +653,13 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
                       child: Container(
                         padding: const EdgeInsets.symmetric(vertical: 8),
                         decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(AppDecorations.radius10),
                           border: Border.all(color: AppColors.errorRed),
                         ),
                         child: Center(
                           child: Text(
                             AppLocalizations.of(context).supportRequestsReject,
-                            style: GoogleFonts.ibmPlexSans(
+                            style: AppTypography.ibm(
                               color: AppColors.errorRed,
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
@@ -676,12 +677,12 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
                         padding: const EdgeInsets.symmetric(vertical: 8),
                         decoration: BoxDecoration(
                           color: AppColors.limeGreen,
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(AppDecorations.radius10),
                         ),
                         child: Center(
                           child: Text(
                             AppLocalizations.of(context).supportRequestsResolve,
-                            style: GoogleFonts.ibmPlexSans(
+                            style: AppTypography.ibm(
                               color: Colors.black,
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
@@ -724,7 +725,7 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
       ),
       child: Text(
         category,
-        style: GoogleFonts.ibmPlexSans(
+        style: AppTypography.ibm(
           color: color,
           fontSize: 11,
           fontWeight: FontWeight.w600,
@@ -761,7 +762,7 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
       ),
       child: Text(
         label,
-        style: GoogleFonts.ibmPlexSans(
+        style: AppTypography.ibm(
           color: color,
           fontSize: 10,
           fontWeight: FontWeight.w700,

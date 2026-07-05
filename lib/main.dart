@@ -32,6 +32,7 @@ import 'design_system/poker_friend_theme.dart';
 import 'screens/club/event_detail_screen.dart';
 import 'screens/club/club_dashboard_screen.dart';
 import 'screens/admin/club_requests_screen.dart';
+import 'design_system/constants/decorations.dart';
 
 /// Global navigator key for deep linking
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -194,7 +195,7 @@ void _showInvitationAcceptedNotification(String clubName) {
       duration: const Duration(seconds: 4),
       behavior: SnackBarBehavior.floating,
       margin: const EdgeInsets.all(16),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDecorations.radiusMd)),
     ),
   );
 }

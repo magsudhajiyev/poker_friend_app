@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'dart:ui' as ui;
 import 'package:fl_chart/fl_chart.dart';
 import '../models/game_types.dart';
@@ -19,6 +18,8 @@ import 'paywall_screen.dart';
 import '../l10n/app_localizations.dart';
 import '../services/currency_service.dart';
 import '../design_system/constants/colors.dart';
+import '../design_system/constants/typography.dart';
+import '../design_system/constants/decorations.dart';
 
 
 class SessionAnalyticsScreen extends StatefulWidget {
@@ -61,17 +62,17 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: const Color(0xFF1A1A2E),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDecorations.radiusLg)),
         title: Text(
           AppLocalizations.of(ctx).sessionAnalyticsDeleteTitle,
-          style: GoogleFonts.ibmPlexSans(
+          style: AppTypography.ibm(
             color: Colors.white,
             fontWeight: FontWeight.w600,
           ),
         ),
         content: Text(
           AppLocalizations.of(ctx).sessionAnalyticsDeleteMessage,
-          style: GoogleFonts.ibmPlexSans(
+          style: AppTypography.ibm(
             color: Colors.white.withValues(alpha: 0.8),
           ),
         ),
@@ -80,14 +81,14 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
             onPressed: () => Navigator.pop(ctx, false),
             child: Text(
               AppLocalizations.of(ctx).commonCancel,
-              style: GoogleFonts.ibmPlexSans(color: Colors.white54),
+              style: AppTypography.ibm(color: Colors.white54),
             ),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             child: Text(
               AppLocalizations.of(ctx).commonDelete,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 color: const Color(0xFFFF6B6B),
                 fontWeight: FontWeight.w600,
               ),
@@ -115,7 +116,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
           SnackBar(
             content: Text(
               AppLocalizations.of(context).sessionAnalyticsDeleted,
-              style: GoogleFonts.ibmPlexSans(color: Colors.white),
+              style: AppTypography.ibm(color: Colors.white),
             ),
             backgroundColor: const Color(0xFF1A1A2E),
           ),
@@ -128,7 +129,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
           SnackBar(
             content: Text(
               AppLocalizations.of(context).sessionAnalyticsFailedToDelete,
-              style: GoogleFonts.ibmPlexSans(color: Colors.white),
+              style: AppTypography.ibm(color: Colors.white),
             ),
             backgroundColor: const Color(0xFFFF6B6B),
           ),
@@ -178,10 +179,10 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
           context: context,
           builder: (ctx) => AlertDialog(
             backgroundColor: AppColors.infoCardBg,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDecorations.radius18)),
             title: Text(
               l10n.quotaExportLimitTitle,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 color: Colors.white,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -189,7 +190,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
             ),
             content: Text(
               l10n.quotaSessionExportLimitPro(_maxMonthlySessionExportsPro),
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 color: Colors.white.withValues(alpha: 0.5),
                 fontSize: 14,
                 height: 1.5,
@@ -203,7 +204,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
                 },
                 child: Text(
                   l10n.quotaUpgradeToElite,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     color: AppColors.buttonPrimary,
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -214,7 +215,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
                 onPressed: () => Navigator.pop(ctx),
                 child: Text(
                   l10n.quotaOk,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     color: AppColors.buttonPrimary,
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -252,17 +253,17 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: const Color(0xFF1A1A2E),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDecorations.radiusLg)),
         title: Text(
           AppLocalizations.of(ctx).sessionAnalyticsExportSession,
-          style: GoogleFonts.ibmPlexSans(
+          style: AppTypography.ibm(
             color: Colors.white,
             fontWeight: FontWeight.w600,
           ),
         ),
         content: Text(
           AppLocalizations.of(ctx).sessionAnalyticsExportConfirm(_hands.length, email),
-          style: GoogleFonts.ibmPlexSans(
+          style: AppTypography.ibm(
             color: Colors.white.withValues(alpha: 0.8),
           ),
         ),
@@ -271,14 +272,14 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
             onPressed: () => Navigator.pop(ctx, false),
             child: Text(
               AppLocalizations.of(ctx).commonCancel,
-              style: GoogleFonts.ibmPlexSans(color: Colors.white54),
+              style: AppTypography.ibm(color: Colors.white54),
             ),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             child: Text(
               AppLocalizations.of(ctx).sessionAnalyticsExport,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 color: AppColors.buttonPrimary,
                 fontWeight: FontWeight.w600,
               ),
@@ -582,7 +583,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
                           children: [
                             Text(
                               l10n.sessionAnalyticsTitle,
-                              style: GoogleFonts.ibmPlexSans(
+                              style: AppTypography.ibm(
                                 fontSize: 20,
                                 color: Colors.white,
                                 fontWeight: FontWeight.w600,
@@ -593,7 +594,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
                             const SizedBox(height: 2),
                             Text(
                               l10n.sessionAnalyticsHandsLogged(widget.sessionData['handsLogged'] ?? widget.sessionData['totalHands'] ?? _hands.length),
-                              style: GoogleFonts.ibmPlexSans(
+                              style: AppTypography.ibm(
                                 fontSize: 15,
                                 color: Colors.white.withOpacity(0.6),
                                 fontWeight: FontWeight.w400,
@@ -694,7 +695,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.infoCardBg,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(AppDecorations.radius18),
       ),
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -703,7 +704,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
           // Session name
           Text(
             widget.sessionData['sessionName'] ?? l10n.sessionAnalyticsPokerSession,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               fontSize: 17,
               fontWeight: FontWeight.w600,
               color: Colors.white,
@@ -776,7 +777,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
               children: [
                 Text(
                   _isCashGame() ? l10n.sessionAnalyticsAddons : l10n.sessionAnalyticsRebuys,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     fontSize: 15,
                     fontWeight: FontWeight.w400,
                     color: Colors.white.withOpacity(0.8),
@@ -785,7 +786,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
                 ),
                 Text(
                   '${_rebuys.length}',
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
                     color: AppColors.buttonPrimary,
@@ -805,14 +806,14 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             title,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               color: Colors.white.withOpacity(0.4),
               fontSize: 12,
               fontWeight: FontWeight.w500,
@@ -821,7 +822,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
           const SizedBox(height: 6),
           Text(
             value,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               color: valueColor ?? Colors.white,
               fontSize: 16,
               fontWeight: FontWeight.w600,
@@ -837,7 +838,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.infoCardBg,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(AppDecorations.radius18),
       ),
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -848,7 +849,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
               Expanded(
                 child: Text(
                   l10n.sessionAnalyticsStackChart,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     fontSize: 17,
                     fontWeight: FontWeight.w600,
                     color: Colors.white,
@@ -956,7 +957,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
                   getTitlesWidget: (double value, TitleMeta meta) {
                     return Text(
                       _formatCurrency(value),
-                      style: GoogleFonts.robotoMono(
+                      style: AppTypography.mono(
                         color: Colors.white.withOpacity(0.3),
                         fontSize: 10,
                       ),
@@ -998,7 +999,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
                       space: 8.0,
                       child: Text(
                         label,
-                        style: GoogleFonts.ibmPlexSans(
+                        style: AppTypography.ibm(
                           color: Colors.white.withOpacity(0.3),
                           fontSize: 10,
                         ),
@@ -1079,7 +1080,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
                       if (detail != stackValue) {
                         return LineTooltipItem(
                           detail,
-                          GoogleFonts.ibmPlexSans(
+                          AppTypography.ibm(
                             color: Colors.white,
                             fontSize: 13,
                             fontWeight: FontWeight.w500,
@@ -1090,7 +1091,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
 
                     return LineTooltipItem(
                       stackValue,
-                      GoogleFonts.ibmPlexSans(
+                      AppTypography.ibm(
                         color: Colors.white,
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
@@ -1191,7 +1192,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
           const SizedBox(height: 12),
           Text(
             l10n.sessionAnalyticsNoStackHistory,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               color: Colors.white.withOpacity(0.4),
               fontSize: 15,
               fontWeight: FontWeight.w500,
@@ -1200,7 +1201,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
           const SizedBox(height: 4),
           Text(
             l10n.sessionAnalyticsStackTrackedFuture,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               color: Colors.white.withOpacity(0.25),
               fontSize: 13,
             ),
@@ -1218,12 +1219,12 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
         height: 52,
         decoration: BoxDecoration(
           color: AppColors.buttonPrimary,
-          borderRadius: BorderRadius.circular(60),
+          borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
         ),
         child: Center(
           child: Text(
             AppLocalizations.of(context).sessionAnalyticsViewLoggedHands,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               fontSize: 17,
               fontWeight: FontWeight.w600,
               color: Colors.black,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../design_system/constants/colors.dart';
+import '../design_system/constants/typography.dart';
+import '../design_system/constants/decorations.dart';
 
 class NoTransitionsBuilder extends PageTransitionsBuilder {
   const NoTransitionsBuilder();
@@ -17,7 +18,7 @@ class NoTransitionsBuilder extends PageTransitionsBuilder {
 
 class AppTheme {
   // IBM Plex Sans base text style
-  static TextStyle get _baseTextStyle => GoogleFonts.ibmPlexSans(
+  static TextStyle get _baseTextStyle => AppTypography.ibm(
     fontSize: 17,
     fontWeight: FontWeight.w400,
     color: Colors.white,
@@ -33,7 +34,7 @@ class AppTheme {
         },
       ),
       // Set IBM Plex Sans as the default font family
-      fontFamily: GoogleFonts.ibmPlexSans().fontFamily,
+      fontFamily: AppTypography.ibm().fontFamily,
       colorScheme: ColorScheme.fromSeed(
         seedColor: const Color(0xFF1B4332),
         brightness: Brightness.dark,
@@ -49,83 +50,83 @@ class AppTheme {
       scaffoldBackgroundColor: Colors.black,
       textTheme: TextTheme(
         // Display styles
-        displayLarge: GoogleFonts.ibmPlexSans(
+        displayLarge: AppTypography.ibm(
           fontSize: 32,
           fontWeight: FontWeight.w700,
           color: Colors.white,
         ),
-        displayMedium: GoogleFonts.ibmPlexSans(
+        displayMedium: AppTypography.ibm(
           fontSize: 28,
           fontWeight: FontWeight.w600,
           color: Colors.white,
         ),
-        displaySmall: GoogleFonts.ibmPlexSans(
+        displaySmall: AppTypography.ibm(
           fontSize: 24,
           fontWeight: FontWeight.w600,
           color: Colors.white,
         ),
         // Headline styles
-        headlineLarge: GoogleFonts.ibmPlexSans(
+        headlineLarge: AppTypography.ibm(
           fontSize: 24,
           fontWeight: FontWeight.w600,
           color: Colors.white,
         ),
-        headlineMedium: GoogleFonts.ibmPlexSans(
+        headlineMedium: AppTypography.ibm(
           fontSize: 20,
           fontWeight: FontWeight.w600,
           color: Colors.white,
         ),
-        headlineSmall: GoogleFonts.ibmPlexSans(
+        headlineSmall: AppTypography.ibm(
           fontSize: 17,
           fontWeight: FontWeight.w600,
           color: Colors.white,
           letterSpacing: -0.43,
         ),
         // Title styles
-        titleLarge: GoogleFonts.ibmPlexSans(
+        titleLarge: AppTypography.ibm(
           fontSize: 20,
           fontWeight: FontWeight.w600,
           color: Colors.white,
         ),
-        titleMedium: GoogleFonts.ibmPlexSans(
+        titleMedium: AppTypography.ibm(
           fontSize: 17,
           fontWeight: FontWeight.w600,
           color: Colors.white,
           letterSpacing: -0.43,
         ),
-        titleSmall: GoogleFonts.ibmPlexSans(
+        titleSmall: AppTypography.ibm(
           fontSize: 15,
           fontWeight: FontWeight.w600,
           color: Colors.white,
         ),
         // Body styles - base 17px
-        bodyLarge: GoogleFonts.ibmPlexSans(
+        bodyLarge: AppTypography.ibm(
           fontSize: 17,
           fontWeight: FontWeight.w400,
           color: Colors.white,
         ),
-        bodyMedium: GoogleFonts.ibmPlexSans(
+        bodyMedium: AppTypography.ibm(
           fontSize: 15,
           fontWeight: FontWeight.w400,
           color: Colors.white,
         ),
-        bodySmall: GoogleFonts.ibmPlexSans(
+        bodySmall: AppTypography.ibm(
           fontSize: 14,
           fontWeight: FontWeight.w400,
           color: Colors.white.withOpacity(0.7),
         ),
         // Label styles
-        labelLarge: GoogleFonts.ibmPlexSans(
+        labelLarge: AppTypography.ibm(
           fontSize: 17,
           fontWeight: FontWeight.w600,
           color: Colors.white,
         ),
-        labelMedium: GoogleFonts.ibmPlexSans(
+        labelMedium: AppTypography.ibm(
           fontSize: 14,
           fontWeight: FontWeight.w500,
           color: Colors.white,
         ),
-        labelSmall: GoogleFonts.ibmPlexSans(
+        labelSmall: AppTypography.ibm(
           fontSize: 12,
           fontWeight: FontWeight.w400,
           color: Colors.white.withOpacity(0.7),
@@ -140,7 +141,7 @@ class AppTheme {
             borderRadius: BorderRadius.circular(110),
           ),
           elevation: 0,
-          textStyle: GoogleFonts.ibmPlexSans(
+          textStyle: AppTypography.ibm(
             fontSize: 17,
             fontWeight: FontWeight.w600,
             letterSpacing: -0.43,
@@ -150,7 +151,7 @@ class AppTheme {
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: AppColors.buttonPrimary,
-          textStyle: GoogleFonts.ibmPlexSans(
+          textStyle: AppTypography.ibm(
             fontSize: 17,
             fontWeight: FontWeight.w500,
           ),
@@ -160,29 +161,29 @@ class AppTheme {
         filled: true,
         fillColor: const Color(0xFF3C3C43).withOpacity(0.18),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
           borderSide: BorderSide(
             color: AppColors.buttonPrimary.withOpacity(0.2),
           ),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
           borderSide: BorderSide(
             color: AppColors.buttonPrimary.withOpacity(0.2),
           ),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
           borderSide: const BorderSide(
             color: AppColors.buttonPrimary,
           ),
         ),
-        hintStyle: GoogleFonts.ibmPlexSans(
+        hintStyle: AppTypography.ibm(
           fontSize: 17,
           fontWeight: FontWeight.w400,
           color: Colors.white.withOpacity(0.5),
         ),
-        labelStyle: GoogleFonts.ibmPlexSans(
+        labelStyle: AppTypography.ibm(
           fontSize: 17,
           fontWeight: FontWeight.w400,
           color: Colors.white,
@@ -201,7 +202,7 @@ class AppTheme {
         foregroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
-        titleTextStyle: GoogleFonts.ibmPlexSans(
+        titleTextStyle: AppTypography.ibm(
           fontSize: 17,
           fontWeight: FontWeight.w600,
           color: Colors.white,
@@ -211,26 +212,26 @@ class AppTheme {
         backgroundColor: AppColors.infoCardBg,
         selectedItemColor: AppColors.tealPrimary,
         unselectedItemColor: Colors.white.withOpacity(0.5),
-        selectedLabelStyle: GoogleFonts.ibmPlexSans(
+        selectedLabelStyle: AppTypography.ibm(
           fontSize: 12,
           fontWeight: FontWeight.w500,
         ),
-        unselectedLabelStyle: GoogleFonts.ibmPlexSans(
+        unselectedLabelStyle: AppTypography.ibm(
           fontSize: 12,
           fontWeight: FontWeight.w400,
         ),
       ),
       dialogTheme: DialogThemeData(
-        backgroundColor: const Color(0xFF1A1A1E),
+        backgroundColor: AppColors.surfaceVariant4,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(AppDecorations.radius20),
         ),
-        titleTextStyle: GoogleFonts.ibmPlexSans(
+        titleTextStyle: AppTypography.ibm(
           fontSize: 17,
           fontWeight: FontWeight.w600,
           color: Colors.white,
         ),
-        contentTextStyle: GoogleFonts.ibmPlexSans(
+        contentTextStyle: AppTypography.ibm(
           fontSize: 15,
           fontWeight: FontWeight.w400,
           color: Colors.white,
@@ -238,14 +239,14 @@ class AppTheme {
       ),
       snackBarTheme: SnackBarThemeData(
         backgroundColor: AppColors.tealPrimary,
-        contentTextStyle: GoogleFonts.ibmPlexSans(
+        contentTextStyle: AppTypography.ibm(
           fontSize: 14,
           fontWeight: FontWeight.w500,
           color: Colors.black,
         ),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
         ),
       ),
     );

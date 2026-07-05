@@ -4,6 +4,7 @@ import 'dart:convert';
 import '../l10n/app_localizations.dart';
 import '../services/firebase_service.dart';
 import '../services/currency_service.dart';
+import '../design_system/constants/colors.dart';
 
 /// Debug screen to fetch and analyze specific hands from Firebase
 /// This helps diagnose position calculation bugs
@@ -292,9 +293,9 @@ class _DebugHandViewerScreenState extends State<DebugHandViewerScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFF161618),
+      backgroundColor: AppColors.surfaceVariant1,
       appBar: AppBar(
-        backgroundColor: Color(0xFF1F1F23),
+        backgroundColor: AppColors.surfaceVariant2,
         title: Text(AppLocalizations.of(context).debugHandViewerTitle, style: TextStyle(color: Colors.white)),
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.white),
@@ -306,7 +307,7 @@ class _DebugHandViewerScreenState extends State<DebugHandViewerScreen> {
           // Input section
           Container(
             padding: EdgeInsets.all(16),
-            color: Color(0xFF1F1F23),
+            color: AppColors.surfaceVariant2,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [

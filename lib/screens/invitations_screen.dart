@@ -4,6 +4,7 @@ import '../l10n/app_localizations.dart';
 import '../models/club_invitation.dart';
 import '../models/club_member.dart';
 import '../services/invitation_service.dart';
+import '../design_system/constants/decorations.dart';
 
 /// Screen to display and manage pending club invitations
 class InvitationsScreen extends StatefulWidget {
@@ -138,7 +139,7 @@ class _InvitationsScreenState extends State<InvitationsScreen> {
             height: 80,
             decoration: BoxDecoration(
               color: PokerFriendColors.dark3,
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(AppDecorations.radius20),
             ),
             child: Icon(
               Icons.mail_outline,
@@ -199,7 +200,7 @@ class _InvitationsScreenState extends State<InvitationsScreen> {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: PokerFriendColors.dark3,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppDecorations.radius20),
         border: Border.all(
           color: PokerFriendColors.purple.withValues(alpha: 0.3),
         ),
@@ -216,7 +217,7 @@ class _InvitationsScreenState extends State<InvitationsScreen> {
                 height: 50,
                 decoration: BoxDecoration(
                   color: PokerFriendColors.purple.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(AppDecorations.radius14),
                 ),
                 child: Icon(
                   Icons.business,
@@ -318,7 +319,7 @@ class _InvitationsScreenState extends State<InvitationsScreen> {
                   style: OutlinedButton.styleFrom(
                     side: BorderSide(color: PokerFriendColors.dark7),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                     ),
                     padding: const EdgeInsets.symmetric(vertical: 14),
                   ),
@@ -341,7 +342,7 @@ class _InvitationsScreenState extends State<InvitationsScreen> {
                     backgroundColor: PokerFriendColors.purple,
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                     ),
                     padding: const EdgeInsets.symmetric(vertical: 14),
                   ),

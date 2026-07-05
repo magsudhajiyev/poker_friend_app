@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/typography.dart';
@@ -8,6 +7,7 @@ import '../models/poker_game_state.dart'; // PlayerAction, BettingRound
 import 'onboarding_state.dart';
 import 'onboarding_prefs.dart';
 import 'onboarding_tour.dart'; // buildTooltip
+import '../design_system/constants/decorations.dart';
 
 
 // ---------------------------------------------------------------------------
@@ -803,7 +803,7 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(40),
+          borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
           border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
         ),
         child: Text(AppLocalizations.of(context).guidedSkip, style: AppTypography.bodySmall(color: Colors.white70).copyWith(fontSize: 15)),
@@ -997,7 +997,7 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
               padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
               decoration: BoxDecoration(
                 color: AppColors.surfaceDark,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                 border: Border.all(
                   color: isHero
                       ? AppColors.buttonPrimary.withValues(alpha: 0.6)
@@ -1024,7 +1024,7 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
                       Expanded(
                         child: Text(
                           instruction.title,
-                          style: GoogleFonts.ibmPlexSans(
+                          style: AppTypography.ibm(
                             color: isHero ? AppColors.buttonPrimary : Colors.white,
                             fontSize: 18,
                             fontWeight: FontWeight.w600,
@@ -1036,7 +1036,7 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(40),
+                            borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
                             border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
                           ),
                           child: Text(
@@ -1052,7 +1052,7 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
                   // Body text
                   Text(
                     instruction.body,
-                    style: GoogleFonts.ibmPlexSans(
+                    style: AppTypography.ibm(
                       color: Colors.white.withValues(alpha: 0.8),
                       fontSize: 15,
                       height: 1.5,
@@ -1064,11 +1064,11 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
                         color: AppColors.buttonPrimary.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
                       ),
                       child: Text(
                         instruction.gestureHint,
-                        style: GoogleFonts.ibmPlexSans(
+                        style: AppTypography.ibm(
                           color: AppColors.buttonPrimary,
                           fontSize: 14,
                           fontWeight: FontWeight.w600,

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../l10n/app_localizations.dart';
 import '../design_system/constants/colors.dart';
+import '../design_system/constants/typography.dart';
 
 /// A snap point for the raise slider.
 class SnapPoint {
@@ -79,7 +79,7 @@ class RaiseSnapOverlay extends StatelessWidget {
                     children: [
                       Text(
                         actionLabel,
-                        style: GoogleFonts.ibmPlexSans(
+                        style: AppTypography.ibm(
                           fontSize: 13,
                           color: Colors.white.withValues(alpha: 0.5),
                           fontWeight: FontWeight.w500,
@@ -89,7 +89,7 @@ class RaiseSnapOverlay extends StatelessWidget {
                       const SizedBox(height: 2),
                       Text(
                         formattedAmount,
-                        style: GoogleFonts.robotoMono(
+                        style: AppTypography.mono(
                           fontSize: 32,
                           color: AppColors.buttonPrimary,
                           fontWeight: FontWeight.w700,
@@ -98,7 +98,7 @@ class RaiseSnapOverlay extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(
                         l10n.raiseSnapReleaseToType,
-                        style: GoogleFonts.ibmPlexSans(
+                        style: AppTypography.ibm(
                           fontSize: 11,
                           color: Colors.white.withValues(alpha: 0.3),
                           fontWeight: FontWeight.w400,
@@ -187,7 +187,7 @@ class RaiseSnapOverlay extends StatelessWidget {
                   // Label
                   Text(
                     label,
-                    style: GoogleFonts.ibmPlexSans(
+                    style: AppTypography.ibm(
                       fontSize: isActive ? 15 : (isKeyPoint ? 13 : 11),
                       color: isActive
                           ? AppColors.buttonPrimary

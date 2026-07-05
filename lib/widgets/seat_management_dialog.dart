@@ -8,6 +8,7 @@ import '../services/free_tier_limits.dart';
 import '../services/opponent_service.dart';
 import '../models/opponent.dart';
 import '../design_system/constants/colors.dart';
+import '../design_system/constants/decorations.dart';
 
 class SeatManagementDialog extends StatefulWidget {
   final int playerCount;
@@ -147,8 +148,8 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
         child: Container(
           constraints: BoxConstraints(maxWidth: 320),
           decoration: BoxDecoration(
-            color: Color(0xFF161618),
-            borderRadius: BorderRadius.circular(20),
+            color: AppColors.surfaceVariant1,
+            borderRadius: BorderRadius.circular(AppDecorations.radius20),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -157,10 +158,10 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
               Container(
                 padding: EdgeInsets.fromLTRB(24, 24, 24, 16),
                 decoration: BoxDecoration(
-                  color: Color(0xFF1F1F23),
+                  color: AppColors.surfaceVariant2,
                   borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(20),
-                    topRight: Radius.circular(20),
+                    topLeft: Radius.circular(AppDecorations.radius20),
+                    topRight: Radius.circular(AppDecorations.radius20),
                   ),
                 ),
                 child: Row(
@@ -170,7 +171,7 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
                       height: 36,
                       decoration: BoxDecoration(
                         color: AppColors.profitGreen.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(AppDecorations.radius10),
                       ),
                       child: Icon(
                         Icons.person_add,
@@ -211,8 +212,8 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
                       child: Container(
                         height: 44,
                         decoration: BoxDecoration(
-                          color: Color(0xFF1F1F23),
-                          borderRadius: BorderRadius.circular(12),
+                          color: AppColors.surfaceVariant2,
+                          borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                         ),
                         child: TextButton(
                           onPressed: () {
@@ -242,7 +243,7 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                           ),
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                         ),
                         child: ElevatedButton(
                           onPressed: () async {
@@ -299,7 +300,7 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
                             backgroundColor: Colors.transparent,
                             shadowColor: Colors.transparent,
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                             ),
                           ),
                           child: Text(
@@ -428,8 +429,8 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
           maxWidth: 420,
         ),
         decoration: BoxDecoration(
-          color: Color(0xFF161618),
-          borderRadius: BorderRadius.circular(24),
+          color: AppColors.surfaceVariant1,
+          borderRadius: BorderRadius.circular(AppDecorations.radiusXl),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -438,10 +439,10 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
             Container(
               padding: EdgeInsets.fromLTRB(24, 24, 24, 16),
               decoration: BoxDecoration(
-                color: Color(0xFF1F1F23),
+                color: AppColors.surfaceVariant2,
                 borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(24),
-                  topRight: Radius.circular(24),
+                  topLeft: Radius.circular(AppDecorations.radiusXl),
+                  topRight: Radius.circular(AppDecorations.radiusXl),
                 ),
               ),
               child: Row(
@@ -451,7 +452,7 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
                     height: 40,
                     decoration: BoxDecoration(
                       color: AppColors.profitGreen.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                     ),
                     child: Icon(
                       Icons.group_outlined,
@@ -506,8 +507,8 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
                       Container(
                         padding: EdgeInsets.all(20),
                         decoration: BoxDecoration(
-                          color: Color(0xFF1F1F23),
-                          borderRadius: BorderRadius.circular(16),
+                          color: AppColors.surfaceVariant2,
+                          borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -552,14 +553,14 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
                                             ? Color(0xFF0A0A0C)
                                             : isSelected
                                             ? AppColors.profitGreen
-                                            : Color(0xFF161618),
-                                        borderRadius: BorderRadius.circular(12),
+                                            : AppColors.surfaceVariant1,
+                                        borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                                         border: Border.all(
                                           color: !isActive
-                                              ? Color(0xFF1A1A1E)
+                                              ? AppColors.surfaceVariant4
                                               : isSelected
                                               ? AppColors.profitGreen
-                                              : Color(0xFF2A2A2E),
+                                              : AppColors.surfaceVariant3,
                                           width: 1,
                                         ),
                                       ),
@@ -597,8 +598,8 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
                             decoration: BoxDecoration(
                               color: isSelected 
                                   ? AppColors.profitGreen.withOpacity(0.1)
-                                  : Color(0xFF1F1F23),
-                              borderRadius: BorderRadius.circular(16),
+                                  : AppColors.surfaceVariant2,
+                              borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
                               border: isSelected 
                                   ? Border.all(color: AppColors.profitGreen, width: 1)
                                   : null,
@@ -617,10 +618,10 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
                                           height: 24,
                                           margin: EdgeInsets.only(right: 12),
                                           decoration: BoxDecoration(
-                                            color: isSelected ? AppColors.profitGreen : Color(0xFF161618),
-                                            borderRadius: BorderRadius.circular(12),
+                                            color: isSelected ? AppColors.profitGreen : AppColors.surfaceVariant1,
+                                            borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                                             border: Border.all(
-                                              color: isSelected ? AppColors.profitGreen : Color(0xFF2A2A2E),
+                                              color: isSelected ? AppColors.profitGreen : AppColors.surfaceVariant3,
                                             ),
                                           ),
                                           child: InkWell(
@@ -630,7 +631,7 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
                                                 _autoInsertUsernameForSeat(seatNumber);
                                               });
                                             },
-                                            borderRadius: BorderRadius.circular(12),
+                                            borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                                             child: Center(
                                               child: isSelected 
                                                   ? Icon(Icons.check, color: Colors.white, size: 16)
@@ -661,7 +662,7 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
                                                         padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                                                         decoration: BoxDecoration(
                                                           color: Colors.orange,
-                                                          borderRadius: BorderRadius.circular(8),
+                                                          borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
                                                         ),
                                                         child: Text(
                                                           'BTN',
@@ -696,7 +697,7 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
                                             value: isActive,
                                             activeColor: AppColors.profitGreen,
                                             inactiveThumbColor: Colors.white,
-                                            inactiveTrackColor: Color(0xFF2A2A2E),
+                                            inactiveTrackColor: AppColors.surfaceVariant3,
                                             onChanged: (value) {
                                               setState(() {
                                                 seatActive[seatNumber] = value;
@@ -759,9 +760,9 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
                                             
                                             return Container(
                                               decoration: BoxDecoration(
-                                                color: Color(0xFF161618),
-                                                borderRadius: BorderRadius.circular(12),
-                                                border: Border.all(color: Color(0xFF2A2A2E)),
+                                                color: AppColors.surfaceVariant1,
+                                                borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
+                                                border: Border.all(color: AppColors.surfaceVariant3),
                                               ),
                                               child: TextField(
                                                 controller: controller,
@@ -796,13 +797,13 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
                                               alignment: Alignment.topLeft,
                                               child: Material(
                                                 elevation: 8,
-                                                borderRadius: BorderRadius.circular(12),
-                                                color: Color(0xFF1F1F23),
+                                                borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
+                                                color: AppColors.surfaceVariant2,
                                                 child: Container(
                                                   constraints: BoxConstraints(maxHeight: 200, maxWidth: 300),
                                                   decoration: BoxDecoration(
-                                                    borderRadius: BorderRadius.circular(12),
-                                                    border: Border.all(color: Color(0xFF2A2A2E)),
+                                                    borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
+                                                    border: Border.all(color: AppColors.surfaceVariant3),
                                                   ),
                                                   child: ListView.builder(
                                                     padding: EdgeInsets.all(8),
@@ -824,8 +825,8 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
                                                       return Container(
                                                         margin: EdgeInsets.only(bottom: 4),
                                                         decoration: BoxDecoration(
-                                                          color: Color(0xFF161618),
-                                                          borderRadius: BorderRadius.circular(8),
+                                                          color: AppColors.surfaceVariant1,
+                                                          borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
                                                         ),
                                                         child: ListTile(
                                                           dense: true,
@@ -869,7 +870,7 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
                                               decoration: BoxDecoration(
                                                 color: AppColors.profitGreen.withOpacity(0.1),
                                                 border: Border.all(color: AppColors.profitGreen.withOpacity(0.3)),
-                                                borderRadius: BorderRadius.circular(8),
+                                                borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
                                               ),
                                               child: Row(
                                                 children: [
@@ -892,9 +893,9 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
                                         SizedBox(height: 16),
                                         Container(
                                           decoration: BoxDecoration(
-                                            color: Color(0xFF161618),
-                                            borderRadius: BorderRadius.circular(12),
-                                            border: Border.all(color: Color(0xFF2A2A2E)),
+                                            color: AppColors.surfaceVariant1,
+                                            borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
+                                            border: Border.all(color: AppColors.surfaceVariant3),
                                           ),
                                           child: TextField(
                                             controller: stackControllers[seatNumber],
@@ -950,10 +951,10 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
             Container(
               padding: EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: Color(0xFF1F1F23),
+                color: AppColors.surfaceVariant2,
                 borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(24),
-                  bottomRight: Radius.circular(24),
+                  bottomLeft: Radius.circular(AppDecorations.radiusXl),
+                  bottomRight: Radius.circular(AppDecorations.radiusXl),
                 ),
               ),
               child: Row(
@@ -962,16 +963,16 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
                     child: Container(
                       height: 48,
                       decoration: BoxDecoration(
-                        color: Color(0xFF161618),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Color(0xFF2A2A2E)),
+                        color: AppColors.surfaceVariant1,
+                        borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
+                        border: Border.all(color: AppColors.surfaceVariant3),
                       ),
                       child: TextButton(
                         onPressed: () => Navigator.pop(context),
                         style: TextButton.styleFrom(
                           backgroundColor: Colors.transparent,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                           ),
                         ),
                         child: Text(
@@ -995,7 +996,7 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                       ),
                       child: ElevatedButton(
                         onPressed: _saveChanges,
@@ -1003,7 +1004,7 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
                           backgroundColor: Colors.transparent,
                           shadowColor: Colors.transparent,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                           ),
                         ),
                         child: Text(

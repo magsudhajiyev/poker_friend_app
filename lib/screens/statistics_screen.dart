@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
-import 'package:google_fonts/google_fonts.dart';
 import '../l10n/app_localizations.dart';
 import '../services/auth_service.dart';
 import '../services/user_stats_service.dart';
@@ -17,6 +16,8 @@ import '../design_system/design_system.dart';
 import '../design_system/components/cards/error_state_card.dart';
 import '../widgets/range_grid/range_grid_view.dart';
 import '../design_system/constants/colors.dart';
+import '../design_system/constants/typography.dart';
+import '../design_system/constants/decorations.dart';
 
 class StatisticsScreen extends StatefulWidget {
   @override
@@ -388,7 +389,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
     final l10n = AppLocalizations.of(context);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0C0C0C),
+      backgroundColor: AppColors.bgPrimary,
       extendBody: true,
       body: SafeArea(
         child: error != null
@@ -438,7 +439,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
                   width: 38,
                   height: 38,
                   decoration: const BoxDecoration(
-                    color: Color(0xFF161719),
+                    color: AppColors.bgSurface,
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(Icons.refresh_rounded, color: Colors.white, size: 20),
@@ -555,7 +556,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
             padding: const EdgeInsets.all(2),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(999),
+              borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
             ),
             child: Row(
               children: [
@@ -568,17 +569,17 @@ class _StatisticsScreenState extends State<StatisticsScreen>
                       duration: const Duration(milliseconds: 200),
                       padding: const EdgeInsets.symmetric(vertical: 10),
                       decoration: BoxDecoration(
-                        color: Color.lerp(const Color(0xFF161719), Colors.transparent, t),
-                        borderRadius: BorderRadius.circular(999),
+                        color: Color.lerp(AppColors.bgSurface, Colors.transparent, t),
+                        borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
                       ),
                       child: Center(
                         child: Text(
                           l10n.statsStats,
-                          style: GoogleFonts.ibmPlexSans(
+                          style: AppTypography.ibm(
                             fontSize: 15,
                             fontWeight: FontWeight.w500,
                             letterSpacing: -0.5,
-                            color: Color.lerp(Colors.white, const Color(0xFF0C0C0C), t),
+                            color: Color.lerp(Colors.white, AppColors.textInverse, t),
                             height: 24 / 15,
                           ),
                         ),
@@ -595,17 +596,17 @@ class _StatisticsScreenState extends State<StatisticsScreen>
                       duration: const Duration(milliseconds: 200),
                       padding: const EdgeInsets.symmetric(vertical: 10),
                       decoration: BoxDecoration(
-                        color: Color.lerp(Colors.transparent, const Color(0xFF161719), t),
-                        borderRadius: BorderRadius.circular(999),
+                        color: Color.lerp(Colors.transparent, AppColors.bgSurface, t),
+                        borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
                       ),
                       child: Center(
                         child: Text(
                           l10n.statsRanges,
-                          style: GoogleFonts.ibmPlexSans(
+                          style: AppTypography.ibm(
                             fontSize: 15,
                             fontWeight: FontWeight.w500,
                             letterSpacing: -0.5,
-                            color: Color.lerp(const Color(0xFF0C0C0C), Colors.white, t),
+                            color: Color.lerp(AppColors.textInverse, Colors.white, t),
                             height: 24 / 15,
                           ),
                         ),
@@ -629,8 +630,8 @@ class _StatisticsScreenState extends State<StatisticsScreen>
     final isNA = !forceActive && !value.contains('%');
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF161719),
-        borderRadius: BorderRadius.circular(16),
+        color: AppColors.bgSurface,
+        borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
@@ -641,22 +642,22 @@ class _StatisticsScreenState extends State<StatisticsScreen>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: const Color(0xFF2C2C2E),
-              borderRadius: BorderRadius.circular(999),
+              color: AppColors.bgElevated,
+              borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
             ),
             child: Text(
               chipLabel,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
-                color: const Color(0xFFB9B9B9),
+                color: AppColors.textSecondary,
               ),
             ),
           ),
           // Value
           Text(
             value,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               fontSize: 22,
               fontWeight: FontWeight.w600,
               color: isNA ? const Color(0xFF4E4E4E) : AppColors.buttonPrimary,
@@ -675,7 +676,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
         children: [
           Text(
             label,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               fontSize: 15,
               fontWeight: FontWeight.w400,
               color: Colors.white.withOpacity(0.8),
@@ -684,7 +685,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
           ),
           Text(
             value,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               fontSize: 15,
               fontWeight: FontWeight.w600,
               color: AppColors.buttonPrimary,
@@ -703,7 +704,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
   Widget _buildSectionHeader(String title) {
     return Text(
       title.toUpperCase(),
-      style: GoogleFonts.ibmPlexSans(
+      style: AppTypography.ibm(
         fontSize: 12,
         fontWeight: FontWeight.w600,
         color: AppColors.limeGreen,
@@ -728,7 +729,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
           child: Container(
             decoration: BoxDecoration(
               color: Colors.black.withOpacity(0.45),
-              borderRadius: BorderRadius.circular(18),
+              borderRadius: BorderRadius.circular(AppDecorations.radius18),
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -741,7 +742,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
                 const SizedBox(height: 8),
                 Text(
                   l10n.statsLockedTitle,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     color: Colors.white,
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
@@ -750,7 +751,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
                 const SizedBox(height: 4),
                 Text(
                   l10n.statsLockedSubtitle,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     color: Colors.white.withOpacity(0.7),
                     fontSize: 13,
                   ),
@@ -763,11 +764,11 @@ class _StatisticsScreenState extends State<StatisticsScreen>
                     padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(60),
+                      borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
                     ),
                     child: Text(
                       l10n.statsLockedUpgrade,
-                      style: GoogleFonts.ibmPlexSans(
+                      style: AppTypography.ibm(
                         color: Colors.black,
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
@@ -786,8 +787,8 @@ class _StatisticsScreenState extends State<StatisticsScreen>
   Widget _buildStatsCard({required List<Widget> children}) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF161719),
-        borderRadius: BorderRadius.circular(16),
+        color: AppColors.bgSurface,
+        borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
       ),
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -824,7 +825,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
             child: Center(
               child: Text(
                 l10n.statsPlayToSee,
-                style: GoogleFonts.ibmPlexSans(color: Colors.white.withOpacity(0.4), fontSize: 14),
+                style: AppTypography.ibm(color: Colors.white.withOpacity(0.4), fontSize: 14),
               ),
             ),
           ),
@@ -905,7 +906,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
       child: Center(
         child: Text(
           message,
-          style: GoogleFonts.ibmPlexSans(color: Colors.white.withOpacity(0.4), fontSize: 14),
+          style: AppTypography.ibm(color: Colors.white.withOpacity(0.4), fontSize: 14),
         ),
       ),
     );
@@ -922,14 +923,14 @@ class _StatisticsScreenState extends State<StatisticsScreen>
         children: [
           Text(
             label,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               fontSize: 15, fontWeight: FontWeight.w400,
               color: Colors.white.withOpacity(0.8), height: 1.0,
             ),
           ),
           Text(
             '$prefix${CurrencyService.formatCashRounded(value)}',
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               fontSize: 15, fontWeight: FontWeight.w600,
               color: color, height: 1.0,
             ),
@@ -950,7 +951,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
           children: [
             Text(
               label,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 fontSize: 15, fontWeight: FontWeight.w400,
                 color: Colors.white.withOpacity(0.8), height: 1.0,
               ),
@@ -959,7 +960,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
             Flexible(
               child: Text(
                 l10n.statsHourlyRateNotAvailable,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   fontSize: 12, fontWeight: FontWeight.w400,
                   color: const Color(0xFF9A9B9E), height: 1.2,
                 ),
@@ -985,14 +986,14 @@ class _StatisticsScreenState extends State<StatisticsScreen>
         children: [
           Text(
             label,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               fontSize: 15, fontWeight: FontWeight.w400,
               color: Colors.white.withOpacity(0.8), height: 1.0,
             ),
           ),
           Text(
             rateText,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               fontSize: 15, fontWeight: FontWeight.w600,
               color: color, height: 1.0,
             ),
@@ -1011,7 +1012,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
       children: [
         Text(
           value,
-          style: GoogleFonts.ibmPlexSans(
+          style: AppTypography.ibm(
             fontSize: 22,
             fontWeight: FontWeight.w600,
             color: AppColors.buttonPrimary,
@@ -1020,7 +1021,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
         const SizedBox(height: 4),
         Text(
           label,
-          style: GoogleFonts.ibmPlexSans(
+          style: AppTypography.ibm(
             color: Colors.white.withOpacity(0.4),
             fontSize: 13,
           ),

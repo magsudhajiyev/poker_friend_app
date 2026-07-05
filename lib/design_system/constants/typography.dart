@@ -254,4 +254,62 @@ class AppTypography {
     color: color ?? Colors.white,
     height: 16 / 11,
   );
+
+  // ── Font-family wrappers ──────────────────────────────────────────────
+  // All inline text styles route through these (enforced by
+  // tool/design_lint.py) so the font family is single-sourced. Signatures
+  // forward every parameter used in the codebase; visual output is
+  // identical to the direct GoogleFonts call they replace.
+
+  static TextStyle ibm({
+    double? fontSize, FontWeight? fontWeight, Color? color, double? height,
+    double? letterSpacing, TextDecoration? decoration, Color? decorationColor,
+    FontStyle? fontStyle,
+  }) => GoogleFonts.ibmPlexSans(
+    fontSize: fontSize, fontWeight: fontWeight, color: color, height: height,
+    letterSpacing: letterSpacing, decoration: decoration,
+    decorationColor: decorationColor, fontStyle: fontStyle,
+  );
+
+  static TextStyle mono({
+    double? fontSize, FontWeight? fontWeight, Color? color, double? height,
+    double? letterSpacing, TextDecoration? decoration, Color? decorationColor,
+    FontStyle? fontStyle,
+  }) => GoogleFonts.robotoMono(
+    fontSize: fontSize, fontWeight: fontWeight, color: color, height: height,
+    letterSpacing: letterSpacing, decoration: decoration,
+    decorationColor: decorationColor, fontStyle: fontStyle,
+  );
+
+  static TextStyle grotesk({
+    double? fontSize, FontWeight? fontWeight, Color? color, double? height,
+    double? letterSpacing, TextDecoration? decoration, Color? decorationColor,
+    FontStyle? fontStyle,
+  }) => GoogleFonts.familjenGrotesk(
+    fontSize: fontSize, fontWeight: fontWeight, color: color, height: height,
+    letterSpacing: letterSpacing, decoration: decoration,
+    decorationColor: decorationColor, fontStyle: fontStyle,
+  );
+
+  // Off-system fonts found in the codebase — kept pixel-identical for now,
+  // named Legacy so the consolidation pass (README phase 3) can find them.
+  static TextStyle interLegacy({
+    double? fontSize, FontWeight? fontWeight, Color? color, double? height,
+    double? letterSpacing, TextDecoration? decoration, Color? decorationColor,
+    FontStyle? fontStyle,
+  }) => GoogleFonts.inter(
+    fontSize: fontSize, fontWeight: fontWeight, color: color, height: height,
+    letterSpacing: letterSpacing, decoration: decoration,
+    decorationColor: decorationColor, fontStyle: fontStyle,
+  );
+
+  static TextStyle plexMonoLegacy({
+    double? fontSize, FontWeight? fontWeight, Color? color, double? height,
+    double? letterSpacing, TextDecoration? decoration, Color? decorationColor,
+    FontStyle? fontStyle,
+  }) => GoogleFonts.ibmPlexMono(
+    fontSize: fontSize, fontWeight: fontWeight, color: color, height: height,
+    letterSpacing: letterSpacing, decoration: decoration,
+    decorationColor: decorationColor, fontStyle: fontStyle,
+  );
 }

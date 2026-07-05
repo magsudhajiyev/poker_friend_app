@@ -7,6 +7,7 @@ import '../../models/poker_table.dart';
 import '../../services/event_service.dart';
 import '../../services/table_service.dart';
 import 'event_dashboard_screen.dart';
+import '../../design_system/constants/decorations.dart';
 
 /// Screen for managing club events (create, edit, view)
 class EventManagementScreen extends StatefulWidget {
@@ -323,7 +324,7 @@ class _EventManagementScreenState extends State<EventManagementScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       child: InkWell(
         onTap: event.isOngoing ? () => _openDashboard(event) : null,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(

@@ -6,6 +6,7 @@ import '../l10n/app_localizations.dart';
 import '../screens/paywall_screen.dart';
 import '../onboarding/onboarding_state.dart';
 import 'subscription_service.dart';
+import '../design_system/constants/decorations.dart';
 
 /// Free-tier limits for the 4-tier subscription system.
 ///
@@ -148,7 +149,7 @@ class FreeTierLimits {
         return Dialog(
           backgroundColor: AppColors.bgSurface,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(AppDecorations.radius20),
             side: BorderSide(
               color: AppColors.whiteBorder(opacity: 0.12),
               width: 1,
@@ -167,7 +168,7 @@ class FreeTierLimits {
                       height: 40,
                       decoration: BoxDecoration(
                         color: AppColors.buttonPrimary.withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                       ),
                       child: Icon(
                         Icons.lock_outline,
@@ -206,7 +207,7 @@ class FreeTierLimits {
                             vertical: AppSpacing.sm,
                           ),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(60),
+                            borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
                             side: BorderSide(
                               color: AppColors.whiteBorder(opacity: 0.2),
                               width: 1,
@@ -233,7 +234,7 @@ class FreeTierLimits {
                           ),
                           decoration: BoxDecoration(
                             color: Colors.white,
-                            borderRadius: BorderRadius.circular(60),
+                            borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
                           ),
                           child: Center(
                             child: Text(

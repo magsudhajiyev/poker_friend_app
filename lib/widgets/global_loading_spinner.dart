@@ -111,7 +111,7 @@ class LoadingOverlay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Color(0xFF161618).withOpacity(0.95),
+      color: AppColors.surfaceVariant1.withOpacity(0.95),
       child: Center(
         child: GlobalLoadingSpinner(
           message: message,

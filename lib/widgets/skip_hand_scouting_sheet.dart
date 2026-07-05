@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../l10n/app_localizations.dart';
 import '../utils/poker_positions.dart';
 import '../services/skip_hand_scouting_service.dart';
+import '../design_system/constants/typography.dart';
+import '../design_system/constants/colors.dart';
+import '../design_system/constants/decorations.dart';
 
 /// Bottom sheet that asks "What happened?" after the hero taps Next Hand.
 ///
@@ -67,8 +69,8 @@ class SkipHandScoutingSheet extends StatelessWidget {
       decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(24),
-          topRight: Radius.circular(24),
+          topLeft: Radius.circular(AppDecorations.radiusXl),
+          topRight: Radius.circular(AppDecorations.radiusXl),
         ),
       ),
       padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + bottomInset),
@@ -84,16 +86,16 @@ class SkipHandScoutingSheet extends StatelessWidget {
               children: [
                 Text(
                   l10n.skipScoutTitle,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
-                    color: const Color(0xFF0C0C0C),
+                    color: AppColors.textInverse,
                     height: 20 / 15,
                   ),
                 ),
                 GestureDetector(
                   onTap: () => Navigator.pop(context),
-                  child: const Icon(Icons.close, size: 18, color: Color(0xFFB9B9B9)),
+                  child: const Icon(Icons.close, size: 18, color: AppColors.contentInactive),
                 ),
               ],
             ),
@@ -141,10 +143,10 @@ class SkipHandScoutingSheet extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(vertical: 4),
                   child: Text(
                     l10n.skipScoutSkip,
-                    style: GoogleFonts.ibmPlexSans(
+                    style: AppTypography.ibm(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
-                      color: const Color(0xFFB9B9B9),
+                      color: AppColors.textSecondary,
                       height: 20 / 14,
                     ),
                   ),
@@ -173,16 +175,16 @@ class _ActionPill extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(999),
-          border: Border.all(color: const Color(0xFFB9B9B9)),
+          borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
+          border: Border.all(color: AppColors.borderLight),
         ),
         alignment: Alignment.center,
         child: Text(
           label,
-          style: GoogleFonts.ibmPlexSans(
+          style: AppTypography.ibm(
             fontSize: 15,
             fontWeight: FontWeight.w600,
-            color: const Color(0xFF0C0C0C),
+            color: AppColors.textInverse,
             height: 20 / 15,
           ),
         ),
@@ -211,17 +213,17 @@ class _OpponentChip extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
           color: const Color(0xFFF5F5F5),
-          borderRadius: BorderRadius.circular(999),
+          borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
               name,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
-                color: const Color(0xFF0C0C0C),
+                color: AppColors.textInverse,
                 height: 20 / 14,
               ),
             ),
@@ -234,7 +236,7 @@ class _OpponentChip extends StatelessWidget {
               ),
               child: Text(
                 position,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
                   color: const Color(0xFF666666),

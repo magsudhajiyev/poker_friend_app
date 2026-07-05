@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/club.dart';
@@ -11,6 +10,8 @@ import '../../services/table_service.dart';
 import '../../services/club_notification_service.dart';
 import '../../design_system/components/calendar/custom_date_picker.dart';
 import '../../design_system/constants/colors.dart';
+import '../../design_system/constants/typography.dart';
+import '../../design_system/constants/decorations.dart';
 
 /// Shows the Create/Edit Event drawer as a modal bottom sheet.
 /// Returns true if event was created/updated, null otherwise.
@@ -180,18 +181,18 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
         builder: (context) => AlertDialog(
           backgroundColor: AppColors.neutral800,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(AppDecorations.radius18),
           ),
           title: Text(
             AppLocalizations.of(context).eventNoTablesAssigned,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               color: Colors.white,
               fontWeight: FontWeight.w600,
             ),
           ),
           content: Text(
             AppLocalizations.of(context).eventNoTablesAssignedDesc,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               color: Colors.white.withOpacity(0.7),
             ),
           ),
@@ -200,7 +201,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
               onPressed: () => Navigator.pop(context, false),
               child: Text(
                 AppLocalizations.of(context).eventGoBack,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   color: Colors.white.withOpacity(0.5),
                 ),
               ),
@@ -212,7 +213,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
               ),
               child: Text(
                 AppLocalizations.of(context).eventContinue,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -396,7 +397,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
           // Title
           Text(
             _isEditMode ? AppLocalizations.of(context).eventEditTitle : AppLocalizations.of(context).eventNewTitle,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               color: Colors.white,
               fontSize: 17,
               fontWeight: FontWeight.w600,
@@ -452,7 +453,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
       child: Container(
         decoration: BoxDecoration(
           color: AppColors.surfaceDark,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
         ),
         padding: const EdgeInsets.symmetric(vertical: 8),
         child: Column(
@@ -499,7 +500,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
       child: Container(
         decoration: BoxDecoration(
           color: AppColors.surfaceDark,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
         ),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
         child: Column(
@@ -507,7 +508,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
           children: [
             Text(
               AppLocalizations.of(context).eventGameType,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 color: Colors.white,
                 fontSize: 17,
                 fontWeight: FontWeight.w600,
@@ -538,7 +539,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected ? AppColors.neutral800 : Colors.transparent,
-          borderRadius: BorderRadius.circular(40),
+          borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
           border: Border.all(
             color: isSelected ? AppColors.buttonPrimary : AppColors.neutral700,
             width: 1,
@@ -546,7 +547,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
         ),
         child: Text(
           label,
-          style: GoogleFonts.ibmPlexSans(
+          style: AppTypography.ibm(
             color: isSelected ? AppColors.buttonPrimary : AppColors.textDisabled,
             fontSize: 15,
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
@@ -562,7 +563,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
       child: Container(
         decoration: BoxDecoration(
           color: AppColors.surfaceDark,
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(AppDecorations.radius18),
         ),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
         child: Column(
@@ -570,7 +571,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
           children: [
             Text(
               AppLocalizations.of(context).eventDateAndTime,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 color: Colors.white,
                 fontSize: 17,
                 fontWeight: FontWeight.w600,
@@ -584,7 +585,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
               children: [
                 Text(
                   AppLocalizations.of(context).eventStarts,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     color: Colors.white,
                     fontSize: 17,
                     fontWeight: FontWeight.w400,
@@ -599,11 +600,11 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
                     padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
                     decoration: BoxDecoration(
                       color: AppColors.neutral800,
-                      borderRadius: BorderRadius.circular(40),
+                      borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
                     ),
                     child: Text(
                       DateFormat('d MMM yyyy').format(_selectedDate),
-                      style: GoogleFonts.ibmPlexSans(
+                      style: AppTypography.ibm(
                         color: Colors.white,
                         fontSize: 13,
                         fontWeight: FontWeight.w400,
@@ -619,11 +620,11 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
                     padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
                     decoration: BoxDecoration(
                       color: AppColors.neutral800,
-                      borderRadius: BorderRadius.circular(40),
+                      borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
                     ),
                     child: Text(
                       _selectedTime.format(context),
-                      style: GoogleFonts.ibmPlexSans(
+                      style: AppTypography.ibm(
                         color: Colors.white,
                         fontSize: 13,
                         fontWeight: FontWeight.w400,
@@ -645,7 +646,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
       child: Container(
         decoration: BoxDecoration(
           color: AppColors.surfaceDark,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
         ),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
         child: Column(
@@ -656,7 +657,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
               children: [
                 Text(
                   AppLocalizations.of(context).eventTables,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     color: Colors.white,
                     fontSize: 17,
                     fontWeight: FontWeight.w600,
@@ -678,7 +679,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
                       _selectedTableIds.length == _availableTables.length
                           ? AppLocalizations.of(context).eventDeselectAll
                           : AppLocalizations.of(context).eventSelectAll,
-                      style: GoogleFonts.ibmPlexSans(
+                      style: AppTypography.ibm(
                         color: AppColors.buttonPrimary,
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
@@ -709,7 +710,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
                 _totalTablesCount > 0
                     ? AppLocalizations.of(context).eventAllTablesInUse
                     : AppLocalizations.of(context).eventNoTablesConfigured,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   color: AppColors.textDisabled,
                   fontSize: 15,
                   height: 1.44,
@@ -737,7 +738,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
                         color: isSelected
                             ? AppColors.mint900
                             : AppColors.neutral800,
-                        borderRadius: BorderRadius.circular(40),
+                        borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
                         border: Border.all(
                           color: isSelected
                               ? AppColors.buttonPrimary
@@ -758,7 +759,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
                           const SizedBox(width: 6),
                           Text(
                             table.name,
-                            style: GoogleFonts.ibmPlexSans(
+                            style: AppTypography.ibm(
                               color: isSelected ? Colors.white : AppColors.textDisabled,
                               fontSize: 14,
                               fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
@@ -782,7 +783,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
       child: Container(
         decoration: BoxDecoration(
           color: AppColors.surfaceDark,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
         ),
         padding: const EdgeInsets.symmetric(vertical: 8),
         child: _buildCardTextField(
@@ -801,7 +802,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
       child: Container(
         decoration: BoxDecoration(
           color: AppColors.surfaceDark,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
         ),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
@@ -811,7 +812,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
               height: 36,
               decoration: BoxDecoration(
                 color: AppColors.neutral800,
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(AppDecorations.radius10),
               ),
               child: const Icon(
                 Icons.notifications_active,
@@ -826,7 +827,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
                 children: [
                   Text(
                     AppLocalizations.of(context).eventNotifyMembers,
-                    style: GoogleFonts.ibmPlexSans(
+                    style: AppTypography.ibm(
                       color: Colors.white,
                       fontSize: 17,
                       fontWeight: FontWeight.w500,
@@ -835,7 +836,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
                   ),
                   Text(
                     AppLocalizations.of(context).eventNotifyMembersSubtitle,
-                    style: GoogleFonts.ibmPlexSans(
+                    style: AppTypography.ibm(
                       color: AppColors.textDisabled,
                       fontSize: 13,
                       fontWeight: FontWeight.w400,
@@ -867,7 +868,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
         padding: const EdgeInsets.symmetric(vertical: 14),
         decoration: BoxDecoration(
           color: AppColors.lossRed.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
           border: Border.all(
             color: AppColors.lossRed.withOpacity(0.3),
           ),
@@ -883,7 +884,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
             const SizedBox(width: 8),
             Text(
               AppLocalizations.of(context).eventDeleteEvent,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 fontSize: 17,
                 color: AppColors.lossRed,
                 fontWeight: FontWeight.w600,
@@ -902,18 +903,18 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.neutral800,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(AppDecorations.radius18),
         ),
         title: Text(
           AppLocalizations.of(context).eventDeleteConfirmTitle,
-          style: GoogleFonts.ibmPlexSans(
+          style: AppTypography.ibm(
             color: Colors.white,
             fontWeight: FontWeight.w600,
           ),
         ),
         content: Text(
           AppLocalizations.of(context).eventDeleteConfirmBody,
-          style: GoogleFonts.ibmPlexSans(
+          style: AppTypography.ibm(
             color: Colors.white.withOpacity(0.7),
           ),
         ),
@@ -922,7 +923,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
             onPressed: () => Navigator.pop(context, false),
             child: Text(
               AppLocalizations.of(context).commonCancel,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 color: Colors.white.withOpacity(0.5),
               ),
             ),
@@ -934,7 +935,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
             ),
             child: Text(
               AppLocalizations.of(context).commonDelete,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -975,7 +976,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
       decoration: showError
           ? BoxDecoration(
               border: Border.all(color: AppColors.lossRed, width: 1),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
             )
           : null,
       margin: showError ? const EdgeInsets.symmetric(horizontal: 8, vertical: 2) : EdgeInsets.zero,
@@ -985,7 +986,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
         minLines: minLines,
         keyboardType: keyboardType,
         inputFormatters: inputFormatters,
-        style: GoogleFonts.ibmPlexSans(
+        style: AppTypography.ibm(
           color: Colors.white,
           fontSize: 17,
           fontWeight: FontWeight.w500,
@@ -993,7 +994,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
         ),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: GoogleFonts.ibmPlexSans(
+          hintStyle: AppTypography.ibm(
             color: showError ? AppColors.lossRed.withValues(alpha: 0.7) : AppColors.textDisabled,
             fontSize: 17,
             fontWeight: FontWeight.w500,

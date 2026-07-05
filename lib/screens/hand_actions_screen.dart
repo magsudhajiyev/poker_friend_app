@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
-import 'package:google_fonts/google_fonts.dart';
 import '../utils/poker_positions.dart';
 import '../utils/number_formatter.dart';
 import '../models/game_types.dart';
@@ -21,6 +20,8 @@ import '../services/currency_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/feature_flag_service.dart';
 import '../design_system/constants/colors.dart';
+import '../design_system/constants/typography.dart';
+import '../design_system/constants/decorations.dart';
 
 class HandActionsScreen extends StatefulWidget {
   final Map<String, dynamic> hand;
@@ -99,9 +100,9 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
     // Ask whether to hide hole cards
     final hideHoleCards = await showModalBottomSheet<bool>(
       context: context,
-      backgroundColor: const Color(0xFF161719),
+      backgroundColor: AppColors.bgSurface,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppDecorations.radius20)),
       ),
       builder: (ctx) => SafeArea(
         child: Padding(
@@ -119,7 +120,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
               const SizedBox(height: 16),
               Text(
                 AppLocalizations.of(context).handActionsShareHand,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white,
                 ),
               ),
@@ -201,7 +202,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
           color: Colors.white.withOpacity(0.05),
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(AppDecorations.radius14),
           border: Border.all(color: Colors.white.withOpacity(0.08)),
         ),
         child: Row(
@@ -212,11 +213,11 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(label, style: GoogleFonts.ibmPlexSans(
+                  Text(label, style: AppTypography.ibm(
                     fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white,
                   )),
                   const SizedBox(height: 2),
-                  Text(subtitle, style: GoogleFonts.ibmPlexSans(
+                  Text(subtitle, style: AppTypography.ibm(
                     fontSize: 12, color: Colors.white.withOpacity(0.4),
                   )),
                 ],
@@ -266,10 +267,10 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
         context: context,
         builder: (ctx) => AlertDialog(
           backgroundColor: AppColors.infoCardBg,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDecorations.radius18)),
           title: Text(
             l10n.quotaExportLimitTitle,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               color: Colors.white,
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -277,7 +278,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
           ),
           content: Text(
             l10n.quotaExportLimitPro(_maxMonthlyExportsPro),
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               color: Colors.white.withValues(alpha: 0.5),
               fontSize: 14,
               height: 1.5,
@@ -291,7 +292,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
               },
               child: Text(
                 l10n.quotaUpgradeToElite,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   color: AppColors.buttonPrimary,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -302,7 +303,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
               onPressed: () => Navigator.pop(ctx),
               child: Text(
                 l10n.quotaOk,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   color: AppColors.buttonPrimary,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -408,9 +409,9 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
-            backgroundColor: const Color(0xFF161719),
+            backgroundColor: AppColors.bgSurface,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(18),
+              borderRadius: BorderRadius.circular(AppDecorations.radius18),
             ),
             title: Row(
               children: [
@@ -418,7 +419,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                 const SizedBox(width: 12),
                 Text(
                   AppLocalizations.of(context).handActionsMissingHeroCards,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     color: Colors.white,
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -428,7 +429,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
             ),
             content: Text(
               AppLocalizations.of(context).handActionsMissingHeroCardsMessage,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 color: Colors.white.withOpacity(0.5),
                 fontSize: 14,
                 height: 1.5,
@@ -439,7 +440,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                 onPressed: () => Navigator.pop(context),
                 child: Text(
                   'OK',
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     color: AppColors.tealPrimary,
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -621,7 +622,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                           children: [
                             Text(
                               AppLocalizations.of(context).handActionsHandNumber('${widget.hand['handNumber'] ?? 'N/A'}'),
-                              style: GoogleFonts.ibmPlexSans(
+                              style: AppTypography.ibm(
                                 fontSize: 20,
                                 color: Colors.white,
                                 fontWeight: FontWeight.w600,
@@ -630,7 +631,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                             const SizedBox(height: 2),
                             Text(
                               AppLocalizations.of(context).handActionsPosition(heroPositionName ?? PokerPositions.getPositionName(heroPosition, buttonPosition, playerCount)),
-                              style: GoogleFonts.ibmPlexSans(
+                              style: AppTypography.ibm(
                                 fontSize: 13,
                                 color: Colors.white.withOpacity(0.5),
                                 fontWeight: FontWeight.w400,
@@ -648,13 +649,13 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                           decoration: BoxDecoration(
                             color: _showBB
                                 ? AppColors.tealPrimary.withOpacity(0.2)
-                                : const Color(0xFF2C2C2E),
+                                : AppColors.bgElevated,
                             shape: BoxShape.circle,
                           ),
                           child: Center(
                             child: Text(
                               'BB',
-                              style: GoogleFonts.robotoMono(
+                              style: AppTypography.mono(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w700,
                                 color: _showBB
@@ -673,7 +674,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                           width: 40,
                           height: 40,
                           decoration: BoxDecoration(
-                            color: const Color(0xFF2C2C2E),
+                            color: AppColors.bgElevated,
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(
@@ -691,7 +692,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                           width: 40,
                           height: 40,
                           decoration: BoxDecoration(
-                            color: const Color(0xFF2C2C2E),
+                            color: AppColors.bgElevated,
                             shape: BoxShape.circle,
                           ),
                           child: _isSharing
@@ -719,7 +720,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                           decoration: BoxDecoration(
                             color: _isStarred
                                 ? Colors.amber.withOpacity(0.2)
-                                : const Color(0xFF2C2C2E),
+                                : AppColors.bgElevated,
                             shape: BoxShape.circle,
                           ),
                           child: Icon(
@@ -840,8 +841,8 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
             child: Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: const Color(0xFF161719),
-                borderRadius: BorderRadius.circular(18),
+                color: AppColors.bgSurface,
+                borderRadius: BorderRadius.circular(AppDecorations.radius18),
                 border: Border.all(color: AppColors.tealPrimary.withOpacity(0.4)),
               ),
               child: Column(
@@ -853,7 +854,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                       const SizedBox(width: 6),
                       Text(
                         AppLocalizations.of(context).handActionsYourCards,
-                        style: GoogleFonts.ibmPlexSans(
+                        style: AppTypography.ibm(
                           color: AppColors.tealPrimary,
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
@@ -891,8 +892,8 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFF161719),
-        borderRadius: BorderRadius.circular(18),
+        color: AppColors.bgSurface,
+        borderRadius: BorderRadius.circular(AppDecorations.radius18),
         border: Border.all(color: const Color(0xFF8B5CF6).withOpacity(0.4)),
       ),
       child: Column(
@@ -904,7 +905,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
               const SizedBox(width: 6),
               Text(
                 AppLocalizations.of(context).handActionsOpponentCards,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   color: const Color(0xFF8B5CF6),
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
@@ -937,7 +938,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                     flex: 2,
                     child: Text(
                       playerName,
-                      style: GoogleFonts.ibmPlexSans(
+                      style: AppTypography.ibm(
                         color: Colors.white,
                         fontSize: 12,
                       ),
@@ -1002,8 +1003,8 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFF161719),
-        borderRadius: BorderRadius.circular(18),
+        color: AppColors.bgSurface,
+        borderRadius: BorderRadius.circular(AppDecorations.radius18),
       ),
       child: Row(
         children: [
@@ -1051,7 +1052,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
       children: [
         Text(
           value,
-          style: GoogleFonts.ibmPlexSans(
+          style: AppTypography.ibm(
             color: isWinner ? const Color(0xFFFFD700) : AppColors.tealPrimary,
             fontSize: 15,
             fontWeight: FontWeight.w600,
@@ -1063,7 +1064,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
         const SizedBox(height: 2),
         Text(
           label,
-          style: GoogleFonts.ibmPlexSans(
+          style: AppTypography.ibm(
             color: Colors.white.withOpacity(0.5),
             fontSize: 10,
             fontWeight: FontWeight.w500,
@@ -1110,7 +1111,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
         color: AppColors.tealPrimary.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
         border: Border.all(
           color: AppColors.tealPrimary.withOpacity(0.3),
           width: 1,
@@ -1127,7 +1128,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
           const SizedBox(width: 6),
           Text(
             tag,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               fontSize: 13,
               color: AppColors.tealPrimary,
               fontWeight: FontWeight.w500,
@@ -1142,8 +1143,8 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF161719),
-        borderRadius: BorderRadius.circular(18),
+        color: AppColors.bgSurface,
+        borderRadius: BorderRadius.circular(AppDecorations.radius18),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1154,7 +1155,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
               const SizedBox(width: 8),
               Text(
                 AppLocalizations.of(context).handActionsNotes,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   color: Colors.white.withOpacity(0.5),
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -1165,7 +1166,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
           const SizedBox(height: 8),
           Text(
             _notes!,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               color: Colors.white,
               fontSize: 14,
               height: 1.4,
@@ -1221,7 +1222,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
       children: [
         Text(
           AppLocalizations.of(context).handActionsActionSummary,
-          style: GoogleFonts.ibmPlexSans(
+          style: AppTypography.ibm(
             color: Colors.white,
             fontSize: 17,
             fontWeight: FontWeight.w600,
@@ -1246,8 +1247,8 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
       decoration: BoxDecoration(
-        color: const Color(0xFF161719),
-        borderRadius: BorderRadius.circular(18),
+        color: AppColors.bgSurface,
+        borderRadius: BorderRadius.circular(AppDecorations.radius18),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1258,8 +1259,8 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
             decoration: BoxDecoration(
               color: Colors.white.withOpacity(0.05),
               borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(18),
-                topRight: Radius.circular(18),
+                topLeft: Radius.circular(AppDecorations.radius18),
+                topRight: Radius.circular(AppDecorations.radius18),
               ),
             ),
             child: Row(
@@ -1269,7 +1270,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                   children: [
                     Text(
                       streetName,
-                      style: GoogleFonts.ibmPlexSans(
+                      style: AppTypography.ibm(
                         color: AppColors.tealPrimary,
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
@@ -1291,12 +1292,12 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
                       color: AppColors.tealPrimary.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(AppDecorations.radius10),
                       border: Border.all(color: AppColors.tealPrimary.withOpacity(0.3)),
                     ),
                     child: Text(
                       _formatPotAmount(potAmount as double, gameType),
-                      style: GoogleFonts.ibmPlexSans(
+                      style: AppTypography.ibm(
                         color: AppColors.tealPrimary,
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
@@ -1347,7 +1348,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
       padding: const EdgeInsets.only(bottom: 8),
       child: Text(
         text,
-        style: GoogleFonts.ibmPlexSans(
+        style: AppTypography.ibm(
           color: Colors.white.withOpacity(0.4),
           fontSize: 10,
           fontWeight: FontWeight.w600,
@@ -1424,8 +1425,8 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 20),
       decoration: BoxDecoration(
-        color: const Color(0xFF161719),
-        borderRadius: BorderRadius.circular(18),
+        color: AppColors.bgSurface,
+        borderRadius: BorderRadius.circular(AppDecorations.radius18),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1435,15 +1436,15 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
             decoration: BoxDecoration(
               color: Colors.white.withOpacity(0.05),
               borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(18),
-                topRight: Radius.circular(18),
+                topLeft: Radius.circular(AppDecorations.radius18),
+                topRight: Radius.circular(AppDecorations.radius18),
               ),
             ),
             child: Row(
               children: [
                 Text(
                   AppLocalizations.of(context).handActionsBoard,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     color: AppColors.tealPrimary,
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
@@ -1560,7 +1561,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
               Expanded(
                 child: Text(
                   playerDisplay,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     color: isHero ? AppColors.tealPrimary : Colors.white,
                     fontSize: 11,
                     fontWeight: isHero ? FontWeight.w600 : FontWeight.normal,
@@ -1575,7 +1576,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
           padding: const EdgeInsets.symmetric(vertical: 6),
           child: Text(
             _formatStack(stack, gameType),
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               color: Colors.white.withOpacity(0.5),
               fontSize: 11,
             ),
@@ -1585,7 +1586,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
           padding: const EdgeInsets.symmetric(vertical: 6),
           child: Text(
             _isAllInAction(action) ? AppLocalizations.of(context).handActionsAllIn : actionType.toUpperCase(),
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               color: actionColor,
               fontSize: 11,
               fontWeight: FontWeight.w600,
@@ -1596,7 +1597,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
           padding: const EdgeInsets.symmetric(vertical: 6),
           child: Text(
             _formatAmount(amount, gameType),
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               color: Colors.white.withOpacity(0.5),
               fontSize: 11,
             ),
@@ -1745,7 +1746,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
           color: buttonColor,
-          borderRadius: BorderRadius.circular(60),
+          borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -1762,7 +1763,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
               const SizedBox(width: 12),
               Text(
                 AppLocalizations.of(context).handActionsAnalyzingHand,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   color: textColor,
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
@@ -1773,7 +1774,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
               const SizedBox(width: 12),
               Text(
                 AppLocalizations.of(context).handActionsHeroCardsMissing,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   color: textColor,
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
@@ -1787,7 +1788,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
               const SizedBox(width: 12),
               Text(
                 _aiAnalysis != null ? AppLocalizations.of(context).handActionsAnalysisComplete : AppLocalizations.of(context).handActionsAiAnalyzerBeta,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   color: textColor,
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
@@ -1875,10 +1876,10 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.infoCardBg,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDecorations.radius18)),
         title: Text(
           l10n.quotaMonthlyLimitTitle,
-          style: GoogleFonts.ibmPlexSans(
+          style: AppTypography.ibm(
             color: Colors.white,
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -1888,7 +1889,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
           isElite
               ? l10n.quotaAiLimitElite(max)
               : l10n.quotaAiLimitPro(max, _maxMonthlyAnalysesElite),
-          style: GoogleFonts.ibmPlexSans(
+          style: AppTypography.ibm(
             color: Colors.white.withValues(alpha: 0.5),
             fontSize: 14,
             height: 1.5,
@@ -1903,7 +1904,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
               },
               child: Text(
                 l10n.quotaUpgradeToElite,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   color: AppColors.buttonPrimary,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -1914,7 +1915,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
             onPressed: () => Navigator.pop(ctx),
             child: Text(
               l10n.quotaOk,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 color: AppColors.buttonPrimary,
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
@@ -1930,8 +1931,8 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF161719),
-        borderRadius: BorderRadius.circular(18),
+        color: AppColors.bgSurface,
+        borderRadius: BorderRadius.circular(AppDecorations.radius18),
         border: Border.all(color: Colors.red.withOpacity(0.4)),
       ),
       child: Row(
@@ -1944,7 +1945,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
               children: [
                 Text(
                   AppLocalizations.of(context).handActionsAnalysisFailed,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     color: Colors.red,
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -1953,7 +1954,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                 const SizedBox(height: 4),
                 Text(
                   _analysisError ?? 'Unknown error',
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     color: Colors.white.withOpacity(0.5),
                     fontSize: 12,
                   ),
@@ -1984,8 +1985,8 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: const Color(0xFF161719),
-              borderRadius: BorderRadius.circular(18),
+              color: AppColors.bgSurface,
+              borderRadius: BorderRadius.circular(AppDecorations.radius18),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1996,7 +1997,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                     const SizedBox(width: 8),
                     Text(
                       AppLocalizations.of(context).handActionsAiAnalysis,
-                      style: GoogleFonts.ibmPlexSans(
+                      style: AppTypography.ibm(
                         color: AppColors.tealPrimary,
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
@@ -2008,7 +2009,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                 if (aiAnalysis['reasoning'] != null) ...[
                   Text(
                     aiAnalysis['reasoning'],
-                    style: GoogleFonts.ibmPlexSans(
+                    style: AppTypography.ibm(
                       color: Colors.white,
                       fontSize: 14,
                       height: 1.5,
@@ -2022,7 +2023,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
                       color: const Color(0xFFFFD700).withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                       border: Border.all(color: const Color(0xFFFFD700).withOpacity(0.3)),
                     ),
                     child: Row(
@@ -2032,7 +2033,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                         Expanded(
                           child: Text(
                             aiAnalysis['learningPoint'],
-                            style: GoogleFonts.ibmPlexSans(
+                            style: AppTypography.ibm(
                               color: const Color(0xFFFFD700),
                               fontSize: 13,
                               fontWeight: FontWeight.w500,
@@ -2055,8 +2056,8 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: const Color(0xFF161719),
-              borderRadius: BorderRadius.circular(18),
+              color: AppColors.bgSurface,
+              borderRadius: BorderRadius.circular(AppDecorations.radius18),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -2067,7 +2068,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                     const SizedBox(width: 8),
                     Text(
                       AppLocalizations.of(context).handActionsStreetByStreetBreakdown,
-                      style: GoogleFonts.ibmPlexSans(
+                      style: AppTypography.ibm(
                         color: AppColors.limeGreen,
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
@@ -2091,7 +2092,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
                       color: const Color(0xFFFFD700).withOpacity(0.08),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(AppDecorations.radius10),
                     ),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -2102,7 +2103,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                         Expanded(
                           child: Text(
                             exploitativeTip!,
-                            style: GoogleFonts.ibmPlexSans(
+                            style: AppTypography.ibm(
                               fontSize: 13,
                               color: const Color(0xFFFFD700),
                               height: 1.4,
@@ -2123,7 +2124,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
         Center(
           child: Text(
             AppLocalizations.of(context).handActionsAnalysisCompletedIn((processingTime / 1000).toStringAsFixed(2)),
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               color: Colors.white.withOpacity(0.4),
               fontSize: 12,
               fontStyle: FontStyle.italic,
@@ -2145,12 +2146,12 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
             height: 28,
             decoration: BoxDecoration(
               color: _gradeColor(grade).withOpacity(0.15),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
             ),
             child: Center(
               child: Text(
                 grade,
-                style: GoogleFonts.robotoMono(
+                style: AppTypography.mono(
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
                   color: _gradeColor(grade),
@@ -2165,7 +2166,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
               children: [
                 Text(
                   streetName[0].toUpperCase() + streetName.substring(1),
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
                     color: Colors.white.withOpacity(0.5),
@@ -2174,7 +2175,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                 const SizedBox(height: 2),
                 Text(
                   analysis,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     fontSize: 13,
                     color: Colors.white.withOpacity(0.8),
                     height: 1.4,

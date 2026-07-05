@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../l10n/app_localizations.dart';
 import '../models/hand_state_machine.dart';
 import '../utils/poker_positions.dart';
@@ -20,6 +19,8 @@ import '../onboarding/onboarding_progress_bar.dart';
 import 'poker_hand_screen.dart';
 import 'my_opponents_screen.dart';
 import '../design_system/constants/colors.dart';
+import '../design_system/constants/typography.dart';
+import '../design_system/constants/decorations.dart';
 
 class SeatSetupScreen extends StatefulWidget {
   final int? playerCount;
@@ -337,8 +338,8 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
               decoration: const BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(24),
-                  topRight: Radius.circular(24),
+                  topLeft: Radius.circular(AppDecorations.radiusXl),
+                  topRight: Radius.circular(AppDecorations.radiusXl),
                 ),
               ),
               child: SingleChildScrollView(
@@ -355,10 +356,10 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                           child: Center(
                             child: Text(
                               'Seat $seatNumber',
-                              style: GoogleFonts.ibmPlexSans(
+                              style: AppTypography.ibm(
                                 fontSize: 15,
                                 fontWeight: FontWeight.w600,
-                                color: const Color(0xFF0C0C0C),
+                                color: AppColors.textInverse,
                                 height: 20 / 15,
                               ),
                             ),
@@ -369,7 +370,7 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                           child: _buildIcon(
                             'icons/figma_icons/close.svg',
                             18,
-                            const Color(0xFFB9B9B9),
+                            AppColors.contentInactive,
                           ),
                         ),
                       ],
@@ -414,8 +415,8 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                               shape: BoxShape.circle,
                               border: Border.all(
                                 color: tempIsMySeat
-                                    ? const Color(0xFF0C0C0C)
-                                    : const Color(0xFFB9B9B9),
+                                    ? AppColors.bgPrimary
+                                    : AppColors.contentInactive,
                                 width: 1.5,
                               ),
                             ),
@@ -426,7 +427,7 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                                       height: 10,
                                       decoration: const BoxDecoration(
                                         shape: BoxShape.circle,
-                                        color: Color(0xFF0C0C0C),
+                                        color: AppColors.bgPrimary,
                                       ),
                                     ),
                                   )
@@ -435,10 +436,10 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                           const SizedBox(width: 8),
                           Text(
                             AppLocalizations.of(context).seatSetupThisIsMySeat,
-                            style: GoogleFonts.ibmPlexSans(
+                            style: AppTypography.ibm(
                               fontSize: 15,
                               fontWeight: FontWeight.w400,
-                              color: const Color(0xFF0C0C0C),
+                              color: AppColors.textInverse,
                             ),
                           ),
                         ],
@@ -454,26 +455,26 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                       children: [
                         Text(
                           AppLocalizations.of(context).seatSetupPlayerName,
-                          style: GoogleFonts.ibmPlexSans(
+                          style: AppTypography.ibm(
                             fontSize: 13,
                             fontWeight: FontWeight.w500,
-                            color: const Color(0xFFB9B9B9),
+                            color: AppColors.textSecondary,
                           ),
                         ),
                         const SizedBox(height: 4),
                         Container(
                           decoration: BoxDecoration(
-                            color: const Color(0xFFFDFDFD),
+                            color: AppColors.bgInputOnInverse,
                             border: Border.all(
-                                color: const Color(0xFFEFEFEF), width: 1.5),
-                            borderRadius: BorderRadius.circular(12),
+                                color: AppColors.borderOnInverseSubtle, width: 1.5),
+                            borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                           ),
                           child: TextField(
                             controller: tempNameController,
                             enabled: !_areSeatChangesLocked(),
-                            style: GoogleFonts.ibmPlexSans(
+                            style: AppTypography.ibm(
                               fontSize: 15,
-                              color: const Color(0xFF0C0C0C),
+                              color: AppColors.textInverse,
                             ),
                             textCapitalization: TextCapitalization.words,
                             decoration: InputDecoration(
@@ -481,9 +482,9 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                               contentPadding: const EdgeInsets.symmetric(
                                   horizontal: 16, vertical: 12),
                               hintText: AppLocalizations.of(context).seatSetupPlayerName,
-                              hintStyle: GoogleFonts.ibmPlexSans(
+                              hintStyle: AppTypography.ibm(
                                 fontSize: 15,
-                                color: const Color(0xFFB9B9B9),
+                                color: AppColors.textSecondary,
                               ),
                             ),
                             onChanged: (value) {
@@ -530,8 +531,8 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                                 margin: const EdgeInsets.only(bottom: 4),
                                 padding: const EdgeInsets.all(8),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFF161719),
-                                  borderRadius: BorderRadius.circular(12),
+                                  color: AppColors.bgSurface,
+                                  borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                                 ),
                                 child: Row(
                                   children: [
@@ -545,7 +546,7 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                                       child: Center(
                                         child: Text(
                                           initials,
-                                          style: GoogleFonts.ibmPlexSans(
+                                          style: AppTypography.ibm(
                                             fontSize: 7.5,
                                             fontWeight: FontWeight.w600,
                                             color: Colors.white,
@@ -556,7 +557,7 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                                     const SizedBox(width: 4),
                                     Text(
                                       suggestion,
-                                      style: GoogleFonts.ibmPlexSans(
+                                      style: AppTypography.ibm(
                                         fontSize: 13,
                                         fontWeight: FontWeight.w500,
                                         color: Colors.white,
@@ -569,16 +570,16 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                                         padding: const EdgeInsets.symmetric(
                                             horizontal: 8, vertical: 4),
                                         decoration: BoxDecoration(
-                                          color: const Color(0xFFA3FF78),
+                                          color: AppColors.accentSecondary,
                                           borderRadius:
-                                              BorderRadius.circular(999),
+                                              BorderRadius.circular(AppDecorations.radiusFull),
                                         ),
                                         child: Text(
                                           assignedSeat,
-                                          style: GoogleFonts.ibmPlexSans(
+                                          style: AppTypography.ibm(
                                             fontSize: 11,
                                             fontWeight: FontWeight.w500,
-                                            color: const Color(0xFF0C0C0C),
+                                            color: AppColors.textInverse,
                                             height: 16 / 11,
                                           ),
                                         ),
@@ -602,16 +603,16 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 18, vertical: 14),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFFDFDFD),
-                        border: Border.all(color: const Color(0xFFEFEFEF)),
-                        borderRadius: BorderRadius.circular(14),
+                        color: AppColors.bgInputOnInverse,
+                        border: Border.all(color: AppColors.borderOnInverseSubtle),
+                        borderRadius: BorderRadius.circular(AppDecorations.radius14),
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
                             'Save as opponent',
-                            style: GoogleFonts.ibmPlexSans(
+                            style: AppTypography.ibm(
                               fontSize: 14,
                               fontWeight: FontWeight.w500,
                               color: const Color(0xFFB2B2B2),
@@ -624,9 +625,9 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                             thumbColor: WidgetStateProperty.all(Colors.white),
                             trackColor: WidgetStateProperty.resolveWith((s) {
                               if (s.contains(WidgetState.selected)) {
-                                return const Color(0xFF0C0C0C);
+                                return AppColors.bgPrimary;
                               }
-                              return const Color(0xFFB9B9B9);
+                              return AppColors.contentInactive;
                             }),
                             trackOutlineColor:
                                 WidgetStateProperty.all(Colors.transparent),
@@ -645,36 +646,36 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                           widget.isCashGame
                               ? AppLocalizations.of(context).seatSetupBuyInAmount
                               : AppLocalizations.of(context).seatSetupStartingChips,
-                          style: GoogleFonts.ibmPlexSans(
+                          style: AppTypography.ibm(
                             fontSize: 13,
                             fontWeight: FontWeight.w500,
-                            color: const Color(0xFFB9B9B9),
+                            color: AppColors.textSecondary,
                           ),
                         ),
                         const SizedBox(height: 4),
                         Container(
                           decoration: BoxDecoration(
-                            color: const Color(0xFFFDFDFD),
-                            border: Border.all(color: const Color(0xFFEFEFEF)),
-                            borderRadius: BorderRadius.circular(12),
+                            color: AppColors.bgInputOnInverse,
+                            border: Border.all(color: AppColors.borderOnInverseSubtle),
+                            borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                           ),
                           child: TextField(
                             controller: tempStackController,
                             enabled: !_areSeatChangesLocked(),
                             keyboardType: TextInputType.numberWithOptions(
                                 decimal: widget.isCashGame),
-                            style: GoogleFonts.ibmPlexSans(
+                            style: AppTypography.ibm(
                               fontSize: 15,
-                              color: const Color(0xFF0C0C0C),
+                              color: AppColors.textInverse,
                             ),
                             decoration: InputDecoration(
                               border: InputBorder.none,
                               contentPadding: const EdgeInsets.symmetric(
                                   horizontal: 16, vertical: 12),
                               hintText: r'$',
-                              hintStyle: GoogleFonts.ibmPlexSans(
+                              hintStyle: AppTypography.ibm(
                                 fontSize: 15,
-                                color: const Color(0xFFB9B9B9),
+                                color: AppColors.textSecondary,
                               ),
                             ),
                             onChanged: (value) {
@@ -726,16 +727,16 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                                   horizontal: 20, vertical: 12),
                               decoration: BoxDecoration(
                                 border: Border.all(
-                                    color: const Color(0xFFB9B9B9)),
-                                borderRadius: BorderRadius.circular(999),
+                                    color: AppColors.borderLight),
+                                borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
                               ),
                               child: Center(
                                 child: Text(
                                   'Back',
-                                  style: GoogleFonts.ibmPlexSans(
+                                  style: AppTypography.ibm(
                                     fontSize: 15,
                                     fontWeight: FontWeight.w600,
-                                    color: const Color(0xFF0C0C0C),
+                                    color: AppColors.textInverse,
                                     height: 20 / 15,
                                   ),
                                 ),
@@ -751,13 +752,13 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 20, vertical: 12),
                               decoration: BoxDecoration(
-                                color: const Color(0xFF0C0C0C),
-                                borderRadius: BorderRadius.circular(999),
+                                color: AppColors.bgPrimary,
+                                borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
                               ),
                               child: Center(
                                 child: Text(
                                   'Save',
-                                  style: GoogleFonts.ibmPlexSans(
+                                  style: AppTypography.ibm(
                                     fontSize: 15,
                                     fontWeight: FontWeight.w600,
                                     color: Colors.white,
@@ -931,7 +932,7 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                           children: [
                             Text(
                               widget.isInitialSetup ? l10n.seatSetupTitle : l10n.seatManagePlayers,
-                              style: GoogleFonts.ibmPlexSans(
+                              style: AppTypography.ibm(
                                 fontSize: 24,
                                 color: Colors.white,
                                 fontWeight: FontWeight.w600,
@@ -945,7 +946,7 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                                   : _isButtonLocked()
                                       ? 'Button locked - hand in progress'
                                       : l10n.seatUpdatePlayerInfo,
-                              style: GoogleFonts.ibmPlexSans(
+                              style: AppTypography.ibm(
                                 fontSize: 14,
                                 color: _isButtonLocked() ? Colors.orange : Colors.white.withOpacity(0.6),
                                 fontWeight: FontWeight.w400,
@@ -1006,7 +1007,7 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                                   child: Center(
                                     child: Text(
                                       widget.isInitialSetup ? l10n.seatStartSession : l10n.seatSaveChanges,
-                                      style: GoogleFonts.ibmPlexSans(
+                                      style: AppTypography.ibm(
                                         color: Colors.black,
                                         fontSize: 17,
                                         fontWeight: FontWeight.w600,
@@ -1024,7 +1025,7 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                                   padding: const EdgeInsets.symmetric(vertical: 8),
                                   child: Text(
                                     AppLocalizations.of(context).seatSetupCancel,
-                                    style: GoogleFonts.ibmPlexSans(
+                                    style: AppTypography.ibm(
                                       color: Colors.white,
                                       fontSize: 17,
                                       fontWeight: FontWeight.w400,
@@ -1183,10 +1184,10 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
     final result = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1A1A1E),
+        backgroundColor: AppColors.surfaceVariant4,
         title: Text(
           'Button on Empty Seat',
-          style: GoogleFonts.ibmPlexSans(
+          style: AppTypography.ibm(
             color: Colors.white,
             fontSize: 17,
             fontWeight: FontWeight.w600,
@@ -1194,7 +1195,7 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
         ),
         content: Text(
           'The dealer button is on Seat $currentBtnSeat which is empty. Move it to Seat $nearestActive?',
-          style: GoogleFonts.ibmPlexSans(
+          style: AppTypography.ibm(
             color: AppColors.textDisabled,
             fontSize: 15,
           ),
@@ -1202,11 +1203,11 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text(l10n.seatKeep, style: GoogleFonts.ibmPlexSans(color: AppColors.textDisabled)),
+            child: Text(l10n.seatKeep, style: AppTypography.ibm(color: AppColors.textDisabled)),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: Text(l10n.seatMove, style: GoogleFonts.ibmPlexSans(color: AppColors.tealPrimary)),
+            child: Text(l10n.seatMove, style: AppTypography.ibm(color: AppColors.tealPrimary)),
           ),
         ],
       ),

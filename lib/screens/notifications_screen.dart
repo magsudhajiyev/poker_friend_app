@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'dart:ui' as ui;
-import 'package:google_fonts/google_fonts.dart';
 import '../design_system/constants/colors.dart';
 import '../l10n/app_localizations.dart';
 import '../models/club_notification.dart';
@@ -17,6 +16,8 @@ import 'admin/club_requests_screen.dart';
 import 'admin/support_requests_screen.dart';
 import '../services/support_request_service.dart';
 import '../models/support_request.dart';
+import '../design_system/constants/typography.dart';
+import '../design_system/constants/decorations.dart';
 
 /// Dedicated notifications screen matching Figma design (node 324:4769)
 class NotificationsScreen extends StatefulWidget {
@@ -253,7 +254,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                       padding: const EdgeInsets.only(left: 12),
                       child: Text(
                         AppLocalizations.of(context).notificationsScreenTitle,
-                        style: GoogleFonts.ibmPlexSans(
+                        style: AppTypography.ibm(
                           fontSize: 27,
                           fontWeight: FontWeight.w600,
                           color: Colors.white,
@@ -332,7 +333,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               // "Today" (Figma node 343:4915): Medium 17px, white, line-height 1.44
               Text(
                 AppLocalizations.of(context).notificationsScreenToday,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   fontSize: 17,
                   fontWeight: FontWeight.w500,
                   color: Colors.white,
@@ -345,7 +346,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   onTap: _markAllAsRead,
                   child: Text(
                     AppLocalizations.of(context).notificationsScreenMarkAllAsRead,
-                    style: GoogleFonts.ibmPlexSans(
+                    style: AppTypography.ibm(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                       color: AppColors.buttonPrimary, // mint/300
@@ -385,7 +386,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           const SizedBox(height: 16),
           Text(
             AppLocalizations.of(context).notificationsScreenNoNotifications,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               fontSize: 17,
               fontWeight: FontWeight.w500,
               color: AppColors.textDisabled,
@@ -440,7 +441,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Text(
                   category,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     fontSize: 17,
                     fontWeight: FontWeight.w400,
                     color: AppColors.textMint, // #D3FFFD
@@ -553,7 +554,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.surfaceDark,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDecorations.radius20)),
         title: Row(
           children: [
             Icon(
@@ -565,7 +566,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             Expanded(
               child: Text(
                 isResolved ? AppLocalizations.of(context).notificationsScreenRequestResolved : AppLocalizations.of(context).notificationsScreenRequestClosed,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   color: Colors.white,
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
@@ -580,7 +581,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           children: [
             Text(
               request.subject,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 color: Colors.white,
                 fontSize: 15,
                 fontWeight: FontWeight.w500,
@@ -589,7 +590,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             const SizedBox(height: 4),
             Text(
               request.category,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 color: AppColors.textDisabled,
                 fontSize: 13,
               ),
@@ -598,7 +599,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               const SizedBox(height: 16),
               Text(
                 AppLocalizations.of(context).notificationsScreenResponse,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   color: AppColors.textDisabled,
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
@@ -613,11 +614,11 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   color: isResolved
                       ? AppColors.limeGreen.withValues(alpha: 0.1)
                       : AppColors.errorRed.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(AppDecorations.radius10),
                 ),
                 child: Text(
                   request.adminResponse!,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     color: Colors.white,
                     fontSize: 14,
                     height: 1.5,
@@ -632,7 +633,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             onPressed: () => Navigator.pop(context),
             child: Text(
               AppLocalizations.of(context).commonOk,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 color: AppColors.buttonPrimary,
                 fontWeight: FontWeight.w600,
               ),
@@ -698,7 +699,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       context: context,
       builder: (dialogContext) => AlertDialog(
         backgroundColor: const Color(0xFF1A1A2E),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDecorations.radius20)),
         title: Text(
           AppLocalizations.of(context).notificationsScreenClubInvitation,
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
@@ -770,7 +771,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               backgroundColor: const Color(0xFF4CAF50),
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
               ),
             ),
             child: Text(AppLocalizations.of(context).commonAccept),
@@ -1188,7 +1189,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 // Title (Figma node 350:4946): Medium 17px, white, line-height 1.44
                 Text(
                   _resolveTitle(notification),
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     fontSize: 17,
                     fontWeight: FontWeight.w500,
                     color: Colors.white,
@@ -1199,7 +1200,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 // Body (Figma node 350:4947): Regular 13px, #B3B4B6, line-height 1.44
                 Text(
                   _resolveBody(notification),
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     fontSize: 13,
                     fontWeight: FontWeight.w400,
                     color: const Color(0xFFB3B4B6),
@@ -1229,7 +1230,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 ),
                 child: Text(
                   AppLocalizations.of(context).notificationsScreenMarkAsRead,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
                     color: Colors.black,

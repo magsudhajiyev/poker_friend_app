@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/club.dart';
 import '../../models/club_event.dart';
 import '../../models/event_attendance.dart';
 import '../../services/event_attendance_service.dart';
 import '../../design_system/constants/colors.dart';
+import '../../design_system/constants/typography.dart';
+import '../../design_system/constants/decorations.dart';
 
 /// Screen showing all attendees for an event
 class EventAttendeesScreen extends StatefulWidget {
@@ -172,7 +173,7 @@ class _EventAttendeesScreenState extends State<EventAttendeesScreen>
               children: [
                 Text(
                   AppLocalizations.of(context).eventAttendeesTitle,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     fontSize: 18,
                     color: Colors.white,
                     fontWeight: FontWeight.w600,
@@ -181,7 +182,7 @@ class _EventAttendeesScreenState extends State<EventAttendeesScreen>
                 const SizedBox(height: 2),
                 Text(
                   widget.event.name,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     fontSize: 13,
                     color: Colors.white.withOpacity(0.5),
                   ),
@@ -201,23 +202,23 @@ class _EventAttendeesScreenState extends State<EventAttendeesScreen>
       margin: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
         color: AppColors.infoCardBg,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
       ),
       child: TabBar(
         controller: _tabController,
         indicator: BoxDecoration(
           color: AppColors.buttonPrimary,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(AppDecorations.radius10),
         ),
         indicatorSize: TabBarIndicatorSize.tab,
         indicatorPadding: const EdgeInsets.all(4),
         labelColor: Colors.black,
         unselectedLabelColor: Colors.white.withOpacity(0.5),
-        labelStyle: GoogleFonts.ibmPlexSans(
+        labelStyle: AppTypography.ibm(
           fontWeight: FontWeight.w600,
           fontSize: 13,
         ),
-        unselectedLabelStyle: GoogleFonts.ibmPlexSans(
+        unselectedLabelStyle: AppTypography.ibm(
           fontWeight: FontWeight.w500,
           fontSize: 13,
         ),
@@ -315,7 +316,7 @@ class _EventAttendeesScreenState extends State<EventAttendeesScreen>
             height: 56,
             decoration: BoxDecoration(
               color: color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(AppDecorations.radius14),
             ),
             child: Icon(
               icon,
@@ -326,7 +327,7 @@ class _EventAttendeesScreenState extends State<EventAttendeesScreen>
           const SizedBox(height: 12),
           Text(
             message,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               fontSize: 15,
               color: Colors.white.withOpacity(0.4),
             ),
@@ -359,7 +360,7 @@ class _EventAttendeesScreenState extends State<EventAttendeesScreen>
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         color: AppColors.infoCardBg,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(AppDecorations.radius14),
       ),
       child: Row(
         children: [
@@ -369,7 +370,7 @@ class _EventAttendeesScreenState extends State<EventAttendeesScreen>
               width: 28,
               child: Text(
                 '#$position',
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                   color: const Color(0xFF9A9B9E),
@@ -384,12 +385,12 @@ class _EventAttendeesScreenState extends State<EventAttendeesScreen>
             height: 40,
             decoration: BoxDecoration(
               color: statusColor.withOpacity(0.12),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
             ),
             child: Center(
               child: Text(
                 _getInitials(attendee.displayName),
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
                   color: statusColor,
@@ -402,7 +403,7 @@ class _EventAttendeesScreenState extends State<EventAttendeesScreen>
           Expanded(
             child: Text(
               attendee.displayName,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 fontSize: 15,
                 color: Colors.white,
                 fontWeight: FontWeight.w500,
@@ -415,7 +416,7 @@ class _EventAttendeesScreenState extends State<EventAttendeesScreen>
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
                 color: AppColors.buttonPrimary.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
               ),
               child: const Icon(
                 Icons.event_available,

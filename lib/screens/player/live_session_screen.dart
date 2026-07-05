@@ -11,6 +11,7 @@ import '../../services/websocket_service.dart';
 import '../../services/auth_service.dart';
 import '../../utils/number_formatter.dart';
 import '../../design_system/constants/colors.dart';
+import '../../design_system/constants/decorations.dart';
 
 /// Screen for players to view the live poker session
 class LiveSessionScreen extends StatefulWidget {
@@ -572,7 +573,7 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> {
     Color borderColor;
 
     if (!isOccupied) {
-      bgColor = const Color(0xFF2A2A2E);
+      bgColor = AppColors.surfaceVariant3;
       borderColor = AppColors.buttonPrimary.withValues(alpha: 0.3);
     } else if (isMySeat) {
       bgColor = Colors.black;
@@ -674,7 +675,7 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: const Color(0xFF161B22),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -820,7 +821,7 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> {
                 color: _dealerSession != null
                     ? Colors.green.withValues(alpha: 0.2)
                     : Colors.grey.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                 border: Border.all(
                   color: _dealerSession != null ? Colors.green : Colors.grey,
                 ),

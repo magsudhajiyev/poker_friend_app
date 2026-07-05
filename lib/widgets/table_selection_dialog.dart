@@ -4,6 +4,7 @@ import '../l10n/app_localizations.dart';
 import '../models/poker_table.dart';
 import '../services/table_service.dart';
 import '../services/seat_service.dart';
+import '../design_system/constants/decorations.dart';
 
 /// Dialog for selecting a table when event has multiple tables
 class TableSelectionDialog extends StatefulWidget {
@@ -88,7 +89,7 @@ class _TableSelectionDialogState extends State<TableSelectionDialog> {
     return Dialog(
       backgroundColor: PokerFriendColors.dark2,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppDecorations.radius20),
       ),
       child: Container(
         constraints: const BoxConstraints(maxWidth: 400, maxHeight: 500),
@@ -192,7 +193,7 @@ class _TableSelectionDialogState extends State<TableSelectionDialog> {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: PokerFriendColors.dark3,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
           border: Border.all(
             color: hasOpenSeats
                 ? PokerFriendColors.green.withOpacity(0.3)
@@ -207,7 +208,7 @@ class _TableSelectionDialogState extends State<TableSelectionDialog> {
               height: 48,
               decoration: BoxDecoration(
                 color: PokerFriendColors.dark5,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
               ),
               child: Center(
                 child: Text(
@@ -275,7 +276,7 @@ class _TableSelectionDialogState extends State<TableSelectionDialog> {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: color.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
       ),
       child: Text(
         text,

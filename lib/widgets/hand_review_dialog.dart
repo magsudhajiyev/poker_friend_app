@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../l10n/app_localizations.dart';
 import '../models/hand_state_machine.dart';
 import 'card_keyboard.dart';
 import '../design_system/constants/colors.dart';
+import '../design_system/constants/typography.dart';
+import '../design_system/constants/decorations.dart';
 
 class HandReviewDialog extends StatefulWidget {
   final HoleCards? existingCards;
@@ -77,7 +78,7 @@ class _HandReviewDialogState extends State<HandReviewDialog> {
         constraints: const BoxConstraints(maxWidth: 400),
         decoration: BoxDecoration(
           color: AppColors.surfaceDark,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
           border: Border.all(color: AppColors.neutral800, width: 1),
         ),
         child: Column(
@@ -140,7 +141,7 @@ class _HandReviewDialogState extends State<HandReviewDialog> {
             child: Center(
               child: Text(
                 l10n.handReviewTitle,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   fontSize: 17,
                   color: Colors.white,
                   fontWeight: FontWeight.w600,
@@ -157,7 +158,7 @@ class _HandReviewDialogState extends State<HandReviewDialog> {
                 color: _isStarred
                     ? Colors.amber.withValues(alpha: 0.2)
                     : AppColors.neutral800,
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(AppDecorations.radius10),
                 border: Border.all(
                   color: _isStarred ? Colors.amber : AppColors.neutral700,
                   width: 1,
@@ -184,7 +185,7 @@ class _HandReviewDialogState extends State<HandReviewDialog> {
           children: [
             Text(
               l10n.handReviewYourHoleCards,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 fontWeight: FontWeight.w500,
                 color: Colors.white,
                 fontSize: 15,
@@ -193,7 +194,7 @@ class _HandReviewDialogState extends State<HandReviewDialog> {
             const SizedBox(width: 6),
             Text(
               l10n.handReviewOptional,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 color: AppColors.textDisabled,
                 fontSize: 13,
               ),
@@ -219,7 +220,7 @@ class _HandReviewDialogState extends State<HandReviewDialog> {
       children: [
         Text(
           l10n.handReviewQuickTags,
-          style: GoogleFonts.ibmPlexSans(
+          style: AppTypography.ibm(
             fontWeight: FontWeight.w500,
             color: Colors.white,
             fontSize: 15,
@@ -253,7 +254,7 @@ class _HandReviewDialogState extends State<HandReviewDialog> {
           color: isSelected
               ? AppColors.buttonPrimary.withValues(alpha: 0.15)
               : AppColors.neutral800,
-          borderRadius: BorderRadius.circular(40),
+          borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
           border: Border.all(
             color: isSelected ? AppColors.buttonPrimary : AppColors.neutral700,
             width: 1,
@@ -270,7 +271,7 @@ class _HandReviewDialogState extends State<HandReviewDialog> {
             const SizedBox(width: 6),
             Text(
               label,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 fontSize: 13,
                 color: isSelected ? AppColors.buttonPrimary : Colors.white70,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
@@ -289,7 +290,7 @@ class _HandReviewDialogState extends State<HandReviewDialog> {
       children: [
         Text(
           l10n.handReviewNotes,
-          style: GoogleFonts.ibmPlexSans(
+          style: AppTypography.ibm(
             fontWeight: FontWeight.w500,
             color: Colors.white,
             fontSize: 15,
@@ -299,16 +300,16 @@ class _HandReviewDialogState extends State<HandReviewDialog> {
         Container(
           decoration: BoxDecoration(
             color: AppColors.paper,
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(AppDecorations.radius14),
             border: Border.all(color: AppColors.neutral800),
           ),
           child: TextField(
             controller: _notesController,
             maxLines: 2,
-            style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 14),
+            style: AppTypography.ibm(color: Colors.white, fontSize: 14),
             decoration: InputDecoration(
               hintText: l10n.handReviewNotesHint,
-              hintStyle: GoogleFonts.ibmPlexSans(
+              hintStyle: AppTypography.ibm(
                 color: AppColors.infoCardDateText,
                 fontSize: 13,
               ),
@@ -333,13 +334,13 @@ class _HandReviewDialogState extends State<HandReviewDialog> {
             style: TextButton.styleFrom(
               backgroundColor: AppColors.buttonPrimary,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(40),
+                borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
               ),
               padding: EdgeInsets.zero,
             ),
             child: Text(
               l10n.handReviewSaveHand,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 color: Colors.black,
                 fontSize: 17,
                 fontWeight: FontWeight.w600,
@@ -357,7 +358,7 @@ class _HandReviewDialogState extends State<HandReviewDialog> {
             style: TextButton.styleFrom(
               backgroundColor: Colors.transparent,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(40),
+                borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
                 side: BorderSide(
                   color: Colors.white.withValues(alpha: 0.3),
                   width: 1,
@@ -367,7 +368,7 @@ class _HandReviewDialogState extends State<HandReviewDialog> {
             ),
             child: Text(
               l10n.handReviewSkip,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 color: Colors.white.withValues(alpha: 0.6),
                 fontSize: 17,
                 fontWeight: FontWeight.w600,

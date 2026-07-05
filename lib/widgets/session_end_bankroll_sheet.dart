@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../design_system/components/form_drawer.dart';
 import '../l10n/app_localizations.dart';
 import '../models/game_types.dart';
@@ -8,6 +7,8 @@ import '../services/session_result_service.dart';
 import '../services/app_data_cache.dart';
 import '../services/currency_service.dart';
 import '../design_system/constants/colors.dart';
+import '../design_system/constants/typography.dart';
+import '../design_system/constants/decorations.dart';
 
 /// Shows session-end bankroll sheet using FormDrawer.
 /// Cash: editable pre-filled profit + total invested.
@@ -144,7 +145,7 @@ class _CashBodyState extends State<_CashBody> {
       child: Container(
         decoration: BoxDecoration(
           color: AppColors.infoCardBg,
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(AppDecorations.radius18),
         ),
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         child: Column(
@@ -157,7 +158,7 @@ class _CashBodyState extends State<_CashBody> {
                 children: [
                   Text(
                     isPositive ? l10n.sessionEndProfit : l10n.sessionEndLoss,
-                    style: GoogleFonts.ibmPlexSans(
+                    style: AppTypography.ibm(
                       fontSize: 13,
                       fontWeight: FontWeight.w400,
                       color: AppColors.textDisabled,
@@ -165,7 +166,7 @@ class _CashBodyState extends State<_CashBody> {
                   ),
                   Text(
                     l10n.sessionEndTotalInvested,
-                    style: GoogleFonts.ibmPlexSans(
+                    style: AppTypography.ibm(
                       fontSize: 13,
                       fontWeight: FontWeight.w400,
                       color: AppColors.textDisabled,
@@ -195,7 +196,7 @@ class _CashBodyState extends State<_CashBody> {
                               decimal: true,
                             ),
                             textInputAction: TextInputAction.done,
-                            style: GoogleFonts.robotoMono(
+                            style: AppTypography.mono(
                               fontSize: 28,
                               fontWeight: FontWeight.w600,
                               color: isPositive
@@ -205,7 +206,7 @@ class _CashBodyState extends State<_CashBody> {
                             onChanged: (_) => setState(() {}),
                             decoration: InputDecoration(
                               prefixText: CurrencyService.prefixText,
-                              prefixStyle: GoogleFonts.robotoMono(
+                              prefixStyle: AppTypography.mono(
                                 fontSize: 28,
                                 fontWeight: FontWeight.w600,
                                 color: isPositive
@@ -226,7 +227,7 @@ class _CashBodyState extends State<_CashBody> {
                             padding: const EdgeInsets.only(left: 2),
                             child: Text(
                               CurrencyService.suffixText!,
-                              style: GoogleFonts.robotoMono(
+                              style: AppTypography.mono(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w500,
                                 color: isPositive
@@ -241,7 +242,7 @@ class _CashBodyState extends State<_CashBody> {
                   const SizedBox(width: 8),
                   Text(
                     CurrencyService.formatCash(widget.totalBuyIn),
-                    style: GoogleFonts.robotoMono(
+                    style: AppTypography.mono(
                       fontSize: 17,
                       fontWeight: FontWeight.w500,
                       color: Colors.white,
@@ -305,7 +306,7 @@ class _TournamentBodyState extends State<_TournamentBody> {
       child: Container(
         decoration: BoxDecoration(
           color: AppColors.infoCardBg,
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(AppDecorations.radius18),
         ),
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         child: Column(
@@ -336,15 +337,15 @@ class _TournamentBodyState extends State<_TournamentBody> {
                 children: [
                   Text(
                     l10n.sessionEndTotalInvested,
-                    style: GoogleFonts.ibmPlexSans(
+                    style: AppTypography.ibm(
                       fontSize: 15,
                       fontWeight: FontWeight.w400,
-                      color: const Color(0xFFB9B9B9),
+                      color: AppColors.textSecondary,
                     ),
                   ),
                   Text(
                     CurrencyService.formatCash(widget.totalBuyIn),
-                    style: GoogleFonts.robotoMono(
+                    style: AppTypography.mono(
                       fontSize: 17,
                       fontWeight: FontWeight.w500,
                       color: Colors.white,
@@ -365,15 +366,15 @@ class _TournamentBodyState extends State<_TournamentBody> {
                       _calculatedProfit! >= 0
                           ? l10n.sessionEndProfit
                           : l10n.sessionEndLoss,
-                      style: GoogleFonts.ibmPlexSans(
+                      style: AppTypography.ibm(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
-                        color: const Color(0xFFB9B9B9),
+                        color: AppColors.textSecondary,
                       ),
                     ),
                     Text(
                       CurrencyService.formatCash(_calculatedProfit!),
-                      style: GoogleFonts.robotoMono(
+                      style: AppTypography.mono(
                         fontSize: 17,
                         fontWeight: FontWeight.w600,
                         color: _calculatedProfit! >= 0
@@ -405,10 +406,10 @@ class _TournamentBodyState extends State<_TournamentBody> {
             flex: 3,
             child: Text(
               label,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 fontSize: 15,
                 fontWeight: FontWeight.w400,
-                color: const Color(0xFFB9B9B9),
+                color: AppColors.textSecondary,
               ),
             ),
           ),
@@ -419,20 +420,20 @@ class _TournamentBodyState extends State<_TournamentBody> {
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
               textInputAction: TextInputAction.done,
               textAlign: TextAlign.right,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 fontSize: 17,
                 fontWeight: FontWeight.w500,
                 color: Colors.white,
               ),
               decoration: InputDecoration(
                 prefixText: prefix,
-                prefixStyle: GoogleFonts.ibmPlexSans(
+                prefixStyle: AppTypography.ibm(
                   fontSize: 17,
                   fontWeight: FontWeight.w500,
                   color: AppColors.textDisabled,
                 ),
                 suffixText: suffix,
-                suffixStyle: GoogleFonts.ibmPlexSans(
+                suffixStyle: AppTypography.ibm(
                   fontSize: 17,
                   fontWeight: FontWeight.w500,
                   color: AppColors.textDisabled,
@@ -451,7 +452,7 @@ class _TournamentBodyState extends State<_TournamentBody> {
   Widget _buildDivider() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8),
-      child: Divider(height: 1, color: const Color(0xFF3A3A3C)),
+      child: Divider(height: 1, color: AppColors.bgOverlay),
     );
   }
 }

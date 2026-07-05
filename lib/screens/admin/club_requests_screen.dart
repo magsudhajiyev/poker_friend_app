@@ -4,6 +4,7 @@ import '../../design_system/poker_friend_theme.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/club_request.dart';
 import '../../services/club_request_service.dart';
+import '../../design_system/constants/decorations.dart';
 
 /// Screen for app admins to manage club registration requests
 class ClubRequestsScreen extends StatefulWidget {
@@ -65,7 +66,7 @@ class _ClubRequestsScreenState extends State<ClubRequestsScreen>
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: PokerFriendColors.dark3,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDecorations.radius20)),
         title: Text(
           AppLocalizations.of(context).clubRequestsApproveTitle,
           style: const TextStyle(color: Colors.white),
@@ -124,7 +125,7 @@ class _ClubRequestsScreenState extends State<ClubRequestsScreen>
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: PokerFriendColors.dark3,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDecorations.radius20)),
         title: Text(
           AppLocalizations.of(context).clubRequestsRejectTitle,
           style: const TextStyle(color: Colors.white),
@@ -148,7 +149,7 @@ class _ClubRequestsScreenState extends State<ClubRequestsScreen>
                 filled: true,
                 fillColor: PokerFriendColors.dark1,
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                   borderSide: BorderSide.none,
                 ),
               ),
@@ -217,7 +218,7 @@ class _ClubRequestsScreenState extends State<ClubRequestsScreen>
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: PokerFriendColors.dark3,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDecorations.radius20)),
         title: Row(
           children: [
             Expanded(
@@ -269,7 +270,7 @@ class _ClubRequestsScreenState extends State<ClubRequestsScreen>
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: PokerFriendColors.red.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
                   ),
                   child: Text(
                     request.rejectionReason!,
@@ -396,7 +397,7 @@ class _ClubRequestsScreenState extends State<ClubRequestsScreen>
               height: 44,
               decoration: BoxDecoration(
                 color: PokerFriendColors.dark3,
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(AppDecorations.radius14),
               ),
               child: const Icon(
                 Icons.arrow_back,
@@ -429,13 +430,13 @@ class _ClubRequestsScreenState extends State<ClubRequestsScreen>
       margin: const EdgeInsets.symmetric(horizontal: 24),
       decoration: BoxDecoration(
         color: PokerFriendColors.dark3,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
       ),
       child: TabBar(
         controller: _tabController,
         indicator: BoxDecoration(
           color: PokerFriendColors.purple,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(AppDecorations.radius10),
         ),
         indicatorSize: TabBarIndicatorSize.tab,
         labelColor: Colors.white,
@@ -531,7 +532,7 @@ class _ClubRequestsScreenState extends State<ClubRequestsScreen>
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: PokerFriendColors.dark3,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -610,7 +611,7 @@ class _ClubRequestsScreenState extends State<ClubRequestsScreen>
                         foregroundColor: PokerFriendColors.red,
                         side: const BorderSide(color: PokerFriendColors.red),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(AppDecorations.radius10),
                         ),
                       ),
                       child: Text(AppLocalizations.of(context).clubRequestsRejectButton),
@@ -623,7 +624,7 @@ class _ClubRequestsScreenState extends State<ClubRequestsScreen>
                       style: ElevatedButton.styleFrom(
                         backgroundColor: PokerFriendColors.green,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(AppDecorations.radius10),
                         ),
                       ),
                       child: Text(AppLocalizations.of(context).clubRequestsApproveButton),

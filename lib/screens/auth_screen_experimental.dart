@@ -159,7 +159,7 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) => AlertDialog(
           backgroundColor: AppColors.bgSurface,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDecorations.radius20)),
           title: Text(l10n.authExpLinkGoogleTitle,
               style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
           content: Column(
@@ -266,7 +266,7 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) => AlertDialog(
           backgroundColor: AppColors.bgSurface,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDecorations.radius20)),
           title: Text(l10n.authExpLinkAppleTitle,
               style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
           content: Column(

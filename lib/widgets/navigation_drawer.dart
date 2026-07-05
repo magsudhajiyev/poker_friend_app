@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../l10n/app_localizations.dart';
 import '../models/club.dart';
@@ -20,6 +19,8 @@ import '../screens/paywall_screen.dart';
 import '../screens/earnings_chart_screen.dart';
 import 'register_club_dialog.dart';
 import '../design_system/constants/colors.dart';
+import '../design_system/constants/typography.dart';
+import '../design_system/constants/decorations.dart';
 
 /// Profile screen drawer matching Figma design (node 522-4548)
 class AppNavigationDrawer extends StatefulWidget {
@@ -318,7 +319,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               decoration: BoxDecoration(
                 color: const Color(0xFF104034).withOpacity(0.6),
-                borderRadius: BorderRadius.circular(70),
+                borderRadius: BorderRadius.circular(AppDecorations.navBarRadius),
                 border: Border.all(
                   color: AppColors.buttonPrimary,
                   width: 1,
@@ -342,7 +343,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
                   const SizedBox(width: 6),
                   Text(
                     _subscriptionPillLabel(l10n),
-                    style: GoogleFonts.ibmPlexSans(
+                    style: AppTypography.ibm(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                       color: AppColors.buttonPrimary,
@@ -369,7 +370,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
         // Name (24px, SemiBold)
         Text(
           widget.username ?? l10n.navDrawerUserFallback,
-          style: GoogleFonts.inter(
+          style: AppTypography.interLegacy(
             fontSize: 24,
             fontWeight: FontWeight.w600,
             color: Colors.white,
@@ -384,7 +385,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
         if (widget.email != null)
           Text(
             widget.email!,
-            style: GoogleFonts.inter(
+            style: AppTypography.interLegacy(
               fontSize: 15,
               fontWeight: FontWeight.w400,
               color: Colors.white.withOpacity(0.7),
@@ -493,7 +494,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
                 _isClubsExpanded = !_isClubsExpanded;
               });
             },
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
             splashColor: Colors.white.withOpacity(0.1),
             highlightColor: Colors.white.withOpacity(0.05),
             child: SizedBox(
@@ -513,7 +514,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
                     Expanded(
                       child: Text(
                         l10n.navDrawerClubs,
-                        style: GoogleFonts.ibmPlexSans(
+                        style: AppTypography.ibm(
                           fontSize: 17,
                           fontWeight: FontWeight.w400,
                           color: color,
@@ -558,7 +559,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
         padding: const EdgeInsets.only(left: 22, top: 12),
         child: Text(
           l10n.navDrawerNoClubsYet,
-          style: GoogleFonts.ibmPlexSans(
+          style: AppTypography.ibm(
             fontSize: 14,
             fontWeight: FontWeight.w400,
             color: Colors.white.withOpacity(0.5),
@@ -610,7 +611,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
             ),
           );
         },
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
         splashColor: Colors.white.withOpacity(0.1),
         highlightColor: Colors.white.withOpacity(0.05),
         child: Padding(
@@ -625,12 +626,12 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
                   height: 36,
                   decoration: BoxDecoration(
                     color: avatarColor,
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(AppDecorations.radius10),
                   ),
                   child: Center(
                     child: Text(
                       initials,
-                      style: GoogleFonts.ibmPlexSans(
+                      style: AppTypography.ibm(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                         color: Colors.white,
@@ -647,7 +648,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
                     children: [
                       Text(
                         club.name,
-                        style: GoogleFonts.ibmPlexSans(
+                        style: AppTypography.ibm(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
                           color: Colors.white,
@@ -659,7 +660,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
                         const SizedBox(height: 2),
                         Text(
                           subtitle,
-                          style: GoogleFonts.ibmPlexSans(
+                          style: AppTypography.ibm(
                             fontSize: 11,
                             fontWeight: FontWeight.w400,
                             color: const Color(0xFF808285),
@@ -685,7 +686,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
                     child: Center(
                       child: Text(
                         roleLabel,
-                        style: GoogleFonts.ibmPlexSans(
+                        style: AppTypography.ibm(
                           fontSize: 10,
                           fontWeight: FontWeight.w600,
                           color: isAdmin
@@ -731,7 +732,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
       color: Colors.transparent,
       child: InkWell(
         onTap: item.onTap,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
         splashColor: Colors.white.withOpacity(0.1),
         highlightColor: Colors.white.withOpacity(0.05),
         child: SizedBox(
@@ -756,7 +757,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
                 // Label
                 Text(
                   item.label,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     fontSize: 17,
                     fontWeight: FontWeight.w400,
                     color: color,
@@ -780,7 +781,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
           // Version
           Text(
             l10n.navDrawerVersion,
-            style: GoogleFonts.inter(
+            style: AppTypography.interLegacy(
               fontSize: 12,
               fontWeight: FontWeight.w400,
               color: Colors.white.withOpacity(0.4),
@@ -790,7 +791,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
           // App name
           Text(
             'Final Table',
-            style: GoogleFonts.inter(
+            style: AppTypography.interLegacy(
               fontSize: 12,
               fontWeight: FontWeight.w500,
               color: Colors.white.withOpacity(0.5),
@@ -800,7 +801,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
           // Last login
           Text(
             l10n.navDrawerLastLoginToday,
-            style: GoogleFonts.inter(
+            style: AppTypography.interLegacy(
               fontSize: 11,
               fontWeight: FontWeight.w400,
               color: Colors.white.withOpacity(0.3),
@@ -844,7 +845,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
       child: Center(
         child: Text(
           _getInitials(),
-          style: GoogleFonts.inter(
+          style: AppTypography.interLegacy(
             fontSize: size * 0.357,
             fontWeight: FontWeight.w600,
             color: AppColors.limeGreen,
@@ -938,7 +939,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
                     Container(
                       decoration: BoxDecoration(
                         color: const Color(0xFF131613),
-                        borderRadius: BorderRadius.circular(18),
+                        borderRadius: BorderRadius.circular(AppDecorations.radius18),
                       ),
                       padding: const EdgeInsets.only(top: 24),
                       child: Column(
@@ -957,7 +958,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
                             padding: const EdgeInsets.symmetric(horizontal: 24),
                             child: Text(
                               l10n.navDrawerNoEarningsTitle,
-                              style: GoogleFonts.ibmPlexSans(
+                              style: AppTypography.ibm(
                                 fontSize: 16,
                                 color: Colors.white,
                                 fontWeight: FontWeight.w600,
@@ -976,7 +977,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
                             padding: const EdgeInsets.symmetric(horizontal: 24),
                             child: Text(
                               l10n.navDrawerNoEarningsBody,
-                              style: GoogleFonts.ibmPlexSans(
+                              style: AppTypography.ibm(
                                 fontSize: 12,
                                 color: Colors.white.withOpacity(0.6),
                                 fontWeight: FontWeight.w400,
@@ -1004,7 +1005,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
                               padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 10),
                               child: Text(
                                 l10n.commonOk,
-                                style: GoogleFonts.ibmPlexSans(
+                                style: AppTypography.ibm(
                                   fontSize: 16,
                                   color: AppColors.buttonPrimary,
                                   fontWeight: FontWeight.w600,
@@ -1036,20 +1037,20 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1A1A1E),
+        backgroundColor: AppColors.surfaceVariant4,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(AppDecorations.radius20),
         ),
         title: Text(
           l10n.navDrawerSignOutTitle,
-          style: GoogleFonts.inter(
+          style: AppTypography.interLegacy(
             color: Colors.white,
             fontWeight: FontWeight.w600,
           ),
         ),
         content: Text(
           l10n.navDrawerSignOutMessage,
-          style: GoogleFonts.inter(
+          style: AppTypography.interLegacy(
             color: Colors.white,
             fontSize: 14,
           ),
@@ -1059,7 +1060,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
             onPressed: () => Navigator.pop(context),
             child: Text(
               l10n.commonCancel,
-              style: GoogleFonts.inter(
+              style: AppTypography.interLegacy(
                 color: Colors.white.withOpacity(0.7),
                 fontWeight: FontWeight.w500,
               ),
@@ -1079,7 +1080,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
             },
             child: Text(
               l10n.navDrawerSignOut,
-              style: GoogleFonts.inter(
+              style: AppTypography.interLegacy(
                 color: const Color(0xFFFF6B6B),
                 fontWeight: FontWeight.w500,
               ),

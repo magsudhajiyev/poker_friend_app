@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../l10n/app_localizations.dart';
 import '../models/game_types.dart';
 import '../models/poker_game_state.dart' show formatBlindValue;
@@ -13,6 +12,8 @@ import '../onboarding/onboarding_tour.dart';
 import '../onboarding/onboarding_progress_bar.dart';
 import '../services/currency_service.dart';
 import '../design_system/constants/colors.dart';
+import '../design_system/constants/typography.dart';
+import '../design_system/constants/decorations.dart';
 
 class IndividualSessionSetupScreen extends StatefulWidget {
   final LoggingMode? loggingMode;
@@ -167,7 +168,7 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
                       // Title
                       Text(
                         AppLocalizations.of(context).individualSetupSessionSetup,
-                        style: GoogleFonts.ibmPlexSans(
+                        style: AppTypography.ibm(
                           fontSize: 17,
                           color: Colors.white,
                           fontWeight: FontWeight.w600,
@@ -214,14 +215,14 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
                             padding: EdgeInsets.all(18),
                             decoration: BoxDecoration(
                               color: AppColors.infoCardBg,
-                              borderRadius: BorderRadius.circular(18),
+                              borderRadius: BorderRadius.circular(AppDecorations.radius18),
                             ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
                                   AppLocalizations.of(context).individualSetupSessionNameLabel,
-                                  style: GoogleFonts.ibmPlexSans(
+                                  style: AppTypography.ibm(
                                     fontSize: 17,
                                     color: AppColors.tealPrimary,
                                     fontWeight: FontWeight.w600,
@@ -233,7 +234,7 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
                                 TextField(
                                   controller: _sessionNameController,
                                   textInputAction: TextInputAction.done,
-                                  style: GoogleFonts.ibmPlexSans(
+                                  style: AppTypography.ibm(
                                     color: Colors.white,
                                     fontSize: 17,
                                     fontWeight: FontWeight.w400,
@@ -241,7 +242,7 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
                                   ),
                                   decoration: InputDecoration(
                                     hintText: AppLocalizations.of(context).individualSetupSessionNameHint,
-                                    hintStyle: GoogleFonts.ibmPlexSans(
+                                    hintStyle: AppTypography.ibm(
                                       color: Colors.white.withOpacity(0.4),
                                       fontSize: 17,
                                       fontWeight: FontWeight.w400,
@@ -250,21 +251,21 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
                                     filled: true,
                                     fillColor: Color(0xFF1C1C1E),
                                     border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
+                                      borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                                       borderSide: BorderSide(
                                         color: Color(0xFF1B262D).withOpacity(0.6),
                                         width: 1,
                                       ),
                                     ),
                                     enabledBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
+                                      borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                                       borderSide: BorderSide(
                                         color: Color(0xFF1B262D).withOpacity(0.6),
                                         width: 1,
                                       ),
                                     ),
                                     focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
+                                      borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                                       borderSide: BorderSide(
                                         color: AppColors.buttonPrimary,
                                         width: 1,
@@ -286,14 +287,14 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
                             padding: EdgeInsets.all(18),
                             decoration: BoxDecoration(
                               color: AppColors.infoCardBg,
-                              borderRadius: BorderRadius.circular(18),
+                              borderRadius: BorderRadius.circular(AppDecorations.radius18),
                             ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
                                   AppLocalizations.of(context).individualSetupGameTypeLabel,
-                                  style: GoogleFonts.ibmPlexSans(
+                                  style: AppTypography.ibm(
                                     fontSize: 17,
                                     color: AppColors.tealPrimary,
                                     fontWeight: FontWeight.w600,
@@ -339,14 +340,14 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
                             padding: EdgeInsets.all(18),
                             decoration: BoxDecoration(
                               color: AppColors.infoCardBg,
-                              borderRadius: BorderRadius.circular(18),
+                              borderRadius: BorderRadius.circular(AppDecorations.radius18),
                             ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
                                   AppLocalizations.of(context).individualSetupBuyInAmountLabel,
-                                  style: GoogleFonts.ibmPlexSans(
+                                  style: AppTypography.ibm(
                                     fontSize: 17,
                                     color: AppColors.tealPrimary,
                                     fontWeight: FontWeight.w600,
@@ -359,7 +360,7 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
                                   controller: _buyInController,
                                   keyboardType: TextInputType.numberWithOptions(decimal: true),
                                   textInputAction: TextInputAction.done,
-                                  style: GoogleFonts.ibmPlexSans(
+                                  style: AppTypography.ibm(
                                     color: Colors.white,
                                     fontSize: 17,
                                     fontWeight: FontWeight.w400,
@@ -367,7 +368,7 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
                                   ),
                                   decoration: InputDecoration(
                                     hintText: AppLocalizations.of(context).individualSetupEnterAmount,
-                                    hintStyle: GoogleFonts.ibmPlexSans(
+                                    hintStyle: AppTypography.ibm(
                                       color: Colors.white.withOpacity(0.4),
                                       fontSize: 17,
                                       fontWeight: FontWeight.w400,
@@ -375,13 +376,13 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
                                     ),
                                     prefixText: CurrencyService.prefixText,
                                     suffixText: CurrencyService.suffixText,
-                                    prefixStyle: GoogleFonts.ibmPlexSans(
+                                    prefixStyle: AppTypography.ibm(
                                       color: Colors.white,
                                       fontSize: 17,
                                       fontWeight: FontWeight.w400,
                                       height: 1.44,
                                     ),
-                                    suffixStyle: GoogleFonts.ibmPlexSans(
+                                    suffixStyle: AppTypography.ibm(
                                       color: Colors.white,
                                       fontSize: 17,
                                       fontWeight: FontWeight.w400,
@@ -390,21 +391,21 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
                                     filled: true,
                                     fillColor: Color(0xFF1C1C1E),
                                     border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
+                                      borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                                       borderSide: BorderSide(
                                         color: Color(0xFF1B262D).withOpacity(0.6),
                                         width: 1,
                                       ),
                                     ),
                                     enabledBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
+                                      borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                                       borderSide: BorderSide(
                                         color: Color(0xFF1B262D).withOpacity(0.6),
                                         width: 1,
                                       ),
                                     ),
                                     focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
+                                      borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                                       borderSide: BorderSide(
                                         color: AppColors.buttonPrimary,
                                         width: 1,
@@ -432,7 +433,7 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
                                       Expanded(
                                         child: Text(
                                           AppLocalizations.of(context).individualSetupCashGameNote,
-                                          style: GoogleFonts.ibmPlexSans(
+                                          style: AppTypography.ibm(
                                             color: Colors.white.withOpacity(0.6),
                                             fontSize: 14,
                                             fontWeight: FontWeight.w400,
@@ -460,14 +461,14 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
                                 padding: EdgeInsets.all(18),
                                 decoration: BoxDecoration(
                                   color: AppColors.infoCardBg,
-                                  borderRadius: BorderRadius.circular(18),
+                                  borderRadius: BorderRadius.circular(AppDecorations.radius18),
                                 ),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
                                       AppLocalizations.of(context).individualSetupStartingStackLabel,
-                                      style: GoogleFonts.ibmPlexSans(
+                                      style: AppTypography.ibm(
                                         fontSize: 17,
                                         color: AppColors.tealPrimary,
                                         fontWeight: FontWeight.w600,
@@ -480,7 +481,7 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
                                       controller: _startingStackController,
                                       keyboardType: TextInputType.numberWithOptions(decimal: true),
                                       textInputAction: TextInputAction.done,
-                                      style: GoogleFonts.ibmPlexSans(
+                                      style: AppTypography.ibm(
                                         color: Colors.white,
                                         fontSize: 17,
                                         fontWeight: FontWeight.w400,
@@ -488,7 +489,7 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
                                       ),
                                       decoration: InputDecoration(
                                         hintText: AppLocalizations.of(context).individualSetupEnterChipStack,
-                                        hintStyle: GoogleFonts.ibmPlexSans(
+                                        hintStyle: AppTypography.ibm(
                                           color: Colors.white.withOpacity(0.4),
                                           fontSize: 17,
                                           fontWeight: FontWeight.w400,
@@ -497,21 +498,21 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
                                         filled: true,
                                         fillColor: Color(0xFF1C1C1E),
                                         border: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(12),
+                                          borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                                           borderSide: BorderSide(
                                             color: hasStackError ? errorBorderColor : Color(0xFF1B262D).withOpacity(0.6),
                                             width: 1,
                                           ),
                                         ),
                                         enabledBorder: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(12),
+                                          borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                                           borderSide: BorderSide(
                                             color: hasStackError ? errorBorderColor : Color(0xFF1B262D).withOpacity(0.6),
                                             width: 1,
                                           ),
                                         ),
                                         focusedBorder: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(12),
+                                          borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                                           borderSide: BorderSide(
                                             color: hasStackError ? errorBorderColor : AppColors.buttonPrimary,
                                             width: 1,
@@ -525,7 +526,7 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
                                       SizedBox(height: 8),
                                       Text(
                                         AppLocalizations.of(context).individualSetupStackValidation(bigBlind.toInt()),
-                                        style: GoogleFonts.ibmPlexSans(
+                                        style: AppTypography.ibm(
                                           fontSize: 12,
                                           color: errorBorderColor,
                                         ),
@@ -578,14 +579,14 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
                               padding: EdgeInsets.all(18),
                               decoration: BoxDecoration(
                                 color: AppColors.infoCardBg,
-                                borderRadius: BorderRadius.circular(18),
+                                borderRadius: BorderRadius.circular(AppDecorations.radius18),
                               ),
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
                                     AppLocalizations.of(context).setupBbAnte,
-                                    style: GoogleFonts.ibmPlexSans(
+                                    style: AppTypography.ibm(
                                       fontSize: 17,
                                       color: Colors.white,
                                       fontWeight: FontWeight.w500,
@@ -600,7 +601,7 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
                                       padding: EdgeInsets.all(2),
                                       decoration: BoxDecoration(
                                         color: hasBBante ? AppColors.tealPrimary : Color(0xFF1C1C1E),
-                                        borderRadius: BorderRadius.circular(16),
+                                        borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
                                         border: hasBBante ? null : Border.all(
                                           color: Color(0xFF1B262D).withOpacity(0.6),
                                           width: 1,
@@ -647,7 +648,7 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
                               child: Center(
                                 child: Text(
                                   AppLocalizations.of(context).individualSetupStartSessionBtn,
-                                  style: GoogleFonts.ibmPlexSans(
+                                  style: AppTypography.ibm(
                                     fontSize: 17,
                                     color: isFormValid ? Colors.black : Colors.white.withOpacity(0.4),
                                     fontWeight: FontWeight.w600,
@@ -684,7 +685,7 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
         padding: EdgeInsets.symmetric(vertical: 14),
         decoration: BoxDecoration(
           color: Color(0xFF1C1C1E),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
           border: Border.all(
             color: isSelected ? AppColors.buttonPrimary : Color(0xFF1B262D).withOpacity(0.6),
             width: isSelected ? 2 : 1,
@@ -693,7 +694,7 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
         child: Center(
           child: Text(
             title,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               fontSize: 15,
               color: isSelected ? AppColors.buttonPrimary : Colors.white.withOpacity(0.6),
               fontWeight: FontWeight.w500,
@@ -714,13 +715,13 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
       padding: EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: AppColors.infoCardBg,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(AppDecorations.radius18),
       ),
       child: Column(
         children: [
           Text(
             title,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               fontSize: 15,
               color: Colors.white,
               fontWeight: FontWeight.w500,
@@ -744,7 +745,7 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
               child: Center(
                 child: Text(
                   value,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     fontSize: 17,
                     color: Colors.white.withOpacity(0.6),
                     fontWeight: FontWeight.w400,
@@ -768,11 +769,11 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
         return AlertDialog(
           backgroundColor: AppColors.infoCardBg,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(AppDecorations.radius18),
           ),
           title: Text(
             title,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               color: AppColors.tealPrimary,
               fontSize: 17,
               fontWeight: FontWeight.w600,
@@ -782,14 +783,14 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
             controller: controller,
             keyboardType: TextInputType.number,
             textInputAction: TextInputAction.done,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               color: Colors.white,
               fontSize: 17,
               fontWeight: FontWeight.w400,
             ),
             decoration: InputDecoration(
               hintText: AppLocalizations.of(context).individualSetupEnterValue,
-              hintStyle: GoogleFonts.ibmPlexSans(
+              hintStyle: AppTypography.ibm(
                 color: Colors.white.withOpacity(0.4),
                 fontSize: 17,
                 fontWeight: FontWeight.w400,
@@ -797,15 +798,15 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
               filled: true,
               fillColor: Color(0xFF1C1C1E),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                 borderSide: BorderSide(color: Color(0xFF1B262D).withOpacity(0.6)),
               ),
               enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                 borderSide: BorderSide(color: Color(0xFF1B262D).withOpacity(0.6)),
               ),
               focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                 borderSide: BorderSide(color: AppColors.buttonPrimary),
               ),
             ),
@@ -816,7 +817,7 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
               onPressed: () => Navigator.pop(context),
               child: Text(
                 'Cancel',
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   color: Colors.white.withOpacity(0.6),
                   fontWeight: FontWeight.w500,
                 ),
@@ -832,7 +833,7 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
               },
               child: Text(
                 'OK',
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   color: AppColors.tealPrimary,
                   fontWeight: FontWeight.w600,
                 ),

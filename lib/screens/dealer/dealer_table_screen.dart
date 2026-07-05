@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import '../../l10n/app_localizations.dart';
 import '../../config/app_config.dart';
@@ -36,6 +35,8 @@ import '../../widgets/all_in_board_cards_dialog.dart';
 import '../../widgets/winner_selection_dialog.dart';
 import '../../widgets/multi_pot_winner_dialog.dart';
 import '../../design_system/constants/colors.dart';
+import '../../design_system/constants/typography.dart';
+import '../../design_system/constants/decorations.dart';
 // Removed: showdown_dialog - dealers don't enter player hole cards
 // Players enter their own hole cards on their devices
 
@@ -1457,7 +1458,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
       builder: (context) => Dialog(
         backgroundColor: AppColors.surfaceDark,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
           side: const BorderSide(color: AppColors.neutral800),
         ),
         child: Padding(
@@ -1483,7 +1484,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
               // Title
               Text(
                 AppLocalizations.of(context).dealerTablePlayerBusted(playerName),
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   color: Colors.white,
                   fontSize: 19,
                   fontWeight: FontWeight.w600,
@@ -1495,7 +1496,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
               Text(
                 AppLocalizations.of(context).dealerTableNoChipsRemaining(seatNumber, _rebuyStack.toStringAsFixed(0)),
                 textAlign: TextAlign.center,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   color: AppColors.textMint,
                   fontSize: 14,
                   fontWeight: FontWeight.w400,
@@ -1517,7 +1518,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                     alignment: Alignment.center,
                     child: Text(
                       AppLocalizations.of(context).dealerTableRemovePlayer,
-                      style: GoogleFonts.ibmPlexSans(
+                      style: AppTypography.ibm(
                         color: Colors.white,
                         fontSize: 17,
                         fontWeight: FontWeight.w600,
@@ -1542,7 +1543,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                     alignment: Alignment.center,
                     child: Text(
                       AppLocalizations.of(context).dealerTableRebuy,
-                      style: GoogleFonts.ibmPlexSans(
+                      style: AppTypography.ibm(
                         color: Colors.white,
                         fontSize: 17,
                         fontWeight: FontWeight.w600,
@@ -1608,7 +1609,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
       builder: (context) => Dialog(
         backgroundColor: AppColors.surfaceDark,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
           side: const BorderSide(color: AppColors.neutral800),
         ),
         child: Padding(
@@ -1637,7 +1638,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                   Expanded(
                     child: Text(
                       AppLocalizations.of(context).dealerTableDealerChange,
-                      style: GoogleFonts.ibmPlexSans(
+                      style: AppTypography.ibm(
                         color: Colors.white,
                         fontSize: 19,
                         fontWeight: FontWeight.w600,
@@ -1650,7 +1651,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
               const SizedBox(height: 16),
               Text(
                 AppLocalizations.of(context).dealerTableDealerChangeBody,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   color: AppColors.textMint,
                   fontSize: 14,
                   fontWeight: FontWeight.w400,
@@ -1660,7 +1661,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
               const SizedBox(height: 10),
               Text(
                 AppLocalizations.of(context).dealerTableDealerChangePreserve,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   color: AppColors.textMint,
                   fontSize: 14,
                   fontWeight: FontWeight.w400,
@@ -1670,7 +1671,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
               const SizedBox(height: 10),
               Text(
                 AppLocalizations.of(context).dealerTableDealerChangeResume,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   color: AppColors.textMint,
                   fontSize: 14,
                   fontWeight: FontWeight.w400,
@@ -1688,7 +1689,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                         alignment: Alignment.center,
                         child: Text(
                           AppLocalizations.of(context).commonCancel,
-                          style: GoogleFonts.ibmPlexSans(
+                          style: AppTypography.ibm(
                             color: Colors.white,
                             fontSize: 17,
                             fontWeight: FontWeight.w600,
@@ -1705,11 +1706,11 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                           horizontal: 32, vertical: 12),
                       decoration: BoxDecoration(
                         color: AppColors.warningText,
-                        borderRadius: BorderRadius.circular(60),
+                        borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
                       ),
                       child: Text(
                         AppLocalizations.of(context).dealerTableHandOff,
-                        style: GoogleFonts.ibmPlexSans(
+                        style: AppTypography.ibm(
                           color: Colors.black,
                           fontSize: 17,
                           fontWeight: FontWeight.w600,
@@ -1862,7 +1863,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
       builder: (context) => Dialog(
         backgroundColor: AppColors.surfaceDark,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
           side: const BorderSide(color: AppColors.neutral800),
         ),
         child: Padding(
@@ -1871,25 +1872,25 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title, style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w600)),
+              Text(title, style: AppTypography.ibm(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w600)),
               const SizedBox(height: 16),
               TextField(
                 controller: controller,
                 keyboardType: TextInputType.number,
-                style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w500),
+                style: AppTypography.ibm(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w500),
                 autofocus: true,
                 decoration: InputDecoration(
                   filled: true,
                   fillColor: AppColors.paper,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppColors.infoCardDateText)),
-                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppColors.infoCardDateText)),
-                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppColors.buttonPrimary)),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppDecorations.radius14), borderSide: const BorderSide(color: AppColors.infoCardDateText)),
+                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(AppDecorations.radius14), borderSide: const BorderSide(color: AppColors.infoCardDateText)),
+                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(AppDecorations.radius14), borderSide: const BorderSide(color: AppColors.buttonPrimary)),
                   prefixText: _isTournament ? null : CurrencyService.prefixText,
                   suffixText: _isTournament ? null : CurrencyService.suffixText,
-                  prefixStyle: GoogleFonts.ibmPlexSans(color: AppColors.textDisabled, fontSize: 17),
-                  suffixStyle: GoogleFonts.ibmPlexSans(color: AppColors.textDisabled, fontSize: 17),
+                  prefixStyle: AppTypography.ibm(color: AppColors.textDisabled, fontSize: 17),
+                  suffixStyle: AppTypography.ibm(color: AppColors.textDisabled, fontSize: 17),
                   hintText: '0',
-                  hintStyle: GoogleFonts.ibmPlexSans(color: AppColors.infoCardDateText, fontSize: 17),
+                  hintStyle: AppTypography.ibm(color: AppColors.infoCardDateText, fontSize: 17),
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 ),
               ),
@@ -1902,7 +1903,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         alignment: Alignment.center,
-                        child: Text(AppLocalizations.of(context).commonCancel, style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w600)),
+                        child: Text(AppLocalizations.of(context).commonCancel, style: AppTypography.ibm(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w600)),
                       ),
                     ),
                   ),
@@ -1913,9 +1914,9 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
                       decoration: BoxDecoration(
                         color: AppColors.buttonPrimary,
-                        borderRadius: BorderRadius.circular(60),
+                        borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
                       ),
-                      child: Text(AppLocalizations.of(context).commonConfirm, style: GoogleFonts.ibmPlexSans(color: Colors.black, fontSize: 17, fontWeight: FontWeight.w600)),
+                      child: Text(AppLocalizations.of(context).commonConfirm, style: AppTypography.ibm(color: Colors.black, fontSize: 17, fontWeight: FontWeight.w600)),
                     ),
                   ),
                 ],
@@ -1941,7 +1942,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
       builder: (context) => Dialog(
         backgroundColor: AppColors.surfaceDark,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
           side: const BorderSide(color: AppColors.neutral800),
         ),
         child: Padding(
@@ -1952,7 +1953,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
             children: [
               Text(
                 AppLocalizations.of(context).dealerTableLeaveTitle,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   color: Colors.white,
                   fontSize: 19,
                   fontWeight: FontWeight.w600,
@@ -1963,7 +1964,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                 _isHandActive
                     ? AppLocalizations.of(context).dealerTableLeaveActiveHand
                     : AppLocalizations.of(context).dealerTableLeaveInactive,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   color: AppColors.textMint,
                   fontSize: 15,
                   fontWeight: FontWeight.w400,
@@ -1981,7 +1982,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                         alignment: Alignment.center,
                         child: Text(
                           AppLocalizations.of(context).commonCancel,
-                          style: GoogleFonts.ibmPlexSans(
+                          style: AppTypography.ibm(
                             color: Colors.white,
                             fontSize: 17,
                             fontWeight: FontWeight.w600,
@@ -1997,11 +1998,11 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
                       decoration: BoxDecoration(
                         color: AppColors.buttonPrimary,
-                        borderRadius: BorderRadius.circular(60),
+                        borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
                       ),
                       child: Text(
                         AppLocalizations.of(context).liveSessionLeave,
-                        style: GoogleFonts.ibmPlexSans(
+                        style: AppTypography.ibm(
                           color: Colors.black,
                           fontSize: 17,
                           fontWeight: FontWeight.w600,
@@ -2077,7 +2078,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
       builder: (dialogContext) => Dialog(
         backgroundColor: AppColors.surfaceDark,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
           side: const BorderSide(color: AppColors.neutral800),
         ),
         child: Padding(
@@ -2088,7 +2089,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
             children: [
               Text(
                 AppLocalizations.of(context).dealerTableApprovePlayer(pending.playerName ?? 'Player'),
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   color: Colors.white,
                   fontSize: 20,
                   fontWeight: FontWeight.w500,
@@ -2099,24 +2100,24 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                 controller: controller,
                 keyboardType: TextInputType.number,
                 autofocus: true,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   color: AppColors.textDisabled,
                   fontSize: 17,
                 ),
                 decoration: InputDecoration(
                   labelText: AppLocalizations.of(context).dealerTableStartingChipStack,
-                  labelStyle: GoogleFonts.ibmPlexSans(
+                  labelStyle: AppTypography.ibm(
                     color: Colors.white,
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
                   ),
                   floatingLabelBehavior: FloatingLabelBehavior.always,
                   enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(AppDecorations.radius14),
                     borderSide: const BorderSide(color: AppColors.infoCardDateText),
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(AppDecorations.radius14),
                     borderSide: const BorderSide(color: AppColors.buttonPrimary),
                   ),
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -2139,7 +2140,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(110)),
                   ),
-                  child: Text(AppLocalizations.of(context).commonConfirm, style: GoogleFonts.ibmPlexSans(fontSize: 17, fontWeight: FontWeight.w600, letterSpacing: -0.5)),
+                  child: Text(AppLocalizations.of(context).commonConfirm, style: AppTypography.ibm(fontSize: 17, fontWeight: FontWeight.w600, letterSpacing: -0.5)),
                 ),
               ),
               const SizedBox(height: 14),
@@ -2155,7 +2156,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(110)),
                       ),
-                      child: Text(AppLocalizations.of(context).commonCancel, style: GoogleFonts.ibmPlexSans(fontSize: 17, fontWeight: FontWeight.w600, letterSpacing: -0.5)),
+                      child: Text(AppLocalizations.of(context).commonCancel, style: AppTypography.ibm(fontSize: 17, fontWeight: FontWeight.w600, letterSpacing: -0.5)),
                     ),
                   ),
                   const SizedBox(width: 11),
@@ -2180,7 +2181,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(110)),
                       ),
-                      child: Text(AppLocalizations.of(context).supportRequestsReject, style: GoogleFonts.ibmPlexSans(fontSize: 17, fontWeight: FontWeight.w600, letterSpacing: -0.5)),
+                      child: Text(AppLocalizations.of(context).supportRequestsReject, style: AppTypography.ibm(fontSize: 17, fontWeight: FontWeight.w600, letterSpacing: -0.5)),
                     ),
                   ),
                 ],
@@ -2268,7 +2269,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                 labelStyle: const TextStyle(color: Colors.white54),
                 filled: true,
                 fillColor: Colors.white.withValues(alpha: 0.1),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppDecorations.radiusSm)),
                 prefixText: CurrencyService.prefixText,
                 suffixText: CurrencyService.suffixText,
                 prefixStyle: const TextStyle(color: Colors.white),
@@ -2353,7 +2354,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
       builder: (context) => Dialog(
         backgroundColor: AppColors.surfaceDark,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
           side: const BorderSide(color: AppColors.neutral800),
         ),
         child: Padding(
@@ -2365,7 +2366,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
               // Title
               Text(
                 AppLocalizations.of(context).dealerTableSeatNumber(seatNumber),
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   color: Colors.white,
                   fontSize: 19,
                   fontWeight: FontWeight.w600,
@@ -2395,7 +2396,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                         children: [
                           Text(
                             AppLocalizations.of(context).dealerTableAddPlayerActionLabel,
-                            style: GoogleFonts.ibmPlexSans(
+                            style: AppTypography.ibm(
                               color: Colors.white,
                               fontSize: 16,
                               fontWeight: FontWeight.w500,
@@ -2403,7 +2404,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                           ),
                           Text(
                             AppLocalizations.of(context).dealerTableSeatAnotherPlayer,
-                            style: GoogleFonts.ibmPlexSans(
+                            style: AppTypography.ibm(
                               color: AppColors.textDisabled,
                               fontSize: 13,
                             ),
@@ -2440,7 +2441,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                         children: [
                           Text(
                             AppLocalizations.of(context).dealerTableSitHereLabel,
-                            style: GoogleFonts.ibmPlexSans(
+                            style: AppTypography.ibm(
                               color: Colors.white,
                               fontSize: 16,
                               fontWeight: FontWeight.w500,
@@ -2448,7 +2449,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                           ),
                           Text(
                             AppLocalizations.of(context).dealerTableJoinAsDealerPlayer,
-                            style: GoogleFonts.ibmPlexSans(
+                            style: AppTypography.ibm(
                               color: AppColors.textDisabled,
                               fontSize: 13,
                             ),
@@ -2470,7 +2471,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                     alignment: Alignment.center,
                     child: Text(
                       AppLocalizations.of(context).commonCancel,
-                      style: GoogleFonts.ibmPlexSans(
+                      style: AppTypography.ibm(
                         color: AppColors.textDisabled,
                         fontSize: 17,
                         fontWeight: FontWeight.w600,
@@ -2564,7 +2565,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: PokerFriendColors.dark3,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDecorations.radiusLg)),
         title: Text(AppLocalizations.of(context).dealerTableEnterStartingStack, style: const TextStyle(color: Colors.white)),
         content: TextField(
           controller: controller,
@@ -2576,7 +2577,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
             filled: true,
             fillColor: PokerFriendColors.dark5,
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
               borderSide: BorderSide.none,
             ),
           ),
@@ -2601,7 +2602,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: PokerFriendColors.green,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDecorations.radius10)),
             ),
             child: Text(AppLocalizations.of(context).commonOk, style: const TextStyle(color: Colors.white)),
           ),
@@ -2803,7 +2804,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
         backgroundColor: AppColors.paper,
         appBar: AppBar(
           backgroundColor: AppColors.surfaceDark,
-          title: Text(widget.table.name, style: GoogleFonts.ibmPlexSans(fontWeight: FontWeight.w600)),
+          title: Text(widget.table.name, style: AppTypography.ibm(fontWeight: FontWeight.w600)),
         ),
         body: const Center(
           child: CircularProgressIndicator(color: AppColors.buttonPrimary),
@@ -2847,7 +2848,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                 Expanded(
                   child: Text(
                     widget.table.name,
-                    style: GoogleFonts.ibmPlexSans(
+                    style: AppTypography.ibm(
                       color: Colors.white,
                       fontSize: 27,
                       fontWeight: FontWeight.w600,
@@ -2986,7 +2987,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                       children: [
                         Text(
                           AppLocalizations.of(context).dealerTableBlindsLabel,
-                          style: GoogleFonts.ibmPlexSans(
+                          style: AppTypography.ibm(
                             color: AppColors.mint600,
                             fontSize: 13,
                             fontWeight: FontWeight.w500,
@@ -3008,7 +3009,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                     Text(
                       '$_smallBlind/$_bigBlind',
                       textAlign: TextAlign.center,
-                      style: GoogleFonts.ibmPlexSans(
+                      style: AppTypography.ibm(
                         color: AppColors.buttonPrimary,
                         fontSize: 15,
                         fontWeight: FontWeight.w500,
@@ -3056,7 +3057,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
           Text(
             label,
             textAlign: TextAlign.center,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               color: labelColor,
               fontSize: 13,
               fontWeight: FontWeight.w500,
@@ -3067,7 +3068,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
             value,
             textAlign: TextAlign.center,
             overflow: TextOverflow.ellipsis,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               color: valueColor,
               fontSize: 15,
               fontWeight: FontWeight.w500,
@@ -3088,7 +3089,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
       builder: (context) => Dialog(
         backgroundColor: AppColors.surfaceDark,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
           side: const BorderSide(color: AppColors.neutral800),
         ),
         child: Padding(
@@ -3099,7 +3100,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
             children: [
               Text(
                 AppLocalizations.of(context).individualUpdateBlinds,
-                style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w600),
+                style: AppTypography.ibm(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 16),
               Row(
@@ -3109,25 +3110,25 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
                         color: AppColors.paper,
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
                         border: Border.all(color: AppColors.neutral800),
                       ),
                       child: Column(
                         children: [
-                          Text(AppLocalizations.of(context).dealerTableSmallBlind, style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 14)),
+                          Text(AppLocalizations.of(context).dealerTableSmallBlind, style: AppTypography.ibm(color: Colors.white, fontSize: 14)),
                           const SizedBox(height: 8),
                           TextField(
                             controller: smallBlindController,
                             keyboardType: TextInputType.number,
                             textAlign: TextAlign.center,
-                            style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w500),
+                            style: AppTypography.ibm(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w500),
                             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                             decoration: InputDecoration(
                               isDense: true,
                               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppColors.infoCardDateText)),
-                              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppColors.infoCardDateText)),
-                              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppColors.buttonPrimary)),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppDecorations.radius14), borderSide: const BorderSide(color: AppColors.infoCardDateText)),
+                              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(AppDecorations.radius14), borderSide: const BorderSide(color: AppColors.infoCardDateText)),
+                              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(AppDecorations.radius14), borderSide: const BorderSide(color: AppColors.buttonPrimary)),
                             ),
                           ),
                         ],
@@ -3140,25 +3141,25 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
                         color: AppColors.paper,
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
                         border: Border.all(color: AppColors.neutral800),
                       ),
                       child: Column(
                         children: [
-                          Text(AppLocalizations.of(context).dealerTableBigBlind, style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 14)),
+                          Text(AppLocalizations.of(context).dealerTableBigBlind, style: AppTypography.ibm(color: Colors.white, fontSize: 14)),
                           const SizedBox(height: 8),
                           TextField(
                             controller: bigBlindController,
                             keyboardType: TextInputType.number,
                             textAlign: TextAlign.center,
-                            style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w500),
+                            style: AppTypography.ibm(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w500),
                             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                             decoration: InputDecoration(
                               isDense: true,
                               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppColors.infoCardDateText)),
-                              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppColors.infoCardDateText)),
-                              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppColors.buttonPrimary)),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppDecorations.radius14), borderSide: const BorderSide(color: AppColors.infoCardDateText)),
+                              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(AppDecorations.radius14), borderSide: const BorderSide(color: AppColors.infoCardDateText)),
+                              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(AppDecorations.radius14), borderSide: const BorderSide(color: AppColors.buttonPrimary)),
                             ),
                           ),
                         ],
@@ -3170,7 +3171,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
               const SizedBox(height: 12),
               Text(
                 AppLocalizations.of(context).dealerTableNewBlindsNote,
-                style: GoogleFonts.ibmPlexSans(color: AppColors.textDisabled, fontSize: 12, fontStyle: FontStyle.italic),
+                style: AppTypography.ibm(color: AppColors.textDisabled, fontSize: 12, fontStyle: FontStyle.italic),
               ),
               const SizedBox(height: 24),
               Row(
@@ -3181,7 +3182,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         alignment: Alignment.center,
-                        child: Text(AppLocalizations.of(context).commonCancel, style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w600)),
+                        child: Text(AppLocalizations.of(context).commonCancel, style: AppTypography.ibm(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w600)),
                       ),
                     ),
                   ),
@@ -3209,9 +3210,9 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
                       decoration: BoxDecoration(
                         color: AppColors.buttonPrimary,
-                        borderRadius: BorderRadius.circular(60),
+                        borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
                       ),
-                      child: Text(AppLocalizations.of(context).commonUpdate, style: GoogleFonts.ibmPlexSans(color: Colors.black, fontSize: 17, fontWeight: FontWeight.w600)),
+                      child: Text(AppLocalizations.of(context).commonUpdate, style: AppTypography.ibm(color: Colors.black, fontSize: 17, fontWeight: FontWeight.w600)),
                     ),
                   ),
                 ],
@@ -3313,7 +3314,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                   ),
                   child: Text(
                     AppLocalizations.of(context).dealerTableAnteLabel(_formatAmount(_bigBlind)),
-                    style: GoogleFonts.ibmPlexSans(
+                    style: AppTypography.ibm(
                       color: Colors.white,
                       fontSize: 10,
                       fontWeight: FontWeight.w500,
@@ -3324,7 +3325,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
               ],
               Text(
                 _formatAmount(_gameState!.currentPot),
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   color: AppColors.textMint,
                   fontSize: 32,
                   fontWeight: FontWeight.w600,
@@ -3334,7 +3335,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
               ),
               Text(
                 AppLocalizations.of(context).dealerTablePotLabel,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   color: AppColors.mint500,
                   fontSize: 18,
                   fontWeight: FontWeight.w400,
@@ -3533,7 +3534,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
       child: Text(
         seatNumber.toString(),
         textAlign: TextAlign.center,
-        style: GoogleFonts.ibmPlexMono(
+        style: AppTypography.plexMonoLegacy(
           color: isOccupied ? Colors.white : AppColors.neutral500,
           fontSize: 17,
           fontWeight: FontWeight.w500,
@@ -3551,7 +3552,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
         if (isPending) ...[
           Text(
             displayName,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               color: Colors.white,
               fontSize: 11,
               fontWeight: FontWeight.w500,
@@ -3561,7 +3562,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
           ),
           Text(
             AppLocalizations.of(context).dealerTablePending,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               color: Colors.orange,
               fontSize: 10,
               fontWeight: FontWeight.w600,
@@ -3571,7 +3572,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
         ] else if (isOccupied) ...[
           Text(
             displayName,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               color: isFolded ? Colors.white38 : Colors.white,
               fontSize: 11,
               fontWeight: FontWeight.w500,
@@ -3581,7 +3582,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
           ),
           Text(
             _formatAmount(stack),
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               color: isFolded ? Colors.white38 : AppColors.buttonPrimary,
               fontSize: 12,
               fontWeight: FontWeight.w500,
@@ -3600,7 +3601,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
             ),
             child: Text(
               isAllIn ? 'ALL-IN' : _formatAmount(bet),
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 color: Colors.white,
                 fontSize: 10,
                 fontWeight: FontWeight.w500,
@@ -3621,7 +3622,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
             ),
             child: Text(
               AppLocalizations.of(context).dealerTableCheckLabel,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 color: Colors.white,
                 fontSize: 9,
                 fontWeight: FontWeight.w600,
@@ -3656,17 +3657,17 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                   if (isPending) ...[
                     Text(
                       displayName,
-                      style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w500, height: 1.44),
+                      style: AppTypography.ibm(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w500, height: 1.44),
                     ),
-                    Text(AppLocalizations.of(context).dealerTablePending, style: GoogleFonts.ibmPlexSans(color: Colors.orange, fontSize: 10, fontWeight: FontWeight.w600, height: 1.44)),
+                    Text(AppLocalizations.of(context).dealerTablePending, style: AppTypography.ibm(color: Colors.orange, fontSize: 10, fontWeight: FontWeight.w600, height: 1.44)),
                   ] else if (isOccupied) ...[
                     Text(
                       displayName,
-                      style: GoogleFonts.ibmPlexSans(color: isFolded ? Colors.white38 : Colors.white, fontSize: 11, fontWeight: FontWeight.w500, height: 1.44),
+                      style: AppTypography.ibm(color: isFolded ? Colors.white38 : Colors.white, fontSize: 11, fontWeight: FontWeight.w500, height: 1.44),
                     ),
                     Text(
                       _formatAmount(stack),
-                      style: GoogleFonts.ibmPlexSans(color: isFolded ? Colors.white38 : AppColors.buttonPrimary, fontSize: 12, fontWeight: FontWeight.w500, height: 1.44),
+                      style: AppTypography.ibm(color: isFolded ? Colors.white38 : AppColors.buttonPrimary, fontSize: 12, fontWeight: FontWeight.w500, height: 1.44),
                     ),
                   ],
                   if (bet > 0 && !isFolded) ...[
@@ -3676,7 +3677,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                       decoration: BoxDecoration(color: isAllIn ? const Color(0xFFE53935) : AppColors.betPill, borderRadius: BorderRadius.circular(30)),
                       child: Text(
                         isAllIn ? 'ALL-IN' : _formatAmount(bet),
-                        style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w500, height: 1.44),
+                        style: AppTypography.ibm(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w500, height: 1.44),
                         textAlign: TextAlign.center,
                       ),
                     ),
@@ -3688,7 +3689,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                       decoration: BoxDecoration(color: const Color(0xFF3BA55D), borderRadius: BorderRadius.circular(30)),
                       child: Text(
                         AppLocalizations.of(context).dealerTableCheckLabel,
-                        style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w600, height: 1.44),
+                        style: AppTypography.ibm(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w600, height: 1.44),
                         textAlign: TextAlign.center,
                       ),
                     ),
@@ -3898,11 +3899,11 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
                 color: AppColors.buttonPrimary.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(AppDecorations.radius20),
               ),
               child: Text(
                 AppLocalizations.of(context).dealerTablePlayerToAct(playerName, _formatAmount(playerStack)),
-                style: GoogleFonts.ibmPlexSans(color: AppColors.buttonPrimary, fontSize: 14, fontWeight: FontWeight.w600),
+                style: AppTypography.ibm(color: AppColors.buttonPrimary, fontSize: 14, fontWeight: FontWeight.w600),
                 textAlign: TextAlign.center,
               ),
             ),
@@ -3960,7 +3961,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
         color: isPaused ? Colors.amber.shade800 : Colors.green.shade800,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(AppDecorations.radius10),
       ),
       child: Row(
         children: [
@@ -4065,7 +4066,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
             child: Center(
               child: Text(
                 card,
-                style: GoogleFonts.ibmPlexMono(
+                style: AppTypography.plexMonoLegacy(
                   color: isRed ? Colors.red : Colors.black,
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
@@ -4091,7 +4092,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
           color: const Color(0xFF2A2A3A),
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(AppDecorations.radius10),
           border: Border.all(color: Colors.white24, width: 1),
         ),
         child: Row(
@@ -4121,7 +4122,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.orange.shade800,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
       ),
       child: Column(
         children: [
@@ -4172,7 +4173,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: Colors.black26,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
               ),
               child: Text(
                 _partialTranscript,
@@ -4191,7 +4192,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.red.shade800,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
       ),
       child: Row(
         children: [
@@ -4350,13 +4351,13 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
           padding: const EdgeInsets.symmetric(vertical: 14),
           decoration: BoxDecoration(
             color: bgColor,
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(AppDecorations.radius10),
             border: Border.all(color: borderColor, width: 1),
           ),
           child: Text(
             label,
             textAlign: TextAlign.center,
-            style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600),
+            style: AppTypography.ibm(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600),
           ),
         ),
       ),
@@ -4396,7 +4397,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                   : Text(
                       buttonLabel,
                       textAlign: TextAlign.center,
-                      style: GoogleFonts.ibmPlexSans(
+                      style: AppTypography.ibm(
                         fontSize: 17,
                         fontWeight: FontWeight.w600,
                         color: Colors.black,
@@ -4409,7 +4410,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
           const SizedBox(height: 8),
           Text(
             '$occupiedSeats players selected',
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               color: AppColors.mint600,
               fontSize: 15,
               fontWeight: FontWeight.w500,
@@ -4435,7 +4436,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                   const SizedBox(width: 8),
                   Text(
                     AppLocalizations.of(context).dealerTableAddTestPlayers,
-                    style: GoogleFonts.ibmPlexSans(
+                    style: AppTypography.ibm(
                       color: AppColors.textMint,
                       fontSize: 17,
                       fontWeight: FontWeight.w600,
@@ -4451,7 +4452,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
             const SizedBox(height: 8),
             Text(
               AppLocalizations.of(context).dealerTableNeedTwoPlayers,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 color: AppColors.warningText,
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
@@ -5069,7 +5070,7 @@ class _QRCodesDialogState extends State<_QRCodesDialog> {
     return Dialog(
       backgroundColor: AppColors.surfaceDark,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
         side: const BorderSide(color: AppColors.neutral800),
       ),
       insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
@@ -5085,7 +5086,7 @@ class _QRCodesDialogState extends State<_QRCodesDialog> {
                 Expanded(
                   child: Text(
                     '${widget.tableName} · Seat $_selectedSeat',
-                    style: GoogleFonts.ibmPlexSans(
+                    style: AppTypography.ibm(
                       color: Colors.white,
                       fontSize: 19,
                       fontWeight: FontWeight.w600,
@@ -5112,7 +5113,7 @@ class _QRCodesDialogState extends State<_QRCodesDialog> {
               const SizedBox(height: 4),
               Text(
                 AppLocalizations.of(context).dealerTableScanToJoin,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   color: AppColors.textMint,
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
@@ -5127,7 +5128,7 @@ class _QRCodesDialogState extends State<_QRCodesDialog> {
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadius.circular(14),
+                        borderRadius: BorderRadius.circular(AppDecorations.radius14),
                       ),
                       child: QrImageView(
                         data: qrData.encode(),
@@ -5140,7 +5141,7 @@ class _QRCodesDialogState extends State<_QRCodesDialog> {
                           horizontal: 16, vertical: 14),
                       decoration: BoxDecoration(
                         color: AppColors.paper,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                         border: Border.all(color: AppColors.neutral800),
                       ),
                       child: Row(
@@ -5157,7 +5158,7 @@ class _QRCodesDialogState extends State<_QRCodesDialog> {
                               children: [
                                 TextSpan(
                                   text: AppLocalizations.of(context).dealerTableOccupiedDot,
-                                  style: GoogleFonts.ibmPlexSans(
+                                  style: AppTypography.ibm(
                                     color: AppColors.textDisabled,
                                     fontSize: 14,
                                     fontWeight: FontWeight.w500,
@@ -5165,7 +5166,7 @@ class _QRCodesDialogState extends State<_QRCodesDialog> {
                                 ),
                                 TextSpan(
                                   text: occupantName ?? 'Player',
-                                  style: GoogleFonts.ibmPlexSans(
+                                  style: AppTypography.ibm(
                                     color: Colors.white,
                                     fontSize: 16,
                                     fontWeight: FontWeight.w700,
@@ -5182,7 +5183,7 @@ class _QRCodesDialogState extends State<_QRCodesDialog> {
             // Seat selector
             Text(
               AppLocalizations.of(context).dealerTableSelectSeatLabel,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 color: AppColors.textDisabled,
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
@@ -5238,13 +5239,13 @@ class _QRCodesDialogState extends State<_QRCodesDialog> {
                           height: 40,
                           decoration: BoxDecoration(
                             color: bg,
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(AppDecorations.radius10),
                             border: Border.all(color: borderColor, width: 1),
                           ),
                           child: Center(
                             child: Text(
                               seat.toString(),
-                              style: GoogleFonts.ibmPlexMono(
+                              style: AppTypography.plexMonoLegacy(
                                 color: textColor,
                                 fontSize: 15,
                                 fontWeight: FontWeight.w600,
@@ -5266,7 +5267,7 @@ class _QRCodesDialogState extends State<_QRCodesDialog> {
                 const SizedBox(width: 6),
                 Text(
                   AppLocalizations.of(context).dealerTableEmptyLabel,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     color: AppColors.textDisabled,
                     fontSize: 12,
                   ),
@@ -5279,7 +5280,7 @@ class _QRCodesDialogState extends State<_QRCodesDialog> {
                 const SizedBox(width: 6),
                 Text(
                   AppLocalizations.of(context).dealerTableOccupiedLabel,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     color: AppColors.textDisabled,
                     fontSize: 12,
                   ),
@@ -5292,7 +5293,7 @@ class _QRCodesDialogState extends State<_QRCodesDialog> {
                 const SizedBox(width: 6),
                 Text(
                   AppLocalizations.of(context).dealerTableSelectedLabel,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     color: AppColors.textDisabled,
                     fontSize: 12,
                   ),
@@ -5478,7 +5479,7 @@ class _UserSearchDialogState extends State<_UserSearchDialog> {
                   labelStyle: const TextStyle(color: Colors.white54),
                   filled: true,
                   fillColor: Colors.white.withValues(alpha: 0.1),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppDecorations.radiusSm)),
                   hintText: AppLocalizations.of(context).dealerTableTypeToSearch,
                   hintStyle: const TextStyle(color: Colors.white30),
                   prefixIcon: const Icon(Icons.search, color: Colors.white54),
@@ -5507,7 +5508,7 @@ class _UserSearchDialogState extends State<_UserSearchDialog> {
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: Colors.green.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
                     border: Border.all(color: Colors.green),
                   ),
                   child: Row(
@@ -5544,7 +5545,7 @@ class _UserSearchDialogState extends State<_UserSearchDialog> {
                   constraints: const BoxConstraints(maxHeight: 150),
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.05),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
                   ),
                   child: ListView.builder(
                     shrinkWrap: true,
@@ -5579,7 +5580,7 @@ class _UserSearchDialogState extends State<_UserSearchDialog> {
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.05),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
                   ),
                   child: Center(
                     child: Text(
@@ -5600,7 +5601,7 @@ class _UserSearchDialogState extends State<_UserSearchDialog> {
                   labelStyle: const TextStyle(color: Colors.white54),
                   filled: true,
                   fillColor: Colors.white.withValues(alpha: 0.1),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppDecorations.radiusSm)),
                   hintText: AppLocalizations.of(context).dealerTableEnterPlayerName,
                   hintStyle: const TextStyle(color: Colors.white30),
                 ),
@@ -5619,7 +5620,7 @@ class _UserSearchDialogState extends State<_UserSearchDialog> {
                 labelStyle: const TextStyle(color: Colors.white54),
                 filled: true,
                 fillColor: Colors.white.withValues(alpha: 0.1),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppDecorations.radiusSm)),
                 prefixText: CurrencyService.prefixText,
                 suffixText: CurrencyService.suffixText,
                 prefixStyle: const TextStyle(color: Colors.white),

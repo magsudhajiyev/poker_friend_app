@@ -1,9 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../design_system/constants/colors.dart';
 import '../../design_system/components/backgrounds/gradient_background.dart';
 import '../../l10n/app_localizations.dart';
+import '../../design_system/constants/typography.dart';
 
 class WeeklyHoursStep extends StatefulWidget {
   final ValueChanged<int> onContinue;
@@ -59,7 +59,7 @@ class _WeeklyHoursStepState extends State<WeeklyHoursStep>
                       const SizedBox(height: 16),
                       Text(
                         l10n.onboardingMonthlySessionsTitle,
-                        style: GoogleFonts.ibmPlexSans(
+                        style: AppTypography.ibm(
                           fontSize: 32,
                           fontWeight: FontWeight.w700,
                           color: Colors.white,
@@ -69,7 +69,7 @@ class _WeeklyHoursStepState extends State<WeeklyHoursStep>
                       const SizedBox(height: 8),
                       Text(
                         l10n.onboardingMonthlySessionsSubtitle,
-                        style: GoogleFonts.ibmPlexSans(
+                        style: AppTypography.ibm(
                           fontSize: 17,
                           fontWeight: FontWeight.w400,
                           color: AppColors.textDisabled,
@@ -106,7 +106,7 @@ class _WeeklyHoursStepState extends State<WeeklyHoursStep>
                             return Center(
                               child: Text(
                                 '$value',
-                                style: GoogleFonts.ibmPlexSans(
+                                style: AppTypography.ibm(
                                   fontSize: 28,
                                   fontWeight: FontWeight.w600,
                                   color: Colors.white,
@@ -120,7 +120,7 @@ class _WeeklyHoursStepState extends State<WeeklyHoursStep>
                       Center(
                         child: Text(
                           l10n.onboardingMonthlySessionsUnit,
-                          style: GoogleFonts.ibmPlexSans(
+                          style: AppTypography.ibm(
                             fontSize: 15,
                             fontWeight: FontWeight.w400,
                             color: AppColors.textDisabled,
@@ -155,7 +155,7 @@ class _WeeklyHoursStepState extends State<WeeklyHoursStep>
                     ),
                     child: Text(
                       l10n.onboardingContinue,
-                      style: GoogleFonts.ibmPlexSans(
+                      style: AppTypography.ibm(
                         fontSize: 17,
                         fontWeight: FontWeight.w600,
                         color: AppColors.bgPrimary,

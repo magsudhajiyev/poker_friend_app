@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../l10n/app_localizations.dart';
 import '../models/poker_game_state.dart';
@@ -10,6 +9,7 @@ import '../services/display_identity_service.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/decorations.dart';
 import 'seat_config_sheet.dart';
+import '../design_system/constants/typography.dart';
 
 class TableManagementSheet extends StatefulWidget {
   final PokerGameState gameState;
@@ -317,7 +317,7 @@ class _TableManagementModalState extends State<_TableManagementModal> {
       children: [
         Text(
           l10n.tableManageTitle,
-          style: GoogleFonts.ibmPlexSans(
+          style: AppTypography.ibm(
             fontSize: 15,
             fontWeight: FontWeight.w600,
             color: AppColors.textOnInverse,
@@ -370,7 +370,7 @@ class _TableManagementModalState extends State<_TableManagementModal> {
               if (elapsed.isNotEmpty) ...[
                 Text(
                   elapsed,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     fontSize: 11,
                     fontWeight: FontWeight.w500,
                     color: AppColors.bgInverse,
@@ -388,7 +388,7 @@ class _TableManagementModalState extends State<_TableManagementModal> {
               const SizedBox(width: 4),
               Text(
                 '$playerCount',
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   fontSize: 11,
                   fontWeight: FontWeight.w500,
                   color: AppColors.bgInverse,
@@ -407,7 +407,7 @@ class _TableManagementModalState extends State<_TableManagementModal> {
             children: [
               Text(
                 l10n.tableManagementDealerButton,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   fontSize: 15,
                   fontWeight: FontWeight.w500,
                   color: AppColors.textOnInverse,
@@ -425,7 +425,7 @@ class _TableManagementModalState extends State<_TableManagementModal> {
                 alignment: Alignment.center,
                 child: Text(
                   '$btnPos',
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
                     color: AppColors.bgInverse,
@@ -482,7 +482,7 @@ class _TableManagementModalState extends State<_TableManagementModal> {
               alignment: Alignment.center,
               child: Text(
                 '$seat',
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
                   color: AppColors.bgInverse,
@@ -497,7 +497,7 @@ class _TableManagementModalState extends State<_TableManagementModal> {
                   Flexible(
                     child: Text(
                       displayName,
-                      style: GoogleFonts.ibmPlexSans(
+                      style: AppTypography.ibm(
                         fontSize: 15,
                         fontWeight: FontWeight.w500,
                         color: AppColors.textOnInverse,
@@ -510,7 +510,7 @@ class _TableManagementModalState extends State<_TableManagementModal> {
                   const SizedBox(width: 8),
                   Text(
                     widget.gameState.formatCurrency(stack),
-                    style: GoogleFonts.ibmPlexSans(
+                    style: AppTypography.ibm(
                       fontSize: 15,
                       fontWeight: FontWeight.w500,
                       color: AppColors.textOnInverse,
@@ -531,7 +531,7 @@ class _TableManagementModalState extends State<_TableManagementModal> {
                 alignment: Alignment.center,
                 child: Text(
                   position,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
                     color: AppColors.textOnInverse,
@@ -566,7 +566,7 @@ class _TableManagementModalState extends State<_TableManagementModal> {
               alignment: Alignment.center,
               child: Text(
                 '$seat',
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
                   color: AppColors.textOnInverse,
@@ -578,7 +578,7 @@ class _TableManagementModalState extends State<_TableManagementModal> {
             Expanded(
               child: Text(
                 l10n.tableManagementAddPlayer,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   fontSize: 15,
                   fontWeight: FontWeight.w500,
                   color: AppColors.borderLight,
@@ -617,7 +617,7 @@ class _TableManagementModalState extends State<_TableManagementModal> {
               alignment: Alignment.center,
               child: Text(
                 l10n.commonCancel,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
                   color: AppColors.textOnInverse,
@@ -640,7 +640,7 @@ class _TableManagementModalState extends State<_TableManagementModal> {
               alignment: Alignment.center,
               child: Text(
                 l10n.commonSave,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
                   color: AppColors.bgInverse,
@@ -768,7 +768,7 @@ class _TableManagementModalState extends State<_TableManagementModal> {
                     Text(
                       title,
                       textAlign: TextAlign.center,
-                      style: GoogleFonts.ibmPlexSans(
+                      style: AppTypography.ibm(
                         fontSize: 17,
                         fontWeight: FontWeight.w500,
                         color: AppColors.textOnInverse,
@@ -779,7 +779,7 @@ class _TableManagementModalState extends State<_TableManagementModal> {
                     Text(
                       body,
                       textAlign: TextAlign.center,
-                      style: GoogleFonts.ibmPlexSans(
+                      style: AppTypography.ibm(
                         fontSize: 15,
                         fontWeight: FontWeight.w400,
                         color: AppColors.borderLight,
@@ -805,7 +805,7 @@ class _TableManagementModalState extends State<_TableManagementModal> {
                         alignment: Alignment.center,
                         child: Text(
                           cancelLabel,
-                          style: GoogleFonts.ibmPlexSans(
+                          style: AppTypography.ibm(
                             fontSize: 15,
                             fontWeight: FontWeight.w600,
                             color: AppColors.textOnInverse,
@@ -831,7 +831,7 @@ class _TableManagementModalState extends State<_TableManagementModal> {
                         alignment: Alignment.center,
                         child: Text(
                           confirmLabel,
-                          style: GoogleFonts.ibmPlexSans(
+                          style: AppTypography.ibm(
                             fontSize: 15,
                             fontWeight: FontWeight.w600,
                             color: AppColors.bgInverse,

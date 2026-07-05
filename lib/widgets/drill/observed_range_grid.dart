@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../../models/observed_range.dart';
 import '../../design_system/constants/colors.dart';
+import '../../design_system/constants/typography.dart';
+import '../../design_system/constants/decorations.dart';
 
 /// Compact 13×13 grid highlighting the hand classes an opponent has actually
 /// shown at showdown. Suited above the diagonal, pairs on it, offsuit below —
@@ -91,7 +92,7 @@ class ObservedRangeGrid extends StatelessWidget {
             padding: const EdgeInsets.all(1),
             child: Text(
               hc,
-              style: GoogleFonts.robotoMono(
+              style: AppTypography.mono(
                 color: shown
                     ? Colors.black.withOpacity(0.8)
                     : Colors.white.withOpacity(0.25),
@@ -118,7 +119,7 @@ class ObservedRangeSheet extends StatelessWidget {
       backgroundColor: AppColors.infoCardBg,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppDecorations.radiusXl)),
       ),
       builder: (_) => ObservedRangeSheet(range: range),
     );
@@ -142,7 +143,7 @@ class ObservedRangeSheet extends StatelessWidget {
                   Expanded(
                     child: Text(
                       l10n.rangeScoutingTitle(range.name),
-                      style: GoogleFonts.ibmPlexSans(
+                      style: AppTypography.ibm(
                           color: Colors.white,
                           fontSize: 18,
                           fontWeight: FontWeight.w600),
@@ -154,10 +155,10 @@ class ObservedRangeSheet extends StatelessWidget {
                           horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
                         color: AppColors.limeGreen.withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(40),
+                        borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
                       ),
                       child: Text(range.shape.label,
-                          style: GoogleFonts.ibmPlexSans(
+                          style: AppTypography.ibm(
                               color: AppColors.limeGreen,
                               fontSize: 12,
                               fontWeight: FontWeight.w600)),
@@ -166,7 +167,7 @@ class ObservedRangeSheet extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(range.summary,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                       color: Colors.white.withOpacity(0.7),
                       fontSize: 14,
                       height: 1.4)),
@@ -180,7 +181,7 @@ class ObservedRangeSheet extends StatelessWidget {
                 const SizedBox(height: 12),
                 Text(
                   l10n.rangeShowdownBias,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                       color: Colors.white.withOpacity(0.4),
                       fontSize: 11,
                       fontStyle: FontStyle.italic,
@@ -193,7 +194,7 @@ class ObservedRangeSheet extends StatelessWidget {
                     child: Text(
                       l10n.rangeNoShowdowns,
                       textAlign: TextAlign.center,
-                      style: GoogleFonts.ibmPlexSans(
+                      style: AppTypography.ibm(
                           color: Colors.white.withOpacity(0.5),
                           fontSize: 14,
                           height: 1.4),
@@ -214,10 +215,10 @@ class ObservedRangeSheet extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         decoration: BoxDecoration(
           color: color.withOpacity(0.12),
-          borderRadius: BorderRadius.circular(40),
+          borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
         ),
         child: Text('$label $count',
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
                 color: color, fontSize: 12, fontWeight: FontWeight.w600)),
       );
     }
@@ -241,7 +242,7 @@ class ObservedRangeSheet extends StatelessWidget {
             Container(width: 8, height: 8, color: color.withOpacity(0.7)),
             const SizedBox(width: 5),
             Text(label,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                     color: Colors.white.withOpacity(0.6), fontSize: 12)),
           ],
         );

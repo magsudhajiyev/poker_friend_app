@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../../models/club.dart';
 import '../../models/club_event.dart';
@@ -31,6 +30,8 @@ import '../../design_system/components/cards/error_state_card.dart';
 import '../../l10n/app_localizations.dart';
 import '../../services/currency_service.dart';
 import '../../design_system/constants/colors.dart';
+import '../../design_system/constants/typography.dart';
+import '../../design_system/constants/decorations.dart';
 
 /// Event detail screen with RSVP functionality
 class EventDetailScreen extends StatefulWidget {
@@ -347,18 +348,18 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         builder: (context) => AlertDialog(
           backgroundColor: AppColors.neutral800,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(AppDecorations.radius18),
           ),
           title: Text(
             AppLocalizations.of(context).eventDetailCantStartTitle,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               color: Colors.white,
               fontWeight: FontWeight.w600,
             ),
           ),
           content: Text(
             AppLocalizations.of(context).eventDetailCantStartBody,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               color: Colors.white.withOpacity(0.7),
             ),
           ),
@@ -370,7 +371,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
               ),
               child: Text(
                 AppLocalizations.of(context).commonOk,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -416,18 +417,18 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.surfaceDark,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(AppDecorations.radius18),
         ),
         title: Text(
           dialogTitle,
-          style: GoogleFonts.ibmPlexSans(
+          style: AppTypography.ibm(
             color: Colors.white,
             fontWeight: FontWeight.w600,
           ),
         ),
         content: Text(
           dialogContent,
-          style: GoogleFonts.ibmPlexSans(
+          style: AppTypography.ibm(
             color: Colors.white.withOpacity(0.7),
           ),
         ),
@@ -436,7 +437,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             onPressed: () => Navigator.pop(context, false),
             child: Text(
               keepButtonText,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 color: Colors.white.withOpacity(0.5),
               ),
             ),
@@ -448,7 +449,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             ),
             child: Text(
               confirmButtonText,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -611,7 +612,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                 // Event name
                                 Text(
                                   _event.name,
-                                  style: GoogleFonts.ibmPlexSans(
+                                  style: AppTypography.ibm(
                                     fontSize: 24,
                                     color: Colors.white,
                                     fontWeight: FontWeight.w600,
@@ -632,7 +633,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                     title: AppLocalizations.of(context).eventDetailLocation,
                                     content: Text(
                                       _event.location!,
-                                      style: GoogleFonts.ibmPlexSans(
+                                      style: AppTypography.ibm(
                                         color: Colors.white,
                                         fontSize: 16,
                                       ),
@@ -648,7 +649,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                     title: AppLocalizations.of(context).eventDetailBuyIn,
                                     content: Text(
                                       CurrencyService.formatCash((_event.buyInAmount ?? 0).toDouble()),
-                                      style: GoogleFonts.ibmPlexSans(
+                                      style: AppTypography.ibm(
                                         color: AppColors.buttonPrimary,
                                         fontSize: 20,
                                         fontWeight: FontWeight.w700,
@@ -665,7 +666,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                     title: AppLocalizations.of(context).eventDetailStakes,
                                     content: Text(
                                       _event.stakes!,
-                                      style: GoogleFonts.ibmPlexSans(
+                                      style: AppTypography.ibm(
                                         color: Colors.white,
                                         fontSize: 16,
                                         fontWeight: FontWeight.w600,
@@ -682,7 +683,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                     title: AppLocalizations.of(context).eventDetailStartingStack,
                                     content: Text(
                                       '${_event.startingStack!.toStringAsFixed(0)}',
-                                      style: GoogleFonts.ibmPlexSans(
+                                      style: AppTypography.ibm(
                                         color: Colors.white,
                                         fontSize: 16,
                                         fontWeight: FontWeight.w600,
@@ -696,7 +697,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                   const SizedBox(height: 16),
                                   Text(
                                     AppLocalizations.of(context).eventDetailAbout,
-                                    style: GoogleFonts.ibmPlexSans(
+                                    style: AppTypography.ibm(
                                       fontSize: 12,
                                       color: AppColors.limeGreen,
                                       fontWeight: FontWeight.w600,
@@ -706,7 +707,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                   const SizedBox(height: 6),
                                   Text(
                                     _event.description!,
-                                    style: GoogleFonts.ibmPlexSans(
+                                    style: AppTypography.ibm(
                                       fontSize: 14,
                                       color: Colors.white.withOpacity(0.7),
                                       height: 1.4,
@@ -815,7 +816,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           Expanded(
             child: Text(
               widget.club.name,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 fontSize: 27,
                 color: Colors.white,
                 fontWeight: FontWeight.w600,
@@ -906,7 +907,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           ],
           Text(
             text,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               fontSize: 10,
               color: textColor,
               fontWeight: FontWeight.w600,
@@ -926,7 +927,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         color: AppColors.surfaceDark,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
       ),
       child: Row(
         children: [
@@ -935,7 +936,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             height: 38,
             decoration: BoxDecoration(
               color: AppColors.buttonPrimary.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(AppDecorations.radius10),
             ),
             child: Icon(
               icon,
@@ -950,7 +951,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
               children: [
                 Text(
                   title,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     fontSize: 12,
                     color: Colors.white.withOpacity(0.5),
                     fontWeight: FontWeight.w500,
@@ -973,7 +974,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         : '';
 
     return ClipRRect(
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
       child: BackdropFilter(
         filter: ui.ImageFilter.blur(sigmaX: 27, sigmaY: 27),
         child: Container(
@@ -981,7 +982,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           padding: const EdgeInsets.fromLTRB(16, 14, 16, 18),
           decoration: BoxDecoration(
             color: const Color(0xFF292F33),
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
             boxShadow: const [
               BoxShadow(
                 color: Color(0x40000000),
@@ -1001,7 +1002,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
                         color: AppColors.mint800,
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
                       ),
                       child: const Icon(
                         Icons.event_seat,
@@ -1015,7 +1016,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                       children: [
                         Text(
                           AppLocalizations.of(context).eventDetailYoureSeatedGoodLuck,
-                          style: GoogleFonts.ibmPlexSans(
+                          style: AppTypography.ibm(
                             fontSize: 15,
                             color: Colors.white,
                             fontWeight: FontWeight.w400,
@@ -1024,7 +1025,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                         ),
                         Text(
                           _getSeatedTableInfo(),
-                          style: GoogleFonts.ibmPlexSans(
+                          style: AppTypography.ibm(
                             fontSize: 13,
                             color: const Color(0xFFE6E6E7),
                             fontWeight: FontWeight.w500,
@@ -1046,7 +1047,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                 children: [
                   Text(
                     AppLocalizations.of(context).eventDetailDateAndTime,
-                    style: GoogleFonts.ibmPlexSans(
+                    style: AppTypography.ibm(
                       fontSize: 13,
                       color: const Color(0xFFB3B4B6),
                       fontWeight: FontWeight.w400,
@@ -1057,7 +1058,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                   const SizedBox(height: 4),
                   Text(
                     dateFormat.format(_event.startTime),
-                    style: GoogleFonts.ibmPlexSans(
+                    style: AppTypography.ibm(
                       color: Colors.white,
                       fontSize: 17,
                       fontWeight: FontWeight.w600,
@@ -1067,7 +1068,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                   ),
                   Text(
                     '${timeFormat.format(_event.startTime)}$endTimeText',
-                    style: GoogleFonts.ibmPlexSans(
+                    style: AppTypography.ibm(
                       color: Colors.white,
                       fontSize: 15,
                       fontWeight: FontWeight.w400,
@@ -1097,7 +1098,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       children: [
         Text(
           AppLocalizations.of(context).eventDetailAreYouGoing,
-          style: GoogleFonts.ibmPlexSans(
+          style: AppTypography.ibm(
             fontSize: 12,
             color: AppColors.limeGreen,
             fontWeight: FontWeight.w600,
@@ -1154,7 +1155,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
           color: isSelected ? color.withOpacity(0.15) : AppColors.surfaceDark,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(AppDecorations.radius14),
           border: Border.all(
             color: isSelected ? color : Colors.white.withOpacity(0.06),
             width: isSelected ? 2 : 1,
@@ -1170,7 +1171,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             const SizedBox(height: 6),
             Text(
               label,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 fontSize: 13,
                 color: isSelected ? color : Colors.white.withOpacity(0.5),
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
@@ -1197,7 +1198,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           color: _addedToCalendar
               ? Colors.white.withOpacity(0.05)
               : AppColors.buttonPrimary,
-          borderRadius: BorderRadius.circular(60),
+          borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -1210,7 +1211,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             const SizedBox(width: 10),
             Text(
               _addedToCalendar ? AppLocalizations.of(context).eventDetailAddedToCalendarBtn : AppLocalizations.of(context).eventDetailAddToCalendarBtn,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
                 color: _addedToCalendar ? Colors.white.withOpacity(0.4) : Colors.black,
@@ -1230,7 +1231,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: AppColors.surfaceDark,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1241,7 +1242,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             children: [
               Text(
                 AppLocalizations.of(context).eventDetailWhosGoing,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   fontSize: 17,
                   color: Colors.white,
                   fontWeight: FontWeight.w600,
@@ -1253,7 +1254,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                 onTap: _navigateToAttendees,
                 child: Text(
                   AppLocalizations.of(context).eventDetailSeeAll,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     fontSize: 17,
                     color: AppColors.textMint,
                     fontWeight: FontWeight.w500,
@@ -1296,7 +1297,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       children: [
         Text(
           label,
-          style: GoogleFonts.ibmPlexSans(
+          style: AppTypography.ibm(
             fontSize: 17,
             color: const Color(0xFF9A9B9E),
             fontWeight: FontWeight.w500,
@@ -1306,7 +1307,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         ),
         Text(
           '$count',
-          style: GoogleFonts.ibmPlexSans(
+          style: AppTypography.ibm(
             fontSize: 17,
             color: countColor,
             fontWeight: FontWeight.w500,
@@ -1335,7 +1336,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
           color: AppColors.buttonPrimary,
-          borderRadius: BorderRadius.circular(60),
+          borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -1348,7 +1349,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             const SizedBox(width: 10),
             Text(
               AppLocalizations.of(context).eventDetailStartDealing,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
                 color: Colors.black,
@@ -1378,7 +1379,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
           color: AppColors.surfaceDark,
-          borderRadius: BorderRadius.circular(60),
+          borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
           border: Border.all(
             color: AppColors.buttonPrimary.withOpacity(0.3),
           ),
@@ -1394,7 +1395,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             const SizedBox(width: 10),
             Text(
               AppLocalizations.of(context).eventDetailViewLiveRankings,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
                 color: AppColors.buttonPrimary,
@@ -1475,7 +1476,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
           color: AppColors.surfaceDark,
-          borderRadius: BorderRadius.circular(60),
+          borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
           border: Border.all(
             color: AppColors.buttonPrimary.withOpacity(0.3),
           ),
@@ -1491,7 +1492,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             const SizedBox(width: 10),
             Text(
               AppLocalizations.of(context).eventDetailReturnToSeat,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
                 color: AppColors.buttonPrimary,
@@ -1521,7 +1522,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
           color: AppColors.surfaceDark,
-          borderRadius: BorderRadius.circular(60),
+          borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
           border: Border.all(
             color: Colors.amber.withOpacity(0.3),
           ),
@@ -1537,7 +1538,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             const SizedBox(width: 10),
             Text(
               AppLocalizations.of(context).eventDetailViewFinalStandings,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
                 color: Colors.amber,
@@ -1557,7 +1558,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
           color: AppColors.buttonPrimary,
-          borderRadius: BorderRadius.circular(60),
+          borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -1570,7 +1571,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             const SizedBox(width: 10),
             Text(
               _event.tableIds.length > 1 ? AppLocalizations.of(context).eventDetailManageTables : AppLocalizations.of(context).eventDetailManageTable,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
                 color: Colors.black,
@@ -1590,7 +1591,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
           color: AppColors.surfaceDark,
-          borderRadius: BorderRadius.circular(60),
+          borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
           border: Border.all(
             color: AppColors.buttonPrimary.withOpacity(0.3),
           ),
@@ -1606,7 +1607,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             const SizedBox(width: 10),
             Text(
               AppLocalizations.of(context).eventDetailSeeAvailability,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
                 color: AppColors.buttonPrimary,
@@ -1625,7 +1626,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       padding: const EdgeInsets.symmetric(vertical: 12),
       decoration: BoxDecoration(
         color: AppColors.buttonPrimary.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(60),
+        borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
         border: Border.all(
           color: AppColors.buttonPrimary.withOpacity(0.3),
         ),
@@ -1641,7 +1642,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           const SizedBox(width: 10),
           Text(
             AppLocalizations.of(context).eventDetailYoureSeated,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               fontSize: 16,
               fontWeight: FontWeight.w600,
               color: AppColors.buttonPrimary,
@@ -1725,7 +1726,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       children: [
         Text(
           AppLocalizations.of(context).eventDetailAdminActions,
-          style: GoogleFonts.ibmPlexSans(
+          style: AppTypography.ibm(
             fontSize: 12,
             color: AppColors.limeGreen,
             fontWeight: FontWeight.w600,
@@ -1784,7 +1785,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         padding: const EdgeInsets.symmetric(vertical: 11),
         decoration: BoxDecoration(
           color: color.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(AppDecorations.radius14),
           border: Border.all(color: color.withOpacity(0.3)),
         ),
         child: Row(
@@ -1794,7 +1795,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             const SizedBox(width: 8),
             Text(
               label,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 fontSize: 14,
                 color: color,
                 fontWeight: FontWeight.w600,

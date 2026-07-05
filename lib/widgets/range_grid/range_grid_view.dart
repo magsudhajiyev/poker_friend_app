@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../../models/stack_bucket.dart';
@@ -10,6 +9,8 @@ import '../../services/range_grid_service.dart';
 import 'range_frequency_bar.dart';
 import 'range_hand_row.dart';
 import '../../design_system/constants/colors.dart';
+import '../../design_system/constants/typography.dart';
+import '../../design_system/constants/decorations.dart';
 
 /// The hero's PREFLOP range chart, built purely from logged hands.
 ///
@@ -128,11 +129,11 @@ class _RangeGridViewState extends State<RangeGridView>
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
           decoration: BoxDecoration(
             color: selected ? AppColors.tealPrimary : Colors.transparent,
-            borderRadius: BorderRadius.circular(999),
+            borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
           ),
           child: Text(
             label,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               fontSize: 13,
               fontWeight: FontWeight.w600,
               color: selected
@@ -147,8 +148,8 @@ class _RangeGridViewState extends State<RangeGridView>
     return Container(
       padding: const EdgeInsets.all(2),
       decoration: BoxDecoration(
-        color: const Color(0xFF161719),
-        borderRadius: BorderRadius.circular(999),
+        color: AppColors.bgSurface,
+        borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
         border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
       ),
       child: Row(
@@ -177,8 +178,8 @@ class _RangeGridViewState extends State<RangeGridView>
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: active ? AppColors.tealPrimary : const Color(0xFF161719),
-          borderRadius: BorderRadius.circular(999),
+          color: active ? AppColors.tealPrimary : AppColors.bgSurface,
+          borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
           border: Border.all(
             color: active
                 ? AppColors.tealPrimary
@@ -196,7 +197,7 @@ class _RangeGridViewState extends State<RangeGridView>
             const SizedBox(width: 6),
             Text(
               _stackLabelText(AppLocalizations.of(context)),
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
                 color: active
@@ -249,7 +250,7 @@ class _RangeGridViewState extends State<RangeGridView>
                   const SizedBox(width: 12),
                   Text(
                     label,
-                    style: GoogleFonts.ibmPlexSans(
+                    style: AppTypography.ibm(
                       fontSize: 15,
                       fontWeight:
                           selected ? FontWeight.w600 : FontWeight.w400,
@@ -264,8 +265,8 @@ class _RangeGridViewState extends State<RangeGridView>
 
         return Container(
           decoration: const BoxDecoration(
-            color: Color(0xFF161719),
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            color: AppColors.bgSurface,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(AppDecorations.radiusXl)),
           ),
           padding: EdgeInsets.fromLTRB(
               24, 14, 24, 16 + MediaQuery.of(sheetContext).padding.bottom),
@@ -286,7 +287,7 @@ class _RangeGridViewState extends State<RangeGridView>
               const SizedBox(height: 14),
               Text(
                 l10n.rangeStackDepth,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                   color: Colors.white,
@@ -315,14 +316,14 @@ class _RangeGridViewState extends State<RangeGridView>
             padding: const EdgeInsets.symmetric(vertical: 8),
             decoration: BoxDecoration(
               color: selected ? AppColors.tealPrimary : Colors.transparent,
-              borderRadius: BorderRadius.circular(999),
+              borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
             ),
             child: Center(
               child: FittedBox(
                 fit: BoxFit.scaleDown,
                 child: Text(
                   label,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
                     color: selected
@@ -340,8 +341,8 @@ class _RangeGridViewState extends State<RangeGridView>
     return Container(
       padding: const EdgeInsets.all(2),
       decoration: BoxDecoration(
-        color: const Color(0xFF161719),
-        borderRadius: BorderRadius.circular(999),
+        color: AppColors.bgSurface,
+        borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
         border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
       ),
       child: Row(
@@ -403,11 +404,11 @@ class _RangeGridViewState extends State<RangeGridView>
           padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
           decoration: BoxDecoration(
             color: selected ? AppColors.tealPrimary : Colors.transparent,
-            borderRadius: BorderRadius.circular(999),
+            borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
           ),
           child: Text(
             label,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               fontSize: 12,
               fontWeight: FontWeight.w600,
               color: selected
@@ -422,8 +423,8 @@ class _RangeGridViewState extends State<RangeGridView>
     return Container(
       padding: const EdgeInsets.all(2),
       decoration: BoxDecoration(
-        color: const Color(0xFF161719),
-        borderRadius: BorderRadius.circular(999),
+        color: AppColors.bgSurface,
+        borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
         border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
       ),
       child: Row(
@@ -458,8 +459,8 @@ class _RangeGridViewState extends State<RangeGridView>
           decoration: BoxDecoration(
             color: enabled
                 ? color.withValues(alpha: 0.18)
-                : const Color(0xFF161719),
-            borderRadius: BorderRadius.circular(999),
+                : AppColors.bgSurface,
+            borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
             border: Border.all(
               color: enabled
                   ? color.withValues(alpha: 0.7)
@@ -480,7 +481,7 @@ class _RangeGridViewState extends State<RangeGridView>
               const SizedBox(width: 5),
               Text(
                 label,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
                   color: enabled
@@ -547,7 +548,7 @@ class _RangeGridViewState extends State<RangeGridView>
         child: Stack(
           fit: StackFit.expand,
           children: [
-            Container(color: const Color(0xFF161719)),
+            Container(color: AppColors.bgSurface),
             // Mixed-frequency fill: cell split proportionally by action,
             // exactly like a solver chart (e.g. 70% raise / 30% fold)
             if (hasData)
@@ -577,7 +578,7 @@ class _RangeGridViewState extends State<RangeGridView>
                   padding: const EdgeInsets.all(1),
                   child: Text(
                     handClass,
-                    style: GoogleFonts.robotoMono(
+                    style: AppTypography.mono(
                       fontSize: 8,
                       fontWeight: FontWeight.w600,
                       color: hasData
@@ -620,7 +621,7 @@ class _RangeGridViewState extends State<RangeGridView>
           const SizedBox(width: 10),
           Text(
             AppLocalizations.of(context).rangeHandsLogged(logged),
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               fontSize: 12,
               fontWeight: FontWeight.w500,
               color: Colors.white.withValues(alpha: 0.55),
@@ -645,7 +646,7 @@ class _RangeGridViewState extends State<RangeGridView>
           const SizedBox(width: 8),
           Text(
             AppLocalizations.of(context).rangeSyncingHistory,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               fontSize: 12,
               color: Colors.white.withValues(alpha: 0.5),
             ),
@@ -689,7 +690,7 @@ class _RangeGridViewState extends State<RangeGridView>
         await _load();
       },
       color: AppColors.tealPrimary,
-      backgroundColor: const Color(0xFF161719),
+      backgroundColor: AppColors.bgSurface,
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.only(top: 16, bottom: 120),
@@ -704,7 +705,7 @@ class _RangeGridViewState extends State<RangeGridView>
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Text(
               AppLocalizations.of(context).rangePreflopHeader,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
                 letterSpacing: 1.0,
@@ -736,7 +737,7 @@ class _RangeGridViewState extends State<RangeGridView>
                 child: Text(
                   AppLocalizations.of(context).rangeEmptyHint,
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     fontSize: 13,
                     color: Colors.white.withValues(alpha: 0.45),
                     height: 1.5,
@@ -807,8 +808,8 @@ class _CellDetailSheetState extends State<_CellDetailSheet> {
         maxHeight: MediaQuery.of(context).size.height * 0.7,
       ),
       decoration: const BoxDecoration(
-        color: Color(0xFF161719),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        color: AppColors.bgSurface,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppDecorations.radiusXl)),
       ),
       padding: EdgeInsets.fromLTRB(
           20, 16, 20, 20 + MediaQuery.of(context).padding.bottom),
@@ -831,7 +832,7 @@ class _CellDetailSheetState extends State<_CellDetailSheet> {
             children: [
               Text(
                 widget.handClass,
-                style: GoogleFonts.robotoMono(
+                style: AppTypography.mono(
                   fontSize: 24,
                   fontWeight: FontWeight.w700,
                   color: AppColors.tealPrimary,
@@ -842,7 +843,7 @@ class _CellDetailSheetState extends State<_CellDetailSheet> {
                 '${l10n.rangeSpotsCount(agg.total)}'
                 '${widget.scenario == 'rfi' ? l10n.rangeRfiSuffix : widget.scenario == 'vs_raise' ? l10n.rangeVsRaiseSuffix : ''}'
                 '${widget.posGroup != null ? ' · ${widget.posGroup}' : ''}',
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   fontSize: 13,
                   color: Colors.white.withValues(alpha: 0.5),
                 ),

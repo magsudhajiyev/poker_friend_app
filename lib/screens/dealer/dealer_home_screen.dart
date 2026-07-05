@@ -9,6 +9,7 @@ import '../../services/table_service.dart';
 import '../../services/dealer_service.dart';
 import '../../services/auth_service.dart';
 import 'dealer_table_screen.dart';
+import '../../design_system/constants/decorations.dart';
 
 /// Home screen for dealers to select a club and table
 class DealerHomeScreen extends StatefulWidget {
@@ -319,7 +320,7 @@ class _DealerHomeScreenState extends State<DealerHomeScreen> {
             filled: true,
             fillColor: Colors.white.withValues(alpha: 0.1),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
               borderSide: BorderSide.none,
             ),
           ),
@@ -397,7 +398,7 @@ class _DealerHomeScreenState extends State<DealerHomeScreen> {
             filled: true,
             fillColor: Colors.white.withValues(alpha: 0.1),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
               borderSide: BorderSide.none,
             ),
           ),
@@ -455,7 +456,7 @@ class _DealerHomeScreenState extends State<DealerHomeScreen> {
             Colors.green.shade800,
           ],
         ),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
       ),
       child: Row(
         children: [
@@ -502,7 +503,7 @@ class _DealerHomeScreenState extends State<DealerHomeScreen> {
             ),
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(AppDecorations.radius20),
             ),
             child: Text(
               AppLocalizations.of(context).dealerHomeClubCount(_clubs.length),
@@ -540,7 +541,7 @@ class _DealerHomeScreenState extends State<DealerHomeScreen> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.amber.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
         border: Border.all(
           color: Colors.amber.withValues(alpha: 0.3),
         ),
@@ -554,7 +555,7 @@ class _DealerHomeScreenState extends State<DealerHomeScreen> {
               height: 50,
               decoration: BoxDecoration(
                 color: Colors.amber.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(AppDecorations.radius10),
               ),
               child: const Icon(
                 Icons.play_circle_fill,
@@ -621,7 +622,7 @@ class _DealerHomeScreenState extends State<DealerHomeScreen> {
                 color: isSelected
                     ? Colors.green.shade800
                     : Colors.white.withValues(alpha: 0.05),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                 border: Border.all(
                   color: isSelected
                       ? Colors.green
@@ -673,7 +674,7 @@ class _DealerHomeScreenState extends State<DealerHomeScreen> {
         padding: const EdgeInsets.all(32),
         decoration: BoxDecoration(
           color: Colors.white.withValues(alpha: 0.05),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
         ),
         child: Column(
           children: [
@@ -706,7 +707,7 @@ class _DealerHomeScreenState extends State<DealerHomeScreen> {
           margin: const EdgeInsets.only(bottom: 12),
           decoration: BoxDecoration(
             color: Colors.white.withValues(alpha: 0.05),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
             border: Border.all(
               color: isActive
                   ? Colors.green.withValues(alpha: 0.5)
@@ -722,7 +723,7 @@ class _DealerHomeScreenState extends State<DealerHomeScreen> {
                 color: isActive
                     ? Colors.green.withValues(alpha: 0.2)
                     : Colors.white.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(AppDecorations.radius10),
               ),
               child: Icon(
                 Icons.table_restaurant,
@@ -831,7 +832,7 @@ class _SessionSettingsDialogState extends State<_SessionSettingsDialog> {
                           filled: true,
                           fillColor: Colors.white.withValues(alpha: 0.1),
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
                             borderSide: BorderSide.none,
                           ),
                         ),
@@ -860,7 +861,7 @@ class _SessionSettingsDialogState extends State<_SessionSettingsDialog> {
                           filled: true,
                           fillColor: Colors.white.withValues(alpha: 0.1),
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
                             borderSide: BorderSide.none,
                           ),
                         ),

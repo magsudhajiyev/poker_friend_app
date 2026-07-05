@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/components/headers/top_nav_bar.dart';
 import '../services/support_request_service.dart';
 import '../l10n/app_localizations.dart';
+import '../design_system/constants/typography.dart';
+import '../design_system/constants/decorations.dart';
 
 class HelpSupportScreen extends StatefulWidget {
   const HelpSupportScreen({super.key});
@@ -20,9 +21,9 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
   String _selectedCategoryKey = 'Bug Report';
   bool _isSubmitting = false;
 
-  static const _surface = Color(0xFF161719);
-  static const _secondary = Color(0xFFB9B9B9);
-  static const _focusBorder = Color(0xFF4CDE78);
+  static const _surface = AppColors.bgSurface;
+  static const _secondary = AppColors.contentInactive;
+  static const _focusBorder = AppColors.accentPrimary;
 
   @override
   void initState() {
@@ -49,7 +50,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(l10n.supportFillAllFields,
-              style: GoogleFonts.ibmPlexSans(color: Colors.white)),
+              style: AppTypography.ibm(color: Colors.white)),
           backgroundColor: AppColors.errorRed,
         ),
       );
@@ -70,7 +71,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(l10n.supportSubmitted,
-              style: GoogleFonts.ibmPlexSans(color: Colors.white)),
+              style: AppTypography.ibm(color: Colors.white)),
           backgroundColor: AppColors.limeGreen,
         ),
       );
@@ -82,7 +83,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(l10n.supportFailedSubmit(e.toString()),
-              style: GoogleFonts.ibmPlexSans(color: Colors.white)),
+              style: AppTypography.ibm(color: Colors.white)),
           backgroundColor: AppColors.errorRed,
         ),
       );
@@ -120,10 +121,10 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                   // ── Category ─────────────────────────────────────────────
                   Text(
                     l10n.supportCategoryLabel,
-                    style: GoogleFonts.ibmPlexSans(
+                    style: AppTypography.ibm(
                       fontSize: 17,
                       fontWeight: FontWeight.w600,
-                      color: const Color(0xFFA3FF78),
+                      color: AppColors.accentSecondary,
                     ),
                   ),
                   const SizedBox(height: 18),
@@ -137,16 +138,16 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF2C2C2E),
-                            borderRadius: BorderRadius.circular(999),
+                            color: AppColors.bgElevated,
+                            borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
                             border: Border.all(
-                              color: isSelected ? const Color(0xFFA3FF78) : const Color(0xFF2C2C2E),
+                              color: isSelected ? AppColors.accentSecondary : AppColors.borderOnInverse,
                               width: 1.5,
                             ),
                           ),
                           child: Text(
                             cat.label,
-                            style: GoogleFonts.ibmPlexSans(
+                            style: AppTypography.ibm(
                               fontSize: 15,
                               fontWeight: FontWeight.w500,
                               color: Colors.white,
@@ -189,7 +190,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                       decoration: BoxDecoration(
                         color: _isSubmitting ? Colors.white.withValues(alpha: 0.5) : Colors.white,
-                        borderRadius: BorderRadius.circular(999),
+                        borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
                       ),
                       child: Center(
                         child: _isSubmitting
@@ -200,10 +201,10 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                               )
                             : Text(
                                 l10n.supportSubmitButton,
-                                style: GoogleFonts.ibmPlexSans(
+                                style: AppTypography.ibm(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w600,
-                                  color: const Color(0xFF0C0C0C),
+                                  color: AppColors.textInverse,
                                   height: 20 / 15,
                                 ),
                               ),
@@ -237,7 +238,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
       children: [
         Text(
           label,
-          style: GoogleFonts.ibmPlexSans(
+          style: AppTypography.ibm(
             fontSize: 13,
             fontWeight: FontWeight.w500,
             color: _secondary,
@@ -249,7 +250,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
             Container(
               decoration: BoxDecoration(
                 color: _surface,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                 border: Border.all(
                   color: isFocused ? _focusBorder : Colors.transparent,
                   width: 1.5,
@@ -259,10 +260,10 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                 controller: controller,
                 focusNode: focusNode,
                 maxLines: maxLines,
-                style: GoogleFonts.ibmPlexSans(fontSize: 15, color: Colors.white),
+                style: AppTypography.ibm(fontSize: 15, color: Colors.white),
                 decoration: InputDecoration(
                   hintText: hint,
-                  hintStyle: GoogleFonts.ibmPlexSans(fontSize: 15, color: _secondary),
+                  hintStyle: AppTypography.ibm(fontSize: 15, color: _secondary),
                   contentPadding: EdgeInsets.fromLTRB(
                     16, 12,
                     isFilled && !isMultiline ? 4 : 16,

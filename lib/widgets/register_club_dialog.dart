@@ -1,9 +1,11 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../design_system/components/app_text_field.dart';
 import '../l10n/app_localizations.dart';
 import '../services/club_request_service.dart';
+import '../design_system/constants/typography.dart';
+import '../design_system/constants/colors.dart';
+import '../design_system/constants/decorations.dart';
 
 /// Show the Register Club bottom sheet
 Future<void> showRegisterClubDialog(BuildContext context) {
@@ -100,7 +102,7 @@ class _RegisterClubSheetState extends State<_RegisterClubSheet> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(l10n.registerClubFailedToSubmit(e.toString())),
-            backgroundColor: const Color(0xFFFF3B30),
+            backgroundColor: AppColors.accentDanger,
           ),
         );
       }
@@ -144,7 +146,7 @@ class _RegisterClubSheetState extends State<_RegisterClubSheet> {
     return Container(
       decoration: const BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppDecorations.radiusXl)),
       ),
       padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + bottomInset),
       child: SingleChildScrollView(
@@ -160,17 +162,17 @@ class _RegisterClubSheetState extends State<_RegisterClubSheet> {
                 children: [
                   Text(
                     l10n.registerClubTitle,
-                    style: GoogleFonts.ibmPlexSans(
+                    style: AppTypography.ibm(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
-                      color: const Color(0xFF0C0C0C),
+                      color: AppColors.textInverse,
                     ),
                   ),
                   Align(
                     alignment: Alignment.centerRight,
                     child: GestureDetector(
                       onTap: () => Navigator.pop(context),
-                      child: const Icon(Icons.close, size: 18, color: Color(0xFFB9B9B9)),
+                      child: const Icon(Icons.close, size: 18, color: AppColors.contentInactive),
                     ),
                   ),
                 ],
@@ -224,15 +226,15 @@ class _RegisterClubSheetState extends State<_RegisterClubSheet> {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.info_outline, size: 12, color: Color(0xFFB9B9B9)),
+                const Icon(Icons.info_outline, size: 12, color: AppColors.contentInactive),
                 const SizedBox(width: 4),
                 Expanded(
                   child: Text(
                     l10n.registerClubInfoMessage,
-                    style: GoogleFonts.ibmPlexSans(
+                    style: AppTypography.ibm(
                       fontSize: 12,
                       fontWeight: FontWeight.w400,
-                      color: const Color(0xFF0C0C0C),
+                      color: AppColors.textInverse,
                     ),
                   ),
                 ),
@@ -251,16 +253,16 @@ class _RegisterClubSheetState extends State<_RegisterClubSheet> {
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       decoration: BoxDecoration(
                         color: Colors.transparent,
-                        borderRadius: BorderRadius.circular(60),
-                        border: Border.all(color: const Color(0xFFB9B9B9), width: 1),
+                        borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
+                        border: Border.all(color: AppColors.borderLight, width: 1),
                       ),
                       child: Center(
                         child: Text(
                           l10n.commonCancel,
-                          style: GoogleFonts.ibmPlexSans(
+                          style: AppTypography.ibm(
                             fontSize: 15,
                             fontWeight: FontWeight.w500,
-                            color: const Color(0xFF0C0C0C),
+                            color: AppColors.textInverse,
                           ),
                         ),
                       ),
@@ -274,8 +276,8 @@ class _RegisterClubSheetState extends State<_RegisterClubSheet> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF0C0C0C),
-                        borderRadius: BorderRadius.circular(60),
+                        color: AppColors.bgPrimary,
+                        borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
                       ),
                       child: Center(
                         child: _isSubmitting
@@ -289,7 +291,7 @@ class _RegisterClubSheetState extends State<_RegisterClubSheet> {
                               )
                             : Text(
                                 l10n.registerClubSubmitRequest,
-                                style: GoogleFonts.ibmPlexSans(
+                                style: AppTypography.ibm(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w500,
                                   color: Colors.white,
@@ -324,7 +326,7 @@ class _SuccessDialogContent extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 24),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(AppDecorations.radiusXl),
       ),
       padding: const EdgeInsets.all(24),
       child: Column(
@@ -340,7 +342,7 @@ class _SuccessDialogContent extends StatelessWidget {
             child: const Icon(
               Icons.check_circle_outline,
               size: 28,
-              color: Color(0xFF4CDE78),
+              color: AppColors.accentPrimary,
             ),
           ),
 
@@ -348,10 +350,10 @@ class _SuccessDialogContent extends StatelessWidget {
 
           Text(
             l10n.registerClubSuccessTitle,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               fontSize: 20,
               fontWeight: FontWeight.w600,
-              color: const Color(0xFF0C0C0C),
+              color: AppColors.textInverse,
               letterSpacing: -0.5,
             ),
             textAlign: TextAlign.center,
@@ -361,10 +363,10 @@ class _SuccessDialogContent extends StatelessWidget {
 
           Text(
             l10n.registerClubSuccessMessage(email),
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               fontSize: 14,
               fontWeight: FontWeight.w400,
-              color: const Color(0xFFB9B9B9),
+              color: AppColors.textSecondary,
               height: 1.44,
             ),
             textAlign: TextAlign.center,
@@ -378,13 +380,13 @@ class _SuccessDialogContent extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 12),
               decoration: BoxDecoration(
-                color: const Color(0xFF0C0C0C),
-                borderRadius: BorderRadius.circular(60),
+                color: AppColors.bgPrimary,
+                borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
               ),
               child: Center(
                 child: Text(
                   l10n.registerClubGotIt,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     fontSize: 15,
                     fontWeight: FontWeight.w500,
                     color: Colors.white,

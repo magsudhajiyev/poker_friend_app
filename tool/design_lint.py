@@ -79,6 +79,17 @@ def scan(fix=False):
                 open(p, "w").write(new)
                 fixed += changed
                 files_fixed += 1
+    # regression guards for phase-2 rules
+    gf = rad = 0
+    for p2 in glob.glob(f"{LIB}/**/*.dart", recursive=True):
+        rel2 = os.path.relpath(p2, LIB)
+        if rel2.startswith(("design_system", "l10n")):
+            continue
+        s2 = open(p2).read()
+        gf += len(re.findall(r"GoogleFonts\.\w+\(", s2))
+        rad += len(re.findall(r"\.circular\(\d", s2))
+    print(f"direct GoogleFonts calls outside design_system: {gf}")
+    print(f"numeric radius literals: {rad}")
     total = sum(colors.values())
     fix_total = sum(fixable.values())
     print(f"hardcoded Color(0x...): {total} ({len(colors)} distinct)")

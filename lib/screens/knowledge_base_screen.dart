@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/components/headers/top_nav_bar.dart';
 import '../l10n/app_localizations.dart';
+import '../design_system/constants/typography.dart';
+import '../design_system/constants/decorations.dart';
 
 enum KnowledgeBaseSection { stats, clubs }
 
@@ -69,7 +70,7 @@ class KnowledgeBaseScreen extends StatelessWidget {
           children: [
             const Icon(
               Icons.bar_chart_rounded,
-              color: Color(0xFF007AFF),
+              color: AppColors.accentInfo,
               size: 24,
             ),
             const SizedBox(height: 12),
@@ -78,7 +79,7 @@ class KnowledgeBaseScreen extends StatelessWidget {
               children: [
                 Text(
                   l10n.kbStatsTitle,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     fontSize: 17,
                     fontWeight: FontWeight.w600,
                     color: Colors.white,
@@ -88,7 +89,7 @@ class KnowledgeBaseScreen extends StatelessWidget {
                 const SizedBox(height: 8),
                 Text(
                   l10n.kbStatsIntro,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     fontSize: 15,
                     fontWeight: FontWeight.w400,
                     color: AppColors.textSecondary,
@@ -123,7 +124,7 @@ class KnowledgeBaseScreen extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.bgSurface,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -132,7 +133,7 @@ class KnowledgeBaseScreen extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
               color: AppColors.bgElevated,
-              borderRadius: BorderRadius.circular(999),
+              borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -145,7 +146,7 @@ class KnowledgeBaseScreen extends StatelessWidget {
                 const SizedBox(width: 4),
                 Text(
                   chipLabel,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     fontSize: 11,
                     fontWeight: FontWeight.w500,
                     color: AppColors.textSecondary,
@@ -158,7 +159,7 @@ class KnowledgeBaseScreen extends StatelessWidget {
           const SizedBox(height: 16),
           Text(
             title,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               fontSize: 17,
               fontWeight: FontWeight.w600,
               color: Colors.white,
@@ -168,7 +169,7 @@ class KnowledgeBaseScreen extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             description,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               fontSize: 15,
               fontWeight: FontWeight.w400,
               color: AppColors.textSecondary,
@@ -198,7 +199,7 @@ class KnowledgeBaseScreen extends StatelessWidget {
               const SizedBox(height: 12),
               Text(
                 l10n.kbClubsTitle,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   fontSize: 17,
                   fontWeight: FontWeight.w600,
                   color: Colors.white,
@@ -208,7 +209,7 @@ class KnowledgeBaseScreen extends StatelessWidget {
               const SizedBox(height: 8),
               Text(
                 l10n.kbClubsIntro,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                   fontSize: 15,
                   fontWeight: FontWeight.w400,
                   color: AppColors.textSecondary,
@@ -241,7 +242,7 @@ class KnowledgeBaseScreen extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.bgSurface,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -251,7 +252,7 @@ class KnowledgeBaseScreen extends StatelessWidget {
             height: 28,
             decoration: BoxDecoration(
               color: AppColors.cardIconBlue,
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(AppDecorations.radius10),
             ),
             child: const Icon(
               Icons.videogame_asset_rounded,
@@ -262,7 +263,7 @@ class KnowledgeBaseScreen extends StatelessWidget {
           const SizedBox(height: 16),
           Text(
             title,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               fontSize: 17,
               fontWeight: FontWeight.w600,
               color: Colors.white,
@@ -272,7 +273,7 @@ class KnowledgeBaseScreen extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             description,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               fontSize: 15,
               fontWeight: FontWeight.w400,
               color: AppColors.textSecondary,

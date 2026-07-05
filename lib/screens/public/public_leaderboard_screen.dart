@@ -7,6 +7,7 @@ import '../../services/event_service.dart';
 import '../../services/websocket_service.dart';
 import '../../config/app_config.dart';
 import '../../l10n/app_localizations.dart';
+import '../../design_system/constants/decorations.dart';
 
 /// Full-screen leaderboard for TV display mode
 /// Large fonts, high contrast, auto-updates
@@ -219,7 +220,7 @@ class _PublicLeaderboardScreenState extends State<PublicLeaderboardScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
               color: _isConnected ? Colors.green : Colors.red,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -326,7 +327,7 @@ class _PublicLeaderboardScreenState extends State<PublicLeaderboardScreen> {
         color: isTopThree
             ? rankColor.withOpacity(0.2)
             : Colors.grey.shade900,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
         border: isTopThree
             ? Border.all(color: rankColor.withOpacity(0.5), width: 2)
             : null,

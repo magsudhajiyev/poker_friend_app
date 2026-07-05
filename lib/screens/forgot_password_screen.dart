@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/decorations.dart';
 import '../design_system/constants/typography.dart';
@@ -381,7 +380,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         textAlign: TextAlign.center,
         maxLength: 1,
         inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-        style: GoogleFonts.robotoMono(
+        style: AppTypography.mono(
           color: Colors.white,
           fontSize: 24,
           fontWeight: FontWeight.w600,

@@ -14,6 +14,7 @@ import '../../config/app_config.dart';
 import '../public/public_leaderboard_screen.dart';
 import '../../design_system/components/cards/error_state_card.dart';
 import '../../l10n/app_localizations.dart';
+import '../../design_system/constants/decorations.dart';
 
 /// Live event dashboard with real-time rankings
 class EventDashboardScreen extends StatefulWidget {
@@ -538,7 +539,7 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> {
                     Colors.amber.shade500,
                   ],
                 ),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
               ),
               child: Row(
                 children: [
@@ -703,7 +704,7 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> {
                 : isTopThree
                     ? rankColor?.withOpacity(0.1)
                     : null,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
         border: isBusted
             ? Border.all(color: Colors.grey.shade600.withOpacity(0.3))
             : isTopThree

@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../l10n/app_localizations.dart';
 import '../services/currency_service.dart';
 import '../models/game_types.dart';
 import 'hand_actions_page_view.dart';
 import '../design_system/constants/colors.dart';
+import '../design_system/constants/typography.dart';
+import '../design_system/constants/decorations.dart';
 
 /// Full-screen landscape stack chart with tap-to-view hand details
 class StackChartScreen extends StatefulWidget {
@@ -182,8 +183,8 @@ class _StackChartScreenState extends State<StackChartScreen> {
             end: Alignment.bottomLeft,
             colors: [
               const Color(0xFF1A4A4A),
-              const Color(0xFF161618),
-              const Color(0xFF161618),
+              AppColors.surfaceVariant1,
+              AppColors.surfaceVariant1,
             ],
             stops: const [0.0, 0.3, 1.0],
           ),
@@ -240,7 +241,7 @@ class _StackChartScreenState extends State<StackChartScreen> {
               children: [
                 Text(
                   AppLocalizations.of(context).stackChartScreenTitle,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     fontSize: 17,
                     color: Colors.white,
                     fontWeight: FontWeight.w600,
@@ -248,7 +249,7 @@ class _StackChartScreenState extends State<StackChartScreen> {
                 ),
                 Text(
                   sessionName,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     fontSize: 12,
                     color: Colors.white.withValues(alpha: 0.5),
                   ),
@@ -281,7 +282,7 @@ class _StackChartScreenState extends State<StackChartScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.07),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppDecorations.radius20),
         border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
       ),
       child: Row(
@@ -289,7 +290,7 @@ class _StackChartScreenState extends State<StackChartScreen> {
         children: [
           Text(
             '$label  ',
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               fontSize: 11,
               color: Colors.white.withValues(alpha: 0.5),
               fontWeight: FontWeight.w400,
@@ -297,7 +298,7 @@ class _StackChartScreenState extends State<StackChartScreen> {
           ),
           Text(
             value,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               fontSize: 12,
               color: valueColor,
               fontWeight: FontWeight.w600,
@@ -381,7 +382,7 @@ class _StackChartScreenState extends State<StackChartScreen> {
               getTitlesWidget: (double value, TitleMeta meta) {
                 return Text(
                   _formatAmount(value),
-                  style: GoogleFonts.robotoMono(
+                  style: AppTypography.mono(
                     color: Colors.white.withValues(alpha: 0.35),
                     fontSize: 10,
                   ),
@@ -423,7 +424,7 @@ class _StackChartScreenState extends State<StackChartScreen> {
                   space: 6.0,
                   child: Text(
                     label,
-                    style: GoogleFonts.ibmPlexSans(
+                    style: AppTypography.ibm(
                       color: Colors.white.withValues(alpha: 0.3),
                       fontSize: 10,
                     ),
@@ -515,7 +516,7 @@ class _StackChartScreenState extends State<StackChartScreen> {
                   if (detail != stackValue) {
                     return LineTooltipItem(
                       detail,
-                      GoogleFonts.ibmPlexSans(
+                      AppTypography.ibm(
                         color: Colors.white,
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
@@ -526,7 +527,7 @@ class _StackChartScreenState extends State<StackChartScreen> {
 
                 return LineTooltipItem(
                   stackValue,
-                  GoogleFonts.ibmPlexSans(
+                  AppTypography.ibm(
                     color: Colors.white,
                     fontSize: 13,
                     fontWeight: FontWeight.w500,

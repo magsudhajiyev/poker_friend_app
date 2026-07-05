@@ -1,12 +1,13 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../design_system/constants/colors.dart';
 import '../../design_system/components/backgrounds/gradient_background.dart';
 import '../../l10n/app_localizations.dart';
 import '../../services/auth_service.dart';
 import '../../services/username_service.dart';
 import '../../services/display_identity_service.dart';
+import '../../design_system/constants/typography.dart';
+import '../../design_system/constants/decorations.dart';
 
 class NicknameStep extends StatefulWidget {
   final VoidCallback onContinue;
@@ -168,7 +169,7 @@ class _NicknameStepState extends State<NicknameStep>
                       const SizedBox(height: 16),
                       Text(
                         l10n.onboardingNicknameTitle,
-                        style: GoogleFonts.ibmPlexSans(
+                        style: AppTypography.ibm(
                           fontSize: 32,
                           fontWeight: FontWeight.w700,
                           color: Colors.white,
@@ -178,7 +179,7 @@ class _NicknameStepState extends State<NicknameStep>
                       const SizedBox(height: 8),
                       Text(
                         l10n.onboardingNicknameSubtitle,
-                        style: GoogleFonts.ibmPlexSans(
+                        style: AppTypography.ibm(
                           fontSize: 17,
                           fontWeight: FontWeight.w400,
                           color: AppColors.textDisabled,
@@ -190,7 +191,7 @@ class _NicknameStepState extends State<NicknameStep>
                       TextFormField(
                         controller: _controller,
                         onChanged: _onUsernameChanged,
-                        style: GoogleFonts.ibmPlexSans(
+                        style: AppTypography.ibm(
                           fontSize: 16,
                           color: Colors.white,
                         ),
@@ -207,7 +208,7 @@ class _NicknameStepState extends State<NicknameStep>
                             padding: const EdgeInsets.only(left: 16, right: 4),
                             child: Text(
                               '@',
-                              style: GoogleFonts.ibmPlexSans(
+                              style: AppTypography.ibm(
                                 fontSize: 18,
                                 color: AppColors.accentPrimary,
                                 fontWeight: FontWeight.w600,
@@ -220,18 +221,18 @@ class _NicknameStepState extends State<NicknameStep>
                           filled: true,
                           fillColor: Colors.white.withValues(alpha: 0.1),
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                             borderSide: BorderSide.none,
                           ),
                           enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                             borderSide: BorderSide(
                               color: Colors.white.withValues(alpha: 0.2),
                               width: 1,
                             ),
                           ),
                           focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                             borderSide: BorderSide(
                               color: _hasChecked && !_isAvailable
                                   ? Colors.red
@@ -299,7 +300,7 @@ class _NicknameStepState extends State<NicknameStep>
                               )
                             : Text(
                                 l10n.usernameSetupClaimButton,
-                                style: GoogleFonts.ibmPlexSans(
+                                style: AppTypography.ibm(
                                   fontSize: 17,
                                   fontWeight: FontWeight.w600,
                                   color: AppColors.bgPrimary,

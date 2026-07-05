@@ -5,6 +5,7 @@ import '../models/game_types.dart';
 import '../models/poker_game_state.dart' show formatBlindValue;
 import '../services/currency_service.dart';
 import 'individual_session_tracking_screen.dart';
+import '../design_system/constants/decorations.dart';
 
 class IndividualHandSetupScreen extends StatefulWidget {
   const IndividualHandSetupScreen({super.key});
@@ -74,7 +75,7 @@ class _IndividualHandSetupScreenState extends State<IndividualHandSetupScreen> {
                         height: 44,
                         decoration: BoxDecoration(
                           color: PokerFriendColors.dark3,
-                          borderRadius: BorderRadius.circular(14),
+                          borderRadius: BorderRadius.circular(AppDecorations.radius14),
                         ),
                         child: IconButton(
                           onPressed: () => Navigator.pop(context),
@@ -94,7 +95,7 @@ class _IndividualHandSetupScreenState extends State<IndividualHandSetupScreen> {
                   padding: EdgeInsets.all(24),
                   decoration: BoxDecoration(
                     color: PokerFriendColors.dark3,
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(AppDecorations.radius20),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -106,7 +107,7 @@ class _IndividualHandSetupScreenState extends State<IndividualHandSetupScreen> {
                             height: 40,
                             decoration: BoxDecoration(
                               color: PokerFriendColors.red.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                             ),
                             child: Icon(
                               Icons.edit,
@@ -135,7 +136,7 @@ class _IndividualHandSetupScreenState extends State<IndividualHandSetupScreen> {
                           filled: true,
                           fillColor: PokerFriendColors.dark1,
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                             borderSide: BorderSide.none,
                           ),
                           contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -232,7 +233,7 @@ class _IndividualHandSetupScreenState extends State<IndividualHandSetupScreen> {
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(AppDecorations.radius20),
                   ),
                   child: ElevatedButton(
                     onPressed: () {
@@ -255,7 +256,7 @@ class _IndividualHandSetupScreenState extends State<IndividualHandSetupScreen> {
                       backgroundColor: Colors.transparent,
                       shadowColor: Colors.transparent,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(AppDecorations.radius20),
                       ),
                     ),
                     child: Row(
@@ -300,7 +301,7 @@ class _IndividualHandSetupScreenState extends State<IndividualHandSetupScreen> {
       padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: PokerFriendColors.dark3,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppDecorations.radius20),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -321,7 +322,7 @@ class _IndividualHandSetupScreenState extends State<IndividualHandSetupScreen> {
                 height: 36,
                 decoration: BoxDecoration(
                   color: PokerFriendColors.red.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(AppDecorations.radius10),
                 ),
                 child: Icon(
                   icon,
@@ -350,7 +351,7 @@ class _IndividualHandSetupScreenState extends State<IndividualHandSetupScreen> {
                     height: 32,
                     decoration: BoxDecoration(
                       color: PokerFriendColors.dark1,
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
                     ),
                     child: Icon(
                       Icons.remove,
@@ -368,7 +369,7 @@ class _IndividualHandSetupScreenState extends State<IndividualHandSetupScreen> {
                     height: 32,
                     decoration: BoxDecoration(
                       color: PokerFriendColors.red,
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
                     ),
                     child: Icon(
                       Icons.add,

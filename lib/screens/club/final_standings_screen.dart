@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../design_system/constants/colors.dart';
@@ -10,6 +9,7 @@ import '../../models/club_event.dart';
 import '../../models/final_standings.dart';
 import '../../services/event_service.dart';
 import '../../l10n/app_localizations.dart';
+import '../../design_system/constants/decorations.dart';
 
 /// Trophy variant drawn next to the top-3 ranks in the final standings list.
 enum _TrophyKind { gold, silver, bronze }
@@ -137,7 +137,7 @@ class _FinalStandingsScreenState extends State<FinalStandingsScreen> {
                               const SizedBox(height: 16),
                               Text(
                                 l10n.finalStandingsNoData,
-                                style: GoogleFonts.ibmPlexSans(
+                                style: AppTypography.ibm(
                                   color: AppColors.textDisabled,
                                   fontSize: 16,
                                 ),
@@ -145,7 +145,7 @@ class _FinalStandingsScreenState extends State<FinalStandingsScreen> {
                               const SizedBox(height: 8),
                               Text(
                                 l10n.finalStandingsNoDataHint,
-                                style: GoogleFonts.ibmPlexSans(
+                                style: AppTypography.ibm(
                                   color: AppColors.textDisabled,
                                   fontSize: 14,
                                 ),
@@ -173,7 +173,7 @@ class _FinalStandingsScreenState extends State<FinalStandingsScreen> {
                               const SizedBox(height: 16),
                               Text(
                                 l10n.finalStandingsEmpty,
-                                style: GoogleFonts.ibmPlexSans(
+                                style: AppTypography.ibm(
                                   color: AppColors.textDisabled,
                                   fontSize: 16,
                                 ),
@@ -215,7 +215,7 @@ class _FinalStandingsScreenState extends State<FinalStandingsScreen> {
               children: [
                 Text(
                   l10n.finalStandingsTitle,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     fontSize: 27,
                     fontWeight: FontWeight.w600,
                     color: Colors.white,
@@ -226,7 +226,7 @@ class _FinalStandingsScreenState extends State<FinalStandingsScreen> {
                 const SizedBox(height: AppSpacing.xxxs),
                 Text(
                   widget.event.name,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                     fontSize: 13,
                     fontWeight: FontWeight.w400,
                     color: AppColors.textMint,
@@ -332,7 +332,7 @@ class _FinalStandingsScreenState extends State<FinalStandingsScreen> {
       ),
       decoration: BoxDecoration(
         color: AppColors.neutral800,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -346,7 +346,7 @@ class _FinalStandingsScreenState extends State<FinalStandingsScreen> {
           Text(
             label,
             textAlign: TextAlign.center,
-            style: GoogleFonts.ibmPlexSans(
+            style: AppTypography.ibm(
               fontSize: 12,
               fontWeight: FontWeight.w400,
               color: AppColors.textDisabled,
@@ -382,7 +382,7 @@ class _FinalStandingsScreenState extends State<FinalStandingsScreen> {
       decoration: BoxDecoration(
         color: style.bg,
         border: Border.all(color: AppColors.neutral700),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
       ),
       child: Row(
         children: [
@@ -392,7 +392,7 @@ class _FinalStandingsScreenState extends State<FinalStandingsScreen> {
             height: 32,
             decoration: BoxDecoration(
               color: style.rankBg,
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
             ),
             alignment: Alignment.center,
             child: Text(
@@ -466,7 +466,7 @@ class _FinalStandingsScreenState extends State<FinalStandingsScreen> {
               colors: [Color(0xFF5D522C), Color(0xFF453600)],
             ),
             border: Border.all(color: const Color(0xFF948A7A)),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
           ),
           alignment: Alignment.center,
           child: const Icon(
@@ -482,7 +482,7 @@ class _FinalStandingsScreenState extends State<FinalStandingsScreen> {
           decoration: BoxDecoration(
             color: const Color(0xFF2A292E),
             border: Border.all(color: const Color(0xFF525252)),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
           ),
           alignment: Alignment.center,
           child: const Icon(
@@ -498,7 +498,7 @@ class _FinalStandingsScreenState extends State<FinalStandingsScreen> {
           decoration: BoxDecoration(
             color: const Color(0xFF2D1F1A),
             border: Border.all(color: const Color(0xFF482407)),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
           ),
           alignment: Alignment.center,
           child: const Icon(

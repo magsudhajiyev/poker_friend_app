@@ -1,7 +1,6 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../../design_system/constants/colors.dart';
@@ -101,10 +100,10 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
         content: TextField(
           controller: controller,
           autofocus: true,
-          style: GoogleFonts.ibmPlexSans(color: AppColors.textPrimary),
+          style: AppTypography.ibm(color: AppColors.textPrimary),
           decoration: InputDecoration(
             hintText: l10n.drillSaveLineupHint,
-            hintStyle: GoogleFonts.ibmPlexSans(
+            hintStyle: AppTypography.ibm(
                 color: AppColors.textSecondary),
           ),
         ),
@@ -112,14 +111,14 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(l10n.commonCancel,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                     color: AppColors.textSecondary)),
           ),
           TextButton(
             onPressed: () =>
                 Navigator.pop(context, controller.text.trim()),
             child: Text(l10n.commonSave,
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                     color: AppColors.accentPrimary,
                     fontWeight: FontWeight.w600)),
           ),
@@ -261,7 +260,7 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
                   const SizedBox(height: AppSpacing.xxxs),
                   Text(
                     l10n.drillSeatsInstruction,
-                    style: GoogleFonts.ibmPlexSans(
+                    style: AppTypography.ibm(
                         color: AppColors.textSecondary, fontSize: 12),
                   ),
                   const SizedBox(height: AppSpacing.xxxs),
@@ -325,7 +324,7 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
           Expanded(
             child: Text(
               l10n.drillTitle,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                   fontSize: 22,
                   fontWeight: FontWeight.w600,
                   color: AppColors.textPrimary),
@@ -371,7 +370,7 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
         padding: const EdgeInsets.fromLTRB(10, 8, 8, 8),
         decoration: BoxDecoration(
           color: AppColors.whiteOverlay(opacity: 0.08),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
           border: Border.all(color: AppColors.whiteBorder()),
         ),
         child: Row(
@@ -397,7 +396,7 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
                   lineup.name,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: AppTypography.ibm(
                       color: AppColors.textPrimary,
                       fontSize: 14,
                       fontWeight: FontWeight.w600),
@@ -405,7 +404,7 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
                 const SizedBox(height: 2),
                 Text(
                   '${lineup.playerCount}P · ${lineup.stackBB.toInt()}BB',
-                  style: GoogleFonts.robotoMono(
+                  style: AppTypography.mono(
                       color: AppColors.textSecondary, fontSize: 11),
                 ),
               ],
@@ -473,7 +472,7 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
   Widget _fieldLabel(String text) {
     return Text(
       text,
-      style: GoogleFonts.ibmPlexSans(
+      style: AppTypography.ibm(
           color: AppColors.textSecondary,
           fontSize: 13,
           fontWeight: FontWeight.w500),
@@ -487,7 +486,7 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         color: AppColors.whiteOverlay(opacity: 0.05),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(AppDecorations.radius14),
       ),
       child: Row(
         children: [
@@ -512,7 +511,7 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
         padding: const EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(
           color: selected ? AppColors.accentPrimary : Colors.transparent,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(AppDecorations.radius10),
         ),
         child: Center(
           child: FittedBox(
@@ -520,7 +519,7 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
             child: Text(
               label,
               maxLines: 1,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 color: selected
                     ? AppColors.textInverse
                     : AppColors.contentActive.withOpacity(0.8),
@@ -680,7 +679,7 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
             child: Text(
               display,
               maxLines: 1,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 color: (isHero || pick != null)
                     ? AppColors.accentSecondary
                     : AppColors.textSecondary,
@@ -693,7 +692,7 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
           const SizedBox(height: 3),
           Text(
             l10n.drillSeatNumber(seat),
-            style: GoogleFonts.robotoMono(
+            style: AppTypography.mono(
               color: AppColors.textSecondary,
               fontSize: 9,
             ),
@@ -723,7 +722,7 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
                     Text(
                       l10n.drillPremiumTitle,
                       textAlign: TextAlign.center,
-                      style: GoogleFonts.ibmPlexSans(
+                      style: AppTypography.ibm(
                           color: AppColors.textPrimary,
                           fontSize: 20,
                           fontWeight: FontWeight.w600),
@@ -799,11 +798,11 @@ class _OpponentPickerSheetState extends State<_OpponentPickerSheet> {
               child: TextField(
                 autofocus: false,
                 onChanged: (v) => setState(() => _query = v),
-                style: GoogleFonts.ibmPlexSans(
+                style: AppTypography.ibm(
                     color: AppColors.textPrimary),
                 decoration: InputDecoration(
                   hintText: l10n.drillSearchOpponents,
-                  hintStyle: GoogleFonts.ibmPlexSans(
+                  hintStyle: AppTypography.ibm(
                       color: AppColors.textSecondary),
                   prefixIcon: Icon(Icons.search,
                       color: AppColors.textSecondary),
@@ -825,11 +824,11 @@ class _OpponentPickerSheetState extends State<_OpponentPickerSheet> {
                       leading: const Icon(Icons.person,
                           color: AppColors.accentPrimary),
                       title: Text(l10n.drillThisIsMe,
-                          style: GoogleFonts.ibmPlexSans(
+                          style: AppTypography.ibm(
                               color: AppColors.accentPrimary,
                               fontWeight: FontWeight.w600)),
                       subtitle: Text(l10n.drillMoveYourSeatHere,
-                          style: GoogleFonts.ibmPlexSans(
+                          style: AppTypography.ibm(
                               color: AppColors.textSecondary,
                               fontSize: 13)),
                       onTap: () => Navigator.pop(
@@ -839,10 +838,10 @@ class _OpponentPickerSheetState extends State<_OpponentPickerSheet> {
                     leading: Icon(Icons.smart_toy,
                         color: AppColors.textSecondary),
                     title: Text(l10n.drillGenericBot,
-                        style: GoogleFonts.ibmPlexSans(
+                        style: AppTypography.ibm(
                             color: AppColors.textPrimary)),
                     subtitle: Text(l10n.drillBalancedRegular,
-                        style: GoogleFonts.ibmPlexSans(
+                        style: AppTypography.ibm(
                             color: AppColors.textSecondary,
                             fontSize: 13)),
                     onTap: () => Navigator.pop(
@@ -856,13 +855,13 @@ class _OpponentPickerSheetState extends State<_OpponentPickerSheet> {
                             o.color.flutterColor.withOpacity(0.25),
                         child: Text(
                           o.name.isNotEmpty ? o.name[0].toUpperCase() : '?',
-                          style: GoogleFonts.ibmPlexSans(
+                          style: AppTypography.ibm(
                               color: o.color.flutterColor,
                               fontWeight: FontWeight.w600),
                         ),
                       ),
                       title: Text(o.name,
-                          style: GoogleFonts.ibmPlexSans(
+                          style: AppTypography.ibm(
                               color: AppColors.textPrimary)),
                       onTap: () =>
                           Navigator.pop(context, _SeatPick(o.id, o.name)),
