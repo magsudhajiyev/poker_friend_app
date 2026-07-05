@@ -7500,6 +7500,12 @@ class AppLocalizationsFr extends AppLocalizations {
       'Vous pouvez basculer entre votre nom et votre pseudo et le modifier à tout moment.';
 
   @override
+  String get onboardingCurrencyTitle => 'Dans quelle devise jouez-vous ?';
+
+  @override
+  String get onboardingCurrencySubtitle => 'Caves, retraits et statistiques l\'utiliseront. Modifiable à tout moment dans les réglages.';
+
+  @override
   String get onboardingGameTypeTitle => 'Choisissez votre type de jeu';
 
   @override

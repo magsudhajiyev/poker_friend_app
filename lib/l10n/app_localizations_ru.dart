@@ -7441,6 +7441,12 @@ class AppLocalizationsRu extends AppLocalizations {
       'Вы можете переключаться между вашим именем и никнеймом и менять его в любое время.';
 
   @override
+  String get onboardingCurrencyTitle => 'В какой валюте вы играете?';
+
+  @override
+  String get onboardingCurrencySubtitle => 'Бай-ины, выплаты и статистика будут в ней. Изменить можно в настройках в любой момент.';
+
+  @override
   String get onboardingGameTypeTitle => 'Выберите тип игры';
 
   @override

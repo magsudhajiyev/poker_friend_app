@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import '../../services/currency_service.dart';
 import '../../services/onboarding_service.dart';
 import '../paywall_screen.dart';
 import 'welcome_step.dart';
 import 'nickname_step.dart';
 import 'game_type_step.dart';
+import 'currency_step.dart';
 import 'journey_step.dart';
 import 'weekly_hours_step.dart';
 import 'purpose_step.dart';
@@ -11,7 +13,7 @@ import '../../design_system/constants/colors.dart';
 
 /// Main onboarding flow controller.
 ///
-/// Manages a PageView of 6 steps (5 if [skipNickname] is true).
+/// Manages a PageView of 7 steps (6 if [skipNickname] is true).
 /// Collects user preferences and persists them to Firestore on completion.
 /// After onboarding, navigates to the paywall screen.
 class OnboardingFlow extends StatefulWidget {
@@ -69,6 +71,15 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
         onBack: _previousStep,
         onContinue: (value) {
           _gameType = value;
+          _nextStep();
+        },
+      ),
+      // Currency: persisted locally right away (CurrencyService), so cash
+      // amounts are correct from the very first logged session.
+      CurrencyStep(
+        onBack: _previousStep,
+        onContinue: (code) {
+          CurrencyService.setCurrency(code);
           _nextStep();
         },
       ),

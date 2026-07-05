@@ -13047,6 +13047,18 @@ abstract class AppLocalizations {
   /// **'You can switch between your name and nickname and change it whenever you want.'**
   String get onboardingNicknameSubtitle;
 
+  /// No description provided for @onboardingCurrencyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What currency do you play in?'**
+  String get onboardingCurrencyTitle;
+
+  /// No description provided for @onboardingCurrencySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Buy-ins, cashouts, and stats will all use it. You can change it anytime in Settings.'**
+  String get onboardingCurrencySubtitle;
+
   /// No description provided for @onboardingGameTypeTitle.
   ///
   /// In en, this message translates to:

@@ -7469,6 +7469,12 @@ class AppLocalizationsPt extends AppLocalizations {
       'Você pode alternar entre seu nome e apelido e mudá-lo sempre que quiser.';
 
   @override
+  String get onboardingCurrencyTitle => 'Em que moeda você joga?';
+
+  @override
+  String get onboardingCurrencySubtitle => 'Buy-ins, saques e estatísticas vão usá-la. Você pode mudar a qualquer momento nos Ajustes.';
+
+  @override
   String get onboardingGameTypeTitle => 'Escolha seu tipo de jogo';
 
   @override

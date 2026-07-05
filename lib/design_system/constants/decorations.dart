@@ -21,6 +21,7 @@ class AppDecorations {
   static const double radius14 = 14.0;
   static const double radius18 = 18.0;
   static const double radius20 = 20.0;
+  static const double radius110 = 110.0;  // onboarding pill buttons
 
   // Blur Values
   static const double blurLight = 45.0;    // For glassy cards

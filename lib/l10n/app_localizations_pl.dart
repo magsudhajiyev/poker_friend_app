@@ -7448,6 +7448,12 @@ class AppLocalizationsPl extends AppLocalizations {
       'Możesz przełączać się między swoim imieniem i nickiem oraz zmieniać go w dowolnym momencie.';
 
   @override
+  String get onboardingCurrencyTitle => 'W jakiej walucie grasz?';
+
+  @override
+  String get onboardingCurrencySubtitle => 'Wpisowe, wypłaty i statystyki będą jej używać. Możesz ją zmienić w Ustawieniach w każdej chwili.';
+
+  @override
   String get onboardingGameTypeTitle => 'Wybierz typ gry';
 
   @override

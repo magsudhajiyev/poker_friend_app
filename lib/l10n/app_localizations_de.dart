@@ -7482,6 +7482,12 @@ class AppLocalizationsDe extends AppLocalizations {
       'Du kannst zwischen deinem Namen und Nickname wechseln und ihn jederzeit ändern.';
 
   @override
+  String get onboardingCurrencyTitle => 'In welcher Währung spielst du?';
+
+  @override
+  String get onboardingCurrencySubtitle => 'Buy-ins, Auszahlungen und Statistiken verwenden sie. Du kannst sie jederzeit in den Einstellungen ändern.';
+
+  @override
   String get onboardingGameTypeTitle => 'Wähle deinen Spieltyp';
 
   @override
