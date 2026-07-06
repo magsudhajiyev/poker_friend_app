@@ -13317,6 +13317,24 @@ abstract class AppLocalizations {
   /// **'Stack depth'**
   String get drillStackDepth;
 
+  /// No description provided for @drillFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'Format'**
+  String get drillFormat;
+
+  /// No description provided for @drillFormatCash.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash'**
+  String get drillFormatCash;
+
+  /// No description provided for @drillFormatAnte.
+  ///
+  /// In en, this message translates to:
+  /// **'MTT · Ante'**
+  String get drillFormatAnte;
+
   /// No description provided for @drillScouting.
   ///
   /// In en, this message translates to:
