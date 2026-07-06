@@ -1488,8 +1488,8 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
 
   /// Header right side: stack-vs-table-average pill (F2) + menu dots.
   ///
-  /// Returns null when no table average has been entered, letting TopNavBar
-  /// render its default menu button — the header stays exactly as before.
+  /// Always visible so the feature is discoverable: shows "—× avg" until a
+  /// table average is entered (tap opens session details → Update Stack).
   Widget? _buildHeaderRightAction(AppLocalizations l10n) {
     final tableAvg = StackAnalytics.latestTableAverage(sessionManager.stackHistory);
     double? heroStack;
@@ -1498,7 +1498,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       heroStack = gameState.players[ourSeat - 1].currentStack;
     }
     final ratio = StackAnalytics.stackToAvgRatio(heroStack, tableAvg);
-    if (ratio == null) return null;
 
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -1513,11 +1512,16 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
               borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
             ),
             child: Text(
-              l10n.handAvgPill(StackAnalytics.formatRatio(ratio)),
+              l10n.handAvgPill(
+                  ratio != null ? StackAnalytics.formatRatio(ratio) : '—×'),
               style: AppTypography.mono(
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
-                color: ratio >= 1.0 ? AppColors.tealPrimary : Colors.white.withValues(alpha: 0.8),
+                color: ratio == null
+                    ? Colors.white.withValues(alpha: 0.55)
+                    : ratio >= 1.0
+                        ? AppColors.tealPrimary
+                        : Colors.white.withValues(alpha: 0.8),
               ),
             ),
           ),
@@ -1983,6 +1987,69 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                           ),
                         ),
                       ),
+                    // Bottom bar INSIDE the drawing board — back chevron
+                    // (left) + undo pill (right), inset from the board's
+                    // rounded corners and the home indicator.
+                    Positioned(
+                      bottom: MediaQuery.of(context).padding.bottom + 12,
+                      left: 12,
+                      right: 12,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          // Back circle
+                          GestureDetector(
+                            onTap: () => _handleNavigationAttempt(isBackButton: true),
+                            child: Container(
+                              width: 38,
+                              height: 38,
+                              decoration: const BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Center(
+                                child: _buildIcon('assets/icons/back icon.svg', 24, Colors.black),
+                              ),
+                            ),
+                          ),
+                          // Undo pill — always visible, dimmed when nothing to undo
+                          Opacity(
+                            opacity: _canUndoLastAction() ? 1.0 : 0.35,
+                            child: GestureDetector(
+                              onTap: _canUndoLastAction() ? _undoLastAction : null,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                decoration: BoxDecoration(
+                                  color: AppColors.bgSurface,
+                                  borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
+                                  border: Border.all(color: AppColors.borderStrong),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    SvgPicture.asset(
+                                      'assets/icons/undo.svg',
+                                      width: 24,
+                                      height: 24,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      l10n.handUndoLastAction,
+                                      style: AppTypography.ibm(
+                                        fontSize: 15,
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w500,
+                                        height: 22 / 15,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -1991,66 +2058,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
               ),
             ],
           ),
-        Positioned(
-          bottom: MediaQuery.of(context).padding.bottom + 12,
-          left: 16,
-          right: 16,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              // Back circle
-              GestureDetector(
-                onTap: () => _handleNavigationAttempt(isBackButton: true),
-                child: Container(
-                  width: 38,
-                  height: 38,
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Center(
-                    child: _buildIcon('assets/icons/back icon.svg', 24, Colors.black),
-                  ),
-                ),
-              ),
-              // Undo pill — always visible, dimmed when nothing to undo
-              Opacity(
-                opacity: _canUndoLastAction() ? 1.0 : 0.35,
-                child: GestureDetector(
-                  onTap: _canUndoLastAction() ? _undoLastAction : null,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    decoration: BoxDecoration(
-                      color: AppColors.bgSurface,
-                      borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
-                      border: Border.all(color: AppColors.borderStrong),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        SvgPicture.asset(
-                          'assets/icons/undo.svg',
-                          width: 24,
-                          height: 24,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          l10n.handUndoLastAction,
-                          style: AppTypography.ibm(
-                            fontSize: 15,
-                            color: Colors.white,
-                            fontWeight: FontWeight.w500,
-                            height: 22 / 15,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
         // Guided hand overlay (onboarding phase 4)
         GuidedHandOverlay(
           key: _guidedOverlayKey,
@@ -2126,6 +2133,27 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         final availableW = constraints.maxWidth;
         final availableH = constraints.maxHeight;
 
+        // Fit the seat ellipse to THIS device's table area so no seat can
+        // overflow it (seat 5 under the top bar, seats 3/7 off the sides).
+        // Seat CENTERS sit on the ellipse, so each axis must keep half a
+        // seat's on-screen footprint plus a margin inside the area. The
+        // widget is rotated 270°, so its width fraction controls the
+        // screen-vertical axis (availableH) and its height fraction the
+        // screen-horizontal axis (availableW).
+        const double seatVisualH = 72.0; // seat pill + name + stack column
+        const double seatVisualW = 60.0; // widest of pill / name badge / stack
+        const double seatEdgePad = 4.0;
+        final double fw = availableH > 0
+            ? ((availableH - seatVisualH - 2 * seatEdgePad) / availableH)
+                .clamp(0.5, 0.92)
+                .toDouble()
+            : 0.92;
+        final double fh = availableW > 0
+            ? ((availableW - seatVisualW - 2 * seatEdgePad) / availableW)
+                .clamp(0.5, 0.88)
+                .toDouble()
+            : 0.88;
+
         return Center(
           child: RotatedBox(
             quarterTurns: 3,
@@ -2140,8 +2168,8 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                 buttonPosition: widgetButton,
                 showDealerButton: true,
                 showLogo: false,
-                tableWidthFraction: 0.92,  // visual height after rotation
-                tableHeightFraction: 0.88, // visual width after rotation
+                tableWidthFraction: fw,  // visual height after rotation
+                tableHeightFraction: fh, // visual width after rotation
                 dealerButtonSize: 26,
                 dealerButtonQuarterTurns: 1,
                 dealerButtonNudge: (widgetSeat) {
@@ -2396,32 +2424,78 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
 
     if (statusPill == null) return playerInfo;
 
-    // Position chip pill toward table center based on seat position
+    // Position chip pill toward table center based on seat position.
+    // The pill is rendered with ZERO layout footprint so the seat stays
+    // centered on the player info alone — pills paint over the felt toward
+    // the pot and can never push a seat off the screen edge (and seats no
+    // longer shift when a bet pill appears/disappears).
     final dir = _chipDirection(seatNumber);
     switch (dir) {
       case _ChipDirection.up:
         return Column(
           mainAxisSize: MainAxisSize.min,
-          children: [statusPill, const SizedBox(height: 4), playerInfo],
+          children: [
+            _zeroFootprintPill(
+              Padding(padding: const EdgeInsets.only(bottom: 4), child: statusPill),
+              Alignment.bottomCenter,
+            ),
+            playerInfo,
+          ],
         );
       case _ChipDirection.down:
         return Column(
           mainAxisSize: MainAxisSize.min,
-          children: [playerInfo, const SizedBox(height: 4), statusPill],
+          children: [
+            playerInfo,
+            _zeroFootprintPill(
+              Padding(padding: const EdgeInsets.only(top: 4), child: statusPill),
+              Alignment.topCenter,
+            ),
+          ],
         );
       case _ChipDirection.left:
         return Row(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.center,
-          children: [statusPill, const SizedBox(width: 4), playerInfo],
+          children: [
+            _zeroFootprintPill(
+              Padding(padding: const EdgeInsets.only(right: 4), child: statusPill),
+              Alignment.centerRight,
+            ),
+            playerInfo,
+          ],
         );
       case _ChipDirection.right:
         return Row(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.center,
-          children: [playerInfo, const SizedBox(width: 4), statusPill],
+          children: [
+            playerInfo,
+            _zeroFootprintPill(
+              Padding(padding: const EdgeInsets.only(left: 4), child: statusPill),
+              Alignment.centerLeft,
+            ),
+          ],
         );
     }
+  }
+
+  /// Wraps a bet/status pill so it takes no layout space: the seat's
+  /// bounding box stays exactly the player-info column, and the pill paints
+  /// outward from the given anchor ([alignment] edge sits on the zero point).
+  Widget _zeroFootprintPill(Widget pill, AlignmentGeometry alignment) {
+    return SizedBox(
+      width: 0,
+      height: 0,
+      child: OverflowBox(
+        minWidth: 0,
+        minHeight: 0,
+        maxWidth: double.infinity,
+        maxHeight: double.infinity,
+        alignment: alignment,
+        child: pill,
+      ),
+    );
   }
 
   Widget _buildStatusPill(String text, Color bgColor, Color textColor, {bool isBold = true}) {
@@ -5335,10 +5409,14 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         }
       }
 
-      // Sync stack history back from session details (rebuys, add-ons, notes)
+      // Sync stack history back from session details (rebuys, add-ons,
+      // notes, table average). setState so the header avg pill refreshes
+      // immediately, not on the next unrelated rebuild.
       if (result['stackHistory'] != null) {
         final returnedHistory = List<Map<String, dynamic>>.from(result['stackHistory']);
-        sessionManager.stackHistory = returnedHistory;
+        setState(() {
+          sessionManager.stackHistory = returnedHistory;
+        });
       }
 
       // Update blinds if they were changed
