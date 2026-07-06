@@ -40,7 +40,8 @@ forgotten to tick).
 
 | ID | Item | Status |
 |----|------|--------|
-| U1 | No confirmation when leaving hand logging → individual logging screen | ⬜ |
+| U1 | Leave-confirmation skip: DONE in code — isIndividualSession branch (poker_hand_screen.dart:1252) | ✅ code-verified |
+| U5 | Chop logic: DONE incl. dealer mode (dealer_table_screen.dart:1187) | ✅ code-verified |
 | U4 | Dealer voice grammar: commands start with seat name; strict speech→action grammar | ⬜ |
 | U8 | Lazy load for long lists | ⬜ |
 
