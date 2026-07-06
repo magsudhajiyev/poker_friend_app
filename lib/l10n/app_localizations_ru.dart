@@ -158,6 +158,9 @@ class AppLocalizationsRu extends AppLocalizations {
       'Доступно после 60 мин отслеживания';
 
   @override
+  String get statsBBPerHour => 'BB / час';
+
+  @override
   String get statsLoadingMessage => 'Загрузка статистики...';
 
   @override
@@ -788,12 +791,6 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get individualTableAvgHint => 'Средний стек стола (необязательно)';
-
-  @override
-  String get statsBBPerHour => 'BB / час';
-
-  @override
   String get handNextHand => 'Следующая рука';
 
   @override
@@ -1263,6 +1260,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get individualNoteHint => 'например выиграл большой банк с AA';
+
+  @override
+  String get individualTableAvgHint => 'Средний стек стола (необязательно)';
 
   @override
   String get individualUpdateBlinds => 'Обновить Blinds';
@@ -7455,7 +7455,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get onboardingCurrencyTitle => 'В какой валюте вы играете?';
 
   @override
-  String get onboardingCurrencySubtitle => 'Бай-ины, выплаты и статистика будут в ней. Изменить можно в настройках в любой момент.';
+  String get onboardingCurrencySubtitle =>
+      'Бай-ины, выплаты и статистика будут в ней. Изменить можно в настройках в любой момент.';
 
   @override
   String get onboardingGameTypeTitle => 'Выберите тип игры';

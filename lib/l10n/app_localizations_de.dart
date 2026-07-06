@@ -156,6 +156,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get statsHourlyRateNotAvailable => 'Verfügbar nach 60 Min. Tracking';
 
   @override
+  String get statsBBPerHour => 'BB / Stunde';
+
+  @override
   String get statsLoadingMessage => 'Statistiken werden geladen...';
 
   @override
@@ -795,12 +798,6 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get individualTableAvgHint => 'Tisch-Durchschnitt (optional)';
-
-  @override
-  String get statsBBPerHour => 'BB / Stunde';
-
-  @override
   String get handNextHand => 'Nächste Hand';
 
   @override
@@ -1278,6 +1275,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get individualNoteHint => 'z.B. Großen Pot mit AA gewonnen';
+
+  @override
+  String get individualTableAvgHint => 'Tisch-Durchschnitt (optional)';
 
   @override
   String get individualUpdateBlinds => 'Blinds aktualisieren';
@@ -7496,7 +7496,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get onboardingCurrencyTitle => 'In welcher Währung spielst du?';
 
   @override
-  String get onboardingCurrencySubtitle => 'Buy-ins, Auszahlungen und Statistiken verwenden sie. Du kannst sie jederzeit in den Einstellungen ändern.';
+  String get onboardingCurrencySubtitle =>
+      'Buy-ins, Auszahlungen und Statistiken verwenden sie. Du kannst sie jederzeit in den Einstellungen ändern.';
 
   @override
   String get onboardingGameTypeTitle => 'Wähle deinen Spieltyp';

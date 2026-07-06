@@ -402,6 +402,12 @@ abstract class AppLocalizations {
   /// **'Available after 60 min of tracking'**
   String get statsHourlyRateNotAvailable;
 
+  /// No description provided for @statsBBPerHour.
+  ///
+  /// In en, this message translates to:
+  /// **'BB / Hour'**
+  String get statsBBPerHour;
+
   /// No description provided for @statsLoadingMessage.
   ///
   /// In en, this message translates to:
@@ -1536,18 +1542,6 @@ abstract class AppLocalizations {
   /// **'{ratio} avg'**
   String handAvgPill(String ratio);
 
-  /// No description provided for @individualTableAvgHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Table average (optional)'**
-  String get individualTableAvgHint;
-
-  /// No description provided for @statsBBPerHour.
-  ///
-  /// In en, this message translates to:
-  /// **'BB / Hour'**
-  String get statsBBPerHour;
-
   /// No description provided for @handNextHand.
   ///
   /// In en, this message translates to:
@@ -2405,6 +2399,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'e.g. Won big pot with AA'**
   String get individualNoteHint;
+
+  /// No description provided for @individualTableAvgHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Table average (optional)'**
+  String get individualTableAvgHint;
 
   /// No description provided for @individualUpdateBlinds.
   ///
