@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import '../l10n/app_localizations.dart';
 import '../services/currency_service.dart';
 import '../services/opponent_service.dart';
+import '../services/free_tier_limits.dart';
 import '../models/opponent.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/decorations.dart';
@@ -160,7 +161,7 @@ class _SeatConfigSheetState extends State<SeatConfigSheet> {
     FocusScope.of(context).unfocus();
   }
 
-  void _save() {
+  Future<void> _save() async {
     final stackText = _stackController.text.trim();
     final stack = stackText.isEmpty
         ? widget.defaultStack
@@ -171,10 +172,24 @@ class _SeatConfigSheetState extends State<SeatConfigSheet> {
     widget.onSave(name: name, stack: stack, isHero: _isHero, isActive: true);
 
     if (_saveAsOpponent && name.isNotEmpty && !_isHero) {
-      _saveAsNewOpponent(name);
+      // Free-tier opponent cap — checked before the sheet closes so the limit
+      // dialog has a live context. Duplicate names reuse the existing profile
+      // and never count against the cap. The seat itself is saved either way.
+      try {
+        final all = await OpponentService.getAllOpponents();
+        final isNew =
+            !all.any((o) => o.name.toLowerCase() == name.toLowerCase());
+        if (isNew && !FreeTierLimits.canCreateAnotherOpponent(all.length)) {
+          if (mounted) await FreeTierLimits.showOpponentLimitDialog(context);
+        } else {
+          _saveAsNewOpponent(name);
+        }
+      } catch (_) {
+        _saveAsNewOpponent(name);
+      }
     }
 
-    Navigator.pop(context);
+    if (mounted) Navigator.pop(context);
   }
 
   void _remove() {

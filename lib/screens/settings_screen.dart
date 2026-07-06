@@ -7,6 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../design_system/constants/colors.dart';
 import '../l10n/app_localizations.dart';
 import '../services/auth_service.dart';
+import '../services/subscription_service.dart';
 import '../services/locale_service.dart';
 import '../services/currency_service.dart';
 import '../services/skip_hand_scouting_service.dart';
@@ -644,6 +645,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   // ── Clubs ──────────────────────────────────────────────────────────────────
 
+  /// Club registration is a Club-tier feature — non-Club users get the
+  /// paywall pre-scrolled to the Club card (same gate as the nav drawer).
+  void _openRegisterClub() {
+    if (SubscriptionService.isClub) {
+      showRegisterClubDialog(context);
+    } else {
+      PaywallScreen.show(
+        context,
+        featureName: AppLocalizations.of(context).settingsRegisterClub,
+        preselectedTier: 2,
+      );
+    }
+  }
+
   void _showClubs() {
     final l10n = AppLocalizations.of(context);
     if (_clubs.isEmpty) {
@@ -736,7 +751,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   GestureDetector(
                     onTap: () {
                       Navigator.pop(dialogContext);
-                      showRegisterClubDialog(context);
+                      _openRegisterClub();
                     },
                     child: Container(
                       width: double.infinity,
@@ -982,7 +997,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       _buildRow(
                         icon: const Icon(Icons.add_circle_outline_rounded, color: AppColors.contentInactive, size: 24),
                         title: l10n.settingsRegisterClub,
-                        onTap: () => showRegisterClubDialog(context),
+                        onTap: _openRegisterClub,
                       ),
                       _buildRow(
                         icon: const Icon(Icons.translate_rounded, color: AppColors.contentInactive, size: 24),
