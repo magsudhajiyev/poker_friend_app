@@ -1502,26 +1502,29 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        GestureDetector(
-          onTap: _showSessionDetails,
-          behavior: HitTestBehavior.opaque,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
-            ),
-            child: Text(
-              l10n.handAvgPill(
-                  ratio != null ? StackAnalytics.formatRatio(ratio) : '—×'),
-              style: AppTypography.mono(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: ratio == null
-                    ? Colors.white.withValues(alpha: 0.55)
-                    : ratio >= 1.0
-                        ? AppColors.tealPrimary
-                        : Colors.white.withValues(alpha: 0.8),
+        Flexible(
+          child: GestureDetector(
+            onTap: _showSessionDetails,
+            behavior: HitTestBehavior.opaque,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
+              ),
+              child: Text(
+                l10n.handAvgPill(
+                    ratio != null ? StackAnalytics.formatRatio(ratio) : '—×'),
+                overflow: TextOverflow.ellipsis,
+                style: AppTypography.mono(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: ratio == null
+                      ? Colors.white.withValues(alpha: 0.55)
+                      : ratio >= 1.0
+                          ? AppColors.tealPrimary
+                          : Colors.white.withValues(alpha: 0.8),
+                ),
               ),
             ),
           ),
