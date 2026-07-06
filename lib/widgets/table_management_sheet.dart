@@ -155,6 +155,11 @@ class _TableManagementModalState extends State<_TableManagementModal> {
     final currentName = widget.sessionManager.playerNames[seat] ?? '';
     final currentStack =
         isActive ? widget.gameState.getPlayerStack(seat) : defaultStack;
+    // Hero's latest stack — survives the hero being removed mid-hand, so
+    // ticking "This is me" on a new seat pre-fills the real stack, not the
+    // 100bb default.
+    final heroLatestStack =
+        widget.sessionManager.latestHeroStack(widget.gameState);
 
     final l10n = AppLocalizations.of(context);
     SeatConfigSheet.show(
@@ -166,6 +171,7 @@ class _TableManagementModalState extends State<_TableManagementModal> {
       isActive: isActive,
       defaultStack: defaultStack,
       heroName: heroName,
+      heroStack: heroLatestStack,
       seatedPlayers: seatedPlayers,
       isCash: widget.sessionManager.gameType == GameType.cash,
       showSaveAsOpponent: !isHero,

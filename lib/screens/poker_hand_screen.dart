@@ -2584,6 +2584,10 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     final currentName = sessionManager.playerNames[seatNumber] ?? '';
     final currentStack =
         isActive ? gameState.getPlayerStack(seatNumber) : defaultStack;
+    // Hero's latest stack — survives the hero being removed mid-hand, so
+    // ticking "This is me" on a new seat pre-fills the real stack, not the
+    // 100bb default.
+    final heroLatestStack = sessionManager.latestHeroStack(gameState);
 
     final l10n = AppLocalizations.of(context);
     SeatConfigSheet.show(
@@ -2595,6 +2599,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       isActive: isActive,
       defaultStack: defaultStack,
       heroName: heroName,
+      heroStack: heroLatestStack,
       seatedPlayers: seatedPlayers,
       isCash: sessionManager.gameType == GameType.cash,
       showSaveAsOpponent: !isHero,

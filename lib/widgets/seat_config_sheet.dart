@@ -17,6 +17,10 @@ class SeatConfigSheet extends StatefulWidget {
   final bool isActive;
   final double defaultStack;
   final String heroName;
+
+  /// Hero's latest known stack (live seat stack, or last tracked stack when
+  /// the hero is currently unseated). Applied when "This is me" is selected.
+  final double heroStack;
   final Map<String, int> seatedPlayers;
   final bool isCash;
   final bool showSaveAsOpponent;
@@ -37,6 +41,7 @@ class SeatConfigSheet extends StatefulWidget {
     required this.isActive,
     required this.defaultStack,
     this.heroName = '',
+    this.heroStack = 0.0,
     this.seatedPlayers = const {},
     this.isCash = true,
     this.showSaveAsOpponent = true,
@@ -53,6 +58,7 @@ class SeatConfigSheet extends StatefulWidget {
     required bool isActive,
     required double defaultStack,
     String heroName = '',
+    double heroStack = 0.0,
     Map<String, int> seatedPlayers = const {},
     bool isCash = true,
     bool showSaveAsOpponent = true,
@@ -76,6 +82,7 @@ class SeatConfigSheet extends StatefulWidget {
         isActive: isActive,
         defaultStack: defaultStack,
         heroName: heroName,
+        heroStack: heroStack,
         seatedPlayers: seatedPlayers,
         isCash: isCash,
         showSaveAsOpponent: showSaveAsOpponent,
@@ -99,17 +106,20 @@ class _SeatConfigSheetState extends State<SeatConfigSheet> {
   bool _saveAsOpponent = false;
   List<Opponent> _allOpponents = [];
   List<Opponent> _filteredOpponents = [];
+  // The pre-filled stack text at open time — used to tell an untouched
+  // prefill apart from a value the user typed (which we never overwrite).
+  late final String _initialStackText;
+
+  static String _formatStack(double value) => value.toStringAsFixed(
+      value == value.roundToDouble() ? 0 : 2);
 
   @override
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.initialName);
-    _stackController = TextEditingController(
-      text: widget.initialStack > 0
-          ? widget.initialStack.toStringAsFixed(
-              widget.initialStack == widget.initialStack.roundToDouble() ? 0 : 2)
-          : '',
-    );
+    _initialStackText =
+        widget.initialStack > 0 ? _formatStack(widget.initialStack) : '';
+    _stackController = TextEditingController(text: _initialStackText);
     _isHero = widget.isHero;
     _isActive = widget.isActive;
     _nameController.addListener(_onNameChanged);
@@ -300,17 +310,24 @@ class _SeatConfigSheetState extends State<SeatConfigSheet> {
                   if (_isHero) {
                     // Hero is never saved as an opponent
                     _saveAsOpponent = false;
-                    // Auto-fill hero name and default stack
+                    // Auto-fill hero name
                     if (widget.heroName.isNotEmpty) {
                       _nameController.removeListener(_onNameChanged);
                       _nameController.text = widget.heroName;
                       _nameController.addListener(_onNameChanged);
                       _filteredOpponents = [];
                     }
-                    if (_stackController.text.isEmpty && widget.defaultStack > 0) {
-                      _stackController.text = widget.defaultStack == widget.defaultStack.roundToDouble()
-                          ? widget.defaultStack.toInt().toString()
-                          : widget.defaultStack.toStringAsFixed(2);
+                    // Apply the hero's LATEST tracked stack, falling back to
+                    // the table default. Only replace an empty field or the
+                    // untouched open-time prefill — never a value the user
+                    // typed themselves.
+                    final untouched = _stackController.text.isEmpty ||
+                        _stackController.text == _initialStackText;
+                    final heroFill = widget.heroStack > 0
+                        ? widget.heroStack
+                        : widget.defaultStack;
+                    if (untouched && heroFill > 0) {
+                      _stackController.text = _formatStack(heroFill);
                     }
                   }
                 }),

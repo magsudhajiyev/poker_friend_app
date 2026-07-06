@@ -1444,6 +1444,24 @@ class PokerSessionManager {
     }
   }
 
+  /// Hero's latest known stack: the live seat stack while seated, otherwise
+  /// the last tracked stack-history entry — so the value survives the hero
+  /// being unseated/removed mid-session and can pre-fill re-seating flows.
+  double latestHeroStack(PokerGameState? gameState) {
+    final seat = ourSeatNumber;
+    if (seat != null) {
+      if (gameState != null && seat >= 1 && seat <= gameState.players.length) {
+        return gameState.players[seat - 1].currentStack;
+      }
+      final tracked = playerStacks[seat];
+      if (tracked != null) return tracked;
+    }
+    if (stackHistory.isNotEmpty) {
+      return ((stackHistory.last['stackSize'] as num?) ?? 0).toDouble();
+    }
+    return 0.0;
+  }
+
   /// Set playerIds map for dealer-assisted mode (seat → Firebase userId)
   void setPlayerIds(Map<int, String> ids) {
     playerIds = Map.from(ids);
