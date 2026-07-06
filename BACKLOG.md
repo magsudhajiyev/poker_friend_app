@@ -43,7 +43,7 @@ forgotten to tick).
 | U1 | Leave-confirmation skip: DONE in code — isIndividualSession branch (poker_hand_screen.dart:1252) | ✅ code-verified |
 | U5 | Chop logic: DONE incl. dealer mode (dealer_table_screen.dart:1187) | ✅ code-verified |
 | U4 | Dealer voice grammar: commands start with seat name; strict speech→action grammar | ⬜ |
-| U8 | Lazy load for long lists | ⬜ |
+| U8 | Lazy load: DONE 2026-07-06 — session history renders a growing window (LazyPagination helper, 15/page, per-tab); scroll-to-bottom reveals next page. Fixed latent two-tabs-one-ScrollController fragility (now per-tab controllers). Tests: lazy_pagination_test.dart. TODO: apply same to session_hands + opponents lists | 🔎 verify on device |
 
 ## P2 — Open product features
 

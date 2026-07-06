@@ -19,6 +19,7 @@ import 'session_analytics_screen.dart';
 import '../services/currency_service.dart';
 import '../services/logger_service.dart';
 import '../design_system/constants/decorations.dart';
+import '../utils/lazy_pagination.dart';
 
 class SessionHistoryScreen extends StatefulWidget {
   final String? targetSessionId;
@@ -33,8 +34,15 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
   List<Map<String, dynamic>> sessions = [];
   bool isLoading = true;
   String? error;
-  final ScrollController _scrollController = ScrollController();
+  // One scroll controller per tab (gameType label) — two ListViews can't
+  // share one. Created lazily in _buildSessionsList.
+  final Map<String, ScrollController> _scrollControllers = {};
+  // U8: how many cards are currently rendered per tab (lazy window).
+  final Map<String, int> _visibleCounts = {};
   late TabController _tabController;
+
+  ScrollController _controllerFor(String gameType) =>
+      _scrollControllers.putIfAbsent(gameType, () => ScrollController());
 
   List<Map<String, dynamic>> get cashSessions => _filterSessionsForTier(
       sessions.where((session) => session['gameType'] == 'cash').toList());
@@ -67,7 +75,9 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
 
   @override
   void dispose() {
-    _scrollController.dispose();
+    for (final c in _scrollControllers.values) {
+      c.dispose();
+    }
     _tabController.dispose();
     super.dispose();
   }
@@ -122,23 +132,43 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
   }
 
   void _scrollToSession(String sessionId) {
-    // Wait a bit for the UI to render
-    Future.delayed(Duration(milliseconds: 300), () {
-      final targetIndex = sessions.indexWhere((session) => session['id'] == sessionId);
+    final l10n = AppLocalizations.of(context);
+    // Find the target within its own tab's filtered list.
+    final target = sessions.firstWhere(
+      (s) => s['id'] == sessionId,
+      orElse: () => const {},
+    );
+    if (target.isEmpty) return;
+    final isTournament =
+        (target['gameType'] ?? 'cash').toString().toLowerCase() == 'tournament';
+    final gameType =
+        isTournament ? l10n.sessionHistoryTournament : l10n.sessionHistoryCash;
+    final list = isTournament ? tournamentSessions : cashSessions;
+    final targetIndex = list.indexWhere((s) => s['id'] == sessionId);
+    if (targetIndex == -1) return;
 
-      if (targetIndex != -1) {
-        // Calculate approximate position (each session card is roughly 120px + margins)
-        const double itemHeight = 140.0;
-        final double scrollOffset = targetIndex * itemHeight;
+    // Switch to the right tab and expand its lazy window so the target card
+    // is actually built before we scroll to it (U8).
+    _tabController.animateTo(isTournament ? 1 : 0);
+    setState(() {
+      final needed = targetIndex + LazyPagination.pageSize;
+      final current = _visibleCounts[gameType] ?? LazyPagination.pageSize;
+      if (needed > current) {
+        _visibleCounts[gameType] = needed > list.length ? list.length : needed;
+      }
+    });
 
-        // Scroll to the session with animation
-        if (_scrollController.hasClients) {
-          _scrollController.animateTo(
-            scrollOffset,
-            duration: Duration(milliseconds: 800),
-            curve: Curves.easeInOut,
-          );
-        }
+    Future.delayed(const Duration(milliseconds: 350), () {
+      const double itemHeight = 140.0;
+      final controller = _controllerFor(gameType);
+      if (controller.hasClients) {
+        final offset = (targetIndex * itemHeight)
+            .clamp(0.0, controller.position.maxScrollExtent);
+        controller.animateTo(
+          offset,
+          duration: const Duration(milliseconds: 800),
+          curve: Curves.easeInOut,
+        );
       }
     });
   }
@@ -401,14 +431,53 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
       );
     }
 
-    return ListView.builder(
-      controller: _scrollController,
-      padding: EdgeInsets.symmetric(horizontal: 16),
-      itemCount: sessionList.length,
-      itemBuilder: (context, index) {
-        final session = sessionList[index];
-        return _buildSessionCard(session);
+    // U8 lazy render: build only a growing window of cards so a long history
+    // doesn't construct hundreds at once. Keyed per tab (gameType) so cash
+    // and tournament page independently.
+    final total = sessionList.length;
+    final visible = _visibleCounts[gameType] ?? LazyPagination.pageSize;
+
+    return NotificationListener<ScrollNotification>(
+      onNotification: (notification) {
+        if (notification is ScrollUpdateNotification &&
+            LazyPagination.hasMore(total, visible)) {
+          final metrics = notification.metrics;
+          // Near the bottom → reveal the next page.
+          if (metrics.pixels >=
+              metrics.maxScrollExtent -
+                  (LazyPagination.prefetchThreshold * 120)) {
+            setState(() {
+              _visibleCounts[gameType] =
+                  LazyPagination.nextVisible(total, visible);
+            });
+          }
+        }
+        return false;
       },
+      child: ListView.builder(
+        // Own controller per tab — the two tab lists can't share one.
+        controller: _controllerFor(gameType),
+        padding: EdgeInsets.symmetric(horizontal: 16),
+        itemCount: LazyPagination.itemCount(total, visible),
+        itemBuilder: (context, index) {
+          if (LazyPagination.isLoaderIndex(index, total, visible)) {
+            return const Padding(
+              padding: EdgeInsets.symmetric(vertical: 24),
+              child: Center(
+                child: SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: AppColors.accentSecondary,
+                  ),
+                ),
+              ),
+            );
+          }
+          return _buildSessionCard(sessionList[index]);
+        },
+      ),
     );
   }
 
