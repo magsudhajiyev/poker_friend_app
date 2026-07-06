@@ -49,8 +49,8 @@ forgotten to tick).
 
 | ID | Item |
 |----|------|
-| F1 | Drill score: decision-making score over time (extends drill grades) |
-| F2 | Stack analytics: table-avg chip input, stack/avg ratio, BB-per-hour growth |
+| F1 | Drill score: decision-making score over time (extends drill grades) — ON HOLD per founder |
+| F2 | Stack analytics: DONE 2026-07-06 — table-avg input in update-stack sheet (rides on stackHistory entries as 'tableAvg'), stack/avg pill on logging header (right of subtitle, tap→session details, hidden until avg entered), BB/hour row in Statistics Cash section (from poker_sessions with blinds+duration, 60-min minimum like hourly rate). Pure math in utils/stack_analytics.dart; tests in stack_analytics_test.dart. 🔎 verify on device |
 | F3 | After-session notes |
 | F4 | Hand of the session |
 | F5 | Hand notes & starring: star UI exists (hand_actions_screen.dart:65); notes editing only in player_session — add notes editor to hand details |

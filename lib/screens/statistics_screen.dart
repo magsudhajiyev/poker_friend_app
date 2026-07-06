@@ -9,12 +9,18 @@ import '../models/currency.dart';
 import '../services/app_data_cache.dart';
 import '../services/subscription_service.dart';
 import '../services/logger_service.dart';
+import '../services/firebase_service.dart';
+import '../utils/stack_analytics.dart';
 import 'paywall_screen.dart';
 import '../widgets/global_loading_spinner.dart';
 import '../widgets/global_bottom_nav_bar.dart';
 import '../design_system/design_system.dart';
 import '../design_system/components/cards/error_state_card.dart';
 import '../widgets/range_grid/range_grid_view.dart';
+
+// Shared row colours (negative values / insufficient-data hints).
+const Color _kNegativeRed = Color(0xFFE85A5A);
+const Color _kHintGrey = Color(0xFF9A9B9E);
 
 class StatisticsScreen extends StatefulWidget {
   @override
@@ -72,6 +78,11 @@ class _StatisticsScreenState extends State<StatisticsScreen>
   int _generalTotalMinutes = 0;
   int _cashTotalMinutes = 0;
   int _tournamentTotalMinutes = 0;
+
+  // BB/hour (F2 stack analytics) — from poker_sessions cash sessions with
+  // blinds + duration; null until 60 tracked minutes.
+  double? _cashBBPerHour;
+  int _cashBBMinutes = 0;
 
   // Opportunity counts for N/A detection
   int threeBetOpportunity = 0;
@@ -170,6 +181,8 @@ class _StatisticsScreenState extends State<StatisticsScreen>
       'generalTotalMinutes': _generalTotalMinutes,
       'cashTotalMinutes': _cashTotalMinutes,
       'tournamentTotalMinutes': _tournamentTotalMinutes,
+      'cashBBPerHour': _cashBBPerHour,
+      'cashBBMinutes': _cashBBMinutes,
     };
   }
 
@@ -217,6 +230,8 @@ class _StatisticsScreenState extends State<StatisticsScreen>
     _generalTotalMinutes = (overall['generalTotalMinutes'] as int?) ?? 0;
     _cashTotalMinutes = (overall['cashTotalMinutes'] as int?) ?? 0;
     _tournamentTotalMinutes = (overall['tournamentTotalMinutes'] as int?) ?? 0;
+    _cashBBPerHour = (overall['cashBBPerHour'] as num?)?.toDouble();
+    _cashBBMinutes = (overall['cashBBMinutes'] as int?) ?? 0;
   }
 
   Future<void> _calculateFromDatabase() async {
@@ -274,6 +289,18 @@ class _StatisticsScreenState extends State<StatisticsScreen>
       // Fetch session results for financial stats
       final results = await SessionResultService.getAllSessionResults();
       _computeSessionFinancials(results);
+
+      // BB/hour from poker_sessions (they carry blinds; session_results don't).
+      // Non-fatal: statistics still render if the session fetch fails.
+      try {
+        final sessions = await FirebaseService.getAllSessions();
+        final bbRate = StackAnalytics.cashBBPerHour(sessions);
+        _cashBBPerHour = bbRate.rate;
+        _cashBBMinutes = bbRate.minutes;
+      } catch (e) {
+        _cashBBPerHour = null;
+        _cashBBMinutes = 0;
+      }
 
     } catch (e) {
       debugPrint('Error calculating statistics: $e');
@@ -856,7 +883,69 @@ class _StatisticsScreenState extends State<StatisticsScreen>
         _buildProfitRow(l10n.statsNetProfit, _cashNetProfit),
         _buildDivider(),
         _buildHourlyRateRow(l10n.statsHourlyRate, _cashHourlyRate, _cashTotalMinutes),
+        _buildDivider(),
+        _buildBBPerHourRow(l10n),
       ],
+    );
+  }
+
+  /// BB/hour row (F2). Uses the same 60-minute sufficiency rule as the
+  /// hourly-rate row; sourced from full-logging cash sessions with blinds.
+  Widget _buildBBPerHourRow(AppLocalizations l10n) {
+    final rate = _cashBBPerHour;
+    if (rate == null || _cashBBMinutes < StackAnalytics.minMinutesForRate) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              l10n.statsBBPerHour,
+              style: AppTypography.ibm(
+                fontSize: 15, fontWeight: FontWeight.w400,
+                color: Colors.white.withOpacity(0.8), height: 1.0,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Flexible(
+              child: Text(
+                l10n.statsHourlyRateNotAvailable,
+                style: AppTypography.ibm(
+                  fontSize: 12, fontWeight: FontWeight.w400,
+                  color: _kHintGrey, height: 1.2,
+                ),
+                textAlign: TextAlign.right,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    final isPositive = rate >= 0;
+    final prefix = isPositive ? '+' : '';
+    final color = isPositive ? AppColors.limeGreen : _kNegativeRed;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            l10n.statsBBPerHour,
+            style: AppTypography.ibm(
+              fontSize: 15, fontWeight: FontWeight.w400,
+              color: Colors.white.withOpacity(0.8), height: 1.0,
+            ),
+          ),
+          Text(
+            '$prefix${rate.toStringAsFixed(1)} BB/h',
+            style: AppTypography.ibm(
+              fontSize: 15, fontWeight: FontWeight.w600,
+              color: color, height: 1.0,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -912,7 +1001,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
   Widget _buildProfitRow(String label, double value) {
     final isPositive = value >= 0;
     final prefix = isPositive ? '+' : '';
-    final color = isPositive ? AppColors.limeGreen : const Color(0xFFE85A5A);
+    final color = isPositive ? AppColors.limeGreen : _kNegativeRed;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 12),
       child: Row(
@@ -959,7 +1048,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
                 l10n.statsHourlyRateNotAvailable,
                 style: AppTypography.ibm(
                   fontSize: 12, fontWeight: FontWeight.w400,
-                  color: const Color(0xFF9A9B9E), height: 1.2,
+                  color: _kHintGrey, height: 1.2,
                 ),
                 textAlign: TextAlign.right,
               ),
@@ -970,7 +1059,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
     }
     final isPositive = rate >= 0;
     final prefix = isPositive ? '+' : '';
-    final color = isPositive ? AppColors.limeGreen : const Color(0xFFE85A5A);
+    final color = isPositive ? AppColors.limeGreen : _kNegativeRed;
     final currency = CurrencyService.current;
     final formatted = rate.toStringAsFixed(0);
     final rateText = currency.position == SymbolPosition.prefix

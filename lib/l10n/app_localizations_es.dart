@@ -790,6 +790,17 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String handAvgPill(String ratio) {
+    return '$ratio prom.';
+  }
+
+  @override
+  String get individualTableAvgHint => 'Promedio de la mesa (opcional)';
+
+  @override
+  String get statsBBPerHour => 'BB / Hora';
+
+  @override
   String get handNextHand => 'Siguiente mano';
 
   @override

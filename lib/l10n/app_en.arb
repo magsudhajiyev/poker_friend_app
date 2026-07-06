@@ -49,6 +49,7 @@
   "statsAvgFieldSize": "Avg Field Size",
   "statsHourlyRate": "Hourly Rate",
   "statsHourlyRateNotAvailable": "Available after 60 min of tracking",
+  "statsBBPerHour": "BB / Hour",
   "statsLoadingMessage": "Loading statistics...",
   "statsFetchingMessage": "Fetching user stats...",
   "statsFailedToLoad": "Failed to load statistics: {error}",
@@ -407,6 +408,14 @@
       }
     }
   },
+  "handAvgPill": "{ratio} avg",
+  "@handAvgPill": {
+    "placeholders": {
+      "ratio": {
+        "type": "String"
+      }
+    }
+  },
   "handNextHand": "Next Hand",
   "handFoldedToMe": "Folded to me",
   "handUndoLastAction": "Undo Last Action",
@@ -662,6 +671,7 @@
   "individualSetTotal": "Set Total",
   "individualNoteLabel": "Note (optional)",
   "individualNoteHint": "e.g. Won big pot with AA",
+  "individualTableAvgHint": "Table average (optional)",
   "individualUpdateBlinds": "Update Blinds",
   "individualSmallBlind": "Small Blind",
   "individualBigBlind": "Big Blind",

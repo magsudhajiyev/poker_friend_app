@@ -49,6 +49,7 @@
   "statsAvgFieldSize": "Taille moy. du champ",
   "statsHourlyRate": "Taux horaire",
   "statsHourlyRateNotAvailable": "Disponible après 60 min de suivi",
+  "statsBBPerHour": "BB / Heure",
   "statsLoadingMessage": "Chargement des statistiques...",
   "statsFetchingMessage": "Récupération des statistiques...",
   "statsFailedToLoad": "Échec du chargement des statistiques : {error}",
@@ -400,6 +401,7 @@
       }
     }
   },
+  "handAvgPill": "{ratio} moy.",
   "handNextHand": "Main suivante",
   "handFoldedToMe": "Folded to me",
   "handUndoLastAction": "Annuler la dernière action",
@@ -652,6 +654,7 @@
   "individualSetTotal": "Définir le total",
   "individualNoteLabel": "Note (facultatif)",
   "individualNoteHint": "p.ex. Gagné un gros pot avec AA",
+  "individualTableAvgHint": "Moyenne de la table (optionnel)",
   "individualUpdateBlinds": "Mettre à jour les Blinds",
   "individualSmallBlind": "Small Blind",
   "individualBigBlind": "Big Blind",

@@ -783,6 +783,17 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String handAvgPill(String ratio) {
+    return '$ratio сред.';
+  }
+
+  @override
+  String get individualTableAvgHint => 'Средний стек стола (необязательно)';
+
+  @override
+  String get statsBBPerHour => 'BB / час';
+
+  @override
   String get handNextHand => 'Следующая рука';
 
   @override

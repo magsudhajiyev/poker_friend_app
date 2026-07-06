@@ -49,6 +49,7 @@
   "statsAvgFieldSize": "Campo medio",
   "statsHourlyRate": "Ganancia/hora",
   "statsHourlyRateNotAvailable": "Disponible después de 60 min de seguimiento",
+  "statsBBPerHour": "BB / Hora",
   "statsLoadingMessage": "Cargando estadísticas...",
   "statsFetchingMessage": "Obteniendo estadísticas del usuario...",
   "statsFailedToLoad": "Error al cargar estadísticas: {error}",
@@ -400,6 +401,7 @@
       }
     }
   },
+  "handAvgPill": "{ratio} prom.",
   "handNextHand": "Siguiente mano",
   "handFoldedToMe": "Folded to me",
   "handUndoLastAction": "Deshacer última acción",
@@ -652,6 +654,7 @@
   "individualSetTotal": "Establecer total",
   "individualNoteLabel": "Nota (opcional)",
   "individualNoteHint": "p.ej. Gané bote grande con AA",
+  "individualTableAvgHint": "Promedio de la mesa (opcional)",
   "individualUpdateBlinds": "Actualizar Blinds",
   "individualSmallBlind": "Small Blind",
   "individualBigBlind": "Big Blind",

@@ -1530,6 +1530,24 @@ abstract class AppLocalizations {
   /// **'{used}/{max} free'**
   String handFreeCounter(int used, int max);
 
+  /// No description provided for @handAvgPill.
+  ///
+  /// In en, this message translates to:
+  /// **'{ratio} avg'**
+  String handAvgPill(String ratio);
+
+  /// No description provided for @individualTableAvgHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Table average (optional)'**
+  String get individualTableAvgHint;
+
+  /// No description provided for @statsBBPerHour.
+  ///
+  /// In en, this message translates to:
+  /// **'BB / Hour'**
+  String get statsBBPerHour;
+
   /// No description provided for @handNextHand.
   ///
   /// In en, this message translates to:

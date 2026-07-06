@@ -22,6 +22,7 @@ import '../onboarding/onboarding_progress_bar.dart';
 import '../design_system/components/app_toggle.dart';
 import '../models/hand_state_machine.dart';
 import '../widgets/stack_growth_chart.dart';
+import '../utils/stack_analytics.dart';
 import '../l10n/app_localizations.dart';
 import '../services/currency_service.dart';
 import '../design_system/constants/colors.dart';
@@ -490,19 +491,27 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
   Future<void> _showUpdateStackDialog() async {
     final l10n = AppLocalizations.of(context);
     final newStackController = TextEditingController(text: _currentStack.toString());
+    final currentTableAvg = StackAnalytics.latestTableAverage(_stackHistory);
+    final tableAvgController = TextEditingController(
+        text: currentTableAvg != null
+            ? (currentTableAvg == currentTableAvg.roundToDouble()
+                ? currentTableAvg.toStringAsFixed(0)
+                : currentTableAvg.toString())
+            : '');
     final noteController = TextEditingController();
     Map<String, dynamic>? result;
 
     await FormDrawer.show(
       context: context,
       title: l10n.individualUpdateCurrentStack,
-      heightFraction: 0.55,
+      heightFraction: 0.62,
       onSave: () {
         final value = double.tryParse(newStackController.text);
         if (value != null) {
           result = {
             'stack': value,
             'note': noteController.text.trim(),
+            'tableAvg': double.tryParse(tableAvgController.text),
           };
           Navigator.pop(context);
         }
@@ -596,6 +605,49 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                 alignment: Alignment.center,
                 child: Container(height: 1, color: AppColors.bgOverlay),
               ),
+              // Table average field (optional, F2 stack analytics)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(10, 10, 8, 10),
+                child: TextField(
+                  controller: tableAvgController,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  style: AppTypography.ibm(
+                    fontSize: 17,
+                    color: Colors.white,
+                    fontWeight: FontWeight.w400,
+                    height: 1.44,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: l10n.individualTableAvgHint,
+                    hintStyle: AppTypography.ibm(
+                      fontSize: 17,
+                      color: Colors.white.withValues(alpha: 0.5),
+                      fontWeight: FontWeight.w400,
+                      height: 1.44,
+                    ),
+                    prefixText: widget.gameType == GameType.cash ? CurrencyService.prefixText : '',
+                    suffixText: widget.gameType == GameType.cash ? CurrencyService.suffixText : null,
+                    prefixStyle: AppTypography.ibm(
+                      fontSize: 17,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w400,
+                    ),
+                    border: InputBorder.none,
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                    filled: false,
+                    contentPadding: EdgeInsets.zero,
+                    isDense: true,
+                  ),
+                ),
+              ),
+              // Separator
+              Container(
+                height: 21,
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                alignment: Alignment.center,
+                child: Container(height: 1, color: AppColors.bgOverlay),
+              ),
               // Note field
               Padding(
                 padding: const EdgeInsets.all(10),
@@ -637,6 +689,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
     if (result != null) {
       final newStack = result!['stack'] as double;
       final note = result!['note'] as String;
+      final tableAvg = result!['tableAvg'] as double?;
       if (newStack >= 0) {
         final previousStack = _currentStack;
         final stackChange = newStack - previousStack;
@@ -651,6 +704,9 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
           };
           if (note.isNotEmpty) {
             entry['note'] = note;
+          }
+          if (tableAvg != null && tableAvg > 0) {
+            entry['tableAvg'] = tableAvg;
           }
           _stackHistory.add(entry);
         });

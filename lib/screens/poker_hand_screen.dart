@@ -33,6 +33,7 @@ import '../models/poker_game_state.dart';
 import '../models/hand_state_machine.dart';
 import '../models/game_types.dart';
 import '../models/stack_bucket.dart';
+import '../utils/stack_analytics.dart';
 import '../widgets/stack_range_circle.dart';
 import '../widgets/hand_micro_animations.dart';
 import '../services/firebase_service.dart';
@@ -1485,6 +1486,62 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     });
   }
 
+  /// Header right side: stack-vs-table-average pill (F2) + menu dots.
+  ///
+  /// Returns null when no table average has been entered, letting TopNavBar
+  /// render its default menu button — the header stays exactly as before.
+  Widget? _buildHeaderRightAction(AppLocalizations l10n) {
+    final tableAvg = StackAnalytics.latestTableAverage(sessionManager.stackHistory);
+    double? heroStack;
+    final ourSeat = sessionManager.ourSeatNumber;
+    if (ourSeat != null && ourSeat >= 1 && ourSeat <= gameState.players.length) {
+      heroStack = gameState.players[ourSeat - 1].currentStack;
+    }
+    final ratio = StackAnalytics.stackToAvgRatio(heroStack, tableAvg);
+    if (ratio == null) return null;
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        GestureDetector(
+          onTap: _showSessionDetails,
+          behavior: HitTestBehavior.opaque,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
+            ),
+            child: Text(
+              l10n.handAvgPill(StackAnalytics.formatRatio(ratio)),
+              style: AppTypography.mono(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: ratio >= 1.0 ? AppColors.tealPrimary : Colors.white.withValues(alpha: 0.8),
+              ),
+            ),
+          ),
+        ),
+        GestureDetector(
+          key: _menuButtonKey,
+          onTap: () => setState(() => _showMenuOverlay = !_showMenuOverlay),
+          behavior: HitTestBehavior.opaque,
+          child: SizedBox(
+            width: 44,
+            height: 44,
+            child: Center(
+              child: SvgPicture.asset(
+                'assets/icons/DotsThreeOutline.svg',
+                width: 24,
+                height: 24,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -1521,6 +1578,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                     onBack: () => _handleNavigationAttempt(isBackButton: true),
                     onMenuTap: () => setState(() => _showMenuOverlay = !_showMenuOverlay),
                     menuKey: _menuButtonKey,
+                    rightAction: _buildHeaderRightAction(l10n),
                   );
                 }),
 

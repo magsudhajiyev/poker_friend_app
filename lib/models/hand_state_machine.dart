@@ -417,7 +417,8 @@ class PokerSessionManager {
   double totalBuyIn = 0.0; // Total amount invested including rebuys
   double? initialStartingStack; // Initial chip count (for MTT) or buy-in amount (for cash)
 
-  // Stack history tracking for analytics
+  // Stack history tracking for analytics. Entries may carry 'tableAvg'
+  // (user-entered table-average stack) — see StackAnalytics.latestTableAverage.
   List<Map<String, dynamic>> stackHistory = [];
 
   // Biggest pot tracking

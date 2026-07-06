@@ -49,6 +49,7 @@
   "statsAvgFieldSize": "Ø Teilnehmer",
   "statsHourlyRate": "Stundensatz",
   "statsHourlyRateNotAvailable": "Verfügbar nach 60 Min. Tracking",
+  "statsBBPerHour": "BB / Stunde",
   "statsLoadingMessage": "Statistiken werden geladen...",
   "statsFetchingMessage": "Benutzerdaten werden abgerufen...",
   "statsFailedToLoad": "Statistiken konnten nicht geladen werden: {error}",
@@ -400,6 +401,7 @@
       }
     }
   },
+  "handAvgPill": "{ratio} Ø",
   "handNextHand": "Nächste Hand",
   "handFoldedToMe": "Alle gefoldet",
   "handUndoLastAction": "Letzte Aktion rückgängig",
@@ -652,6 +654,7 @@
   "individualSetTotal": "Gesamt setzen",
   "individualNoteLabel": "Notiz (optional)",
   "individualNoteHint": "z.B. Großen Pot mit AA gewonnen",
+  "individualTableAvgHint": "Tisch-Durchschnitt (optional)",
   "individualUpdateBlinds": "Blinds aktualisieren",
   "individualSmallBlind": "Small Blind",
   "individualBigBlind": "Big Blind",

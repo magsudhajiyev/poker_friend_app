@@ -49,6 +49,7 @@
   "statsAvgFieldSize": "Tamanho Médio",
   "statsHourlyRate": "Taxa Horária",
   "statsHourlyRateNotAvailable": "Disponível após 60 min de rastreamento",
+  "statsBBPerHour": "BB / Hora",
   "statsLoadingMessage": "Carregando estatisticas...",
   "statsFetchingMessage": "Buscando estatisticas do usuario...",
   "statsFailedToLoad": "Falha ao carregar estatisticas: {error}",
@@ -400,6 +401,7 @@
       }
     }
   },
+  "handAvgPill": "{ratio} méd.",
   "handNextHand": "Proxima Mao",
   "handFoldedToMe": "Fold para mim",
   "handUndoLastAction": "Desfazer Ultima Acao",
@@ -652,6 +654,7 @@
   "individualSetTotal": "Definir Total",
   "individualNoteLabel": "Nota (opcional)",
   "individualNoteHint": "p.ex. Ganhei um grande pote com AA",
+  "individualTableAvgHint": "Média da mesa (opcional)",
   "individualUpdateBlinds": "Atualizar Blinds",
   "individualSmallBlind": "Small Blind",
   "individualBigBlind": "Big Blind",
