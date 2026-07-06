@@ -10,7 +10,7 @@ forgotten to tick).
 
 | ID | Item | Status |
 |----|------|--------|
-| B14 | Positional stats mismatch — ROOT CAUSE FOUND: positionHandsPlayed/positionVpipCount etc. are documented but NEVER written (user_stats_service.dart:82 increments handsPlayed only). Fix: add position counters to the atomic stats delta | ⬜ OPEN |
+| B14 | Positional stats: FIXED 2026-07-06 — position maps added to UserStats model + atomic delta writes (positionUpdatePaths) + hero call site; unit tests in user_stats_position_test.dart. Note: counters start from this fix — historical hands need the migration path to backfill | 🔎 verify on device |
 | B11 | Side pots PARTIAL: no explicit heads-up guard in SidePotCalculator, and hand_actions_screen.dart:1023-1047 shows only a single winnerId/choppedWinners — no per-side-pot winner breakdown (matches "incorrect player wins in details view") | ⬜ OPEN |
 | B10 | Bust after all-in: implemented for DEALER mode (dealer_table_screen.dart:1332). Own-logging bust handling unverified | ❓ verify own logging |
 | B3 | Manage players → blinds: code-verified CLEAN — no blind writes anywhere in seat management/remove flows. Likely already fixed | 🔎 confirm on device |

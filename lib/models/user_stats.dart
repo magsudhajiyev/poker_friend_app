@@ -33,6 +33,14 @@ class UserStats {
   final int wonHands;
   final int totalSessions;
   final int totalPlayTimeMinutes;
+
+  // Position breakdowns (key: position name 'BTN', 'CO', 'MP', ...).
+  // positionHandsPlayed counts hands DEALT at the position (denominator);
+  // the others mirror their global counters per position.
+  final Map<String, int> positionHandsPlayed;
+  final Map<String, int> positionVpipCount;
+  final Map<String, int> positionPfrCount;
+  final Map<String, int> positionThreeBetCount;
   final DateTime lastUpdated;
 
   UserStats({
@@ -56,7 +64,15 @@ class UserStats {
     this.totalSessions = 0,
     this.totalPlayTimeMinutes = 0,
     DateTime? lastUpdated,
-  }) : lastUpdated = lastUpdated ?? DateTime.now();
+    Map<String, int>? positionHandsPlayed,
+    Map<String, int>? positionVpipCount,
+    Map<String, int>? positionPfrCount,
+    Map<String, int>? positionThreeBetCount,
+  })  : positionHandsPlayed = positionHandsPlayed ?? const {},
+        positionVpipCount = positionVpipCount ?? const {},
+        positionPfrCount = positionPfrCount ?? const {},
+        positionThreeBetCount = positionThreeBetCount ?? const {},
+        lastUpdated = lastUpdated ?? DateTime.now();
 
   /// Eligible hands for VPIP/PFR calculation (excludes walks)
   int get eligibleHands => totalHands - walksCount;
@@ -126,6 +142,13 @@ class UserStats {
   double get avgSessionMinutes => totalSessions > 0 ? (totalPlayTimeMinutes / totalSessions) : 0.0;
 
   /// Factory constructor from Firestore document
+  static Map<String, int> _parsePositionMap(dynamic raw) {
+    if (raw is Map) {
+      return raw.map((k, v) => MapEntry(k.toString(), (v as num?)?.toInt() ?? 0));
+    }
+    return const {};
+  }
+
   factory UserStats.fromFirestore(Map<String, dynamic> data) {
     return UserStats(
       userId: data['userId'] ?? '',
@@ -146,6 +169,10 @@ class UserStats {
       checkRaiseFlopOpportunity: data['checkRaiseFlopOpportunity'] ?? 0,
       wonHands: data['wonHands'] ?? 0,
       totalSessions: data['totalSessions'] ?? 0,
+      positionHandsPlayed: _parsePositionMap(data['positionHandsPlayed']),
+      positionVpipCount: _parsePositionMap(data['positionVpipCount']),
+      positionPfrCount: _parsePositionMap(data['positionPfrCount']),
+      positionThreeBetCount: _parsePositionMap(data['positionThreeBetCount']),
       totalPlayTimeMinutes: data['totalPlayTimeMinutes'] ?? 0,
       lastUpdated: data['lastUpdated']?.toDate() ?? DateTime.now(),
     );
@@ -172,6 +199,10 @@ class UserStats {
       'checkRaiseFlopOpportunity': checkRaiseFlopOpportunity,
       'wonHands': wonHands,
       'totalSessions': totalSessions,
+      'positionHandsPlayed': positionHandsPlayed,
+      'positionVpipCount': positionVpipCount,
+      'positionPfrCount': positionPfrCount,
+      'positionThreeBetCount': positionThreeBetCount,
       'totalPlayTimeMinutes': totalPlayTimeMinutes,
       'lastUpdated': lastUpdated,
     };
@@ -182,6 +213,10 @@ class UserStats {
     return {
       'totalHands': totalHands,
       'totalSessions': totalSessions,
+      'positionHandsPlayed': positionHandsPlayed,
+      'positionVpipCount': positionVpipCount,
+      'positionPfrCount': positionPfrCount,
+      'positionThreeBetCount': positionThreeBetCount,
       // Core poker stats (proper opportunity-based percentages)
       'vpip': vpipPercentage,
       'pfr': pfrPercentage,

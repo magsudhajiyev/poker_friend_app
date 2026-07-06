@@ -1478,6 +1478,7 @@ class FirebaseService {
         checkRaiseFlopDelta: didCRFlop ? 1 : 0,
         checkRaiseFlopOpportunityDelta: hadCRFlopOpp ? 1 : 0,
         wonHandsDelta: (didWin && didPlay) ? 1 : 0,
+        position: heroPositionName,
       );
 
 

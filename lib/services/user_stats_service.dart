@@ -63,6 +63,7 @@ class UserStatsService {
     int wonHandsDelta = 0,
     int sessionsDelta = 0,
     int playTimeMinutesDelta = 0,
+    String? position,
   }) async {
     try {
       final docRef = _firestore.collection('user_stats').doc(userId);
@@ -98,6 +99,17 @@ class UserStatsService {
         if (sessionsDelta != 0) updates['totalSessions'] = FieldValue.increment(sessionsDelta);
         if (playTimeMinutesDelta != 0) updates['totalPlayTimeMinutes'] = FieldValue.increment(playTimeMinutesDelta);
 
+        // Position breakdowns (B14): dealt/vpip/pfr/3bet per position.
+        positionUpdatePaths(
+          position: position,
+          handsDealtDelta: totalHandsDelta,
+          vpipDelta: vpipDelta,
+          pfrDelta: pfrDelta,
+          threeBetDelta: threeBetDelta,
+        ).forEach((path, delta) {
+          updates[path] = FieldValue.increment(delta);
+        });
+
 
         updates['lastUpdated'] = FieldValue.serverTimestamp();
 
@@ -107,6 +119,31 @@ class UserStatsService {
       await LoggerService.error('Error updating user stats atomically', e, StackTrace.current);
       rethrow;
     }
+  }
+
+  /// Pure helper (unit-tested): Firestore dot-paths for the position
+  /// breakdown increments. positionHandsPlayed counts hands DEALT at the
+  /// position — the denominator for per-position VPIP/PFR — while the other
+  /// maps mirror their global counters. Returns {} when [position] is null/
+  /// empty or when every delta is zero.
+  static Map<String, int> positionUpdatePaths({
+    required String? position,
+    int handsDealtDelta = 0,
+    int vpipDelta = 0,
+    int pfrDelta = 0,
+    int threeBetDelta = 0,
+  }) {
+    final pos = position?.trim();
+    if (pos == null || pos.isEmpty) return const {};
+    // Firestore dot-paths address nested map keys; position names must not
+    // contain dots (they never do: BTN/CO/HJ/MP/EP/UTG/SB/BB).
+    if (pos.contains('.')) return const {};
+    return {
+      if (handsDealtDelta != 0) 'positionHandsPlayed.$pos': handsDealtDelta,
+      if (vpipDelta != 0) 'positionVpipCount.$pos': vpipDelta,
+      if (pfrDelta != 0) 'positionPfrCount.$pos': pfrDelta,
+      if (threeBetDelta != 0) 'positionThreeBetCount.$pos': threeBetDelta,
+    };
   }
 
   /// Calculate and store user statistics for all existing data (one-time migration)
