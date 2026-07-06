@@ -22,7 +22,7 @@ class LocalStorageService {
     
     return await openDatabase(
       dbPath,
-      version: 15,
+      version: 16,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE sessions(
@@ -74,6 +74,7 @@ class LocalStorageService {
             handBigBlind INTEGER,
             handGameType TEXT,
             isChoppedPot INTEGER DEFAULT 0,
+            isSplitPot INTEGER DEFAULT 0,
             choppedWinners TEXT,
             individualShares TEXT,
             sharePerWinner REAL,
@@ -159,6 +160,11 @@ class LocalStorageService {
           // Derived data: safe to drop and rebuild via backfill.
           await db.execute('DROP TABLE IF EXISTS range_grid_index');
           await _createRangeGridTable(db);
+        }
+        if (oldVersion < 16) {
+          // B11: split-pot flag (winners of separate side pots, not a chop)
+          await db.execute(
+              'ALTER TABLE hands ADD COLUMN isSplitPot INTEGER DEFAULT 0');
         }
       },
       onOpen: (db) async {
@@ -465,6 +471,7 @@ class LocalStorageService {
     String? gameType,
     // Chopped pot fields
     bool? isChoppedPot,
+    bool? isSplitPot,
     List<int>? choppedWinners,
     Map<int, double>? individualShares,
     double? sharePerWinner,
@@ -508,6 +515,7 @@ class LocalStorageService {
           'handGameType': gameType,
           // Chopped pot fields
           'isChoppedPot': (isChoppedPot == true) ? 1 : 0,
+          'isSplitPot': (isSplitPot == true) ? 1 : 0,
           'choppedWinners': choppedWinners != null ? _safeJsonEncode(choppedWinners) : null,
           'individualShares': individualShares != null ? _safeJsonEncode(_convertKeysToStrings(individualShares)) : null,
           'sharePerWinner': sharePerWinner,
@@ -657,6 +665,7 @@ class LocalStorageService {
 
     // Parse chopped pot fields
     result['isChoppedPot'] = (result['isChoppedPot'] == 1);
+    result['isSplitPot'] = (result['isSplitPot'] == 1);
     if (result['choppedWinners'] != null && result['choppedWinners'].isNotEmpty) {
       try {
         result['choppedWinners'] = jsonDecode(result['choppedWinners']);

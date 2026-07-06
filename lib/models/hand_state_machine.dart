@@ -200,6 +200,9 @@ class HandRecord {
   List<int>? choppedWinners;
   Map<int, double>? individualShares;
   double? sharePerWinner;
+  // True when [choppedWinners] won SEPARATE side pots (not a split of one
+  // pot). Lets the details view label winners accurately (B11).
+  bool isSplitPot = false;
 
   // Table tracking (cash games)
   int? tableNumber;
@@ -282,6 +285,7 @@ class HandRecord {
       'heroPositionName': heroPositionName,
       'heroSeatNumber': heroSeatNumber,
       'isChoppedPot': isChoppedPot,
+      'isSplitPot': isSplitPot,
       'choppedWinners': choppedWinners,
       'individualShares': individualShares?.map((key, value) => MapEntry(key.toString(), value)),
       'sharePerWinner': sharePerWinner,
@@ -319,6 +323,7 @@ class HandRecord {
 
     // Set chopped pot fields
     hand.isChoppedPot = map['isChoppedPot'] ?? false;
+    hand.isSplitPot = map['isSplitPot'] ?? false;
     hand.choppedWinners = map['choppedWinners'] != null
         ? List<int>.from(map['choppedWinners'])
         : null;
@@ -773,6 +778,7 @@ class PokerSessionManager {
     double? sharePerWinner,
     double? currentStack,
     PokerGameState? gameState,
+    bool isSplitPot = false,
   }) {
     if (currentHand == null) return;
 
@@ -795,6 +801,7 @@ class PokerSessionManager {
 
     // Add chop data to the hand record
     currentHand!.isChoppedPot = true;
+    currentHand!.isSplitPot = isSplitPot;
     currentHand!.choppedWinners = winnerIds;
     currentHand!.individualShares = individualShares;
     currentHand!.sharePerWinner = sharePerWinner;
@@ -867,6 +874,7 @@ class PokerSessionManager {
       gameType: gameType.name,
       // Chopped pot fields
       isChoppedPot: hand.isChoppedPot,
+      isSplitPot: hand.isSplitPot,
       choppedWinners: hand.choppedWinners,
       individualShares: hand.individualShares,
       sharePerWinner: hand.sharePerWinner,
@@ -915,6 +923,7 @@ class PokerSessionManager {
         gameType: gameType.name,
         // Chopped pot fields
         isChoppedPot: hand.isChoppedPot,
+        isSplitPot: hand.isSplitPot,
         choppedWinners: hand.choppedWinners,
         individualShares: hand.individualShares,
         sharePerWinner: hand.sharePerWinner,

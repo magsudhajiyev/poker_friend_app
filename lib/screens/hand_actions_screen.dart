@@ -1027,14 +1027,18 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
     final playerNamesData = widget.hand['playerNames'];
 
     if (isChoppedPot && choppedWinners != null && choppedWinners.isNotEmpty) {
-      if (choppedWinners.length <= 2) {
-        List<String> names = choppedWinners.map((w) {
-          if (playerNamesData is Map) {
-            return (playerNamesData[w.toString()] ?? 'P$w') as String;
-          }
-          return 'P$w';
-        }).toList();
-        return names.join(', ');
+      // B11: split pots (winners of separate side pots) show every winner —
+      // never collapse to a count — so a side-pot winner is never hidden.
+      final isSplitPot = widget.hand['isSplitPot'] == true;
+      String nameOf(dynamic w) {
+        if (playerNamesData is Map) {
+          return (playerNamesData[w.toString()] ?? 'P$w') as String;
+        }
+        return 'P$w';
+      }
+
+      if (isSplitPot || choppedWinners.length <= 2) {
+        return choppedWinners.map(nameOf).join(', ');
       }
       return AppLocalizations.of(context).handActionsPlayersCount(choppedWinners.length);
     } else if (winnerId != null) {

@@ -4970,6 +4970,13 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         // Distribute each pot to its winner(s)
         List<String> potLogs = [];
         double totalDistributed = 0.0;
+        // B11: aggregate EVERY pot's winner + total winnings so the saved
+        // hand records all of them (previously only the first pot's winner
+        // was persisted, so a side-pot winner vanished from the details view).
+        final Map<int, double> combinedShares = {};
+        void creditWinner(int winnerId, double amount) {
+          combinedShares[winnerId] = (combinedShares[winnerId] ?? 0) + amount;
+        }
 
         for (int potIndex = 0; potIndex < resultSidePots.length; potIndex++) {
           final potResult = potResults[potIndex]!;
@@ -4985,6 +4992,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
               final winnerPlayer = gameState.players[winnerId - 1];
               winnerPlayer.currentStack += winnerShare;
               totalDistributed += winnerShare;
+              creditWinner(winnerId, winnerShare);
             }
 
             List<String> winnerDetails = winners.map((id) {
@@ -4999,6 +5007,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
             final winnerPlayer = gameState.players[winnerId - 1];
             winnerPlayer.currentStack += potAmount;
             totalDistributed += potAmount;
+            creditWinner(winnerId, potAmount);
 
             String winnerName = sessionManager.getPlayerNameWithPosition(winnerId);
             potLogs.add("🏆 $potName: $winnerName wins ${_formatCurrency(potAmount)}");
@@ -5021,25 +5030,41 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         final ourSeat = sessionManager.ourSeatNumber;
         final currentStack = ourSeat != null ? gameState.players[ourSeat - 1].currentStack : null;
 
-        // For multi-pot, complete with the primary winner (first pot's winner)
-        final firstPotResult = potResults[0]!;
-        if (firstPotResult['isChoppedPot'] == true) {
-          final winners = List<int>.from(firstPotResult['winners']);
-          final individualShares = Map<int, double>.from(firstPotResult['individualShares']);
+        // B11: persist EVERY pot's winner. Sort winners by winnings desc so
+        // winnerId (kept for stats back-compat) is the largest-pot winner.
+        final winnerIds = combinedShares.keys.toList()
+          ..sort((a, b) => combinedShares[b]!.compareTo(combinedShares[a]!));
+        if (winnerIds.length > 1) {
+          // Multiple distinct winners across pots: record all of them.
+          // Marked isSplitPot (not a chop) — they won SEPARATE pots.
           sessionManager.completeCurrentHandWithChop(
             potAmount: totalDistributed,
-            winnerIds: winners,
-            individualShares: individualShares,
+            winnerIds: winnerIds,
+            individualShares: Map<int, double>.from(combinedShares),
             currentStack: currentStack,
             gameState: gameState,
+            isSplitPot: true,
           );
         } else {
-          sessionManager.completeCurrentHand(
-            potAmount: totalDistributed,
-            winnerId: firstPotResult['winner'] as int,
-            currentStack: currentStack,
-            gameState: gameState,
-          );
+          // Every pot went to the same player (or the main pot was chopped).
+          final firstPotResult = potResults[0]!;
+          if (firstPotResult['isChoppedPot'] == true) {
+            sessionManager.completeCurrentHandWithChop(
+              potAmount: totalDistributed,
+              winnerIds: List<int>.from(firstPotResult['winners']),
+              individualShares:
+                  Map<int, double>.from(firstPotResult['individualShares']),
+              currentStack: currentStack,
+              gameState: gameState,
+            );
+          } else {
+            sessionManager.completeCurrentHand(
+              potAmount: totalDistributed,
+              winnerId: winnerIds.first,
+              currentStack: currentStack,
+              gameState: gameState,
+            );
+          }
         }
       });
     } else {

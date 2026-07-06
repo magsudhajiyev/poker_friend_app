@@ -385,5 +385,27 @@ void main() {
       expect(totalFromPots, totalContributions,
         reason: 'Sum of all pots should equal sum of all committed chips');
     });
+    test('B11: heads-up overage pot has a single eligible player (display drops it)', () {
+      // Heads-up all-in, unequal contributions BEFORE the uncalled bet is
+      // returned. The raw calculator emits the overage as a trailing pot,
+      // but it has only ONE eligible player — recalculateActiveSidePots
+      // filters pots to eligiblePlayers.length >= 2, so no spurious side-pot
+      // pill ever shows heads-up. A genuine side pot needs 3+ live players.
+      List<PlayerState> players = [
+        PlayerState(playerId: 1, isActive: true, hasFolded: false, isAllIn: true, currentStack: 0, totalContribution: 1000),
+        PlayerState(playerId: 2, isActive: true, hasFolded: false, isAllIn: true, currentStack: 0, totalContribution: 1200),
+      ];
+
+      final sidePots = SidePotCalculator.calculateSidePots(players);
+
+      // Exactly one pot is contestable (2 eligible); the overage is single-eligible.
+      final contestable = sidePots.where((p) => p.eligiblePlayers.length >= 2).toList();
+      expect(contestable.length, 1, reason: 'Heads-up has exactly one contested pot');
+      expect(contestable.first.amount, 2000);
+      final overage = sidePots.where((p) => p.eligiblePlayers.length < 2).toList();
+      for (final p in overage) {
+        expect(p.eligiblePlayers.length, 1, reason: 'Overage is an uncalled bet, not a side pot');
+      }
+    });
   });
 }

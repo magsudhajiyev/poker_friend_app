@@ -162,6 +162,7 @@ class FirebaseService {
     String? gameType,
     // Chopped pot fields
     bool? isChoppedPot,
+    bool? isSplitPot,
     List<int>? choppedWinners,
     Map<int, double>? individualShares,
     double? sharePerWinner,
@@ -252,6 +253,10 @@ class FirebaseService {
       // Add chopped pot fields
       if (isChoppedPot != null) {
         handData['isChoppedPot'] = isChoppedPot;
+      }
+
+      if (isSplitPot != null) {
+        handData['isSplitPot'] = isSplitPot;
       }
 
       if (choppedWinners != null) {

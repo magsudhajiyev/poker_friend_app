@@ -1857,6 +1857,11 @@ class SidePotCalculator {
 
     // Layers: distinct all-in commitments (ascending), then one top layer
     // capped at the highest live contribution for the still-active money.
+    // NOTE (B11): this raw output may include a trailing single-eligible
+    // "overage" pot for an uncalled bet. Callers must return uncalled bets
+    // first (processUncalledBetReturns) before awarding, and the display
+    // path (recalculateActiveSidePots) drops single-eligible pots — so a
+    // heads-up overage never reaches a winner or a UI pill.
     final levels = livePlayers
         .where((p) => p.isAllIn)
         .map(contributionOf)
