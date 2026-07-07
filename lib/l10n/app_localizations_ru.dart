@@ -791,6 +791,21 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String get errorNoConnection => 'Нет подключения к интернету. Проверьте сеть и попробуйте снова.';
+
+  @override
+  String get errorTimeout => 'Время ожидания истекло. Попробуйте снова.';
+
+  @override
+  String get errorServer => 'Что-то пошло не так на нашей стороне. Попробуйте снова через несколько минут.';
+
+  @override
+  String get errorNotAuthorized => 'У вас нет прав для этого действия. Войдите снова.';
+
+  @override
+  String get errorGeneric => 'Что-то пошло не так. Попробуйте снова.';
+
+  @override
   String get handNextHand => 'Следующая рука';
 
   @override

@@ -11,6 +11,7 @@ import '../services/currency_service.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/typography.dart';
 import '../design_system/constants/decorations.dart';
+import '../utils/user_facing_error.dart';
 
 class OpponentHandsScreen extends StatefulWidget {
   final Opponent opponent;
@@ -117,7 +118,7 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
       });
     } catch (e) {
       setState(() {
-        error = 'Failed to load hands: $e';
+        error = 'Failed to load hands: ${UserFacingError.message(e)}';
         isLoading = false;
       });
     }

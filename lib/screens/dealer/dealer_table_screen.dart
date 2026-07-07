@@ -37,6 +37,7 @@ import '../../widgets/multi_pot_winner_dialog.dart';
 import '../../design_system/constants/colors.dart';
 import '../../design_system/constants/typography.dart';
 import '../../design_system/constants/decorations.dart';
+import '../../utils/user_facing_error.dart';
 // Removed: showdown_dialog - dealers don't enter player hole cards
 // Players enter their own hole cards on their devices
 
@@ -507,7 +508,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
       }
     } catch (e) {
       setState(() => _isLoading = false);
-      _showError(AppLocalizations.of(context).dealerTableFailedStartHand(e.toString()));
+      _showError(AppLocalizations.of(context).dealerTableFailedStartHand(UserFacingError.message(e)));
     }
   }
 
@@ -1104,7 +1105,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
         setState(() {
           _isCompletingHand = false;
         });
-        _showError(AppLocalizations.of(context).dealerTableFailedCompleteHand(e.toString()));
+        _showError(AppLocalizations.of(context).dealerTableFailedCompleteHand(UserFacingError.message(e)));
       }
     }
   }
@@ -1180,7 +1181,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
       setState(() {
         _isCompletingHand = false;
       });
-      _showError(AppLocalizations.of(context).dealerTableFailedCompleteHand(e.toString()));
+      _showError(AppLocalizations.of(context).dealerTableFailedCompleteHand(UserFacingError.message(e)));
     }
   }
 
@@ -1263,7 +1264,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
       setState(() {
         _isCompletingHand = false;
       });
-      _showError(AppLocalizations.of(context).dealerTableFailedCompleteHand(e.toString()));
+      _showError(AppLocalizations.of(context).dealerTableFailedCompleteHand(UserFacingError.message(e)));
     }
   }
 
@@ -1748,7 +1749,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
         Navigator.pop(context);
       }
     } catch (e) {
-      _showError(AppLocalizations.of(context).dealerTablePauseFailed(e.toString()));
+      _showError(AppLocalizations.of(context).dealerTablePauseFailed(UserFacingError.message(e)));
     }
   }
 
@@ -2172,7 +2173,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                           if (dialogContext.mounted) Navigator.pop(dialogContext);
                           _showSuccess(AppLocalizations.of(context).dealerTablePlayerRejected(pending.playerName ?? 'Player'));
                         } catch (e) {
-                          _showError(AppLocalizations.of(context).dealerTableRejectFailed(e.toString()));
+                          _showError(AppLocalizations.of(context).dealerTableRejectFailed(UserFacingError.message(e)));
                         }
                       },
                       style: ElevatedButton.styleFrom(
@@ -2235,7 +2236,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
 
         _showSuccess(AppLocalizations.of(context).dealerTablePlayerJoined(pending.playerName ?? 'Player', _formatAmount(chipStack)));
       } catch (e) {
-        _showError(AppLocalizations.of(context).dealerTableApproveFailed(e.toString()));
+        _showError(AppLocalizations.of(context).dealerTableApproveFailed(UserFacingError.message(e)));
       }
     }
   }
@@ -2334,7 +2335,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
           setState(() {});
           _showSuccess(AppLocalizations.of(context).dealerTableUpdatedStackMsg(playerName ?? 'player', _formatAmount(newStack)));
         } catch (e) {
-          _showError(AppLocalizations.of(context).dealerTableFailedUpdateStackMsg(e.toString()));
+          _showError(AppLocalizations.of(context).dealerTableFailedUpdateStackMsg(UserFacingError.message(e)));
         }
       }
     }
@@ -2553,7 +2554,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
       setState(() {});
       _showSuccess(AppLocalizations.of(context).dealerTableSittingAtSeatMsg(seatNumber));
     } catch (e) {
-      _showError(AppLocalizations.of(context).dealerTableFailedSitMsg(e.toString()));
+      _showError(AppLocalizations.of(context).dealerTableFailedSitMsg(UserFacingError.message(e)));
     }
   }
 
@@ -2690,7 +2691,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
         setState(() {});
         _showSuccess(AppLocalizations.of(context).dealerTablePlayerAdded(playerName, seatNumber));
       } catch (e) {
-        _showError(AppLocalizations.of(context).dealerTableFailedAddPlayerMsg(e.toString()));
+        _showError(AppLocalizations.of(context).dealerTableFailedAddPlayerMsg(UserFacingError.message(e)));
       }
     }
   }
@@ -2742,7 +2743,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
       setState(() {});
       _showSuccess(AppLocalizations.of(context).dealerTableRemovedFromSeat(playerName ?? 'Player', seatNumber));
     } catch (e) {
-      _showError(AppLocalizations.of(context).dealerTableFailedRemoveMsg(e.toString()));
+      _showError(AppLocalizations.of(context).dealerTableFailedRemoveMsg(UserFacingError.message(e)));
     }
   }
 
@@ -3278,7 +3279,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(AppLocalizations.of(context).dealerTableFailedUpdateBlinds('$e')),
+              content: Text(AppLocalizations.of(context).dealerTableFailedUpdateBlinds('${UserFacingError.message(e)}')),
               backgroundColor: Colors.red,
             ),
           );
@@ -3477,7 +3478,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(AppLocalizations.of(context).dealerTableFailedMoveButton('$e')),
+            content: Text(AppLocalizations.of(context).dealerTableFailedMoveButton('${UserFacingError.message(e)}')),
             backgroundColor: Colors.red,
           ),
         );
@@ -4309,7 +4310,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
         _showError(AppLocalizations.of(context).dealerTableFailedStartStreaming);
       }
     } catch (e) {
-      _showError(AppLocalizations.of(context).dealerTableFailedStartVoice('$e'));
+      _showError(AppLocalizations.of(context).dealerTableFailedStartVoice(UserFacingError.message(e)));
       if (mounted) {
         setState(() {
           _isVoiceMode = false;

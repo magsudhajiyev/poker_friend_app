@@ -26,6 +26,7 @@ import '../l10n/app_localizations.dart';
 import '../services/feature_flag_service.dart';
 import '../design_system/constants/typography.dart';
 import '../design_system/constants/decorations.dart';
+import '../utils/user_facing_error.dart';
 
 class ProfileScreen extends StatefulWidget {
   @override
@@ -186,7 +187,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       }
     } catch (e) {
       if (mounted) {
-        _showSnack('Failed to save: $e');
+        _showSnack('Failed to save: ${UserFacingError.message(e)}');
         setState(() => _isSaving = false);
       }
     }
@@ -268,7 +269,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             context, MaterialPageRoute(builder: (_) => IntroScreen()), (_) => false);
       }
     } catch (e) {
-      if (mounted) _showSnack('Failed to delete account: $e');
+      if (mounted) _showSnack('Failed to delete account: ${UserFacingError.message(e)}');
     }
   }
 
@@ -844,7 +845,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 } catch (e) {
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Flag update failed: $e')));
+                        SnackBar(content: Text('Flag update failed: ${UserFacingError.message(e)}')));
                   }
                 }
               },
@@ -997,7 +998,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       Navigator.push(context, MaterialPageRoute(
           builder: (_) => SessionAnalyticsScreen(sessionData: data, sessionId: doc.id)));
     } catch (e) {
-      if (mounted) _showSnack('Error: $e');
+      if (mounted) _showSnack(UserFacingError.message(e));
     }
   }
 
@@ -1008,7 +1009,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       await TestDataSeedService.seedShowdownHands(['Aldante', 'Kulikor']);
       if (mounted) _showSnack('Scouting data seeded! Tap an opponent in drill setup to see it.');
     } catch (e) {
-      if (mounted) _showSnack('Error: $e');
+      if (mounted) _showSnack(UserFacingError.message(e));
     }
   }
 
@@ -1196,7 +1197,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (mounted) _showSnack('Stats diagnostic printed to console — check debug log');
     } catch (e) {
       debugPrint('Diagnostic error: $e');
-      if (mounted) _showSnack('Error: $e');
+      if (mounted) _showSnack(UserFacingError.message(e));
     }
   }
 

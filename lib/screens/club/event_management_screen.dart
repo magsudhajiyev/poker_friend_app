@@ -8,6 +8,7 @@ import '../../services/event_service.dart';
 import '../../services/table_service.dart';
 import 'event_dashboard_screen.dart';
 import '../../design_system/constants/decorations.dart';
+import '../../utils/user_facing_error.dart';
 
 /// Screen for managing club events (create, edit, view)
 class EventManagementScreen extends StatefulWidget {
@@ -50,7 +51,7 @@ class _EventManagementScreenState extends State<EventManagementScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(AppLocalizations.of(context).eventManagementErrorLoading('$e')),
+            content: Text(AppLocalizations.of(context).eventManagementErrorLoading('${UserFacingError.message(e)}')),
             backgroundColor: Colors.red.shade700,
           ),
         );
@@ -104,7 +105,7 @@ class _EventManagementScreenState extends State<EventManagementScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(AppLocalizations.of(context).eventManagementCreateFailed('$e')),
+            content: Text(AppLocalizations.of(context).eventManagementCreateFailed('${UserFacingError.message(e)}')),
             backgroundColor: Colors.red.shade700,
           ),
         );
@@ -147,7 +148,7 @@ class _EventManagementScreenState extends State<EventManagementScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(AppLocalizations.of(context).eventManagementFailedUpdateEvent('$e')),
+            content: Text(AppLocalizations.of(context).eventManagementFailedUpdateEvent('${UserFacingError.message(e)}')),
             backgroundColor: Colors.red.shade700,
           ),
         );
@@ -203,7 +204,7 @@ class _EventManagementScreenState extends State<EventManagementScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(AppLocalizations.of(context).eventManagementEndFailed('$e')),
+            content: Text(AppLocalizations.of(context).eventManagementEndFailed('${UserFacingError.message(e)}')),
             backgroundColor: Colors.red.shade700,
           ),
         );

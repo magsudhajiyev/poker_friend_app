@@ -788,6 +788,21 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get errorNoConnection => 'No internet connection. Check your network and try again.';
+
+  @override
+  String get errorTimeout => 'The request timed out. Please try again.';
+
+  @override
+  String get errorServer => 'Something went wrong on our side. Please try again in a few minutes.';
+
+  @override
+  String get errorNotAuthorized => 'You don\'t have permission to do that. Try signing in again.';
+
+  @override
+  String get errorGeneric => 'Something went wrong. Please try again.';
+
+  @override
   String get handNextHand => 'Next Hand';
 
   @override

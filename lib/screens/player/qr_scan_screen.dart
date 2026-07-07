@@ -4,6 +4,7 @@ import '../../l10n/app_localizations.dart';
 import '../../services/qr_service.dart';
 import 'qr_join_screen.dart';
 import '../../design_system/constants/decorations.dart';
+import '../../utils/user_facing_error.dart';
 
 /// Screen for scanning QR codes to join a poker table
 class QRScanScreen extends StatefulWidget {
@@ -68,7 +69,7 @@ class _QRScanScreenState extends State<QRScanScreen> {
         );
       }
     } catch (e) {
-      _showError(AppLocalizations.of(context).qrScanError(e.toString()));
+      _showError(AppLocalizations.of(context).qrScanError(UserFacingError.message(e)));
     } finally {
       if (mounted) {
         setState(() {

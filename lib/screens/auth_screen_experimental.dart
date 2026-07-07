@@ -12,6 +12,7 @@ import '../l10n/app_localizations.dart';
 import '../services/auth_service.dart';
 import '../services/notification_service.dart';
 import 'forgot_password_screen.dart';
+import '../utils/user_facing_error.dart';
 
 class AuthScreenExperimental extends StatefulWidget {
   final bool initialIsSignUp;
@@ -73,7 +74,7 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.toString()),
+            content: Text(UserFacingError.message(e)),
             backgroundColor: Colors.red,
           ),
         );
@@ -106,7 +107,7 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.toString()),
+            content: Text(UserFacingError.message(e)),
             backgroundColor: Colors.red,
           ),
         );
@@ -140,7 +141,7 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
+          SnackBar(content: Text(UserFacingError.message(e)), backgroundColor: Colors.red),
         );
       }
     } finally {
@@ -247,7 +248,7 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
+          SnackBar(content: Text(UserFacingError.message(e)), backgroundColor: Colors.red),
         );
       }
     } finally {

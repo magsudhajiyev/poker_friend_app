@@ -10,6 +10,7 @@ import '../../l10n/app_localizations.dart';
 import '../../design_system/constants/colors.dart';
 import '../../design_system/constants/typography.dart';
 import '../../design_system/constants/decorations.dart';
+import '../../utils/user_facing_error.dart';
 
 /// Screen for spectators to view live rankings during an event
 class EventRankingsScreen extends StatefulWidget {
@@ -111,7 +112,7 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
       if (mounted) {
         setState(() {
           _isLoading = false;
-          _error = 'Error loading rankings: $e';
+          _error = 'Error loading rankings: ${UserFacingError.message(e)}';
         });
       }
     }

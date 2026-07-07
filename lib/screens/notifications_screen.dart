@@ -18,6 +18,7 @@ import '../services/support_request_service.dart';
 import '../models/support_request.dart';
 import '../design_system/constants/typography.dart';
 import '../design_system/constants/decorations.dart';
+import '../utils/user_facing_error.dart';
 
 /// Dedicated notifications screen matching Figma design (node 324:4769)
 class NotificationsScreen extends StatefulWidget {
@@ -687,7 +688,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       if (mounted) Navigator.pop(context);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context).commonErrorGeneric(e.toString()))),
+          SnackBar(content: Text(AppLocalizations.of(context).commonErrorGeneric(UserFacingError.message(e)))),
         );
       }
     }
@@ -850,7 +851,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       if (mounted) Navigator.pop(context);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context).commonErrorGeneric(e.toString()))),
+          SnackBar(content: Text(AppLocalizations.of(context).commonErrorGeneric(UserFacingError.message(e)))),
         );
       }
     }
@@ -950,7 +951,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       if (mounted) Navigator.pop(context);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context).notificationsErrorLoadingEvent(e.toString()))),
+          SnackBar(content: Text(AppLocalizations.of(context).notificationsErrorLoadingEvent(UserFacingError.message(e)))),
         );
       }
     }
@@ -1002,7 +1003,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       if (mounted) Navigator.pop(context);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context).notificationsFailedLoadClub(e.toString()))),
+          SnackBar(content: Text(AppLocalizations.of(context).notificationsFailedLoadClub(UserFacingError.message(e)))),
         );
       }
     }

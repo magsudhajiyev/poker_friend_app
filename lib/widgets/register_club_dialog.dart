@@ -6,6 +6,7 @@ import '../services/club_request_service.dart';
 import '../design_system/constants/typography.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/decorations.dart';
+import '../utils/user_facing_error.dart';
 
 /// Show the Register Club bottom sheet
 Future<void> showRegisterClubDialog(BuildContext context) {
@@ -101,7 +102,7 @@ class _RegisterClubSheetState extends State<_RegisterClubSheet> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(l10n.registerClubFailedToSubmit(e.toString())),
+            content: Text(l10n.registerClubFailedToSubmit(UserFacingError.message(e))),
             backgroundColor: AppColors.accentDanger,
           ),
         );

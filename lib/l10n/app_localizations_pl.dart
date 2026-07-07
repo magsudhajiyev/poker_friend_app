@@ -790,6 +790,21 @@ class AppLocalizationsPl extends AppLocalizations {
   }
 
   @override
+  String get errorNoConnection => 'Brak połączenia z internetem. Sprawdź sieć i spróbuj ponownie.';
+
+  @override
+  String get errorTimeout => 'Przekroczono limit czasu. Spróbuj ponownie.';
+
+  @override
+  String get errorServer => 'Coś poszło nie tak po naszej stronie. Spróbuj ponownie za kilka minut.';
+
+  @override
+  String get errorNotAuthorized => 'Nie masz do tego uprawnień. Zaloguj się ponownie.';
+
+  @override
+  String get errorGeneric => 'Coś poszło nie tak. Spróbuj ponownie.';
+
+  @override
   String get handNextHand => 'Następna ręka';
 
   @override

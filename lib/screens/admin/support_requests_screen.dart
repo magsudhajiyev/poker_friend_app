@@ -7,6 +7,7 @@ import '../../models/support_request.dart';
 import '../../services/support_request_service.dart';
 import '../../design_system/constants/typography.dart';
 import '../../design_system/constants/decorations.dart';
+import '../../utils/user_facing_error.dart';
 
 class SupportRequestsScreen extends StatefulWidget {
   const SupportRequestsScreen({super.key});
@@ -140,7 +141,7 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(AppLocalizations.of(context).commonErrorGeneric('$e'), style: AppTypography.ibm(color: Colors.white)),
+          content: Text(AppLocalizations.of(context).commonErrorGeneric('${UserFacingError.message(e)}'), style: AppTypography.ibm(color: Colors.white)),
           backgroundColor: AppColors.errorRed,
         ),
       );
@@ -228,7 +229,7 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(AppLocalizations.of(context).commonErrorGeneric('$e'), style: AppTypography.ibm(color: Colors.white)),
+          content: Text(AppLocalizations.of(context).commonErrorGeneric('${UserFacingError.message(e)}'), style: AppTypography.ibm(color: Colors.white)),
           backgroundColor: AppColors.errorRed,
         ),
       );

@@ -4,6 +4,7 @@ import '../services/auth_service.dart';
 import 'home_screen.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/decorations.dart';
+import '../utils/user_facing_error.dart';
 
 class AuthScreen extends StatefulWidget {
   @override
@@ -67,7 +68,7 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.toString()),
+            content: Text(UserFacingError.message(e)),
             backgroundColor: Colors.red,
           ),
         );
@@ -99,7 +100,7 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.toString()),
+            content: Text(UserFacingError.message(e)),
             backgroundColor: Colors.red,
           ),
         );
@@ -620,7 +621,7 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
                 } catch (e) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text(e.toString()),
+                      content: Text(UserFacingError.message(e)),
                       backgroundColor: Colors.red,
                     ),
                   );

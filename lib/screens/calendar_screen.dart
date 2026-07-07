@@ -16,6 +16,7 @@ import '../widgets/event_success_popup.dart';
 import 'club/event_detail_screen.dart' as club_detail;
 import 'event_detail_screen.dart';
 import '../l10n/app_localizations.dart';
+import '../utils/user_facing_error.dart';
 
 class CalendarScreen extends StatefulWidget {
   @override
@@ -120,7 +121,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
           }
         } catch (e) {
           ScaffoldMessenger.of(outerContext).showSnackBar(
-            SnackBar(content: Text(l10n.calendarFailedToCreateEvent(e.toString()))),
+            SnackBar(content: Text(l10n.calendarFailedToCreateEvent(UserFacingError.message(e)))),
           );
         }
       },
@@ -1544,7 +1545,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
         );
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.calendarFailedToLoadEvent(e.toString()))),
+          SnackBar(content: Text(l10n.calendarFailedToLoadEvent(UserFacingError.message(e)))),
         );
       }
       return;
@@ -1610,7 +1611,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
           _loadEvents();
         } catch (e) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l10n.calendarFailedToUpdateEvent(e.toString()))),
+            SnackBar(content: Text(l10n.calendarFailedToUpdateEvent(UserFacingError.message(e)))),
           );
         }
       },
@@ -1698,7 +1699,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
           _loadEvents();
         } catch (e) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l10n.calendarFailedToUpdateEvent(e.toString()))),
+            SnackBar(content: Text(l10n.calendarFailedToUpdateEvent(UserFacingError.message(e)))),
           );
         }
       },

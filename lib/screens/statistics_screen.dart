@@ -17,6 +17,7 @@ import '../widgets/global_bottom_nav_bar.dart';
 import '../design_system/design_system.dart';
 import '../design_system/components/cards/error_state_card.dart';
 import '../widgets/range_grid/range_grid_view.dart';
+import '../utils/user_facing_error.dart';
 
 // Shared row colours (negative values / insufficient-data hints).
 const Color _kNegativeRed = Color(0xFFE85A5A);
@@ -131,7 +132,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
       });
     } catch (e) {
       setState(() {
-        error = e.toString();
+        error = UserFacingError.message(e);
         isLoading = false;
       });
     }

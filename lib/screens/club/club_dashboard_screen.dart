@@ -29,6 +29,7 @@ import 'club_info_screen.dart';
 import 'grouped_cash_game_screen.dart';
 import '../../design_system/constants/typography.dart';
 import '../../design_system/constants/decorations.dart';
+import '../../utils/user_facing_error.dart';
 
 /// Club dashboard showing events with segmented tabs for Upcoming, Live, Past, Dealers
 /// Matches Figma node 357:3862
@@ -1708,7 +1709,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(AppLocalizations.of(context).clubDashboardFailedSendInvitationMsg(e.toString())),
+            content: Text(AppLocalizations.of(context).clubDashboardFailedSendInvitationMsg(UserFacingError.message(e))),
             backgroundColor: const Color(0xFFDA5B5E),
           ),
         );
@@ -1760,7 +1761,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(AppLocalizations.of(context).clubDashboardFailedCancelMsg(e.toString())),
+              content: Text(AppLocalizations.of(context).clubDashboardFailedCancelMsg(UserFacingError.message(e))),
               backgroundColor: const Color(0xFFDA5B5E),
             ),
           );

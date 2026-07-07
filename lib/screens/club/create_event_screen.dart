@@ -12,6 +12,7 @@ import '../../design_system/components/calendar/custom_date_picker.dart';
 import '../../design_system/constants/colors.dart';
 import '../../design_system/constants/typography.dart';
 import '../../design_system/constants/decorations.dart';
+import '../../utils/user_facing_error.dart';
 
 /// Shows the Create/Edit Event drawer as a modal bottom sheet.
 /// Returns true if event was created/updated, null otherwise.
@@ -954,7 +955,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(AppLocalizations.of(context).eventDeleteFailed('$e')),
+              content: Text(AppLocalizations.of(context).eventDeleteFailed('${UserFacingError.message(e)}')),
               backgroundColor: AppColors.lossRed,
             ),
           );

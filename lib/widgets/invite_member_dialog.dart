@@ -11,6 +11,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/typography.dart';
 import '../design_system/constants/decorations.dart';
+import '../utils/user_facing_error.dart';
 
 /// Dialog for club admins to invite dealers or other admins
 class InviteMemberDialog extends StatefulWidget {
@@ -135,7 +136,7 @@ class _InviteMemberDialogState extends State<InviteMemberDialog> {
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(AppLocalizations.of(context).inviteMemberError(e.toString())),
+          content: Text(AppLocalizations.of(context).inviteMemberError(UserFacingError.message(e))),
           backgroundColor: AppColors.lossRed,
         ),
       );

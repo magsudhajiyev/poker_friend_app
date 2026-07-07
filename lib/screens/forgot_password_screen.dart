@@ -8,6 +8,7 @@ import '../design_system/components/backgrounds/gradient_background.dart';
 import '../design_system/components/buttons/glassy_icon_button.dart';
 import '../l10n/app_localizations.dart';
 import '../services/password_reset_service.dart';
+import '../utils/user_facing_error.dart';
 
 enum _Phase { email, code, password }
 
@@ -119,7 +120,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         });
       }
     } catch (e) {
-      _showError(e.toString());
+      _showError(UserFacingError.message(e));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -140,7 +141,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         _showError(AppLocalizations.of(context).forgotPasswordFailedResend);
       }
     } catch (e) {
-      _showError(e.toString());
+      _showError(UserFacingError.message(e));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -168,7 +169,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         setState(() => _phase = _Phase.password);
       }
     } catch (e) {
-      _showError(e.toString());
+      _showError(UserFacingError.message(e));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -189,7 +190,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         Navigator.pop(context); // Back to auth screen
       }
     } catch (e) {
-      if (mounted) _showError(e.toString());
+      if (mounted) _showError(UserFacingError.message(e));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }

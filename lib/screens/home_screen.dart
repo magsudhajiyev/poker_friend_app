@@ -64,6 +64,7 @@ import '../services/app_data_cache.dart';
 import '../services/display_identity_service.dart';
 import '../services/logger_service.dart';
 import '../l10n/app_localizations.dart';
+import '../utils/user_facing_error.dart';
 
 /// Home screen
 class HomeScreen extends StatefulWidget {
@@ -828,7 +829,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       if (mounted) Navigator.pop(context);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context).commonErrorGeneric(e.toString()))),
+          SnackBar(content: Text(AppLocalizations.of(context).commonErrorGeneric(UserFacingError.message(e)))),
         );
       }
     }
@@ -990,7 +991,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       if (mounted) Navigator.pop(context);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context).commonErrorGeneric(e.toString()))),
+          SnackBar(content: Text(AppLocalizations.of(context).commonErrorGeneric(UserFacingError.message(e)))),
         );
       }
     }
@@ -1080,7 +1081,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       if (mounted) Navigator.pop(context);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context).commonErrorGeneric(e.toString()))),
+          SnackBar(content: Text(AppLocalizations.of(context).commonErrorGeneric(UserFacingError.message(e)))),
         );
       }
     }
@@ -1139,7 +1140,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       if (mounted) Navigator.pop(context);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context).homeErrorLoadingEvent(e.toString()))),
+          SnackBar(content: Text(AppLocalizations.of(context).homeErrorLoadingEvent(UserFacingError.message(e)))),
         );
       }
     }
@@ -3445,7 +3446,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context).homeFailedLoadEvent(e.toString()))),
+          SnackBar(content: Text(AppLocalizations.of(context).homeFailedLoadEvent(UserFacingError.message(e)))),
         );
       }
     }
@@ -3940,7 +3941,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 _loadData();
                               } catch (e) {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text(AppLocalizations.of(context).homeFailedUpdateEvent(e.toString()))),
+                                  SnackBar(content: Text(AppLocalizations.of(context).homeFailedUpdateEvent(UserFacingError.message(e)))),
                                 );
                               }
                             },
@@ -4725,7 +4726,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(AppLocalizations.of(context).homeErrorDeletingEvent(e.toString())),
+          content: Text(AppLocalizations.of(context).homeErrorDeletingEvent(UserFacingError.message(e))),
           backgroundColor: Colors.red,
           duration: Duration(seconds: 3),
         ),

@@ -17,6 +17,7 @@ import 'dealer_table_screen.dart';
 import '../../design_system/constants/colors.dart';
 import '../../design_system/constants/typography.dart';
 import '../../design_system/constants/decorations.dart';
+import '../../utils/user_facing_error.dart';
 
 /// Screen for dealers to scan a table QR code to start dealing at an event
 class DealerQRScanScreen extends StatefulWidget {
@@ -152,7 +153,7 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
         _showSessionSettingsDialog(table);
       }
     } catch (e) {
-      _showError(AppLocalizations.of(context).dealerQrScanError(e.toString()));
+      _showError(AppLocalizations.of(context).dealerQrScanError(UserFacingError.message(e)));
     } finally {
       if (mounted) {
         setState(() {
@@ -469,7 +470,7 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
         );
       }
     } catch (e) {
-      _showError(AppLocalizations.of(context).dealerQrScanFailedStart(e.toString()));
+      _showError(AppLocalizations.of(context).dealerQrScanFailedStart(UserFacingError.message(e)));
       setState(() => _isProcessing = false);
     }
   }
@@ -644,7 +645,7 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
         );
       }
     } catch (e) {
-      _showError(AppLocalizations.of(context).dealerQrScanFailedResume(e.toString()));
+      _showError(AppLocalizations.of(context).dealerQrScanFailedResume(UserFacingError.message(e)));
       setState(() => _isProcessing = false);
     }
   }

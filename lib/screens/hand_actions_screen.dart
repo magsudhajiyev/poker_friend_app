@@ -23,6 +23,7 @@ import '../services/feature_flag_service.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/typography.dart';
 import '../design_system/constants/decorations.dart';
+import '../utils/user_facing_error.dart';
 
 class HandActionsScreen extends StatefulWidget {
   final Map<String, dynamic> hand;
@@ -180,7 +181,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${AppLocalizations.of(context).handActionsFailedToShareHand}: $e'),
+            content: Text('${AppLocalizations.of(context).handActionsFailedToShareHand}: ${UserFacingError.message(e)}'),
             duration: const Duration(seconds: 5),
           ),
         );
@@ -362,7 +363,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(AppLocalizations.of(context).handActionsFailedToExport(e.toString())),
+            content: Text(AppLocalizations.of(context).handActionsFailedToExport(UserFacingError.message(e))),
             backgroundColor: Colors.red,
           ),
         );

@@ -5,6 +5,7 @@ import '../../l10n/app_localizations.dart';
 import '../../models/club_request.dart';
 import '../../services/club_request_service.dart';
 import '../../design_system/constants/decorations.dart';
+import '../../utils/user_facing_error.dart';
 
 /// Screen for app admins to manage club registration requests
 class ClubRequestsScreen extends StatefulWidget {
@@ -110,7 +111,7 @@ class _ClubRequestsScreenState extends State<ClubRequestsScreen>
         Navigator.pop(context); // Close loading
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(AppLocalizations.of(context).commonErrorGeneric('$e')),
+            content: Text(AppLocalizations.of(context).commonErrorGeneric('${UserFacingError.message(e)}')),
             backgroundColor: PokerFriendColors.red,
           ),
         );
@@ -195,7 +196,7 @@ class _ClubRequestsScreenState extends State<ClubRequestsScreen>
         Navigator.pop(context); // Close loading
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(AppLocalizations.of(context).commonErrorGeneric('$e')),
+            content: Text(AppLocalizations.of(context).commonErrorGeneric('${UserFacingError.message(e)}')),
             backgroundColor: PokerFriendColors.red,
           ),
         );

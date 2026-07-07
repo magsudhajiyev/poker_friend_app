@@ -18,6 +18,7 @@ import 'admin_table_management_screen.dart';
 import 'member_table_view_screen.dart';
 import '../../design_system/constants/typography.dart';
 import '../../design_system/constants/decorations.dart';
+import '../../utils/user_facing_error.dart';
 
 /// Grouped Cash Game screen — collapses multiple live cash events sharing the
 /// same stakes into a single 2-column table grid. Tapping a table card goes
@@ -126,7 +127,7 @@ class _GroupedCashGameScreenState extends State<GroupedCashGameScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _error = 'Failed to load tables: $e';
+        _error = 'Failed to load tables: ${UserFacingError.message(e)}';
         _isLoading = false;
       });
     }
@@ -279,7 +280,7 @@ class _GroupedCashGameScreenState extends State<GroupedCashGameScreen> {
       setState(() => _isJoining = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(AppLocalizations.of(context).clubCashGameJoinFailed('$e')),
+          content: Text(AppLocalizations.of(context).clubCashGameJoinFailed('${UserFacingError.message(e)}')),
           backgroundColor: AppColors.errorRed,
         ),
       );
@@ -311,7 +312,7 @@ class _GroupedCashGameScreenState extends State<GroupedCashGameScreen> {
       setState(() => _isLeaving = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(AppLocalizations.of(context).clubCashGameLeaveFailed('$e')),
+          content: Text(AppLocalizations.of(context).clubCashGameLeaveFailed('${UserFacingError.message(e)}')),
           backgroundColor: AppColors.errorRed,
         ),
       );
@@ -573,7 +574,7 @@ class _GroupedCashGameScreenState extends State<GroupedCashGameScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(AppLocalizations.of(context).clubCashGameRefreshFailed('$e')),
+          content: Text(AppLocalizations.of(context).clubCashGameRefreshFailed('${UserFacingError.message(e)}')),
           backgroundColor: AppColors.errorRed,
         ),
       );
@@ -1056,7 +1057,7 @@ class _AdminWaitlistSheetState extends State<_AdminWaitlistSheet> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            AppLocalizations.of(context).clubCashGameNotifyFailed('$e'),
+            AppLocalizations.of(context).clubCashGameNotifyFailed(UserFacingError.message(e)),
             style: AppTypography.ibm(),
           ),
           backgroundColor: AppColors.errorRed,
@@ -1470,7 +1471,7 @@ class _AddTableSheetState extends State<_AddTableSheet> {
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _error = 'Failed to load tables: $e';
+        _error = 'Failed to load tables: ${UserFacingError.message(e)}';
         _isLoading = false;
       });
     }
@@ -1516,7 +1517,7 @@ class _AddTableSheetState extends State<_AddTableSheet> {
       setState(() => _isCreating = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(AppLocalizations.of(context).clubCashGameAddFailed('$e')),
+          content: Text(AppLocalizations.of(context).clubCashGameAddFailed('${UserFacingError.message(e)}')),
           backgroundColor: AppColors.errorRed,
         ),
       );
@@ -1546,7 +1547,7 @@ class _AddTableSheetState extends State<_AddTableSheet> {
       setState(() => _attachingTableId = null);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(AppLocalizations.of(context).clubCashGameAttachFailed('$e')),
+          content: Text(AppLocalizations.of(context).clubCashGameAttachFailed('${UserFacingError.message(e)}')),
           backgroundColor: AppColors.errorRed,
         ),
       );

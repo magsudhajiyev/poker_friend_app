@@ -19,6 +19,7 @@ import '../l10n/app_localizations.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/typography.dart';
 import '../design_system/constants/decorations.dart';
+import '../utils/user_facing_error.dart';
 
 class MyOpponentsScreen extends StatefulWidget {
   // Static cache accessible from other screens
@@ -169,7 +170,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> with SingleTicker
       });
     } catch (e) {
       setState(() {
-        error = 'Failed to load opponents: $e';
+        error = 'Failed to load opponents: ${UserFacingError.message(e)}';
         isLoading = false;
       });
     }
@@ -531,7 +532,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> with SingleTicker
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(l10n.opponentsErrorGeneric(e.toString())),
+            content: Text(l10n.opponentsErrorGeneric(UserFacingError.message(e))),
             backgroundColor: Colors.red,
           ),
         );
@@ -1273,7 +1274,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> with SingleTicker
                           if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content: Text(l10n.opponentsErrorDeleting(e.toString())),
+                                content: Text(l10n.opponentsErrorDeleting(UserFacingError.message(e))),
                                 backgroundColor: Colors.red,
                               ),
                             );

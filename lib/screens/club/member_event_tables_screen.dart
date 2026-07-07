@@ -13,6 +13,7 @@ import '../../l10n/app_localizations.dart';
 import 'member_table_view_screen.dart';
 import '../../design_system/constants/colors.dart';
 import '../../design_system/constants/decorations.dart';
+import '../../utils/user_facing_error.dart';
 
 /// Screen for members to view all tables in a multi-table event
 /// Shows availability across all tables and allows joining shared waitlist
@@ -214,7 +215,7 @@ class _MemberEventTablesScreenState extends State<MemberEventTablesScreen> {
         setState(() => _isJoiningWaitlist = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(AppLocalizations.of(context).memberEventJoinFailed('$e')),
+            content: Text(AppLocalizations.of(context).memberEventJoinFailed('${UserFacingError.message(e)}')),
             backgroundColor: PokerFriendColors.red,
           ),
         );
@@ -249,7 +250,7 @@ class _MemberEventTablesScreenState extends State<MemberEventTablesScreen> {
         setState(() => _isLeavingWaitlist = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(AppLocalizations.of(context).memberEventLeaveFailed('$e')),
+            content: Text(AppLocalizations.of(context).memberEventLeaveFailed('${UserFacingError.message(e)}')),
             backgroundColor: PokerFriendColors.red,
           ),
         );

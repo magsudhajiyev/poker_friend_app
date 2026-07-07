@@ -32,6 +32,7 @@ import '../../services/currency_service.dart';
 import '../../design_system/constants/colors.dart';
 import '../../design_system/constants/typography.dart';
 import '../../design_system/constants/decorations.dart';
+import '../../utils/user_facing_error.dart';
 
 /// Event detail screen with RSVP functionality
 class EventDetailScreen extends StatefulWidget {
@@ -335,7 +336,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       _loadData(); // Refresh
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context).eventDetailRsvpFailed('$e'))),
+        SnackBar(content: Text(AppLocalizations.of(context).eventDetailRsvpFailed('${UserFacingError.message(e)}'))),
       );
     }
   }
@@ -394,7 +395,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context).eventDetailStartFailed('$e'))),
+        SnackBar(content: Text(AppLocalizations.of(context).eventDetailStartFailed('${UserFacingError.message(e)}'))),
       );
     }
   }
@@ -470,7 +471,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         Navigator.pop(context, true); // Return to refresh list
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context).eventDetailFailedFinishCancel(isLive ? "finish" : "cancel", e.toString()))),
+          SnackBar(content: Text(AppLocalizations.of(context).eventDetailFailedFinishCancel(isLive ? "finish" : "cancel", UserFacingError.message(e)))),
         );
       }
     }
@@ -530,7 +531,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(AppLocalizations.of(context).eventDetailCalendarFailed('$e')),
+            content: Text(AppLocalizations.of(context).eventDetailCalendarFailed('${UserFacingError.message(e)}')),
             backgroundColor: AppColors.lossRed,
           ),
         );
@@ -1460,7 +1461,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(AppLocalizations.of(context).eventDetailErrorFindingSeat(e.toString())),
+            content: Text(AppLocalizations.of(context).eventDetailErrorFindingSeat(UserFacingError.message(e))),
             backgroundColor: AppColors.lossRed,
           ),
         );

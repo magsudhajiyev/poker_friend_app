@@ -10,6 +10,7 @@ import '../../models/final_standings.dart';
 import '../../services/event_service.dart';
 import '../../l10n/app_localizations.dart';
 import '../../design_system/constants/decorations.dart';
+import '../../utils/user_facing_error.dart';
 
 /// Trophy variant drawn next to the top-3 ranks in the final standings list.
 enum _TrophyKind { gold, silver, bronze }
@@ -68,7 +69,7 @@ class _FinalStandingsScreenState extends State<FinalStandingsScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _error = 'Failed to load standings: $e';
+        _error = 'Failed to load standings: ${UserFacingError.message(e)}';
         _isLoading = false;
       });
     }

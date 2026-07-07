@@ -51,6 +51,7 @@ import '../onboarding/onboarding_tour.dart';
 import '../onboarding/onboarding_progress_bar.dart';
 import '../onboarding/guided_hand_overlay.dart';
 import 'session_history_screen.dart';
+import '../utils/user_facing_error.dart';
 
 class PokerHandScreen extends StatefulWidget {
   final double smallBlind;
@@ -827,7 +828,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(AppLocalizations.of(context).pokerHandFailedEndSession(e.toString())),
+            content: Text(AppLocalizations.of(context).pokerHandFailedEndSession(UserFacingError.message(e))),
             backgroundColor: Colors.red,
           ),
         );
@@ -1351,7 +1352,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(AppLocalizations.of(context).pokerHandFailedSaveSession(e.toString())),
+            content: Text(AppLocalizations.of(context).pokerHandFailedSaveSession(UserFacingError.message(e))),
             backgroundColor: Colors.red,
           ),
         );
@@ -6285,7 +6286,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(AppLocalizations.of(context).pokerHandFailedSaveSession(e.toString())),
+          content: Text(AppLocalizations.of(context).pokerHandFailedSaveSession(UserFacingError.message(e))),
           backgroundColor: Colors.red,
         ),
       );

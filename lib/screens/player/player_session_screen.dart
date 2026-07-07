@@ -17,6 +17,7 @@ import '../hand_actions_page_view.dart';
 import '../spectator/event_rankings_screen.dart';
 import '../../design_system/constants/typography.dart';
 import '../../design_system/constants/decorations.dart';
+import '../../utils/user_facing_error.dart';
 
 /// Player session screen for participating in dealer-assisted sessions.
 /// Shows real-time hand updates, allows player to input hole cards, notes, and tags.
@@ -134,7 +135,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
       });
     } catch (e) {
       setState(() {
-        _error = e.toString();
+        _error = UserFacingError.message(e);
         _isLoading = false;
       });
     }
@@ -625,7 +626,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                AppLocalizations.of(context).playerSessionFailedLeave(e.toString()),
+                AppLocalizations.of(context).playerSessionFailedLeave(UserFacingError.message(e)),
                 style: AppTypography.ibm(color: Colors.white),
               ),
               backgroundColor: AppColors.errorRed,
@@ -2012,7 +2013,7 @@ class _EditHandBottomSheetState extends State<_EditHandBottomSheet> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Error saving: $e',
+              'Error saving: ${UserFacingError.message(e)}',
               style: AppTypography.ibm(color: Colors.white),
             ),
             backgroundColor: AppColors.errorRed,

@@ -20,6 +20,7 @@ import '../services/currency_service.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/typography.dart';
 import '../design_system/constants/decorations.dart';
+import '../utils/user_facing_error.dart';
 
 
 class SessionAnalyticsScreen extends StatefulWidget {
@@ -313,7 +314,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(AppLocalizations.of(context).sessionAnalyticsExportFailed(e.toString())),
+            content: Text(AppLocalizations.of(context).sessionAnalyticsExportFailed(UserFacingError.message(e))),
             backgroundColor: Colors.red,
           ),
         );

@@ -18,6 +18,7 @@ import '../../widgets/poker_table_widget.dart';
 import '../../l10n/app_localizations.dart';
 import '../../design_system/constants/colors.dart';
 import '../../design_system/constants/decorations.dart';
+import '../../utils/user_facing_error.dart';
 
 /// Full-screen elliptic table view for admin seat management
 /// Uses the same visual design as seat_setup_screen.dart
@@ -357,7 +358,7 @@ class _AdminTableManagementScreenState
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context).commonErrorGeneric('$e')), backgroundColor: PokerFriendColors.red),
+          SnackBar(content: Text(AppLocalizations.of(context).commonErrorGeneric('${UserFacingError.message(e)}')), backgroundColor: PokerFriendColors.red),
         );
       }
     }
@@ -628,7 +629,7 @@ class _AdminTableManagementScreenState
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context).commonErrorGeneric('$e')), backgroundColor: PokerFriendColors.red),
+          SnackBar(content: Text(AppLocalizations.of(context).commonErrorGeneric('${UserFacingError.message(e)}')), backgroundColor: PokerFriendColors.red),
         );
       }
     }
@@ -832,7 +833,7 @@ class _AdminTableManagementScreenState
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context).commonErrorGeneric('$e')), backgroundColor: PokerFriendColors.red),
+          SnackBar(content: Text(AppLocalizations.of(context).commonErrorGeneric('${UserFacingError.message(e)}')), backgroundColor: PokerFriendColors.red),
         );
       }
     }
@@ -875,7 +876,7 @@ class _AdminTableManagementScreenState
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context).commonErrorGeneric('$e')), backgroundColor: PokerFriendColors.red),
+          SnackBar(content: Text(AppLocalizations.of(context).commonErrorGeneric('${UserFacingError.message(e)}')), backgroundColor: PokerFriendColors.red),
         );
       }
     }
@@ -898,7 +899,7 @@ class _AdminTableManagementScreenState
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context).commonErrorGeneric('$e')), backgroundColor: PokerFriendColors.red),
+          SnackBar(content: Text(AppLocalizations.of(context).commonErrorGeneric('${UserFacingError.message(e)}')), backgroundColor: PokerFriendColors.red),
         );
       }
     }
@@ -930,7 +931,7 @@ class _AdminTableManagementScreenState
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context).commonErrorGeneric('$e')), backgroundColor: PokerFriendColors.red),
+          SnackBar(content: Text(AppLocalizations.of(context).commonErrorGeneric('${UserFacingError.message(e)}')), backgroundColor: PokerFriendColors.red),
         );
       }
     }
@@ -952,7 +953,7 @@ class _AdminTableManagementScreenState
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context).commonErrorGeneric('$e')), backgroundColor: PokerFriendColors.red),
+          SnackBar(content: Text(AppLocalizations.of(context).commonErrorGeneric('${UserFacingError.message(e)}')), backgroundColor: PokerFriendColors.red),
         );
       }
     }
@@ -974,7 +975,7 @@ class _AdminTableManagementScreenState
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context).commonErrorGeneric('$e')), backgroundColor: PokerFriendColors.red),
+          SnackBar(content: Text(AppLocalizations.of(context).commonErrorGeneric('${UserFacingError.message(e)}')), backgroundColor: PokerFriendColors.red),
         );
       }
     }

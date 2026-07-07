@@ -14,6 +14,7 @@ import '../../l10n/app_localizations.dart';
 import 'admin_table_management_screen.dart';
 import '../../design_system/constants/colors.dart';
 import '../../design_system/constants/decorations.dart';
+import '../../utils/user_facing_error.dart';
 
 /// Screen for admin to view all tables in an event with shared waitlist
 /// Used when event has multiple tables
@@ -234,7 +235,7 @@ class _AdminEventTablesScreenState extends State<AdminEventTablesScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context).commonErrorGeneric('$e')), backgroundColor: PokerFriendColors.red),
+          SnackBar(content: Text(AppLocalizations.of(context).commonErrorGeneric('${UserFacingError.message(e)}')), backgroundColor: PokerFriendColors.red),
         );
       }
     }
@@ -296,7 +297,7 @@ class _AdminEventTablesScreenState extends State<AdminEventTablesScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context).commonErrorGeneric('$e')), backgroundColor: PokerFriendColors.red),
+          SnackBar(content: Text(AppLocalizations.of(context).commonErrorGeneric('${UserFacingError.message(e)}')), backgroundColor: PokerFriendColors.red),
         );
       }
     }
@@ -726,7 +727,7 @@ class _AdminEventTablesScreenState extends State<AdminEventTablesScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context).commonErrorGeneric('$e')), backgroundColor: PokerFriendColors.red),
+          SnackBar(content: Text(AppLocalizations.of(context).commonErrorGeneric('${UserFacingError.message(e)}')), backgroundColor: PokerFriendColors.red),
         );
       }
     }
@@ -781,7 +782,7 @@ class _AdminEventTablesScreenState extends State<AdminEventTablesScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context).commonErrorGeneric('$e')), backgroundColor: PokerFriendColors.red),
+          SnackBar(content: Text(AppLocalizations.of(context).commonErrorGeneric('${UserFacingError.message(e)}')), backgroundColor: PokerFriendColors.red),
         );
       }
     }

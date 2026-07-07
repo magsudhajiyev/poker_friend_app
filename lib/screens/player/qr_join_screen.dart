@@ -14,6 +14,7 @@ import '../../services/seat_service.dart';
 import 'player_session_screen.dart';
 import '../../design_system/constants/typography.dart';
 import '../../design_system/constants/decorations.dart';
+import '../../utils/user_facing_error.dart';
 
 /// Screen for confirming and joining a poker table seat
 class QRJoinScreen extends StatefulWidget {
@@ -80,7 +81,7 @@ class _QRJoinScreenState extends State<QRJoinScreen> {
       });
     } catch (e) {
       setState(() {
-        _error = e.toString();
+        _error = UserFacingError.message(e);
         _isLoading = false;
       });
     }
@@ -144,7 +145,7 @@ class _QRJoinScreenState extends State<QRJoinScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              AppLocalizations.of(context).qrJoinFailed(e.toString()),
+              AppLocalizations.of(context).qrJoinFailed(UserFacingError.message(e)),
               style: AppTypography.ibm(color: Colors.white),
             ),
             backgroundColor: AppColors.errorRed,

@@ -5,6 +5,7 @@ import '../services/support_request_service.dart';
 import '../l10n/app_localizations.dart';
 import '../design_system/constants/typography.dart';
 import '../design_system/constants/decorations.dart';
+import '../utils/user_facing_error.dart';
 
 class HelpSupportScreen extends StatefulWidget {
   const HelpSupportScreen({super.key});
@@ -82,7 +83,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
       setState(() => _isSubmitting = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(l10n.supportFailedSubmit(e.toString()),
+          content: Text(l10n.supportFailedSubmit(UserFacingError.message(e)),
               style: AppTypography.ibm(color: Colors.white)),
           backgroundColor: AppColors.errorRed,
         ),

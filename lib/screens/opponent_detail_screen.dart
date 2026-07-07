@@ -15,6 +15,7 @@ import '../l10n/app_localizations.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/typography.dart';
 import '../design_system/constants/decorations.dart';
+import '../utils/user_facing_error.dart';
 
 class OpponentDetailScreen extends StatefulWidget {
   final Opponent opponent;
@@ -1393,7 +1394,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
       } catch (e) {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text(l10n.commonErrorGeneric(e.toString())),
+            content: Text(l10n.commonErrorGeneric(UserFacingError.message(e))),
             backgroundColor: Colors.red,
           ));
         }
@@ -1701,7 +1702,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
         } catch (e) {
           if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: Text(l10n.opponentDetailErrorDeleting(e.toString())),
+              content: Text(l10n.opponentDetailErrorDeleting(UserFacingError.message(e))),
               backgroundColor: Colors.red,
             ));
           }

@@ -9,6 +9,7 @@ import '../services/opponent_service.dart';
 import '../models/opponent.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/decorations.dart';
+import '../utils/user_facing_error.dart';
 
 class SeatManagementDialog extends StatefulWidget {
   final int playerCount;
@@ -290,7 +291,7 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
                               Navigator.pop(context);
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text(AppLocalizations.of(context).seatManagementFailedToSaveOpponent(e.toString())),
+                                  content: Text(AppLocalizations.of(context).seatManagementFailedToSaveOpponent(UserFacingError.message(e))),
                                   backgroundColor: Colors.red,
                                 ),
                               );

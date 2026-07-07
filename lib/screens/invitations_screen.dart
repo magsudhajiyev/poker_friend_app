@@ -5,6 +5,7 @@ import '../models/club_invitation.dart';
 import '../models/club_member.dart';
 import '../services/invitation_service.dart';
 import '../design_system/constants/decorations.dart';
+import '../utils/user_facing_error.dart';
 
 /// Screen to display and manage pending club invitations
 class InvitationsScreen extends StatefulWidget {
@@ -36,7 +37,7 @@ class _InvitationsScreenState extends State<InvitationsScreen> {
       setState(() => _isLoading = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context).invitationsFailedLoad(e.toString()))),
+          SnackBar(content: Text(AppLocalizations.of(context).invitationsFailedLoad(UserFacingError.message(e)))),
         );
       }
     }
@@ -63,7 +64,7 @@ class _InvitationsScreenState extends State<InvitationsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(AppLocalizations.of(context).invitationsFailedAccept(e.toString())),
+            content: Text(AppLocalizations.of(context).invitationsFailedAccept(UserFacingError.message(e))),
             backgroundColor: PokerFriendColors.red,
           ),
         );
@@ -91,7 +92,7 @@ class _InvitationsScreenState extends State<InvitationsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(AppLocalizations.of(context).invitationsFailedDecline(e.toString())),
+            content: Text(AppLocalizations.of(context).invitationsFailedDecline(UserFacingError.message(e))),
             backgroundColor: PokerFriendColors.red,
           ),
         );

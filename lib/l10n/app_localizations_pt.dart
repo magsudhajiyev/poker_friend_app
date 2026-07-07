@@ -797,6 +797,21 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  String get errorNoConnection => 'Sem conexão com a internet. Verifique sua rede e tente novamente.';
+
+  @override
+  String get errorTimeout => 'A solicitação expirou. Tente novamente.';
+
+  @override
+  String get errorServer => 'Algo deu errado do nosso lado. Tente novamente em alguns minutos.';
+
+  @override
+  String get errorNotAuthorized => 'Você não tem permissão para isso. Faça login novamente.';
+
+  @override
+  String get errorGeneric => 'Algo deu errado. Tente novamente.';
+
+  @override
   String get handNextHand => 'Proxima Mao';
 
   @override

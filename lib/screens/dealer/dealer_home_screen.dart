@@ -10,6 +10,7 @@ import '../../services/dealer_service.dart';
 import '../../services/auth_service.dart';
 import 'dealer_table_screen.dart';
 import '../../design_system/constants/decorations.dart';
+import '../../utils/user_facing_error.dart';
 
 /// Home screen for dealers to select a club and table
 class DealerHomeScreen extends StatefulWidget {
@@ -71,7 +72,7 @@ class _DealerHomeScreenState extends State<DealerHomeScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(AppLocalizations.of(context).dealerHomeErrorLoading(e.toString())),
+            content: Text(AppLocalizations.of(context).dealerHomeErrorLoading(UserFacingError.message(e))),
             backgroundColor: Colors.red.shade700,
           ),
         );
@@ -122,7 +123,7 @@ class _DealerHomeScreenState extends State<DealerHomeScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(AppLocalizations.of(context).dealerHomeStartFailed(e.toString())),
+            content: Text(AppLocalizations.of(context).dealerHomeStartFailed(UserFacingError.message(e))),
             backgroundColor: Colors.red.shade700,
           ),
         );
@@ -369,7 +370,7 @@ class _DealerHomeScreenState extends State<DealerHomeScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(AppLocalizations.of(context).dealerHomeAddTableFailed(e.toString())),
+              content: Text(AppLocalizations.of(context).dealerHomeAddTableFailed(UserFacingError.message(e))),
               backgroundColor: Colors.red.shade700,
             ),
           );
@@ -437,7 +438,7 @@ class _DealerHomeScreenState extends State<DealerHomeScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(AppLocalizations.of(context).dealerHomeClubCreateFailed(e.toString())),
+              content: Text(AppLocalizations.of(context).dealerHomeClubCreateFailed(UserFacingError.message(e))),
               backgroundColor: Colors.red.shade700,
             ),
           );

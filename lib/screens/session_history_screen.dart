@@ -20,6 +20,7 @@ import '../services/currency_service.dart';
 import '../services/logger_service.dart';
 import '../design_system/constants/decorations.dart';
 import '../utils/lazy_pagination.dart';
+import '../utils/user_facing_error.dart';
 
 class SessionHistoryScreen extends StatefulWidget {
   final String? targetSessionId;
@@ -125,7 +126,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
       }
     } catch (e) {
       setState(() {
-        error = AppLocalizations.of(context).sessionHistoryFailedLoad(e.toString());
+        error = AppLocalizations.of(context).sessionHistoryFailedLoad(UserFacingError.message(e));
         isLoading = false;
       });
     }
@@ -937,7 +938,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(l10n.sessionHistorySyncFailed(e.toString())),
+            content: Text(l10n.sessionHistorySyncFailed(UserFacingError.message(e))),
             backgroundColor: Colors.red,
           ),
         );
@@ -1028,14 +1029,14 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
       }
     } catch (e) {
       setState(() {
-        error = AppLocalizations.of(context).sessionHistoryClearFailed(e.toString());
+        error = AppLocalizations.of(context).sessionHistoryClearFailed(UserFacingError.message(e));
         isLoading = false;
       });
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(AppLocalizations.of(context).sessionHistoryClearFailed(e.toString())),
+            content: Text(AppLocalizations.of(context).sessionHistoryClearFailed(UserFacingError.message(e))),
             backgroundColor: Colors.red,
           ),
         );

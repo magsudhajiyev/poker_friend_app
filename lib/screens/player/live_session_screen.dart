@@ -12,6 +12,7 @@ import '../../services/auth_service.dart';
 import '../../utils/number_formatter.dart';
 import '../../design_system/constants/colors.dart';
 import '../../design_system/constants/decorations.dart';
+import '../../utils/user_facing_error.dart';
 
 /// Screen for players to view the live poker session
 class LiveSessionScreen extends StatefulWidget {
@@ -138,7 +139,7 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> {
       });
     } catch (e) {
       setState(() {
-        _error = e.toString();
+        _error = UserFacingError.message(e);
         _isLoading = false;
       });
     }
@@ -343,7 +344,7 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(l10n.liveSessionLeaveFailed(e.toString())),
+              content: Text(l10n.liveSessionLeaveFailed(UserFacingError.message(e))),
               backgroundColor: Colors.red.shade700,
             ),
           );

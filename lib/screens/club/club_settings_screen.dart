@@ -19,6 +19,7 @@ import '../../widgets/invite_member_dialog.dart';
 import '../../widgets/global_bottom_nav_bar.dart';
 import '../../design_system/constants/typography.dart';
 import '../../design_system/constants/decorations.dart';
+import '../../utils/user_facing_error.dart';
 
 /// Club settings screen for admins to manage club info, tables, and members
 /// Matches Figma node 436:5292
@@ -85,7 +86,7 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
       setState(() => _isLoading = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context).clubSettingsErrorLoading('$e'))),
+          SnackBar(content: Text(AppLocalizations.of(context).clubSettingsErrorLoading('${UserFacingError.message(e)}'))),
         );
       }
     }
@@ -124,7 +125,7 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(AppLocalizations.of(context).clubSettingsErrorSaving('$e')),
+            content: Text(AppLocalizations.of(context).clubSettingsErrorSaving('${UserFacingError.message(e)}')),
             backgroundColor: const Color(0xFFDA5B5E),
           ),
         );
@@ -832,7 +833,7 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(AppLocalizations.of(context).commonErrorGeneric('$e')),
+              content: Text(AppLocalizations.of(context).commonErrorGeneric('${UserFacingError.message(e)}')),
               backgroundColor: const Color(0xFFDA5B5E),
             ),
           );
@@ -909,7 +910,7 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(AppLocalizations.of(context).commonErrorGeneric('$e')),
+              content: Text(AppLocalizations.of(context).commonErrorGeneric('${UserFacingError.message(e)}')),
               backgroundColor: const Color(0xFFDA5B5E),
             ),
           );
@@ -968,7 +969,7 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(AppLocalizations.of(context).commonErrorGeneric('$e')),
+              content: Text(AppLocalizations.of(context).commonErrorGeneric('${UserFacingError.message(e)}')),
               backgroundColor: const Color(0xFFDA5B5E),
             ),
           );
@@ -1065,7 +1066,7 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
               } catch (e) {
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(AppLocalizations.of(context).commonErrorGeneric('$e'))),
+                    SnackBar(content: Text(AppLocalizations.of(context).commonErrorGeneric('${UserFacingError.message(e)}'))),
                   );
                 }
               }
@@ -1301,7 +1302,7 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(AppLocalizations.of(context).clubSettingsErrorPdf('$e')),
+            content: Text(AppLocalizations.of(context).clubSettingsErrorPdf('${UserFacingError.message(e)}')),
             backgroundColor: const Color(0xFFDA5B5E),
           ),
         );
@@ -1404,7 +1405,7 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(AppLocalizations.of(context).clubSettingsErrorPdf('$e')),
+            content: Text(AppLocalizations.of(context).clubSettingsErrorPdf('${UserFacingError.message(e)}')),
             backgroundColor: const Color(0xFFDA5B5E),
           ),
         );

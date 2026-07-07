@@ -12,6 +12,7 @@ import '../widgets/global_bottom_nav_bar.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/typography.dart';
 import '../design_system/constants/decorations.dart';
+import '../utils/user_facing_error.dart';
 
 class SessionHandsScreen extends StatefulWidget {
   final Map<String, dynamic> session;
@@ -119,7 +120,7 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
       });
     } catch (e) {
       setState(() {
-        error = 'Failed to load hands: $e';
+        error = 'Failed to load hands: ${UserFacingError.message(e)}';
         isLoading = false;
       });
     }
