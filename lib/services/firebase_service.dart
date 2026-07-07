@@ -875,6 +875,7 @@ class FirebaseService {
     List<Map<String, dynamic>>? stackHistory,
     double? totalBuyIn,
     double? averageGrowth,
+    int? skippedHands,
   }) async {
     try {
       final userId = AuthService.userId;
@@ -886,6 +887,10 @@ class FirebaseService {
 
       if (handsLogged != null) {
         updateData['handsLogged'] = handsLogged;
+      }
+
+      if (skippedHands != null) {
+        updateData['skippedHands'] = skippedHands;
       }
 
       if (biggestPot != null) {

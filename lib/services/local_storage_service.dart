@@ -22,7 +22,7 @@ class LocalStorageService {
     
     return await openDatabase(
       dbPath,
-      version: 16,
+      version: 17,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE sessions(
@@ -44,7 +44,8 @@ class LocalStorageService {
             buyInAmount REAL,
             totalBuyIn REAL,
             handsLogged INTEGER DEFAULT 0,
-            biggestPot REAL DEFAULT 0
+            biggestPot REAL DEFAULT 0,
+            skippedHands INTEGER DEFAULT 0
           )
         ''');
         
@@ -165,6 +166,12 @@ class LocalStorageService {
           // B11: split-pot flag (winners of separate side pots, not a chop)
           await db.execute(
               'ALTER TABLE hands ADD COLUMN isSplitPot INTEGER DEFAULT 0');
+        }
+        if (oldVersion < 17) {
+          // Hands folded preflop + skipped (no hand record) — needed for
+          // honest VPIP/PFR denominators in session exports.
+          await db.execute(
+              'ALTER TABLE sessions ADD COLUMN skippedHands INTEGER DEFAULT 0');
         }
       },
       onOpen: (db) async {
@@ -822,6 +829,7 @@ class LocalStorageService {
     double? biggestPot,
     List<Map<String, dynamic>>? stackHistory,
     double? totalBuyIn,
+    int? skippedHands,
   }) async {
     try {
       final db = await database;
@@ -832,6 +840,10 @@ class LocalStorageService {
 
       if (handsLogged != null) {
         updateData['handsLogged'] = handsLogged;
+      }
+
+      if (skippedHands != null) {
+        updateData['skippedHands'] = skippedHands;
       }
 
       if (biggestPot != null) {

@@ -157,10 +157,17 @@ class SessionExportService {
 
     final winRate =
         totalHands > 0 ? (wonHands / totalHands * 100).toStringAsFixed(1) : '0';
+
+    // VPIP/PFR denominator must include hands the hero folded preflop and
+    // SKIPPED via Next Hand — those never become hand records, so counting
+    // only saved hands inflates VPIP toward 100%. The session tracks a
+    // skippedHands counter for exactly this.
+    final skippedHands = (session['skippedHands'] as num?)?.toInt() ?? 0;
+    final handsDealt = totalHands + skippedHands;
     final vpipPct =
-        totalHands > 0 ? (vpipCount / totalHands * 100).toStringAsFixed(1) : '0';
+        handsDealt > 0 ? (vpipCount / handsDealt * 100).toStringAsFixed(1) : '0';
     final pfrPct =
-        totalHands > 0 ? (pfrCount / totalHands * 100).toStringAsFixed(1) : '0';
+        handsDealt > 0 ? (pfrCount / handsDealt * 100).toStringAsFixed(1) : '0';
 
     // Net result
     final startingStack =
@@ -185,7 +192,12 @@ class SessionExportService {
     buf.writeln('Stakes: $sb/$bb');
     buf.writeln('Date: $dateStr');
     buf.writeln('Duration: $duration');
-    buf.writeln('Hands Played: $totalHands');
+    if (skippedHands > 0) {
+      buf.writeln(
+          'Hands Dealt: $handsDealt ($totalHands logged, $skippedHands folded & skipped)');
+    } else {
+      buf.writeln('Hands Played: $totalHands');
+    }
     buf.writeln('Hands Won: $wonHands ($winRate%)');
     buf.writeln('Net Result: $netStr $unit');
     buf.writeln('');

@@ -4526,6 +4526,26 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         });
       }
 
+      // Persist the SESSION-level counter too: the export summary computes
+      // VPIP/PFR from this session's hand records, and skipped hands have
+      // none — without this counter the export reads ~100% VPIP.
+      sessionManager.skippedHands++;
+      final sessionId = sessionManager.sessionId;
+      if (sessionId != null) {
+        FirebaseService.updateSession(
+          sessionId: sessionId,
+          skippedHands: sessionManager.skippedHands,
+        ).catchError((e) {
+          debugPrint('⚠️ Error saving skippedHands (Firebase): $e');
+        });
+        LocalStorageService.updateSession(
+          sessionId: sessionId,
+          skippedHands: sessionManager.skippedHands,
+        ).catchError((e) {
+          debugPrint('⚠️ Error saving skippedHands (local): $e');
+        });
+      }
+
       // Fire-and-forget opponent stats from scouting
       if (scoutResult != null) {
         SkipHandScoutingService.applySkipDeltas(

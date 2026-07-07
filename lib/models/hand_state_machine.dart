@@ -421,6 +421,11 @@ class PokerSessionManager {
   // (user-entered table-average stack) — see StackAnalytics.latestTableAverage.
   List<Map<String, dynamic>> stackHistory = [];
 
+  // Hands the hero folded preflop and skipped via Next Hand. These have no
+  // hand record, so exports/analytics need this counter to compute honest
+  // VPIP/PFR denominators (hands dealt, not just hands logged).
+  int skippedHands = 0;
+
   // Biggest pot tracking
   double biggestPot = 0.0;
   double biggestPotBB = 0.0; // BB level when biggest pot occurred
