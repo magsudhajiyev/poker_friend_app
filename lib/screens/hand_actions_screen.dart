@@ -1500,19 +1500,40 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
       int? winnerId,
       GameType gameType,
       ) {
+    // A street that was DEALT but has no recorded actions is an all-in
+    // run-out — players were already all-in on an earlier street. Those
+    // streets collapse into one side-by-side board strip (no street name,
+    // no player/stack/action table) instead of empty street sections.
+    final flopIsRunout =
+        flop.isNotEmpty && actionsByStreet['flop']!.isEmpty;
+    final turnIsRunout = turn != null &&
+        turn.isNotEmpty &&
+        actionsByStreet['turn']!.isEmpty;
+    final riverIsRunout = river != null &&
+        river.isNotEmpty &&
+        actionsByStreet['river']!.isEmpty;
+
     return Column(
       children: [
-        if (flop.isNotEmpty)
+        if (flop.isNotEmpty && !flopIsRunout)
           _buildStreetSection('FLOP', flop, actionsByStreet['flop']!,
               buttonPosition, playerCount, heroPosition, playerNamesMap, winnerId, gameType.value, widget.hand['flopPot']),
 
-        if (turn != null && turn.isNotEmpty)
+        if (turn != null && turn.isNotEmpty && !turnIsRunout)
           _buildStreetSection('TURN', [turn], actionsByStreet['turn']!,
               buttonPosition, playerCount, heroPosition, playerNamesMap, winnerId, gameType.value, widget.hand['turnPot']),
 
-        if (river != null && river.isNotEmpty)
+        if (river != null && river.isNotEmpty && !riverIsRunout)
           _buildStreetSection('RIVER', [river], actionsByStreet['river']!,
               buttonPosition, playerCount, heroPosition, playerNamesMap, winnerId, gameType.value, widget.hand['riverPot']),
+
+        if (flopIsRunout || turnIsRunout || riverIsRunout)
+          _buildCombinedBoardSection(
+            flopIsRunout ? flop : const [],
+            turnIsRunout ? turn : null,
+            riverIsRunout ? river : null,
+            gameType,
+          ),
       ],
     );
   }
