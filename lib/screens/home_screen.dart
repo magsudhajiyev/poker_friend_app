@@ -112,15 +112,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   OverlayEntry? _playStyleTooltipEntry;
   final GlobalKey _playStyleInfoKey = GlobalKey(debugLabel: 'playStyleInfo');
 
-  // Bankroll card flip animation
-  late AnimationController _flipController;
-  late Animation<double> _flipAnimation;
-  bool _isBankrollFlipped = false;
-  final _resultController = TextEditingController();
+  // Bankroll card inline edit (press-and-hold)
   final _editGoalController = TextEditingController();
   final _editBankrollController = TextEditingController();
-  String _manualGameType = 'cash';
-  bool _showEditFields = false;
   bool _isBankrollEditing = false;
 
   // Context menu state
@@ -132,14 +126,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   void initState() {
     super.initState();
     LoggerService.logScreenView('home');
-
-    _flipController = AnimationController(
-      duration: const Duration(milliseconds: 500),
-      vsync: this,
-    );
-    _flipAnimation = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(parent: _flipController, curve: Curves.easeInOutBack),
-    );
 
     _progressAnimationController = AnimationController(
       duration: const Duration(milliseconds: 1500),
@@ -1165,8 +1151,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     _clubNotificationSubscription?.cancel();
     _playStyleTooltipEntry?.remove();
     _progressAnimationController.dispose();
-    _flipController.dispose();
-    _resultController.dispose();
     _editGoalController.dispose();
     _editBankrollController.dispose();
     super.dispose();
@@ -2186,53 +2170,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     _playStyleTooltipEntry = null;
   }
 
-  void _flipBankrollCard() {
-    if (_isBankrollFlipped) {
-      _flipController.reverse();
-    } else {
-      _editGoalController.text = bankrollGoal > 0 ? bankrollGoal.toStringAsFixed(0) : '';
-      _editBankrollController.text = currentBankroll > 0 ? currentBankroll.toStringAsFixed(0) : '';
-      _resultController.clear();
-      _showEditFields = false;
-      _flipController.forward();
-    }
-    setState(() => _isBankrollFlipped = !_isBankrollFlipped);
-  }
-
-  Future<void> _submitBankrollResult() async {
-    final l10n = AppLocalizations.of(context);
-    final result = double.tryParse(_resultController.text);
-    if (result == null || result == 0.0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.profilePleaseEnterValidAmount),
-          backgroundColor: Colors.orange,
-        ),
-      );
-      return;
-    }
-
-    await BankrollService.addToBankroll(result);
-    await SessionResultService.addSessionResult(
-      amount: result,
-      gameType: _manualGameType,
-    );
-    AppDataCache.markHomeDirty();
-
-    _resultController.clear();
-    _flipBankrollCard();
-    _loadData();
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.profileSessionResultAdded),
-          backgroundColor: AppColors.accentPrimary,
-        ),
-      );
-    }
-  }
-
   Widget _buildBankrollCard() => _buildBankrollFront();
 
   void _startBankrollEdit() {
@@ -2285,6 +2222,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
     return GestureDetector(
       onLongPress: _isBankrollHidden ? null : _startBankrollEdit,
+      // Opaque so press-and-hold works anywhere on the card, not only on
+      // the text glyphs (deferToChild made the gesture feel broken).
+      behavior: HitTestBehavior.opaque,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
         child: Column(
@@ -2496,247 +2436,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildBankrollBack() {
-    final l10n = AppLocalizations.of(context);
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(AppDecorations.radiusXl),
-        color: AppColors.bgSurface,
-        border: Border.all(color: AppColors.borderStrong, width: 1),
-        boxShadow: const [
-          BoxShadow(color: Color(0x40000000), blurRadius: 4, offset: Offset(0, 4)),
-        ],
-      ),
-      padding: EdgeInsets.fromLTRB(16, 14, 16, _showEditFields ? 4 : 14),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-            children: [
-                    // Header: title + close
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          l10n.bankrollSheetTitle,
-                          style: AppTypography.ibm(
-                            fontSize: 15, fontWeight: FontWeight.w600,
-                            color: Colors.white, letterSpacing: -0.3,
-                          ),
-                        ),
-                        GestureDetector(
-                          onTap: _flipBankrollCard,
-                          child: Container(
-                            width: 28, height: 28,
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.1),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(Icons.close, size: 16, color: Colors.white),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-
-                    // Game type toggle
-                    StatefulBuilder(
-                      builder: (context, setToggleState) {
-                        return Container(
-                          height: 32,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.08),
-                            borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
-                          ),
-                          child: Row(
-                            children: [
-                              _buildBackToggle(l10n.profileCash, 'cash', _manualGameType, (v) {
-                                setToggleState(() => _manualGameType = v);
-                              }),
-                              _buildBackToggle(l10n.profileTournament, 'tournament', _manualGameType, (v) {
-                                setToggleState(() => _manualGameType = v);
-                              }),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 10),
-
-                    // Amount input
-                    Container(
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.06),
-                        borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
-                      ),
-                      child: TextField(
-                        controller: _resultController,
-                        keyboardType: const TextInputType.numberWithOptions(signed: true, decimal: true),
-                        style: AppTypography.mono(
-                          fontSize: 20, fontWeight: FontWeight.w600, color: Colors.white,
-                        ),
-                        textAlign: TextAlign.center,
-                        decoration: InputDecoration(
-                          hintText: l10n.profileSessionResultHint,
-                          hintStyle: AppTypography.ibm(
-                            fontSize: 13, color: Colors.white.withValues(alpha: 0.3),
-                          ),
-                          border: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-
-                    // Submit button
-                    AppButton(
-                      label: l10n.profileAddResult,
-                      variant: AppButtonVariant.primaryLarge,
-                      onTap: _submitBankrollResult,
-                      fullWidth: true,
-                    ),
-                    const SizedBox(height: 8),
-
-                    // Edit goal/bankroll expandable
-                    GestureDetector(
-                      onTap: () => setState(() => _showEditFields = !_showEditFields),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            l10n.bankrollSheetEditSection,
-                            style: AppTypography.ibm(
-                              fontSize: 12, fontWeight: FontWeight.w500,
-                              color: Colors.white.withValues(alpha: 0.4),
-                            ),
-                          ),
-                          const SizedBox(width: 4),
-                          Icon(
-                            _showEditFields ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-                            size: 14, color: Colors.white.withValues(alpha: 0.4),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    if (_showEditFields) ...[
-                      const SizedBox(height: 6),
-                      Container(height: 1, color: Colors.white.withValues(alpha: 0.08)),
-                      _buildMiniEditRow(l10n.bankrollSheetGoalLabel, _editGoalController, () async {
-                        final val = double.tryParse(_editGoalController.text) ?? 0.0;
-                        if (val > 0) {
-                          await BankrollService.setBankrollGoal(val);
-                          _loadData();
-                          if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(l10n.bankrollSheetGoalUpdated), backgroundColor: AppColors.accentPrimary),
-                            );
-                          }
-                        }
-                      }),
-                      Container(height: 1, color: Colors.white.withValues(alpha: 0.08)),
-                      _buildMiniEditRow(l10n.bankrollSheetCurrentLabel, _editBankrollController, () async {
-                        final val = double.tryParse(_editBankrollController.text) ?? 0.0;
-                        if (val >= 0) {
-                          await BankrollService.setCurrentBankroll(val);
-                          _loadData();
-                          if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(l10n.bankrollSheetBankrollUpdated), backgroundColor: AppColors.accentPrimary),
-                            );
-                          }
-                        }
-                      }),
-                    ],
-                  ],
-                ),
-          );
-      }
-
-  Widget _buildBackToggle(String label, String value, String selected, ValueChanged<String> onChanged) {
-    final isSelected = selected == value;
-    return Expanded(
-      child: GestureDetector(
-        onTap: () => onChanged(value),
-        child: Container(
-          height: 32,
-          decoration: BoxDecoration(
-            color: isSelected ? AppColors.accentPrimary.withValues(alpha: 0.15) : Colors.transparent,
-            borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
-            border: isSelected ? Border.all(color: AppColors.accentPrimary.withValues(alpha: 0.4), width: 1) : null,
-          ),
-          child: Center(
-            child: Text(
-              label,
-              style: AppTypography.ibm(
-                fontSize: 12, fontWeight: FontWeight.w500,
-                color: isSelected ? AppColors.accentPrimary : AppColors.contentInactive,
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMiniEditRow(String label, TextEditingController controller, VoidCallback onSubmit) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        children: [
-          Text(
-            label,
-            style: AppTypography.ibm(
-              fontSize: 13, fontWeight: FontWeight.w400,
-              color: AppColors.textSecondary,
-            ),
-          ),
-          const Spacer(),
-          Container(
-            width: 120,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
-              border: Border.all(color: AppColors.borderStrong, width: 0.5),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: TextField(
-              controller: controller,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              textAlign: TextAlign.right,
-              style: AppTypography.mono(
-                fontSize: 14, fontWeight: FontWeight.w500, color: Colors.white,
-              ),
-              decoration: InputDecoration(
-                prefixText: CurrencyService.prefixText,
-                suffixText: CurrencyService.suffixText,
-                prefixStyle: AppTypography.mono(
-                  fontSize: 14, color: AppColors.contentInactive,
-                ),
-                border: InputBorder.none,
-                enabledBorder: InputBorder.none,
-                focusedBorder: InputBorder.none,
-                filled: false,
-                isDense: true,
-                contentPadding: const EdgeInsets.symmetric(vertical: 8),
-              ),
-              onSubmitted: (_) => onSubmit(),
-            ),
-          ),
-          GestureDetector(
-            onTap: onSubmit,
-            child: Container(
-              width: 24, height: 24,
-              margin: const EdgeInsets.only(left: 4),
-              decoration: const BoxDecoration(
-                color: AppColors.accentPrimary,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(Icons.check, size: 14, color: AppColors.bgPrimary),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildEarningsCard() {
     final l10n = AppLocalizations.of(context);

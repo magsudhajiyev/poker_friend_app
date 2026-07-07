@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'dart:math' as math;
 import '../utils/poker_positions.dart';
 import '../utils/number_formatter.dart';
@@ -597,20 +598,21 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
                   child: Row(
                     children: [
-                      // Back button - glassy circle
+                      // Back button — unified top chevron (same as TopNavBar,
+                      // no circular background)
                       GestureDetector(
                         onTap: () => Navigator.pop(context),
-                        child: Container(
+                        behavior: HitTestBehavior.opaque,
+                        child: SizedBox(
                           width: 44,
                           height: 44,
-                          decoration: const BoxDecoration(
-                            color: Colors.white,
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.arrow_back,
-                            color: Colors.black,
-                            size: 22,
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: SvgPicture.asset(
+                              'assets/icons/CaretLeft.svg',
+                              width: 20,
+                              height: 20,
+                            ),
                           ),
                         ),
                       ),

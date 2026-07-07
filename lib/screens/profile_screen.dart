@@ -3,7 +3,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/components/headers/top_nav_bar.dart';
@@ -486,11 +485,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     trailing: _buildToggle(_emailUpdates, (v) => setState(() => _emailUpdates = v)),
                   ),
                   _buildRow(
-                    icon: _svgIcon('assets/icons/X.svg'),
-                    title: l10n.profileFollowUs,
-                    onTap: () => launchUrl(Uri.parse('https://x.com/finaltable'), mode: LaunchMode.externalApplication),
-                  ),
-                  _buildRow(
                     icon: const Icon(Icons.logout_rounded, color: AppColors.contentInactive, size: 24),
                     title: l10n.profileSignOut,
                     onTap: _showSignOutConfirmation,
@@ -716,11 +710,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
       ),
     );
-  }
-
-  Widget _svgIcon(String path) {
-    return SvgPicture.asset(path, width: 24, height: 24,
-        colorFilter: const ColorFilter.mode(AppColors.contentInactive, BlendMode.srcIn));
   }
 
   // ── Change password sheet ──────────────────────────────────────────────────
