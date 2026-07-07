@@ -196,7 +196,7 @@ class AuthService {
       if (!doc.exists) {
         await _createUserDocument(
           user.uid,
-          user.displayName ?? user.email?.split('@').first ?? 'Player',
+          fallbackDisplayNameFor(user.displayName, user.email),
           user.email ?? '',
         );
       } else {
@@ -459,6 +459,7 @@ class AuthService {
       if (userCredential.user != null) {
         await _syncAppleProfileData(userCredential.user!, appleCredential);
         await ensureUserDocument();
+        await _repairAppleDisplayName(userCredential.user!);
         clearExplicitLogoutFlag();
         unawaited(LoggerService.setUserId(userCredential.user!.uid));
         unawaited(LoggerService.logEvent('login', parameters: {'method': 'apple'}));
@@ -523,6 +524,45 @@ class AuthService {
       }
     } catch (e) {
       // Non-fatal: profile sync failure should not block sign-in
+    }
+  }
+
+  /// Apple only delivers the user's name on the FIRST authorization ever.
+  /// On later sign-ins (reinstall, account re-creation) the name is null and
+  /// old fallbacks stored the private-relay token as the display name.
+  /// If the account's name is missing or such a placeholder, recover it from
+  /// the user document: chosen username first, then a previously stored real
+  /// display name.
+  static Future<void> _repairAppleDisplayName(User user) async {
+    try {
+      if (!isPlaceholderNameFor(user.displayName, user.email)) return;
+
+      final doc = await _firestore.collection('users').doc(user.uid).get();
+      final data = doc.data();
+      if (data == null) return;
+
+      final username = (data['username'] as String?)?.trim() ?? '';
+      final storedName = (data['displayName'] as String?)?.trim() ?? '';
+
+      String? candidate;
+      if (username.isNotEmpty) {
+        candidate = username;
+      } else if (!isPlaceholderNameFor(storedName, user.email)) {
+        candidate = storedName;
+      }
+      if (candidate == null) return;
+
+      await user.updateDisplayName(candidate);
+      await user.reload();
+      await _firestore.collection('users').doc(user.uid).set({
+        'displayName': candidate,
+        'displayNameLower': candidate.toLowerCase(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+      DisplayIdentityService.clearCache();
+    } catch (e) {
+      // Non-fatal: a cosmetic repair must never block sign-in.
+      debugPrint('Apple display-name repair skipped: $e');
     }
   }
 
@@ -594,10 +634,44 @@ class AuthService {
     }
   }
   
-  // Get user display name
-  static String get userDisplayName {
-    return currentUser?.displayName ?? currentUser?.email?.split('@').first ?? 'Player';
+  /// True when [email] is an Apple private-relay address. Its local part is
+  /// a random token (e.g. `x7kq2mfd9a@privaterelay.appleid.com`) and must
+  /// never be shown as a name.
+  static bool isPrivateRelayEmail(String? email) =>
+      email != null &&
+      email.toLowerCase().endsWith('@privaterelay.appleid.com');
+
+  /// Pure check: is [name] unusable as a display name for an account with
+  /// [email]? Unusable = empty, or equal to the random local part of a
+  /// private-relay email (how the "weird id" usernames were born).
+  static bool isPlaceholderNameFor(String? name, String? email) {
+    final trimmed = name?.trim() ?? '';
+    if (trimmed.isEmpty) return true;
+    if (isPrivateRelayEmail(email)) {
+      final localPart = email!.split('@').first.toLowerCase();
+      if (trimmed.toLowerCase() == localPart) return true;
+    }
+    return false;
   }
+
+  /// Convenience: placeholder check against the signed-in user's email.
+  static bool isPlaceholderDisplayName(String? name) =>
+      isPlaceholderNameFor(name, currentUser?.email);
+
+  /// Display-name fallback that never leaks a private-relay token:
+  /// real display name → email local part (non-relay only) → 'Player'.
+  static String fallbackDisplayNameFor(String? name, String? email) {
+    final trimmed = name?.trim() ?? '';
+    if (!isPlaceholderNameFor(trimmed, email)) return trimmed;
+    if (email != null && email.isNotEmpty && !isPrivateRelayEmail(email)) {
+      return email.split('@').first;
+    }
+    return 'Player';
+  }
+
+  // Get user display name
+  static String get userDisplayName =>
+      fallbackDisplayNameFor(currentUser?.displayName, currentUser?.email);
 
   // Get user photo URL (from Google profile or manually set)
   static String? get userPhotoURL => currentUser?.photoURL;

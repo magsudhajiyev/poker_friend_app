@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'auth_service.dart';
+import 'display_identity_service.dart';
 
 class UsernameService {
   static final _firestore = FirebaseFirestore.instance;
@@ -97,6 +99,26 @@ class UsernameService {
         _cachedHasSetUsername = true;
         _cachedForUserId = userId;
         markClaimAsClaimed(normalized);
+
+        // If the account has no usable display name — typical for Apple
+        // sign-in, where the name is only delivered on the very first
+        // authorization and the private-relay email offers no fallback —
+        // adopt the chosen username as the display name.
+        try {
+          final user = FirebaseAuth.instance.currentUser;
+          if (user != null &&
+              AuthService.isPlaceholderNameFor(user.displayName, user.email)) {
+            await user.updateDisplayName(displayName);
+            await user.reload();
+            await _firestore.collection('users').doc(userId).update({
+              'displayName': displayName,
+              'displayNameLower': normalized,
+            });
+            DisplayIdentityService.clearCache();
+          }
+        } catch (_) {
+          // Non-fatal: username claim already succeeded.
+        }
       }
       return success;
     } catch (e) {
