@@ -1066,11 +1066,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const HelpSupportScreen())),
                       ),
                       _buildRow(
-                        icon: _svgIcon('assets/icons/X.svg'),
-                        title: l10n.profileFollowUs,
-                        onTap: () => launchUrl(Uri.parse('https://x.com/finaltable'), mode: LaunchMode.externalApplication),
-                      ),
-                      _buildRow(
                         icon: const Icon(Icons.logout_rounded, color: _danger, size: 24),
                         title: l10n.profileSignOut,
                         titleColor: _danger,
