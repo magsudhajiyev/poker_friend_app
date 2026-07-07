@@ -33,7 +33,6 @@ import '../models/poker_game_state.dart';
 import '../models/hand_state_machine.dart';
 import '../models/game_types.dart';
 import '../models/stack_bucket.dart';
-import '../utils/stack_analytics.dart';
 import '../widgets/stack_range_circle.dart';
 import '../widgets/hand_micro_animations.dart';
 import '../services/firebase_service.dart';
@@ -1486,69 +1485,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     });
   }
 
-  /// Header right side: stack-vs-table-average pill (F2) + menu dots.
-  ///
-  /// Always visible so the feature is discoverable: shows "—× avg" until a
-  /// table average is entered (tap opens session details → Update Stack).
-  Widget? _buildHeaderRightAction(AppLocalizations l10n) {
-    final tableAvg = StackAnalytics.latestTableAverage(sessionManager.stackHistory);
-    double? heroStack;
-    final ourSeat = sessionManager.ourSeatNumber;
-    if (ourSeat != null && ourSeat >= 1 && ourSeat <= gameState.players.length) {
-      heroStack = gameState.players[ourSeat - 1].currentStack;
-    }
-    final ratio = StackAnalytics.stackToAvgRatio(heroStack, tableAvg);
-
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Flexible(
-          child: GestureDetector(
-            onTap: _showSessionDetails,
-            behavior: HitTestBehavior.opaque,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
-              ),
-              child: Text(
-                l10n.handAvgPill(
-                    ratio != null ? StackAnalytics.formatRatio(ratio) : '—×'),
-                overflow: TextOverflow.ellipsis,
-                style: AppTypography.mono(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: ratio == null
-                      ? Colors.white.withValues(alpha: 0.55)
-                      : ratio >= 1.0
-                          ? AppColors.tealPrimary
-                          : Colors.white.withValues(alpha: 0.8),
-                ),
-              ),
-            ),
-          ),
-        ),
-        GestureDetector(
-          key: _menuButtonKey,
-          onTap: () => setState(() => _showMenuOverlay = !_showMenuOverlay),
-          behavior: HitTestBehavior.opaque,
-          child: SizedBox(
-            width: 44,
-            height: 44,
-            child: Center(
-              child: SvgPicture.asset(
-                'assets/icons/DotsThreeOutline.svg',
-                width: 24,
-                height: 24,
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -1585,7 +1521,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                     onBack: () => _handleNavigationAttempt(isBackButton: true),
                     onMenuTap: () => setState(() => _showMenuOverlay = !_showMenuOverlay),
                     menuKey: _menuButtonKey,
-                    rightAction: _buildHeaderRightAction(l10n),
                   );
                 }),
 
@@ -3044,6 +2979,20 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       },
     ));
 
+    items.add(_buildMenuSeparator());
+
+    // Skip-hand scouting toggle — same preference as the Settings row.
+    // Toggling keeps the menu open so the state change is visible.
+    items.add(_buildMenuToggleItem(
+      label: l10n.settingsSkipHandScouting,
+      value: SkipHandScoutingService.isEnabled,
+      onTap: () async {
+        await SkipHandScoutingService.setEnabled(
+            !SkipHandScoutingService.isEnabled);
+        if (mounted) setState(() {});
+      },
+    ));
+
     if (widget.gameType == GameType.tournament) {
       items.add(_buildMenuSeparator());
       items.add(_buildMenuItem(
@@ -3131,6 +3080,65 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
               ),
             ),
             _buildIcon(icon, 16, color),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Menu row with a small inline toggle instead of a trailing icon.
+  Widget _buildMenuToggleItem({
+    required String label,
+    required bool value,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Flexible(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppTypography.ibm(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w400,
+                  color: Colors.white,
+                  height: 22 / 15,
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              width: 34,
+              height: 20,
+              decoration: BoxDecoration(
+                color: value
+                    ? AppColors.tealPrimary
+                    : Colors.white.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
+              ),
+              child: AnimatedAlign(
+                duration: const Duration(milliseconds: 180),
+                alignment:
+                    value ? Alignment.centerRight : Alignment.centerLeft,
+                child: Container(
+                  width: 16,
+                  height: 16,
+                  margin: const EdgeInsets.all(2),
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ),
+            ),
           ],
         ),
       ),
