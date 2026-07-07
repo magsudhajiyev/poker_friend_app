@@ -79,6 +79,11 @@ class PokerStarsExportService {
 
   /// Parse playerNames from hand data. Returns Map<int, String>.
   /// Hero's actual name is replaced with "Hero" based on heroSeatNumber.
+  ///
+  /// Names are sanitized HERE and blank names become "Player {seat}": a
+  /// seat stored with an empty name otherwise produces lines like
+  /// ": raises 3000" and "Seat 3:  (49200 in chips)", which hand-history
+  /// parsers (GTO Wizard etc.) reject.
   static Map<int, String> _getPlayerNames(Map<String, dynamic> hand) {
     final raw = hand['playerNames'] as Map<String, dynamic>? ?? {};
     final heroSeat = hand['heroSeatNumber'] as int?;
@@ -89,7 +94,8 @@ class PokerStarsExportService {
         if (seat == heroSeat) {
           result[seat] = 'Hero';
         } else {
-          result[seat] = value.toString();
+          final name = _sanitizeName(value.toString());
+          result[seat] = name.isEmpty ? 'Player $seat' : name;
         }
       }
     });
@@ -338,7 +344,7 @@ class PokerStarsExportService {
     final seats = names.keys.toList()..sort();
     final buf = StringBuffer();
     for (final seat in seats) {
-      final name = _sanitizeName(names[seat] ?? 'Player$seat');
+      final name = _sanitizeName(names[seat] ?? 'Player $seat');
       final stack = stacks[seat] ?? 0;
       buf.writeln('Seat $seat: $name (${_fmtAmt(stack)} in chips)');
     }
@@ -366,8 +372,8 @@ class PokerStarsExportService {
     final hasBBante = session['hasBBante'] == true;
     final playerCount = activeSeats.length;
 
-    final sbName = _sanitizeName(names[blinds.sb] ?? 'Player${blinds.sb}');
-    final bbName = _sanitizeName(names[blinds.bb] ?? 'Player${blinds.bb}');
+    final sbName = _sanitizeName(names[blinds.sb] ?? 'Player ${blinds.sb}');
+    final bbName = _sanitizeName(names[blinds.bb] ?? 'Player ${blinds.bb}');
 
     final buf = StringBuffer();
 
@@ -378,7 +384,7 @@ class PokerStarsExportService {
       final antePerPlayer = bb / playerCount;
       final seats = List<int>.from(activeSeats)..sort();
       for (final seat in seats) {
-        final name = _sanitizeName(names[seat] ?? 'Player$seat');
+        final name = _sanitizeName(names[seat] ?? 'Player $seat');
         buf.writeln('$name: posts the ante ${_fmtAmt(antePerPlayer)}');
       }
     }
@@ -485,7 +491,7 @@ class PokerStarsExportService {
         final seat = a['player'] as int? ?? 0;
         final actionType = (a['action'] as String?)?.toLowerCase() ?? '';
         final amount = (a['amount'] as num?)?.toDouble();
-        final name = _sanitizeName(names[seat] ?? 'Player$seat');
+        final name = _sanitizeName(names[seat] ?? 'Player $seat');
 
         // Skip dealer mode blind/ante actions — we generate those separately
         if (_isDealerBlindAction(actionType)) continue;
@@ -591,7 +597,7 @@ class PokerStarsExportService {
     final uncalled = _computeUncalledBet(hand);
     if (uncalled != null && uncalled.amount > 0) {
       final name =
-          _sanitizeName(names[uncalled.seat] ?? 'Player${uncalled.seat}');
+          _sanitizeName(names[uncalled.seat] ?? 'Player ${uncalled.seat}');
       buf.writeln(
           'Uncalled bet (${_fmtAmt(uncalled.amount)}) returned to $name');
     }
@@ -605,7 +611,7 @@ class PokerStarsExportService {
           (hand['sharePerWinner'] as num?)?.toDouble();
 
       for (final seat in winners) {
-        final name = _sanitizeName(names[seat] ?? 'Player$seat');
+        final name = _sanitizeName(names[seat] ?? 'Player $seat');
         double amt;
         if (shares.containsKey(seat.toString())) {
           amt = (shares[seat.toString()] as num).toDouble();
@@ -619,7 +625,7 @@ class PokerStarsExportService {
     } else {
       final winnerId = hand['winnerId'] as int?;
       if (winnerId != null) {
-        final name = _sanitizeName(names[winnerId] ?? 'Player$winnerId');
+        final name = _sanitizeName(names[winnerId] ?? 'Player $winnerId');
         // Pot after removing uncalled bet
         final collectedPot =
             uncalled != null ? pot - uncalled.amount : pot;
@@ -748,7 +754,7 @@ class PokerStarsExportService {
         final c1 = cards['card1'] as String?;
         final c2 = cards['card2'] as String?;
         if (c1 != null && c2 != null && c1.isNotEmpty && c2.isNotEmpty) {
-          final name = _sanitizeName(names[seat] ?? 'Player$seat');
+          final name = _sanitizeName(names[seat] ?? 'Player $seat');
           buf.writeln(
               '$name: shows [${_convertCard(c1)} ${_convertCard(c2)}]');
         }
@@ -802,7 +808,7 @@ class PokerStarsExportService {
     // Per-seat summary
     final seats = names.keys.toList()..sort();
     for (final seat in seats) {
-      final name = _sanitizeName(names[seat] ?? 'Player$seat');
+      final name = _sanitizeName(names[seat] ?? 'Player $seat');
 
       // Position label
       String posLabel = '';
