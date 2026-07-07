@@ -145,6 +145,11 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
   List<SnapPoint> _raiseSnapPoints = [];
   int _activeSnapIndex = 0;
   double _raiseSnapProgress = 0.0;
+  // Unclamped progress — goes negative when the finger drops back below the
+  // entry threshold. Distinguishes "cancel intent" from "released on the
+  // FIRST snap point" (which sits at clamped progress 0, e.g. Min = 2x when
+  // facing a bet).
+  double _raiseSnapRawProgress = 0.0;
   double _raiseSnapAmount = 0.0;
   PlayerAction? _raiseSnapAction;
   // Action flash state
@@ -1676,32 +1681,40 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                                   ),
                                 ),
                               ),
-                              // Next Hand button
+                              // Next Hand button — fades out while the raise
+                              // drag bar is active (it overlaps the snap labels)
                               if (!widget.isIndividualSession) ...[
                                 const SizedBox(width: 8),
-                                GestureDetector(
-                                  key: _nextHandButtonKey,
-                                  onTap: _skipCurrentAction,
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-                                    decoration: BoxDecoration(
-                                      color: AppColors.bgPrimary,
-                                      borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
-                                    ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Text(
-                                          l10n.handNextHand,
-                                          style: AppTypography.ibm(
-                                            fontSize: 13,
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.w600,
-                                          ),
+                                IgnorePointer(
+                                  ignoring: _isRaiseSnapping,
+                                  child: AnimatedOpacity(
+                                    opacity: _isRaiseSnapping ? 0.05 : 1.0,
+                                    duration: const Duration(milliseconds: 150),
+                                    child: GestureDetector(
+                                      key: _nextHandButtonKey,
+                                      onTap: _skipCurrentAction,
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.bgPrimary,
+                                          borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
                                         ),
-                                        const SizedBox(width: 8),
-                                        _buildIcon('assets/icons/CaretRight.svg', 16, Colors.white),
-                                      ],
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Text(
+                                              l10n.handNextHand,
+                                              style: AppTypography.ibm(
+                                                fontSize: 13,
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 8),
+                                            _buildIcon('assets/icons/CaretRight.svg', 16, Colors.white),
+                                          ],
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -1950,9 +1963,17 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                               ),
                             ),
                           ),
-                          // Undo pill — always visible, dimmed when nothing to undo
-                          Opacity(
-                            opacity: _canUndoLastAction() ? 1.0 : 0.35,
+                          // Undo pill — dimmed when nothing to undo; fades out
+                          // while the raise drag bar is active (overlaps it)
+                          IgnorePointer(
+                            ignoring: _isRaiseSnapping,
+                            child: AnimatedOpacity(
+                              opacity: _isRaiseSnapping
+                                  ? 0.05
+                                  : _canUndoLastAction()
+                                      ? 1.0
+                                      : 0.35,
+                              duration: const Duration(milliseconds: 150),
                             child: GestureDetector(
                               onTap: _canUndoLastAction() ? _undoLastAction : null,
                               child: Container(
@@ -1983,6 +2004,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                                   ],
                                 ),
                               ),
+                            ),
                             ),
                           ),
                         ],
@@ -3594,6 +3616,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       _raiseSnapAction = action;
       _activeSnapIndex = 0;
       _raiseSnapProgress = 0.0;
+      _raiseSnapRawProgress = 0.0;
       _raiseSnapAmount = points.isNotEmpty ? points.first.amount : minBet;
     });
 
@@ -3621,6 +3644,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
 
     setState(() {
       _raiseSnapProgress = clampedProgress;
+      _raiseSnapRawProgress = progress;
       _activeSnapIndex = newSnapIndex;
       _raiseSnapAmount = newAmount;
     });
@@ -3634,6 +3658,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       _raiseSnapAction = null;
       _activeSnapIndex = 0;
       _raiseSnapProgress = 0.0;
+      _raiseSnapRawProgress = 0.0;
       _raiseSnapAmount = 0.0;
     });
   }
@@ -3659,14 +3684,17 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     if (_isRaiseSnapping) {
       final action = _raiseSnapAction;
       final amount = _raiseSnapAmount;
-      final progress = _raiseSnapProgress;
+      final rawProgress = _raiseSnapRawProgress;
       _cancelRaiseSnap();
       _swipePanStart = null;
 
       if (action == null) return;
 
-      // If user dragged back down (progress near 0), open numpad for custom entry
-      if (progress < 0.05) {
+      // Numpad only when the finger clearly dropped BACK BELOW the entry
+      // threshold (raw progress negative) — releasing ON the first snap
+      // point must bet it. (Min = 2x when facing a bet, so the old
+      // `progress < 0.05` check made 2x unselectable.)
+      if (rawProgress < -0.1) {
         _showBetAmountDialog(action).then((customAmount) {
           if (customAmount != null) {
             _performPokerActionWithAmount(action, customAmount);
