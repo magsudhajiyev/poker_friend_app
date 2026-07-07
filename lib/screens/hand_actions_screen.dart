@@ -1423,10 +1423,21 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
   Widget _buildCombinedBoardSection(List<String> flop, String? turn, String? river, GameType gameType) {
     final allCards = <String>[];
     allCards.addAll(flop);
-    if (turn != null && turn.isNotEmpty) allCards.add(turn);
-    if (river != null && river.isNotEmpty) allCards.add(river);
+    final hasTurn = turn != null && turn.isNotEmpty;
+    final hasRiver = river != null && river.isNotEmpty;
+    if (hasTurn) allCards.add(turn);
+    if (hasRiver) allCards.add(river);
 
     if (allCards.isEmpty) return const SizedBox.shrink();
+
+    // Single-street run-out keeps its street name (all-in on the turn shows
+    // just the river card → "RIVER"); multi-street run-outs are "RUNOUT".
+    // Labels match the hardcoded FLOP/TURN/RIVER street headers.
+    final String label = flop.isEmpty && !hasTurn && hasRiver
+        ? 'RIVER'
+        : flop.isEmpty && hasTurn && !hasRiver
+            ? 'TURN'
+            : 'RUNOUT';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 20),
@@ -1449,7 +1460,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
             child: Row(
               children: [
                 Text(
-                  AppLocalizations.of(context).handActionsBoard,
+                  label,
                   style: AppTypography.ibm(
                     color: AppColors.tealPrimary,
                     fontSize: 14,
