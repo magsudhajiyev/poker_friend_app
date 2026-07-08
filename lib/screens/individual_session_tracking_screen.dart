@@ -244,8 +244,11 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
       opacityShadow: 0.85,
       paddingFocus: 12,
       hideSkip: false,
+      // Top-left so it never overlaps the bottom-right + FAB
+      alignSkip: Alignment.topLeft,
       skipWidget: Padding(
-        padding: const EdgeInsets.only(right: 16, bottom: 8),
+        padding: EdgeInsets.only(
+            left: 16, top: MediaQuery.of(context).padding.top + 8),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
           decoration: BoxDecoration(

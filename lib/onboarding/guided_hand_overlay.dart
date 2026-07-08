@@ -609,6 +609,7 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
         opacityShadow: 0.85,
         paddingFocus: 12,
         hideSkip: false,
+        alignSkip: Alignment.topLeft,
         skipWidget: _buildSkipWidget(),
         onSkip: () {
           _finishOnboarding();
@@ -670,6 +671,7 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
         opacityShadow: 0.85,
         paddingFocus: 12,
         hideSkip: false,
+        alignSkip: Alignment.topLeft,
         skipWidget: _buildSkipWidget(),
         onSkip: () {
           _finishOnboarding();
@@ -728,6 +730,7 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
         opacityShadow: 0.85,
         paddingFocus: 12,
         hideSkip: false,
+        alignSkip: Alignment.topLeft,
         skipWidget: _buildSkipWidget(),
         onSkip: () {
           _finishOnboarding();
@@ -794,6 +797,7 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
         opacityShadow: 0.85,
         paddingFocus: 12,
         hideSkip: false,
+        alignSkip: Alignment.topLeft,
         skipWidget: _buildSkipWidget(),
         onSkip: () {
           _finishOnboarding();
@@ -816,7 +820,8 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
 
   Widget _buildSkipWidget() {
     return Padding(
-      padding: const EdgeInsets.only(right: 16, bottom: 8),
+      padding: EdgeInsets.only(
+          left: 16, top: MediaQuery.of(context).padding.top + 8),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         decoration: BoxDecoration(
