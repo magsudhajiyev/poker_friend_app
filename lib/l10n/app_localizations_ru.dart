@@ -898,7 +898,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get handGestureSwipeOut => 'Свайп наружу';
 
   @override
-  String get handGestureSwipeUp => 'Свайп вверх';
+  String get handGestureSwipeUp =>
+      'Зажмите и потяните';
 
   @override
   String get handGestureBetRaise => 'Bet / Raise';
@@ -7084,7 +7085,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get guidedGestureGuideBody =>
-      'Нажмите на эту иконку в любое время, чтобы увидеть все жесты управления.';
+      'Нажмите этот значок в любой момент, чтобы снова увидеть подсказки по жестам.';
 
   @override
   String get guidedSkipButtonTitle => 'Кнопка пропуска';
@@ -7167,10 +7168,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get guidedGestureCall => 'Нажать';
 
   @override
-  String get guidedGestureBet => 'Свайп вверх ↑';
+  String get guidedGestureBet =>
+      'Зажмите и потяните вверх ↑';
 
   @override
-  String get guidedGestureRaise => 'Свайп вверх ↑';
+  String get guidedGestureRaise =>
+      'Зажмите и потяните вверх ↑';
 
   @override
   String get guidedActionFold => 'Fold';
@@ -7247,7 +7250,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get guidedSessionInfoBody =>
-      'Отлично! Теперь нажмите эту кнопку, чтобы открыть детали сессии и завершить её.';
+      'Отлично! Нажмите здесь, чтобы открыть детали сессии — продолжим там.';
 
   @override
   String get guidedAddOnTitle => 'Аdd-оны и ребаи';
@@ -7276,6 +7279,46 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get guidedStopSessionBody =>
       'Нажмите кнопку «Стоп», чтобы завершить сессию — затем мы покажем, где она сохранена.';
+
+  @override
+  String get guidedTableIntroTitle =>
+      'Ваш стол';
+
+  @override
+  String get guidedTableIntroBody =>
+      'Здесь вы записываете действия. Фолд: смахните влево. Чек / Колл: нажмите. Бет / Рейз: зажмите и потяните вверх. Запишем первую раздачу!';
+
+  @override
+  String get guidedUndoTitle =>
+      'Отмена в любой момент';
+
+  @override
+  String get guidedUndoBody =>
+      'Ошиблись? Нажмите «Отменить последнее действие», чтобы вернуть последний ход.';
+
+  @override
+  String get guidedSessionInfoFinishTitle =>
+      'Завершить';
+
+  @override
+  String get guidedSessionInfoFinishBody =>
+      'Готовы завершить? Нажмите здесь, чтобы открыть детали сессии и закончить.';
+
+  @override
+  String get guidedDetailsBackTitle =>
+      'Назад к столу';
+
+  @override
+  String get guidedDetailsBackBody =>
+      'Нажмите здесь, чтобы вернуться и записать ещё одну раздачу.';
+
+  @override
+  String get guidedLogOneMoreTitle =>
+      'Запишите ещё одну раздачу';
+
+  @override
+  String get guidedLogOneMoreBody =>
+      'Нажмите «Следующая раздача», чтобы раздать её, и разыграйте сами.';
 
   @override
   String get guidedTourCompleteTitle => 'Тур завершён!';

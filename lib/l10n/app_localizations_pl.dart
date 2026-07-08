@@ -897,7 +897,8 @@ class AppLocalizationsPl extends AppLocalizations {
   String get handGestureSwipeOut => 'Przeciągnij na zewnątrz';
 
   @override
-  String get handGestureSwipeUp => 'Przeciągnij w górę';
+  String get handGestureSwipeUp =>
+      'Przytrzymaj i przeciągnij';
 
   @override
   String get handGestureBetRaise => 'Bet / Raise';
@@ -7092,7 +7093,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get guidedGestureGuideBody =>
-      'Dotknij tej ikony w dowolnym momencie, aby zobaczyć wszystkie sterowanie gestami.';
+      'Dotknij tej ikony w dowolnym momencie, aby ponownie zobaczyć przewodnik po gestach.';
 
   @override
   String get guidedSkipButtonTitle => 'Przycisk pominięcia';
@@ -7175,10 +7176,12 @@ class AppLocalizationsPl extends AppLocalizations {
   String get guidedGestureCall => 'Dotknij';
 
   @override
-  String get guidedGestureBet => 'Przesuń w górę ↑';
+  String get guidedGestureBet =>
+      'Przytrzymaj i przeciągnij w górę ↑';
 
   @override
-  String get guidedGestureRaise => 'Przesuń w górę ↑';
+  String get guidedGestureRaise =>
+      'Przytrzymaj i przeciągnij w górę ↑';
 
   @override
   String get guidedActionFold => 'Fold';
@@ -7255,7 +7258,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get guidedSessionInfoBody =>
-      'Świetnie! Teraz dotknij tego przycisku, aby otworzyć szczegóły sesji i zakończyć.';
+      'Świetnie! Dotknij tutaj, aby otworzyć szczegóły sesji — kontynuujemy tam.';
 
   @override
   String get guidedAddOnTitle => 'Add-Ony i Rebuys';
@@ -7284,6 +7287,46 @@ class AppLocalizationsPl extends AppLocalizations {
   @override
   String get guidedStopSessionBody =>
       'Dotknij przycisku stop, aby zakończyć sesję — potem pokażemy Ci, gdzie została zapisana.';
+
+  @override
+  String get guidedTableIntroTitle =>
+      'Twój stół';
+
+  @override
+  String get guidedTableIntroBody =>
+      'Tutaj zapisujesz akcje. Fold: przesuń w lewo. Check / Call: dotknij. Bet / Raise: przytrzymaj i przeciągnij w górę. Zapiszmy pierwszą rękę!';
+
+  @override
+  String get guidedUndoTitle =>
+      'Cofnij w każdej chwili';
+
+  @override
+  String get guidedUndoBody =>
+      'Pomyłka? Dotknij Cofnij ostatnią akcję, aby cofnąć ostatni ruch.';
+
+  @override
+  String get guidedSessionInfoFinishTitle =>
+      'Zakończ';
+
+  @override
+  String get guidedSessionInfoFinishBody =>
+      'Gotowy, aby zakończyć? Dotknij tutaj, aby otworzyć szczegóły sesji i zakończyć.';
+
+  @override
+  String get guidedDetailsBackTitle =>
+      'Powrót do stołu';
+
+  @override
+  String get guidedDetailsBackBody =>
+      'Dotknij tutaj, aby wrócić i zapisać jeszcze jedną rękę.';
+
+  @override
+  String get guidedLogOneMoreTitle =>
+      'Zapisz jeszcze jedną rękę';
+
+  @override
+  String get guidedLogOneMoreBody =>
+      'Dotknij Następna ręka, aby ją rozdać, a potem rozegraj ją samodzielnie.';
 
   @override
   String get guidedTourCompleteTitle => 'Tour zakończony!';

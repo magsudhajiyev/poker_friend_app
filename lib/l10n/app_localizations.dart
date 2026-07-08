@@ -1755,7 +1755,7 @@ abstract class AppLocalizations {
   /// No description provided for @handGestureSwipeUp.
   ///
   /// In en, this message translates to:
-  /// **'Swipe Up'**
+  /// **'Press & drag up'**
   String get handGestureSwipeUp;
 
   /// No description provided for @handGestureBetRaise.
@@ -12384,7 +12384,7 @@ abstract class AppLocalizations {
   /// No description provided for @guidedGestureGuideBody.
   ///
   /// In en, this message translates to:
-  /// **'Tap this icon anytime to see all gesture controls.'**
+  /// **'Tap this icon anytime to see the gesture guide again.'**
   String get guidedGestureGuideBody;
 
   /// No description provided for @guidedSkipButtonTitle.
@@ -12540,13 +12540,13 @@ abstract class AppLocalizations {
   /// No description provided for @guidedGestureBet.
   ///
   /// In en, this message translates to:
-  /// **'Swipe up ↑'**
+  /// **'Press & drag up ↑'**
   String get guidedGestureBet;
 
   /// No description provided for @guidedGestureRaise.
   ///
   /// In en, this message translates to:
-  /// **'Swipe up ↑'**
+  /// **'Press & drag up ↑'**
   String get guidedGestureRaise;
 
   /// No description provided for @guidedActionFold.
@@ -12684,7 +12684,7 @@ abstract class AppLocalizations {
   /// No description provided for @guidedSessionInfoBody.
   ///
   /// In en, this message translates to:
-  /// **'Great! Now tap this button to open your session details and finish up.'**
+  /// **'Great! Tap here to open your session details — we\'ll continue there.'**
   String get guidedSessionInfoBody;
 
   /// No description provided for @guidedAddOnTitle.
@@ -12734,6 +12734,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Tap the stop button to finish your session — then we\'ll show you where it\'s saved.'**
   String get guidedStopSessionBody;
+
+  /// No description provided for @guidedTableIntroTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Table'**
+  String get guidedTableIntroTitle;
+
+  /// No description provided for @guidedTableIntroBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This is where you log the action. Fold: swipe left. Check / Call: tap. Bet / Raise: press & drag up. Let\'s log the first hand!'**
+  String get guidedTableIntroBody;
+
+  /// No description provided for @guidedUndoTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo Anytime'**
+  String get guidedUndoTitle;
+
+  /// No description provided for @guidedUndoBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Made a mistake? Tap Undo Last Action to revert your last move.'**
+  String get guidedUndoBody;
+
+  /// No description provided for @guidedSessionInfoFinishTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish Up'**
+  String get guidedSessionInfoFinishTitle;
+
+  /// No description provided for @guidedSessionInfoFinishBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready to wrap up? Tap here to open your session details and finish.'**
+  String get guidedSessionInfoFinishBody;
+
+  /// No description provided for @guidedDetailsBackTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to the Table'**
+  String get guidedDetailsBackTitle;
+
+  /// No description provided for @guidedDetailsBackBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap here to return and log one more hand.'**
+  String get guidedDetailsBackBody;
+
+  /// No description provided for @guidedLogOneMoreTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Log One More Hand'**
+  String get guidedLogOneMoreTitle;
+
+  /// No description provided for @guidedLogOneMoreBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap Next Hand to deal it, then play it out yourself.'**
+  String get guidedLogOneMoreBody;
 
   /// No description provided for @guidedTourCompleteTitle.
   ///

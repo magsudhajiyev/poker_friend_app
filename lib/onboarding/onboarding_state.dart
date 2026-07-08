@@ -18,6 +18,11 @@ enum GuidedPhase {
   done,
 }
 
+/// Which content the session-details tour shows when the user opens the ⓘ
+/// during the guided hand: [explain] (first visit — stack chart + "go back to
+/// log one more hand") or [finish] (second visit — spotlight the Stop button).
+enum SessionDetailsTourMode { none, explain, finish }
+
 /// Tracks onboarding progress across multiple screens.
 ///
 /// Each screen checks [isOnboardingActive] + [currentPhase] in initState
@@ -57,6 +62,14 @@ class OnboardingState {
 
   /// Whether the session details tour needs to run (after tapping ⓘ in full session mode).
   static bool sessionDetailsTourPending = false;
+
+  /// Which content the session-details tour shows this visit (explain vs finish).
+  static SessionDetailsTourMode sessionDetailsTourMode =
+      SessionDetailsTourMode.none;
+
+  /// Set on the first (explain) ⓘ visit so the poker screen knows, when the
+  /// session-details screen pops, to prompt the user to log one more hand.
+  static bool sessionDetailsExplainReturnPending = false;
 
   /// Whether the user still needs to log the second (free-play) tour hand.
   /// Set when the Next Hand coach mark finishes; consumed when that hand
@@ -108,6 +121,8 @@ class OnboardingState {
     quickStackUpdateTourPending = false;
     individualStopSessionTourPending = false;
     sessionDetailsTourPending = false;
+    sessionDetailsTourMode = SessionDetailsTourMode.none;
+    sessionDetailsExplainReturnPending = false;
     secondTourHandPending = false;
     sessionHistoryTourPending = false;
     handListTourPending = false;
@@ -131,6 +146,8 @@ class OnboardingState {
     quickStackUpdateTourPending = false;
     individualStopSessionTourPending = false;
     sessionDetailsTourPending = false;
+    sessionDetailsTourMode = SessionDetailsTourMode.none;
+    sessionDetailsExplainReturnPending = false;
     secondTourHandPending = false;
     sessionHistoryTourPending = false;
     handListTourPending = false;
@@ -151,6 +168,8 @@ class OnboardingState {
     quickStackUpdateTourPending = false;
     individualStopSessionTourPending = false;
     sessionDetailsTourPending = false;
+    sessionDetailsTourMode = SessionDetailsTourMode.none;
+    sessionDetailsExplainReturnPending = false;
     secondTourHandPending = false;
     sessionHistoryTourPending = false;
     handListTourPending = false;
@@ -176,6 +195,9 @@ class OnboardingState {
     individualTrackingTourPending = false;
     quickStackUpdateTourPending = false;
     individualStopSessionTourPending = false;
+    sessionDetailsTourPending = false;
+    sessionDetailsTourMode = SessionDetailsTourMode.none;
+    sessionDetailsExplainReturnPending = false;
     secondTourHandPending = false;
     sessionHistoryTourPending = false;
     handListTourPending = false;
@@ -195,6 +217,8 @@ class OnboardingState {
     quickStackUpdateTourPending = false;
     individualStopSessionTourPending = false;
     sessionDetailsTourPending = false;
+    sessionDetailsTourMode = SessionDetailsTourMode.none;
+    sessionDetailsExplainReturnPending = false;
     secondTourHandPending = false;
     sessionHistoryTourPending = false;
     handListTourPending = false;

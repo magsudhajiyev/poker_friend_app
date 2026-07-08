@@ -211,32 +211,86 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
 
   void _showSessionDetailsTour() {
     final l10n = AppLocalizations.of(context);
+    final isFinish =
+        OnboardingState.sessionDetailsTourMode == SessionDetailsTourMode.finish;
 
-    // The session-details screen already shows the live stack chart as its
-    // main content, so the only instruction the user needs here is how to
-    // finish the session — spotlight the red stop button.
-    final targets = <TargetFocus>[
-      TargetFocus(
-        identify: 'stop_session_button',
-        keyTarget: _stopSessionBtnKey,
-        shape: ShapeLightFocus.Circle,
-        paddingFocus: 12,
-        contents: [
-          TargetContent(
-            align: ContentAlign.bottom,
-            builder: (context, controller) {
-              return buildTooltip(
-                title: l10n.guidedStopSessionTitle,
-                body: l10n.guidedStopSessionBody,
-                onNext: () => controller.next(),
-                context: context,
-                isLast: true,
-              );
-            },
+    final targets = <TargetFocus>[];
+
+    if (isFinish) {
+      // Second visit (after hand 2): spotlight the red Stop button to finish.
+      targets.add(
+        TargetFocus(
+          identify: 'stop_session_button',
+          keyTarget: _stopSessionBtnKey,
+          shape: ShapeLightFocus.Circle,
+          paddingFocus: 12,
+          contents: [
+            TargetContent(
+              align: ContentAlign.bottom,
+              builder: (context, controller) {
+                return buildTooltip(
+                  title: l10n.guidedStopSessionTitle,
+                  body: l10n.guidedStopSessionBody,
+                  onNext: () => controller.next(),
+                  context: context,
+                  isLast: true,
+                );
+              },
+            ),
+          ],
+        ),
+      );
+    } else {
+      // First visit (explain): show the stack chart, then point at "Go back to
+      // hand" so the user returns to log one more hand.
+      if (_stackChartKey.currentContext != null) {
+        targets.add(
+          TargetFocus(
+            identify: 'stack_chart',
+            keyTarget: _stackChartKey,
+            shape: ShapeLightFocus.RRect,
+            radius: 18,
+            paddingFocus: 6,
+            contents: [
+              TargetContent(
+                align: ContentAlign.bottom,
+                builder: (context, controller) {
+                  return buildTooltip(
+                    title: l10n.guidedStackChartTitle,
+                    body: l10n.guidedStackChartBody,
+                    onNext: () => controller.next(),
+                    context: context,
+                  );
+                },
+              ),
+            ],
           ),
-        ],
-      ),
-    ];
+        );
+      }
+      targets.add(
+        TargetFocus(
+          identify: 'go_back_to_hand',
+          keyTarget: _logHandBtnKey,
+          shape: ShapeLightFocus.RRect,
+          radius: 20,
+          paddingFocus: 6,
+          contents: [
+            TargetContent(
+              align: ContentAlign.top,
+              builder: (context, controller) {
+                return buildTooltip(
+                  title: l10n.guidedDetailsBackTitle,
+                  body: l10n.guidedDetailsBackBody,
+                  onNext: () => controller.next(),
+                  context: context,
+                  isLast: true,
+                );
+              },
+            ),
+          ],
+        ),
+      );
+    }
 
     final coach = TutorialCoachMark(
       targets: targets,

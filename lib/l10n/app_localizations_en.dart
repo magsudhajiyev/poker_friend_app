@@ -895,7 +895,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get handGestureSwipeOut => 'Swipe Out';
 
   @override
-  String get handGestureSwipeUp => 'Swipe Up';
+  String get handGestureSwipeUp =>
+      'Press & drag up';
 
   @override
   String get handGestureBetRaise => 'Bet / Raise';
@@ -7062,7 +7063,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get guidedGestureGuideBody =>
-      'Tap this icon anytime to see all gesture controls.';
+      'Tap this icon anytime to see the gesture guide again.';
 
   @override
   String get guidedSkipButtonTitle => 'Skip Button';
@@ -7145,10 +7146,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get guidedGestureCall => 'Tap';
 
   @override
-  String get guidedGestureBet => 'Swipe up ↑';
+  String get guidedGestureBet =>
+      'Press & drag up ↑';
 
   @override
-  String get guidedGestureRaise => 'Swipe up ↑';
+  String get guidedGestureRaise =>
+      'Press & drag up ↑';
 
   @override
   String get guidedActionFold => 'Fold';
@@ -7225,7 +7228,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get guidedSessionInfoBody =>
-      'Great! Now tap this button to open your session details and finish up.';
+      'Great! Tap here to open your session details — we\'ll continue there.';
 
   @override
   String get guidedAddOnTitle => 'Add-Ons & Rebuys';
@@ -7254,6 +7257,46 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get guidedStopSessionBody =>
       'Tap the stop button to finish your session — then we\'ll show you where it\'s saved.';
+
+  @override
+  String get guidedTableIntroTitle =>
+      'Your Table';
+
+  @override
+  String get guidedTableIntroBody =>
+      'This is where you log the action. Fold: swipe left. Check / Call: tap. Bet / Raise: press & drag up. Let\'s log the first hand!';
+
+  @override
+  String get guidedUndoTitle =>
+      'Undo Anytime';
+
+  @override
+  String get guidedUndoBody =>
+      'Made a mistake? Tap Undo Last Action to revert your last move.';
+
+  @override
+  String get guidedSessionInfoFinishTitle =>
+      'Finish Up';
+
+  @override
+  String get guidedSessionInfoFinishBody =>
+      'Ready to wrap up? Tap here to open your session details and finish.';
+
+  @override
+  String get guidedDetailsBackTitle =>
+      'Back to the Table';
+
+  @override
+  String get guidedDetailsBackBody =>
+      'Tap here to return and log one more hand.';
+
+  @override
+  String get guidedLogOneMoreTitle =>
+      'Log One More Hand';
+
+  @override
+  String get guidedLogOneMoreBody =>
+      'Tap Next Hand to deal it, then play it out yourself.';
 
   @override
   String get guidedTourCompleteTitle => 'Tour Complete!';

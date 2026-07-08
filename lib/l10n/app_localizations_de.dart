@@ -905,7 +905,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get handGestureSwipeOut => 'Nach außen wischen';
 
   @override
-  String get handGestureSwipeUp => 'Nach oben wischen';
+  String get handGestureSwipeUp =>
+      'Halten & hochziehen';
 
   @override
   String get handGestureBetRaise => 'Bet / Raise';
@@ -7125,7 +7126,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get guidedGestureGuideBody =>
-      'Tippe jederzeit auf dieses Symbol, um alle Gestensteuerungen zu sehen.';
+      'Tippe jederzeit auf dieses Symbol, um die Gestenübersicht erneut zu sehen.';
 
   @override
   String get guidedSkipButtonTitle => 'Überspringen-Button';
@@ -7208,10 +7209,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get guidedGestureCall => 'Tippen';
 
   @override
-  String get guidedGestureBet => 'Nach oben wischen ↑';
+  String get guidedGestureBet =>
+      'Gedrückt halten & hochziehen ↑';
 
   @override
-  String get guidedGestureRaise => 'Nach oben wischen ↑';
+  String get guidedGestureRaise =>
+      'Gedrückt halten & hochziehen ↑';
 
   @override
   String get guidedActionFold => 'Fold';
@@ -7288,7 +7291,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get guidedSessionInfoBody =>
-      'Super! Tippe jetzt auf diesen Button, um deine Session-Details zu öffnen und abzuschließen.';
+      'Super! Tippe hier, um deine Session-Details zu öffnen – dort geht es weiter.';
 
   @override
   String get guidedAddOnTitle => 'Add-Ons & Rebuys';
@@ -7317,6 +7320,46 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get guidedStopSessionBody =>
       'Tippe auf den Stopp-Button, um deine Session zu beenden – danach zeigen wir dir, wo sie gespeichert ist.';
+
+  @override
+  String get guidedTableIntroTitle =>
+      'Dein Tisch';
+
+  @override
+  String get guidedTableIntroBody =>
+      'Hier loggst du die Aktionen. Fold: nach links wischen. Check / Call: tippen. Bet / Raise: gedrückt halten & hochziehen. Los geht die erste Hand!';
+
+  @override
+  String get guidedUndoTitle =>
+      'Jederzeit rückgängig';
+
+  @override
+  String get guidedUndoBody =>
+      'Fehler gemacht? Tippe auf „Letzte Aktion rückgängig", um deinen letzten Zug zurückzunehmen.';
+
+  @override
+  String get guidedSessionInfoFinishTitle =>
+      'Abschließen';
+
+  @override
+  String get guidedSessionInfoFinishBody =>
+      'Bereit zum Abschließen? Tippe hier, um deine Session-Details zu öffnen und zu beenden.';
+
+  @override
+  String get guidedDetailsBackTitle =>
+      'Zurück zum Tisch';
+
+  @override
+  String get guidedDetailsBackBody =>
+      'Tippe hier, um zurückzukehren und eine weitere Hand zu loggen.';
+
+  @override
+  String get guidedLogOneMoreTitle =>
+      'Noch eine Hand loggen';
+
+  @override
+  String get guidedLogOneMoreBody =>
+      'Tippe auf Nächste Hand, um sie auszugeben, und spiele sie selbst aus.';
 
   @override
   String get guidedTourCompleteTitle => 'Tour abgeschlossen!';

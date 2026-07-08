@@ -203,6 +203,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
   final GlobalKey _tableButtonKey = GlobalKey(debugLabel: 'tableButton');
   final GlobalKey _blindsPillKey = GlobalKey(debugLabel: 'blindsPill');
   final GlobalKey _nextHandButtonKey = GlobalKey(debugLabel: 'nextHandButton');
+  final GlobalKey _undoButtonKey = GlobalKey(debugLabel: 'undoButton');
   final GlobalKey _sessionInfoButtonKey = GlobalKey(debugLabel: 'sessionInfoButton');
 
   @override
@@ -1676,6 +1677,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                             children: [
                               // Session info button
                               GestureDetector(
+                                key: _sessionInfoButtonKey,
                                 onTap: _showSessionDetails,
                                 child: Container(
                                   width: 32,
@@ -1983,6 +1985,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                                       : 0.35,
                               duration: const Duration(milliseconds: 150),
                             child: GestureDetector(
+                              key: _undoButtonKey,
                               onTap: _canUndoLastAction() ? _undoLastAction : null,
                               child: Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -2036,6 +2039,8 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
           blindsPillKey: _blindsPillKey,
           nextHandButtonKey: _nextHandButtonKey,
           sessionInfoButtonKey: _sessionInfoButtonKey,
+          drawingAreaKey: _drawingAreaKey,
+          undoButtonKey: _undoButtonKey,
           heroSeat: sessionManager.ourSeatNumber,
           currentPlayerSeat: gameState.currentPlayer,
           isValidAction: gameState.isValidAction,
@@ -4990,6 +4995,10 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     final result = await showDialog<BoardCards>(
       context: context,
       barrierDismissible: false,
+      // Keep the guided-tour instruction banner visible behind the dialog
+      barrierColor: OnboardingState.isGuidedHandActive
+          ? Colors.transparent
+          : Colors.black54,
       builder: (context) => AllInBoardCardsDialog(
         excludedCards: excludedCards,
         existingBoardCards: sessionManager.currentHand?.boardCards,
@@ -5368,6 +5377,10 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     showDialog(
       context: context,
       barrierDismissible: false,
+      // Keep the guided-tour instruction banner visible behind the dialog
+      barrierColor: OnboardingState.isGuidedHandActive
+          ? Colors.transparent
+          : Colors.black54,
       builder: (context) => BoardCardsDialog(
         currentRound: round,
         existingCards: sessionManager.currentHand?.boardCards,
@@ -5512,6 +5525,15 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         await prefs.setDouble('small_blind', newSmallBlind);
         await prefs.setDouble('big_blind', newBigBlind);
       }
+    }
+
+    // Guided tour: returning from the first (explain) session-details visit —
+    // prompt the user to log one more hand, then finish from there.
+    if (OnboardingState.sessionDetailsExplainReturnPending && mounted) {
+      OnboardingState.sessionDetailsExplainReturnPending = false;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _guidedOverlayKey.currentState?.promptSecondHand();
+      });
     }
   }
 

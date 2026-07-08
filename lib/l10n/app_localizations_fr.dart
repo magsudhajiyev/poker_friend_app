@@ -910,7 +910,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get handGestureSwipeOut => 'Glisser vers l\'extérieur';
 
   @override
-  String get handGestureSwipeUp => 'Glisser vers le haut';
+  String get handGestureSwipeUp =>
+      'Appuyez & glissez';
 
   @override
   String get handGestureBetRaise => 'Bet / Raise';
@@ -7144,7 +7145,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get guidedGestureGuideBody =>
-      'Appuyez sur cette icône à tout moment pour voir tous les contrôles gestuels.';
+      'Touchez cette icône à tout moment pour revoir le guide des gestes.';
 
   @override
   String get guidedSkipButtonTitle => 'Bouton passer';
@@ -7227,10 +7228,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get guidedGestureCall => 'Appuyer';
 
   @override
-  String get guidedGestureBet => 'Glisser vers le haut ↑';
+  String get guidedGestureBet =>
+      'Appuyez & glissez vers le haut ↑';
 
   @override
-  String get guidedGestureRaise => 'Glisser vers le haut ↑';
+  String get guidedGestureRaise =>
+      'Appuyez & glissez vers le haut ↑';
 
   @override
   String get guidedActionFold => 'Fold';
@@ -7307,7 +7310,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get guidedSessionInfoBody =>
-      'Parfait ! Touchez maintenant ce bouton pour ouvrir les détails de votre session et terminer.';
+      'Parfait ! Touchez ici pour ouvrir les détails de votre session — on continue là-bas.';
 
   @override
   String get guidedAddOnTitle => 'Add-Ons et Rebuys';
@@ -7336,6 +7339,46 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get guidedStopSessionBody =>
       'Touchez le bouton stop pour terminer votre session — nous vous montrerons ensuite où elle est enregistrée.';
+
+  @override
+  String get guidedTableIntroTitle =>
+      'Votre table';
+
+  @override
+  String get guidedTableIntroBody =>
+      'C\'est ici que vous enregistrez les actions. Fold : glissez à gauche. Check / Call : touchez. Bet / Raise : appuyez & glissez vers le haut. Enregistrons la première main !';
+
+  @override
+  String get guidedUndoTitle =>
+      'Annulez à tout moment';
+
+  @override
+  String get guidedUndoBody =>
+      'Une erreur ? Touchez Annuler la dernière action pour revenir en arrière.';
+
+  @override
+  String get guidedSessionInfoFinishTitle =>
+      'Terminer';
+
+  @override
+  String get guidedSessionInfoFinishBody =>
+      'Prêt à conclure ? Touchez ici pour ouvrir les détails de votre session et terminer.';
+
+  @override
+  String get guidedDetailsBackTitle =>
+      'Retour à la table';
+
+  @override
+  String get guidedDetailsBackBody =>
+      'Touchez ici pour revenir et enregistrer une main de plus.';
+
+  @override
+  String get guidedLogOneMoreTitle =>
+      'Enregistrez une main de plus';
+
+  @override
+  String get guidedLogOneMoreBody =>
+      'Touchez Main suivante pour la distribuer, puis jouez-la vous-même.';
 
   @override
   String get guidedTourCompleteTitle => 'Tour terminé !';

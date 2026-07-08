@@ -904,7 +904,8 @@ class AppLocalizationsPt extends AppLocalizations {
   String get handGestureSwipeOut => 'Deslizar para Fora';
 
   @override
-  String get handGestureSwipeUp => 'Deslizar para Cima';
+  String get handGestureSwipeUp =>
+      'Segure e arraste';
 
   @override
   String get handGestureBetRaise => 'Bet / Raise';
@@ -7112,7 +7113,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get guidedGestureGuideBody =>
-      'Toque neste ícone a qualquer momento para ver todos os controles de gesto.';
+      'Toque neste ícone quando quiser para ver o guia de gestos novamente.';
 
   @override
   String get guidedSkipButtonTitle => 'Botão Pular';
@@ -7196,10 +7197,12 @@ class AppLocalizationsPt extends AppLocalizations {
   String get guidedGestureCall => 'Tocar';
 
   @override
-  String get guidedGestureBet => 'Deslizar para cima ↑';
+  String get guidedGestureBet =>
+      'Segure e arraste para cima ↑';
 
   @override
-  String get guidedGestureRaise => 'Deslizar para cima ↑';
+  String get guidedGestureRaise =>
+      'Segure e arraste para cima ↑';
 
   @override
   String get guidedActionFold => 'Fold';
@@ -7276,7 +7279,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get guidedSessionInfoBody =>
-      'Ótimo! Agora toque neste botão para abrir os detalhes da sua sessão e finalizar.';
+      'Ótimo! Toque aqui para abrir os detalhes da sua sessão — continuamos lá.';
 
   @override
   String get guidedAddOnTitle => 'Add-Ons e Rebuys';
@@ -7305,6 +7308,46 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get guidedStopSessionBody =>
       'Toque no botão de parar para finalizar sua sessão — depois mostraremos onde ela fica salva.';
+
+  @override
+  String get guidedTableIntroTitle =>
+      'Sua mesa';
+
+  @override
+  String get guidedTableIntroBody =>
+      'É aqui que você registra a ação. Fold: deslize para a esquerda. Check / Call: toque. Bet / Raise: segure e arraste para cima. Vamos registrar a primeira mão!';
+
+  @override
+  String get guidedUndoTitle =>
+      'Desfaça quando quiser';
+
+  @override
+  String get guidedUndoBody =>
+      'Cometeu um erro? Toque em Desfazer última ação para reverter sua última jogada.';
+
+  @override
+  String get guidedSessionInfoFinishTitle =>
+      'Finalizar';
+
+  @override
+  String get guidedSessionInfoFinishBody =>
+      'Pronto para finalizar? Toque aqui para abrir os detalhes da sua sessão e concluir.';
+
+  @override
+  String get guidedDetailsBackTitle =>
+      'Voltar à mesa';
+
+  @override
+  String get guidedDetailsBackBody =>
+      'Toque aqui para voltar e registrar mais uma mão.';
+
+  @override
+  String get guidedLogOneMoreTitle =>
+      'Registre mais uma mão';
+
+  @override
+  String get guidedLogOneMoreBody =>
+      'Toque em Próxima mão para distribuí-la e jogue você mesmo.';
 
   @override
   String get guidedTourCompleteTitle => 'Tour concluído!';
