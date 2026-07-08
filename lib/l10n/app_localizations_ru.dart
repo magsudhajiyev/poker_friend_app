@@ -6932,11 +6932,80 @@ class AppLocalizationsRu extends AppLocalizations {
       'Перетащите это на место с позицией дилера. Это определяет блайнды и порядок действий.';
 
   @override
-  String get onboardingViewSessionsTitle => 'Просмотр сессий';
+  String get onboardingViewSessionsTitle =>
+      'Здесь живут ваши сессии';
 
   @override
   String get onboardingViewSessionsBody =>
-      'Нажмите «Сессии», чтобы увидеть результаты сессий, историю раздач и статистику.';
+      'Нажмите на значок «Сессии», чтобы увидеть только что сыгранную сессию.';
+
+  @override
+  String get onboardingSessionHistoryCardTitle =>
+      'Только что сыгранная сессия';
+
+  @override
+  String get onboardingSessionHistoryCardBody =>
+      'Это ваша обучающая сессия — нажмите на неё в любой момент, чтобы увидеть каждую раздачу.';
+
+  @override
+  String get onboardingHandListTitle =>
+      'Каждая раздача сохранена';
+
+  @override
+  String get onboardingHandListBody =>
+      'Нажмите здесь, чтобы открыть раздачи, записанные в этой сессии.';
+
+  @override
+  String get onboardingHandCardTitle =>
+      'Ваша записанная раздача';
+
+  @override
+  String get onboardingHandCardBody =>
+      'Нажмите на раздачу, чтобы увидеть полный повтор, улица за улицей.';
+
+  @override
+  String get onboardingAiAnalysisTitle =>
+      'ИИ-анализ раздачи';
+
+  @override
+  String get onboardingAiAnalysisBody =>
+      'Получите мгновенный разбор этой раздачи — первый анализ за наш счёт. Нажмите на кнопку!';
+
+  @override
+  String get sessionTutorialBadge =>
+      'Обучение';
+
+  @override
+  String get introGetStarted =>
+      'Начать';
+
+  @override
+  String get linkAccountTitle =>
+      'Вы играете как гость';
+
+  @override
+  String get linkAccountBody =>
+      'Создайте бесплатный аккаунт, чтобы сохранить данные на всех устройствах.';
+
+  @override
+  String get linkAccountSuccess =>
+      'Аккаунт создан — ваши данные теперь под защитой.';
+
+  @override
+  String get linkAccountConflictTitle =>
+      'Аккаунт уже существует';
+
+  @override
+  String get linkAccountConflictBody =>
+      'Этот аккаунт уже существует. Войти в него? Данные гостя не будут перенесены.';
+
+  @override
+  String get anonSignOutWarning =>
+      'Вы вошли как гость. Выйдя, вы навсегда потеряете доступ к своим сессиям и раздачам.';
+
+  @override
+  String get paywallAccountReady =>
+      'Аккаунт создан! Теперь вы можете завершить покупку.';
 
   @override
   String get onboardingAllSetTitle => 'Всё готово!';

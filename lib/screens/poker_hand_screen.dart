@@ -773,36 +773,41 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         // Check if widget is still mounted before using context
         if (!mounted) return;
 
-        // Show bankroll update prompt
+        // Show bankroll update prompt (skipped for tutorial sessions — tour
+        // money must never reach session_results/bankroll)
+        final isTourSession = OnboardingState.isOnboardingActive;
         final stackHistory = sessionManager.stackHistory;
         if (stackHistory.isNotEmpty) {
-          final lastStack = (stackHistory.last['stackSize'] as num).toDouble();
-          final profit = lastStack - sessionManager.totalBuyIn;
-          final sessionDuration = sessionManager.sessionStartTime != null
-              ? DateTime.now().difference(sessionManager.sessionStartTime!).inMinutes
-              : null;
-          final bankrollResult = await SessionEndBankrollSheet.show(
-            context: context,
-            gameType: sessionManager.gameType,
-            profitLoss: profit,
-            totalBuyIn: sessionManager.totalBuyIn,
-            durationMinutes: sessionDuration,
-          );
+          Map<String, dynamic>? bankrollResult;
+          if (!isTourSession) {
+            final lastStack = (stackHistory.last['stackSize'] as num).toDouble();
+            final profit = lastStack - sessionManager.totalBuyIn;
+            final sessionDuration = sessionManager.sessionStartTime != null
+                ? DateTime.now().difference(sessionManager.sessionStartTime!).inMinutes
+                : null;
+            bankrollResult = await SessionEndBankrollSheet.show(
+              context: context,
+              gameType: sessionManager.gameType,
+              profitLoss: profit,
+              totalBuyIn: sessionManager.totalBuyIn,
+              durationMinutes: sessionDuration,
+            );
 
-          // Save tournament finish data to session document
-          if (bankrollResult != null) {
-            final fPlace = bankrollResult['finishedPlace'] as int?;
-            final fSize = bankrollResult['fieldSize'] as int?;
-            final fPrize = bankrollResult['prizeWon'] as double?;
-            if (fPlace != null || fSize != null || fPrize != null) {
-              try {
-                await FirebaseService.updateIndividualSession(
-                  sessionId: sessionManager.sessionId!,
-                  finishedPlace: fPlace,
-                  fieldSize: fSize,
-                  prizeWon: fPrize,
-                );
-              } catch (_) {}
+            // Save tournament finish data to session document
+            if (bankrollResult != null) {
+              final fPlace = bankrollResult['finishedPlace'] as int?;
+              final fSize = bankrollResult['fieldSize'] as int?;
+              final fPrize = bankrollResult['prizeWon'] as double?;
+              if (fPlace != null || fSize != null || fPrize != null) {
+                try {
+                  await FirebaseService.updateIndividualSession(
+                    sessionId: sessionManager.sessionId!,
+                    finishedPlace: fPlace,
+                    fieldSize: fSize,
+                    prizeWon: fPrize,
+                  );
+                } catch (_) {}
+              }
             }
           }
 
@@ -1309,9 +1314,11 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         if (!mounted) return;
 
         // Show bankroll/session end sheet (finish position, field size, etc.)
+        // Skipped for tutorial sessions — tour money must never reach
+        // session_results/bankroll
         Map<String, dynamic>? bankrollResult;
         final stackHistory = sessionManager.stackHistory;
-        if (stackHistory.isNotEmpty) {
+        if (stackHistory.isNotEmpty && !OnboardingState.isOnboardingActive) {
           final lastStack = (stackHistory.last['stackSize'] as num).toDouble();
           final profit = lastStack - sessionManager.totalBuyIn;
           final sessionDuration = sessionManager.sessionStartTime != null

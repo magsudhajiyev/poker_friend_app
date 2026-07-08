@@ -3,6 +3,7 @@ import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/typography.dart';
 import '../l10n/app_localizations.dart';
+import '../screens/paywall_screen.dart';
 import 'onboarding_prefs.dart';
 import 'onboarding_state.dart';
 import '../design_system/constants/decorations.dart';
@@ -39,8 +40,14 @@ TutorialCoachMark _createCoachMark({
       ),
     ),
     onSkip: () {
+      final wasReplay = OnboardingState.isReplay;
       OnboardingState.cancel();
       OnboardingPrefs.markOnboardingSeen();
+      if (!wasReplay) {
+        // Don't push the paywall from mid-tour contexts — the next Home
+        // visit shows it once via the pending flag
+        OnboardingPrefs.setPostTourPaywallPending();
+      }
       onSkip?.call();
       return true;
     },
@@ -686,6 +693,41 @@ class ButtonTokenTour {
 // (see lib/onboarding/guided_hand_overlay.dart)
 
 // ---------------------------------------------------------------------------
+// Tour completion — shared by the phase-6 end and every phase-5/6 fallback
+// ---------------------------------------------------------------------------
+
+/// Ends the tour: completion dialog, then (once ever) the post-tour paywall,
+/// then a clean reset to Home — the tour can end several screens deep.
+Future<void> finishOnboardingTour(BuildContext context,
+    {bool showPaywall = true}) async {
+  OnboardingState.complete();
+  OnboardingPrefs.markOnboardingSeen();
+
+  await showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (ctx) => _OnboardingCompleteDialog(
+      onDone: () => Navigator.of(ctx).pop(),
+    ),
+  );
+  if (!context.mounted) return;
+
+  if (showPaywall && !(await OnboardingPrefs.wasPostTourPaywallShown())) {
+    await OnboardingPrefs.markPostTourPaywallShown();
+    if (!context.mounted) return;
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (_) => const PaywallScreen(showSkip: true),
+      ),
+    );
+  }
+
+  if (!context.mounted) return;
+  Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
+}
+
+// ---------------------------------------------------------------------------
 // Phase 5 — Session Result Tour (on home screen after session ends)
 // ---------------------------------------------------------------------------
 
@@ -729,7 +771,8 @@ class SessionResultTour {
     }
 
     if (targets.isEmpty) {
-      _finishAndShowCompletion(context);
+      finishOnboardingTour(context);
+      onComplete?.call();
       return;
     }
 
@@ -737,24 +780,252 @@ class SessionResultTour {
       targets: targets,
       context: context,
       onFinish: () {
-        _finishAndShowCompletion(context);
+        // Hand off to phase 6: the user now taps the real Sessions icon,
+        // and SessionHistoryScreen picks the tour up in initState.
+        OnboardingState.advanceTo(6);
+        OnboardingState.sessionHistoryTourPending = true;
+        onComplete?.call();
       },
     );
     coach.show(context: context);
   }
+}
 
-  void _finishAndShowCompletion(BuildContext context) {
-    OnboardingState.complete();
-    OnboardingPrefs.markOnboardingSeen();
-    onComplete?.call();
+// ---------------------------------------------------------------------------
+// Phase 6a — Session History Tour (spotlights the tutorial session card)
+// ---------------------------------------------------------------------------
 
-    showDialog(
+class SessionHistoryTour {
+  final GlobalKey sessionCardKey;
+
+  SessionHistoryTour({required this.sessionCardKey});
+
+  void show(BuildContext context) {
+    if (!OnboardingState.isOnboardingActive ||
+        OnboardingState.currentPhase != 6) return;
+
+    final targets = <TargetFocus>[];
+
+    if (sessionCardKey.currentContext != null) {
+      targets.add(
+        TargetFocus(
+          identify: 'tour_session_card',
+          keyTarget: sessionCardKey,
+          shape: ShapeLightFocus.RRect,
+          radius: 12,
+          paddingFocus: 4,
+          contents: [
+            TargetContent(
+              align: ContentAlign.bottom,
+              builder: (context, controller) {
+                final l10n = AppLocalizations.of(context);
+                return buildTooltip(
+                  title: l10n.onboardingSessionHistoryCardTitle,
+                  body: l10n.onboardingSessionHistoryCardBody,
+                  onNext: () => controller.next(),
+                  context: context,
+                  isLast: true,
+                );
+              },
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (targets.isEmpty) {
+      finishOnboardingTour(context);
+      return;
+    }
+
+    final coach = _createCoachMark(
+      targets: targets,
       context: context,
-      barrierDismissible: false,
-      builder: (ctx) => _OnboardingCompleteDialog(
-        onDone: () => Navigator.of(ctx).pop(),
-      ),
+      onFinish: () {
+        // User now taps the real session card; SessionAnalyticsScreen
+        // continues the tour on its hand list.
+        OnboardingState.handListTourPending = true;
+      },
     );
+    coach.show(context: context);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Phase 6b — Hand List Tour (spotlights "View Logged Hands" in analytics)
+// ---------------------------------------------------------------------------
+
+class HandListTour {
+  final GlobalKey loggedHandsButtonKey;
+
+  HandListTour({required this.loggedHandsButtonKey});
+
+  void show(BuildContext context) {
+    if (!OnboardingState.isOnboardingActive ||
+        OnboardingState.currentPhase != 6) return;
+
+    final targets = <TargetFocus>[];
+
+    if (loggedHandsButtonKey.currentContext != null) {
+      targets.add(
+        TargetFocus(
+          identify: 'logged_hands_button',
+          keyTarget: loggedHandsButtonKey,
+          shape: ShapeLightFocus.RRect,
+          radius: 26,
+          paddingFocus: 4,
+          contents: [
+            TargetContent(
+              align: ContentAlign.top,
+              builder: (context, controller) {
+                final l10n = AppLocalizations.of(context);
+                return buildTooltip(
+                  title: l10n.onboardingHandListTitle,
+                  body: l10n.onboardingHandListBody,
+                  onNext: () => controller.next(),
+                  context: context,
+                  isLast: true,
+                );
+              },
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (targets.isEmpty) {
+      finishOnboardingTour(context);
+      return;
+    }
+
+    final coach = _createCoachMark(
+      targets: targets,
+      context: context,
+      onFinish: () {
+        // User now taps the real button; SessionHandsScreen continues the
+        // tour on the first hand card.
+        OnboardingState.handCardTourPending = true;
+      },
+    );
+    coach.show(context: context);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Phase 6c — Hand Card Tour (inside the logged hands list)
+// ---------------------------------------------------------------------------
+
+class HandCardTour {
+  final GlobalKey handCardKey;
+
+  HandCardTour({required this.handCardKey});
+
+  void show(BuildContext context) {
+    if (!OnboardingState.isOnboardingActive ||
+        OnboardingState.currentPhase != 6) return;
+
+    final targets = <TargetFocus>[];
+
+    if (handCardKey.currentContext != null) {
+      targets.add(
+        TargetFocus(
+          identify: 'tour_hand_card',
+          keyTarget: handCardKey,
+          shape: ShapeLightFocus.RRect,
+          radius: 12,
+          paddingFocus: 4,
+          contents: [
+            TargetContent(
+              align: ContentAlign.bottom,
+              builder: (context, controller) {
+                final l10n = AppLocalizations.of(context);
+                return buildTooltip(
+                  title: l10n.onboardingHandCardTitle,
+                  body: l10n.onboardingHandCardBody,
+                  onNext: () => controller.next(),
+                  context: context,
+                  isLast: true,
+                );
+              },
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (targets.isEmpty) {
+      finishOnboardingTour(context);
+      return;
+    }
+
+    final coach = _createCoachMark(
+      targets: targets,
+      context: context,
+      onFinish: () {
+        // User now taps the real hand card; HandActionsScreen continues
+        // the tour on the AI analysis button.
+        OnboardingState.aiAnalysisTourPending = true;
+      },
+    );
+    coach.show(context: context);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Phase 6d — AI Analysis Tour (inside hand details)
+// ---------------------------------------------------------------------------
+
+class AiAnalysisTour {
+  final GlobalKey aiButtonKey;
+
+  AiAnalysisTour({required this.aiButtonKey});
+
+  /// [onAnalyze] runs the free tour analysis; the caller ends the tour with
+  /// [finishOnboardingTour] once the analysis has been shown.
+  void show(BuildContext context, {required VoidCallback onAnalyze}) {
+    if (!OnboardingState.isOnboardingActive ||
+        OnboardingState.currentPhase != 6) return;
+
+    final targets = <TargetFocus>[];
+
+    if (aiButtonKey.currentContext != null) {
+      targets.add(
+        TargetFocus(
+          identify: 'ai_analysis_button',
+          keyTarget: aiButtonKey,
+          shape: ShapeLightFocus.RRect,
+          radius: 16,
+          paddingFocus: 4,
+          contents: [
+            TargetContent(
+              align: ContentAlign.top,
+              builder: (context, controller) {
+                final l10n = AppLocalizations.of(context);
+                return buildTooltip(
+                  title: l10n.onboardingAiAnalysisTitle,
+                  body: l10n.onboardingAiAnalysisBody,
+                  onNext: () => controller.next(),
+                  context: context,
+                  isLast: true,
+                );
+              },
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (targets.isEmpty) {
+      finishOnboardingTour(context);
+      return;
+    }
+
+    final coach = _createCoachMark(
+      targets: targets,
+      context: context,
+      onFinish: onAnalyze,
+    );
+    coach.show(context: context);
   }
 }
 

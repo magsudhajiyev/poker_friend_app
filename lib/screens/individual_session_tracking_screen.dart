@@ -10,6 +10,7 @@ import '../services/auth_service.dart';
 import '../services/display_identity_service.dart';
 import 'poker_hand_screen.dart';
 import 'quick_stack_update_screen.dart';
+import 'paywall_screen.dart';
 import '../design_system/components/drawer_dots.dart';
 import '../design_system/components/form_drawer.dart';
 import '../widgets/session_end_bankroll_sheet.dart';
@@ -324,8 +325,12 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
         // Tour overlay dismissed — onboarding stays active until user stops session
       },
       onSkip: () {
+        final wasReplay = OnboardingState.isReplay;
         OnboardingState.cancel();
         OnboardingPrefs.markOnboardingSeen();
+        if (!wasReplay) {
+          OnboardingPrefs.setPostTourPaywallPending();
+        }
         return true;
       },
     );
@@ -334,6 +339,11 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
 
   Future<void> _initializeSession() async {
     _sessionStartTime = DateTime.now();
+
+    // Individual sessions started during the first-run tour are badged as
+    // tutorials and excluded from stats/bankroll
+    final isTutorial =
+        OnboardingState.isOnboardingActive && !OnboardingState.isReplay;
 
     try {
       final sessionId = await FirebaseService.createSession(
@@ -346,7 +356,12 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
         startingStack: widget.startingStack,
         hasBBante: widget.hasBBante,
         totalBuyIn: widget.buyInAmount,
+        isTutorial: isTutorial,
       );
+
+      if (isTutorial) {
+        OnboardingState.tourSessionId = sessionId;
+      }
 
       setState(() {
         _sessionId = sessionId;
@@ -354,6 +369,10 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
     } catch (e) {
       debugPrint('Error creating individual session in Firebase: $e');
       final localSessionId = DateTime.now().millisecondsSinceEpoch.toString();
+
+      if (isTutorial) {
+        OnboardingState.tourSessionId = localSessionId;
+      }
 
       await LocalStorageService.saveSession(
         sessionId: localSessionId,
@@ -363,6 +382,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
         startTime: DateTime.now().toIso8601String(),
         gameType: widget.gameType,
         buyInAmount: widget.buyInAmount,
+        isTutorial: isTutorial,
       );
 
       setState(() {
@@ -1199,22 +1219,27 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
     );
 
     if (result == 'save') {
-      // Show bankroll sheet BEFORE ending session
+      // Show bankroll sheet BEFORE ending session (skipped for tutorial
+      // sessions — tour money must never reach session_results/bankroll)
       if (!mounted) return;
+      final isTourSession = OnboardingState.isOnboardingActive;
       final profit = _currentStack - _totalBuyIn;
       final duration = _sessionStartTime != null
           ? DateTime.now().difference(_sessionStartTime!).inMinutes
           : null;
-      final bankrollResult = await SessionEndBankrollSheet.show(
-        context: context,
-        gameType: widget.gameType,
-        profitLoss: profit,
-        totalBuyIn: _totalBuyIn,
-        durationMinutes: duration,
-      );
+      Map<String, dynamic>? bankrollResult;
+      if (!isTourSession) {
+        bankrollResult = await SessionEndBankrollSheet.show(
+          context: context,
+          gameType: widget.gameType,
+          profitLoss: profit,
+          totalBuyIn: _totalBuyIn,
+          durationMinutes: duration,
+        );
 
-      // User hit X — resume session
-      if (bankrollResult == null) return;
+        // User hit X — resume session
+        if (bankrollResult == null) return;
+      }
 
       // User applied — end session
       if (_sessionId != null) {
@@ -1228,9 +1253,9 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
             biggestPot: _biggestPot,
             stackHistory: _stackHistory,
             totalBuyIn: _totalBuyIn,
-            finishedPlace: bankrollResult['finishedPlace'] as int?,
-            fieldSize: bankrollResult['fieldSize'] as int?,
-            prizeWon: bankrollResult['prizeWon'] as double?,
+            finishedPlace: bankrollResult?['finishedPlace'] as int?,
+            fieldSize: bankrollResult?['fieldSize'] as int?,
+            prizeWon: bankrollResult?['prizeWon'] as double?,
           );
         } catch (e) {}
       }
@@ -1242,14 +1267,14 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
           data: SessionSummaryData(
             sessionName: widget.sessionName ?? 'Session',
             gameType: widget.gameType,
-            profitLoss: bankrollResult['profitLoss'] as double? ?? profit,
+            profitLoss: bankrollResult?['profitLoss'] as double? ?? profit,
             totalBuyIn: _totalBuyIn,
             handsPlayed: _handsLogged,
             biggestPot: _biggestPot,
             durationMinutes: duration ?? 0,
-            finishedPlace: bankrollResult['finishedPlace'] as int?,
-            fieldSize: bankrollResult['fieldSize'] as int?,
-            prizeWon: bankrollResult['prizeWon'] as double?,
+            finishedPlace: bankrollResult?['finishedPlace'] as int?,
+            fieldSize: bankrollResult?['fieldSize'] as int?,
+            prizeWon: bankrollResult?['prizeWon'] as double?,
           ),
         );
       }
@@ -1399,21 +1424,27 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
       // Show bankroll update prompt BEFORE ending session
       // X (close) = cancel, resume session
       // Checkmark (save) = apply result, end session
+      // Skipped for tutorial sessions — tour money must never reach
+      // session_results/bankroll
       if (!mounted) return;
+      final isOnboarding = OnboardingState.isOnboardingActive;
       final profit = _currentStack - _totalBuyIn;
       final duration2 = _sessionStartTime != null
           ? DateTime.now().difference(_sessionStartTime!).inMinutes
           : null;
-      final bankrollResult = await SessionEndBankrollSheet.show(
-        context: context,
-        gameType: widget.gameType,
-        profitLoss: profit,
-        totalBuyIn: _totalBuyIn,
-        durationMinutes: duration2,
-      );
+      Map<String, dynamic>? bankrollResult;
+      if (!isOnboarding) {
+        bankrollResult = await SessionEndBankrollSheet.show(
+          context: context,
+          gameType: widget.gameType,
+          profitLoss: profit,
+          totalBuyIn: _totalBuyIn,
+          durationMinutes: duration2,
+        );
 
-      // User hit X — resume session, don't end
-      if (bankrollResult == null) return;
+        // User hit X — resume session, don't end
+        if (bankrollResult == null) return;
+      }
 
       // User applied — end session
       if (_sessionId != null) {
@@ -1427,14 +1458,12 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
             biggestPot: _biggestPot,
             stackHistory: _stackHistory,
             totalBuyIn: _totalBuyIn,
-            finishedPlace: bankrollResult['finishedPlace'] as int?,
-            fieldSize: bankrollResult['fieldSize'] as int?,
-            prizeWon: bankrollResult['prizeWon'] as double?,
+            finishedPlace: bankrollResult?['finishedPlace'] as int?,
+            fieldSize: bankrollResult?['fieldSize'] as int?,
+            prizeWon: bankrollResult?['prizeWon'] as double?,
           );
         } catch (e) {}
       }
-
-      final isOnboarding = OnboardingState.isOnboardingActive;
 
       // Show session summary card
       if (mounted) {
@@ -1443,22 +1472,36 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
           data: SessionSummaryData(
             sessionName: widget.sessionName ?? 'Session',
             gameType: widget.gameType,
-            profitLoss: bankrollResult['profitLoss'] as double? ?? profit,
+            profitLoss: bankrollResult?['profitLoss'] as double? ?? profit,
             totalBuyIn: _totalBuyIn,
             handsPlayed: _handsLogged,
             biggestPot: _biggestPot,
             durationMinutes: duration2 ?? 0,
-            finishedPlace: bankrollResult['finishedPlace'] as int?,
-            fieldSize: bankrollResult['fieldSize'] as int?,
-            prizeWon: bankrollResult['prizeWon'] as double?,
+            finishedPlace: bankrollResult?['finishedPlace'] as int?,
+            fieldSize: bankrollResult?['fieldSize'] as int?,
+            prizeWon: bankrollResult?['prizeWon'] as double?,
           ),
         );
       }
 
-      // Show tour-complete dialog after session summary during onboarding
+      // Show tour-complete dialog after session summary during onboarding,
+      // then the post-tour paywall (once ever)
       if (isOnboarding && mounted) {
         OnboardingState.complete();
+        OnboardingPrefs.markOnboardingSeen();
         await _showOnboardingCompleteDialog();
+        if (mounted && !(await OnboardingPrefs.wasPostTourPaywallShown())) {
+          await OnboardingPrefs.markPostTourPaywallShown();
+          if (mounted) {
+            await Navigator.push(
+              context,
+              MaterialPageRoute(
+                fullscreenDialog: true,
+                builder: (_) => const PaywallScreen(showSkip: true),
+              ),
+            );
+          }
+        }
       }
 
       if (mounted) {

@@ -21,6 +21,8 @@ import '../services/logger_service.dart';
 import '../design_system/constants/decorations.dart';
 import '../utils/lazy_pagination.dart';
 import '../utils/user_facing_error.dart';
+import '../onboarding/onboarding_state.dart';
+import '../onboarding/onboarding_tour.dart';
 
 class SessionHistoryScreen extends StatefulWidget {
   final String? targetSessionId;
@@ -41,6 +43,10 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
   // U8: how many cards are currently rendered per tab (lazy window).
   final Map<String, int> _visibleCounts = {};
   late TabController _tabController;
+
+  // Phase-6 onboarding: spotlight for the tutorial session card
+  final GlobalKey _tourSessionCardKey = GlobalKey();
+  String? _tourHighlightSessionId;
 
   ScrollController _controllerFor(String gameType) =>
       _scrollControllers.putIfAbsent(gameType, () => ScrollController());
@@ -72,6 +78,56 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
     LoggerService.logScreenView('session_history');
     _tabController = TabController(length: 2, vsync: this);
     _loadSessions();
+    _scheduleOnboardingTour();
+  }
+
+  /// Phase 6 — spotlight the tutorial session card after the tour's
+  /// Sessions-nav handoff, then let the user tap it for real.
+  void _scheduleOnboardingTour() async {
+    if (!OnboardingState.isOnboardingActive ||
+        OnboardingState.currentPhase != 6 ||
+        !OnboardingState.sessionHistoryTourPending) return;
+    OnboardingState.sessionHistoryTourPending = false;
+
+    // Wait for the session list to load
+    for (int i = 0; i < 30; i++) {
+      await Future.delayed(const Duration(milliseconds: 100));
+      if (!mounted) return;
+      if (!isLoading) break;
+    }
+    if (!mounted) return;
+
+    // Find the tutorial session (exact id → newest tutorial → newest)
+    Map<String, dynamic> target = sessions.firstWhere(
+      (s) => s['id'] == OnboardingState.tourSessionId,
+      orElse: () => sessions.firstWhere(
+        (s) => s['isTutorial'] == true,
+        orElse: () => sessions.isNotEmpty ? sessions.first : const {},
+      ),
+    );
+    if (target.isEmpty) {
+      finishOnboardingTour(context);
+      return;
+    }
+
+    setState(() => _tourHighlightSessionId = target['id'] as String?);
+    // Switches to the right tab, expands the lazy window and scrolls the
+    // card into view so the GlobalKey attaches
+    _scrollToSession(target['id'] as String);
+
+    // Wait for the card key to attach
+    for (int i = 0; i < 20; i++) {
+      await Future.delayed(const Duration(milliseconds: 100));
+      if (!mounted) return;
+      if (_tourSessionCardKey.currentContext != null) break;
+    }
+    if (!mounted) return;
+    if (_tourSessionCardKey.currentContext == null) {
+      finishOnboardingTour(context);
+      return;
+    }
+
+    SessionHistoryTour(sessionCardKey: _tourSessionCardKey).show(context);
   }
 
   @override
@@ -540,6 +596,9 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
             : CurrencyService.formatCash(profitLoss);
 
     return GestureDetector(
+      key: session['id'] == _tourHighlightSessionId
+          ? _tourSessionCardKey
+          : null,
       onTap: () async {
         await Navigator.push(
           context,
@@ -589,7 +648,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
                 children: [
                   Row(
                     children: [
-                      Expanded(
+                      Flexible(
                         child: Text(
                           sessionName,
                           style: AppTypography.ibm(
@@ -601,6 +660,29 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
+                      if (session['isTutorial'] == true) ...[
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: AppColors.accentSecondary
+                                .withValues(alpha: 0.15),
+                            borderRadius:
+                                BorderRadius.circular(AppDecorations.radiusFull),
+                          ),
+                          child: Text(
+                            l10n.sessionTutorialBadge,
+                            style: AppTypography.ibm(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.accentSecondary,
+                              height: 14 / 11,
+                            ),
+                          ),
+                        ),
+                      ],
+                      const Spacer(),
                       const SizedBox(width: 8),
                       Text(
                         plText,

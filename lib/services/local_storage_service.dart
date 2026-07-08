@@ -22,7 +22,7 @@ class LocalStorageService {
     
     return await openDatabase(
       dbPath,
-      version: 17,
+      version: 18,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE sessions(
@@ -45,7 +45,8 @@ class LocalStorageService {
             totalBuyIn REAL,
             handsLogged INTEGER DEFAULT 0,
             biggestPot REAL DEFAULT 0,
-            skippedHands INTEGER DEFAULT 0
+            skippedHands INTEGER DEFAULT 0,
+            isTutorial INTEGER DEFAULT 0
           )
         ''');
         
@@ -172,6 +173,11 @@ class LocalStorageService {
           // honest VPIP/PFR denominators in session exports.
           await db.execute(
               'ALTER TABLE sessions ADD COLUMN skippedHands INTEGER DEFAULT 0');
+        }
+        if (oldVersion < 18) {
+          // First-run tour sessions — badged in history, excluded from stats
+          await db.execute(
+              'ALTER TABLE sessions ADD COLUMN isTutorial INTEGER DEFAULT 0');
         }
       },
       onOpen: (db) async {
@@ -401,6 +407,7 @@ class LocalStorageService {
     int? ourSeatNumber,
     GameType gameType = GameType.cash,
     double? buyInAmount,
+    bool isTutorial = false,
   }) async {
     try {
       final db = await database;
@@ -419,6 +426,7 @@ class LocalStorageService {
         'userEmail': AuthService.currentUser?.email,
         'userName': AuthService.userDisplayName,
         'gameType': gameType.value,
+        'isTutorial': isTutorial ? 1 : 0,
       };
 
       if (buyInAmount != null) {
@@ -578,7 +586,11 @@ class LocalStorageService {
         }).toList();
       }
 
-      return sessions;
+      // Normalize SQLite ints to booleans so local and Firestore session maps
+      // look identical to the UI
+      return sessions
+          .map((s) => {...s, 'isTutorial': s['isTutorial'] == 1})
+          .toList();
     } catch (e) {
       debugPrint('Error getting user sessions: $e');
       return [];
@@ -968,6 +980,9 @@ class LocalStorageService {
 
       // Add empty rebuys for compatibility (local storage doesn't track rebuys separately yet)
       sessionData['rebuys'] = sessionData['rebuys'] ?? [];
+
+      // Normalize SQLite int to boolean (matches Firestore session shape)
+      sessionData['isTutorial'] = sessionData['isTutorial'] == 1;
 
       return sessionData;
     } catch (e) {

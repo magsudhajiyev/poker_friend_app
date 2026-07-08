@@ -24,6 +24,9 @@ import '../design_system/constants/colors.dart';
 import '../design_system/constants/typography.dart';
 import '../design_system/constants/decorations.dart';
 import '../utils/user_facing_error.dart';
+import '../onboarding/onboarding_state.dart';
+import '../onboarding/onboarding_tour.dart';
+import '../onboarding/onboarding_prefs.dart';
 
 class HandActionsScreen extends StatefulWidget {
   final Map<String, dynamic> hand;
@@ -41,6 +44,9 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
   String? _analysisError;
   final ScrollController _scrollController = ScrollController();
 
+  // Phase-6 onboarding: spotlight for the AI analysis button
+  final GlobalKey _aiButtonKey = GlobalKey();
+
   // Star, tags, and display state
   late bool _isStarred;
   bool _showBB = false;
@@ -56,6 +62,47 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
     _tags = rawTags is List ? rawTags.cast<String>() : [];
     _notes = widget.hand['notes'] as String?;
     _loadExistingAnalysis();
+    _scheduleOnboardingTour();
+  }
+
+  /// Phase 6 — spotlight the AI analysis button after the hand-card handoff,
+  /// then run the user's free tour analysis and wrap up the tour.
+  void _scheduleOnboardingTour() async {
+    if (!OnboardingState.isOnboardingActive ||
+        OnboardingState.currentPhase != 6 ||
+        !OnboardingState.aiAnalysisTourPending) return;
+    OnboardingState.aiAnalysisTourPending = false;
+
+    for (int i = 0; i < 20; i++) {
+      await Future.delayed(const Duration(milliseconds: 100));
+      if (!mounted) return;
+      if (_aiButtonKey.currentContext != null) break;
+    }
+    if (!mounted) return;
+    if (_aiButtonKey.currentContext == null) {
+      finishOnboardingTour(context);
+      return;
+    }
+
+    AiAnalysisTour(aiButtonKey: _aiButtonKey)
+        .show(context, onAnalyze: _runTourAnalysis);
+  }
+
+  Future<void> _runTourAnalysis() async {
+    final ourHoleCards = widget.hand['ourHoleCards'] as Map<String, dynamic>?;
+    final card1 = ourHoleCards?['card1'] as String?;
+    final card2 = ourHoleCards?['card2'] as String?;
+    final hasHeroCards =
+        card1 != null && card2 != null && card1.isNotEmpty && card2.isNotEmpty;
+
+    if (hasHeroCards && _aiAnalysis == null && !_isAnalyzing) {
+      await _handleAnalyzeButtonTap();
+      // Let the result render before wrapping up the tour — the analysis is
+      // cached, so the user can come back to it any time from Sessions
+      await Future.delayed(const Duration(milliseconds: 2500));
+    }
+    if (!mounted) return;
+    await finishOnboardingTour(context);
   }
 
   @override
@@ -1779,6 +1826,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
     }
 
     return GestureDetector(
+      key: _aiButtonKey,
       onTap: (_isAnalyzing || !hasHeroCards || _aiAnalysis != null) ? null : () => _handleAnalyzeButtonTap(),
       child: Container(
         width: double.infinity,
@@ -1852,6 +1900,20 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
   }
 
   Future<void> _handleAnalyzeButtonTap() async {
+    // One free analysis for non-premium users — the tour's taste of the
+    // premium feature. Consumed only on success; persisted on the user doc
+    // so it survives reinstall and account linking.
+    if (!SubscriptionService.isPremium &&
+        await OnboardingPrefs.canUseTourAnalysis()) {
+      if (!mounted) return;
+      await _analyzeHand();
+      if (_aiAnalysis != null) {
+        await OnboardingPrefs.markTourAnalysisUsed();
+      }
+      return;
+    }
+    if (!mounted) return;
+
     // Gate free users at the paywall — AI analysis requires at least Pro
     if (!SubscriptionService.isPremium) {
       final purchased = await PaywallScreen.show(context, featureName: 'AI Hand Analysis');

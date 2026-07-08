@@ -6966,11 +6966,80 @@ class AppLocalizationsEs extends AppLocalizations {
       'Arrástralo al asiento con la posición de dealer. Determina las ciegas y el orden de acción.';
 
   @override
-  String get onboardingViewSessionsTitle => 'Ver tus sesiones';
+  String get onboardingViewSessionsTitle =>
+      'Tus sesiones viven aquí';
 
   @override
   String get onboardingViewSessionsBody =>
-      'Toca Sesiones para ver los resultados de tu sesión, historial de manos y estadísticas.';
+      'Toca el icono de Sesiones para ver la sesión que acabas de jugar.';
+
+  @override
+  String get onboardingSessionHistoryCardTitle =>
+      'La sesión que acabas de jugar';
+
+  @override
+  String get onboardingSessionHistoryCardBody =>
+      'Esta es tu sesión de tutorial: tócala cuando quieras para ver cada mano.';
+
+  @override
+  String get onboardingHandListTitle =>
+      'Cada mano, guardada';
+
+  @override
+  String get onboardingHandListBody =>
+      'Toca aquí para abrir las manos registradas en esta sesión.';
+
+  @override
+  String get onboardingHandCardTitle =>
+      'Tu mano registrada';
+
+  @override
+  String get onboardingHandCardBody =>
+      'Toca una mano para ver la repetición completa, calle por calle.';
+
+  @override
+  String get onboardingAiAnalysisTitle =>
+      'Análisis de manos con IA';
+
+  @override
+  String get onboardingAiAnalysisBody =>
+      'Recibe coaching instantáneo sobre esta mano: tu primer análisis es gratis. ¡Toca el botón!';
+
+  @override
+  String get sessionTutorialBadge =>
+      'Tutorial';
+
+  @override
+  String get introGetStarted =>
+      'Empezar';
+
+  @override
+  String get linkAccountTitle =>
+      'Estás jugando como invitado';
+
+  @override
+  String get linkAccountBody =>
+      'Crea una cuenta gratuita para proteger tus datos en todos tus dispositivos.';
+
+  @override
+  String get linkAccountSuccess =>
+      'Cuenta creada: tus datos ya están respaldados.';
+
+  @override
+  String get linkAccountConflictTitle =>
+      'La cuenta ya existe';
+
+  @override
+  String get linkAccountConflictBody =>
+      'Esta cuenta ya existe. ¿Iniciar sesión con ella? Tus datos de invitado no se transferirán.';
+
+  @override
+  String get anonSignOutWarning =>
+      'Has iniciado sesión como invitado. Si cierras sesión, perderás para siempre el acceso a tus sesiones y manos.';
+
+  @override
+  String get paywallAccountReady =>
+      '¡Cuenta creada! Ya puedes completar tu compra.';
 
   @override
   String get onboardingAllSetTitle => '¡Todo listo!';

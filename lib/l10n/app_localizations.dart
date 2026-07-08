@@ -12144,14 +12144,116 @@ abstract class AppLocalizations {
   /// No description provided for @onboardingViewSessionsTitle.
   ///
   /// In en, this message translates to:
-  /// **'View Your Sessions'**
+  /// **'Your Sessions Live Here'**
   String get onboardingViewSessionsTitle;
 
   /// No description provided for @onboardingViewSessionsBody.
   ///
   /// In en, this message translates to:
-  /// **'Tap Sessions to see your session results, hand history, and stats.'**
+  /// **'Tap the Sessions icon to see the session you just played.'**
   String get onboardingViewSessionsBody;
+
+  /// No description provided for @onboardingSessionHistoryCardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The Session You Just Played'**
+  String get onboardingSessionHistoryCardTitle;
+
+  /// No description provided for @onboardingSessionHistoryCardBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This is your tutorial session — tap it anytime to see every hand.'**
+  String get onboardingSessionHistoryCardBody;
+
+  /// No description provided for @onboardingHandListTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Every Hand, Saved'**
+  String get onboardingHandListTitle;
+
+  /// No description provided for @onboardingHandListBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap here to open the hands you logged in this session.'**
+  String get onboardingHandListBody;
+
+  /// No description provided for @onboardingHandCardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Logged Hand'**
+  String get onboardingHandCardTitle;
+
+  /// No description provided for @onboardingHandCardBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap a hand to see the full action replay, street by street.'**
+  String get onboardingHandCardBody;
+
+  /// No description provided for @onboardingAiAnalysisTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'AI Hand Analysis'**
+  String get onboardingAiAnalysisTitle;
+
+  /// No description provided for @onboardingAiAnalysisBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Get instant coaching on this hand — your first analysis is on us. Tap the button!'**
+  String get onboardingAiAnalysisBody;
+
+  /// No description provided for @sessionTutorialBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Tutorial'**
+  String get sessionTutorialBadge;
+
+  /// No description provided for @introGetStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Get Started'**
+  String get introGetStarted;
+
+  /// No description provided for @linkAccountTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re playing as a guest'**
+  String get linkAccountTitle;
+
+  /// No description provided for @linkAccountBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a free account to keep your data safe across devices.'**
+  String get linkAccountBody;
+
+  /// No description provided for @linkAccountSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Account created — your data is now backed up.'**
+  String get linkAccountSuccess;
+
+  /// No description provided for @linkAccountConflictTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Account already exists'**
+  String get linkAccountConflictTitle;
+
+  /// No description provided for @linkAccountConflictBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This account already exists. Sign in to it instead? Your guest data won\'t be transferred.'**
+  String get linkAccountConflictBody;
+
+  /// No description provided for @anonSignOutWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re signed in as a guest. Signing out will permanently delete access to your sessions and hands.'**
+  String get anonSignOutWarning;
+
+  /// No description provided for @paywallAccountReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Account created! You can now complete your purchase.'**
+  String get paywallAccountReady;
 
   /// No description provided for @onboardingAllSetTitle.
   ///

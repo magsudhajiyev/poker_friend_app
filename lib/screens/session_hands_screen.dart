@@ -13,6 +13,8 @@ import '../design_system/constants/colors.dart';
 import '../design_system/constants/typography.dart';
 import '../design_system/constants/decorations.dart';
 import '../utils/user_facing_error.dart';
+import '../onboarding/onboarding_state.dart';
+import '../onboarding/onboarding_tour.dart';
 
 class SessionHandsScreen extends StatefulWidget {
   final Map<String, dynamic> session;
@@ -28,10 +30,56 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
   bool isLoading = true;
   String? error;
 
+  // Phase-6 onboarding: spotlight for the tour hand card
+  final GlobalKey _tourHandCardKey = GlobalKey();
+  int? _tourHighlightIndex;
+
   @override
   void initState() {
     super.initState();
     _loadHands();
+    _scheduleOnboardingTour();
+  }
+
+  /// Phase 6 — spotlight a hand card after the logged-hands handoff.
+  /// Prefers a hand with hero hole cards so the AI-analysis step can run.
+  void _scheduleOnboardingTour() async {
+    if (!OnboardingState.isOnboardingActive ||
+        OnboardingState.currentPhase != 6 ||
+        !OnboardingState.handCardTourPending) return;
+    OnboardingState.handCardTourPending = false;
+
+    for (int i = 0; i < 30; i++) {
+      await Future.delayed(const Duration(milliseconds: 100));
+      if (!mounted) return;
+      if (!isLoading) break;
+    }
+    if (!mounted) return;
+    if (hands.isEmpty) {
+      finishOnboardingTour(context);
+      return;
+    }
+
+    var targetIndex = hands.indexWhere((h) {
+      final holeCards = h['ourHoleCards'];
+      return holeCards is Map && holeCards.isNotEmpty;
+    });
+    if (targetIndex == -1) targetIndex = 0;
+
+    setState(() => _tourHighlightIndex = targetIndex);
+
+    for (int i = 0; i < 20; i++) {
+      await Future.delayed(const Duration(milliseconds: 100));
+      if (!mounted) return;
+      if (_tourHandCardKey.currentContext != null) break;
+    }
+    if (!mounted) return;
+    if (_tourHandCardKey.currentContext == null) {
+      finishOnboardingTour(context);
+      return;
+    }
+
+    HandCardTour(handCardKey: _tourHandCardKey).show(context);
   }
 
   Future<void> _loadHands() async {
@@ -319,13 +367,14 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
     return ListView.builder(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
       itemCount: hands.length,
-      itemBuilder: (context, index) => _buildHandCard(hands[index], index + 1),
+      itemBuilder: (context, index) =>
+          _buildHandCard(hands[index], index + 1, index),
     );
   }
 
   static const _mint = AppColors.buttonPrimary;
 
-  Widget _buildHandCard(Map<String, dynamic> hand, int handNumber) {
+  Widget _buildHandCard(Map<String, dynamic> hand, int handNumber, int index) {
     final l10n = AppLocalizations.of(context);
     final actions = hand['actions'] as List<dynamic>? ?? [];
     final startTime = DateTime.parse(hand['startTime']);
@@ -351,6 +400,7 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
         '${DateFormat('HH:mm').format(startTime)}  ·  ${l10n.sessionHandsActions(actions.length)}  ·  ${hand['playerCount']}p';
 
     return GestureDetector(
+      key: index == _tourHighlightIndex ? _tourHandCardKey : null,
       onTap: () => _navigateToHandActions(hand),
       behavior: HitTestBehavior.opaque,
       child: Container(

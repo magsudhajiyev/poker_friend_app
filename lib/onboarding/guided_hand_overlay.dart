@@ -838,9 +838,15 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
   }
 
   void _finishOnboarding() {
+    final wasReplay = OnboardingState.isReplay;
     OnboardingState.guidedHandPhase = GuidedPhase.done;
     OnboardingState.complete();
     OnboardingPrefs.markOnboardingSeen();
+    if (!wasReplay) {
+      // Tour skipped mid-hand — the next Home visit shows the post-tour
+      // paywall once via the pending flag
+      OnboardingPrefs.setPostTourPaywallPending();
+    }
     // Notify parent so it can rebuild (e.g. hide progress bar).
     widget.onSkipOrFinish?.call();
   }

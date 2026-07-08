@@ -37,6 +37,7 @@ class FirebaseService {
     bool isLive = false,  // True for dealer/live sessions
     String? dealerSessionId, // Links to dealer_sessions for hole card lookup
     String? eventId, // Links to club event for tournament session grouping
+    bool isTutorial = false, // First-run tour session: badged, excluded from stats
   }) async {
     try {
       final userId = AuthService.userId;
@@ -60,6 +61,10 @@ class FirebaseService {
         'isLive': isLive,  // True for dealer/live sessions
         'sessionName': sessionName ?? (isIndividualSession ? 'Individual Session' : ''), // Always set sessionName
       };
+
+      if (isTutorial) {
+        sessionData['isTutorial'] = true;
+      }
 
       // For live sessions, initialize participant tracking
       if (isLive) {
@@ -172,6 +177,8 @@ class FirebaseService {
     String? notes,
     // Dealer mode: map of seat → Firebase userId for all players
     Map<int, String>? playerIds,
+    // Tutorial (first-run tour) hands: saved for display, never counted in stats
+    bool skipStats = false,
   }) async {
     try {
       final handData = {
@@ -305,49 +312,54 @@ class FirebaseService {
         'totalHands': FieldValue.increment(1),
       });
 
-      // Check if this is dealer-assisted mode (playerIds present)
-      final isDealerMode = playerIds != null && playerIds.isNotEmpty;
+      if (!skipStats) {
+        // Check if this is dealer-assisted mode (playerIds present)
+        final isDealerMode = playerIds != null && playerIds.isNotEmpty;
 
-      if (isDealerMode) {
-        // Dealer mode: update stats for ALL seated players (including dealer if playing)
-        final activeSeats = playerNames?.keys.toList() ?? [];
-        await _updateAllPlayerStatsFromHand(
+        if (isDealerMode) {
+          // Dealer mode: update stats for ALL seated players (including dealer if playing)
+          final activeSeats = playerNames?.keys.toList() ?? [];
+          await _updateAllPlayerStatsFromHand(
+            actions: actions,
+            playerIds: playerIds,
+            buttonPosition: buttonPosition,
+            activeSeats: activeSeats,
+            winnerId: winnerId,
+            choppedWinners: choppedWinners,
+          );
+        } else {
+          // Normal mode: update stats for hero only
+          await _updateUserStatsFromHand(
+            actions: actions,
+            heroPositionName: heroPositionName,
+            heroSeatNumber: heroSeatNumber,
+            winnerId: winnerId,
+            playerNames: playerNames,
+            choppedWinners: choppedWinners,
+          );
+        }
+
+        // Update opponent statistics incrementally (both modes)
+        await _updateOpponentStatsFromHand(
           actions: actions,
-          playerIds: playerIds,
-          buttonPosition: buttonPosition,
-          activeSeats: activeSeats,
-          winnerId: winnerId,
-          choppedWinners: choppedWinners,
-        );
-      } else {
-        // Normal mode: update stats for hero only
-        await _updateUserStatsFromHand(
-          actions: actions,
-          heroPositionName: heroPositionName,
-          heroSeatNumber: heroSeatNumber,
-          winnerId: winnerId,
           playerNames: playerNames,
-          choppedWinners: choppedWinners,
+          reachedShowdown: reachedShowdown,
         );
       }
-
-      // Update opponent statistics incrementally (both modes)
-      await _updateOpponentStatsFromHand(
-        actions: actions,
-        playerNames: playerNames,
-        reachedShowdown: reachedShowdown,
-      );
 
       unawaited(LoggerService.logEvent('hand_saved', parameters: {
         'session_id': sessionId,
         'hand_number': handNumber,
+        if (skipStats) 'is_tutorial': true,
       }));
 
       AppDataCache.markHomeDirty();
       AppDataCache.markSessionsDirty();
-      AppDataCache.markStatsDirty();
-      AppDataCache.markOpponentsDirty();
-      AppDataCache.markOpponentHandsDirty();
+      if (!skipStats) {
+        AppDataCache.markStatsDirty();
+        AppDataCache.markOpponentsDirty();
+        AppDataCache.markOpponentHandsDirty();
+      }
     } catch (e) {
       await LoggerService.error('Error saving hand', e, StackTrace.current);
       rethrow;
@@ -448,7 +460,10 @@ class FirebaseService {
               participantIds.contains(userId) ||
               totalHands > 0;
 
-          if (userParticipated) {
+          // Tutorial sessions never count toward session/play-time stats
+          final isTutorial = sessionData['isTutorial'] == true;
+
+          if (userParticipated && !isTutorial) {
             final duration = DateTime.now().difference(startTime.toDate()).inMinutes;
             await UserStatsService.updateStatsAtomic(
               userId: userId,

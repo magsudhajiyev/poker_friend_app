@@ -34,6 +34,7 @@ import '../services/calendar_event_service.dart';
 import '../widgets/global_bottom_nav_bar.dart';
 import '../onboarding/onboarding_tour.dart';
 import '../onboarding/onboarding_prefs.dart';
+import 'paywall_screen.dart';
 import '../onboarding/onboarding_state.dart';
 import '../onboarding/onboarding_progress_bar.dart';
 import '../design_system/design_system.dart';
@@ -165,7 +166,28 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     }
 
     final seen = await OnboardingPrefs.hasSeenOnboarding();
-    if (seen || !mounted) return;
+    if (!mounted) return;
+    if (seen) {
+      // Tour skipped mid-way earlier — show the deferred post-tour paywall
+      // once, then never again
+      if (await OnboardingPrefs.isPostTourPaywallPending()) {
+        await OnboardingPrefs.clearPostTourPaywallPending();
+        final shown = await OnboardingPrefs.wasPostTourPaywallShown();
+        if (!shown && mounted) {
+          await OnboardingPrefs.markPostTourPaywallShown();
+          if (mounted) {
+            await Navigator.push(
+              context,
+              MaterialPageRoute(
+                fullscreenDialog: true,
+                builder: (_) => const PaywallScreen(showSkip: true),
+              ),
+            );
+          }
+        }
+      }
+      return;
+    }
 
     // Wait for the FAB key to be attached (nav bar may take a few frames)
     for (int i = 0; i < 20; i++) {

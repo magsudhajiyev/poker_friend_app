@@ -6940,11 +6940,80 @@ class AppLocalizationsPl extends AppLocalizations {
       'Przeciągnij to do miejsca z pozycją dealera. Określa blindy i kolejność akcji.';
 
   @override
-  String get onboardingViewSessionsTitle => 'Wyświetl swoje sesje';
+  String get onboardingViewSessionsTitle =>
+      'Tu mieszkają Twoje sesje';
 
   @override
   String get onboardingViewSessionsBody =>
-      'Dotknij Sesje, aby zobaczyć wyniki sesji, historię rozdań i statystyki.';
+      'Dotknij ikony Sesje, aby zobaczyć sesję, którą właśnie rozegrałeś.';
+
+  @override
+  String get onboardingSessionHistoryCardTitle =>
+      'Sesja, którą właśnie rozegrałeś';
+
+  @override
+  String get onboardingSessionHistoryCardBody =>
+      'To Twoja sesja samouczka – dotknij jej w dowolnym momencie, aby zobaczyć każdą rękę.';
+
+  @override
+  String get onboardingHandListTitle =>
+      'Każda ręka zapisana';
+
+  @override
+  String get onboardingHandListBody =>
+      'Dotknij tutaj, aby otworzyć ręce zapisane w tej sesji.';
+
+  @override
+  String get onboardingHandCardTitle =>
+      'Twoja zapisana ręka';
+
+  @override
+  String get onboardingHandCardBody =>
+      'Dotknij ręki, aby zobaczyć pełną powtórkę, ulica po ulicy.';
+
+  @override
+  String get onboardingAiAnalysisTitle =>
+      'Analiza ręki AI';
+
+  @override
+  String get onboardingAiAnalysisBody =>
+      'Otrzymaj natychmiastowy coaching dla tej ręki – pierwsza analiza na nasz koszt. Dotknij przycisku!';
+
+  @override
+  String get sessionTutorialBadge =>
+      'Samouczek';
+
+  @override
+  String get introGetStarted =>
+      'Zacznij';
+
+  @override
+  String get linkAccountTitle =>
+      'Grasz jako gość';
+
+  @override
+  String get linkAccountBody =>
+      'Załóż darmowe konto, aby zabezpieczyć swoje dane na wszystkich urządzeniach.';
+
+  @override
+  String get linkAccountSuccess =>
+      'Konto utworzone – Twoje dane są teraz zabezpieczone.';
+
+  @override
+  String get linkAccountConflictTitle =>
+      'Konto już istnieje';
+
+  @override
+  String get linkAccountConflictBody =>
+      'To konto już istnieje. Zalogować się na nie? Dane gościa nie zostaną przeniesione.';
+
+  @override
+  String get anonSignOutWarning =>
+      'Jesteś zalogowany jako gość. Wylogowanie spowoduje trwałą utratę dostępu do Twoich sesji i rąk.';
+
+  @override
+  String get paywallAccountReady =>
+      'Konto utworzone! Możesz teraz dokończyć zakup.';
 
   @override
   String get onboardingAllSetTitle => 'Wszystko gotowe!';

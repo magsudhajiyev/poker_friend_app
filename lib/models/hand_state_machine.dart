@@ -426,6 +426,11 @@ class PokerSessionManager {
   // VPIP/PFR denominators (hands dealt, not just hands logged).
   int skippedHands = 0;
 
+  // True when this session was started during the first-run tour. Its hands
+  // are persisted (session history must show them) but excluded from all
+  // user/opponent stats and the range grid.
+  bool isTutorialSession = false;
+
   // Biggest pot tracking
   double biggestPot = 0.0;
   double biggestPotBB = 0.0; // BB level when biggest pot occurred
@@ -469,6 +474,13 @@ class PokerSessionManager {
     // Clear opponent tracking for new session
     opponentsSeenThisSession.clear();
 
+    // Sessions started during the first-run tour are badged as tutorials and
+    // excluded from stats/bankroll (replay never creates sessions). The flag
+    // covers ALL hands of the tour session, not just the scripted one.
+    final isTutorial =
+        OnboardingState.isOnboardingActive && !OnboardingState.isReplay;
+    isTutorialSession = isTutorial;
+
     // If we already have a session ID (from individual session), don't create a new one
     if (sessionId == null) {
       sessionId = 'session_${DateTime.now().millisecondsSinceEpoch}';
@@ -487,10 +499,15 @@ class PokerSessionManager {
           isLive: isLive, // True for dealer/live sessions
           dealerSessionId: dealerSessionId,
           eventId: eventId,
+          isTutorial: isTutorial,
         );
         sessionId = firebaseId;
       } catch (e) {
         await LoggerService.error('Firebase session creation failed, using local fallback', e, StackTrace.current);
+      }
+
+      if (isTutorial) {
+        OnboardingState.tourSessionId = sessionId;
       }
 
       // Always save locally as backup
@@ -503,6 +520,7 @@ class PokerSessionManager {
         ourSeatNumber: ourSeatNumber,
         gameType: gameType,
         buyInAmount: initialStack,
+        isTutorial: isTutorial,
       );
     } else {
       // We already have an existing session (individual session case)
@@ -850,8 +868,12 @@ class PokerSessionManager {
   // Save a completed hand to both Firebase and local storage
   Future<void> _saveHandToFirebase(HandRecord hand) async {
     if (sessionId == null) return;
-    // Tour hands are never persisted — they don't affect stats or hand counts
-    if (OnboardingState.isGuidedHandActive) return;
+    // Knowledge-Base replay hands are never persisted
+    if (OnboardingState.isGuidedHandActive && OnboardingState.isReplay) return;
+    // First-run tour hands ARE persisted (so the tour can show them in session
+    // history) but must never touch user/opponent stats or the range grid.
+    // Covers every hand of the tutorial session, not just the scripted one.
+    final skipStats = isTutorialSession || OnboardingState.isGuidedHandActive;
 
     // Always save to local storage first
     final localHandId = await LocalStorageService.saveHand(
@@ -892,7 +914,7 @@ class PokerSessionManager {
 
     // Index for the range grid — local derived data, fire-and-forget so it
     // can never block or break the save path.
-    if (localHandId != null) {
+    if (localHandId != null && !skipStats) {
       unawaited(RangeGridService.indexHand(
         hand: hand,
         handId: localHandId,
@@ -939,19 +961,20 @@ class PokerSessionManager {
         notes: hand.notes,
         // Dealer mode: pass playerIds for stats tracking
         playerIds: playerIds.isNotEmpty ? playerIds : null,
+        skipStats: skipStats,
       );
 
       hand.markSaved();
 
       // Update optimized stats for all participants
-      await _updateOptimizedStats(hand);
+      if (!skipStats) await _updateOptimizedStats(hand);
     } catch (e) {
       await LoggerService.error('Firebase hand save failed, using local fallback', e, StackTrace.current);
       // Mark as saved since we have it locally
       hand.markSaved();
 
       // Still update optimized stats even if Firebase failed
-      await _updateOptimizedStats(hand);
+      if (!skipStats) await _updateOptimizedStats(hand);
     }
   }
 

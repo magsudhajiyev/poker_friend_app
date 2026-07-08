@@ -6910,11 +6910,80 @@ class AppLocalizationsEn extends AppLocalizations {
       'Drag this to the seat with the dealer position. It determines blinds and action order.';
 
   @override
-  String get onboardingViewSessionsTitle => 'View Your Sessions';
+  String get onboardingViewSessionsTitle =>
+      'Your Sessions Live Here';
 
   @override
   String get onboardingViewSessionsBody =>
-      'Tap Sessions to see your session results, hand history, and stats.';
+      'Tap the Sessions icon to see the session you just played.';
+
+  @override
+  String get onboardingSessionHistoryCardTitle =>
+      'The Session You Just Played';
+
+  @override
+  String get onboardingSessionHistoryCardBody =>
+      'This is your tutorial session — tap it anytime to see every hand.';
+
+  @override
+  String get onboardingHandListTitle =>
+      'Every Hand, Saved';
+
+  @override
+  String get onboardingHandListBody =>
+      'Tap here to open the hands you logged in this session.';
+
+  @override
+  String get onboardingHandCardTitle =>
+      'Your Logged Hand';
+
+  @override
+  String get onboardingHandCardBody =>
+      'Tap a hand to see the full action replay, street by street.';
+
+  @override
+  String get onboardingAiAnalysisTitle =>
+      'AI Hand Analysis';
+
+  @override
+  String get onboardingAiAnalysisBody =>
+      'Get instant coaching on this hand — your first analysis is on us. Tap the button!';
+
+  @override
+  String get sessionTutorialBadge =>
+      'Tutorial';
+
+  @override
+  String get introGetStarted =>
+      'Get Started';
+
+  @override
+  String get linkAccountTitle =>
+      'You\'re playing as a guest';
+
+  @override
+  String get linkAccountBody =>
+      'Create a free account to keep your data safe across devices.';
+
+  @override
+  String get linkAccountSuccess =>
+      'Account created — your data is now backed up.';
+
+  @override
+  String get linkAccountConflictTitle =>
+      'Account already exists';
+
+  @override
+  String get linkAccountConflictBody =>
+      'This account already exists. Sign in to it instead? Your guest data won\'t be transferred.';
+
+  @override
+  String get anonSignOutWarning =>
+      'You\'re signed in as a guest. Signing out will permanently delete access to your sessions and hands.';
+
+  @override
+  String get paywallAccountReady =>
+      'Account created! You can now complete your purchase.';
 
   @override
   String get onboardingAllSetTitle => 'You\'re All Set!';
