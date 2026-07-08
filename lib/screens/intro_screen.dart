@@ -4,6 +4,8 @@ import '../design_system/constants/decorations.dart';
 import '../design_system/constants/typography.dart';
 import '../design_system/components/backgrounds/gradient_background.dart';
 import '../l10n/app_localizations.dart';
+import '../services/auth_service.dart';
+import '../utils/user_facing_error.dart';
 import 'auth_screen_experimental.dart';
 
 class IntroScreen extends StatefulWidget {
@@ -14,12 +16,34 @@ class IntroScreen extends StatefulWidget {
 class _IntroScreenState extends State<IntroScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
+  bool _isStartingGuest = false;
   static const int _totalPages = 4;
 
   @override
   void dispose() {
     _pageController.dispose();
     super.dispose();
+  }
+
+  /// Guest entry — anonymous auth; AuthWrapper's auth stream takes over
+  /// (questions → Home → guided tour) without any navigation from here.
+  Future<void> _startAsGuest() async {
+    if (_isStartingGuest) return;
+    setState(() => _isStartingGuest = true);
+    try {
+      await AuthService.signInAnonymously();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(UserFacingError.message(e)),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isStartingGuest = false);
+    }
   }
 
   void _goToPage(int page) {
@@ -199,19 +223,12 @@ class _IntroScreenState extends State<IntroScreen> {
           ),
           const Spacer(flex: 2),
 
-          // Create Account Button
+          // Get Started Button (guest — no account needed)
           SizedBox(
             width: double.infinity,
             height: 56,
             child: ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => AuthScreenExperimental(),
-                  ),
-                );
-              },
+              onPressed: _isStartingGuest ? null : _startAsGuest,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white,
                 foregroundColor: AppColors.bgPrimary,
@@ -221,16 +238,25 @@ class _IntroScreenState extends State<IntroScreen> {
                 ),
                 elevation: 0,
               ),
-              child: Text(
-                l10n.onboardingCreateAccount,
-                style: AppTypography.buttonText().copyWith(fontSize: 16),
-              ),
+              child: _isStartingGuest
+                  ? const SizedBox(
+                      width: 22,
+                      height: 22,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.5,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.black),
+                      ),
+                    )
+                  : Text(
+                      l10n.introGetStarted,
+                      style: AppTypography.buttonText().copyWith(fontSize: 16),
+                    ),
             ),
           ),
 
           const SizedBox(height: 16),
 
-          // Log In Button
+          // Create Account Button
           SizedBox(
             width: double.infinity,
             height: 56,
@@ -239,7 +265,7 @@ class _IntroScreenState extends State<IntroScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => AuthScreenExperimental(initialIsSignUp: false),
+                    builder: (context) => AuthScreenExperimental(),
                   ),
                 );
               },
@@ -253,9 +279,37 @@ class _IntroScreenState extends State<IntroScreen> {
                 ),
               ),
               child: Text(
-                l10n.onboardingLogIn,
+                l10n.onboardingCreateAccount,
                 style: AppTypography.buttonText(color: Colors.white).copyWith(
                   fontSize: 16,
+                ),
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          // Log In link
+          Center(
+            child: GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AuthScreenExperimental(initialIsSignUp: false),
+                  ),
+                );
+              },
+              behavior: HitTestBehavior.opaque,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                child: Text(
+                  l10n.onboardingLogIn,
+                  style: AppTypography.ibm(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.textDisabled,
+                  ),
                 ),
               ),
             ),

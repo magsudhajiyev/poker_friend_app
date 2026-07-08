@@ -13,11 +13,23 @@ import '../services/auth_service.dart';
 import '../services/notification_service.dart';
 import 'forgot_password_screen.dart';
 import '../utils/user_facing_error.dart';
+import '../design_system/components/modals/confirm_dialog.dart';
 
 class AuthScreenExperimental extends StatefulWidget {
   final bool initialIsSignUp;
 
-  const AuthScreenExperimental({Key? key, this.initialIsSignUp = true}) : super(key: key);
+  /// When true, the sign-up form and social buttons LINK the current guest
+  /// (anonymous) account to the chosen credential — keeping the same uid and
+  /// all data — instead of creating/signing into a separate account. On
+  /// success the screen pops with `true` so the caller can continue (e.g.
+  /// the paywall's purchase flow).
+  final bool linkMode;
+
+  const AuthScreenExperimental({
+    Key? key,
+    this.initialIsSignUp = true,
+    this.linkMode = false,
+  }) : super(key: key);
 
   @override
   _AuthScreenExperimentalState createState() => _AuthScreenExperimentalState();
@@ -90,6 +102,17 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
     setState(() => _isLoading = true);
 
     try {
+      if (widget.linkMode) {
+        // Upgrade the guest account in place — same uid, data stays
+        await AuthService.linkAnonymousWithEmail(
+          _registerEmailController.text.trim(),
+          _registerPasswordController.text,
+          _registerNameController.text.trim(),
+        );
+        if (mounted) Navigator.pop(context, true);
+        return;
+      }
+
       await AuthService.registerWithEmail(
         _registerEmailController.text.trim(),
         _registerPasswordController.text,
@@ -103,6 +126,8 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
         // Clear entire stack back to AuthWrapper, which will show HomeScreen
         Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
       }
+    } on AnonymousLinkConflictException {
+      if (mounted) _showLinkConflictDialog();
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -115,6 +140,22 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  /// The credential already belongs to an existing account. Warn that the
+  /// guest data won't transfer, then switch to the sign-in form.
+  void _showLinkConflictDialog() {
+    final l10n = AppLocalizations.of(context);
+    ConfirmDialog.show(
+      context,
+      title: l10n.linkAccountConflictTitle,
+      message: l10n.linkAccountConflictBody,
+      confirmLabel: l10n.onboardingLogIn,
+      confirmColor: Colors.black,
+      onConfirm: () {
+        if (mounted) setState(() => _isSignUp = false);
+      },
+    );
   }
 
   void _handleForgotPassword() {
@@ -131,11 +172,19 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
   Future<void> _handleGoogleSignIn() async {
     setState(() => _isLoading = true);
     try {
+      if (widget.linkMode) {
+        final linked = await AuthService.linkAnonymousWithGoogle();
+        if (linked != null && mounted) Navigator.pop(context, true);
+        return;
+      }
+
       final credential = await AuthService.signInWithGoogle();
       if (credential != null && mounted) {
         // Clear entire stack back to AuthWrapper, which will show HomeScreen
         Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
       }
+    } on AnonymousLinkConflictException {
+      if (mounted) _showLinkConflictDialog();
     } on GoogleSignInAccountLinkException catch (e) {
       if (mounted) _showAccountLinkDialog(e);
     } catch (e) {
@@ -239,10 +288,18 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
   Future<void> _handleAppleSignIn() async {
     setState(() => _isLoading = true);
     try {
+      if (widget.linkMode) {
+        final linked = await AuthService.linkAnonymousWithApple();
+        if (linked != null && mounted) Navigator.pop(context, true);
+        return;
+      }
+
       final credential = await AuthService.signInWithApple();
       if (credential != null && mounted) {
         Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
       }
+    } on AnonymousLinkConflictException {
+      if (mounted) _showLinkConflictDialog();
     } on AppleSignInAccountLinkException catch (e) {
       if (mounted) _showAppleAccountLinkDialog(e);
     } catch (e) {

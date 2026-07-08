@@ -5,7 +5,9 @@ import '../l10n/app_localizations.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/spacing.dart';
 import '../services/subscription_service.dart';
+import '../services/auth_service.dart';
 import '../design_system/constants/decorations.dart';
+import 'auth_screen_experimental.dart';
 
 /// Paywall screen showing subscription plan selection.
 ///
@@ -71,6 +73,25 @@ class _PaywallScreenState extends State<PaywallScreen> {
 
   Future<void> _onContinue() async {
     final l10n = AppLocalizations.of(context);
+
+    // Guests must create an account before purchasing so the receipt is
+    // tied to a recoverable identity. Linking keeps the same uid, so their
+    // data (and this paywall) carry straight over.
+    if (AuthService.isAnonymous) {
+      final linked = await Navigator.push<bool>(
+        context,
+        MaterialPageRoute(
+          builder: (_) => AuthScreenExperimental(linkMode: true),
+        ),
+      );
+      if (linked != true || !mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.paywallAccountReady),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
 
     // Get the appropriate package via product ID lookup
     final tierIds = [
