@@ -6992,6 +6992,14 @@ class AppLocalizationsPt extends AppLocalizations {
       'Toque em uma mão para ver o replay completo, street por street.';
 
   @override
+  String get onboardingHandToolsTitle =>
+      'Ferramentas da mão';
+
+  @override
+  String get onboardingHandToolsBody =>
+      'Alterne os valores para big blinds (BB), exporte ou compartilhe a mão e marque com estrela para salvar suas favoritas — tudo daqui.';
+
+  @override
   String get onboardingAiAnalysisTitle =>
       'Análise de mão com IA';
 
@@ -7249,11 +7257,12 @@ class AppLocalizationsPt extends AppLocalizations {
       'Toque aqui para atualizar os níveis de blinds a qualquer momento — útil quando os níveis do torneio aumentam.';
 
   @override
-  String get guidedNextHandTitle => 'Próxima Mão';
+  String get guidedNextHandTitle =>
+      'Mais uma mão';
 
   @override
   String get guidedNextHandBody =>
-      'Toque para pular para a próxima mão. Move o botão do dealer, rastreia seu stack automaticamente e deduz os blinds.';
+      'Bom trabalho! Vamos registrar mais uma mão. Toque em Próxima mão e jogue você mesmo.';
 
   @override
   String get guidedInfoButtonTitle => 'Guia de Gestos';
@@ -7267,7 +7276,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get guidedSessionInfoBody =>
-      'Toque neste botão para ver os detalhes da sua sessão, gráfico de stack e histórico de mãos. Toque agora!';
+      'Ótimo! Agora toque neste botão para abrir os detalhes da sua sessão e finalizar.';
 
   @override
   String get guidedAddOnTitle => 'Add-Ons e Rebuys';
@@ -7290,11 +7299,12 @@ class AppLocalizationsPt extends AppLocalizations {
       'Toque em qualquer ponto para ver como está indo seu jogo.';
 
   @override
-  String get guidedStopSessionTitle => 'Parar Sessão';
+  String get guidedStopSessionTitle =>
+      'Finalize sua sessão';
 
   @override
   String get guidedStopSessionBody =>
-      'Encerre sua sessão a qualquer momento quando terminar.';
+      'Toque no botão de parar para finalizar sua sessão — depois mostraremos onde ela fica salva.';
 
   @override
   String get guidedTourCompleteTitle => 'Tour concluído!';

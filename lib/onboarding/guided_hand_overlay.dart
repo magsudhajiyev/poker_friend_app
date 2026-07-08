@@ -173,6 +173,17 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
 
   /// Called after hole cards dialog completes.
   void onHoleCardsCompleted() {
+    // Second (free-play) tour hand just finished — time to wrap up the
+    // session: spotlight the ⓘ button
+    if (OnboardingState.isOnboardingActive &&
+        !OnboardingState.isReplay &&
+        OnboardingState.currentPhase == 4 &&
+        OnboardingState.secondTourHandPending) {
+      OnboardingState.secondTourHandPending = false;
+      _showSessionInfoCoachMark();
+      return;
+    }
+
     if (!OnboardingState.isGuidedHandActive) return;
     if (OnboardingState.guidedHandPhase == GuidedPhase.holeCards) {
       _setPhase(GuidedPhase.handComplete);
@@ -683,8 +694,7 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
 
       final nextKey = widget.nextHandButtonKey;
       if (nextKey == null || nextKey.currentContext == null) {
-        _setPhase(GuidedPhase.gestureInfoTap);
-        _showSessionInfoCoachMark();
+        _startFreePlayHand();
         return;
       }
 
@@ -723,13 +733,20 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
           _finishOnboarding();
           return true;
         },
-        onFinish: () {
-          _setPhase(GuidedPhase.gestureInfoTap);
-          _showSessionInfoCoachMark();
-        },
+        onFinish: _startFreePlayHand,
       );
       coach.show(context: context);
     });
+  }
+
+  /// After the Next Hand coach mark: hide the overlay and let the user log
+  /// one more hand on their own. When that hand completes,
+  /// [onHoleCardsCompleted] triggers the finish-session (ⓘ) spotlight.
+  void _startFreePlayHand() {
+    OnboardingState.secondTourHandPending = true;
+    OnboardingState.guidedHandPhase = GuidedPhase.done;
+    widget.onSkipOrFinish?.call();
+    if (mounted) setState(() {});
   }
 
   // ---------------------------------------------------------------------------

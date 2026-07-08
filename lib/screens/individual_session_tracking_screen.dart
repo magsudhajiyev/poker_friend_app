@@ -11,6 +11,7 @@ import '../services/display_identity_service.dart';
 import 'poker_hand_screen.dart';
 import 'quick_stack_update_screen.dart';
 import 'paywall_screen.dart';
+import 'home_screen.dart';
 import '../design_system/components/drawer_dots.dart';
 import '../design_system/components/form_drawer.dart';
 import '../widgets/session_end_bankroll_sheet.dart';
@@ -211,71 +212,10 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
   void _showSessionDetailsTour() {
     final l10n = AppLocalizations.of(context);
 
+    // The session-details screen already shows the live stack chart as its
+    // main content, so the only instruction the user needs here is how to
+    // finish the session — spotlight the red stop button.
     final targets = <TargetFocus>[
-      // 1. + button (add-ons & rebuys)
-      TargetFocus(
-        identify: 'add_on_button',
-        keyTarget: _dotsKey,
-        shape: ShapeLightFocus.Circle,
-        paddingFocus: 12,
-        contents: [
-          TargetContent(
-            align: ContentAlign.bottom,
-            builder: (context, controller) {
-              return buildTooltip(
-                title: l10n.guidedAddOnTitle,
-                body: l10n.guidedAddOnBody,
-                onNext: () => controller.next(),
-                context: context,
-              );
-            },
-          ),
-        ],
-      ),
-      // 2. Update button on stack card
-      TargetFocus(
-        identify: 'update_stack_button',
-        keyTarget: _updateStackBtnKey,
-        shape: ShapeLightFocus.RRect,
-        radius: 20,
-        paddingFocus: 4,
-        contents: [
-          TargetContent(
-            align: ContentAlign.bottom,
-            builder: (context, controller) {
-              return buildTooltip(
-                title: l10n.guidedUpdateStackTitle,
-                body: l10n.guidedUpdateStackBody,
-                onNext: () => controller.next(),
-                context: context,
-              );
-            },
-          ),
-        ],
-      ),
-      // 3. Stack chart
-      if (_stackChartKey.currentContext != null)
-        TargetFocus(
-          identify: 'stack_chart',
-          keyTarget: _stackChartKey,
-          shape: ShapeLightFocus.RRect,
-          radius: 18,
-          paddingFocus: 4,
-          contents: [
-            TargetContent(
-              align: ContentAlign.top,
-              builder: (context, controller) {
-                return buildTooltip(
-                  title: l10n.guidedStackChartTitle,
-                  body: l10n.guidedStackChartBody,
-                  onNext: () => controller.next(),
-                  context: context,
-                );
-              },
-            ),
-          ],
-        ),
-      // 4. Stop session button — dismiss tour, user stops session on their own
       TargetFocus(
         identify: 'stop_session_button',
         keyTarget: _stopSessionBtnKey,
@@ -1484,8 +1424,21 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
         );
       }
 
-      // Show tour-complete dialog after session summary during onboarding,
-      // then the post-tour paywall (once ever)
+      // Full-logging tour: finishing the session from the session-details
+      // screen hands off to phase 5 so the user is guided to view the
+      // finished session (Sessions → card → stack chart → hands). We do NOT
+      // complete the tour here — Home picks up phase 5 on arrival.
+      if (isOnboarding && widget.isFromActiveSession && mounted) {
+        OnboardingState.advanceTo(5);
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => HomeScreen()),
+          (route) => false,
+        );
+        return;
+      }
+
+      // Individual-mode tour: complete the tour inline (this screen IS the
+      // main logging surface — there is no separate poker screen to return to)
       if (isOnboarding && mounted) {
         OnboardingState.complete();
         OnboardingPrefs.markOnboardingSeen();

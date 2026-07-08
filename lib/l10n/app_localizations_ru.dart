@@ -6964,6 +6964,14 @@ class AppLocalizationsRu extends AppLocalizations {
       'Нажмите на раздачу, чтобы увидеть полный повтор, улица за улицей.';
 
   @override
+  String get onboardingHandToolsTitle =>
+      'Инструменты раздачи';
+
+  @override
+  String get onboardingHandToolsBody =>
+      'Переключайте суммы в большие блайнды (BB), экспортируйте или делитесь раздачей и отмечайте звёздочкой избранные — всё отсюда.';
+
+  @override
   String get onboardingAiAnalysisTitle =>
       'ИИ-анализ раздачи';
 
@@ -7220,11 +7228,12 @@ class AppLocalizationsRu extends AppLocalizations {
       'Нажмите здесь, чтобы обновить уровни блайндов в любое время — полезно, когда уровни турнира растут.';
 
   @override
-  String get guidedNextHandTitle => 'Следующая Рука';
+  String get guidedNextHandTitle =>
+      'Ещё одна раздача';
 
   @override
   String get guidedNextHandBody =>
-      'Нажмите, чтобы перейти к следующей руке. Перемещает кнопку дилера, автоматически отслеживает ваш стек и вычитает блайнды.';
+      'Отлично! Давайте запишем ещё одну раздачу. Нажмите «Следующая раздача» и разыграйте её сами.';
 
   @override
   String get guidedInfoButtonTitle => 'Гид по Жестам';
@@ -7238,7 +7247,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get guidedSessionInfoBody =>
-      'Нажмите на эту кнопку, чтобы увидеть детали сессии, график стека и историю рук. Нажмите сейчас!';
+      'Отлично! Теперь нажмите эту кнопку, чтобы открыть детали сессии и завершить её.';
 
   @override
   String get guidedAddOnTitle => 'Аdd-оны и ребаи';
@@ -7261,11 +7270,12 @@ class AppLocalizationsRu extends AppLocalizations {
       'Нажмите на любую точку, чтобы увидеть, как идёт ваша игра.';
 
   @override
-  String get guidedStopSessionTitle => 'Завершить сессию';
+  String get guidedStopSessionTitle =>
+      'Завершите сессию';
 
   @override
   String get guidedStopSessionBody =>
-      'Завершите сессию в любой момент, когда закончите играть.';
+      'Нажмите кнопку «Стоп», чтобы завершить сессию — затем мы покажем, где она сохранена.';
 
   @override
   String get guidedTourCompleteTitle => 'Тур завершён!';

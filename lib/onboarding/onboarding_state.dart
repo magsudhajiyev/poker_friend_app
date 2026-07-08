@@ -58,6 +58,11 @@ class OnboardingState {
   /// Whether the session details tour needs to run (after tapping ⓘ in full session mode).
   static bool sessionDetailsTourPending = false;
 
+  /// Whether the user still needs to log the second (free-play) tour hand.
+  /// Set when the Next Hand coach mark finishes; consumed when that hand
+  /// completes, triggering the finish-session (ⓘ) spotlight.
+  static bool secondTourHandPending = false;
+
   /// Whether the session-history tour needs to run (phase 6, after tapping Sessions nav).
   static bool sessionHistoryTourPending = false;
 
@@ -103,6 +108,7 @@ class OnboardingState {
     quickStackUpdateTourPending = false;
     individualStopSessionTourPending = false;
     sessionDetailsTourPending = false;
+    secondTourHandPending = false;
     sessionHistoryTourPending = false;
     handListTourPending = false;
     handCardTourPending = false;
@@ -125,6 +131,7 @@ class OnboardingState {
     quickStackUpdateTourPending = false;
     individualStopSessionTourPending = false;
     sessionDetailsTourPending = false;
+    secondTourHandPending = false;
     sessionHistoryTourPending = false;
     handListTourPending = false;
     handCardTourPending = false;
@@ -144,6 +151,7 @@ class OnboardingState {
     quickStackUpdateTourPending = false;
     individualStopSessionTourPending = false;
     sessionDetailsTourPending = false;
+    secondTourHandPending = false;
     sessionHistoryTourPending = false;
     handListTourPending = false;
     handCardTourPending = false;
@@ -168,6 +176,7 @@ class OnboardingState {
     individualTrackingTourPending = false;
     quickStackUpdateTourPending = false;
     individualStopSessionTourPending = false;
+    secondTourHandPending = false;
     sessionHistoryTourPending = false;
     handListTourPending = false;
     handCardTourPending = false;
@@ -186,6 +195,7 @@ class OnboardingState {
     quickStackUpdateTourPending = false;
     individualStopSessionTourPending = false;
     sessionDetailsTourPending = false;
+    secondTourHandPending = false;
     sessionHistoryTourPending = false;
     handListTourPending = false;
     handCardTourPending = false;

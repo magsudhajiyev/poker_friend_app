@@ -52,8 +52,9 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
   bool _isExporting = false;
   bool _isDeleting = false;
 
-  // Phase-6 onboarding: spotlight for the "View Logged Hands" button
+  // Phase-6 onboarding: spotlights for the stack chart + "View Logged Hands"
   final GlobalKey _loggedHandsButtonKey = GlobalKey();
+  final GlobalKey _stackChartKey = GlobalKey();
 
   @override
   void initState() {
@@ -80,7 +81,10 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
       return;
     }
 
-    HandListTour(loggedHandsButtonKey: _loggedHandsButtonKey).show(context);
+    HandListTour(
+      loggedHandsButtonKey: _loggedHandsButtonKey,
+      stackChartKey: _stackChartKey,
+    ).show(context);
   }
 
   Future<void> _handleDeleteSession() async {
@@ -864,6 +868,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
   Widget _buildStackChart() {
     final l10n = AppLocalizations.of(context);
     return Container(
+      key: _stackChartKey,
       decoration: BoxDecoration(
         color: AppColors.infoCardBg,
         borderRadius: BorderRadius.circular(AppDecorations.radius18),

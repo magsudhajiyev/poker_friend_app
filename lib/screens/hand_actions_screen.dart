@@ -44,8 +44,9 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
   String? _analysisError;
   final ScrollController _scrollController = ScrollController();
 
-  // Phase-6 onboarding: spotlight for the AI analysis button
+  // Phase-6 onboarding: spotlights for the tools row + AI analysis button
   final GlobalKey _aiButtonKey = GlobalKey();
+  final GlobalKey _toolsRowKey = GlobalKey();
 
   // Star, tags, and display state
   late bool _isStarred;
@@ -65,24 +66,56 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
     _scheduleOnboardingTour();
   }
 
-  /// Phase 6 — spotlight the AI analysis button after the hand-card handoff,
-  /// then run the user's free tour analysis and wrap up the tour.
+  /// Phase 6 — after the hand-card handoff: explain the hand tools (BB /
+  /// export / share / star) all at once, then scroll to and spotlight the AI
+  /// analysis button, run the free analysis, and wrap up the tour.
   void _scheduleOnboardingTour() async {
     if (!OnboardingState.isOnboardingActive ||
         OnboardingState.currentPhase != 6 ||
         !OnboardingState.aiAnalysisTourPending) return;
     OnboardingState.aiAnalysisTourPending = false;
 
+    // The tools row is at the top of the screen — always laid out first.
     for (int i = 0; i < 20; i++) {
       await Future.delayed(const Duration(milliseconds: 100));
       if (!mounted) return;
+      if (_toolsRowKey.currentContext != null) break;
+    }
+    if (!mounted) return;
+
+    if (_toolsRowKey.currentContext != null) {
+      HandToolsTour(toolsRowKey: _toolsRowKey)
+          .show(context, onNext: _showAiAnalysisStep);
+    } else {
+      _showAiAnalysisStep();
+    }
+  }
+
+  /// Scrolls the AI analysis button into view (it lives below the fold), then
+  /// spotlights it. Fixes the coach-mark card being hidden off-screen.
+  Future<void> _showAiAnalysisStep() async {
+    // Give the AI button a chance to attach, scroll it to centre so the
+    // spotlight card isn't clipped at the bottom of the screen.
+    for (int i = 0; i < 20; i++) {
+      if (!mounted) return;
       if (_aiButtonKey.currentContext != null) break;
+      await Future.delayed(const Duration(milliseconds: 100));
     }
     if (!mounted) return;
     if (_aiButtonKey.currentContext == null) {
       finishOnboardingTour(context);
       return;
     }
+
+    await Scrollable.ensureVisible(
+      _aiButtonKey.currentContext!,
+      alignment: 0.5,
+      duration: const Duration(milliseconds: 400),
+      curve: Curves.easeInOut,
+    );
+    // Let the scroll settle before the coach mark measures the target.
+    await Future.delayed(const Duration(milliseconds: 250));
+    if (!mounted) return;
 
     AiAnalysisTour(aiButtonKey: _aiButtonKey)
         .show(context, onAnalyze: _runTourAnalysis);
@@ -690,95 +723,103 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                           ],
                         ),
                       ),
-                      // BB toggle button
-                      GestureDetector(
-                        onTap: () => setState(() => _showBB = !_showBB),
-                        child: Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: _showBB
-                                ? AppColors.tealPrimary.withOpacity(0.2)
-                                : AppColors.bgElevated,
-                            shape: BoxShape.circle,
-                          ),
-                          child: Center(
-                            child: Text(
-                              'BB',
-                              style: AppTypography.mono(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700,
+                      // Hand tools (BB / export / share / star) — grouped so
+                      // the onboarding tour can spotlight them all at once
+                      Row(
+                        key: _toolsRowKey,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // BB toggle button
+                          GestureDetector(
+                            onTap: () => setState(() => _showBB = !_showBB),
+                            child: Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
                                 color: _showBB
-                                    ? AppColors.tealPrimary
-                                    : Colors.white,
+                                    ? AppColors.tealPrimary.withOpacity(0.2)
+                                    : AppColors.bgElevated,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Center(
+                                child: Text(
+                                  'BB',
+                                  style: AppTypography.mono(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                    color: _showBB
+                                        ? AppColors.tealPrimary
+                                        : Colors.white,
+                                  ),
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      // Export button
-                      GestureDetector(
-                        onTap: _handleExportButtonTap,
-                        child: Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: AppColors.bgElevated,
-                            shape: BoxShape.circle,
+                          const SizedBox(width: 8),
+                          // Export button
+                          GestureDetector(
+                            onTap: _handleExportButtonTap,
+                            child: Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: AppColors.bgElevated,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.download,
+                                color: Colors.white,
+                                size: 22,
+                              ),
+                            ),
                           ),
-                          child: const Icon(
-                            Icons.download,
-                            color: Colors.white,
-                            size: 22,
+                          const SizedBox(width: 8),
+                          // Share button
+                          GestureDetector(
+                            onTap: _handleShareButtonTap,
+                            child: Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: AppColors.bgElevated,
+                                shape: BoxShape.circle,
+                              ),
+                              child: _isSharing
+                                  ? const Padding(
+                                      padding: EdgeInsets.all(10),
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : const Icon(
+                                      Icons.ios_share,
+                                      color: Colors.white,
+                                      size: 20,
+                                    ),
+                            ),
                           ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      // Share button
-                      GestureDetector(
-                        onTap: _handleShareButtonTap,
-                        child: Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: AppColors.bgElevated,
-                            shape: BoxShape.circle,
+                          const SizedBox(width: 8),
+                          // Star button
+                          GestureDetector(
+                            onTap: _toggleStar,
+                            child: Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: _isStarred
+                                    ? Colors.amber.withOpacity(0.2)
+                                    : AppColors.bgElevated,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                _isStarred ? Icons.star : Icons.star_border,
+                                color: _isStarred ? Colors.amber : Colors.white,
+                                size: 22,
+                              ),
+                            ),
                           ),
-                          child: _isSharing
-                              ? const Padding(
-                                  padding: EdgeInsets.all(10),
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
-                                  ),
-                                )
-                              : const Icon(
-                                  Icons.ios_share,
-                                  color: Colors.white,
-                                  size: 20,
-                                ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      // Star button
-                      GestureDetector(
-                        onTap: _toggleStar,
-                        child: Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: _isStarred
-                                ? Colors.amber.withOpacity(0.2)
-                                : AppColors.bgElevated,
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            _isStarred ? Icons.star : Icons.star_border,
-                            color: _isStarred ? Colors.amber : Colors.white,
-                            size: 22,
-                          ),
-                        ),
+                        ],
                       ),
                     ],
                   ),

@@ -857,8 +857,9 @@ class SessionHistoryTour {
 
 class HandListTour {
   final GlobalKey loggedHandsButtonKey;
+  final GlobalKey? stackChartKey;
 
-  HandListTour({required this.loggedHandsButtonKey});
+  HandListTour({required this.loggedHandsButtonKey, this.stackChartKey});
 
   void show(BuildContext context) {
     if (!OnboardingState.isOnboardingActive ||
@@ -866,6 +867,34 @@ class HandListTour {
 
     final targets = <TargetFocus>[];
 
+    // Step 1 — the stack chart (this is the "see how your session went" moment)
+    if (stackChartKey?.currentContext != null) {
+      targets.add(
+        TargetFocus(
+          identify: 'stack_chart',
+          keyTarget: stackChartKey!,
+          shape: ShapeLightFocus.RRect,
+          radius: 18,
+          paddingFocus: 6,
+          contents: [
+            TargetContent(
+              align: ContentAlign.bottom,
+              builder: (context, controller) {
+                final l10n = AppLocalizations.of(context);
+                return buildTooltip(
+                  title: l10n.guidedStackChartTitle,
+                  body: l10n.guidedStackChartBody,
+                  onNext: () => controller.next(),
+                  context: context,
+                );
+              },
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Step 2 — the "View Logged Hands" button
     if (loggedHandsButtonKey.currentContext != null) {
       targets.add(
         TargetFocus(
@@ -972,7 +1001,62 @@ class HandCardTour {
 }
 
 // ---------------------------------------------------------------------------
-// Phase 6d — AI Analysis Tour (inside hand details)
+// Phase 6d — Hand Tools Tour (inside hand details, before AI analysis)
+// ---------------------------------------------------------------------------
+
+/// Explains the BB / export / share / star buttons all at once by spotlighting
+/// the whole tools row, then hands off to the AI analysis step via [onNext].
+class HandToolsTour {
+  final GlobalKey toolsRowKey;
+
+  HandToolsTour({required this.toolsRowKey});
+
+  void show(BuildContext context, {required VoidCallback onNext}) {
+    if (!OnboardingState.isOnboardingActive ||
+        OnboardingState.currentPhase != 6) {
+      return;
+    }
+
+    if (toolsRowKey.currentContext == null) {
+      onNext();
+      return;
+    }
+
+    final targets = <TargetFocus>[
+      TargetFocus(
+        identify: 'hand_tools_row',
+        keyTarget: toolsRowKey,
+        shape: ShapeLightFocus.RRect,
+        radius: 24,
+        paddingFocus: 8,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (context, controller) {
+              final l10n = AppLocalizations.of(context);
+              return buildTooltip(
+                title: l10n.onboardingHandToolsTitle,
+                body: l10n.onboardingHandToolsBody,
+                onNext: () => controller.next(),
+                context: context,
+              );
+            },
+          ),
+        ],
+      ),
+    ];
+
+    final coach = _createCoachMark(
+      targets: targets,
+      context: context,
+      onFinish: onNext,
+    );
+    coach.show(context: context);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Phase 6e — AI Analysis Tour (inside hand details)
 // ---------------------------------------------------------------------------
 
 class AiAnalysisTour {

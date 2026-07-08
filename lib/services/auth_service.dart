@@ -101,7 +101,11 @@ class AuthService {
       return credential;
     } on FirebaseAuthException catch (e) {
       await LoggerService.error('Anonymous sign in error', e);
-      if (e.code == 'operation-not-allowed') {
+      // Firebase returns admin-restricted-operation when the Anonymous
+      // provider is disabled in the console, operation-not-allowed on some
+      // SDK versions — both mean guest access is unavailable.
+      if (e.code == 'operation-not-allowed' ||
+          e.code == 'admin-restricted-operation') {
         throw 'Guest access is not available right now. Please create an account.';
       }
       throw _getAuthException(e);

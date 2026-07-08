@@ -6942,6 +6942,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'Tap a hand to see the full action replay, street by street.';
 
   @override
+  String get onboardingHandToolsTitle =>
+      'Hand Tools';
+
+  @override
+  String get onboardingHandToolsBody =>
+      'Switch amounts to big blinds (BB), export or share the hand, and star it to save your favourites — all from here.';
+
+  @override
   String get onboardingAiAnalysisTitle =>
       'AI Hand Analysis';
 
@@ -7198,11 +7206,12 @@ class AppLocalizationsEn extends AppLocalizations {
       'Tap here to update the blind levels anytime — useful when tournament levels go up.';
 
   @override
-  String get guidedNextHandTitle => 'Next Hand';
+  String get guidedNextHandTitle =>
+      'One More Hand';
 
   @override
   String get guidedNextHandBody =>
-      'Tap this to skip to the next hand. It moves the dealer button, auto-tracks your stack, and deducts blinds automatically.';
+      'Nice work! Let\'s log one more hand. Tap Next Hand to deal it, then play it out on your own.';
 
   @override
   String get guidedInfoButtonTitle => 'Gesture Guide';
@@ -7216,7 +7225,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get guidedSessionInfoBody =>
-      'Tap this button to view your session details, stack chart, and hand history. Go ahead and tap it now!';
+      'Great! Now tap this button to open your session details and finish up.';
 
   @override
   String get guidedAddOnTitle => 'Add-Ons & Rebuys';
@@ -7239,11 +7248,12 @@ class AppLocalizationsEn extends AppLocalizations {
       'Tap any point to see how your game is going.';
 
   @override
-  String get guidedStopSessionTitle => 'Stop Session';
+  String get guidedStopSessionTitle =>
+      'Finish Your Session';
 
   @override
   String get guidedStopSessionBody =>
-      'Finish your session anytime you are done.';
+      'Tap the stop button to finish your session — then we\'ll show you where it\'s saved.';
 
   @override
   String get guidedTourCompleteTitle => 'Tour Complete!';

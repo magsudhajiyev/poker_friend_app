@@ -12189,6 +12189,18 @@ abstract class AppLocalizations {
   /// **'Tap a hand to see the full action replay, street by street.'**
   String get onboardingHandCardBody;
 
+  /// No description provided for @onboardingHandToolsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Hand Tools'**
+  String get onboardingHandToolsTitle;
+
+  /// No description provided for @onboardingHandToolsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch amounts to big blinds (BB), export or share the hand, and star it to save your favourites — all from here.'**
+  String get onboardingHandToolsBody;
+
   /// No description provided for @onboardingAiAnalysisTitle.
   ///
   /// In en, this message translates to:
@@ -12642,13 +12654,13 @@ abstract class AppLocalizations {
   /// No description provided for @guidedNextHandTitle.
   ///
   /// In en, this message translates to:
-  /// **'Next Hand'**
+  /// **'One More Hand'**
   String get guidedNextHandTitle;
 
   /// No description provided for @guidedNextHandBody.
   ///
   /// In en, this message translates to:
-  /// **'Tap this to skip to the next hand. It moves the dealer button, auto-tracks your stack, and deducts blinds automatically.'**
+  /// **'Nice work! Let\'s log one more hand. Tap Next Hand to deal it, then play it out on your own.'**
   String get guidedNextHandBody;
 
   /// No description provided for @guidedInfoButtonTitle.
@@ -12672,7 +12684,7 @@ abstract class AppLocalizations {
   /// No description provided for @guidedSessionInfoBody.
   ///
   /// In en, this message translates to:
-  /// **'Tap this button to view your session details, stack chart, and hand history. Go ahead and tap it now!'**
+  /// **'Great! Now tap this button to open your session details and finish up.'**
   String get guidedSessionInfoBody;
 
   /// No description provided for @guidedAddOnTitle.
@@ -12714,13 +12726,13 @@ abstract class AppLocalizations {
   /// No description provided for @guidedStopSessionTitle.
   ///
   /// In en, this message translates to:
-  /// **'Stop Session'**
+  /// **'Finish Your Session'**
   String get guidedStopSessionTitle;
 
   /// No description provided for @guidedStopSessionBody.
   ///
   /// In en, this message translates to:
-  /// **'Finish your session anytime you are done.'**
+  /// **'Tap the stop button to finish your session — then we\'ll show you where it\'s saved.'**
   String get guidedStopSessionBody;
 
   /// No description provided for @guidedTourCompleteTitle.

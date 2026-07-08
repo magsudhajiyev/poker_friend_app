@@ -6972,6 +6972,14 @@ class AppLocalizationsPl extends AppLocalizations {
       'Dotknij ręki, aby zobaczyć pełną powtórkę, ulica po ulicy.';
 
   @override
+  String get onboardingHandToolsTitle =>
+      'Narzędzia ręki';
+
+  @override
+  String get onboardingHandToolsBody =>
+      'Przełączaj kwoty na duże ciemne (BB), eksportuj lub udostępniaj rękę i oznacz ją gwiazdką, aby zapisać ulubione — wszystko stąd.';
+
+  @override
   String get onboardingAiAnalysisTitle =>
       'Analiza ręki AI';
 
@@ -7228,11 +7236,12 @@ class AppLocalizationsPl extends AppLocalizations {
       'Dotknij tutaj, aby zaktualizować poziomy blindów w dowolnym momencie — przydatne, gdy rosną poziomy turniejowe.';
 
   @override
-  String get guidedNextHandTitle => 'Następna Ręka';
+  String get guidedNextHandTitle =>
+      'Jeszcze jedna ręka';
 
   @override
   String get guidedNextHandBody =>
-      'Dotknij, aby przejść do następnej ręki. Przesunie przycisk dealera, automatycznie śledzi twój stack i potrąca blindy.';
+      'Dobra robota! Zapiszmy jeszcze jedną rękę. Dotknij Następna ręka i rozegraj ją samodzielnie.';
 
   @override
   String get guidedInfoButtonTitle => 'Przewodnik po Gestach';
@@ -7246,7 +7255,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get guidedSessionInfoBody =>
-      'Dotknij tego przycisku, aby zobaczyć szczegóły sesji, wykres stacka i historię rąk. Dotknij teraz!';
+      'Świetnie! Teraz dotknij tego przycisku, aby otworzyć szczegóły sesji i zakończyć.';
 
   @override
   String get guidedAddOnTitle => 'Add-Ony i Rebuys';
@@ -7269,11 +7278,12 @@ class AppLocalizationsPl extends AppLocalizations {
       'Dotknij dowolnego punktu, aby zobaczyć, jak idzie twoja gra.';
 
   @override
-  String get guidedStopSessionTitle => 'Zakończ Sesję';
+  String get guidedStopSessionTitle =>
+      'Zakończ sesję';
 
   @override
   String get guidedStopSessionBody =>
-      'Zakończ sesję w dowolnym momencie, gdy skończysz grać.';
+      'Dotknij przycisku stop, aby zakończyć sesję — potem pokażemy Ci, gdzie została zapisana.';
 
   @override
   String get guidedTourCompleteTitle => 'Tour zakończony!';

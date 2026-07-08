@@ -256,40 +256,8 @@ class _IntroScreenState extends State<IntroScreen> {
 
           const SizedBox(height: 16),
 
-          // Create Account Button
-          SizedBox(
-            width: double.infinity,
-            height: 56,
-            child: OutlinedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => AuthScreenExperimental(),
-                  ),
-                );
-              },
-              style: OutlinedButton.styleFrom(
-                side: BorderSide(
-                  color: AppColors.whiteOverlay(opacity: 0.30),
-                  width: 1.5,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
-                ),
-              ),
-              child: Text(
-                l10n.onboardingCreateAccount,
-                style: AppTypography.buttonText(color: Colors.white).copyWith(
-                  fontSize: 16,
-                ),
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          // Log In link
+          // Log In link — for returning users. New users who want a classic
+          // account (instead of guest) can toggle to sign-up from here.
           Center(
             child: GestureDetector(
               onTap: () {

@@ -7005,6 +7005,14 @@ class AppLocalizationsDe extends AppLocalizations {
       'Tippe auf eine Hand, um das komplette Replay Street für Street zu sehen.';
 
   @override
+  String get onboardingHandToolsTitle =>
+      'Hand-Werkzeuge';
+
+  @override
+  String get onboardingHandToolsBody =>
+      'Beträge in Big Blinds (BB) umschalten, die Hand exportieren oder teilen und mit einem Stern als Favorit speichern – alles von hier aus.';
+
+  @override
   String get onboardingAiAnalysisTitle =>
       'KI-Handanalyse';
 
@@ -7261,11 +7269,12 @@ class AppLocalizationsDe extends AppLocalizations {
       'Tippe hier, um die Blind-Stufen jederzeit zu ändern — nützlich, wenn die Turnier-Levels steigen.';
 
   @override
-  String get guidedNextHandTitle => 'Nächste Hand';
+  String get guidedNextHandTitle =>
+      'Noch eine Hand';
 
   @override
   String get guidedNextHandBody =>
-      'Tippe hier, um zur nächsten Hand zu springen. Der Dealer-Button wird verschoben, dein Stack wird automatisch verfolgt und die Blinds werden abgezogen.';
+      'Gut gemacht! Lass uns noch eine Hand loggen. Tippe auf Nächste Hand und spiele sie selbst aus.';
 
   @override
   String get guidedInfoButtonTitle => 'Gesten-Guide';
@@ -7279,7 +7288,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get guidedSessionInfoBody =>
-      'Tippe auf diesen Button, um deine Sitzungsdetails, Stack-Chart und Handverlauf zu sehen. Tippe jetzt darauf!';
+      'Super! Tippe jetzt auf diesen Button, um deine Session-Details zu öffnen und abzuschließen.';
 
   @override
   String get guidedAddOnTitle => 'Add-Ons & Rebuys';
@@ -7302,11 +7311,12 @@ class AppLocalizationsDe extends AppLocalizations {
       'Tippe auf einen Punkt, um zu sehen, wie dein Spiel läuft.';
 
   @override
-  String get guidedStopSessionTitle => 'Session beenden';
+  String get guidedStopSessionTitle =>
+      'Session beenden';
 
   @override
   String get guidedStopSessionBody =>
-      'Beende deine Session jederzeit, wenn du fertig bist.';
+      'Tippe auf den Stopp-Button, um deine Session zu beenden – danach zeigen wir dir, wo sie gespeichert ist.';
 
   @override
   String get guidedTourCompleteTitle => 'Tour abgeschlossen!';
