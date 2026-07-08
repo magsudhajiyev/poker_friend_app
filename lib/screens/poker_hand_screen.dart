@@ -2482,7 +2482,8 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     if (amount >= 10000) return '${(amount / 1000).toStringAsFixed(0)}K';
     if (amount >= 1000) return '${(amount / 1000).toStringAsFixed(1)}K';
     if (amount == amount.roundToDouble()) return amount.toInt().toString();
-    return amount.toStringAsFixed(0);
+    // Preserve decimals for fractional amounts (e.g. $0.25/$0.50 cash blinds)
+    return amount.toStringAsFixed(2).replaceAll(RegExp(r'0+$'), '').replaceAll(RegExp(r'\.$'), '');
   }
 
   void _onDealerButtonMoved(int newLogicalSeat) {
@@ -3346,7 +3347,8 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     if (sessionManager.gameType == GameType.cash) {
       return CurrencyService.formatCash(amount);
     }
-    return amount.toStringAsFixed(0);
+    if (amount == amount.roundToDouble()) return amount.toInt().toString();
+    return amount.toStringAsFixed(2).replaceAll(RegExp(r'0+$'), '').replaceAll(RegExp(r'\.$'), '');
   }
 
   Widget _buildInfoItemWithAsset(BuildContext context, String label, String value, String assetPath) {
@@ -7317,9 +7319,9 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
   String _formatCurrency(double amount) {
     if (widget.gameType == GameType.cash) {
       return CurrencyService.formatCash(amount);
-    } else {
-      return '${amount.toInt()}';
     }
+    if (amount == amount.roundToDouble()) return '${amount.toInt()}';
+    return amount.toStringAsFixed(2).replaceAll(RegExp(r'0+$'), '').replaceAll(RegExp(r'\.$'), '');
   }
 
 }

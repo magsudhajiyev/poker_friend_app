@@ -157,6 +157,25 @@ class AppLocalizationsEs extends AppLocalizations {
       'Disponible después de 60 min de seguimiento';
 
   @override
+  String get errorNoConnection =>
+      'Sin conexión a internet. Comprueba tu red e inténtalo de nuevo.';
+
+  @override
+  String get errorTimeout =>
+      'La solicitud tardó demasiado. Inténtalo de nuevo.';
+
+  @override
+  String get errorServer =>
+      'Algo salió mal por nuestra parte. Inténtalo de nuevo en unos minutos.';
+
+  @override
+  String get errorNotAuthorized =>
+      'No tienes permiso para hacer eso. Vuelve a iniciar sesión.';
+
+  @override
+  String get errorGeneric => 'Algo salió mal. Inténtalo de nuevo.';
+
+  @override
   String get statsBBPerHour => 'BB / Hora';
 
   @override
@@ -796,21 +815,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String handAvgPill(String ratio) {
     return '$ratio prom.';
   }
-
-  @override
-  String get errorNoConnection => 'Sin conexión a internet. Comprueba tu red e inténtalo de nuevo.';
-
-  @override
-  String get errorTimeout => 'La solicitud tardó demasiado. Inténtalo de nuevo.';
-
-  @override
-  String get errorServer => 'Algo salió mal por nuestra parte. Inténtalo de nuevo en unos minutos.';
-
-  @override
-  String get errorNotAuthorized => 'No tienes permiso para hacer eso. Vuelve a iniciar sesión.';
-
-  @override
-  String get errorGeneric => 'Algo salió mal. Inténtalo de nuevo.';
 
   @override
   String get handNextHand => 'Siguiente mano';

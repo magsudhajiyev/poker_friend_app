@@ -157,6 +157,24 @@ class AppLocalizationsFr extends AppLocalizations {
   String get statsHourlyRateNotAvailable => 'Disponible après 60 min de suivi';
 
   @override
+  String get errorNoConnection =>
+      'Pas de connexion internet. Vérifiez votre réseau et réessayez.';
+
+  @override
+  String get errorTimeout => 'La demande a expiré. Veuillez réessayer.';
+
+  @override
+  String get errorServer =>
+      'Un problème est survenu de notre côté. Réessayez dans quelques minutes.';
+
+  @override
+  String get errorNotAuthorized =>
+      'Vous n\'avez pas l\'autorisation de faire cela. Reconnectez-vous.';
+
+  @override
+  String get errorGeneric => 'Un problème est survenu. Veuillez réessayer.';
+
+  @override
   String get statsBBPerHour => 'BB / Heure';
 
   @override
@@ -801,21 +819,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String handAvgPill(String ratio) {
     return '$ratio moy.';
   }
-
-  @override
-  String get errorNoConnection => 'Pas de connexion internet. Vérifiez votre réseau et réessayez.';
-
-  @override
-  String get errorTimeout => 'La demande a expiré. Veuillez réessayer.';
-
-  @override
-  String get errorServer => 'Un problème est survenu de notre côté. Réessayez dans quelques minutes.';
-
-  @override
-  String get errorNotAuthorized => 'Vous n\'avez pas l\'autorisation de faire cela. Reconnectez-vous.';
-
-  @override
-  String get errorGeneric => 'Un problème est survenu. Veuillez réessayer.';
 
   @override
   String get handNextHand => 'Main suivante';

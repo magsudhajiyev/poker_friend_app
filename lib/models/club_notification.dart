@@ -17,6 +17,7 @@ enum NotificationType {
   seatAvailable,    // When a seat becomes available for waitlist member
   newSupportRequest, // When a user submits a support request (for app admins)
   supportRequestUpdated, // When admin resolves/rejects a support request (for user)
+  partnerGranted,    // When admin grants a user a free plan
 }
 
 extension NotificationTypeExtension on NotificationType {
@@ -52,6 +53,8 @@ extension NotificationTypeExtension on NotificationType {
         return 'Support Request';
       case NotificationType.supportRequestUpdated:
         return 'Support Update';
+      case NotificationType.partnerGranted:
+        return 'Plan Granted';
     }
   }
 
@@ -87,6 +90,8 @@ extension NotificationTypeExtension on NotificationType {
         return 'new_support_request';
       case NotificationType.supportRequestUpdated:
         return 'support_request_updated';
+      case NotificationType.partnerGranted:
+        return 'partner_granted';
     }
   }
 
@@ -122,6 +127,8 @@ extension NotificationTypeExtension on NotificationType {
         return NotificationType.newSupportRequest;
       case 'support_request_updated':
         return NotificationType.supportRequestUpdated;
+      case 'partner_granted':
+        return NotificationType.partnerGranted;
       default:
         return NotificationType.eventCreated;
     }

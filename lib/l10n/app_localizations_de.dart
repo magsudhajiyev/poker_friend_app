@@ -156,6 +156,25 @@ class AppLocalizationsDe extends AppLocalizations {
   String get statsHourlyRateNotAvailable => 'Verfügbar nach 60 Min. Tracking';
 
   @override
+  String get errorNoConnection =>
+      'Keine Internetverbindung. Prüfe dein Netzwerk und versuche es erneut.';
+
+  @override
+  String get errorTimeout => 'Zeitüberschreitung. Bitte versuche es erneut.';
+
+  @override
+  String get errorServer =>
+      'Bei uns ist etwas schiefgelaufen. Bitte versuche es in ein paar Minuten erneut.';
+
+  @override
+  String get errorNotAuthorized =>
+      'Dazu fehlt dir die Berechtigung. Melde dich erneut an.';
+
+  @override
+  String get errorGeneric =>
+      'Etwas ist schiefgelaufen. Bitte versuche es erneut.';
+
+  @override
   String get statsBBPerHour => 'BB / Stunde';
 
   @override
@@ -796,21 +815,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String handAvgPill(String ratio) {
     return '$ratio Ø';
   }
-
-  @override
-  String get errorNoConnection => 'Keine Internetverbindung. Prüfe dein Netzwerk und versuche es erneut.';
-
-  @override
-  String get errorTimeout => 'Zeitüberschreitung. Bitte versuche es erneut.';
-
-  @override
-  String get errorServer => 'Bei uns ist etwas schiefgelaufen. Bitte versuche es in ein paar Minuten erneut.';
-
-  @override
-  String get errorNotAuthorized => 'Dazu fehlt dir die Berechtigung. Melde dich erneut an.';
-
-  @override
-  String get errorGeneric => 'Etwas ist schiefgelaufen. Bitte versuche es erneut.';
 
   @override
   String get handNextHand => 'Nächste Hand';

@@ -158,6 +158,24 @@ class AppLocalizationsRu extends AppLocalizations {
       'Доступно после 60 мин отслеживания';
 
   @override
+  String get errorNoConnection =>
+      'Нет подключения к интернету. Проверьте сеть и попробуйте снова.';
+
+  @override
+  String get errorTimeout => 'Время ожидания истекло. Попробуйте снова.';
+
+  @override
+  String get errorServer =>
+      'Что-то пошло не так на нашей стороне. Попробуйте снова через несколько минут.';
+
+  @override
+  String get errorNotAuthorized =>
+      'У вас нет прав для этого действия. Войдите снова.';
+
+  @override
+  String get errorGeneric => 'Что-то пошло не так. Попробуйте снова.';
+
+  @override
   String get statsBBPerHour => 'BB / час';
 
   @override
@@ -789,21 +807,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String handAvgPill(String ratio) {
     return '$ratio сред.';
   }
-
-  @override
-  String get errorNoConnection => 'Нет подключения к интернету. Проверьте сеть и попробуйте снова.';
-
-  @override
-  String get errorTimeout => 'Время ожидания истекло. Попробуйте снова.';
-
-  @override
-  String get errorServer => 'Что-то пошло не так на нашей стороне. Попробуйте снова через несколько минут.';
-
-  @override
-  String get errorNotAuthorized => 'У вас нет прав для этого действия. Войдите снова.';
-
-  @override
-  String get errorGeneric => 'Что-то пошло не так. Попробуйте снова.';
 
   @override
   String get handNextHand => 'Следующая рука';

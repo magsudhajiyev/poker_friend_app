@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../services/auth_service.dart';
 import '../services/deep_link_service.dart';
+import '../services/partner_grant_service.dart';
 import '../services/subscription_service.dart';
 import '../services/username_service.dart';
 import '../services/onboarding_service.dart';
@@ -121,6 +122,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
             if (SubscriptionService.isInitialized) {
               SubscriptionService.loginUser(snapshot.data!.uid);
             }
+            PartnerGrantService.init(snapshot.data!.uid);
           });
 
           // Reuse the same future across stream rebuilds to avoid re-running the check

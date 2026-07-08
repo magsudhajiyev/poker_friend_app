@@ -157,6 +157,24 @@ class AppLocalizationsEn extends AppLocalizations {
       'Available after 60 min of tracking';
 
   @override
+  String get errorNoConnection =>
+      'No internet connection. Check your network and try again.';
+
+  @override
+  String get errorTimeout => 'The request timed out. Please try again.';
+
+  @override
+  String get errorServer =>
+      'Something went wrong on our side. Please try again in a few minutes.';
+
+  @override
+  String get errorNotAuthorized =>
+      'You don\'t have permission to do that. Try signing in again.';
+
+  @override
+  String get errorGeneric => 'Something went wrong. Please try again.';
+
+  @override
   String get statsBBPerHour => 'BB / Hour';
 
   @override
@@ -786,21 +804,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String handAvgPill(String ratio) {
     return '$ratio avg';
   }
-
-  @override
-  String get errorNoConnection => 'No internet connection. Check your network and try again.';
-
-  @override
-  String get errorTimeout => 'The request timed out. Please try again.';
-
-  @override
-  String get errorServer => 'Something went wrong on our side. Please try again in a few minutes.';
-
-  @override
-  String get errorNotAuthorized => 'You don\'t have permission to do that. Try signing in again.';
-
-  @override
-  String get errorGeneric => 'Something went wrong. Please try again.';
 
   @override
   String get handNextHand => 'Next Hand';

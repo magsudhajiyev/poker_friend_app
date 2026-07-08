@@ -569,6 +569,165 @@ class EmailService {
 ''';
   }
 
+  /// Send partner grant notification email
+  static Future<bool> sendPartnerGrantEmail({
+    required String toEmail,
+    required String displayName,
+    required String tier,
+    required String duration,
+  }) async {
+    final apiKey = EnvConfig.resendApiKey;
+    if (apiKey.isEmpty) {
+      debugPrint('EmailService: Resend API key not configured');
+      return false;
+    }
+
+    final tierLabel = tier[0].toUpperCase() + tier.substring(1);
+    final emailBody = _buildPartnerGrantEmailHtml(
+      displayName: displayName,
+      tierLabel: tierLabel,
+      duration: duration,
+      tier: tier,
+    );
+
+    try {
+      final response = await http.post(
+        Uri.parse(_resendApiUrl),
+        headers: {
+          'Authorization': 'Bearer $apiKey',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'from': 'Final Table <admin@finaltable.io>',
+          'to': [toEmail],
+          'subject': 'You\'ve been upgraded to $tierLabel!',
+          'html': emailBody,
+        }),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        debugPrint('EmailService: Partner grant email sent to $toEmail');
+        return true;
+      } else {
+        debugPrint('EmailService: Failed to send email - ${response.statusCode}: ${response.body}');
+        return false;
+      }
+    } catch (e) {
+      debugPrint('EmailService: Error sending email - $e');
+      return false;
+    }
+  }
+
+  /// Build styled HTML email for partner grant notification
+  static String _buildPartnerGrantEmailHtml({
+    required String displayName,
+    required String tierLabel,
+    required String duration,
+    required String tier,
+  }) {
+    final name = displayName.isNotEmpty ? displayName : 'there';
+
+    String features;
+    switch (tier) {
+      case 'club':
+        features = '''
+                <tr><td style="padding: 6px 0; color: #e2e8f0; font-size: 15px;">&#10003; Unlimited hand logging</td></tr>
+                <tr><td style="padding: 6px 0; color: #e2e8f0; font-size: 15px;">&#10003; Unlimited opponents</td></tr>
+                <tr><td style="padding: 6px 0; color: #e2e8f0; font-size: 15px;">&#10003; Full session history</td></tr>
+                <tr><td style="padding: 6px 0; color: #e2e8f0; font-size: 15px;">&#10003; AI hand analysis</td></tr>
+                <tr><td style="padding: 6px 0; color: #e2e8f0; font-size: 15px;">&#10003; Unlimited exports</td></tr>
+                <tr><td style="padding: 6px 0; color: #e2e8f0; font-size: 15px;">&#10003; Club management &amp; events</td></tr>''';
+      case 'elite':
+        features = '''
+                <tr><td style="padding: 6px 0; color: #e2e8f0; font-size: 15px;">&#10003; Unlimited hand logging</td></tr>
+                <tr><td style="padding: 6px 0; color: #e2e8f0; font-size: 15px;">&#10003; Unlimited opponents</td></tr>
+                <tr><td style="padding: 6px 0; color: #e2e8f0; font-size: 15px;">&#10003; Full session history</td></tr>
+                <tr><td style="padding: 6px 0; color: #e2e8f0; font-size: 15px;">&#10003; 30 AI analyses / month</td></tr>
+                <tr><td style="padding: 6px 0; color: #e2e8f0; font-size: 15px;">&#10003; Unlimited exports</td></tr>''';
+      default: // pro
+        features = '''
+                <tr><td style="padding: 6px 0; color: #e2e8f0; font-size: 15px;">&#10003; 50 hands per session</td></tr>
+                <tr><td style="padding: 6px 0; color: #e2e8f0; font-size: 15px;">&#10003; 15 opponent profiles</td></tr>
+                <tr><td style="padding: 6px 0; color: #e2e8f0; font-size: 15px;">&#10003; 90-day session history</td></tr>
+                <tr><td style="padding: 6px 0; color: #e2e8f0; font-size: 15px;">&#10003; 10 AI analyses / month</td></tr>
+                <tr><td style="padding: 6px 0; color: #e2e8f0; font-size: 15px;">&#10003; 30 exports / month</td></tr>''';
+    }
+
+    return '''
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>You've Been Upgraded!</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #0f0f1a;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #0f0f1a;">
+    <tr>
+      <td align="center" style="padding: 40px 20px;">
+        <table role="presentation" width="100%" style="max-width: 500px; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 20px; overflow: hidden;">
+          <!-- Header -->
+          <tr>
+            <td style="padding: 32px 32px 0;">
+              <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #62E3BC 0%, #89F1EC 100%); border-radius: 12px; display: inline-block; text-align: center; line-height: 50px;">
+                <span style="font-size: 24px; color: #0f0f1a;">&#9824;</span>
+              </div>
+            </td>
+          </tr>
+
+          <!-- Title -->
+          <tr>
+            <td style="padding: 24px 32px 8px;">
+              <h1 style="margin: 0; color: #62E3BC; font-size: 28px; font-weight: 700;">You've Been Upgraded!</h1>
+            </td>
+          </tr>
+
+          <!-- Main Message -->
+          <tr>
+            <td style="padding: 16px 32px 8px;">
+              <p style="margin: 0; color: #ffffff; font-size: 18px; line-height: 1.6;">
+                Hi $name, your account has been upgraded to a <strong style="color: #62E3BC;">$tierLabel</strong> plan for <strong style="color: #89F1EC;">$duration</strong>!
+              </p>
+            </td>
+          </tr>
+
+          <!-- Features -->
+          <tr>
+            <td style="padding: 24px 32px;">
+              <p style="margin: 0 0 12px; color: #9ca3af; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Your $tierLabel features</p>
+              <table role="presentation" cellspacing="0" cellpadding="0">
+$features
+              </table>
+            </td>
+          </tr>
+
+          <!-- Divider -->
+          <tr>
+            <td style="padding: 0 32px;">
+              <hr style="border: none; border-top: 1px solid #374151; margin: 0;">
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 24px 32px 32px;">
+              <p style="margin: 0; color: #6b7280; font-size: 12px; line-height: 1.6;">
+                Open the Final Table app to start using your new features.
+              </p>
+              <p style="margin: 16px 0 0; color: #4b5563; font-size: 11px;">
+                Sent by Final Table
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+''';
+  }
+
   /// Send password reset verification code email
   static Future<bool> sendPasswordResetCodeEmail({
     required String toEmail,

@@ -20,10 +20,10 @@ import 'poker_hand_screen.dart';
 import 'session_analytics_screen.dart';
 import '../widgets/session_summary_card.dart';
 import 'onboarding/onboarding_flow.dart';
-import '../services/test_data_seed_service.dart';
 import '../services/stats_calculator.dart';
 import '../l10n/app_localizations.dart';
 import '../services/feature_flag_service.dart';
+import 'admin/partner_grants_screen.dart';
 import '../design_system/constants/typography.dart';
 import '../design_system/constants/decorations.dart';
 import '../utils/user_facing_error.dart';
@@ -509,6 +509,38 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   if (FeatureFlagService.isSuperAdmin) ...[
                     const SizedBox(height: 24),
                     _buildFeatureFlags(),
+                    const SizedBox(height: 16),
+                    GestureDetector(
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const PartnerGrantsScreen()),
+                      ),
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: AppColors.bgSurface,
+                          borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
+                          border: Border.all(color: AppColors.accentPrimary.withValues(alpha: 0.3)),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.handshake_outlined, color: AppColors.accentPrimary, size: 20),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                'User Management',
+                                style: AppTypography.ibm(
+                                  color: Colors.white,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                            const Icon(Icons.chevron_right, color: AppColors.contentInactive, size: 20),
+                          ],
+                        ),
+                      ),
+                    ),
                   ],
                 ],
               ),
@@ -933,8 +965,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           const SizedBox(height: 8),
           _devButton('Open Latest Session Analytics', AppColors.warningAmber, _openLatestSession),
           const SizedBox(height: 8),
-          _devButton('Seed Scouting Data (Aldante + Kulikor)', AppColors.limeGreen, _seedScoutingData),
-          const SizedBox(height: 8),
           _devButton('Diagnose Stats (Latest Session)', AppColors.warningAmber, _diagnoseStats),
         ],
       ),
@@ -997,17 +1027,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (!mounted) return;
       Navigator.push(context, MaterialPageRoute(
           builder: (_) => SessionAnalyticsScreen(sessionData: data, sessionId: doc.id)));
-    } catch (e) {
-      if (mounted) _showSnack(UserFacingError.message(e));
-    }
-  }
-
-  Future<void> _seedScoutingData() async {
-    _showSnack('Cleaning old data & seeding scouting data...');
-    try {
-      await TestDataSeedService.cleanupShowdownSeeds();
-      await TestDataSeedService.seedShowdownHands(['Aldante', 'Kulikor']);
-      if (mounted) _showSnack('Scouting data seeded! Tap an opponent in drill setup to see it.');
     } catch (e) {
       if (mounted) _showSnack(UserFacingError.message(e));
     }

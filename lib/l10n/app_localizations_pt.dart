@@ -157,6 +157,24 @@ class AppLocalizationsPt extends AppLocalizations {
       'Disponível após 60 min de rastreamento';
 
   @override
+  String get errorNoConnection =>
+      'Sem conexão com a internet. Verifique sua rede e tente novamente.';
+
+  @override
+  String get errorTimeout => 'A solicitação expirou. Tente novamente.';
+
+  @override
+  String get errorServer =>
+      'Algo deu errado do nosso lado. Tente novamente em alguns minutos.';
+
+  @override
+  String get errorNotAuthorized =>
+      'Você não tem permissão para isso. Faça login novamente.';
+
+  @override
+  String get errorGeneric => 'Algo deu errado. Tente novamente.';
+
+  @override
   String get statsBBPerHour => 'BB / Hora';
 
   @override
@@ -795,21 +813,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String handAvgPill(String ratio) {
     return '$ratio méd.';
   }
-
-  @override
-  String get errorNoConnection => 'Sem conexão com a internet. Verifique sua rede e tente novamente.';
-
-  @override
-  String get errorTimeout => 'A solicitação expirou. Tente novamente.';
-
-  @override
-  String get errorServer => 'Algo deu errado do nosso lado. Tente novamente em alguns minutos.';
-
-  @override
-  String get errorNotAuthorized => 'Você não tem permissão para isso. Faça login novamente.';
-
-  @override
-  String get errorGeneric => 'Algo deu errado. Tente novamente.';
 
   @override
   String get handNextHand => 'Proxima Mao';

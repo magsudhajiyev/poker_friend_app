@@ -338,6 +338,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         icon = Icons.check_circle;
         iconColor = AppColors.limeGreen;
         break;
+      case NotificationType.partnerGranted:
+        icon = Icons.card_giftcard;
+        iconColor = AppColors.accentPrimary;
+        break;
     }
 
     SlidingNotificationOverlay.show(
@@ -681,6 +685,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         break;
       case NotificationType.supportRequestUpdated:
         _showSupportResponseDialog(notification);
+        break;
+      case NotificationType.partnerGranted:
+        // No navigation needed — the grant is already active
         break;
     }
   }

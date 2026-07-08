@@ -402,6 +402,36 @@ abstract class AppLocalizations {
   /// **'Available after 60 min of tracking'**
   String get statsHourlyRateNotAvailable;
 
+  /// No description provided for @errorNoConnection.
+  ///
+  /// In en, this message translates to:
+  /// **'No internet connection. Check your network and try again.'**
+  String get errorNoConnection;
+
+  /// No description provided for @errorTimeout.
+  ///
+  /// In en, this message translates to:
+  /// **'The request timed out. Please try again.'**
+  String get errorTimeout;
+
+  /// No description provided for @errorServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong on our side. Please try again in a few minutes.'**
+  String get errorServer;
+
+  /// No description provided for @errorNotAuthorized.
+  ///
+  /// In en, this message translates to:
+  /// **'You don\'t have permission to do that. Try signing in again.'**
+  String get errorNotAuthorized;
+
+  /// No description provided for @errorGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong. Please try again.'**
+  String get errorGeneric;
+
   /// No description provided for @statsBBPerHour.
   ///
   /// In en, this message translates to:
@@ -1541,36 +1571,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{ratio} avg'**
   String handAvgPill(String ratio);
-
-  /// No description provided for @errorNoConnection.
-  ///
-  /// In en, this message translates to:
-  /// **'No internet connection. Check your network and try again.'**
-  String get errorNoConnection;
-
-  /// No description provided for @errorTimeout.
-  ///
-  /// In en, this message translates to:
-  /// **'The request timed out. Please try again.'**
-  String get errorTimeout;
-
-  /// No description provided for @errorServer.
-  ///
-  /// In en, this message translates to:
-  /// **'Something went wrong on our side. Please try again in a few minutes.'**
-  String get errorServer;
-
-  /// No description provided for @errorNotAuthorized.
-  ///
-  /// In en, this message translates to:
-  /// **'You don't have permission to do that. Try signing in again.'**
-  String get errorNotAuthorized;
-
-  /// No description provided for @errorGeneric.
-  ///
-  /// In en, this message translates to:
-  /// **'Something went wrong. Please try again.'**
-  String get errorGeneric;
 
   /// No description provided for @handNextHand.
   ///
