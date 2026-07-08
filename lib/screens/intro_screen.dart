@@ -25,13 +25,20 @@ class _IntroScreenState extends State<IntroScreen> {
     super.dispose();
   }
 
-  /// Guest entry — anonymous auth; AuthWrapper's auth stream takes over
-  /// (questions → Home → guided tour) without any navigation from here.
+  /// Guest entry — anonymous auth. Mirrors the email/Google/Apple sign-in
+  /// paths: after auth succeeds we reset the stack to '/', which rebuilds
+  /// AuthWrapper from scratch and routes into the onboarding flow. Relying on
+  /// the auth stream alone is not enough — this IntroScreen may itself be a
+  /// pushed route (e.g. after sign-out), which would hide the rebuild.
   Future<void> _startAsGuest() async {
     if (_isStartingGuest) return;
     setState(() => _isStartingGuest = true);
     try {
-      await AuthService.signInAnonymously();
+      final credential = await AuthService.signInAnonymously();
+      if (credential?.user != null && mounted) {
+        Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+        return;
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
