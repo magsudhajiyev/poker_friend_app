@@ -4,6 +4,9 @@ import '../design_system/constants/colors.dart';
 import '../design_system/constants/typography.dart';
 import '../l10n/app_localizations.dart';
 import '../screens/paywall_screen.dart';
+import '../screens/auth_screen_experimental.dart';
+import '../screens/onboarding/onboarding_flow.dart';
+import '../services/auth_service.dart';
 import 'onboarding_prefs.dart';
 import 'onboarding_state.dart';
 import '../design_system/constants/decorations.dart';
@@ -699,8 +702,14 @@ class ButtonTokenTour {
 // Tour completion — shared by the phase-6 end and every phase-5/6 fallback
 // ---------------------------------------------------------------------------
 
-/// Ends the tour: completion dialog, then (once ever) the post-tour paywall,
-/// then a clean reset to Home — the tour can end several screens deep.
+/// Ends the tour: completion dialog, then — for a guest — required sign-up and
+/// the onboarding questions, then (once ever) the skippable post-tour paywall,
+/// then a clean reset to Home. The tour can end several screens deep.
+///
+/// Guest funnel (value-first): the anonymous user experienced the tour first;
+/// only now do we ask them to create an account (hard gate), answer the
+/// onboarding questions, and see the paywall. A user who already had an account
+/// before the tour keeps the original behavior (dialog → paywall → Home).
 Future<void> finishOnboardingTour(BuildContext context,
     {bool showPaywall = true}) async {
   OnboardingState.complete();
@@ -715,6 +724,44 @@ Future<void> finishOnboardingTour(BuildContext context,
   );
   if (!context.mounted) return;
 
+  final isGuest = AuthService.isAnonymous && !OnboardingState.isReplay;
+
+  if (isGuest) {
+    // 1. Required sign-up (hard gate). canDismiss:false means the screen can
+    //    only leave via a successful link (pops `true`) — or, on a credential
+    //    conflict, by signing into the existing account (which resets the stack,
+    //    unmounting `context`, handled by the mounted checks below).
+    final linked = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (_) => const AuthScreenExperimental(
+          linkMode: true,
+          canDismiss: false,
+        ),
+      ),
+    );
+    if (!context.mounted) return;
+
+    if (linked == true) {
+      // 2. Onboarding questions. skipNickname:false so the nickname step writes
+      //    hasSetUsername:true (linking alone doesn't) — otherwise the final
+      //    return to '/' would re-route back into OnboardingFlow. popOnComplete
+      //    pops back here so we can continue to the paywall.
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => const OnboardingFlow(
+            skipNickname: false,
+            popOnComplete: true,
+          ),
+        ),
+      );
+      if (!context.mounted) return;
+    }
+  }
+
+  // 3. Skippable paywall (shown at most once ever). For a guest it lands after
+  //    the questions; for a pre-existing account it's the immediate post-tour
+  //    paywall (unchanged behavior).
   if (showPaywall && !(await OnboardingPrefs.wasPostTourPaywallShown())) {
     await OnboardingPrefs.markPostTourPaywallShown();
     if (!context.mounted) return;

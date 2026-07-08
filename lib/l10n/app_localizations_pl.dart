@@ -7326,7 +7326,15 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get guidedLogOneMoreBody =>
-      'Dotknij Następna ręka, aby ją rozdać, a potem rozegraj ją samodzielnie.';
+      'Zapisz jeszcze jedno rozdanie — rozegraj je samodzielnie.';
+
+  @override
+  String get guidedCurrentStackTitle =>
+      'Aktualny stack';
+
+  @override
+  String get guidedCurrentStackBody =>
+      'To Twój aktualny stack — aktualizuje się przy każdym zapisanym rozdaniu.';
 
   @override
   String get guidedTourCompleteTitle => 'Tour zakończony!';

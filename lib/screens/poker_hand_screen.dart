@@ -819,8 +819,11 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         if (!mounted) return;
 
         // Navigate back to main screen
-        if (OnboardingState.isOnboardingActive && OnboardingState.currentPhase == 5) {
-          // Push a fresh home screen so initState runs and detects phase 5
+        if (OnboardingState.isOnboardingActive) {
+          // Tutorial finish (via the 3-dot menu → Stop Session): advance to the
+          // post-session phase and push a fresh Home so its initState detects
+          // phase 5 and continues the tour (Sessions → card → chart → hands → AI).
+          OnboardingState.advanceTo(5);
           Navigator.of(context).pushAndRemoveUntil(
             MaterialPageRoute(builder: (_) => HomeScreen()),
             (route) => false,
@@ -2039,6 +2042,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
           blindsPillKey: _blindsPillKey,
           nextHandButtonKey: _nextHandButtonKey,
           sessionInfoButtonKey: _sessionInfoButtonKey,
+          menuButtonKey: _menuButtonKey,
           drawingAreaKey: _drawingAreaKey,
           undoButtonKey: _undoButtonKey,
           heroSeat: sessionManager.ourSeatNumber,
@@ -6680,9 +6684,15 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
 
         setState(() {
           if (isChoppedPot) {
-            // Get current stack for our seat to track in session history
+            // Get current stack for our seat to track in session history.
+            // The pot hasn't been credited yet (distribution happens below), so
+            // if the hero is a winner, add their share now — otherwise the stack
+            // chart records the pre-award (lower) value and dips on a won hand.
             final ourSeat = sessionManager.ourSeatNumber;
-            final currentStack = ourSeat != null ? gameState.players[ourSeat - 1].currentStack : null;
+            double? currentStack = ourSeat != null ? gameState.players[ourSeat - 1].currentStack : null;
+            if (currentStack != null && ourSeat != null && winners.contains(ourSeat)) {
+              currentStack += individualShares[ourSeat] ?? sharePerWinner;
+            }
 
             // Complete current hand in session manager with pot and multiple winners
             sessionManager.completeCurrentHandWithChop(
@@ -6714,9 +6724,15 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                 sessionManager.getPlayerNameWithPosition(id)).join(', ');
             }
           } else {
-            // Get current stack for our seat to track in session history
+            // Get current stack for our seat to track in session history.
+            // The pot hasn't been credited yet (distribution happens below), so
+            // if the hero won, add the pot now — otherwise the stack chart
+            // records the pre-award (lower) value and dips on a won hand.
             final ourSeat = sessionManager.ourSeatNumber;
-            final currentStack = ourSeat != null ? gameState.players[ourSeat - 1].currentStack : null;
+            double? currentStack = ourSeat != null ? gameState.players[ourSeat - 1].currentStack : null;
+            if (currentStack != null && ourSeat != null && winners.contains(ourSeat)) {
+              currentStack += potAmount;
+            }
 
             // Complete current hand in session manager with single winner
             sessionManager.completeCurrentHand(

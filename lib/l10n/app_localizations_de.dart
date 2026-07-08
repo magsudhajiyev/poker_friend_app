@@ -7359,7 +7359,15 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get guidedLogOneMoreBody =>
-      'Tippe auf Nächste Hand, um sie auszugeben, und spiele sie selbst aus.';
+      'Erfasse ruhig noch eine Hand – spiel sie selbst zu Ende.';
+
+  @override
+  String get guidedCurrentStackTitle =>
+      'Aktueller Stack';
+
+  @override
+  String get guidedCurrentStackBody =>
+      'Das ist dein aktueller Stack – er aktualisiert sich mit jeder erfassten Hand.';
 
   @override
   String get guidedTourCompleteTitle => 'Tour abgeschlossen!';

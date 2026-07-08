@@ -7378,7 +7378,15 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get guidedLogOneMoreBody =>
-      'Touchez Main suivante pour la distribuer, puis jouez-la vous-même.';
+      'Enregistrez encore une main — jouez-la vous-même.';
+
+  @override
+  String get guidedCurrentStackTitle =>
+      'Tapis actuel';
+
+  @override
+  String get guidedCurrentStackBody =>
+      'Voici votre tapis en direct : il se met à jour à chaque main enregistrée.';
 
   @override
   String get guidedTourCompleteTitle => 'Tour terminé !';

@@ -123,6 +123,13 @@ class _AuthWrapperState extends State<AuthWrapper> {
             }
           });
 
+          // Anonymous guests skip the username/onboarding gates and go straight
+          // to Home, where the guided tour auto-starts (value-first funnel). Sign-up
+          // and the onboarding questions are deferred until AFTER the tour finishes.
+          if (AuthService.isAnonymous) {
+            return HomeScreen();
+          }
+
           // Reuse the same future across stream rebuilds to avoid re-running the check
           _usernameSetupFuture ??= _checkUsernameSetup();
 

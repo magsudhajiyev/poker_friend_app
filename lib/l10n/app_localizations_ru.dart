@@ -7318,7 +7318,15 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get guidedLogOneMoreBody =>
-      'Нажмите «Следующая раздача», чтобы раздать её, и разыграйте сами.';
+      'Запишите ещё одну раздачу — разыграйте её сами.';
+
+  @override
+  String get guidedCurrentStackTitle =>
+      'Текущий стек';
+
+  @override
+  String get guidedCurrentStackBody =>
+      'Это ваш текущий стек — он обновляется после каждой записанной раздачи.';
 
   @override
   String get guidedTourCompleteTitle => 'Тур завершён!';

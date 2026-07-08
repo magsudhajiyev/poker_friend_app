@@ -252,6 +252,27 @@ class _PaywallScreenState extends State<PaywallScreen> {
                     ),
                   ),
                 ),
+                // Skip affordance — only when the paywall is dismissible
+                // (post-tour onboarding). Pops with no purchase.
+                if (widget.showSkip)
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: GestureDetector(
+                      onTap: () => Navigator.of(context).pop(),
+                      child: Padding(
+                        padding: EdgeInsets.only(right: AppSpacing.md),
+                        child: Text(
+                          l10n.onboardingSkip,
+                          style: const TextStyle(
+                            fontFamily: 'IBM Plex Sans',
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),

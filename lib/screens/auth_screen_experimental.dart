@@ -25,10 +25,17 @@ class AuthScreenExperimental extends StatefulWidget {
   /// the paywall's purchase flow).
   final bool linkMode;
 
+  /// When false, the screen becomes a hard gate: system back is blocked, the
+  /// back arrow and the sign-in/sign-up toggle links are hidden, so the only
+  /// way out is a successful sign-up/link (or signing into a conflicting
+  /// account). Used by the post-tour guest funnel where signing up is required.
+  final bool canDismiss;
+
   const AuthScreenExperimental({
     Key? key,
     this.initialIsSignUp = true,
     this.linkMode = false,
+    this.canDismiss = true,
   }) : super(key: key);
 
   @override
@@ -478,28 +485,31 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.bgPrimary,
-      body: Stack(
-        children: [
-          const GradientBackground(),
-          SafeArea(
-            child: SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const SizedBox(height: 20),
-                    _buildHeader(),
-                    const SizedBox(height: 40),
-                    _isSignUp ? _buildSignUpForm() : _buildSignInForm(),
-                  ],
+    return PopScope(
+      canPop: widget.canDismiss,
+      child: Scaffold(
+        backgroundColor: AppColors.bgPrimary,
+        body: Stack(
+          children: [
+            const GradientBackground(),
+            SafeArea(
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const SizedBox(height: 20),
+                      _buildHeader(),
+                      const SizedBox(height: 40),
+                      _isSignUp ? _buildSignUpForm() : _buildSignInForm(),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -508,15 +518,16 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Back arrow
-        GlassyIconButton(
-          icon: Icons.arrow_back,
-          onPressed: () => Navigator.pop(context),
-          size: 40,
-          iconSize: 20,
-        ),
+        // Back arrow (hidden when the screen is a hard gate)
+        if (widget.canDismiss)
+          GlassyIconButton(
+            icon: Icons.arrow_back,
+            onPressed: () => Navigator.pop(context),
+            size: 40,
+            iconSize: 20,
+          ),
 
-        const SizedBox(height: 24),
+        if (widget.canDismiss) const SizedBox(height: 24),
 
         // Title
         Text(
@@ -638,28 +649,29 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
 
           const SizedBox(height: 20),
 
-          // Already have an account?
-          Center(
-            child: GestureDetector(
-              onTap: () => setState(() => _isSignUp = false),
-              child: RichText(
-                text: TextSpan(
-                  style: AppTypography.bodySmall(color: Colors.white.withOpacity(0.70)),
-                  children: [
-                    TextSpan(text: l10n.authExpAlreadyHaveAccount),
-                    TextSpan(
-                      text: l10n.authExpSignIn,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                        decoration: TextDecoration.underline,
+          // Already have an account? (hidden in hard-gate mode)
+          if (widget.canDismiss)
+            Center(
+              child: GestureDetector(
+                onTap: () => setState(() => _isSignUp = false),
+                child: RichText(
+                  text: TextSpan(
+                    style: AppTypography.bodySmall(color: Colors.white.withOpacity(0.70)),
+                    children: [
+                      TextSpan(text: l10n.authExpAlreadyHaveAccount),
+                      TextSpan(
+                        text: l10n.authExpSignIn,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                          decoration: TextDecoration.underline,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
 
           _buildSocialSignInSection(),
         ],
@@ -737,28 +749,29 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
 
           const SizedBox(height: 20),
 
-          // Don't have an account?
-          Center(
-            child: GestureDetector(
-              onTap: () => setState(() => _isSignUp = true),
-              child: RichText(
-                text: TextSpan(
-                  style: AppTypography.bodySmall(color: Colors.white.withOpacity(0.70)),
-                  children: [
-                    TextSpan(text: l10n.authExpDontHaveAccount),
-                    TextSpan(
-                      text: l10n.authExpSignUp,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                        decoration: TextDecoration.underline,
+          // Don't have an account? (hidden in hard-gate mode)
+          if (widget.canDismiss)
+            Center(
+              child: GestureDetector(
+                onTap: () => setState(() => _isSignUp = true),
+                child: RichText(
+                  text: TextSpan(
+                    style: AppTypography.bodySmall(color: Colors.white.withOpacity(0.70)),
+                    children: [
+                      TextSpan(text: l10n.authExpDontHaveAccount),
+                      TextSpan(
+                        text: l10n.authExpSignUp,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                          decoration: TextDecoration.underline,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
 
           _buildSocialSignInSection(),
         ],

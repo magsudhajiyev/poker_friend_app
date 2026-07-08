@@ -59,6 +59,7 @@ class GuidedHandOverlay extends StatefulWidget {
   final GlobalKey? blindsPillKey;
   final GlobalKey? nextHandButtonKey;
   final GlobalKey? sessionInfoButtonKey;
+  final GlobalKey? menuButtonKey;
   final GlobalKey? drawingAreaKey;
   final GlobalKey? undoButtonKey;
   final int? heroSeat;
@@ -83,6 +84,7 @@ class GuidedHandOverlay extends StatefulWidget {
     this.blindsPillKey,
     this.nextHandButtonKey,
     this.sessionInfoButtonKey,
+    this.menuButtonKey,
     this.drawingAreaKey,
     this.undoButtonKey,
     this.heroSeat,
@@ -179,14 +181,14 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
 
   /// Called after hole cards dialog completes.
   void onHoleCardsCompleted() {
-    // Second (free-play) tour hand just finished — time to finish the
-    // session: spotlight the ⓘ button in FINISH mode.
+    // Second (free-play) tour hand just finished — time to finish the session:
+    // spotlight the 3-dot game menu and let the user pick "Stop Session".
     if (OnboardingState.isOnboardingActive &&
         !OnboardingState.isReplay &&
         OnboardingState.currentPhase == 4 &&
         OnboardingState.secondTourHandPending) {
       OnboardingState.secondTourHandPending = false;
-      _showSessionInfoCoachMark(SessionDetailsTourMode.finish);
+      _showFinishMenuCoachMark();
       return;
     }
 
@@ -722,7 +724,7 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
 
       final nextKey = widget.nextHandButtonKey;
       if (nextKey == null || nextKey.currentContext == null) {
-        _showSessionInfoCoachMark(SessionDetailsTourMode.explain);
+        _showSessionInfoCoachMark();
         return;
       }
 
@@ -762,36 +764,38 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
           _finishOnboarding();
           return true;
         },
-        onFinish: () =>
-            _showSessionInfoCoachMark(SessionDetailsTourMode.explain),
+        onFinish: () => _showSessionInfoCoachMark(),
       );
       coach.show(context: context);
     });
   }
 
-  /// After returning from the first (explain) session-details visit: spotlight
-  /// the Next Hand button and prompt the user to log one more hand. When that
-  /// hand completes, [onHoleCardsCompleted] fires the finish-session step.
-  /// Called by the poker screen once the session-details screen pops.
+  /// After returning from the first (explain) session-details visit: show a
+  /// centered instruction card asking the user to log one more hand — with NO
+  /// spotlight. (The Next Hand button is deliberately not highlighted: it skips
+  /// the current hand and moves the dealer button, whereas a fresh hand is
+  /// already ready to log.) When that hand completes, [onHoleCardsCompleted]
+  /// fires the finish-session step. Called by the poker screen once the
+  /// session-details screen pops.
   void promptSecondHand() {
     if (!mounted) return;
-    final nextKey = widget.nextHandButtonKey;
-    if (nextKey == null || nextKey.currentContext == null) {
-      // No button to point at — just arm the second-hand handoff.
-      OnboardingState.secondTourHandPending = true;
-      return;
-    }
+
+    final screenHeight = MediaQuery.of(context).size.height;
 
     final targets = <TargetFocus>[
       TargetFocus(
         identify: 'log_one_more_hand',
-        keyTarget: nextKey,
-        shape: ShapeLightFocus.RRect,
-        radius: 17,
-        paddingFocus: 8,
+        // Off-screen target → no spotlight, just a centered card.
+        targetPosition: TargetPosition(
+          const Size(0, 0),
+          const Offset(-1000, -1000),
+        ),
+        shape: ShapeLightFocus.Circle,
+        radius: 0,
         contents: [
           TargetContent(
-            align: ContentAlign.bottom,
+            align: ContentAlign.custom,
+            customPosition: CustomTargetContentPosition(top: screenHeight * 0.32),
             builder: (context, controller) {
               final l10n = AppLocalizations.of(context);
               return buildTooltip(
@@ -820,7 +824,7 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
         return true;
       },
       onFinish: () {
-        // User will now tap Next Hand and play hand 2 freely.
+        // User will now play hand 2 freely (a fresh hand is already dealt).
         OnboardingState.secondTourHandPending = true;
       },
     );
@@ -831,10 +835,11 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
   // Session Info Button Coach Mark — spotlight the ⓘ next to the 3-dot menu
   // ---------------------------------------------------------------------------
 
-  /// Spotlights the ⓘ session-details button. In [SessionDetailsTourMode.explain]
-  /// (after hand 1) it sets up the explain→"go back" detour; in
-  /// [SessionDetailsTourMode.finish] (after hand 2) it sets up the finish detour.
-  void _showSessionInfoCoachMark(SessionDetailsTourMode mode) {
+  /// Spotlights the ⓘ session-details button after hand 1 — the EXPLAIN detour.
+  /// When the user taps it, the session-details screen shows the current-stack
+  /// card, Update button and stack chart, then a "go back" step; returning here
+  /// prompts the user to log one more hand ([promptSecondHand]).
+  void _showSessionInfoCoachMark() {
     Future.delayed(const Duration(milliseconds: 400), () {
       if (!mounted) return;
 
@@ -842,15 +847,9 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
       if (infoKey == null || infoKey.currentContext == null) {
         // Degrade gracefully if the ⓘ can't be spotlighted.
         OnboardingState.guidedHandPhase = GuidedPhase.done;
-        if (mode == SessionDetailsTourMode.explain) {
-          promptSecondHand();
-        } else {
-          OnboardingState.advanceTo(5);
-        }
+        promptSecondHand();
         return;
       }
-
-      final isExplain = mode == SessionDetailsTourMode.explain;
 
       final targets = <TargetFocus>[
         TargetFocus(
@@ -864,12 +863,8 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
               builder: (context, controller) {
                 final l10n = AppLocalizations.of(context);
                 return buildTooltip(
-                  title: isExplain
-                      ? l10n.guidedSessionInfoTitle
-                      : l10n.guidedSessionInfoFinishTitle,
-                  body: isExplain
-                      ? l10n.guidedSessionInfoBody
-                      : l10n.guidedSessionInfoFinishBody,
+                  title: l10n.guidedSessionInfoTitle,
+                  body: l10n.guidedSessionInfoBody,
                   onNext: () => controller.next(),
                   context: context,
                   isLast: true,
@@ -893,10 +888,72 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
           return true;
         },
         onFinish: () {
-          // The session-details screen picks up the tour in the chosen mode.
+          // The session-details screen picks up the explain tour on open.
           OnboardingState.sessionDetailsTourPending = true;
-          OnboardingState.sessionDetailsTourMode = mode;
-          OnboardingState.sessionDetailsExplainReturnPending = isExplain;
+          OnboardingState.sessionDetailsExplainReturnPending = true;
+          OnboardingState.guidedHandPhase = GuidedPhase.done;
+          widget.onSkipOrFinish?.call();
+        },
+      );
+      coach.show(context: context);
+    });
+  }
+
+  /// Spotlights the 3-dot game menu after hand 2 so the user can open it and
+  /// pick "Stop Session" to finish the tutorial. The menu's Stop Session item
+  /// calls the poker screen's `_stopSession`, which (while onboarding is active)
+  /// advances to phase 5 and lands on Home to continue the tour.
+  void _showFinishMenuCoachMark() {
+    Future.delayed(const Duration(milliseconds: 400), () {
+      if (!mounted) return;
+
+      final menuKey = widget.menuButtonKey;
+      if (menuKey == null || menuKey.currentContext == null) {
+        // Degrade gracefully if the menu can't be spotlighted — advance anyway.
+        OnboardingState.guidedHandPhase = GuidedPhase.done;
+        OnboardingState.advanceTo(5);
+        return;
+      }
+
+      final targets = <TargetFocus>[
+        TargetFocus(
+          identify: 'finish_menu_button',
+          keyTarget: menuKey,
+          shape: ShapeLightFocus.Circle,
+          paddingFocus: 12,
+          contents: [
+            TargetContent(
+              align: ContentAlign.bottom,
+              builder: (context, controller) {
+                final l10n = AppLocalizations.of(context);
+                return buildTooltip(
+                  title: l10n.guidedEndSessionTitle,
+                  body: l10n.guidedEndSessionBody,
+                  onNext: () => controller.next(),
+                  context: context,
+                  isLast: true,
+                );
+              },
+            ),
+          ],
+        ),
+      ];
+
+      final coach = TutorialCoachMark(
+        targets: targets,
+        colorShadow: Colors.black,
+        opacityShadow: 0.85,
+        paddingFocus: 12,
+        hideSkip: false,
+        alignSkip: Alignment.topLeft,
+        skipWidget: _buildSkipWidget(),
+        onSkip: () {
+          _finishOnboarding();
+          return true;
+        },
+        onFinish: () {
+          // Dismiss the coach; the user now opens the 3-dot menu and taps
+          // Stop Session, which drives the finish routing in _stopSession.
           OnboardingState.guidedHandPhase = GuidedPhase.done;
           widget.onSkipOrFinish?.call();
         },

@@ -24,7 +24,6 @@ import '../onboarding/onboarding_progress_bar.dart';
 import '../design_system/components/app_toggle.dart';
 import '../models/hand_state_machine.dart';
 import '../widgets/stack_growth_chart.dart';
-import '../utils/stack_analytics.dart';
 import '../l10n/app_localizations.dart';
 import '../services/currency_service.dart';
 import '../design_system/constants/colors.dart';
@@ -118,6 +117,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
   final GlobalKey _dotsKey = GlobalKey();
 
   // Onboarding GlobalKeys
+  final GlobalKey _currentStackCardKey = GlobalKey(debugLabel: 'currentStackCard');
   final GlobalKey _updateStackBtnKey = GlobalKey(debugLabel: 'updateStackBtn');
   final GlobalKey _logHandBtnKey = GlobalKey(debugLabel: 'logHandBtn');
   final GlobalKey _stopSessionBtnKey = GlobalKey(debugLabel: 'stopSessionBtn');
@@ -211,79 +211,29 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
 
   void _showSessionDetailsTour() {
     final l10n = AppLocalizations.of(context);
-    final isFinish =
-        OnboardingState.sessionDetailsTourMode == SessionDetailsTourMode.finish;
 
+    // Explain tour (top-to-bottom): current-stack card → Update button →
+    // stack chart → "Go back to hand". Finishing the session now happens via
+    // the poker screen's 3-dot menu, so there is no Stop-button step here.
     final targets = <TargetFocus>[];
 
-    if (isFinish) {
-      // Second visit (after hand 2): spotlight the red Stop button to finish.
+    if (_currentStackCardKey.currentContext != null) {
       targets.add(
         TargetFocus(
-          identify: 'stop_session_button',
-          keyTarget: _stopSessionBtnKey,
-          shape: ShapeLightFocus.Circle,
-          paddingFocus: 12,
+          identify: 'current_stack_card',
+          keyTarget: _currentStackCardKey,
+          shape: ShapeLightFocus.RRect,
+          radius: 18,
+          paddingFocus: 6,
           contents: [
             TargetContent(
               align: ContentAlign.bottom,
               builder: (context, controller) {
                 return buildTooltip(
-                  title: l10n.guidedStopSessionTitle,
-                  body: l10n.guidedStopSessionBody,
+                  title: l10n.guidedCurrentStackTitle,
+                  body: l10n.guidedCurrentStackBody,
                   onNext: () => controller.next(),
                   context: context,
-                  isLast: true,
-                );
-              },
-            ),
-          ],
-        ),
-      );
-    } else {
-      // First visit (explain): show the stack chart, then point at "Go back to
-      // hand" so the user returns to log one more hand.
-      if (_stackChartKey.currentContext != null) {
-        targets.add(
-          TargetFocus(
-            identify: 'stack_chart',
-            keyTarget: _stackChartKey,
-            shape: ShapeLightFocus.RRect,
-            radius: 18,
-            paddingFocus: 6,
-            contents: [
-              TargetContent(
-                align: ContentAlign.bottom,
-                builder: (context, controller) {
-                  return buildTooltip(
-                    title: l10n.guidedStackChartTitle,
-                    body: l10n.guidedStackChartBody,
-                    onNext: () => controller.next(),
-                    context: context,
-                  );
-                },
-              ),
-            ],
-          ),
-        );
-      }
-      targets.add(
-        TargetFocus(
-          identify: 'go_back_to_hand',
-          keyTarget: _logHandBtnKey,
-          shape: ShapeLightFocus.RRect,
-          radius: 20,
-          paddingFocus: 6,
-          contents: [
-            TargetContent(
-              align: ContentAlign.top,
-              builder: (context, controller) {
-                return buildTooltip(
-                  title: l10n.guidedDetailsBackTitle,
-                  body: l10n.guidedDetailsBackBody,
-                  onNext: () => controller.next(),
-                  context: context,
-                  isLast: true,
                 );
               },
             ),
@@ -291,6 +241,75 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
         ),
       );
     }
+    targets.add(
+      TargetFocus(
+        identify: 'update_stack_button',
+        keyTarget: _updateStackBtnKey,
+        shape: ShapeLightFocus.RRect,
+        radius: 20,
+        paddingFocus: 6,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (context, controller) {
+              return buildTooltip(
+                title: l10n.guidedUpdateStackTitle,
+                body: l10n.guidedUpdateStackBody,
+                onNext: () => controller.next(),
+                context: context,
+              );
+            },
+          ),
+        ],
+      ),
+    );
+    if (_stackChartKey.currentContext != null) {
+      targets.add(
+        TargetFocus(
+          identify: 'stack_chart',
+          keyTarget: _stackChartKey,
+          shape: ShapeLightFocus.RRect,
+          radius: 18,
+          paddingFocus: 6,
+          contents: [
+            TargetContent(
+              align: ContentAlign.top,
+              builder: (context, controller) {
+                return buildTooltip(
+                  title: l10n.guidedStackChartTitle,
+                  body: l10n.guidedStackChartBody,
+                  onNext: () => controller.next(),
+                  context: context,
+                );
+              },
+            ),
+          ],
+        ),
+      );
+    }
+    targets.add(
+      TargetFocus(
+        identify: 'go_back_to_hand',
+        keyTarget: _logHandBtnKey,
+        shape: ShapeLightFocus.RRect,
+        radius: 20,
+        paddingFocus: 6,
+        contents: [
+          TargetContent(
+            align: ContentAlign.top,
+            builder: (context, controller) {
+              return buildTooltip(
+                title: l10n.guidedDetailsBackTitle,
+                body: l10n.guidedDetailsBackBody,
+                onNext: () => controller.next(),
+                context: context,
+                isLast: true,
+              );
+            },
+          ),
+        ],
+      ),
+    );
 
     final coach = TutorialCoachMark(
       targets: targets,
@@ -508,13 +527,6 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
   Future<void> _showUpdateStackDialog() async {
     final l10n = AppLocalizations.of(context);
     final newStackController = TextEditingController(text: _currentStack.toString());
-    final currentTableAvg = StackAnalytics.latestTableAverage(_stackHistory);
-    final tableAvgController = TextEditingController(
-        text: currentTableAvg != null
-            ? (currentTableAvg == currentTableAvg.roundToDouble()
-                ? currentTableAvg.toStringAsFixed(0)
-                : currentTableAvg.toString())
-            : '');
     final noteController = TextEditingController();
     Map<String, dynamic>? result;
 
@@ -528,7 +540,6 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
           result = {
             'stack': value,
             'note': noteController.text.trim(),
-            'tableAvg': double.tryParse(tableAvgController.text),
           };
           Navigator.pop(context);
         }
@@ -622,49 +633,6 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                 alignment: Alignment.center,
                 child: Container(height: 1, color: AppColors.bgOverlay),
               ),
-              // Table average field (optional, F2 stack analytics)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(10, 10, 8, 10),
-                child: TextField(
-                  controller: tableAvgController,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  style: AppTypography.ibm(
-                    fontSize: 17,
-                    color: Colors.white,
-                    fontWeight: FontWeight.w400,
-                    height: 1.44,
-                  ),
-                  decoration: InputDecoration(
-                    hintText: l10n.individualTableAvgHint,
-                    hintStyle: AppTypography.ibm(
-                      fontSize: 17,
-                      color: Colors.white.withValues(alpha: 0.5),
-                      fontWeight: FontWeight.w400,
-                      height: 1.44,
-                    ),
-                    prefixText: widget.gameType == GameType.cash ? CurrencyService.prefixText : '',
-                    suffixText: widget.gameType == GameType.cash ? CurrencyService.suffixText : null,
-                    prefixStyle: AppTypography.ibm(
-                      fontSize: 17,
-                      color: Colors.white,
-                      fontWeight: FontWeight.w400,
-                    ),
-                    border: InputBorder.none,
-                    enabledBorder: InputBorder.none,
-                    focusedBorder: InputBorder.none,
-                    filled: false,
-                    contentPadding: EdgeInsets.zero,
-                    isDense: true,
-                  ),
-                ),
-              ),
-              // Separator
-              Container(
-                height: 21,
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                alignment: Alignment.center,
-                child: Container(height: 1, color: AppColors.bgOverlay),
-              ),
               // Note field
               Padding(
                 padding: const EdgeInsets.all(10),
@@ -706,7 +674,6 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
     if (result != null) {
       final newStack = result!['stack'] as double;
       final note = result!['note'] as String;
-      final tableAvg = result!['tableAvg'] as double?;
       if (newStack >= 0) {
         final previousStack = _currentStack;
         final stackChange = newStack - previousStack;
@@ -721,9 +688,6 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
           };
           if (note.isNotEmpty) {
             entry['note'] = note;
-          }
-          if (tableAvg != null && tableAvg > 0) {
-            entry['tableAvg'] = tableAvg;
           }
           _stackHistory.add(entry);
         });
@@ -2224,6 +2188,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
 
                   // Main Stack Card
                   Container(
+                    key: _currentStackCardKey,
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
                       color: AppColors.infoCardBg,

@@ -12792,8 +12792,20 @@ abstract class AppLocalizations {
   /// No description provided for @guidedLogOneMoreBody.
   ///
   /// In en, this message translates to:
-  /// **'Tap Next Hand to deal it, then play it out yourself.'**
+  /// **'Go ahead and log one more hand — play it out yourself.'**
   String get guidedLogOneMoreBody;
+
+  /// No description provided for @guidedCurrentStackTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Current Stack'**
+  String get guidedCurrentStackTitle;
+
+  /// No description provided for @guidedCurrentStackBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This is your live stack — it updates every time you log a hand.'**
+  String get guidedCurrentStackBody;
 
   /// No description provided for @guidedTourCompleteTitle.
   ///
