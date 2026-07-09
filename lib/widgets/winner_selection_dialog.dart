@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../l10n/app_localizations.dart';
 import '../models/game_types.dart';
+import '../onboarding/onboarding_state.dart';
 import '../services/currency_service.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/decorations.dart';
@@ -426,6 +427,44 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
                           ),
                         ),
                       ),
+
+                    // Tour tip — chop pot hint
+                    if (!isChoppedPot && OnboardingState.isGuidedHandActive)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 12),
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: AppColors.limeGreen.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
+                            border: Border.all(
+                              color: AppColors.limeGreen.withValues(alpha: 0.3),
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.touch_app_rounded,
+                                color: AppColors.limeGreen,
+                                size: 22,
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  'Tip: Press and hold a player to split the pot between multiple winners',
+                                  style: AppTypography.ibm(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w500,
+                                    color: AppColors.limeGreen,
+                                    height: 1.4,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+
                     const SizedBox(height: 16),
 
                     // Player rows

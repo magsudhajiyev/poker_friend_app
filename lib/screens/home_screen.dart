@@ -77,6 +77,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final GlobalKey _fabKey = GlobalKey(debugLabel: 'fab');
   final GlobalKey _sessionsNavKey = GlobalKey(debugLabel: 'sessionsNav');
+  final GlobalKey _bankrollCardKey = GlobalKey(debugLabel: 'bankrollCard');
   int _currentIndex = 2;
   List<Map<String, dynamic>> upcomingEvents = [];
   Map<String, int> _eventGoingCounts = {};  // eventId -> going count
@@ -184,6 +185,20 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               ),
             );
           }
+        }
+      }
+
+      // Post-tour bankroll card tip — shown once after completing the tour
+      if (await OnboardingPrefs.isBankrollTourPending()) {
+        if (!mounted) return;
+        // Wait for bankroll card to render
+        for (int i = 0; i < 20; i++) {
+          await Future.delayed(const Duration(milliseconds: 100));
+          if (!mounted) return;
+          if (_bankrollCardKey.currentContext != null) break;
+        }
+        if (mounted && _bankrollCardKey.currentContext != null) {
+          BankrollCardTour(bankrollCardKey: _bankrollCardKey).show(context);
         }
       }
       return;
@@ -2251,6 +2266,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     final l10n = AppLocalizations.of(context);
 
     return GestureDetector(
+      key: _bankrollCardKey,
       onLongPress: _isBankrollHidden ? null : _startBankrollEdit,
       // Opaque so press-and-hold works anywhere on the card, not only on
       // the text glyphs (deferToChild made the gesture feel broken).

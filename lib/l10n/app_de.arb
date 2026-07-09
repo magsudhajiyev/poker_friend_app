@@ -5512,5 +5512,7 @@
         "type": "String"
       }
     }
-  }
+  },
+  "onboardingBankrollCardTitle": "Dein Bankroll",
+  "onboardingBankrollCardBody": "Halte die Bankroll-Karte gedrückt, um dein aktuelles Bankroll und dein Bankroll-Ziel einzugeben. Verfolge deinen Fortschritt!"
 }

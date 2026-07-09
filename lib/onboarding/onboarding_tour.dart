@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import '../design_system/constants/colors.dart';
-import '../design_system/constants/spacing.dart';
 import '../design_system/constants/typography.dart';
 import '../l10n/app_localizations.dart';
 import '../screens/paywall_screen.dart';
@@ -62,82 +61,58 @@ TutorialCoachMark _createCoachMark({
   );
 }
 
-Widget buildWelcomeCard({
-  required VoidCallback onNext,
-  required BuildContext context,
-  VoidCallback? onClose,
-}) {
+Widget buildWelcomeCard({required VoidCallback onNext, required BuildContext context}) {
   final l10n = AppLocalizations.of(context);
   return Container(
-    padding: const EdgeInsets.all(AppSpacing.space6),
-    margin: const EdgeInsets.symmetric(horizontal: AppSpacing.space4),
+    padding: const EdgeInsets.all(28),
+    margin: const EdgeInsets.symmetric(horizontal: 24),
     decoration: BoxDecoration(
-      color: AppColors.bgSurface,
-      borderRadius: BorderRadius.circular(AppDecorations.radiusXl),
+      color: AppColors.surfaceDark,
+      borderRadius: BorderRadius.circular(AppDecorations.radius20),
+      border: Border.all(
+        color: AppColors.limeGreen.withValues(alpha: 0.15),
+        width: 1,
+      ),
+      boxShadow: [
+        BoxShadow(
+          color: AppColors.limeGreen.withValues(alpha: 0.08),
+          blurRadius: 20,
+          offset: const Offset(0, 4),
+        ),
+      ],
     ),
     child: Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Row(
-          children: [
-            const Spacer(),
-            GestureDetector(
-              onTap: onClose ?? onNext,
-              behavior: HitTestBehavior.opaque,
-              child: const SizedBox(
-                width: 18,
-                height: 18,
-                child: Icon(
-                  Icons.close,
-                  size: 18,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.space6),
         Text(
           l10n.onboardingWelcomeTitle,
+          style: AppTypography.pageTitle().copyWith(fontSize: 24),
           textAlign: TextAlign.center,
-          style: AppTypography.ibm(
-            fontSize: 17,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
-            height: 20 / 17,
-          ),
         ),
-        const SizedBox(height: 7),
+        const SizedBox(height: 12),
         Text(
           l10n.onboardingWelcomeBody,
+          style: AppTypography.bodySmall(
+            color: Colors.white.withValues(alpha: 0.8),
+          ).copyWith(fontSize: 15, height: 1.5),
           textAlign: TextAlign.center,
-          style: AppTypography.bodyMd(color: AppColors.textSecondary),
         ),
-        const SizedBox(height: AppSpacing.space6),
+        const SizedBox(height: 24),
         SizedBox(
           width: double.infinity,
-          child: GestureDetector(
-            onTap: onNext,
-            behavior: HitTestBehavior.opaque,
-            child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.space5,
-                vertical: AppSpacing.space3,
+          child: TextButton(
+            onPressed: onNext,
+            style: TextButton.styleFrom(
+              backgroundColor: AppColors.limeGreen,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
               ),
-              decoration: BoxDecoration(
-                color: AppColors.accentPrimary,
-                borderRadius:
-                    BorderRadius.circular(AppDecorations.radiusFull),
-              ),
-              child: Text(
-                l10n.onboardingLetsGo,
-                textAlign: TextAlign.center,
-                style: AppTypography.ibm(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textInverse,
-                  height: 20 / 15,
-                ),
+            ),
+            child: Text(
+              l10n.onboardingLetsGo,
+              style: AppTypography.bodyLarge(color: Colors.black).copyWith(
+                fontWeight: FontWeight.w600,
               ),
             ),
           ),
@@ -162,11 +137,11 @@ Widget buildTooltip({
       color: AppColors.surfaceDark,
       borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
       border: Border.all(
-        color: AppColors.accentPrimary.withValues(alpha: 0.15),
+        color: AppColors.limeGreen.withValues(alpha: 0.15),
       ),
       boxShadow: [
         BoxShadow(
-          color: AppColors.accentPrimary.withValues(alpha: 0.08),
+          color: AppColors.limeGreen.withValues(alpha: 0.08),
           blurRadius: 20,
           offset: const Offset(0, 4),
         ),
@@ -198,12 +173,12 @@ Widget buildTooltip({
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                color: AppColors.accentPrimary.withValues(alpha: 0.08),
+                color: AppColors.limeGreen.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
               ),
               child: Text(
                 isLast ? l10n.onboardingGotIt : l10n.onboardingNext,
-                style: AppTypography.bodyLarge(color: AppColors.accentPrimary)
+                style: AppTypography.bodyLarge(color: AppColors.limeGreen)
                     .copyWith(fontWeight: FontWeight.w600),
               ),
             ),
@@ -246,11 +221,7 @@ class HomeTour {
                   0.3,
             ),
             builder: (context, controller) {
-              return buildWelcomeCard(
-                onNext: () => controller.next(),
-                onClose: () => controller.skip(),
-                context: context,
-              );
+              return buildWelcomeCard(onNext: () => controller.next(), context: context);
             },
           ),
         ],
@@ -337,8 +308,8 @@ class LoggingModeTour {
           identify: 'full_mode',
           keyTarget: fullModeCardKey,
           shape: ShapeLightFocus.RRect,
-          radius: 18,
-          paddingFocus: 8,
+          radius: AppDecorations.radiusXl,
+          paddingFocus: 4,
           contents: [
             TargetContent(
               align: ContentAlign.bottom,
@@ -364,8 +335,8 @@ class LoggingModeTour {
           identify: 'individual_mode',
           keyTarget: individualModeCardKey,
           shape: ShapeLightFocus.RRect,
-          radius: 18,
-          paddingFocus: 8,
+          radius: AppDecorations.radiusXl,
+          paddingFocus: 4,
           contents: [
             TargetContent(
               align: ContentAlign.top,
@@ -743,6 +714,7 @@ Future<void> finishOnboardingTour(BuildContext context,
     {bool showPaywall = true}) async {
   OnboardingState.complete();
   OnboardingPrefs.markOnboardingSeen();
+  OnboardingPrefs.setBankrollTourPending();
 
   final isGuest = AuthService.isAnonymous && !OnboardingState.isReplay;
   if (isGuest) {
@@ -867,7 +839,7 @@ class _GuestSignupGateState extends State<GuestSignupGate> {
     return const Scaffold(
       backgroundColor: AppColors.bgPrimary,
       body: Center(
-        child: CircularProgressIndicator(color: AppColors.accentPrimary),
+        child: CircularProgressIndicator(color: AppColors.limeGreen),
       ),
     );
   }
@@ -1302,7 +1274,7 @@ class _OnboardingCompleteDialog extends StatelessWidget {
           children: [
             const Icon(
               Icons.check_circle_outline,
-              color: AppColors.accentPrimary,
+              color: AppColors.limeGreen,
               size: 48,
             ),
             const SizedBox(height: 16),
@@ -1648,6 +1620,59 @@ class IndividualStopSessionTour {
       onFinish: () {
         OnboardingState.individualStopSessionTourPending = false;
         OnboardingState.advanceTo(5);
+      },
+    );
+    coach.show(context: context);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Post-tour — Bankroll Card Tour (shown once on first Home visit after tour)
+// ---------------------------------------------------------------------------
+
+class BankrollCardTour {
+  final GlobalKey bankrollCardKey;
+
+  BankrollCardTour({required this.bankrollCardKey});
+
+  void show(BuildContext context) {
+    if (bankrollCardKey.currentContext == null) return;
+
+    final targets = <TargetFocus>[
+      TargetFocus(
+        identify: 'bankroll_card',
+        keyTarget: bankrollCardKey,
+        shape: ShapeLightFocus.RRect,
+        radius: 16,
+        paddingFocus: 4,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (context, controller) {
+              final l10n = AppLocalizations.of(context);
+              return buildTooltip(
+                title: l10n.onboardingBankrollCardTitle,
+                body: l10n.onboardingBankrollCardBody,
+                onNext: () => controller.next(),
+                context: context,
+                isLast: true,
+              );
+            },
+          ),
+        ],
+      ),
+    ];
+
+    final coach = TutorialCoachMark(
+      targets: targets,
+      colorShadow: Colors.black,
+      opacityShadow: 0.85,
+      paddingFocus: 12,
+      hideSkip: true,
+      onFinish: () => OnboardingPrefs.clearBankrollTourPending(),
+      onSkip: () {
+        OnboardingPrefs.clearBankrollTourPending();
+        return true;
       },
     );
     coach.show(context: context);

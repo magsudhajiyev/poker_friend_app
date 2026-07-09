@@ -5512,5 +5512,7 @@
         "type": "String"
       }
     }
-  }
+  },
+  "onboardingBankrollCardTitle": "Twój Bankroll",
+  "onboardingBankrollCardBody": "Przytrzymaj kartę bankroll, aby wpisać aktualny bankroll i ustawić cel. Śledź swoje postępy!"
 }

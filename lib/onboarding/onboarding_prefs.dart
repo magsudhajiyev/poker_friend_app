@@ -8,6 +8,7 @@ class OnboardingPrefs {
   static const _paywallShownField = 'postTourPaywallShown';
   static const _paywallPendingField = 'postTourPaywallPending';
   static const _signupRequiredField = 'postTourSignupRequired';
+  static const _bankrollTourField = 'bankrollTourPending';
 
   static String? get _userId => FirebaseAuth.instance.currentUser?.uid;
 
@@ -121,4 +122,17 @@ class OnboardingPrefs {
 
   static Future<void> clearPostTourSignupRequired() =>
       _writeFlag(_signupRequiredField, false);
+
+  // ── Post-tour bankroll card tip ─────────────────────────────────────
+  // Set at tour completion so the next Home visit shows the bankroll
+  // card press-and-hold coach mark once.
+
+  static Future<bool> isBankrollTourPending() =>
+      _readFlag(_bankrollTourField, onError: false);
+
+  static Future<void> setBankrollTourPending() =>
+      _writeFlag(_bankrollTourField, true);
+
+  static Future<void> clearBankrollTourPending() =>
+      _writeFlag(_bankrollTourField, false);
 }
