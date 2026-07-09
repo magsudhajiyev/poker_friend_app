@@ -653,5 +653,12 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
     );
     // Refresh data when returning (in case star was toggled)
     _loadHands();
+
+    // The guided tour defers its completion (and guest sign-up) until the user
+    // leaves the hand-details screen — fire it now, back on the hand list.
+    if (OnboardingState.tourCompletionPending) {
+      OnboardingState.tourCompletionPending = false;
+      if (mounted) finishOnboardingTour(context);
+    }
   }
 }

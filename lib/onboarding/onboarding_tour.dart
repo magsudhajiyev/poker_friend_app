@@ -1158,7 +1158,9 @@ class AiAnalysisTour {
     }
 
     if (targets.isEmpty) {
-      finishOnboardingTour(context);
+      // No spotlight possible — defer completion to when the user leaves the
+      // hand-details screen (SessionHandsScreen runs finishOnboardingTour).
+      OnboardingState.tourCompletionPending = true;
       return;
     }
 

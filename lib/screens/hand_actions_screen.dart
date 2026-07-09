@@ -103,7 +103,8 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
     }
     if (!mounted) return;
     if (_aiButtonKey.currentContext == null) {
-      finishOnboardingTour(context);
+      // No spotlight possible — defer completion to when the user leaves.
+      OnboardingState.tourCompletionPending = true;
       return;
     }
 
@@ -128,14 +129,16 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
     final hasHeroCards =
         card1 != null && card2 != null && card1.isNotEmpty && card2.isNotEmpty;
 
+    // Mark the tour as pending completion up front: don't finish here (let the
+    // user read the analysis) — the completion dialog + guest sign-up fire only
+    // once they LEAVE this screen (SessionHandsScreen runs finishOnboardingTour
+    // on return). Setting it before the await means leaving mid-analysis still
+    // triggers completion.
+    OnboardingState.tourCompletionPending = true;
+
     if (hasHeroCards && _aiAnalysis == null && !_isAnalyzing) {
       await _handleAnalyzeButtonTap();
-      // Let the result render before wrapping up the tour — the analysis is
-      // cached, so the user can come back to it any time from Sessions
-      await Future.delayed(const Duration(milliseconds: 2500));
     }
-    if (!mounted) return;
-    await finishOnboardingTour(context);
   }
 
   @override

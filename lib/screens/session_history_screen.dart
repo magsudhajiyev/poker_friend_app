@@ -127,6 +127,19 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
       return;
     }
 
+    // The tab-switch + itemHeight-based scroll are still in flight when the key
+    // attaches, so measuring the card now yields a stale RenderBox (the
+    // spotlight lands partially off the card — worse for tournaments, which add
+    // a tab animation). Re-align precisely and let it settle before spotlighting.
+    await Scrollable.ensureVisible(
+      _tourSessionCardKey.currentContext!,
+      alignment: 0.5,
+      duration: const Duration(milliseconds: 400),
+      curve: Curves.easeInOut,
+    );
+    await Future.delayed(const Duration(milliseconds: 250));
+    if (!mounted) return;
+
     SessionHistoryTour(sessionCardKey: _tourSessionCardKey).show(context);
   }
 

@@ -67,6 +67,12 @@ class OnboardingState {
   /// completes, triggering the finish-session (ⓘ) spotlight.
   static bool secondTourHandPending = false;
 
+  /// Set after the phase-6 AI-analysis step so the tour completion (and guest
+  /// sign-up) fires only once the user LEAVES the hand-details screen — not
+  /// while they're still reading the analysis. Consumed on return to the
+  /// hand-list screen.
+  static bool tourCompletionPending = false;
+
   /// Whether the session-history tour needs to run (phase 6, after tapping Sessions nav).
   static bool sessionHistoryTourPending = false;
 
@@ -114,6 +120,7 @@ class OnboardingState {
     sessionDetailsTourPending = false;
     sessionDetailsExplainReturnPending = false;
     secondTourHandPending = false;
+    tourCompletionPending = false;
     sessionHistoryTourPending = false;
     handListTourPending = false;
     handCardTourPending = false;
@@ -138,6 +145,7 @@ class OnboardingState {
     sessionDetailsTourPending = false;
     sessionDetailsExplainReturnPending = false;
     secondTourHandPending = false;
+    tourCompletionPending = false;
     sessionHistoryTourPending = false;
     handListTourPending = false;
     handCardTourPending = false;
@@ -159,6 +167,7 @@ class OnboardingState {
     sessionDetailsTourPending = false;
     sessionDetailsExplainReturnPending = false;
     secondTourHandPending = false;
+    tourCompletionPending = false;
     sessionHistoryTourPending = false;
     handListTourPending = false;
     handCardTourPending = false;
@@ -186,6 +195,7 @@ class OnboardingState {
     sessionDetailsTourPending = false;
     sessionDetailsExplainReturnPending = false;
     secondTourHandPending = false;
+    tourCompletionPending = false;
     sessionHistoryTourPending = false;
     handListTourPending = false;
     handCardTourPending = false;
@@ -206,6 +216,7 @@ class OnboardingState {
     sessionDetailsTourPending = false;
     sessionDetailsExplainReturnPending = false;
     secondTourHandPending = false;
+    tourCompletionPending = false;
     sessionHistoryTourPending = false;
     handListTourPending = false;
     handCardTourPending = false;
@@ -237,4 +248,10 @@ class OnboardingState {
 
   static bool get isGuidedHandActive =>
       isOnboardingActive && currentPhase == 4 && guidedHandPhase != GuidedPhase.done;
+
+  /// True for the entire guided session (phase 4), including the free-play
+  /// second hand where [guidedHandPhase] is already `done`. Used to suppress
+  /// the poker screen's auto-advance so the tour controls hand flow.
+  static bool get isGuidedSessionActive =>
+      isOnboardingActive && currentPhase == 4;
 }

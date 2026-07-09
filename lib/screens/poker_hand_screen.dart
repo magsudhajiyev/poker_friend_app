@@ -5532,9 +5532,22 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     }
 
     // Guided tour: returning from the first (explain) session-details visit —
-    // prompt the user to log one more hand, then finish from there.
+    // deal a fresh hand (auto-advance is suppressed during the guided session,
+    // so hand 1's completion never dealt one), then prompt the user to log it.
+    // guidedHandPhase is already `done` here, so hand 2 is free play (not
+    // re-scripted). Mirrors _skipSettling()'s deal without the settling overlay.
     if (OnboardingState.sessionDetailsExplainReturnPending && mounted) {
       OnboardingState.sessionDetailsExplainReturnPending = false;
+      setState(() {
+        gameState.startNewHand();
+        gameState.initializePot();
+        sessionManager.startHand(
+          gameState.handNumber,
+          gameState.buttonPosition,
+          sbSeat: gameState.effectiveSBPosition,
+          bbSeat: gameState.effectiveBBPosition,
+        );
+      });
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _guidedOverlayKey.currentState?.promptSecondHand();
       });
@@ -6212,7 +6225,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       }
 
       // During onboarding, don't start the next hand — wait for user to end session
-      if (OnboardingState.isGuidedHandActive) {
+      if (OnboardingState.isGuidedSessionActive) {
         setState(() {});
         return;
       }
@@ -6776,7 +6789,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     }
 
     // During onboarding, don't start the next hand — wait for user to end session
-    if (OnboardingState.isGuidedHandActive) {
+    if (OnboardingState.isGuidedSessionActive) {
       setState(() {});
       return;
     }
@@ -7328,7 +7341,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     }
 
     // During onboarding, don't start the next hand — wait for user to end session
-    if (OnboardingState.isGuidedHandActive) {
+    if (OnboardingState.isGuidedSessionActive) {
       setState(() {});
       return;
     }
