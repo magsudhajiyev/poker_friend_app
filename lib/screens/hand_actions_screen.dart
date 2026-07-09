@@ -8,6 +8,7 @@ import '../services/ai_analyzer_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../services/auth_service.dart';
 import '../services/firebase_service.dart';
+import '../services/partner_grant_service.dart';
 import '../services/subscription_service.dart';
 import '../services/pokerstars_export_service.dart';
 import '../services/hand_sharing_service.dart';
@@ -1983,6 +1984,33 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
     }
     if (isAdmin) {
       _analyzeHand();
+      return;
+    }
+
+    // Partner grant custom AI quota
+    final partnerQuota = PartnerGrantService.partnerAiQuota;
+    if (partnerQuota != null) {
+      if (partnerQuota == -1) {
+        _analyzeHand();
+        return;
+      }
+      final prefs = await SharedPreferences.getInstance();
+      final storedMonth = prefs.getString(_analysisMonthKey) ?? '';
+      final currentMonth = _currentMonthKey();
+      const partnerCountKey = 'monthly_ai_analysis_count_partner';
+      if (storedMonth != currentMonth) {
+        await prefs.setString(_analysisMonthKey, currentMonth);
+        await prefs.setInt(partnerCountKey, 0);
+        await prefs.setInt(_analysisCountKeyPro, 0);
+        await prefs.setInt(_analysisCountKeyElite, 0);
+      }
+      final used = prefs.getInt(partnerCountKey) ?? 0;
+      if (used >= partnerQuota) {
+        if (mounted) _showAnalysisQuotaDialog(used, partnerQuota, true);
+        return;
+      }
+      _analyzeHand();
+      await prefs.setInt(partnerCountKey, used + 1);
       return;
     }
 

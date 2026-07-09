@@ -129,6 +129,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       case NotificationType.newSupportRequest:
       case NotificationType.supportRequestUpdated:
         return l10n.notificationsScreenSupport;
+      case NotificationType.partnerGranted:
+        return 'Account';
     }
   }
 
@@ -538,6 +540,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         break;
       case NotificationType.supportRequestUpdated:
         _showSupportResponseDialog(notification);
+        break;
+      case NotificationType.partnerGranted:
+        // No navigation needed
         break;
     }
   }
@@ -1102,6 +1107,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         return l10n.notifSupportRequestTitle;
       case NotificationType.supportRequestUpdated:
         return l10n.notifSupportUpdatedTitle;
+      case NotificationType.partnerGranted:
+        return notification.title;
     }
   }
 
@@ -1151,6 +1158,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         return l10n.notifSupportRequestBody;
       case NotificationType.supportRequestUpdated:
         return l10n.notifSupportUpdatedBody;
+      case NotificationType.partnerGranted:
+        return notification.body;
     }
   }
 
@@ -1278,6 +1287,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       case NotificationType.newSupportRequest:
       case NotificationType.supportRequestUpdated:
         return Icons.support_agent_outlined;
+      case NotificationType.partnerGranted:
+        return Icons.card_giftcard_outlined;
     }
   }
 
@@ -1305,6 +1316,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       case NotificationType.newSupportRequest:
       case NotificationType.supportRequestUpdated:
         return AppColors.textMint;
+      case NotificationType.partnerGranted:
+        return AppColors.accentPrimary;
     }
   }
 }

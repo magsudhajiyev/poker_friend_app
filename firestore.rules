@@ -22,12 +22,18 @@ service cloud.firestore {
         (resource == null || resource.data.userId == request.auth.uid || request.resource.data.userId == request.auth.uid);
     }
 
-    // User notifications - users can only read/update their own notifications
+    // User notifications - users can read/update/delete their own, authenticated can create
     match /user_notifications/{notificationId} {
       allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
       allow update: if isAuthenticated() && resource.data.userId == request.auth.uid;
-      allow create: if false;
+      allow create: if isAuthenticated();
       allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+
+    // Partner grants - owner can read their own, super admin has full access
+    match /partner_grants/{userId} {
+      allow read: if isOwner(userId) || isSuperAdmin();
+      allow write: if isSuperAdmin();
     }
 
     // Users collection - public read, owner or superAdmin write

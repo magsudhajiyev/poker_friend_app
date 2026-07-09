@@ -12,6 +12,7 @@ import '../models/account_type.dart';
 import 'app_data_cache.dart';
 import 'fcm_service.dart';
 import 'logger_service.dart';
+import 'partner_grant_service.dart';
 import 'subscription_service.dart';
 import 'username_service.dart';
 import 'display_identity_service.dart';
@@ -273,6 +274,7 @@ class AuthService {
 
         // RevenueCat user association - don't block sign-in
         unawaited(SubscriptionService.loginUser(credential.user!.uid));
+        await PartnerGrantService.init(credential.user!.uid);
 
         // FCM setup runs in background - don't block sign-in
         unawaited(_setupFcmInBackground());
@@ -433,6 +435,7 @@ class AuthService {
 
       // RevenueCat logout - don't block sign-out
       unawaited(SubscriptionService.logoutUser());
+      PartnerGrantService.reset();
 
       clearAccountTypeCache();  // Clear cached account type
       UsernameService.clearCache();
@@ -505,6 +508,7 @@ class AuthService {
         unawaited(LoggerService.setUserId(userCredential.user!.uid));
         unawaited(LoggerService.logEvent('login', parameters: {'method': 'google'}));
         unawaited(SubscriptionService.loginUser(userCredential.user!.uid));
+        await PartnerGrantService.init(userCredential.user!.uid);
         unawaited(_setupFcmInBackground());
       }
 
@@ -556,6 +560,7 @@ class AuthService {
       unawaited(LoggerService.setUserId(linked.user!.uid));
       unawaited(LoggerService.logEvent('login', parameters: {'method': 'google_link'}));
       unawaited(SubscriptionService.loginUser(linked.user!.uid));
+      await PartnerGrantService.init(linked.user!.uid);
       unawaited(_setupFcmInBackground());
 
       return linked;
@@ -647,6 +652,7 @@ class AuthService {
         unawaited(LoggerService.setUserId(userCredential.user!.uid));
         unawaited(LoggerService.logEvent('login', parameters: {'method': 'apple'}));
         unawaited(SubscriptionService.loginUser(userCredential.user!.uid));
+        await PartnerGrantService.init(userCredential.user!.uid);
         unawaited(_setupFcmInBackground());
       }
 
@@ -772,6 +778,7 @@ class AuthService {
       unawaited(LoggerService.setUserId(linked.user!.uid));
       unawaited(LoggerService.logEvent('login', parameters: {'method': 'apple_link'}));
       unawaited(SubscriptionService.loginUser(linked.user!.uid));
+      await PartnerGrantService.init(linked.user!.uid);
       unawaited(_setupFcmInBackground());
 
       return linked;

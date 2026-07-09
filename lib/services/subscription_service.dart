@@ -6,6 +6,7 @@ import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../config/env_config.dart';
 import 'logger_service.dart';
+import 'partner_grant_service.dart';
 
 /// Service for managing subscriptions via RevenueCat
 ///
@@ -62,8 +63,18 @@ class SubscriptionService {
     return _isClub ? 'club' : _isElite ? 'elite' : _isPremium ? 'pro' : 'free';
   }
 
-  /// Effective tier — applies debug override first.
-  static String get _effectiveTier => _debugTierOverride ?? currentTier;
+  /// Effective tier — applies debug override first, then partner grant.
+  /// Partner grant only wins if it provides a HIGHER tier than RevenueCat.
+  static String get _effectiveTier {
+    if (_debugTierOverride != null) return _debugTierOverride!;
+    final rcTier = currentTier;
+    final partnerTier = PartnerGrantService.partnerTier;
+    if (partnerTier == null) return rcTier;
+    const tierRank = {'free': 0, 'pro': 1, 'elite': 2, 'club': 3};
+    return (tierRank[partnerTier] ?? 0) > (tierRank[rcTier] ?? 0)
+        ? partnerTier
+        : rcTier;
+  }
 
   /// True for any paid tier (Pro, Elite, Club). Backwards-compatible with all
   /// existing callsites that check `SubscriptionService.isPremium`.
@@ -276,6 +287,12 @@ class SubscriptionService {
     } catch (e) {
       // Non-fatal: cached state stays until next successful fetch
     }
+  }
+
+  /// Called by PartnerGrantService when the grant snapshot changes.
+  /// Re-evaluates effective tier and notifies all listeners.
+  static void notifyPartnerGrantChanged() {
+    _premiumStatusController.add(isPremium);
   }
 
   /// Check and refresh premium status
