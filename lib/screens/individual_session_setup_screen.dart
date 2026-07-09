@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'package:flutter/services.dart';
 import '../l10n/app_localizations.dart';
 import '../models/game_types.dart';
 import '../models/poker_game_state.dart' show formatBlindValue;
@@ -32,6 +32,16 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
   final TextEditingController _smallBlindController = TextEditingController();
   final TextEditingController _bigBlindController = TextEditingController();
 
+  // Focus nodes (inline field focus highlighting)
+  final FocusNode _sbFocusNode = FocusNode();
+  final FocusNode _bbFocusNode = FocusNode();
+  final FocusNode _buyInFocusNode = FocusNode();
+  final FocusNode _startingStackFocusNode = FocusNode();
+  bool _isSBFocused = false;
+  bool _isBBFocused = false;
+  bool _isBuyInFocused = false;
+  bool _isStartingStackFocused = false;
+
   // Game settings
   GameType gameType = GameType.cash;
   double smallBlind = 1.0;
@@ -60,6 +70,10 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
     // Initialize blind controllers with default values
     _smallBlindController.text = formatBlindValue(smallBlind);
     _bigBlindController.text = formatBlindValue(bigBlind);
+    _sbFocusNode.addListener(() => setState(() => _isSBFocused = _sbFocusNode.hasFocus));
+    _bbFocusNode.addListener(() => setState(() => _isBBFocused = _bbFocusNode.hasFocus));
+    _buyInFocusNode.addListener(() => setState(() => _isBuyInFocused = _buyInFocusNode.hasFocus));
+    _startingStackFocusNode.addListener(() => setState(() => _isStartingStackFocused = _startingStackFocusNode.hasFocus));
     _scheduleOnboardingTour();
   }
 
@@ -80,770 +94,676 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
     _startingStackController.dispose();
     _smallBlindController.dispose();
     _bigBlindController.dispose();
+    _sbFocusNode.dispose();
+    _bbFocusNode.dispose();
+    _buyInFocusNode.dispose();
+    _startingStackFocusNode.dispose();
     super.dispose();
   }
 
-  Widget _buildIcon(String path, double size, Color color) {
-    if (path.endsWith('.svg')) {
-      return SvgPicture.asset(
-        path,
-        width: size,
-        height: size,
-        colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
-      );
-    } else {
-      return Image.asset(
-        path,
-        width: size,
-        height: size,
-        color: color,
-      );
-    }
-  }
+  // ─── BUILD ───────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
-      backgroundColor: Colors.black,
-      body: Stack(
+      backgroundColor: AppColors.bgPrimary,
+      body: Column(
         children: [
-          // Teal gradient background (consistent with other screens)
-          Positioned(
-            top: -screenWidth * 0.3,
-            right: -screenWidth * 0.25,
-            child: Transform.scale(
-              scaleX: 1.0,
-              scaleY: 0.7,
-              child: Container(
-                width: screenWidth * 1.5,
-                height: screenWidth * 1.2,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(
-                    center: Alignment.center,
-                    radius: 0.5,
-                    colors: [
-                      Color(0xFF1A4A4A),
-                      AppColors.headerGradientTeal.withOpacity(0.7),
-                      AppColors.headerGradientTeal.withOpacity(0.3),
-                      Colors.transparent,
-                    ],
-                    stops: [0.0, 0.3, 0.6, 1.0],
-                  ),
-                ),
+          _buildHeader(l10n),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 20),
+                  _buildFormSection(l10n),
+                  const SizedBox(height: 32),
+                  _buildStartButton(l10n),
+                  const SizedBox(height: 48),
+                ],
               ),
             ),
           ),
-          SafeArea(
-            child: Column(
-              children: [
-                OnboardingProgressBar(),
-                // Header with X, title, and checkmark
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      // X button (close)
-                      GestureDetector(
-                        onTap: () => Navigator.pop(context),
-                        child: Container(
-                          width: 44,
-                          height: 44,
-                          decoration: BoxDecoration(
-                            color: Color(0xFF3C3C43).withOpacity(0.3),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Center(
-                            child: _buildIcon(
-                              'icons/figma_icons/close.svg',
-                              16,
-                              Colors.white,
-                            ),
-                          ),
+        ],
+      ),
+    );
+  }
+
+  // ─── HEADER ──────────────────────────────────────────────────────
+
+  Widget _buildHeader(AppLocalizations l10n) {
+    return Container(
+      color: AppColors.bgSurface,
+      child: SafeArea(
+        bottom: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              height: 44,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Row(
+                  children: [
+                    GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      behavior: HitTestBehavior.opaque,
+                      child: const SizedBox(
+                        width: 44,
+                        height: 44,
+                        child: Center(
+                          child: Icon(Icons.chevron_left,
+                              color: Colors.white, size: 24),
                         ),
-                      ),
-                      // Title
-                      Text(
-                        AppLocalizations.of(context).individualSetupSessionSetup,
-                        style: AppTypography.ibm(
-                          fontSize: 17,
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: -0.43,
-                          height: 1.3,
-                        ),
-                      ),
-                      // Checkmark button (confirm/start)
-                      GestureDetector(
-                        onTap: isFormValid ? _startSession : null,
-                        child: Container(
-                          width: 44,
-                          height: 44,
-                          decoration: BoxDecoration(
-                            color: isFormValid
-                              ? AppColors.tealPrimary
-                              : Color(0xFF3C3C43).withOpacity(0.3),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Center(
-                            child: _buildIcon(
-                              'icons/figma_icons/check.svg',
-                              16,
-                              isFormValid ? Colors.black : Colors.white.withOpacity(0.5),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Content
-                Expanded(
-                  child: SingleChildScrollView(
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Session Name Card
-                          Container(
-                            width: double.infinity,
-                            padding: EdgeInsets.all(18),
-                            decoration: BoxDecoration(
-                              color: AppColors.infoCardBg,
-                              borderRadius: BorderRadius.circular(AppDecorations.radius18),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  AppLocalizations.of(context).individualSetupSessionNameLabel,
-                                  style: AppTypography.ibm(
-                                    fontSize: 17,
-                                    color: AppColors.tealPrimary,
-                                    fontWeight: FontWeight.w600,
-                                    letterSpacing: -0.43,
-                                    height: 1.3,
-                                  ),
-                                ),
-                                SizedBox(height: 12),
-                                TextField(
-                                  controller: _sessionNameController,
-                                  textInputAction: TextInputAction.done,
-                                  style: AppTypography.ibm(
-                                    color: Colors.white,
-                                    fontSize: 17,
-                                    fontWeight: FontWeight.w400,
-                                    height: 1.44,
-                                  ),
-                                  decoration: InputDecoration(
-                                    hintText: AppLocalizations.of(context).individualSetupSessionNameHint,
-                                    hintStyle: AppTypography.ibm(
-                                      color: Colors.white.withOpacity(0.4),
-                                      fontSize: 17,
-                                      fontWeight: FontWeight.w400,
-                                      height: 1.44,
-                                    ),
-                                    filled: true,
-                                    fillColor: Color(0xFF1C1C1E),
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
-                                      borderSide: BorderSide(
-                                        color: Color(0xFF1B262D).withOpacity(0.6),
-                                        width: 1,
-                                      ),
-                                    ),
-                                    enabledBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
-                                      borderSide: BorderSide(
-                                        color: Color(0xFF1B262D).withOpacity(0.6),
-                                        width: 1,
-                                      ),
-                                    ),
-                                    focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
-                                      borderSide: BorderSide(
-                                        color: AppColors.buttonPrimary,
-                                        width: 1,
-                                      ),
-                                    ),
-                                    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                                  ),
-                                  onChanged: (value) => setState(() {}),
-                                ),
-                              ],
-                            ),
-                          ),
-
-                          SizedBox(height: 16),
-
-                          // Game Type Card
-                          Container(
-                            width: double.infinity,
-                            padding: EdgeInsets.all(18),
-                            decoration: BoxDecoration(
-                              color: AppColors.infoCardBg,
-                              borderRadius: BorderRadius.circular(AppDecorations.radius18),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  AppLocalizations.of(context).individualSetupGameTypeLabel,
-                                  style: AppTypography.ibm(
-                                    fontSize: 17,
-                                    color: AppColors.tealPrimary,
-                                    fontWeight: FontWeight.w600,
-                                    letterSpacing: -0.43,
-                                    height: 1.3,
-                                  ),
-                                ),
-                                SizedBox(height: 12),
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: _buildGameTypeToggle(
-                                        title: AppLocalizations.of(context).individualSetupCashGame,
-                                        isSelected: gameType == GameType.cash,
-                                        onTap: () => setState(() {
-                                          gameType = GameType.cash;
-                                          _updateStackForGameType();
-                                        }),
-                                      ),
-                                    ),
-                                    SizedBox(width: 12),
-                                    Expanded(
-                                      child: _buildGameTypeToggle(
-                                        title: AppLocalizations.of(context).individualSetupTournament,
-                                        isSelected: gameType == GameType.tournament,
-                                        onTap: () => setState(() {
-                                          gameType = GameType.tournament;
-                                          _updateStackForGameType();
-                                        }),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-
-                          SizedBox(height: 16),
-
-                          // Buy-in Amount Card
-                          Container(
-                            width: double.infinity,
-                            padding: EdgeInsets.all(18),
-                            decoration: BoxDecoration(
-                              color: AppColors.infoCardBg,
-                              borderRadius: BorderRadius.circular(AppDecorations.radius18),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  AppLocalizations.of(context).individualSetupBuyInAmountLabel,
-                                  style: AppTypography.ibm(
-                                    fontSize: 17,
-                                    color: AppColors.tealPrimary,
-                                    fontWeight: FontWeight.w600,
-                                    letterSpacing: -0.43,
-                                    height: 1.3,
-                                  ),
-                                ),
-                                SizedBox(height: 12),
-                                TextField(
-                                  controller: _buyInController,
-                                  keyboardType: TextInputType.numberWithOptions(decimal: true),
-                                  textInputAction: TextInputAction.done,
-                                  style: AppTypography.ibm(
-                                    color: Colors.white,
-                                    fontSize: 17,
-                                    fontWeight: FontWeight.w400,
-                                    height: 1.44,
-                                  ),
-                                  decoration: InputDecoration(
-                                    hintText: AppLocalizations.of(context).individualSetupEnterAmount,
-                                    hintStyle: AppTypography.ibm(
-                                      color: Colors.white.withOpacity(0.4),
-                                      fontSize: 17,
-                                      fontWeight: FontWeight.w400,
-                                      height: 1.44,
-                                    ),
-                                    prefixText: CurrencyService.prefixText,
-                                    suffixText: CurrencyService.suffixText,
-                                    prefixStyle: AppTypography.ibm(
-                                      color: Colors.white,
-                                      fontSize: 17,
-                                      fontWeight: FontWeight.w400,
-                                      height: 1.44,
-                                    ),
-                                    suffixStyle: AppTypography.ibm(
-                                      color: Colors.white,
-                                      fontSize: 17,
-                                      fontWeight: FontWeight.w400,
-                                      height: 1.44,
-                                    ),
-                                    filled: true,
-                                    fillColor: Color(0xFF1C1C1E),
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
-                                      borderSide: BorderSide(
-                                        color: Color(0xFF1B262D).withOpacity(0.6),
-                                        width: 1,
-                                      ),
-                                    ),
-                                    enabledBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
-                                      borderSide: BorderSide(
-                                        color: Color(0xFF1B262D).withOpacity(0.6),
-                                        width: 1,
-                                      ),
-                                    ),
-                                    focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
-                                      borderSide: BorderSide(
-                                        color: AppColors.buttonPrimary,
-                                        width: 1,
-                                      ),
-                                    ),
-                                    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                                  ),
-                                  onChanged: (value) {
-                                    setState(() {});
-                                    _updateStackForGameType();
-                                  },
-                                ),
-                                // Cash game explanation
-                                if (gameType == GameType.cash) ...[
-                                  SizedBox(height: 12),
-                                  Row(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      _buildIcon(
-                                        'icons/figma_icons/info.svg',
-                                        18,
-                                        AppColors.buttonPrimary,
-                                      ),
-                                      SizedBox(width: 8),
-                                      Expanded(
-                                        child: Text(
-                                          AppLocalizations.of(context).individualSetupCashGameNote,
-                                          style: AppTypography.ibm(
-                                            color: Colors.white.withOpacity(0.6),
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w400,
-                                            height: 1.44,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ],
-                            ),
-                          ),
-
-                          // Starting Stack Card - only show for MTT
-                          if (gameType == GameType.tournament) ...[
-                            SizedBox(height: 16),
-                            Builder(builder: (context) {
-                              final stackValue = double.tryParse(_startingStackController.text);
-                              final hasStackError = stackValue != null && stackValue < bigBlind;
-                              final errorBorderColor = AppColors.lossRed;
-
-                              return Container(
-                                width: double.infinity,
-                                padding: EdgeInsets.all(18),
-                                decoration: BoxDecoration(
-                                  color: AppColors.infoCardBg,
-                                  borderRadius: BorderRadius.circular(AppDecorations.radius18),
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      AppLocalizations.of(context).individualSetupStartingStackLabel,
-                                      style: AppTypography.ibm(
-                                        fontSize: 17,
-                                        color: AppColors.tealPrimary,
-                                        fontWeight: FontWeight.w600,
-                                        letterSpacing: -0.43,
-                                        height: 1.3,
-                                      ),
-                                    ),
-                                    SizedBox(height: 12),
-                                    TextField(
-                                      controller: _startingStackController,
-                                      keyboardType: TextInputType.numberWithOptions(decimal: true),
-                                      textInputAction: TextInputAction.done,
-                                      style: AppTypography.ibm(
-                                        color: Colors.white,
-                                        fontSize: 17,
-                                        fontWeight: FontWeight.w400,
-                                        height: 1.44,
-                                      ),
-                                      decoration: InputDecoration(
-                                        hintText: AppLocalizations.of(context).individualSetupEnterChipStack,
-                                        hintStyle: AppTypography.ibm(
-                                          color: Colors.white.withOpacity(0.4),
-                                          fontSize: 17,
-                                          fontWeight: FontWeight.w400,
-                                          height: 1.44,
-                                        ),
-                                        filled: true,
-                                        fillColor: Color(0xFF1C1C1E),
-                                        border: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
-                                          borderSide: BorderSide(
-                                            color: hasStackError ? errorBorderColor : Color(0xFF1B262D).withOpacity(0.6),
-                                            width: 1,
-                                          ),
-                                        ),
-                                        enabledBorder: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
-                                          borderSide: BorderSide(
-                                            color: hasStackError ? errorBorderColor : Color(0xFF1B262D).withOpacity(0.6),
-                                            width: 1,
-                                          ),
-                                        ),
-                                        focusedBorder: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
-                                          borderSide: BorderSide(
-                                            color: hasStackError ? errorBorderColor : AppColors.buttonPrimary,
-                                            width: 1,
-                                          ),
-                                        ),
-                                        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                                      ),
-                                      onChanged: (value) => setState(() {}),
-                                    ),
-                                    if (hasStackError) ...[
-                                      SizedBox(height: 8),
-                                      Text(
-                                        AppLocalizations.of(context).individualSetupStackValidation(bigBlind.toInt()),
-                                        style: AppTypography.ibm(
-                                          fontSize: 12,
-                                          color: errorBorderColor,
-                                        ),
-                                      ),
-                                    ],
-                                  ],
-                                ),
-                              );
-                            }),
-                          ],
-
-                          SizedBox(height: 16),
-
-                          // Blinds Row
-                          Row(
-                            children: [
-                              Expanded(
-                                child: _buildBlindCard(
-                                  title: AppLocalizations.of(context).individualSetupSmallBlind,
-                                  value: gameType == GameType.cash ? '${CurrencyService.symbol}${formatBlindValue(smallBlind)}' : formatBlindValue(smallBlind),
-                                  onTap: () => _showBlindInputDialog(AppLocalizations.of(context).individualSetupSmallBlind, smallBlind, (value) {
-                                    setState(() {
-                                      smallBlind = value;
-                                      _smallBlindController.text = formatBlindValue(smallBlind);
-                                    });
-                                  }),
-                                ),
-                              ),
-                              SizedBox(width: 12),
-                              Expanded(
-                                child: _buildBlindCard(
-                                  title: AppLocalizations.of(context).individualSetupBigBlind,
-                                  value: gameType == GameType.cash ? '${CurrencyService.symbol}${formatBlindValue(bigBlind)}' : formatBlindValue(bigBlind),
-                                  onTap: () => _showBlindInputDialog(AppLocalizations.of(context).individualSetupBigBlind, bigBlind, (value) {
-                                    setState(() {
-                                      bigBlind = value;
-                                      _bigBlindController.text = formatBlindValue(bigBlind);
-                                    });
-                                  }),
-                                ),
-                              ),
-                            ],
-                          ),
-
-                          // BB Ante Section (only for tournaments)
-                          if (gameType == GameType.tournament) ...[
-                            SizedBox(height: 16),
-                            Container(
-                              width: double.infinity,
-                              padding: EdgeInsets.all(18),
-                              decoration: BoxDecoration(
-                                color: AppColors.infoCardBg,
-                                borderRadius: BorderRadius.circular(AppDecorations.radius18),
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    AppLocalizations.of(context).setupBbAnte,
-                                    style: AppTypography.ibm(
-                                      fontSize: 17,
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w500,
-                                      height: 1.44,
-                                    ),
-                                  ),
-                                  GestureDetector(
-                                    onTap: () => setState(() => hasBBante = !hasBBante),
-                                    child: Container(
-                                      width: 51,
-                                      height: 31,
-                                      padding: EdgeInsets.all(2),
-                                      decoration: BoxDecoration(
-                                        color: hasBBante ? AppColors.tealPrimary : Color(0xFF1C1C1E),
-                                        borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
-                                        border: hasBBante ? null : Border.all(
-                                          color: Color(0xFF1B262D).withOpacity(0.6),
-                                          width: 1,
-                                        ),
-                                      ),
-                                      child: AnimatedAlign(
-                                        duration: Duration(milliseconds: 200),
-                                        alignment: hasBBante ? Alignment.centerRight : Alignment.centerLeft,
-                                        child: Container(
-                                          width: 27,
-                                          height: 27,
-                                          decoration: BoxDecoration(
-                                            color: Colors.white,
-                                            shape: BoxShape.circle,
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: Colors.black.withOpacity(0.15),
-                                                blurRadius: 4,
-                                                offset: Offset(0, 2),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-
-                          SizedBox(height: 32),
-
-                          // Start Button
-                          GestureDetector(
-                            onTap: isFormValid ? _startSession : null,
-                            child: Container(
-                              width: double.infinity,
-                              decoration: BoxDecoration(
-                                color: isFormValid ? AppColors.tealPrimary : Color(0xFF1C1C1E),
-                                borderRadius: BorderRadius.circular(110),
-                              ),
-                              padding: EdgeInsets.symmetric(vertical: 16),
-                              child: Center(
-                                child: Text(
-                                  AppLocalizations.of(context).individualSetupStartSessionBtn,
-                                  style: AppTypography.ibm(
-                                    fontSize: 17,
-                                    color: isFormValid ? Colors.black : Colors.white.withOpacity(0.4),
-                                    fontWeight: FontWeight.w600,
-                                    letterSpacing: -0.43,
-                                    height: 1.3,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-
-                          SizedBox(height: 100),
-                        ],
                       ),
                     ),
+                    Expanded(
+                      child: Text(
+                        l10n.individualSetupSessionSetup,
+                        textAlign: TextAlign.center,
+                        style: AppTypography.ibm(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                          height: 22 / 17,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 44),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 6),
+            if (OnboardingState.isOnboardingActive) const OnboardingProgressBar(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ─── FORM SECTION ────────────────────────────────────────────────
+
+  Widget _buildFormSection(AppLocalizations l10n) {
+    return Column(
+      children: [
+        // Session Name
+        _buildFormRow(
+          label: l10n.individualSetupSessionNameLabel,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          content: _buildTextField(
+            controller: _sessionNameController,
+            hint: l10n.individualSetupSessionNameHint,
+          ),
+        ),
+        _buildDivider(),
+
+        // Game Type
+        _buildFormRow(
+          label: l10n.individualSetupGameTypeLabel,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          content: Row(
+            children: [
+              _buildRadioOption(
+                l10n.individualSetupCashGame,
+                gameType == GameType.cash,
+                () => setState(() {
+                  gameType = GameType.cash;
+                  _updateStackForGameType();
+                }),
+              ),
+              const SizedBox(width: 16),
+              _buildRadioOption(
+                l10n.individualSetupTournament,
+                gameType == GameType.tournament,
+                () => setState(() {
+                  gameType = GameType.tournament;
+                  _updateStackForGameType();
+                }),
+              ),
+            ],
+          ),
+        ),
+        _buildDivider(),
+
+        // Buy-in Amount
+        _buildFormRow(
+          label: l10n.individualSetupBuyInAmountLabel,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          content: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                decoration: BoxDecoration(
+                  color: AppColors.bgSurface,
+                  borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
+                  border: Border.all(
+                    color: _isBuyInFocused ? AppColors.accentPrimary : AppColors.borderDefault,
+                    width: _isBuyInFocused ? 1.5 : 1.0,
                   ),
                 ),
+                child: Row(
+                  children: [
+                    if (CurrencyService.prefixText != null) ...[
+                      Text(
+                        CurrencyService.prefixText!,
+                        style: AppTypography.ibm(
+                          color: _isBuyInFocused ? Colors.white : AppColors.textSecondary,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w400,
+                          height: 22 / 15,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                    ],
+                    Expanded(
+                      child: TextField(
+                        controller: _buyInController,
+                        focusNode: _buyInFocusNode,
+                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        textInputAction: TextInputAction.done,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+                        ],
+                        style: AppTypography.ibm(
+                          color: Colors.white,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w400,
+                          height: 22 / 15,
+                        ),
+                        decoration: InputDecoration(
+                          hintText: l10n.individualSetupEnterAmount,
+                          hintStyle: AppTypography.ibm(
+                            color: AppColors.textSecondary,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w400,
+                            height: 22 / 15,
+                          ),
+                          border: InputBorder.none,
+                          enabledBorder: InputBorder.none,
+                          focusedBorder: InputBorder.none,
+                          filled: true,
+                          fillColor: Colors.transparent,
+                          contentPadding: EdgeInsets.zero,
+                          isDense: true,
+                        ),
+                        onChanged: (_) {
+                          setState(() {});
+                          _updateStackForGameType();
+                        },
+                      ),
+                    ),
+                    if (CurrencyService.suffixText != null) ...[
+                      const SizedBox(width: 4),
+                      Text(
+                        CurrencyService.suffixText!,
+                        style: AppTypography.ibm(
+                          color: _isBuyInFocused ? Colors.white : AppColors.textSecondary,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w400,
+                          height: 22 / 15,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              if (gameType == GameType.cash) ...[
+                const SizedBox(height: 8),
+                _buildInfoNote(l10n.individualSetupCashGameNote),
               ],
+            ],
+          ),
+        ),
+        _buildDivider(),
+
+        // Blinds
+        _buildFormRow(
+          label: l10n.individualSetupBlindsLabel,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          content: Row(
+            children: [
+              Expanded(
+                child: _buildBlindTextField(
+                  l10n.individualSetupSmallBlind,
+                  _smallBlindController,
+                  _sbFocusNode,
+                  _isSBFocused,
+                  gameType == GameType.cash,
+                  (v) => setState(() => smallBlind = v),
+                  allowDecimal: gameType == GameType.cash,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _buildBlindTextField(
+                  l10n.individualSetupBigBlind,
+                  _bigBlindController,
+                  _bbFocusNode,
+                  _isBBFocused,
+                  gameType == GameType.cash,
+                  (v) => setState(() => bigBlind = v),
+                  allowDecimal: gameType == GameType.cash,
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // Tournament-only fields
+        if (gameType == GameType.tournament) ...[
+          _buildDivider(),
+          Builder(builder: (context) {
+            final stack = double.tryParse(_startingStackController.text);
+            final hasError = stack != null && stack < bigBlind;
+            return _buildFormRow(
+              label: l10n.individualSetupStartingStackLabel,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              content: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: AppColors.bgSurface,
+                      borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
+                      border: Border.all(
+                        color: hasError
+                            ? AppColors.accentDanger
+                            : _isStartingStackFocused
+                                ? AppColors.accentPrimary
+                                : AppColors.borderDefault,
+                        width: (hasError || _isStartingStackFocused) ? 1.5 : 1.0,
+                      ),
+                    ),
+                    child: TextField(
+                      controller: _startingStackController,
+                      focusNode: _startingStackFocusNode,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      textInputAction: TextInputAction.done,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+                      ],
+                      style: AppTypography.ibm(
+                        color: Colors.white,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w400,
+                        height: 22 / 15,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: l10n.individualSetupEnterChipStack,
+                        hintStyle: AppTypography.ibm(
+                          color: AppColors.textSecondary,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w400,
+                          height: 22 / 15,
+                        ),
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        filled: true,
+                        fillColor: Colors.transparent,
+                        contentPadding: EdgeInsets.zero,
+                        isDense: true,
+                      ),
+                      onChanged: (_) => setState(() {}),
+                    ),
+                  ),
+                  if (hasError) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      l10n.individualSetupStackValidation(bigBlind.toInt()),
+                      style: AppTypography.ibm(
+                        fontSize: 12,
+                        color: AppColors.accentDanger,
+                        height: 16 / 12,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            );
+          }),
+          _buildDivider(),
+          _buildFormRow(
+            label: l10n.setupBbAnte,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            content: Align(
+              alignment: Alignment.centerLeft,
+              child: _buildSwitch(
+                  hasBBante, (v) => setState(() => hasBBante = v)),
             ),
           ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildFormRow({
+    required String label,
+    required Widget content,
+    required CrossAxisAlignment crossAxisAlignment,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 20),
+      child: Row(
+        crossAxisAlignment: crossAxisAlignment,
+        children: [
+          SizedBox(
+            width: 80,
+            child: Text(
+              label,
+              style: AppTypography.ibm(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: Colors.white,
+                height: 1.44,
+              ),
+            ),
+          ),
+          const SizedBox(width: 40),
+          Expanded(child: content),
         ],
       ),
     );
   }
 
-  Widget _buildGameTypeToggle({
-    required String title,
-    required bool isSelected,
-    required VoidCallback onTap,
+  Widget _buildDivider() {
+    return const Divider(
+      height: 1,
+      thickness: 1,
+      color: AppColors.bgElevated,
+    );
+  }
+
+  // ─── FORM INPUTS ─────────────────────────────────────────────────
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    String? hint,
+    TextInputType? keyboardType,
+    bool hasError = false,
   }) {
+    return TextField(
+      controller: controller,
+      keyboardType: keyboardType,
+      textInputAction: TextInputAction.done,
+      style: AppTypography.ibm(
+        color: Colors.white,
+        fontSize: 15,
+        fontWeight: FontWeight.w400,
+      ),
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: AppTypography.ibm(
+          color: AppColors.textSecondary,
+          fontSize: 15,
+          fontWeight: FontWeight.w400,
+        ),
+        filled: true,
+        fillColor: AppColors.bgSurface,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
+          borderSide: hasError
+              ? const BorderSide(color: AppColors.accentDanger, width: 1.5)
+              : BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
+          borderSide: BorderSide(
+            color: hasError
+                ? AppColors.accentDanger
+                : AppColors.accentPrimary,
+            width: 1.5,
+          ),
+        ),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      ),
+      onChanged: (_) => setState(() {}),
+    );
+  }
+
+  Widget _buildRadioOption(
+      String label, bool isSelected, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        padding: EdgeInsets.symmetric(vertical: 14),
-        decoration: BoxDecoration(
-          color: Color(0xFF1C1C1E),
-          borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
-          border: Border.all(
-            color: isSelected ? AppColors.buttonPrimary : Color(0xFF1B262D).withOpacity(0.6),
-            width: isSelected ? 2 : 1,
-          ),
-        ),
-        child: Center(
-          child: Text(
-            title,
-            style: AppTypography.ibm(
-              fontSize: 15,
-              color: isSelected ? AppColors.buttonPrimary : Colors.white.withOpacity(0.6),
-              fontWeight: FontWeight.w500,
-              height: 1.44,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBlindCard({
-    required String title,
-    required String value,
-    required VoidCallback onTap,
-  }) {
-    return Container(
-      padding: EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: AppColors.infoCardBg,
-        borderRadius: BorderRadius.circular(AppDecorations.radius18),
-      ),
-      child: Column(
-        children: [
-          Text(
-            title,
-            style: AppTypography.ibm(
-              fontSize: 15,
-              color: Colors.white,
-              fontWeight: FontWeight.w500,
-              height: 1.44,
-            ),
-          ),
-          SizedBox(height: 12),
-          GestureDetector(
-            onTap: onTap,
-            child: Container(
-              width: double.infinity,
-              padding: EdgeInsets.symmetric(vertical: 12),
+      behavior: HitTestBehavior.opaque,
+      child: SizedBox(
+        height: 44,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 22,
+              height: 22,
               decoration: BoxDecoration(
-                color: Color(0xFF1C1C1E),
-                borderRadius: BorderRadius.circular(80),
+                color: AppColors.bgSurface,
+                shape: BoxShape.circle,
                 border: Border.all(
-                  color: Color(0xFF1B262D).withOpacity(0.6),
-                  width: 1,
+                  color: isSelected
+                      ? AppColors.accentPrimary
+                      : AppColors.borderDefault,
+                  width: 1.5,
                 ),
               ),
-              child: Center(
-                child: Text(
-                  value,
-                  style: AppTypography.ibm(
-                    fontSize: 17,
-                    color: Colors.white.withOpacity(0.6),
-                    fontWeight: FontWeight.w400,
-                    height: 1.44,
-                  ),
-                ),
-              ),
+              child: isSelected
+                  ? Center(
+                      child: Container(
+                        width: 10,
+                        height: 10,
+                        decoration: const BoxDecoration(
+                          color: AppColors.accentPrimary,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    )
+                  : null,
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showBlindInputDialog(String title, double currentValue, Function(double) onConfirm) {
-    final controller = TextEditingController(text: formatBlindValue(currentValue));
-
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: AppColors.infoCardBg,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppDecorations.radius18),
-          ),
-          title: Text(
-            title,
-            style: AppTypography.ibm(
-              color: AppColors.tealPrimary,
-              fontSize: 17,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          content: TextField(
-            controller: controller,
-            keyboardType: TextInputType.number,
-            textInputAction: TextInputAction.done,
-            style: AppTypography.ibm(
-              color: Colors.white,
-              fontSize: 17,
-              fontWeight: FontWeight.w400,
-            ),
-            decoration: InputDecoration(
-              hintText: AppLocalizations.of(context).individualSetupEnterValue,
-              hintStyle: AppTypography.ibm(
-                color: Colors.white.withOpacity(0.4),
-                fontSize: 17,
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: AppTypography.ibm(
+                fontSize: 15,
                 fontWeight: FontWeight.w400,
-              ),
-              filled: true,
-              fillColor: Color(0xFF1C1C1E),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
-                borderSide: BorderSide(color: Color(0xFF1B262D).withOpacity(0.6)),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
-                borderSide: BorderSide(color: Color(0xFF1B262D).withOpacity(0.6)),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
-                borderSide: BorderSide(color: AppColors.buttonPrimary),
-              ),
-            ),
-            autofocus: true,
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(
-                'Cancel',
-                style: AppTypography.ibm(
-                  color: Colors.white.withOpacity(0.6),
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-            TextButton(
-              onPressed: () {
-                final value = double.tryParse(controller.text);
-                if (value != null && value > 0) {
-                  onConfirm(value);
-                  Navigator.pop(context);
-                }
-              },
-              child: Text(
-                'OK',
-                style: AppTypography.ibm(
-                  color: AppColors.tealPrimary,
-                  fontWeight: FontWeight.w600,
-                ),
+                color: Colors.white,
               ),
             ),
           ],
-        );
-      },
+        ),
+      ),
     );
   }
+
+  Widget _buildBlindTextField(
+    String label,
+    TextEditingController controller,
+    FocusNode focusNode,
+    bool isFocused,
+    bool showCurrencyPrefix,
+    ValueChanged<double> onChanged, {
+    bool allowDecimal = false,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: AppTypography.ibm(
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+            color: AppColors.textSecondary,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          decoration: BoxDecoration(
+            color: AppColors.bgSurface,
+            borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
+            border: Border.all(
+              color: isFocused ? AppColors.accentPrimary : AppColors.borderDefault,
+              width: isFocused ? 1.5 : 1.0,
+            ),
+          ),
+          child: Row(
+            children: [
+              if (showCurrencyPrefix) ...[
+                Text(
+                  CurrencyService.symbol,
+                  style: AppTypography.ibm(
+                    color: isFocused ? Colors.white : AppColors.textSecondary,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w400,
+                    height: 22 / 15,
+                  ),
+                ),
+                const SizedBox(width: 4),
+              ],
+              Expanded(
+                child: TextField(
+                  controller: controller,
+                  focusNode: focusNode,
+                  keyboardType: allowDecimal
+                      ? const TextInputType.numberWithOptions(decimal: true)
+                      : TextInputType.number,
+                  textInputAction: TextInputAction.done,
+                  inputFormatters: [
+                    allowDecimal
+                        ? FilteringTextInputFormatter.allow(RegExp(r'[\d.]'))
+                        : FilteringTextInputFormatter.digitsOnly,
+                  ],
+                  style: AppTypography.ibm(
+                    color: Colors.white,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w400,
+                    height: 22 / 15,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: '0',
+                    hintStyle: AppTypography.ibm(
+                      color: AppColors.textSecondary,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w400,
+                      height: 22 / 15,
+                    ),
+                    border: InputBorder.none,
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                    filled: true,
+                    fillColor: Colors.transparent,
+                    contentPadding: EdgeInsets.zero,
+                    isDense: true,
+                  ),
+                  onChanged: (value) {
+                    final v = double.tryParse(value);
+                    if (v != null && v > 0) onChanged(v);
+                    setState(() {});
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildInfoNote(String text) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: EdgeInsets.only(top: 1),
+          child: Icon(Icons.info_outline,
+              color: AppColors.accentPrimary, size: 16),
+        ),
+        const SizedBox(width: 4),
+        Expanded(
+          child: Text(
+            text,
+            style: AppTypography.ibm(
+              fontSize: 11,
+              fontWeight: FontWeight.w400,
+              color: AppColors.textSecondary,
+              height: 16 / 11,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSwitch(bool value, ValueChanged<bool> onChanged) {
+    return GestureDetector(
+      onTap: () => onChanged(!value),
+      child: Container(
+        width: 51,
+        height: 31,
+        padding: const EdgeInsets.all(2),
+        decoration: BoxDecoration(
+          color: value
+              ? AppColors.accentPrimary
+              : AppColors.bgSurface,
+          borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
+          border: value
+              ? null
+              : Border.all(color: AppColors.borderOnInverse),
+        ),
+        child: AnimatedAlign(
+          duration: const Duration(milliseconds: 200),
+          alignment:
+              value ? Alignment.centerRight : Alignment.centerLeft,
+          child: Container(
+            width: 27,
+            height: 27,
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ─── START BUTTON ────────────────────────────────────────────────
+
+  Widget _buildStartButton(AppLocalizations l10n) {
+    final isValid = isFormValid;
+    return Center(
+      child: GestureDetector(
+        onTap: isValid ? _startSession : null,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+          decoration: BoxDecoration(
+            color: isValid
+                ? AppColors.accentPrimary
+                : AppColors.accentPrimary.withValues(alpha: 0.35),
+            borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
+          ),
+          child: Text(
+            l10n.individualSetupStartSessionBtn,
+            style: AppTypography.ibm(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textInverse,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ─── SESSION LOGIC ───────────────────────────────────────────────
 
   void _updateStackForGameType() {
     if (gameType == GameType.cash) {

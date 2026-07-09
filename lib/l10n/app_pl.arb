@@ -2979,6 +2979,7 @@
   "individualHandSetupPlayers": "Gracze",
   "individualHandSetupSmallBlind": "Small Blind",
   "individualSetupBigBlind": "Big Blind",
+  "individualSetupBlindsLabel": "Ciemne",
   "individualSetupCashGame": "Cash Game",
   "individualSetupEnterAmount": "Wpisz kwotę",
   "individualSetupEnterChipStack": "Wpisz Stack żetonów",

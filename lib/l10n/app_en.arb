@@ -3386,6 +3386,7 @@
   "individualSetupEnterChipStack": "Enter chip stack",
   "individualSetupSmallBlind": "Small Blind",
   "individualSetupBigBlind": "Big Blind",
+  "individualSetupBlindsLabel": "Blinds",
   "individualSetupEnterValue": "Enter value",
   "individualHandSetupNameHint": "e.g., \"AA vs KK Cooler\"",
   "individualHandSetupSmallBlind": "Small Blind",
