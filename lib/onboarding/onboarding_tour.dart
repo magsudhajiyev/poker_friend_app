@@ -715,6 +715,15 @@ Future<void> finishOnboardingTour(BuildContext context,
   OnboardingState.complete();
   OnboardingPrefs.markOnboardingSeen();
 
+  final isGuest = AuthService.isAnonymous && !OnboardingState.isReplay;
+  if (isGuest) {
+    // Persist the sign-up requirement NOW — before the dialog — so that if the
+    // guest kills the app at any point after the tour, the next launch forces
+    // them back into sign-up (AuthWrapper → GuestSignupGate) instead of letting
+    // them keep using the app as a guest.
+    await OnboardingPrefs.setPostTourSignupRequired();
+  }
+
   await showDialog(
     context: context,
     barrierDismissible: false,
@@ -724,44 +733,13 @@ Future<void> finishOnboardingTour(BuildContext context,
   );
   if (!context.mounted) return;
 
-  final isGuest = AuthService.isAnonymous && !OnboardingState.isReplay;
-
   if (isGuest) {
-    // 1. Required sign-up (hard gate). canDismiss:false means the screen can
-    //    only leave via a successful link (pops `true`) — or, on a credential
-    //    conflict, by signing into the existing account (which resets the stack,
-    //    unmounting `context`, handled by the mounted checks below).
-    final linked = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(
-        fullscreenDialog: true,
-        builder: (_) => const AuthScreenExperimental(
-          linkMode: true,
-          canDismiss: false,
-        ),
-      ),
-    );
-    if (!context.mounted) return;
-
-    if (linked == true) {
-      // 2. Onboarding questions. skipNickname:false so the nickname step writes
-      //    hasSetUsername:true (linking alone doesn't) — otherwise the final
-      //    return to '/' would re-route back into OnboardingFlow. popOnComplete
-      //    pops back here so we can continue to the paywall.
-      await Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) => const OnboardingFlow(
-            skipNickname: false,
-            popOnComplete: true,
-          ),
-        ),
-      );
-      if (!context.mounted) return;
-    }
+    // Required sign-up → questions → paywall → Home (same chain used on relaunch).
+    await completeGuestSignup(context);
+    return;
   }
 
-  // 3. Skippable paywall (shown at most once ever). For a guest it lands after
-  //    the questions; for a pre-existing account it's the immediate post-tour
-  //    paywall (unchanged behavior).
+  // Non-guest: skippable paywall (at most once ever), then Home.
   if (showPaywall && !(await OnboardingPrefs.wasPostTourPaywallShown())) {
     await OnboardingPrefs.markPostTourPaywallShown();
     if (!context.mounted) return;
@@ -775,6 +753,95 @@ Future<void> finishOnboardingTour(BuildContext context,
 
   if (!context.mounted) return;
   Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
+}
+
+/// The mandatory guest sign-up chain: hard-gate sign-up → onboarding questions
+/// → skippable paywall → Home. Run at tour completion (for a guest) and again
+/// on app relaunch if the guest killed the app before linking (GuestSignupGate).
+Future<void> completeGuestSignup(BuildContext context) async {
+  // 1. Required sign-up (hard gate). canDismiss:false → the screen can only
+  //    leave via a successful link (pops `true`) or, on a credential conflict,
+  //    by signing into the existing account (which resets the stack, unmounting
+  //    `context` — handled by the mounted checks below).
+  final linked = await Navigator.of(context).push<bool>(
+    MaterialPageRoute(
+      fullscreenDialog: true,
+      builder: (_) => const AuthScreenExperimental(
+        linkMode: true,
+        canDismiss: false,
+      ),
+    ),
+  );
+  if (!context.mounted) return;
+
+  if (linked == true) {
+    // Account created — drop the relaunch gate.
+    await OnboardingPrefs.clearPostTourSignupRequired();
+    if (!context.mounted) return;
+
+    // 2. Onboarding questions. skipNickname:false so the nickname step writes
+    //    hasSetUsername:true (linking alone doesn't) — otherwise the final
+    //    return to '/' would re-route back into OnboardingFlow. popOnComplete
+    //    pops back here so we can continue to the paywall.
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => const OnboardingFlow(
+          skipNickname: false,
+          popOnComplete: true,
+        ),
+      ),
+    );
+    if (!context.mounted) return;
+
+    // 3. Skippable paywall (at most once ever).
+    if (!(await OnboardingPrefs.wasPostTourPaywallShown())) {
+      await OnboardingPrefs.markPostTourPaywallShown();
+      if (!context.mounted) return;
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          fullscreenDialog: true,
+          builder: (_) => const PaywallScreen(showSkip: true),
+        ),
+      );
+    }
+  }
+
+  if (!context.mounted) return;
+  Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
+}
+
+/// Shown by AuthWrapper when an anonymous user who has already finished the tour
+/// relaunches the app: immediately (re-)presents the mandatory guest sign-up so
+/// a guest can't bypass it by killing and reopening the app.
+class GuestSignupGate extends StatefulWidget {
+  const GuestSignupGate({super.key});
+
+  @override
+  State<GuestSignupGate> createState() => _GuestSignupGateState();
+}
+
+class _GuestSignupGateState extends State<GuestSignupGate> {
+  bool _started = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_started || !mounted) return;
+      _started = true;
+      completeGuestSignup(context);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      backgroundColor: AppColors.bgPrimary,
+      body: Center(
+        child: CircularProgressIndicator(color: AppColors.tealPrimary),
+      ),
+    );
+  }
 }
 
 // ---------------------------------------------------------------------------

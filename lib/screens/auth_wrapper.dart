@@ -11,6 +11,8 @@ import '../widgets/looping_splash_logo.dart';
 import 'intro_screen.dart';
 import 'home_screen.dart';
 import 'onboarding/onboarding_flow.dart';
+import '../onboarding/onboarding_prefs.dart';
+import '../onboarding/onboarding_tour.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/typography.dart';
 import '../design_system/constants/decorations.dart';
@@ -29,6 +31,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
   bool _authTimedOut = false;  // Track if auth stream took too long to resolve
   Future<bool>? _usernameSetupFuture;  // Stored future to prevent re-creation on stream rebuilds
   Future<bool>? _onboardingFuture;    // Stored future for onboarding check
+  Future<bool>? _anonSignupFuture;    // Whether an anonymous guest must sign up (finished tour)
   Timer? _authTimeoutTimer;
   @override
   void initState() {
@@ -126,8 +129,23 @@ class _AuthWrapperState extends State<AuthWrapper> {
           // Anonymous guests skip the username/onboarding gates and go straight
           // to Home, where the guided tour auto-starts (value-first funnel). Sign-up
           // and the onboarding questions are deferred until AFTER the tour finishes.
+          // But once a guest has FINISHED the tour, sign-up is mandatory: if they
+          // killed the app before linking, force them back into it here (the flag
+          // is persisted, so it survives an app kill).
           if (AuthService.isAnonymous) {
-            return HomeScreen();
+            _anonSignupFuture ??= OnboardingPrefs.isPostTourSignupRequired();
+            return FutureBuilder<bool>(
+              future: _anonSignupFuture,
+              builder: (context, signupSnapshot) {
+                if (signupSnapshot.connectionState == ConnectionState.waiting) {
+                  return _buildLoadingScreen(context);
+                }
+                if (signupSnapshot.data == true) {
+                  return const GuestSignupGate();
+                }
+                return HomeScreen();
+              },
+            );
           }
 
           // Reuse the same future across stream rebuilds to avoid re-running the check
@@ -203,6 +221,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
         _wasSignedIn = false;
         _usernameSetupFuture = null;
         _onboardingFuture = null;
+        _anonSignupFuture = null;
 
         // User is not signed in
         return IntroScreen();
