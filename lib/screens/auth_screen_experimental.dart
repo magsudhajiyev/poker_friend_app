@@ -13,11 +13,30 @@ import '../services/auth_service.dart';
 import '../services/notification_service.dart';
 import 'forgot_password_screen.dart';
 import '../utils/user_facing_error.dart';
+import '../design_system/components/modals/confirm_dialog.dart';
 
 class AuthScreenExperimental extends StatefulWidget {
   final bool initialIsSignUp;
 
-  const AuthScreenExperimental({Key? key, this.initialIsSignUp = true}) : super(key: key);
+  /// When true, the sign-up form and social buttons LINK the current guest
+  /// (anonymous) account to the chosen credential — keeping the same uid and
+  /// all data — instead of creating/signing into a separate account. On
+  /// success the screen pops with `true` so the caller can continue (e.g.
+  /// the paywall's purchase flow).
+  final bool linkMode;
+
+  /// When false, the screen becomes a hard gate: system back is blocked, the
+  /// back arrow and the sign-in/sign-up toggle links are hidden, so the only
+  /// way out is a successful sign-up/link (or signing into a conflicting
+  /// account). Used by the post-tour guest funnel where signing up is required.
+  final bool canDismiss;
+
+  const AuthScreenExperimental({
+    Key? key,
+    this.initialIsSignUp = true,
+    this.linkMode = false,
+    this.canDismiss = true,
+  }) : super(key: key);
 
   @override
   _AuthScreenExperimentalState createState() => _AuthScreenExperimentalState();
@@ -90,6 +109,17 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
     setState(() => _isLoading = true);
 
     try {
+      if (widget.linkMode) {
+        // Upgrade the guest account in place — same uid, data stays
+        await AuthService.linkAnonymousWithEmail(
+          _registerEmailController.text.trim(),
+          _registerPasswordController.text,
+          _registerNameController.text.trim(),
+        );
+        if (mounted) Navigator.pop(context, true);
+        return;
+      }
+
       await AuthService.registerWithEmail(
         _registerEmailController.text.trim(),
         _registerPasswordController.text,
@@ -103,6 +133,8 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
         // Clear entire stack back to AuthWrapper, which will show HomeScreen
         Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
       }
+    } on AnonymousLinkConflictException {
+      if (mounted) _showLinkConflictDialog();
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -115,6 +147,22 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  /// The credential already belongs to an existing account. Warn that the
+  /// guest data won't transfer, then switch to the sign-in form.
+  void _showLinkConflictDialog() {
+    final l10n = AppLocalizations.of(context);
+    ConfirmDialog.show(
+      context,
+      title: l10n.linkAccountConflictTitle,
+      message: l10n.linkAccountConflictBody,
+      confirmLabel: l10n.onboardingLogIn,
+      confirmColor: Colors.black,
+      onConfirm: () {
+        if (mounted) setState(() => _isSignUp = false);
+      },
+    );
   }
 
   void _handleForgotPassword() {
@@ -131,11 +179,22 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
   Future<void> _handleGoogleSignIn() async {
     setState(() => _isLoading = true);
     try {
+      // Only LINK the guest from the sign-up form. On the sign-in form (e.g.
+      // after a credential conflict switched us here) do a plain sign-in into
+      // the existing account instead of re-attempting the link.
+      if (widget.linkMode && _isSignUp) {
+        final linked = await AuthService.linkAnonymousWithGoogle();
+        if (linked != null && mounted) Navigator.pop(context, true);
+        return;
+      }
+
       final credential = await AuthService.signInWithGoogle();
       if (credential != null && mounted) {
         // Clear entire stack back to AuthWrapper, which will show HomeScreen
         Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
       }
+    } on AnonymousLinkConflictException {
+      if (mounted) _showLinkConflictDialog();
     } on GoogleSignInAccountLinkException catch (e) {
       if (mounted) _showAccountLinkDialog(e);
     } catch (e) {
@@ -239,10 +298,20 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
   Future<void> _handleAppleSignIn() async {
     setState(() => _isLoading = true);
     try {
+      // Only LINK the guest from the sign-up form; on the sign-in form do a
+      // plain sign-in into the existing account (see _handleGoogleSignIn).
+      if (widget.linkMode && _isSignUp) {
+        final linked = await AuthService.linkAnonymousWithApple();
+        if (linked != null && mounted) Navigator.pop(context, true);
+        return;
+      }
+
       final credential = await AuthService.signInWithApple();
       if (credential != null && mounted) {
         Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
       }
+    } on AnonymousLinkConflictException {
+      if (mounted) _showLinkConflictDialog();
     } on AppleSignInAccountLinkException catch (e) {
       if (mounted) _showAppleAccountLinkDialog(e);
     } catch (e) {
@@ -421,28 +490,31 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.bgPrimary,
-      body: Stack(
-        children: [
-          const GradientBackground(),
-          SafeArea(
-            child: SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const SizedBox(height: 20),
-                    _buildHeader(),
-                    const SizedBox(height: 40),
-                    _isSignUp ? _buildSignUpForm() : _buildSignInForm(),
-                  ],
+    return PopScope(
+      canPop: widget.canDismiss,
+      child: Scaffold(
+        backgroundColor: AppColors.bgPrimary,
+        body: Stack(
+          children: [
+            const GradientBackground(),
+            SafeArea(
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const SizedBox(height: 20),
+                      _buildHeader(),
+                      const SizedBox(height: 40),
+                      _isSignUp ? _buildSignUpForm() : _buildSignInForm(),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -451,15 +523,16 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Back arrow
-        GlassyIconButton(
-          icon: Icons.arrow_back,
-          onPressed: () => Navigator.pop(context),
-          size: 40,
-          iconSize: 20,
-        ),
+        // Back arrow (hidden when the screen is a hard gate)
+        if (widget.canDismiss)
+          GlassyIconButton(
+            icon: Icons.arrow_back,
+            onPressed: () => Navigator.pop(context),
+            size: 40,
+            iconSize: 20,
+          ),
 
-        const SizedBox(height: 24),
+        if (widget.canDismiss) const SizedBox(height: 24),
 
         // Title
         Text(
@@ -581,28 +654,29 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
 
           const SizedBox(height: 20),
 
-          // Already have an account?
-          Center(
-            child: GestureDetector(
-              onTap: () => setState(() => _isSignUp = false),
-              child: RichText(
-                text: TextSpan(
-                  style: AppTypography.bodySmall(color: Colors.white.withOpacity(0.70)),
-                  children: [
-                    TextSpan(text: l10n.authExpAlreadyHaveAccount),
-                    TextSpan(
-                      text: l10n.authExpSignIn,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                        decoration: TextDecoration.underline,
+          // Already have an account? (hidden in hard-gate mode)
+          if (widget.canDismiss)
+            Center(
+              child: GestureDetector(
+                onTap: () => setState(() => _isSignUp = false),
+                child: RichText(
+                  text: TextSpan(
+                    style: AppTypography.bodySmall(color: Colors.white.withOpacity(0.70)),
+                    children: [
+                      TextSpan(text: l10n.authExpAlreadyHaveAccount),
+                      TextSpan(
+                        text: l10n.authExpSignIn,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                          decoration: TextDecoration.underline,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
 
           _buildSocialSignInSection(),
         ],
@@ -680,28 +754,29 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
 
           const SizedBox(height: 20),
 
-          // Don't have an account?
-          Center(
-            child: GestureDetector(
-              onTap: () => setState(() => _isSignUp = true),
-              child: RichText(
-                text: TextSpan(
-                  style: AppTypography.bodySmall(color: Colors.white.withOpacity(0.70)),
-                  children: [
-                    TextSpan(text: l10n.authExpDontHaveAccount),
-                    TextSpan(
-                      text: l10n.authExpSignUp,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                        decoration: TextDecoration.underline,
+          // Don't have an account? (hidden in hard-gate mode)
+          if (widget.canDismiss)
+            Center(
+              child: GestureDetector(
+                onTap: () => setState(() => _isSignUp = true),
+                child: RichText(
+                  text: TextSpan(
+                    style: AppTypography.bodySmall(color: Colors.white.withOpacity(0.70)),
+                    children: [
+                      TextSpan(text: l10n.authExpDontHaveAccount),
+                      TextSpan(
+                        text: l10n.authExpSignUp,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                          decoration: TextDecoration.underline,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
 
           _buildSocialSignInSection(),
         ],

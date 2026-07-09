@@ -21,6 +21,8 @@ import '../design_system/constants/colors.dart';
 import '../design_system/constants/typography.dart';
 import '../design_system/constants/decorations.dart';
 import '../utils/user_facing_error.dart';
+import '../onboarding/onboarding_state.dart';
+import '../onboarding/onboarding_tour.dart';
 
 
 class SessionAnalyticsScreen extends StatefulWidget {
@@ -50,10 +52,39 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
   bool _isExporting = false;
   bool _isDeleting = false;
 
+  // Phase-6 onboarding: spotlights for the stack chart + "View Logged Hands"
+  final GlobalKey _loggedHandsButtonKey = GlobalKey();
+  final GlobalKey _stackChartKey = GlobalKey();
+
   @override
   void initState() {
     super.initState();
     _loadSessionAnalytics();
+    _scheduleOnboardingTour();
+  }
+
+  /// Phase 6 — spotlight "View Logged Hands" after the session-card handoff.
+  void _scheduleOnboardingTour() async {
+    if (!OnboardingState.isOnboardingActive ||
+        OnboardingState.currentPhase != 6 ||
+        !OnboardingState.handListTourPending) return;
+    OnboardingState.handListTourPending = false;
+
+    for (int i = 0; i < 30; i++) {
+      await Future.delayed(const Duration(milliseconds: 100));
+      if (!mounted) return;
+      if (!_isLoading && _loggedHandsButtonKey.currentContext != null) break;
+    }
+    if (!mounted) return;
+    if (_loggedHandsButtonKey.currentContext == null) {
+      finishOnboardingTour(context);
+      return;
+    }
+
+    HandListTour(
+      loggedHandsButtonKey: _loggedHandsButtonKey,
+      stackChartKey: _stackChartKey,
+    ).show(context);
   }
 
   Future<void> _handleDeleteSession() async {
@@ -837,6 +868,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
   Widget _buildStackChart() {
     final l10n = AppLocalizations.of(context);
     return Container(
+      key: _stackChartKey,
       decoration: BoxDecoration(
         color: AppColors.infoCardBg,
         borderRadius: BorderRadius.circular(AppDecorations.radius18),
@@ -1214,6 +1246,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
 
   Widget _buildLoggedHandsButton() {
     return GestureDetector(
+      key: _loggedHandsButtonKey,
       onTap: _navigateToLoggedHands,
       child: Container(
         width: double.infinity,

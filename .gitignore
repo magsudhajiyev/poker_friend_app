@@ -36,6 +36,10 @@ migrate_working_dir/
 # is commented out by default.
 #.vscode/
 
+# Generated l10n files (regenerated on build from ARB sources)
+lib/l10n/app_localizations.dart
+lib/l10n/app_localizations_*.dart
+
 # Flutter/Dart/Pub related
 **/doc/api/
 **/ios/Flutter/.last_build_id

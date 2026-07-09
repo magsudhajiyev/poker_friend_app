@@ -25,6 +25,9 @@ import '../design_system/constants/colors.dart';
 import '../design_system/constants/typography.dart';
 import '../design_system/constants/decorations.dart';
 import '../utils/user_facing_error.dart';
+import '../onboarding/onboarding_state.dart';
+import '../onboarding/onboarding_tour.dart';
+import '../onboarding/onboarding_prefs.dart';
 
 class HandActionsScreen extends StatefulWidget {
   final Map<String, dynamic> hand;
@@ -42,6 +45,10 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
   String? _analysisError;
   final ScrollController _scrollController = ScrollController();
 
+  // Phase-6 onboarding: spotlights for the tools row + AI analysis button
+  final GlobalKey _aiButtonKey = GlobalKey();
+  final GlobalKey _toolsRowKey = GlobalKey();
+
   // Star, tags, and display state
   late bool _isStarred;
   bool _showBB = false;
@@ -57,6 +64,82 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
     _tags = rawTags is List ? rawTags.cast<String>() : [];
     _notes = widget.hand['notes'] as String?;
     _loadExistingAnalysis();
+    _scheduleOnboardingTour();
+  }
+
+  /// Phase 6 — after the hand-card handoff: explain the hand tools (BB /
+  /// export / share / star) all at once, then scroll to and spotlight the AI
+  /// analysis button, run the free analysis, and wrap up the tour.
+  void _scheduleOnboardingTour() async {
+    if (!OnboardingState.isOnboardingActive ||
+        OnboardingState.currentPhase != 6 ||
+        !OnboardingState.aiAnalysisTourPending) return;
+    OnboardingState.aiAnalysisTourPending = false;
+
+    // The tools row is at the top of the screen — always laid out first.
+    for (int i = 0; i < 20; i++) {
+      await Future.delayed(const Duration(milliseconds: 100));
+      if (!mounted) return;
+      if (_toolsRowKey.currentContext != null) break;
+    }
+    if (!mounted) return;
+
+    if (_toolsRowKey.currentContext != null) {
+      HandToolsTour(toolsRowKey: _toolsRowKey)
+          .show(context, onNext: _showAiAnalysisStep);
+    } else {
+      _showAiAnalysisStep();
+    }
+  }
+
+  /// Scrolls the AI analysis button into view (it lives below the fold), then
+  /// spotlights it. Fixes the coach-mark card being hidden off-screen.
+  Future<void> _showAiAnalysisStep() async {
+    // Give the AI button a chance to attach, scroll it to centre so the
+    // spotlight card isn't clipped at the bottom of the screen.
+    for (int i = 0; i < 20; i++) {
+      if (!mounted) return;
+      if (_aiButtonKey.currentContext != null) break;
+      await Future.delayed(const Duration(milliseconds: 100));
+    }
+    if (!mounted) return;
+    if (_aiButtonKey.currentContext == null) {
+      // No spotlight possible — defer completion to when the user leaves.
+      OnboardingState.tourCompletionPending = true;
+      return;
+    }
+
+    await Scrollable.ensureVisible(
+      _aiButtonKey.currentContext!,
+      alignment: 0.5,
+      duration: const Duration(milliseconds: 400),
+      curve: Curves.easeInOut,
+    );
+    // Let the scroll settle before the coach mark measures the target.
+    await Future.delayed(const Duration(milliseconds: 250));
+    if (!mounted) return;
+
+    AiAnalysisTour(aiButtonKey: _aiButtonKey)
+        .show(context, onAnalyze: _runTourAnalysis);
+  }
+
+  Future<void> _runTourAnalysis() async {
+    final ourHoleCards = widget.hand['ourHoleCards'] as Map<String, dynamic>?;
+    final card1 = ourHoleCards?['card1'] as String?;
+    final card2 = ourHoleCards?['card2'] as String?;
+    final hasHeroCards =
+        card1 != null && card2 != null && card1.isNotEmpty && card2.isNotEmpty;
+
+    // Mark the tour as pending completion up front: don't finish here (let the
+    // user read the analysis) — the completion dialog + guest sign-up fire only
+    // once they LEAVE this screen (SessionHandsScreen runs finishOnboardingTour
+    // on return). Setting it before the await means leaving mid-analysis still
+    // triggers completion.
+    OnboardingState.tourCompletionPending = true;
+
+    if (hasHeroCards && _aiAnalysis == null && !_isAnalyzing) {
+      await _handleAnalyzeButtonTap();
+    }
   }
 
   @override
@@ -644,95 +727,103 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                           ],
                         ),
                       ),
-                      // BB toggle button
-                      GestureDetector(
-                        onTap: () => setState(() => _showBB = !_showBB),
-                        child: Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: _showBB
-                                ? AppColors.tealPrimary.withOpacity(0.2)
-                                : AppColors.bgElevated,
-                            shape: BoxShape.circle,
-                          ),
-                          child: Center(
-                            child: Text(
-                              'BB',
-                              style: AppTypography.mono(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700,
+                      // Hand tools (BB / export / share / star) — grouped so
+                      // the onboarding tour can spotlight them all at once
+                      Row(
+                        key: _toolsRowKey,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // BB toggle button
+                          GestureDetector(
+                            onTap: () => setState(() => _showBB = !_showBB),
+                            child: Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
                                 color: _showBB
-                                    ? AppColors.tealPrimary
-                                    : Colors.white,
+                                    ? AppColors.tealPrimary.withOpacity(0.2)
+                                    : AppColors.bgElevated,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Center(
+                                child: Text(
+                                  'BB',
+                                  style: AppTypography.mono(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                    color: _showBB
+                                        ? AppColors.tealPrimary
+                                        : Colors.white,
+                                  ),
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      // Export button
-                      GestureDetector(
-                        onTap: _handleExportButtonTap,
-                        child: Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: AppColors.bgElevated,
-                            shape: BoxShape.circle,
+                          const SizedBox(width: 8),
+                          // Export button
+                          GestureDetector(
+                            onTap: _handleExportButtonTap,
+                            child: Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: AppColors.bgElevated,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.download,
+                                color: Colors.white,
+                                size: 22,
+                              ),
+                            ),
                           ),
-                          child: const Icon(
-                            Icons.download,
-                            color: Colors.white,
-                            size: 22,
+                          const SizedBox(width: 8),
+                          // Share button
+                          GestureDetector(
+                            onTap: _handleShareButtonTap,
+                            child: Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: AppColors.bgElevated,
+                                shape: BoxShape.circle,
+                              ),
+                              child: _isSharing
+                                  ? const Padding(
+                                      padding: EdgeInsets.all(10),
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : const Icon(
+                                      Icons.ios_share,
+                                      color: Colors.white,
+                                      size: 20,
+                                    ),
+                            ),
                           ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      // Share button
-                      GestureDetector(
-                        onTap: _handleShareButtonTap,
-                        child: Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: AppColors.bgElevated,
-                            shape: BoxShape.circle,
+                          const SizedBox(width: 8),
+                          // Star button
+                          GestureDetector(
+                            onTap: _toggleStar,
+                            child: Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: _isStarred
+                                    ? Colors.amber.withOpacity(0.2)
+                                    : AppColors.bgElevated,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                _isStarred ? Icons.star : Icons.star_border,
+                                color: _isStarred ? Colors.amber : Colors.white,
+                                size: 22,
+                              ),
+                            ),
                           ),
-                          child: _isSharing
-                              ? const Padding(
-                                  padding: EdgeInsets.all(10),
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
-                                  ),
-                                )
-                              : const Icon(
-                                  Icons.ios_share,
-                                  color: Colors.white,
-                                  size: 20,
-                                ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      // Star button
-                      GestureDetector(
-                        onTap: _toggleStar,
-                        child: Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: _isStarred
-                                ? Colors.amber.withOpacity(0.2)
-                                : AppColors.bgElevated,
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            _isStarred ? Icons.star : Icons.star_border,
-                            color: _isStarred ? Colors.amber : Colors.white,
-                            size: 22,
-                          ),
-                        ),
+                        ],
                       ),
                     ],
                   ),
@@ -1780,6 +1871,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
     }
 
     return GestureDetector(
+      key: _aiButtonKey,
       onTap: (_isAnalyzing || !hasHeroCards || _aiAnalysis != null) ? null : () => _handleAnalyzeButtonTap(),
       child: Container(
         width: double.infinity,
@@ -1853,6 +1945,20 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
   }
 
   Future<void> _handleAnalyzeButtonTap() async {
+    // One free analysis for non-premium users — the tour's taste of the
+    // premium feature. Consumed only on success; persisted on the user doc
+    // so it survives reinstall and account linking.
+    if (!SubscriptionService.isPremium &&
+        await OnboardingPrefs.canUseTourAnalysis()) {
+      if (!mounted) return;
+      await _analyzeHand();
+      if (_aiAnalysis != null) {
+        await OnboardingPrefs.markTourAnalysisUsed();
+      }
+      return;
+    }
+    if (!mounted) return;
+
     // Gate free users at the paywall — AI analysis requires at least Pro
     if (!SubscriptionService.isPremium) {
       final purchased = await PaywallScreen.show(context, featureName: 'AI Hand Analysis');

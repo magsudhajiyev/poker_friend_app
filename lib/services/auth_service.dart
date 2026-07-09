@@ -39,6 +39,14 @@ class AppleSignInAccountLinkException implements Exception {
   });
 }
 
+/// Thrown when linking a guest (anonymous) account to a credential that
+/// already belongs to an existing account. The UI should warn the user that
+/// guest data won't be transferred and offer to sign in to the existing
+/// account instead.
+class AnonymousLinkConflictException implements Exception {
+  const AnonymousLinkConflictException();
+}
+
 class AuthService {
   static final FirebaseAuth _auth = FirebaseAuth.instance;
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -66,9 +74,184 @@ class AuthService {
   
   // Check if user is signed in
   static bool get isSignedIn => currentUser != null;
-  
+
+  /// True for guest (anonymous) accounts — no email/Google/Apple linked yet.
+  static bool get isAnonymous => currentUser?.isAnonymous ?? false;
+
   // Auth state stream
   static Stream<User?> get authStateChanges => _auth.authStateChanges();
+
+  // ==================== Anonymous (guest) auth ====================
+
+  /// Start using the app as a guest — no account required. All data is
+  /// keyed by the anonymous uid, and linking a real credential later keeps
+  /// the same uid, so nothing needs migrating.
+  static Future<UserCredential?> signInAnonymously() async {
+    try {
+      final credential = await _auth.signInAnonymously();
+
+      if (credential.user != null) {
+        await ensureUserDocument();
+        clearExplicitLogoutFlag();
+        unawaited(LoggerService.setUserId(credential.user!.uid));
+        unawaited(LoggerService.logEvent('signup', parameters: {'method': 'anonymous'}));
+        unawaited(SubscriptionService.loginUser(credential.user!.uid));
+        unawaited(_setupFcmInBackground());
+      }
+
+      return credential;
+    } on FirebaseAuthException catch (e) {
+      await LoggerService.error('Anonymous sign in error', e);
+      // Firebase returns admin-restricted-operation when the Anonymous
+      // provider is disabled in the console, operation-not-allowed on some
+      // SDK versions — both mean guest access is unavailable.
+      if (e.code == 'operation-not-allowed' ||
+          e.code == 'admin-restricted-operation') {
+        throw 'Guest access is not available right now. Please create an account.';
+      }
+      throw _getAuthException(e);
+    } catch (e) {
+      await LoggerService.error('Unexpected error during anonymous sign in', e, StackTrace.current);
+      throw 'Could not start a guest session. Please check your connection and try again.';
+    }
+  }
+
+  /// Common post-linking bookkeeping: merge the real identity into the user
+  /// doc (created with an empty email for guests) and refresh services.
+  static Future<void> _finalizeAnonymousLink(User user, String method) async {
+    try {
+      final displayName = user.displayName?.trim() ?? '';
+      await _firestore.collection('users').doc(user.uid).set({
+        'email': user.email ?? '',
+        if (displayName.isNotEmpty) 'displayName': displayName,
+        if (displayName.isNotEmpty) 'displayNameLower': displayName.toLowerCase(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    } catch (_) {}
+
+    DisplayIdentityService.clearCache();
+    unawaited(LoggerService.logEvent('account_linked', parameters: {'method': method}));
+    unawaited(SubscriptionService.loginUser(user.uid));
+    unawaited(_setupFcmInBackground());
+  }
+
+  static bool _isLinkConflict(FirebaseAuthException e) =>
+      e.code == 'credential-already-in-use' ||
+      e.code == 'email-already-in-use' ||
+      e.code == 'account-exists-with-different-credential' ||
+      e.code == 'provider-already-linked';
+
+  /// Link the guest account to an email/password credential.
+  /// Throws [AnonymousLinkConflictException] when the email already belongs
+  /// to another account.
+  static Future<UserCredential> linkAnonymousWithEmail(
+      String email, String password, String displayName) async {
+    final user = currentUser;
+    if (user == null || !user.isAnonymous) {
+      throw 'No guest session to upgrade. Please sign in normally.';
+    }
+    try {
+      final linked = await user.linkWithCredential(
+        EmailAuthProvider.credential(email: email, password: password),
+      );
+      await linked.user?.updateDisplayName(displayName);
+      await linked.user?.reload();
+      await _finalizeAnonymousLink(currentUser!, 'email');
+      return linked;
+    } on FirebaseAuthException catch (e) {
+      if (_isLinkConflict(e)) throw const AnonymousLinkConflictException();
+      throw _getAuthException(e);
+    }
+  }
+
+  /// Link the guest account to a Google credential.
+  /// Returns null if the user cancels the Google dialog.
+  /// Throws [AnonymousLinkConflictException] when the Google account already
+  /// belongs to another account.
+  static Future<UserCredential?> linkAnonymousWithGoogle() async {
+    final user = currentUser;
+    if (user == null || !user.isAnonymous) {
+      throw 'No guest session to upgrade. Please sign in normally.';
+    }
+    try {
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      if (googleUser == null) return null; // User cancelled
+
+      final googleAuth = await googleUser.authentication;
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      final linked = await user.linkWithCredential(credential);
+      if (linked.user != null) {
+        await _syncGoogleProfileData(linked.user!, googleUser);
+        // Adopt Google's name when the guest has none
+        final googleName = googleUser.displayName?.trim() ?? '';
+        if (googleName.isNotEmpty &&
+            (linked.user!.displayName == null ||
+                linked.user!.displayName!.trim().isEmpty)) {
+          await linked.user!.updateDisplayName(googleName);
+          await linked.user!.reload();
+        }
+        await _finalizeAnonymousLink(currentUser!, 'google');
+      }
+      return linked;
+    } on FirebaseAuthException catch (e) {
+      if (_isLinkConflict(e)) throw const AnonymousLinkConflictException();
+      throw _getAuthException(e);
+    } catch (e) {
+      if (e is AnonymousLinkConflictException) rethrow;
+      if (e.toString().contains('sign_in_canceled')) return null;
+      throw 'Google sign-in failed. Please try again.';
+    }
+  }
+
+  /// Link the guest account to an Apple credential.
+  /// Returns null if the user cancels the Apple dialog.
+  /// Throws [AnonymousLinkConflictException] when the Apple ID already
+  /// belongs to another account.
+  static Future<UserCredential?> linkAnonymousWithApple() async {
+    final user = currentUser;
+    if (user == null || !user.isAnonymous) {
+      throw 'No guest session to upgrade. Please sign in normally.';
+    }
+    try {
+      final rawNonce = _generateNonce();
+      final nonce = _sha256ofString(rawNonce);
+
+      final appleCredential = await SignInWithApple.getAppleIDCredential(
+        scopes: [
+          AppleIDAuthorizationScopes.email,
+          AppleIDAuthorizationScopes.fullName,
+        ],
+        nonce: nonce,
+      );
+
+      final oauthCredential = OAuthProvider('apple.com').credential(
+        idToken: appleCredential.identityToken,
+        rawNonce: rawNonce,
+      );
+
+      final linked = await user.linkWithCredential(oauthCredential);
+      if (linked.user != null) {
+        await _syncAppleProfileData(linked.user!, appleCredential);
+        await _repairAppleDisplayName(linked.user!);
+        await _finalizeAnonymousLink(currentUser!, 'apple');
+      }
+      return linked;
+    } on FirebaseAuthException catch (e) {
+      if (_isLinkConflict(e)) throw const AnonymousLinkConflictException();
+      throw _getAuthException(e);
+    } on SignInWithAppleAuthorizationException catch (e) {
+      if (e.code == AuthorizationErrorCode.canceled) return null;
+      throw 'Apple sign-in failed. Please try again.';
+    } catch (e) {
+      if (e is AnonymousLinkConflictException) rethrow;
+      if (e.toString().contains('AuthorizationErrorCode.canceled')) return null;
+      throw 'Apple sign-in failed. Please try again.';
+    }
+  }
   
   // Sign in with email and password
   static Future<UserCredential?> signInWithEmail(String email, String password) async {

@@ -203,6 +203,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
   final GlobalKey _tableButtonKey = GlobalKey(debugLabel: 'tableButton');
   final GlobalKey _blindsPillKey = GlobalKey(debugLabel: 'blindsPill');
   final GlobalKey _nextHandButtonKey = GlobalKey(debugLabel: 'nextHandButton');
+  final GlobalKey _undoButtonKey = GlobalKey(debugLabel: 'undoButton');
   final GlobalKey _sessionInfoButtonKey = GlobalKey(debugLabel: 'sessionInfoButton');
 
   @override
@@ -773,36 +774,41 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         // Check if widget is still mounted before using context
         if (!mounted) return;
 
-        // Show bankroll update prompt
+        // Show bankroll update prompt (skipped for tutorial sessions — tour
+        // money must never reach session_results/bankroll)
+        final isTourSession = OnboardingState.isOnboardingActive;
         final stackHistory = sessionManager.stackHistory;
         if (stackHistory.isNotEmpty) {
-          final lastStack = (stackHistory.last['stackSize'] as num).toDouble();
-          final profit = lastStack - sessionManager.totalBuyIn;
-          final sessionDuration = sessionManager.sessionStartTime != null
-              ? DateTime.now().difference(sessionManager.sessionStartTime!).inMinutes
-              : null;
-          final bankrollResult = await SessionEndBankrollSheet.show(
-            context: context,
-            gameType: sessionManager.gameType,
-            profitLoss: profit,
-            totalBuyIn: sessionManager.totalBuyIn,
-            durationMinutes: sessionDuration,
-          );
+          Map<String, dynamic>? bankrollResult;
+          if (!isTourSession) {
+            final lastStack = (stackHistory.last['stackSize'] as num).toDouble();
+            final profit = lastStack - sessionManager.totalBuyIn;
+            final sessionDuration = sessionManager.sessionStartTime != null
+                ? DateTime.now().difference(sessionManager.sessionStartTime!).inMinutes
+                : null;
+            bankrollResult = await SessionEndBankrollSheet.show(
+              context: context,
+              gameType: sessionManager.gameType,
+              profitLoss: profit,
+              totalBuyIn: sessionManager.totalBuyIn,
+              durationMinutes: sessionDuration,
+            );
 
-          // Save tournament finish data to session document
-          if (bankrollResult != null) {
-            final fPlace = bankrollResult['finishedPlace'] as int?;
-            final fSize = bankrollResult['fieldSize'] as int?;
-            final fPrize = bankrollResult['prizeWon'] as double?;
-            if (fPlace != null || fSize != null || fPrize != null) {
-              try {
-                await FirebaseService.updateIndividualSession(
-                  sessionId: sessionManager.sessionId!,
-                  finishedPlace: fPlace,
-                  fieldSize: fSize,
-                  prizeWon: fPrize,
-                );
-              } catch (_) {}
+            // Save tournament finish data to session document
+            if (bankrollResult != null) {
+              final fPlace = bankrollResult['finishedPlace'] as int?;
+              final fSize = bankrollResult['fieldSize'] as int?;
+              final fPrize = bankrollResult['prizeWon'] as double?;
+              if (fPlace != null || fSize != null || fPrize != null) {
+                try {
+                  await FirebaseService.updateIndividualSession(
+                    sessionId: sessionManager.sessionId!,
+                    finishedPlace: fPlace,
+                    fieldSize: fSize,
+                    prizeWon: fPrize,
+                  );
+                } catch (_) {}
+              }
             }
           }
 
@@ -813,8 +819,11 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         if (!mounted) return;
 
         // Navigate back to main screen
-        if (OnboardingState.isOnboardingActive && OnboardingState.currentPhase == 5) {
-          // Push a fresh home screen so initState runs and detects phase 5
+        if (OnboardingState.isOnboardingActive) {
+          // Tutorial finish (via the 3-dot menu → Stop Session): advance to the
+          // post-session phase and push a fresh Home so its initState detects
+          // phase 5 and continues the tour (Sessions → card → chart → hands → AI).
+          OnboardingState.advanceTo(5);
           Navigator.of(context).pushAndRemoveUntil(
             MaterialPageRoute(builder: (_) => HomeScreen()),
             (route) => false,
@@ -1309,9 +1318,11 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         if (!mounted) return;
 
         // Show bankroll/session end sheet (finish position, field size, etc.)
+        // Skipped for tutorial sessions — tour money must never reach
+        // session_results/bankroll
         Map<String, dynamic>? bankrollResult;
         final stackHistory = sessionManager.stackHistory;
-        if (stackHistory.isNotEmpty) {
+        if (stackHistory.isNotEmpty && !OnboardingState.isOnboardingActive) {
           final lastStack = (stackHistory.last['stackSize'] as num).toDouble();
           final profit = lastStack - sessionManager.totalBuyIn;
           final sessionDuration = sessionManager.sessionStartTime != null
@@ -1669,6 +1680,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                             children: [
                               // Session info button
                               GestureDetector(
+                                key: _sessionInfoButtonKey,
                                 onTap: _showSessionDetails,
                                 child: Container(
                                   width: 32,
@@ -1976,6 +1988,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                                       : 0.35,
                               duration: const Duration(milliseconds: 150),
                             child: GestureDetector(
+                              key: _undoButtonKey,
                               onTap: _canUndoLastAction() ? _undoLastAction : null,
                               child: Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -2029,6 +2042,9 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
           blindsPillKey: _blindsPillKey,
           nextHandButtonKey: _nextHandButtonKey,
           sessionInfoButtonKey: _sessionInfoButtonKey,
+          menuButtonKey: _menuButtonKey,
+          drawingAreaKey: _drawingAreaKey,
+          undoButtonKey: _undoButtonKey,
           heroSeat: sessionManager.ourSeatNumber,
           currentPlayerSeat: gameState.currentPlayer,
           isValidAction: gameState.isValidAction,
@@ -4985,6 +5001,10 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     final result = await showDialog<BoardCards>(
       context: context,
       barrierDismissible: false,
+      // Keep the guided-tour instruction banner visible behind the dialog
+      barrierColor: OnboardingState.isGuidedHandActive
+          ? Colors.transparent
+          : Colors.black54,
       builder: (context) => AllInBoardCardsDialog(
         excludedCards: excludedCards,
         existingBoardCards: sessionManager.currentHand?.boardCards,
@@ -5363,6 +5383,10 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     showDialog(
       context: context,
       barrierDismissible: false,
+      // Keep the guided-tour instruction banner visible behind the dialog
+      barrierColor: OnboardingState.isGuidedHandActive
+          ? Colors.transparent
+          : Colors.black54,
       builder: (context) => BoardCardsDialog(
         currentRound: round,
         existingCards: sessionManager.currentHand?.boardCards,
@@ -5507,6 +5531,28 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         await prefs.setDouble('small_blind', newSmallBlind);
         await prefs.setDouble('big_blind', newBigBlind);
       }
+    }
+
+    // Guided tour: returning from the first (explain) session-details visit —
+    // deal a fresh hand (auto-advance is suppressed during the guided session,
+    // so hand 1's completion never dealt one), then prompt the user to log it.
+    // guidedHandPhase is already `done` here, so hand 2 is free play (not
+    // re-scripted). Mirrors _skipSettling()'s deal without the settling overlay.
+    if (OnboardingState.sessionDetailsExplainReturnPending && mounted) {
+      OnboardingState.sessionDetailsExplainReturnPending = false;
+      setState(() {
+        gameState.startNewHand();
+        gameState.initializePot();
+        sessionManager.startHand(
+          gameState.handNumber,
+          gameState.buttonPosition,
+          sbSeat: gameState.effectiveSBPosition,
+          bbSeat: gameState.effectiveBBPosition,
+        );
+      });
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _guidedOverlayKey.currentState?.promptSecondHand();
+      });
     }
   }
 
@@ -6181,7 +6227,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       }
 
       // During onboarding, don't start the next hand — wait for user to end session
-      if (OnboardingState.isGuidedHandActive) {
+      if (OnboardingState.isGuidedSessionActive) {
         setState(() {});
         return;
       }
@@ -6653,9 +6699,15 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
 
         setState(() {
           if (isChoppedPot) {
-            // Get current stack for our seat to track in session history
+            // Get current stack for our seat to track in session history.
+            // The pot hasn't been credited yet (distribution happens below), so
+            // if the hero is a winner, add their share now — otherwise the stack
+            // chart records the pre-award (lower) value and dips on a won hand.
             final ourSeat = sessionManager.ourSeatNumber;
-            final currentStack = ourSeat != null ? gameState.players[ourSeat - 1].currentStack : null;
+            double? currentStack = ourSeat != null ? gameState.players[ourSeat - 1].currentStack : null;
+            if (currentStack != null && ourSeat != null && winners.contains(ourSeat)) {
+              currentStack += individualShares[ourSeat] ?? sharePerWinner;
+            }
 
             // Complete current hand in session manager with pot and multiple winners
             sessionManager.completeCurrentHandWithChop(
@@ -6687,9 +6739,15 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                 sessionManager.getPlayerNameWithPosition(id)).join(', ');
             }
           } else {
-            // Get current stack for our seat to track in session history
+            // Get current stack for our seat to track in session history.
+            // The pot hasn't been credited yet (distribution happens below), so
+            // if the hero won, add the pot now — otherwise the stack chart
+            // records the pre-award (lower) value and dips on a won hand.
             final ourSeat = sessionManager.ourSeatNumber;
-            final currentStack = ourSeat != null ? gameState.players[ourSeat - 1].currentStack : null;
+            double? currentStack = ourSeat != null ? gameState.players[ourSeat - 1].currentStack : null;
+            if (currentStack != null && ourSeat != null && winners.contains(ourSeat)) {
+              currentStack += potAmount;
+            }
 
             // Complete current hand in session manager with single winner
             sessionManager.completeCurrentHand(
@@ -6733,7 +6791,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     }
 
     // During onboarding, don't start the next hand — wait for user to end session
-    if (OnboardingState.isGuidedHandActive) {
+    if (OnboardingState.isGuidedSessionActive) {
       setState(() {});
       return;
     }
@@ -7285,7 +7343,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     }
 
     // During onboarding, don't start the next hand — wait for user to end session
-    if (OnboardingState.isGuidedHandActive) {
+    if (OnboardingState.isGuidedSessionActive) {
       setState(() {});
       return;
     }

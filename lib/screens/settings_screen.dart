@@ -940,11 +940,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
           TextButton(
             onPressed: () async {
               Navigator.pop(context);
-              await AuthService.signOut();
-              if (context.mounted) {
-                Navigator.pushAndRemoveUntil(
-                    context, MaterialPageRoute(builder: (_) => IntroScreen()), (route) => false);
-              }
+              // Navigate to Intro FIRST so the logout registers on the first tap
+              // (see profile_screen.dart) — awaiting signOut() first can trip
+              // AuthWrapper's recovery loading. Sign out in the background.
+              Navigator.pushAndRemoveUntil(
+                  context, MaterialPageRoute(builder: (_) => IntroScreen()), (route) => false);
+              try {
+                await AuthService.signOut();
+              } catch (_) {}
             },
             child: Text(l10n.navDrawerSignOut,
                 style: AppTypography.ibm(color: _danger, fontWeight: FontWeight.w500)),

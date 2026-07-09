@@ -3,6 +3,10 @@ import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/typography.dart';
 import '../l10n/app_localizations.dart';
+import '../screens/paywall_screen.dart';
+import '../screens/auth_screen_experimental.dart';
+import '../screens/onboarding/onboarding_flow.dart';
+import '../services/auth_service.dart';
 import 'onboarding_prefs.dart';
 import 'onboarding_state.dart';
 import '../design_system/constants/decorations.dart';
@@ -24,8 +28,11 @@ TutorialCoachMark _createCoachMark({
     opacityShadow: 0.85,
     paddingFocus: 12,
     hideSkip: false,
+    // Top-left so it never overlaps the bottom-right + FAB / action buttons
+    alignSkip: Alignment.topLeft,
     skipWidget: Padding(
-      padding: const EdgeInsets.only(right: 16, bottom: 8),
+      padding: EdgeInsets.only(
+          left: 16, top: MediaQuery.of(context).padding.top + 8),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         decoration: BoxDecoration(
@@ -39,8 +46,14 @@ TutorialCoachMark _createCoachMark({
       ),
     ),
     onSkip: () {
+      final wasReplay = OnboardingState.isReplay;
       OnboardingState.cancel();
       OnboardingPrefs.markOnboardingSeen();
+      if (!wasReplay) {
+        // Don't push the paywall from mid-tour contexts — the next Home
+        // visit shows it once via the pending flag
+        OnboardingPrefs.setPostTourPaywallPending();
+      }
       onSkip?.call();
       return true;
     },
@@ -57,12 +70,12 @@ Widget buildWelcomeCard({required VoidCallback onNext, required BuildContext con
       color: AppColors.surfaceDark,
       borderRadius: BorderRadius.circular(AppDecorations.radius20),
       border: Border.all(
-        color: AppColors.buttonPrimary.withValues(alpha: 0.15),
+        color: AppColors.tealPrimary.withValues(alpha: 0.15),
         width: 1,
       ),
       boxShadow: [
         BoxShadow(
-          color: AppColors.buttonPrimary.withValues(alpha: 0.08),
+          color: AppColors.tealPrimary.withValues(alpha: 0.08),
           blurRadius: 20,
           offset: const Offset(0, 4),
         ),
@@ -90,7 +103,7 @@ Widget buildWelcomeCard({required VoidCallback onNext, required BuildContext con
           child: TextButton(
             onPressed: onNext,
             style: TextButton.styleFrom(
-              backgroundColor: AppColors.buttonPrimary,
+              backgroundColor: AppColors.tealPrimary,
               padding: const EdgeInsets.symmetric(vertical: 14),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
@@ -124,11 +137,11 @@ Widget buildTooltip({
       color: AppColors.surfaceDark,
       borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
       border: Border.all(
-        color: AppColors.buttonPrimary.withValues(alpha: 0.15),
+        color: AppColors.tealPrimary.withValues(alpha: 0.15),
       ),
       boxShadow: [
         BoxShadow(
-          color: AppColors.buttonPrimary.withValues(alpha: 0.08),
+          color: AppColors.tealPrimary.withValues(alpha: 0.08),
           blurRadius: 20,
           offset: const Offset(0, 4),
         ),
@@ -160,12 +173,12 @@ Widget buildTooltip({
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                color: AppColors.buttonPrimary.withValues(alpha: 0.08),
+                color: AppColors.tealPrimary.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
               ),
               child: Text(
                 isLast ? l10n.onboardingGotIt : l10n.onboardingNext,
-                style: AppTypography.bodyLarge(color: AppColors.buttonPrimary)
+                style: AppTypography.bodyLarge(color: AppColors.tealPrimary)
                     .copyWith(fontWeight: FontWeight.w600),
               ),
             ),
@@ -686,6 +699,152 @@ class ButtonTokenTour {
 // (see lib/onboarding/guided_hand_overlay.dart)
 
 // ---------------------------------------------------------------------------
+// Tour completion — shared by the phase-6 end and every phase-5/6 fallback
+// ---------------------------------------------------------------------------
+
+/// Ends the tour: completion dialog, then — for a guest — required sign-up and
+/// the onboarding questions, then (once ever) the skippable post-tour paywall,
+/// then a clean reset to Home. The tour can end several screens deep.
+///
+/// Guest funnel (value-first): the anonymous user experienced the tour first;
+/// only now do we ask them to create an account (hard gate), answer the
+/// onboarding questions, and see the paywall. A user who already had an account
+/// before the tour keeps the original behavior (dialog → paywall → Home).
+Future<void> finishOnboardingTour(BuildContext context,
+    {bool showPaywall = true}) async {
+  OnboardingState.complete();
+  OnboardingPrefs.markOnboardingSeen();
+
+  final isGuest = AuthService.isAnonymous && !OnboardingState.isReplay;
+  if (isGuest) {
+    // Persist the sign-up requirement NOW — before the dialog — so that if the
+    // guest kills the app at any point after the tour, the next launch forces
+    // them back into sign-up (AuthWrapper → GuestSignupGate) instead of letting
+    // them keep using the app as a guest.
+    await OnboardingPrefs.setPostTourSignupRequired();
+  }
+
+  await showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (ctx) => _OnboardingCompleteDialog(
+      onDone: () => Navigator.of(ctx).pop(),
+    ),
+  );
+  if (!context.mounted) return;
+
+  if (isGuest) {
+    // Required sign-up → questions → paywall → Home (same chain used on relaunch).
+    await completeGuestSignup(context);
+    return;
+  }
+
+  // Non-guest: skippable paywall (at most once ever), then Home.
+  if (showPaywall && !(await OnboardingPrefs.wasPostTourPaywallShown())) {
+    await OnboardingPrefs.markPostTourPaywallShown();
+    if (!context.mounted) return;
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (_) => const PaywallScreen(showSkip: true),
+      ),
+    );
+  }
+
+  if (!context.mounted) return;
+  Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
+}
+
+/// The mandatory guest sign-up chain: hard-gate sign-up → onboarding questions
+/// → skippable paywall → Home. Run at tour completion (for a guest) and again
+/// on app relaunch if the guest killed the app before linking (GuestSignupGate).
+Future<void> completeGuestSignup(BuildContext context) async {
+  // 1. Required sign-up (hard gate). canDismiss:false → the screen can only
+  //    leave via a successful link (pops `true`) or, on a credential conflict,
+  //    by signing into the existing account (which resets the stack, unmounting
+  //    `context` — handled by the mounted checks below).
+  final linked = await Navigator.of(context).push<bool>(
+    MaterialPageRoute(
+      fullscreenDialog: true,
+      builder: (_) => const AuthScreenExperimental(
+        linkMode: true,
+        canDismiss: false,
+      ),
+    ),
+  );
+  if (!context.mounted) return;
+
+  if (linked == true) {
+    // Account created — drop the relaunch gate.
+    await OnboardingPrefs.clearPostTourSignupRequired();
+    if (!context.mounted) return;
+
+    // 2. Onboarding questions. skipNickname:false so the nickname step writes
+    //    hasSetUsername:true (linking alone doesn't) — otherwise the final
+    //    return to '/' would re-route back into OnboardingFlow. popOnComplete
+    //    pops back here so we can continue to the paywall.
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => const OnboardingFlow(
+          skipNickname: false,
+          popOnComplete: true,
+        ),
+      ),
+    );
+    if (!context.mounted) return;
+
+    // 3. Skippable paywall (at most once ever).
+    if (!(await OnboardingPrefs.wasPostTourPaywallShown())) {
+      await OnboardingPrefs.markPostTourPaywallShown();
+      if (!context.mounted) return;
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          fullscreenDialog: true,
+          builder: (_) => const PaywallScreen(showSkip: true),
+        ),
+      );
+    }
+  }
+
+  if (!context.mounted) return;
+  Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
+}
+
+/// Shown by AuthWrapper when an anonymous user who has already finished the tour
+/// relaunches the app: immediately (re-)presents the mandatory guest sign-up so
+/// a guest can't bypass it by killing and reopening the app.
+class GuestSignupGate extends StatefulWidget {
+  const GuestSignupGate({super.key});
+
+  @override
+  State<GuestSignupGate> createState() => _GuestSignupGateState();
+}
+
+class _GuestSignupGateState extends State<GuestSignupGate> {
+  bool _started = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_started || !mounted) return;
+      _started = true;
+      completeGuestSignup(context);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      backgroundColor: AppColors.bgPrimary,
+      body: Center(
+        child: CircularProgressIndicator(color: AppColors.tealPrimary),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Phase 5 — Session Result Tour (on home screen after session ends)
 // ---------------------------------------------------------------------------
 
@@ -729,7 +888,8 @@ class SessionResultTour {
     }
 
     if (targets.isEmpty) {
-      _finishAndShowCompletion(context);
+      finishOnboardingTour(context);
+      onComplete?.call();
       return;
     }
 
@@ -737,24 +897,346 @@ class SessionResultTour {
       targets: targets,
       context: context,
       onFinish: () {
-        _finishAndShowCompletion(context);
+        // Hand off to phase 6: the user now taps the real Sessions icon,
+        // and SessionHistoryScreen picks the tour up in initState.
+        OnboardingState.advanceTo(6);
+        OnboardingState.sessionHistoryTourPending = true;
+        onComplete?.call();
       },
     );
     coach.show(context: context);
   }
+}
 
-  void _finishAndShowCompletion(BuildContext context) {
-    OnboardingState.complete();
-    OnboardingPrefs.markOnboardingSeen();
-    onComplete?.call();
+// ---------------------------------------------------------------------------
+// Phase 6a — Session History Tour (spotlights the tutorial session card)
+// ---------------------------------------------------------------------------
 
-    showDialog(
+class SessionHistoryTour {
+  final GlobalKey sessionCardKey;
+
+  SessionHistoryTour({required this.sessionCardKey});
+
+  void show(BuildContext context) {
+    if (!OnboardingState.isOnboardingActive ||
+        OnboardingState.currentPhase != 6) return;
+
+    final targets = <TargetFocus>[];
+
+    if (sessionCardKey.currentContext != null) {
+      targets.add(
+        TargetFocus(
+          identify: 'tour_session_card',
+          keyTarget: sessionCardKey,
+          shape: ShapeLightFocus.RRect,
+          radius: 12,
+          paddingFocus: 4,
+          contents: [
+            TargetContent(
+              align: ContentAlign.bottom,
+              builder: (context, controller) {
+                final l10n = AppLocalizations.of(context);
+                return buildTooltip(
+                  title: l10n.onboardingSessionHistoryCardTitle,
+                  body: l10n.onboardingSessionHistoryCardBody,
+                  onNext: () => controller.next(),
+                  context: context,
+                  isLast: true,
+                );
+              },
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (targets.isEmpty) {
+      finishOnboardingTour(context);
+      return;
+    }
+
+    final coach = _createCoachMark(
+      targets: targets,
       context: context,
-      barrierDismissible: false,
-      builder: (ctx) => _OnboardingCompleteDialog(
-        onDone: () => Navigator.of(ctx).pop(),
-      ),
+      onFinish: () {
+        // User now taps the real session card; SessionAnalyticsScreen
+        // continues the tour on its hand list.
+        OnboardingState.handListTourPending = true;
+      },
     );
+    coach.show(context: context);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Phase 6b — Hand List Tour (spotlights "View Logged Hands" in analytics)
+// ---------------------------------------------------------------------------
+
+class HandListTour {
+  final GlobalKey loggedHandsButtonKey;
+  final GlobalKey? stackChartKey;
+
+  HandListTour({required this.loggedHandsButtonKey, this.stackChartKey});
+
+  void show(BuildContext context) {
+    if (!OnboardingState.isOnboardingActive ||
+        OnboardingState.currentPhase != 6) return;
+
+    final targets = <TargetFocus>[];
+
+    // Step 1 — the stack chart (this is the "see how your session went" moment)
+    if (stackChartKey?.currentContext != null) {
+      targets.add(
+        TargetFocus(
+          identify: 'stack_chart',
+          keyTarget: stackChartKey!,
+          shape: ShapeLightFocus.RRect,
+          radius: 18,
+          paddingFocus: 6,
+          contents: [
+            TargetContent(
+              // Pin near the top so the card stays visible — the chart sits
+              // low on screen and a bottom/attached card would clip off.
+              align: ContentAlign.custom,
+              customPosition: CustomTargetContentPosition(
+                top: MediaQueryData.fromView(
+                  WidgetsBinding.instance.platformDispatcher.views.first,
+                ).size.height *
+                    0.12,
+              ),
+              builder: (context, controller) {
+                final l10n = AppLocalizations.of(context);
+                return buildTooltip(
+                  title: l10n.guidedStackChartTitle,
+                  body: l10n.guidedStackChartBody,
+                  onNext: () => controller.next(),
+                  context: context,
+                );
+              },
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Step 2 — the "View Logged Hands" button
+    if (loggedHandsButtonKey.currentContext != null) {
+      targets.add(
+        TargetFocus(
+          identify: 'logged_hands_button',
+          keyTarget: loggedHandsButtonKey,
+          shape: ShapeLightFocus.RRect,
+          radius: 26,
+          paddingFocus: 4,
+          contents: [
+            TargetContent(
+              align: ContentAlign.top,
+              builder: (context, controller) {
+                final l10n = AppLocalizations.of(context);
+                return buildTooltip(
+                  title: l10n.onboardingHandListTitle,
+                  body: l10n.onboardingHandListBody,
+                  onNext: () => controller.next(),
+                  context: context,
+                  isLast: true,
+                );
+              },
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (targets.isEmpty) {
+      finishOnboardingTour(context);
+      return;
+    }
+
+    final coach = _createCoachMark(
+      targets: targets,
+      context: context,
+      onFinish: () {
+        // User now taps the real button; SessionHandsScreen continues the
+        // tour on the first hand card.
+        OnboardingState.handCardTourPending = true;
+      },
+    );
+    coach.show(context: context);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Phase 6c — Hand Card Tour (inside the logged hands list)
+// ---------------------------------------------------------------------------
+
+class HandCardTour {
+  final GlobalKey handCardKey;
+
+  HandCardTour({required this.handCardKey});
+
+  void show(BuildContext context) {
+    if (!OnboardingState.isOnboardingActive ||
+        OnboardingState.currentPhase != 6) return;
+
+    final targets = <TargetFocus>[];
+
+    if (handCardKey.currentContext != null) {
+      targets.add(
+        TargetFocus(
+          identify: 'tour_hand_card',
+          keyTarget: handCardKey,
+          shape: ShapeLightFocus.RRect,
+          radius: 12,
+          paddingFocus: 4,
+          contents: [
+            TargetContent(
+              align: ContentAlign.bottom,
+              builder: (context, controller) {
+                final l10n = AppLocalizations.of(context);
+                return buildTooltip(
+                  title: l10n.onboardingHandCardTitle,
+                  body: l10n.onboardingHandCardBody,
+                  onNext: () => controller.next(),
+                  context: context,
+                  isLast: true,
+                );
+              },
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (targets.isEmpty) {
+      finishOnboardingTour(context);
+      return;
+    }
+
+    final coach = _createCoachMark(
+      targets: targets,
+      context: context,
+      onFinish: () {
+        // User now taps the real hand card; HandActionsScreen continues
+        // the tour on the AI analysis button.
+        OnboardingState.aiAnalysisTourPending = true;
+      },
+    );
+    coach.show(context: context);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Phase 6d — Hand Tools Tour (inside hand details, before AI analysis)
+// ---------------------------------------------------------------------------
+
+/// Explains the BB / export / share / star buttons all at once by spotlighting
+/// the whole tools row, then hands off to the AI analysis step via [onNext].
+class HandToolsTour {
+  final GlobalKey toolsRowKey;
+
+  HandToolsTour({required this.toolsRowKey});
+
+  void show(BuildContext context, {required VoidCallback onNext}) {
+    if (!OnboardingState.isOnboardingActive ||
+        OnboardingState.currentPhase != 6) {
+      return;
+    }
+
+    if (toolsRowKey.currentContext == null) {
+      onNext();
+      return;
+    }
+
+    final targets = <TargetFocus>[
+      TargetFocus(
+        identify: 'hand_tools_row',
+        keyTarget: toolsRowKey,
+        shape: ShapeLightFocus.RRect,
+        radius: 24,
+        paddingFocus: 8,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (context, controller) {
+              final l10n = AppLocalizations.of(context);
+              return buildTooltip(
+                title: l10n.onboardingHandToolsTitle,
+                body: l10n.onboardingHandToolsBody,
+                onNext: () => controller.next(),
+                context: context,
+              );
+            },
+          ),
+        ],
+      ),
+    ];
+
+    final coach = _createCoachMark(
+      targets: targets,
+      context: context,
+      onFinish: onNext,
+    );
+    coach.show(context: context);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Phase 6e — AI Analysis Tour (inside hand details)
+// ---------------------------------------------------------------------------
+
+class AiAnalysisTour {
+  final GlobalKey aiButtonKey;
+
+  AiAnalysisTour({required this.aiButtonKey});
+
+  /// [onAnalyze] runs the free tour analysis; the caller ends the tour with
+  /// [finishOnboardingTour] once the analysis has been shown.
+  void show(BuildContext context, {required VoidCallback onAnalyze}) {
+    if (!OnboardingState.isOnboardingActive ||
+        OnboardingState.currentPhase != 6) return;
+
+    final targets = <TargetFocus>[];
+
+    if (aiButtonKey.currentContext != null) {
+      targets.add(
+        TargetFocus(
+          identify: 'ai_analysis_button',
+          keyTarget: aiButtonKey,
+          shape: ShapeLightFocus.RRect,
+          radius: 16,
+          paddingFocus: 4,
+          contents: [
+            TargetContent(
+              align: ContentAlign.top,
+              builder: (context, controller) {
+                final l10n = AppLocalizations.of(context);
+                return buildTooltip(
+                  title: l10n.onboardingAiAnalysisTitle,
+                  body: l10n.onboardingAiAnalysisBody,
+                  onNext: () => controller.next(),
+                  context: context,
+                  isLast: true,
+                );
+              },
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (targets.isEmpty) {
+      // No spotlight possible — defer completion to when the user leaves the
+      // hand-details screen (SessionHandsScreen runs finishOnboardingTour).
+      OnboardingState.tourCompletionPending = true;
+      return;
+    }
+
+    final coach = _createCoachMark(
+      targets: targets,
+      context: context,
+      onFinish: onAnalyze,
+    );
+    coach.show(context: context);
   }
 }
 

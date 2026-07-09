@@ -30,8 +30,9 @@ class OnboardingState {
   /// Used by [OnboardingProgressBar] to self-rebuild.
   static final ValueNotifier<int> notifier = ValueNotifier<int>(0);
   static void _notify() => notifier.value++;
-  // 0=home, 1=loggingMode, 2=sessionSetup, 3=seatSetup, 4=handLogging, 5=sessionResult
-  static const int totalPhases = 6;
+  // 0=home, 1=loggingMode, 2=sessionSetup, 3=seatSetup, 4=handLogging,
+  // 5=sessionResult, 6=sessionReview (history → hand list → AI analysis)
+  static const int totalPhases = 7;
 
   /// Whether the seat dialog sub-tour still needs to run (within phase 3).
   static bool seatDialogTourPending = false;
@@ -56,6 +57,37 @@ class OnboardingState {
 
   /// Whether the session details tour needs to run (after tapping ⓘ in full session mode).
   static bool sessionDetailsTourPending = false;
+
+  /// Set on the first (explain) ⓘ visit so the poker screen knows, when the
+  /// session-details screen pops, to prompt the user to log one more hand.
+  static bool sessionDetailsExplainReturnPending = false;
+
+  /// Whether the user still needs to log the second (free-play) tour hand.
+  /// Set when the Next Hand coach mark finishes; consumed when that hand
+  /// completes, triggering the finish-session (ⓘ) spotlight.
+  static bool secondTourHandPending = false;
+
+  /// Set after the phase-6 AI-analysis step so the tour completion (and guest
+  /// sign-up) fires only once the user LEAVES the hand-details screen — not
+  /// while they're still reading the analysis. Consumed on return to the
+  /// hand-list screen.
+  static bool tourCompletionPending = false;
+
+  /// Whether the session-history tour needs to run (phase 6, after tapping Sessions nav).
+  static bool sessionHistoryTourPending = false;
+
+  /// Whether the hand-list tour needs to run (phase 6, inside session analytics).
+  static bool handListTourPending = false;
+
+  /// Whether the hand-card tour needs to run (phase 6, inside logged hands list).
+  static bool handCardTourPending = false;
+
+  /// Whether the AI-analysis tour needs to run (phase 6, inside hand details).
+  static bool aiAnalysisTourPending = false;
+
+  /// Session id of the tutorial session created during the tour, so phase-6
+  /// tours can spotlight the exact card without querying.
+  static String? tourSessionId;
 
   // ---------------------------------------------------------------------------
   // Phase 4 — Guided hand state
@@ -86,6 +118,14 @@ class OnboardingState {
     quickStackUpdateTourPending = false;
     individualStopSessionTourPending = false;
     sessionDetailsTourPending = false;
+    sessionDetailsExplainReturnPending = false;
+    secondTourHandPending = false;
+    tourCompletionPending = false;
+    sessionHistoryTourPending = false;
+    handListTourPending = false;
+    handCardTourPending = false;
+    aiAnalysisTourPending = false;
+    tourSessionId = null;
     _resetGuidedHand();
     _notify();
   }
@@ -103,6 +143,13 @@ class OnboardingState {
     quickStackUpdateTourPending = false;
     individualStopSessionTourPending = false;
     sessionDetailsTourPending = false;
+    sessionDetailsExplainReturnPending = false;
+    secondTourHandPending = false;
+    tourCompletionPending = false;
+    sessionHistoryTourPending = false;
+    handListTourPending = false;
+    handCardTourPending = false;
+    aiAnalysisTourPending = false;
     guidedHandPhase = GuidedPhase.done;
     _notify();
   }
@@ -118,6 +165,13 @@ class OnboardingState {
     quickStackUpdateTourPending = false;
     individualStopSessionTourPending = false;
     sessionDetailsTourPending = false;
+    sessionDetailsExplainReturnPending = false;
+    secondTourHandPending = false;
+    tourCompletionPending = false;
+    sessionHistoryTourPending = false;
+    handListTourPending = false;
+    handCardTourPending = false;
+    aiAnalysisTourPending = false;
     guidedHandPhase = GuidedPhase.done;
     _notify();
   }
@@ -138,6 +192,14 @@ class OnboardingState {
     individualTrackingTourPending = false;
     quickStackUpdateTourPending = false;
     individualStopSessionTourPending = false;
+    sessionDetailsTourPending = false;
+    sessionDetailsExplainReturnPending = false;
+    secondTourHandPending = false;
+    tourCompletionPending = false;
+    sessionHistoryTourPending = false;
+    handListTourPending = false;
+    handCardTourPending = false;
+    aiAnalysisTourPending = false;
     if (phase == 4) {
       _resetGuidedHand();
     }
@@ -152,6 +214,13 @@ class OnboardingState {
     quickStackUpdateTourPending = false;
     individualStopSessionTourPending = false;
     sessionDetailsTourPending = false;
+    sessionDetailsExplainReturnPending = false;
+    secondTourHandPending = false;
+    tourCompletionPending = false;
+    sessionHistoryTourPending = false;
+    handListTourPending = false;
+    handCardTourPending = false;
+    aiAnalysisTourPending = false;
     guidedHandPhase = GuidedPhase.done;
     _notify();
   }
@@ -170,13 +239,19 @@ class OnboardingState {
     final offset = _isReplay ? 0 : 1; // replay starts at phase 1 = step 1
     if (currentPhase <= 2) return currentPhase + offset; // 0→1, 1→2, 2→3 (normal) | 1→1, 2→2 (replay)
     if (currentPhase == 3) return 2 + offset;            // same step as phase 2
-    return currentPhase - 1 + offset;                    // 4→4, 5→5 (normal) | 4→3, 5→4 (replay)
+    return currentPhase - 1 + offset;                    // 4→4, 5→5, 6→6 (normal) | 4→3, 5→4 (replay)
   }
 
-  static int get displayTotalSteps => _isReplay ? 4 : 5;
+  static int get displayTotalSteps => _isReplay ? 4 : 6;
 
   static double get progress => displayStep / displayTotalSteps;
 
   static bool get isGuidedHandActive =>
       isOnboardingActive && currentPhase == 4 && guidedHandPhase != GuidedPhase.done;
+
+  /// True for the entire guided session (phase 4), including the free-play
+  /// second hand where [guidedHandPhase] is already `done`. Used to suppress
+  /// the poker screen's auto-advance so the tour controls hand flow.
+  static bool get isGuidedSessionActive =>
+      isOnboardingActive && currentPhase == 4;
 }

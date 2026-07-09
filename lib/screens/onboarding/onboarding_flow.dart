@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../services/currency_service.dart';
 import '../../services/onboarding_service.dart';
-import '../paywall_screen.dart';
 import 'welcome_step.dart';
 import 'nickname_step.dart';
 import 'game_type_step.dart';
@@ -15,7 +14,7 @@ import '../../design_system/constants/colors.dart';
 ///
 /// Manages a PageView of 7 steps (6 if [skipNickname] is true).
 /// Collects user preferences and persists them to Firestore on completion.
-/// After onboarding, navigates to the paywall screen.
+/// After onboarding, lands on Home — the paywall shows after the guided tour.
 class OnboardingFlow extends StatefulWidget {
   /// If true, skip the nickname claim step (user already has a username).
   final bool skipNickname;
@@ -23,10 +22,16 @@ class OnboardingFlow extends StatefulWidget {
   /// If true, skip Firestore writes and pop back when done (for dev testing).
   final bool testMode;
 
+  /// If true, pop back to the caller (with `true`) on completion instead of
+  /// resetting the nav stack to Home. Lets the guest post-tour chain continue
+  /// into the paywall after the questions finish.
+  final bool popOnComplete;
+
   const OnboardingFlow({
     super.key,
     this.skipNickname = false,
     this.testMode = false,
+    this.popOnComplete = false,
   });
 
   @override
@@ -147,19 +152,15 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
 
     if (!mounted) return;
 
-    // Navigate to paywall screen
-    await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const PaywallScreen(showSkip: true),
-      ),
-    );
-
-    if (!mounted) return;
+    // No paywall here anymore — it shows AFTER the guided tour (value first),
+    // via finishOnboardingTour / the pending-flag fallback on Home.
 
     if (widget.testMode) {
       // In test mode, just pop back to profile
       Navigator.pop(context);
+    } else if (widget.popOnComplete) {
+      // Guest post-tour chain: pop back so the caller can continue to the paywall.
+      Navigator.pop(context, true);
     } else {
       // In real flow, go to home
       Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);

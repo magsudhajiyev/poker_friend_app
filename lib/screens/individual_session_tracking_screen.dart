@@ -10,6 +10,8 @@ import '../services/auth_service.dart';
 import '../services/display_identity_service.dart';
 import 'poker_hand_screen.dart';
 import 'quick_stack_update_screen.dart';
+import 'paywall_screen.dart';
+import 'home_screen.dart';
 import '../design_system/components/drawer_dots.dart';
 import '../design_system/components/form_drawer.dart';
 import '../widgets/session_end_bankroll_sheet.dart';
@@ -22,7 +24,6 @@ import '../onboarding/onboarding_progress_bar.dart';
 import '../design_system/components/app_toggle.dart';
 import '../models/hand_state_machine.dart';
 import '../widgets/stack_growth_chart.dart';
-import '../utils/stack_analytics.dart';
 import '../l10n/app_localizations.dart';
 import '../services/currency_service.dart';
 import '../design_system/constants/colors.dart';
@@ -116,6 +117,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
   final GlobalKey _dotsKey = GlobalKey();
 
   // Onboarding GlobalKeys
+  final GlobalKey _currentStackCardKey = GlobalKey(debugLabel: 'currentStackCard');
   final GlobalKey _updateStackBtnKey = GlobalKey(debugLabel: 'updateStackBtn');
   final GlobalKey _logHandBtnKey = GlobalKey(debugLabel: 'logHandBtn');
   final GlobalKey _stopSessionBtnKey = GlobalKey(debugLabel: 'stopSessionBtn');
@@ -210,34 +212,42 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
   void _showSessionDetailsTour() {
     final l10n = AppLocalizations.of(context);
 
-    final targets = <TargetFocus>[
-      // 1. + button (add-ons & rebuys)
-      TargetFocus(
-        identify: 'add_on_button',
-        keyTarget: _dotsKey,
-        shape: ShapeLightFocus.Circle,
-        paddingFocus: 12,
-        contents: [
-          TargetContent(
-            align: ContentAlign.bottom,
-            builder: (context, controller) {
-              return buildTooltip(
-                title: l10n.guidedAddOnTitle,
-                body: l10n.guidedAddOnBody,
-                onNext: () => controller.next(),
-                context: context,
-              );
-            },
-          ),
-        ],
-      ),
-      // 2. Update button on stack card
+    // Explain tour (top-to-bottom): current-stack card → Update button →
+    // stack chart → "Go back to hand". Finishing the session now happens via
+    // the poker screen's 3-dot menu, so there is no Stop-button step here.
+    final targets = <TargetFocus>[];
+
+    if (_currentStackCardKey.currentContext != null) {
+      targets.add(
+        TargetFocus(
+          identify: 'current_stack_card',
+          keyTarget: _currentStackCardKey,
+          shape: ShapeLightFocus.RRect,
+          radius: 18,
+          paddingFocus: 6,
+          contents: [
+            TargetContent(
+              align: ContentAlign.bottom,
+              builder: (context, controller) {
+                return buildTooltip(
+                  title: l10n.guidedCurrentStackTitle,
+                  body: l10n.guidedCurrentStackBody,
+                  onNext: () => controller.next(),
+                  context: context,
+                );
+              },
+            ),
+          ],
+        ),
+      );
+    }
+    targets.add(
       TargetFocus(
         identify: 'update_stack_button',
         keyTarget: _updateStackBtnKey,
         shape: ShapeLightFocus.RRect,
         radius: 20,
-        paddingFocus: 4,
+        paddingFocus: 6,
         contents: [
           TargetContent(
             align: ContentAlign.bottom,
@@ -252,17 +262,26 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
           ),
         ],
       ),
-      // 3. Stack chart
-      if (_stackChartKey.currentContext != null)
+    );
+    if (_stackChartKey.currentContext != null) {
+      targets.add(
         TargetFocus(
           identify: 'stack_chart',
           keyTarget: _stackChartKey,
           shape: ShapeLightFocus.RRect,
           radius: 18,
-          paddingFocus: 4,
+          paddingFocus: 6,
           contents: [
             TargetContent(
-              align: ContentAlign.top,
+              // Pin near the top so the card stays visible — the chart sits
+              // low on screen and an attached card would clip off.
+              align: ContentAlign.custom,
+              customPosition: CustomTargetContentPosition(
+                top: MediaQueryData.fromView(
+                  WidgetsBinding.instance.platformDispatcher.views.first,
+                ).size.height *
+                    0.12,
+              ),
               builder: (context, controller) {
                 return buildTooltip(
                   title: l10n.guidedStackChartTitle,
@@ -274,19 +293,22 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
             ),
           ],
         ),
-      // 4. Stop session button — dismiss tour, user stops session on their own
+      );
+    }
+    targets.add(
       TargetFocus(
-        identify: 'stop_session_button',
-        keyTarget: _stopSessionBtnKey,
-        shape: ShapeLightFocus.Circle,
-        paddingFocus: 12,
+        identify: 'go_back_to_hand',
+        keyTarget: _logHandBtnKey,
+        shape: ShapeLightFocus.RRect,
+        radius: 20,
+        paddingFocus: 6,
         contents: [
           TargetContent(
-            align: ContentAlign.bottom,
+            align: ContentAlign.top,
             builder: (context, controller) {
               return buildTooltip(
-                title: l10n.guidedStopSessionTitle,
-                body: l10n.guidedStopSessionBody,
+                title: l10n.guidedDetailsBackTitle,
+                body: l10n.guidedDetailsBackBody,
                 onNext: () => controller.next(),
                 context: context,
                 isLast: true,
@@ -295,7 +317,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
           ),
         ],
       ),
-    ];
+    );
 
     final coach = TutorialCoachMark(
       targets: targets,
@@ -303,8 +325,11 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
       opacityShadow: 0.85,
       paddingFocus: 12,
       hideSkip: false,
+      // Top-left so it never overlaps the bottom-right + FAB
+      alignSkip: Alignment.topLeft,
       skipWidget: Padding(
-        padding: const EdgeInsets.only(right: 16, bottom: 8),
+        padding: EdgeInsets.only(
+            left: 16, top: MediaQuery.of(context).padding.top + 8),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
           decoration: BoxDecoration(
@@ -324,8 +349,12 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
         // Tour overlay dismissed — onboarding stays active until user stops session
       },
       onSkip: () {
+        final wasReplay = OnboardingState.isReplay;
         OnboardingState.cancel();
         OnboardingPrefs.markOnboardingSeen();
+        if (!wasReplay) {
+          OnboardingPrefs.setPostTourPaywallPending();
+        }
         return true;
       },
     );
@@ -334,6 +363,11 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
 
   Future<void> _initializeSession() async {
     _sessionStartTime = DateTime.now();
+
+    // Individual sessions started during the first-run tour are badged as
+    // tutorials and excluded from stats/bankroll
+    final isTutorial =
+        OnboardingState.isOnboardingActive && !OnboardingState.isReplay;
 
     try {
       final sessionId = await FirebaseService.createSession(
@@ -346,7 +380,12 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
         startingStack: widget.startingStack,
         hasBBante: widget.hasBBante,
         totalBuyIn: widget.buyInAmount,
+        isTutorial: isTutorial,
       );
+
+      if (isTutorial) {
+        OnboardingState.tourSessionId = sessionId;
+      }
 
       setState(() {
         _sessionId = sessionId;
@@ -354,6 +393,10 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
     } catch (e) {
       debugPrint('Error creating individual session in Firebase: $e');
       final localSessionId = DateTime.now().millisecondsSinceEpoch.toString();
+
+      if (isTutorial) {
+        OnboardingState.tourSessionId = localSessionId;
+      }
 
       await LocalStorageService.saveSession(
         sessionId: localSessionId,
@@ -363,6 +406,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
         startTime: DateTime.now().toIso8601String(),
         gameType: widget.gameType,
         buyInAmount: widget.buyInAmount,
+        isTutorial: isTutorial,
       );
 
       setState(() {
@@ -491,13 +535,6 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
   Future<void> _showUpdateStackDialog() async {
     final l10n = AppLocalizations.of(context);
     final newStackController = TextEditingController(text: _currentStack.toString());
-    final currentTableAvg = StackAnalytics.latestTableAverage(_stackHistory);
-    final tableAvgController = TextEditingController(
-        text: currentTableAvg != null
-            ? (currentTableAvg == currentTableAvg.roundToDouble()
-                ? currentTableAvg.toStringAsFixed(0)
-                : currentTableAvg.toString())
-            : '');
     final noteController = TextEditingController();
     Map<String, dynamic>? result;
 
@@ -511,7 +548,6 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
           result = {
             'stack': value,
             'note': noteController.text.trim(),
-            'tableAvg': double.tryParse(tableAvgController.text),
           };
           Navigator.pop(context);
         }
@@ -605,49 +641,6 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                 alignment: Alignment.center,
                 child: Container(height: 1, color: AppColors.bgOverlay),
               ),
-              // Table average field (optional, F2 stack analytics)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(10, 10, 8, 10),
-                child: TextField(
-                  controller: tableAvgController,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  style: AppTypography.ibm(
-                    fontSize: 17,
-                    color: Colors.white,
-                    fontWeight: FontWeight.w400,
-                    height: 1.44,
-                  ),
-                  decoration: InputDecoration(
-                    hintText: l10n.individualTableAvgHint,
-                    hintStyle: AppTypography.ibm(
-                      fontSize: 17,
-                      color: Colors.white.withValues(alpha: 0.5),
-                      fontWeight: FontWeight.w400,
-                      height: 1.44,
-                    ),
-                    prefixText: widget.gameType == GameType.cash ? CurrencyService.prefixText : '',
-                    suffixText: widget.gameType == GameType.cash ? CurrencyService.suffixText : null,
-                    prefixStyle: AppTypography.ibm(
-                      fontSize: 17,
-                      color: Colors.white,
-                      fontWeight: FontWeight.w400,
-                    ),
-                    border: InputBorder.none,
-                    enabledBorder: InputBorder.none,
-                    focusedBorder: InputBorder.none,
-                    filled: false,
-                    contentPadding: EdgeInsets.zero,
-                    isDense: true,
-                  ),
-                ),
-              ),
-              // Separator
-              Container(
-                height: 21,
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                alignment: Alignment.center,
-                child: Container(height: 1, color: AppColors.bgOverlay),
-              ),
               // Note field
               Padding(
                 padding: const EdgeInsets.all(10),
@@ -689,7 +682,6 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
     if (result != null) {
       final newStack = result!['stack'] as double;
       final note = result!['note'] as String;
-      final tableAvg = result!['tableAvg'] as double?;
       if (newStack >= 0) {
         final previousStack = _currentStack;
         final stackChange = newStack - previousStack;
@@ -704,9 +696,6 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
           };
           if (note.isNotEmpty) {
             entry['note'] = note;
-          }
-          if (tableAvg != null && tableAvg > 0) {
-            entry['tableAvg'] = tableAvg;
           }
           _stackHistory.add(entry);
         });
@@ -1199,22 +1188,27 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
     );
 
     if (result == 'save') {
-      // Show bankroll sheet BEFORE ending session
+      // Show bankroll sheet BEFORE ending session (skipped for tutorial
+      // sessions — tour money must never reach session_results/bankroll)
       if (!mounted) return;
+      final isTourSession = OnboardingState.isOnboardingActive;
       final profit = _currentStack - _totalBuyIn;
       final duration = _sessionStartTime != null
           ? DateTime.now().difference(_sessionStartTime!).inMinutes
           : null;
-      final bankrollResult = await SessionEndBankrollSheet.show(
-        context: context,
-        gameType: widget.gameType,
-        profitLoss: profit,
-        totalBuyIn: _totalBuyIn,
-        durationMinutes: duration,
-      );
+      Map<String, dynamic>? bankrollResult;
+      if (!isTourSession) {
+        bankrollResult = await SessionEndBankrollSheet.show(
+          context: context,
+          gameType: widget.gameType,
+          profitLoss: profit,
+          totalBuyIn: _totalBuyIn,
+          durationMinutes: duration,
+        );
 
-      // User hit X — resume session
-      if (bankrollResult == null) return;
+        // User hit X — resume session
+        if (bankrollResult == null) return;
+      }
 
       // User applied — end session
       if (_sessionId != null) {
@@ -1228,9 +1222,9 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
             biggestPot: _biggestPot,
             stackHistory: _stackHistory,
             totalBuyIn: _totalBuyIn,
-            finishedPlace: bankrollResult['finishedPlace'] as int?,
-            fieldSize: bankrollResult['fieldSize'] as int?,
-            prizeWon: bankrollResult['prizeWon'] as double?,
+            finishedPlace: bankrollResult?['finishedPlace'] as int?,
+            fieldSize: bankrollResult?['fieldSize'] as int?,
+            prizeWon: bankrollResult?['prizeWon'] as double?,
           );
         } catch (e) {}
       }
@@ -1242,14 +1236,14 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
           data: SessionSummaryData(
             sessionName: widget.sessionName ?? 'Session',
             gameType: widget.gameType,
-            profitLoss: bankrollResult['profitLoss'] as double? ?? profit,
+            profitLoss: bankrollResult?['profitLoss'] as double? ?? profit,
             totalBuyIn: _totalBuyIn,
             handsPlayed: _handsLogged,
             biggestPot: _biggestPot,
             durationMinutes: duration ?? 0,
-            finishedPlace: bankrollResult['finishedPlace'] as int?,
-            fieldSize: bankrollResult['fieldSize'] as int?,
-            prizeWon: bankrollResult['prizeWon'] as double?,
+            finishedPlace: bankrollResult?['finishedPlace'] as int?,
+            fieldSize: bankrollResult?['fieldSize'] as int?,
+            prizeWon: bankrollResult?['prizeWon'] as double?,
           ),
         );
       }
@@ -1399,21 +1393,27 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
       // Show bankroll update prompt BEFORE ending session
       // X (close) = cancel, resume session
       // Checkmark (save) = apply result, end session
+      // Skipped for tutorial sessions — tour money must never reach
+      // session_results/bankroll
       if (!mounted) return;
+      final isOnboarding = OnboardingState.isOnboardingActive;
       final profit = _currentStack - _totalBuyIn;
       final duration2 = _sessionStartTime != null
           ? DateTime.now().difference(_sessionStartTime!).inMinutes
           : null;
-      final bankrollResult = await SessionEndBankrollSheet.show(
-        context: context,
-        gameType: widget.gameType,
-        profitLoss: profit,
-        totalBuyIn: _totalBuyIn,
-        durationMinutes: duration2,
-      );
+      Map<String, dynamic>? bankrollResult;
+      if (!isOnboarding) {
+        bankrollResult = await SessionEndBankrollSheet.show(
+          context: context,
+          gameType: widget.gameType,
+          profitLoss: profit,
+          totalBuyIn: _totalBuyIn,
+          durationMinutes: duration2,
+        );
 
-      // User hit X — resume session, don't end
-      if (bankrollResult == null) return;
+        // User hit X — resume session, don't end
+        if (bankrollResult == null) return;
+      }
 
       // User applied — end session
       if (_sessionId != null) {
@@ -1427,14 +1427,12 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
             biggestPot: _biggestPot,
             stackHistory: _stackHistory,
             totalBuyIn: _totalBuyIn,
-            finishedPlace: bankrollResult['finishedPlace'] as int?,
-            fieldSize: bankrollResult['fieldSize'] as int?,
-            prizeWon: bankrollResult['prizeWon'] as double?,
+            finishedPlace: bankrollResult?['finishedPlace'] as int?,
+            fieldSize: bankrollResult?['fieldSize'] as int?,
+            prizeWon: bankrollResult?['prizeWon'] as double?,
           );
         } catch (e) {}
       }
-
-      final isOnboarding = OnboardingState.isOnboardingActive;
 
       // Show session summary card
       if (mounted) {
@@ -1443,22 +1441,49 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
           data: SessionSummaryData(
             sessionName: widget.sessionName ?? 'Session',
             gameType: widget.gameType,
-            profitLoss: bankrollResult['profitLoss'] as double? ?? profit,
+            profitLoss: bankrollResult?['profitLoss'] as double? ?? profit,
             totalBuyIn: _totalBuyIn,
             handsPlayed: _handsLogged,
             biggestPot: _biggestPot,
             durationMinutes: duration2 ?? 0,
-            finishedPlace: bankrollResult['finishedPlace'] as int?,
-            fieldSize: bankrollResult['fieldSize'] as int?,
-            prizeWon: bankrollResult['prizeWon'] as double?,
+            finishedPlace: bankrollResult?['finishedPlace'] as int?,
+            fieldSize: bankrollResult?['fieldSize'] as int?,
+            prizeWon: bankrollResult?['prizeWon'] as double?,
           ),
         );
       }
 
-      // Show tour-complete dialog after session summary during onboarding
+      // Full-logging tour: finishing the session from the session-details
+      // screen hands off to phase 5 so the user is guided to view the
+      // finished session (Sessions → card → stack chart → hands). We do NOT
+      // complete the tour here — Home picks up phase 5 on arrival.
+      if (isOnboarding && widget.isFromActiveSession && mounted) {
+        OnboardingState.advanceTo(5);
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => HomeScreen()),
+          (route) => false,
+        );
+        return;
+      }
+
+      // Individual-mode tour: complete the tour inline (this screen IS the
+      // main logging surface — there is no separate poker screen to return to)
       if (isOnboarding && mounted) {
         OnboardingState.complete();
+        OnboardingPrefs.markOnboardingSeen();
         await _showOnboardingCompleteDialog();
+        if (mounted && !(await OnboardingPrefs.wasPostTourPaywallShown())) {
+          await OnboardingPrefs.markPostTourPaywallShown();
+          if (mounted) {
+            await Navigator.push(
+              context,
+              MaterialPageRoute(
+                fullscreenDialog: true,
+                builder: (_) => const PaywallScreen(showSkip: true),
+              ),
+            );
+          }
+        }
       }
 
       if (mounted) {
@@ -2171,6 +2196,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
 
                   // Main Stack Card
                   Container(
+                    key: _currentStackCardKey,
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
                       color: AppColors.infoCardBg,
