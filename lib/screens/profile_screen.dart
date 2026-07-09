@@ -228,11 +228,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
           TextButton(
             onPressed: () async {
               Navigator.pop(ctx);
-              await AuthService.signOut();
-              if (mounted) {
-                Navigator.pushAndRemoveUntil(
-                    context, MaterialPageRoute(builder: (_) => IntroScreen()), (_) => false);
-              }
+              // Navigate to Intro FIRST so the logout registers on the first
+              // tap, regardless of auth-stream timing. Awaiting signOut() before
+              // navigating meant its auth-stream churn (worse for guests) could
+              // trip AuthWrapper's "unexpected logout" recovery loading and leave
+              // the user on the same screen. Removing AuthWrapper from the stack
+              // here bypasses that; the sign-out clears the session in the
+              // background.
+              Navigator.pushAndRemoveUntil(
+                  context, MaterialPageRoute(builder: (_) => IntroScreen()), (_) => false);
+              try {
+                await AuthService.signOut();
+              } catch (_) {}
             },
             child: Text(l10n.profileSignOut, style: AppTypography.ibm(color: _danger, fontWeight: FontWeight.w500)),
           ),

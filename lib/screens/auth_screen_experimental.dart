@@ -179,7 +179,10 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
   Future<void> _handleGoogleSignIn() async {
     setState(() => _isLoading = true);
     try {
-      if (widget.linkMode) {
+      // Only LINK the guest from the sign-up form. On the sign-in form (e.g.
+      // after a credential conflict switched us here) do a plain sign-in into
+      // the existing account instead of re-attempting the link.
+      if (widget.linkMode && _isSignUp) {
         final linked = await AuthService.linkAnonymousWithGoogle();
         if (linked != null && mounted) Navigator.pop(context, true);
         return;
@@ -295,7 +298,9 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
   Future<void> _handleAppleSignIn() async {
     setState(() => _isLoading = true);
     try {
-      if (widget.linkMode) {
+      // Only LINK the guest from the sign-up form; on the sign-in form do a
+      // plain sign-in into the existing account (see _handleGoogleSignIn).
+      if (widget.linkMode && _isSignUp) {
         final linked = await AuthService.linkAnonymousWithApple();
         if (linked != null && mounted) Navigator.pop(context, true);
         return;
