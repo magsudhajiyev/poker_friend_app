@@ -70,12 +70,12 @@ Widget buildWelcomeCard({required VoidCallback onNext, required BuildContext con
       color: AppColors.surfaceDark,
       borderRadius: BorderRadius.circular(AppDecorations.radius20),
       border: Border.all(
-        color: AppColors.buttonPrimary.withValues(alpha: 0.15),
+        color: AppColors.tealPrimary.withValues(alpha: 0.15),
         width: 1,
       ),
       boxShadow: [
         BoxShadow(
-          color: AppColors.buttonPrimary.withValues(alpha: 0.08),
+          color: AppColors.tealPrimary.withValues(alpha: 0.08),
           blurRadius: 20,
           offset: const Offset(0, 4),
         ),
@@ -103,7 +103,7 @@ Widget buildWelcomeCard({required VoidCallback onNext, required BuildContext con
           child: TextButton(
             onPressed: onNext,
             style: TextButton.styleFrom(
-              backgroundColor: AppColors.buttonPrimary,
+              backgroundColor: AppColors.tealPrimary,
               padding: const EdgeInsets.symmetric(vertical: 14),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
@@ -137,11 +137,11 @@ Widget buildTooltip({
       color: AppColors.surfaceDark,
       borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
       border: Border.all(
-        color: AppColors.buttonPrimary.withValues(alpha: 0.15),
+        color: AppColors.tealPrimary.withValues(alpha: 0.15),
       ),
       boxShadow: [
         BoxShadow(
-          color: AppColors.buttonPrimary.withValues(alpha: 0.08),
+          color: AppColors.tealPrimary.withValues(alpha: 0.08),
           blurRadius: 20,
           offset: const Offset(0, 4),
         ),
@@ -173,12 +173,12 @@ Widget buildTooltip({
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                color: AppColors.buttonPrimary.withValues(alpha: 0.08),
+                color: AppColors.tealPrimary.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
               ),
               child: Text(
                 isLast ? l10n.onboardingGotIt : l10n.onboardingNext,
-                style: AppTypography.bodyLarge(color: AppColors.buttonPrimary)
+                style: AppTypography.bodyLarge(color: AppColors.tealPrimary)
                     .copyWith(fontWeight: FontWeight.w600),
               ),
             ),
@@ -928,7 +928,15 @@ class HandListTour {
           paddingFocus: 6,
           contents: [
             TargetContent(
-              align: ContentAlign.bottom,
+              // Pin near the top so the card stays visible — the chart sits
+              // low on screen and a bottom/attached card would clip off.
+              align: ContentAlign.custom,
+              customPosition: CustomTargetContentPosition(
+                top: MediaQueryData.fromView(
+                  WidgetsBinding.instance.platformDispatcher.views.first,
+                ).size.height *
+                    0.12,
+              ),
               builder: (context, controller) {
                 final l10n = AppLocalizations.of(context);
                 return buildTooltip(

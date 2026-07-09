@@ -273,7 +273,15 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
           paddingFocus: 6,
           contents: [
             TargetContent(
-              align: ContentAlign.top,
+              // Pin near the top so the card stays visible — the chart sits
+              // low on screen and an attached card would clip off.
+              align: ContentAlign.custom,
+              customPosition: CustomTargetContentPosition(
+                top: MediaQueryData.fromView(
+                  WidgetsBinding.instance.platformDispatcher.views.first,
+                ).size.height *
+                    0.12,
+              ),
               builder: (context, controller) {
                 return buildTooltip(
                   title: l10n.guidedStackChartTitle,

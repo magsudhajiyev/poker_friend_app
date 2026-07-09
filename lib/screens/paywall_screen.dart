@@ -226,20 +226,24 @@ class _PaywallScreenState extends State<PaywallScreen> {
             height: 44,
             child: Stack(
               children: [
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: GestureDetector(
-                    onTap: () => Navigator.of(context).pop(),
-                    child: Padding(
-                      padding: EdgeInsets.only(left: AppSpacing.md),
-                      child: const Icon(
-                        Icons.arrow_back_ios_new,
-                        color: Colors.white,
-                        size: 20,
+                // Back chevron — hidden when the Skip button is shown
+                // (onboarding paywall), kept for feature-gate paywalls so they
+                // stay dismissible.
+                if (!widget.showSkip)
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: GestureDetector(
+                      onTap: () => Navigator.of(context).pop(),
+                      child: Padding(
+                        padding: EdgeInsets.only(left: AppSpacing.md),
+                        child: const Icon(
+                          Icons.arrow_back_ios_new,
+                          color: Colors.white,
+                          size: 20,
+                        ),
                       ),
                     ),
                   ),
-                ),
                 Center(
                   child: Text(
                     l10n.paywallAvailablePlans,
