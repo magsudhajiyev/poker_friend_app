@@ -2979,6 +2979,7 @@
   "individualHandSetupPlayers": "Игроки",
   "individualHandSetupSmallBlind": "Small Blind",
   "individualSetupBigBlind": "Big Blind",
+  "individualSetupBlindsLabel": "Блайнды",
   "individualSetupCashGame": "Cash Game",
   "individualSetupEnterAmount": "Введите сумму",
   "individualSetupEnterChipStack": "Введите Stack фишек",

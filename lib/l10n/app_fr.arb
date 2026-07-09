@@ -3149,6 +3149,7 @@
   "individualHandSetupPlayers": "Joueurs",
   "individualHandSetupSmallBlind": "Small Blind",
   "individualSetupBigBlind": "Big Blind",
+  "individualSetupBlindsLabel": "Blindes",
   "individualSetupCashGame": "Cash Game",
   "individualSetupEnterAmount": "Entrer le montant",
   "individualSetupEnterChipStack": "Entrer le Stack de jetons",

@@ -3149,6 +3149,7 @@
   "individualHandSetupPlayers": "Jugadores",
   "individualHandSetupSmallBlind": "Small Blind",
   "individualSetupBigBlind": "Big Blind",
+  "individualSetupBlindsLabel": "Ciegas",
   "individualSetupCashGame": "Cash Game",
   "individualSetupEnterAmount": "Introduce la cantidad",
   "individualSetupEnterChipStack": "Introduce el Stack de fichas",
