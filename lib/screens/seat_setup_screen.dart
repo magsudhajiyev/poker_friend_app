@@ -31,10 +31,6 @@ class SeatSetupScreen extends StatefulWidget {
   final bool isCashGame;
   final PokerGameState? gameState;
 
-  // Individual session parameters
-  final bool isIndividualSession;
-  final double? individualCurrentStack;
-
   // Session parameters from Session Setup
   final String? sessionName;
   final double? buyInAmount;
@@ -53,8 +49,6 @@ class SeatSetupScreen extends StatefulWidget {
     this.isInitialSetup = true,
     this.isCashGame = true,
     this.gameState,
-    this.isIndividualSession = false,
-    this.individualCurrentStack,
     this.sessionName,
     this.buyInAmount,
     this.startingStack,
@@ -391,12 +385,7 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                               tempNameController.text = userName;
                               suggestions = _getSuggestions(userName);
                             }
-                            if (widget.isIndividualSession && widget.individualCurrentStack != null) {
-                              tempStack = widget.isCashGame
-                                  ? widget.individualCurrentStack!.toStringAsFixed(2)
-                                  : widget.individualCurrentStack!.toInt().toString();
-                              tempStackController.text = tempStack;
-                            } else if (widget.startingStack != null) {
+                            if (widget.startingStack != null) {
                               tempStack = widget.gameType == GameType.cash
                                   ? widget.startingStack!.toStringAsFixed(2)
                                   : widget.startingStack!.toInt().toString();

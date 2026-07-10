@@ -64,8 +64,6 @@
   "settingsGuidedTourSubtitle": "Повторить обучение",
   "settingsFullLoggingTour": "Полное логирование",
   "settingsFullLoggingTourSubtitle": "Полный поток отслеживания сессии",
-  "settingsIndividualLoggingTour": "Индивидуальное логирование",
-  "settingsIndividualLoggingTourSubtitle": "Отслеживание одной руки",
   "settingsUnderstandingStats": "Ваши показатели",
   "settingsUnderstandingStatsSubtitle": "Узнайте что означает каждая метрика",
   "settingsClubsEvents": "Клубы и события",
@@ -1025,48 +1023,6 @@
       }
     }
   },
-  "quickStackTitle": "Обновить Stack и кнопку",
-  "quickStackBlinds": "Blinds: {blinds}",
-  "@quickStackBlinds": {
-    "placeholders": {
-      "blinds": {
-        "type": "String"
-      }
-    }
-  },
-  "quickStackInstruction": "Нажмите на Stack для редактирования  •  Проведите для корректировки  •  Нажмите D для кнопки",
-  "quickStackContinue": "ПРОДОЛЖИТЬ ЗАПИСЬ РАЗДАЧИ",
-  "quickStackEditStack": "Редактировать Stack",
-  "quickStackStackInBb": "Stack в BB",
-  "quickStackCurrentValue": "Текущее: {bbValue} BB = {chipValue}",
-  "@quickStackCurrentValue": {
-    "placeholders": {
-      "bbValue": {
-        "type": "String"
-      },
-      "chipValue": {
-        "type": "String"
-      }
-    }
-  },
-  "quickStackValidationError": "Введите значение от 0 до 1000 BB",
-  "quickStackSeat": "Место {number}",
-  "@quickStackSeat": {
-    "placeholders": {
-      "number": {
-        "type": "int"
-      }
-    }
-  },
-  "quickStackEmpty": "Пусто",
-  "quickStackPlayerDefault": "Игрок {id}",
-  "@quickStackPlayerDefault": {
-    "placeholders": {
-      "id": {
-        "type": "int"
-      }
-    }
-  },
   "handReviewTitle": "Обзор раздачи",
   "handReviewYourHoleCards": "Ваши карты",
   "handReviewOptional": "(необязательно)",
@@ -1380,18 +1336,12 @@
   },
   "registerClubGotIt": "Понятно",
   "loggingModeChooseMode": "Выберите режим",
-  "loggingModeFullTitle": "Полная запись",
+  "loggingModeFullTitle": "Режим записи",
   "loggingModeFullSubtitle": "Полное отслеживание сессии",
   "loggingModeFullFeature1": "Многораздачная сессия",
   "loggingModeFullFeature2": "Статистика в реальном времени",
   "loggingModeFullFeature3": "Детальная история раздач",
   "loggingModeFullFeature4": "Аналитика сессии",
-  "loggingModeIndividualTitle": "Быстрая сессия",
-  "loggingModeIndividualSubtitle": "Запись отдельных раздач",
-  "loggingModeIndividualFeature1": "Фокус на одной раздаче",
-  "loggingModeIndividualFeature2": "Быстрая запись",
-  "loggingModeIndividualFeature3": "Анализ раздачи",
-  "loggingModeIndividualFeature4": "Мгновенные результаты",
   "loggingModeFeatures": "Возможности",
   "loggingModeStart": "Начать",
   "earningsChartAllTimeEarnings": "Доход за всё время",
@@ -2973,20 +2923,6 @@
     }
   },
   "homeTournament": "Tournament",
-  "individualHandSetupBigBlind": "Big Blind",
-  "individualHandSetupGameType": "Тип игры",
-  "individualHandSetupNameHint": "напр. \"AA vs KK Cooler\"",
-  "individualHandSetupPlayers": "Игроки",
-  "individualHandSetupSmallBlind": "Small Blind",
-  "individualSetupBigBlind": "Big Blind",
-  "individualSetupBlindsLabel": "Блайнды",
-  "individualSetupCashGame": "Cash Game",
-  "individualSetupEnterAmount": "Введите сумму",
-  "individualSetupEnterChipStack": "Введите Stack фишек",
-  "individualSetupEnterValue": "Введите значение",
-  "individualSetupSessionNameHint": "напр. \"Пятничный покер\"",
-  "individualSetupSmallBlind": "Small Blind",
-  "individualSetupTournament": "Tournament",
   "invitationsDeclined": "Приглашение отклонено",
   "invitationsFailedAccept": "Не удалось принять приглашение: {error}",
   "@invitationsFailedAccept": {
@@ -3208,7 +3144,6 @@
     }
   },
   "profileVersion": "Версия 1.0",
-  "quickStackSearchHint": "Найти или добавить игрока...",
   "raiseSnapReleaseToType": "Отпустите на мин., чтобы ввести",
   "seatSetupFailedSave": "Не удалось сохранить: {error}",
   "@seatSetupFailedSave": {
@@ -3903,29 +3838,6 @@
   "opponentDetailFoldTo3Bet": "Fold to 3-Bet",
   "opponentDetailStealLabel": "Steal",
   "opponentDetailCheckRaiseLabel": "Check/Raise",
-  "individualSetupSessionSetup": "Настройка сессии",
-  "individualSetupSessionNameLabel": "Название сессии",
-  "individualSetupGameTypeLabel": "Тип игры",
-  "individualSetupCashGameLabel": "Cash Game",
-  "individualSetupTournamentLabel": "Tournament",
-  "individualSetupBuyInAmountLabel": "Сумма Buy-in",
-  "individualSetupEnterAmountHint": "Введите сумму",
-  "individualSetupCashGameNote": "В Cash Game ваш начальный Stack равен сумме Buy-in.",
-  "individualSetupStartingStackLabel": "Начальный Stack",
-  "individualSetupEnterChipStackHint": "Введите Stack фишек",
-  "individualSetupStackValidation": "Начальный Stack должен быть не менее Big Blind ({bigBlind})",
-  "@individualSetupStackValidation": {
-    "placeholders": {
-      "bigBlind": {
-        "type": "int"
-      }
-    }
-  },
-  "individualSetupStartSessionBtn": "Начать сессию",
-  "individualSetupEnterValueHint": "Введите значение",
-  "individualHandSetupTitle": "Отдельная раздача",
-  "individualHandSetupSubtitle": "Быстрая запись раздачи",
-  "individualHandSetupHandNameLabel": "Название раздачи (необязательно)",
   "playerSessionBluff": "Bluff",
   "playerSessionValue": "Value",
   "playerSessionMistake": "Ошибка",
@@ -4153,18 +4065,6 @@
   "stackChartScreenStart": "Старт",
   "stackChartScreenRebuy": "Rebuy",
   "stackChartScreenEnd": "Конец",
-  "quickStackSelectPlayer": "Выбрать игрока",
-  "quickStackAddPlayer": "Добавить «{name}»",
-  "@quickStackAddPlayer": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
-  "quickStackSaveToOpponents": "Сохранить в список оппонентов",
-  "quickStackYou": "Вы",
-  "quickStackNoPlayersFound": "Игроки не найдены.",
   "seatSetupDone": "Готово",
   "seatSetupCancel": "Отмена",
   "authConnectionIssue": "Проблема с подключением",
@@ -4306,29 +4206,15 @@
   "memberTableFallback": "Стол",
   "memberTablePlayer": "Игрок",
   "memberTableSeatedOpen": "{seated} занято  •  {open} свободно",
-  "onboardingAdjustStackBody": "Перетащите ползунок, чтобы установить стек соперника в BB. Нажмите на значение стека, чтобы ввести точную сумму.",
-  "onboardingAdjustStackTitle": "Настройка стека",
   "onboardingAllSetBody": "Вы готовы начать отслеживать свои покерные сессии.",
   "onboardingAllSetTitle": "Всё готово!",
-  "onboardingAssignPlayerBody": "Нажмите на имя игрока, чтобы посадить себя или сохранённого соперника. Ваш стек применяется автоматически, когда вы садитесь.",
-  "onboardingAssignPlayerTitle": "Назначить игрока",
   "onboardingDealerButtonBody": "Перетащите это на место с позицией дилера. Это определяет блайнды и порядок действий.",
-  "onboardingDealerButtonQsuBody": "Нажмите «D», чтобы назначить кнопку дилера на любое место. Это управляет позициями блайндов и порядком действий.",
-  "onboardingDealerButtonQsuTitle": "Кнопка дилера",
   "onboardingDealerButtonTitle": "Кнопка дилера",
-  "onboardingEndSessionBody": "Нажмите красную кнопку «Стоп», чтобы сохранить результаты сессии и вернуться на главный экран.",
-  "onboardingEndSessionTitle": "Завершить сессию",
   "onboardingFullModeBody": "Отслеживайте каждое действие каждого игрока на всех улицах. Идеально для серьёзного анализа.",
   "onboardingFullModeTitle": "Режим полной записи",
   "onboardingGotIt": "Понял",
-  "onboardingIndividualModeBody": "Быстрое отслеживание выигрыша/проигрыша за одну сессию. Теперь выберите режим для продолжения!",
-  "onboardingIndividualModeTitle": "Режим индивидуальной записи",
   "onboardingLetsGo": "Поехали",
   "onboardingLetsPlay": "Играть",
-  "onboardingLogAHandBody": "Нажмите здесь, чтобы настроить стол и записать раздачу. Попробуем прямо сейчас!",
-  "onboardingLogAHandTitle": "Записать раздачу",
-  "onboardingMarkSeatOpenBody": "Нажмите на флажок, чтобы переключить место между занятым и пустым. Пустые места пропускаются в раздаче.",
-  "onboardingMarkSeatOpenTitle": "Отметить место как свободное",
   "onboardingNext": "Далее",
   "onboardingPlayerNameBody": "Введите имя или выберите из сохранённых соперников. Сохранённые соперники отслеживают статистику между сессиями.",
   "onboardingPlayerNameTitle": "Имя игрока",
@@ -4346,8 +4232,6 @@
   "onboardingTableSetupTitle": "Настройка стола",
   "onboardingThisIsMySeatBody": "Нажмите здесь, если это ваше место. Автоматически заполняет ваше имя и отслеживает вашу личную статистику.",
   "onboardingThisIsMySeatTitle": "Это моё место",
-  "onboardingUpdateStackBody": "Используйте это для ручного обновления количества фишек в любой момент без записи полной раздачи.",
-  "onboardingUpdateStackTitle": "Обновить стек",
   "onboardingViewSessionsBody": "Нажмите на значок «Сессии», чтобы увидеть только что сыгранную сессию.",
   "onboardingSessionHistoryCardTitle": "Только что сыгранная сессия",
   "onboardingSessionHistoryCardBody": "Это ваша обучающая сессия — нажмите на неё в любой момент, чтобы увидеть каждую раздачу.",
@@ -4472,9 +4356,9 @@
   "onboardingWelcomeSubtitle": "Ваш персональный покерный помощник для записи рук, отслеживания статистики и улучшения игры.",
   "onboardingNicknameTitle": "Давайте начнём с выбора вашего никнейма",
   "onboardingNicknameSubtitle": "Вы можете переключаться между вашим именем и никнеймом и менять его в любое время.",
-    "onboardingCurrencyTitle": "В какой валюте вы играете?",
+  "onboardingCurrencyTitle": "В какой валюте вы играете?",
   "onboardingCurrencySubtitle": "Бай-ины, выплаты и статистика будут в ней. Изменить можно в настройках в любой момент.",
-"onboardingGameTypeTitle": "Выберите тип игры",
+  "onboardingGameTypeTitle": "Выберите тип игры",
   "onboardingGameTypeSubtitle": "Мы настроим ваш опыт в зависимости от того, во что вы играете. Расскажите нам, в основном ли вы играете cash или MTT?",
   "onboardingGameTypeCash": "Cash Game",
   "onboardingGameTypeTournament": "Tournament (MTT)",
@@ -5231,6 +5115,9 @@
   "drillDeleteLineupMessage": "Remove \"{name}\" from your saved lineups?",
   "drillActionJam": "JAM {amount}",
   "loggingTrainingDrillsSubtitle": "Practice preflop spots against your real opponents",
+  "loggingTrainingDrillsFeature1": "Префлоп-тренировки",
+  "loggingTrainingDrillsFeature2": "Диапазоны GTO",
+  "loggingTrainingDrillsFeature3": "На основе оппонентов",
   "@profileUseNicknameDescription": {
     "placeholders": {
       "username": {

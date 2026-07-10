@@ -29,7 +29,6 @@ class FirebaseService {
     required int playerCount,
     int? ourSeatNumber,
     GameType gameType = GameType.cash,
-    bool isIndividualSession = false,
     String? sessionName,
     double? startingStack,
     bool hasBBante = false,
@@ -57,9 +56,9 @@ class FirebaseService {
         'endTime': null,
         'totalHands': 0,
         'createdAt': FieldValue.serverTimestamp(),
-        'isIndividualSession': isIndividualSession,
+        'isIndividualSession': false,
         'isLive': isLive,  // True for dealer/live sessions
-        'sessionName': sessionName ?? (isIndividualSession ? 'Individual Session' : ''), // Always set sessionName
+        'sessionName': sessionName ?? '',
       };
 
       if (isTutorial) {
@@ -78,29 +77,16 @@ class FirebaseService {
         }
       }
 
-      // Add individual session specific fields
-      if (isIndividualSession) {
+      // Save buy-in amount and total invested (NOT chip count)
+      if (totalBuyIn != null && totalBuyIn > 0) {
         sessionData.addAll({
-          'startingStack': startingStack ?? 0.0,
-          'currentStack': startingStack ?? 0.0,
-          'buyInAmount': totalBuyIn ?? 0.0, // Money paid for buy-in
-          'totalBuyIn': totalBuyIn ?? 0.0, // Total money invested (starts with buy-in)
-          'handsLogged': 0,
-          'biggestPot': 0.0,
-          'sessionStatus': 'active',
+          'buyInAmount': totalBuyIn, // Money paid for buy-in
+          'totalBuyIn': totalBuyIn,  // Total money invested (starts with buy-in)
         });
-      } else {
-        // For full hand logging sessions, save buy-in amount and total invested (NOT chip count)
-        if (totalBuyIn != null && totalBuyIn > 0) {
-          sessionData.addAll({
-            'buyInAmount': totalBuyIn, // Money paid for buy-in
-            'totalBuyIn': totalBuyIn,  // Total money invested (starts with buy-in)
-          });
-        }
-        // Also save starting stack if provided (for reference, but not used in total invested)
-        if (startingStack != null && startingStack > 0) {
-          sessionData['startingStack'] = startingStack;
-        }
+      }
+      // Also save starting stack if provided (for reference, but not used in total invested)
+      if (startingStack != null && startingStack > 0) {
+        sessionData['startingStack'] = startingStack;
       }
 
       final sessionRef = await _firestore.collection(_sessionsCollection).add(sessionData);

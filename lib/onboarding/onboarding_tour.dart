@@ -283,11 +283,9 @@ class HomeTour {
 
 class LoggingModeTour {
   final GlobalKey fullModeCardKey;
-  final GlobalKey individualModeCardKey;
 
   LoggingModeTour({
     required this.fullModeCardKey,
-    required this.individualModeCardKey,
   });
 
   void show(BuildContext context) {
@@ -295,14 +293,8 @@ class LoggingModeTour {
         OnboardingState.currentPhase != 1) return;
 
     final targets = <TargetFocus>[];
-    final isReplay = OnboardingState.isReplay;
-    final isIndividual = OnboardingState.isIndividualMode;
 
-    // During replay, only highlight the relevant mode card
-    final showFull = !isReplay || !isIndividual;
-    final showIndividual = !isReplay || isIndividual;
-
-    if (showFull && fullModeCardKey.currentContext != null) {
+    if (fullModeCardKey.currentContext != null) {
       targets.add(
         TargetFocus(
           identify: 'full_mode',
@@ -312,39 +304,12 @@ class LoggingModeTour {
           paddingFocus: 4,
           contents: [
             TargetContent(
-              align: ContentAlign.bottom,
+              align: ContentAlign.top,
               builder: (context, controller) {
                 final l10n = AppLocalizations.of(context);
                 return buildTooltip(
                   title: l10n.onboardingFullModeTitle,
                   body: l10n.onboardingFullModeBody,
-                  onNext: () => controller.next(),
-                  context: context,
-                  isLast: isReplay && !isIndividual,
-                );
-              },
-            ),
-          ],
-        ),
-      );
-    }
-
-    if (showIndividual && individualModeCardKey.currentContext != null) {
-      targets.add(
-        TargetFocus(
-          identify: 'individual_mode',
-          keyTarget: individualModeCardKey,
-          shape: ShapeLightFocus.RRect,
-          radius: AppDecorations.radiusXl,
-          paddingFocus: 4,
-          contents: [
-            TargetContent(
-              align: ContentAlign.top,
-              builder: (context, controller) {
-                final l10n = AppLocalizations.of(context);
-                return buildTooltip(
-                  title: l10n.onboardingIndividualModeTitle,
-                  body: l10n.onboardingIndividualModeBody,
                   onNext: () => controller.next(),
                   context: context,
                   isLast: true,
@@ -421,14 +386,9 @@ class SessionSetupTour {
       targets: targets,
       context: context,
       onFinish: () {
-        if (OnboardingState.isIndividualMode) {
-          OnboardingState.advanceTo(3);
-          OnboardingState.individualTrackingTourPending = true;
-        } else {
-          // Mark table tour pending and notify the screen
-          OnboardingState.tableTourPending = true;
-          onFinished?.call();
-        }
+        // Mark table tour pending and notify the screen
+        OnboardingState.tableTourPending = true;
+        onFinished?.call();
       },
     );
     coach.show(context: context);
@@ -1328,301 +1288,6 @@ class _OnboardingCompleteDialog extends StatelessWidget {
         ),
       ),
     );
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Phase 3 (individual mode) — Individual Tracking Tour
-// ---------------------------------------------------------------------------
-
-class IndividualTrackingTour {
-  final GlobalKey updateStackButtonKey;
-  final GlobalKey logHandButtonKey;
-
-  IndividualTrackingTour({
-    required this.updateStackButtonKey,
-    required this.logHandButtonKey,
-  });
-
-  void show(BuildContext context) {
-    if (!OnboardingState.isOnboardingActive ||
-        OnboardingState.currentPhase != 3 ||
-        !OnboardingState.individualTrackingTourPending) return;
-
-    final targets = <TargetFocus>[];
-
-    if (updateStackButtonKey.currentContext != null) {
-      targets.add(
-        TargetFocus(
-          identify: 'update_stack_btn',
-          keyTarget: updateStackButtonKey,
-          shape: ShapeLightFocus.Circle,
-          paddingFocus: 6,
-          contents: [
-            TargetContent(
-              align: ContentAlign.bottom,
-              builder: (context, controller) {
-                final l10n = AppLocalizations.of(context);
-                return buildTooltip(
-                  title: l10n.onboardingUpdateStackTitle,
-                  body: l10n.onboardingUpdateStackBody,
-                  onNext: () => controller.next(),
-                  context: context,
-                );
-              },
-            ),
-          ],
-        ),
-      );
-    }
-
-    if (logHandButtonKey.currentContext != null) {
-      targets.add(
-        TargetFocus(
-          identify: 'log_hand_btn',
-          keyTarget: logHandButtonKey,
-          shape: ShapeLightFocus.RRect,
-          radius: 60,
-          paddingFocus: 8,
-          contents: [
-            TargetContent(
-              align: ContentAlign.top,
-              builder: (context, controller) {
-                final l10n = AppLocalizations.of(context);
-                return buildTooltip(
-                  title: l10n.onboardingLogAHandTitle,
-                  body: l10n.onboardingLogAHandBody,
-                  onNext: () => controller.next(),
-                  context: context,
-                  isLast: true,
-                );
-              },
-            ),
-          ],
-        ),
-      );
-    }
-
-    if (targets.isEmpty) {
-      OnboardingState.individualTrackingTourPending = false;
-      OnboardingState.quickStackUpdateTourPending = true;
-      return;
-    }
-
-    final coach = _createCoachMark(
-      targets: targets,
-      context: context,
-      onFinish: () {
-        OnboardingState.individualTrackingTourPending = false;
-        OnboardingState.quickStackUpdateTourPending = true;
-      },
-    );
-    coach.show(context: context);
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Phase 3 (individual mode) — Quick Stack Update Tour
-// ---------------------------------------------------------------------------
-
-class QuickStackUpdateTour {
-  final GlobalKey seatToggleKey;
-  final GlobalKey buttonIndicatorKey;
-  final GlobalKey playerNameAreaKey;
-  final GlobalKey stackSliderKey;
-
-  QuickStackUpdateTour({
-    required this.seatToggleKey,
-    required this.buttonIndicatorKey,
-    required this.playerNameAreaKey,
-    required this.stackSliderKey,
-  });
-
-  void show(BuildContext context) {
-    if (!OnboardingState.isOnboardingActive ||
-        OnboardingState.currentPhase != 3 ||
-        !OnboardingState.quickStackUpdateTourPending) return;
-
-    final targets = <TargetFocus>[];
-
-    if (seatToggleKey.currentContext != null) {
-      targets.add(
-        TargetFocus(
-          identify: 'seat_toggle_qsu',
-          keyTarget: seatToggleKey,
-          shape: ShapeLightFocus.RRect,
-          radius: 5,
-          paddingFocus: 8,
-          contents: [
-            TargetContent(
-              align: ContentAlign.bottom,
-              builder: (context, controller) {
-                final l10n = AppLocalizations.of(context);
-                return buildTooltip(
-                  title: l10n.onboardingMarkSeatOpenTitle,
-                  body: l10n.onboardingMarkSeatOpenBody,
-                  onNext: () => controller.next(),
-                  context: context,
-                );
-              },
-            ),
-          ],
-        ),
-      );
-    }
-
-    if (buttonIndicatorKey.currentContext != null) {
-      targets.add(
-        TargetFocus(
-          identify: 'button_indicator_qsu',
-          keyTarget: buttonIndicatorKey,
-          shape: ShapeLightFocus.Circle,
-          paddingFocus: 8,
-          contents: [
-            TargetContent(
-              align: ContentAlign.bottom,
-              builder: (context, controller) {
-                final l10n = AppLocalizations.of(context);
-                return buildTooltip(
-                  title: l10n.onboardingDealerButtonQsuTitle,
-                  body: l10n.onboardingDealerButtonQsuBody,
-                  onNext: () => controller.next(),
-                  context: context,
-                );
-              },
-            ),
-          ],
-        ),
-      );
-    }
-
-    if (playerNameAreaKey.currentContext != null) {
-      targets.add(
-        TargetFocus(
-          identify: 'player_name_qsu',
-          keyTarget: playerNameAreaKey,
-          shape: ShapeLightFocus.RRect,
-          radius: 8,
-          paddingFocus: 4,
-          contents: [
-            TargetContent(
-              align: ContentAlign.bottom,
-              builder: (context, controller) {
-                final l10n = AppLocalizations.of(context);
-                return buildTooltip(
-                  title: l10n.onboardingAssignPlayerTitle,
-                  body: l10n.onboardingAssignPlayerBody,
-                  onNext: () => controller.next(),
-                  context: context,
-                );
-              },
-            ),
-          ],
-        ),
-      );
-    }
-
-    if (stackSliderKey.currentContext != null) {
-      targets.add(
-        TargetFocus(
-          identify: 'stack_slider_qsu',
-          keyTarget: stackSliderKey,
-          shape: ShapeLightFocus.RRect,
-          radius: 8,
-          paddingFocus: 8,
-          contents: [
-            TargetContent(
-              align: ContentAlign.top,
-              builder: (context, controller) {
-                final l10n = AppLocalizations.of(context);
-                return buildTooltip(
-                  title: l10n.onboardingAdjustStackTitle,
-                  body: l10n.onboardingAdjustStackBody,
-                  onNext: () => controller.next(),
-                  context: context,
-                  isLast: true,
-                );
-              },
-            ),
-          ],
-        ),
-      );
-    }
-
-    if (targets.isEmpty) {
-      OnboardingState.quickStackUpdateTourPending = false;
-      OnboardingState.advanceTo(4);
-      return;
-    }
-
-    final coach = _createCoachMark(
-      targets: targets,
-      context: context,
-      onFinish: () {
-        OnboardingState.quickStackUpdateTourPending = false;
-        OnboardingState.advanceTo(4);
-      },
-    );
-    coach.show(context: context);
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Phase 3 (individual mode) — Individual Stop Session Tour
-// ---------------------------------------------------------------------------
-
-class IndividualStopSessionTour {
-  final GlobalKey stopSessionButtonKey;
-
-  IndividualStopSessionTour({required this.stopSessionButtonKey});
-
-  void show(BuildContext context) {
-    if (!OnboardingState.isOnboardingActive ||
-        !OnboardingState.individualStopSessionTourPending) return;
-
-    final targets = <TargetFocus>[];
-
-    if (stopSessionButtonKey.currentContext != null) {
-      targets.add(
-        TargetFocus(
-          identify: 'stop_session_btn',
-          keyTarget: stopSessionButtonKey,
-          shape: ShapeLightFocus.Circle,
-          paddingFocus: 12,
-          contents: [
-            TargetContent(
-              align: ContentAlign.bottom,
-              builder: (context, controller) {
-                final l10n = AppLocalizations.of(context);
-                return buildTooltip(
-                  title: l10n.onboardingEndSessionTitle,
-                  body: l10n.onboardingEndSessionBody,
-                  onNext: () => controller.next(),
-                  context: context,
-                  isLast: true,
-                );
-              },
-            ),
-          ],
-        ),
-      );
-    }
-
-    if (targets.isEmpty) {
-      OnboardingState.individualStopSessionTourPending = false;
-      OnboardingState.advanceTo(5);
-      return;
-    }
-
-    final coach = _createCoachMark(
-      targets: targets,
-      context: context,
-      onFinish: () {
-        OnboardingState.individualStopSessionTourPending = false;
-        OnboardingState.advanceTo(5);
-      },
-    );
-    coach.show(context: context);
   }
 }
 

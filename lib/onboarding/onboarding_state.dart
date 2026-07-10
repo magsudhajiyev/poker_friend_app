@@ -43,17 +43,6 @@ class OnboardingState {
   /// Whether the table section tour needs to run (after session details OK in unified setup).
   static bool tableTourPending = false;
 
-  /// Whether the user chose individual logging mode in phase 1.
-  static bool isIndividualMode = false;
-
-  /// Whether the IndividualSessionTrackingScreen sub-tour still needs to run.
-  static bool individualTrackingTourPending = false;
-
-  /// Whether the QuickStackUpdateScreen sub-tour still needs to run.
-  static bool quickStackUpdateTourPending = false;
-
-  /// Whether the individual mode stop-session tour is pending.
-  static bool individualStopSessionTourPending = false;
 
   /// Whether the session details tour needs to run (after tapping ⓘ in full session mode).
   static bool sessionDetailsTourPending = false;
@@ -110,13 +99,9 @@ class OnboardingState {
   static void start() {
     isOnboardingActive = true;
     currentPhase = 0;
-    isIndividualMode = false;
     seatDialogTourPending = false;
     buttonTokenTourPending = false;
     tableTourPending = false;
-    individualTrackingTourPending = false;
-    quickStackUpdateTourPending = false;
-    individualStopSessionTourPending = false;
     sessionDetailsTourPending = false;
     sessionDetailsExplainReturnPending = false;
     secondTourHandPending = false;
@@ -138,10 +123,6 @@ class OnboardingState {
   static void complete() {
     isOnboardingActive = false;
     currentPhase = 0;
-    isIndividualMode = false;
-    individualTrackingTourPending = false;
-    quickStackUpdateTourPending = false;
-    individualStopSessionTourPending = false;
     sessionDetailsTourPending = false;
     sessionDetailsExplainReturnPending = false;
     secondTourHandPending = false;
@@ -157,13 +138,9 @@ class OnboardingState {
   static void cancel() {
     isOnboardingActive = false;
     currentPhase = 0;
-    isIndividualMode = false;
     seatDialogTourPending = false;
     buttonTokenTourPending = false;
     tableTourPending = false;
-    individualTrackingTourPending = false;
-    quickStackUpdateTourPending = false;
-    individualStopSessionTourPending = false;
     sessionDetailsTourPending = false;
     sessionDetailsExplainReturnPending = false;
     secondTourHandPending = false;
@@ -181,17 +158,13 @@ class OnboardingState {
   static bool _isReplay = false;
   static bool get isReplay => _isReplay;
 
-  static void startFromPhase(int phase, {bool individualMode = false}) {
+  static void startFromPhase(int phase) {
     isOnboardingActive = true;
     currentPhase = phase;
-    isIndividualMode = individualMode;
     _isReplay = true;
     seatDialogTourPending = false;
     buttonTokenTourPending = false;
     tableTourPending = false;
-    individualTrackingTourPending = false;
-    quickStackUpdateTourPending = false;
-    individualStopSessionTourPending = false;
     sessionDetailsTourPending = false;
     sessionDetailsExplainReturnPending = false;
     secondTourHandPending = false;
@@ -208,11 +181,7 @@ class OnboardingState {
   static void completeReplay() {
     isOnboardingActive = false;
     currentPhase = 0;
-    isIndividualMode = false;
     _isReplay = false;
-    individualTrackingTourPending = false;
-    quickStackUpdateTourPending = false;
-    individualStopSessionTourPending = false;
     sessionDetailsTourPending = false;
     sessionDetailsExplainReturnPending = false;
     secondTourHandPending = false;

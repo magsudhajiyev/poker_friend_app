@@ -7,14 +7,11 @@ import '../models/poker_game_state.dart' show formatBlindValue;
 import 'poker_hand_screen.dart';
 import '../widgets/loading_screen.dart';
 import 'logging_mode_selection_screen.dart';
-import 'individual_session_setup_screen.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/decorations.dart';
 
 class IntroductionScreen extends StatefulWidget {
-  final LoggingMode? loggingMode;
-
-  const IntroductionScreen({super.key, this.loggingMode});
+  const IntroductionScreen({super.key});
 
   @override
   State<IntroductionScreen> createState() => _IntroductionScreenState();
@@ -291,28 +288,18 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
                         });
                         
                         // Navigate based on logging mode
-                        if (widget.loggingMode == LoggingMode.individual) {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => IndividualSessionSetupScreen(),
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => PokerHandScreen(
+                              smallBlind: smallBlind,
+                              bigBlind: bigBlind,
+                              numberOfPlayers: numberOfPlayers,
+                              gameType: gameType,
+                              hasBBante: bbAnteEnabled,
                             ),
-                          );
-                        } else {
-                          // Default to full logging mode (existing behavior)
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => PokerHandScreen(
-                                smallBlind: smallBlind,
-                                bigBlind: bigBlind,
-                                numberOfPlayers: numberOfPlayers,
-                                gameType: gameType,
-                                hasBBante: bbAnteEnabled,
-                              ),
-                            ),
-                          );
-                        }
+                          ),
+                        );
                       }
                     },
                     style: ElevatedButton.styleFrom(

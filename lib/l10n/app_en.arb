@@ -75,8 +75,6 @@
   "settingsGuidedTourSubtitle": "Replay onboarding tours",
   "settingsFullLoggingTour": "Full Logging Tour",
   "settingsFullLoggingTourSubtitle": "Complete session tracking flow",
-  "settingsIndividualLoggingTour": "Individual Logging Tour",
-  "settingsIndividualLoggingTourSubtitle": "Single hand tracking flow",
   "settingsUnderstandingStats": "Understanding Your Stats",
   "settingsUnderstandingStatsSubtitle": "Learn what each metric means",
   "settingsClubsEvents": "Clubs & Events",
@@ -1226,48 +1224,6 @@
       }
     }
   },
-  "quickStackTitle": "Update Stacks & Button",
-  "quickStackBlinds": "Blinds: {blinds}",
-  "@quickStackBlinds": {
-    "placeholders": {
-      "blinds": {
-        "type": "String"
-      }
-    }
-  },
-  "quickStackInstruction": "Tap stack to edit  •  Slide to adjust  •  Tap D for button",
-  "quickStackContinue": "CONTINUE TO LOG HAND",
-  "quickStackEditStack": "Edit Stack",
-  "quickStackStackInBb": "Stack in BB",
-  "quickStackCurrentValue": "Current: {bbValue} BB = {chipValue}",
-  "@quickStackCurrentValue": {
-    "placeholders": {
-      "bbValue": {
-        "type": "String"
-      },
-      "chipValue": {
-        "type": "String"
-      }
-    }
-  },
-  "quickStackValidationError": "Please enter a value between 0 and 1000 BB",
-  "quickStackSeat": "Seat {number}",
-  "@quickStackSeat": {
-    "placeholders": {
-      "number": {
-        "type": "int"
-      }
-    }
-  },
-  "quickStackEmpty": "Empty",
-  "quickStackPlayerDefault": "Player {id}",
-  "@quickStackPlayerDefault": {
-    "placeholders": {
-      "id": {
-        "type": "int"
-      }
-    }
-  },
   "handReviewTitle": "Hand Review",
   "handReviewYourHoleCards": "Your Hole Cards",
   "handReviewOptional": "(optional)",
@@ -1581,18 +1537,12 @@
   },
   "registerClubGotIt": "Got it",
   "loggingModeChooseMode": "Choose Mode",
-  "loggingModeFullTitle": "Full Logging Mode",
+  "loggingModeFullTitle": "Logging Mode",
   "loggingModeFullSubtitle": "Complete Session Tracking",
   "loggingModeFullFeature1": "Multi-hand session tracking",
   "loggingModeFullFeature2": "Real time statistics",
   "loggingModeFullFeature3": "Detailed hand history",
   "loggingModeFullFeature4": "Session analytics",
-  "loggingModeIndividualTitle": "Quick Session Logging Mode",
-  "loggingModeIndividualSubtitle": "Single hand tracking",
-  "loggingModeIndividualFeature1": "Single hand focus",
-  "loggingModeIndividualFeature2": "Quick logging",
-  "loggingModeIndividualFeature3": "Hand analysis",
-  "loggingModeIndividualFeature4": "Instant results",
   "loggingModeFeatures": "Features",
   "loggingModeStart": "Start",
   "earningsChartAllTimeEarnings": "All-Time Earnings",
@@ -3379,20 +3329,6 @@
   "authExpLinkGoogleTitle": "Link Google Account",
   "authExpPassword": "Password",
   "authExpLinkAccount": "Link Account",
-  "individualSetupSessionNameHint": "e.g., \"Friday Night Poker\"",
-  "individualSetupCashGame": "Cash Game",
-  "individualSetupTournament": "Tournament",
-  "individualSetupEnterAmount": "Enter amount",
-  "individualSetupEnterChipStack": "Enter chip stack",
-  "individualSetupSmallBlind": "Small Blind",
-  "individualSetupBigBlind": "Big Blind",
-  "individualSetupBlindsLabel": "Blinds",
-  "individualSetupEnterValue": "Enter value",
-  "individualHandSetupNameHint": "e.g., \"AA vs KK Cooler\"",
-  "individualHandSetupSmallBlind": "Small Blind",
-  "individualHandSetupBigBlind": "Big Blind",
-  "individualHandSetupPlayers": "Players",
-  "individualHandSetupGameType": "Game Type",
   "playerSessionYourHoleCards": "Your Hole Cards",
   "playerSessionSeat": "SEAT",
   "playerSessionStack": "STACK",
@@ -3441,7 +3377,6 @@
   "stackChartScreenDuration": "Duration",
   "stackChartScreenProfitLoss": "P/L",
   "stackChartScreenStack": "Stack",
-  "quickStackSearchHint": "Search or add player...",
   "sessionHandsLoading": "Loading hands...",
   "createEventDefaultCashGame": "Cash Game {stakes}",
   "@createEventDefaultCashGame": {
@@ -4225,29 +4160,6 @@
   "opponentDetailFoldTo3Bet": "Fold to 3-Bet",
   "opponentDetailStealLabel": "Steal",
   "opponentDetailCheckRaiseLabel": "Check/Raise",
-  "individualSetupSessionSetup": "Session Setup",
-  "individualSetupSessionNameLabel": "Session Name",
-  "individualSetupGameTypeLabel": "Game Type",
-  "individualSetupCashGameLabel": "Cash Game",
-  "individualSetupTournamentLabel": "Tournament",
-  "individualSetupBuyInAmountLabel": "Buy-in Amount",
-  "individualSetupEnterAmountHint": "Enter amount",
-  "individualSetupCashGameNote": "In cash games your starting stack equals your buy-in amount.",
-  "individualSetupStartingStackLabel": "Starting Stack",
-  "individualSetupEnterChipStackHint": "Enter chip stack",
-  "individualSetupStackValidation": "Starting stack must be at least equal to the Big Blind ({bigBlind})",
-  "@individualSetupStackValidation": {
-    "placeholders": {
-      "bigBlind": {
-        "type": "int"
-      }
-    }
-  },
-  "individualSetupStartSessionBtn": "Start Session",
-  "individualSetupEnterValueHint": "Enter value",
-  "individualHandSetupTitle": "Individual Hand",
-  "individualHandSetupSubtitle": "Quick hand logging setup",
-  "individualHandSetupHandNameLabel": "Hand Name (Optional)",
   "playerSessionBluff": "Bluff",
   "playerSessionValue": "Value",
   "playerSessionMistake": "Mistake",
@@ -4475,18 +4387,6 @@
   "stackChartScreenStart": "Start",
   "stackChartScreenRebuy": "Rebuy",
   "stackChartScreenEnd": "End",
-  "quickStackSelectPlayer": "Select Player",
-  "quickStackAddPlayer": "Add \"{name}\"",
-  "@quickStackAddPlayer": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
-  "quickStackSaveToOpponents": "Save to opponent list",
-  "quickStackYou": "You",
-  "quickStackNoPlayersFound": "No players found.",
   "seatSetupDone": "Done",
   "seatSetupCancel": "Cancel",
   "authConnectionIssue": "Connection Issue",
@@ -4691,8 +4591,6 @@
   "onboardingStartLoggingBody": "Tap the + button to begin logging a hand.",
   "onboardingFullModeTitle": "Full Logging Mode",
   "onboardingFullModeBody": "Lets you track your and your opponents' hands throughout the session. It is up to you what to log. Perfect for serious analysis afterwards.",
-  "onboardingIndividualModeTitle": "Individual Logging Mode",
-  "onboardingIndividualModeBody": "Quick profit/loss tracking for a single session. You can still log the hands. Now choose a mode to continue!",
   "onboardingSessionSetupTitle": "Session Details",
   "onboardingSessionSetupBody": "Here you can set your session name, game type, blinds, buy-in amount, and starting stack.",
   "onboardingTableSetupTitle": "Setup Your Table",
@@ -4731,20 +4629,6 @@
   "onboardingAllSetTitle": "You're All Set!",
   "onboardingAllSetBody": "You're ready to start tracking your poker sessions.",
   "onboardingLetsPlay": "Let's play",
-  "onboardingUpdateStackTitle": "Update Stack",
-  "onboardingUpdateStackBody": "Use this to manually update your chip count at any point without logging a full hand.",
-  "onboardingLogAHandTitle": "Log a Hand",
-  "onboardingLogAHandBody": "Tap here to set up the table and log a hand. Let's try it now!",
-  "onboardingMarkSeatOpenTitle": "Mark Seat Open",
-  "onboardingMarkSeatOpenBody": "Tap the checkmark to toggle a seat between occupied and empty. Empty seats are skipped in the hand.",
-  "onboardingDealerButtonQsuTitle": "Dealer Button",
-  "onboardingDealerButtonQsuBody": "Tap \"D\" to assign the dealer button to any seat. This controls blind positions and action order.",
-  "onboardingAssignPlayerTitle": "Assign a Player",
-  "onboardingAssignPlayerBody": "Tap a player's name to seat yourself or a saved opponent. Your stack is auto-applied when you seat yourself.",
-  "onboardingAdjustStackTitle": "Adjust Stack",
-  "onboardingAdjustStackBody": "Drag the slider to set an opponent's stack in BBs. Tap the stack value to type an exact amount.",
-  "onboardingEndSessionTitle": "End Your Session",
-  "onboardingEndSessionBody": "Tap the red Stop button to save your session results and return to the home screen.",
   "onboardingStepOf": "Step {step} of {total}",
   "@onboardingStepOf": {
     "placeholders": {
@@ -4957,9 +4841,9 @@
   "onboardingWelcomeSubtitle": "Your personal poker companion for logging hands, tracking stats, and improving your game.",
   "onboardingNicknameTitle": "Let's start by choosing your nickname",
   "onboardingNicknameSubtitle": "You can switch between your name and nickname and change it whenever you want.",
-    "onboardingCurrencyTitle": "What currency do you play in?",
+  "onboardingCurrencyTitle": "What currency do you play in?",
   "onboardingCurrencySubtitle": "Buy-ins, cashouts, and stats will all use it. You can change it anytime in Settings.",
-"onboardingGameTypeTitle": "Choose your game type",
+  "onboardingGameTypeTitle": "Choose your game type",
   "onboardingGameTypeSubtitle": "We'll tailor your experience based on what you play. Let us know, are you mainly a cash or MTT player?",
   "onboardingGameTypeCash": "Cash Game",
   "onboardingGameTypeTournament": "Tournament (MTT)",
@@ -5356,6 +5240,9 @@
   "loggingChoose": "Choose",
   "loggingTrainingDrills": "Training Drills",
   "loggingTrainingDrillsSubtitle": "Practice preflop spots against your real opponents",
+  "loggingTrainingDrillsFeature1": "Preflop drills",
+  "loggingTrainingDrillsFeature2": "GTO ranges",
+  "loggingTrainingDrillsFeature3": "Opponent-based",
   "loggingPro": "PRO",
   "opponentsEnterName": "Enter name",
   "opponentsAddNotes": "Add notes",

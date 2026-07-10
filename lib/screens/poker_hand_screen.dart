@@ -19,7 +19,7 @@ import '../widgets/board_cards_dialog.dart';
 import '../widgets/all_in_board_cards_dialog.dart';
 import '../widgets/hole_cards_dialog.dart';
 import '../widgets/hand_review_dialog.dart';
-import 'individual_session_tracking_screen.dart';
+import 'session_details_screen.dart';
 import '../widgets/showdown_dialog.dart';
 import 'seat_setup_screen.dart';
 import '../widgets/action_button_grid.dart';
@@ -62,18 +62,6 @@ class PokerHandScreen extends StatefulWidget {
   final bool hasBBante;
   final double ante;
 
-  // Individual session parameters
-  final bool isIndividualSession;
-  final double? individualCurrentStack;
-  final String? individualSessionId;
-  final double? individualTotalBuyIn;
-
-  // Quick stack update parameters (for individual session)
-  final Map<int, double>? preConfiguredStacks;
-  final int? preConfiguredButtonPosition;
-  final Map<int, String>? preConfiguredPlayerNames;
-  final bool skipTableSetup;
-
   // Full session parameters
   final String? sessionName;
   final double? buyInAmount;
@@ -90,14 +78,6 @@ class PokerHandScreen extends StatefulWidget {
     this.gameType = GameType.cash,
     this.hasBBante = false,
     this.ante = 0,
-    this.isIndividualSession = false,
-    this.individualCurrentStack,
-    this.individualSessionId,
-    this.individualTotalBuyIn,
-    this.preConfiguredStacks,
-    this.preConfiguredButtonPosition,
-    this.preConfiguredPlayerNames,
-    this.skipTableSetup = false,
     this.sessionName,
     this.buyInAmount,
     this.startingStack,
@@ -230,8 +210,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         bigBlind: widget.bigBlind,
         playerCount: widget.numberOfPlayers,
         gameType: widget.gameType,
-        existingSessionId: widget.individualSessionId, // Use existing session ID for individual sessions
-        initialBuyIn: widget.individualTotalBuyIn, // Pass total buy-in for individual sessions
         startingStack: widget.startingStack, // Pass starting stack (chips for MTT, same as buy-in for cash)
       );
     }
@@ -248,18 +226,8 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
 
     // Start session and first hand
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      // If we have pre-configured stacks and button (from quick stack update), use those
-      if (widget.skipTableSetup &&
-          widget.preConfiguredStacks != null &&
-          widget.preConfiguredButtonPosition != null) {
-        _initializeWithPreConfiguredData(
-          widget.preConfiguredStacks!,
-          widget.preConfiguredButtonPosition!,
-          widget.preConfiguredPlayerNames,
-        );
-      }
       // If we have initial seat info from session setup, skip seat selection
-      else if (widget.initialSeat != null && widget.initialButtonPosition != null) {
+      if (widget.initialSeat != null && widget.initialButtonPosition != null) {
         _initializeWithSeatInfo(widget.initialSeat!, widget.initialButtonPosition!);
       } else {
         _initializeSession();
@@ -367,115 +335,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     setState(() {});
   }
 
-  Future<void> _initializeWithPreConfiguredData(
-    Map<int, double> playerStacks,
-    int buttonPosition,
-    Map<int, String>? playerNames,
-  ) async {
-    // Initialize with pre-configured stacks and button from quick stack update
-    // This skips the table selection UI entirely
-
-    // Get user's name to identify which seat they selected for themselves
-    final ourName = DisplayIdentityService.cachedDisplayIdentity;
-
-    // CRITICAL: Find which seat the user selected for themselves in Quick Stack Update
-    // Look through playerNames to find if user's name was assigned to any seat
-    int? ourSeatFromNames;
-    if (playerNames != null) {
-      final ourNameLower = ourName.toLowerCase();
-      for (var entry in playerNames.entries) {
-        if (entry.value.toLowerCase() == ourNameLower) {
-          ourSeatFromNames = entry.key;
-          break;
-        }
-      }
-    }
-
-    // Set our seat number: use the seat where user placed themselves, or default to first active seat
-    if (ourSeatFromNames != null) {
-      sessionManager.ourSeatNumber = ourSeatFromNames;
-    } else {
-      // User didn't select themselves, default to first active seat with a stack
-      int? firstActiveSeat;
-      for (var entry in playerStacks.entries) {
-        if (entry.value > 0) {
-          firstActiveSeat = entry.key;
-          break;
-        }
-      }
-      sessionManager.ourSeatNumber = firstActiveSeat ?? 1;
-    }
-
-    // Apply ALL pre-configured player names from quick stack update
-    // This includes the user's name if they selected themselves
-    if (playerNames != null) {
-      for (var entry in playerNames.entries) {
-        final seatNumber = entry.key;
-        final playerName = entry.value;
-        if (seatNumber >= 1 && seatNumber <= 9 && playerName.isNotEmpty) {
-          sessionManager.setPlayerName(seatNumber, playerName);
-        }
-      }
-    }
-
-    // If user didn't select themselves in any seat, set their name to ourSeatNumber
-    if (ourSeatFromNames == null && sessionManager.ourSeatNumber != null) {
-      sessionManager.setPlayerName(sessionManager.ourSeatNumber!, ourName);
-    }
-
-    // Initialize ALL player stacks and active status
-    for (int i = 1; i <= 9; i++) {
-      if (playerStacks.containsKey(i) && playerStacks[i]! > 0) {
-        // Active player - set their stack
-        gameState.setPlayerStack(i, playerStacks[i]!);
-        gameState.setPlayerActive(i, true);
-        // Make sure session manager knows this seat is active
-        if (!sessionManager.activeSeats.contains(i)) {
-          sessionManager.activeSeats.add(i);
-        }
-      } else {
-        // Inactive player - set stack to 0 and mark inactive
-        gameState.setPlayerStack(i, 0.0);
-        gameState.setPlayerActive(i, false);
-        // Make sure session manager knows this seat is inactive
-        sessionManager.activeSeats.remove(i);
-      }
-    }
-
-    // CRITICAL: NOW set button position AFTER players are initialized
-    gameState.buttonPosition = buttonPosition;
-
-    // CRITICAL: Complete initialization and calculate action order
-    gameState.finalizeInitialization();
-
-    // Initialize pot with blinds - this will deduct blinds from stacks and add to pot
-    gameState.initializePot();
-
-    // Get initial stack for our seat to track in session history
-    final sessionSeat = sessionManager.ourSeatNumber;
-    final initialStack = sessionSeat != null ? gameState.players[sessionSeat - 1].currentStack : (widget.individualCurrentStack ?? widget.startingStack);
-
-    // CRITICAL: Store user's actual starting stack for accurate win/loss calculation
-    // This reflects what they actually started with (including manual adjustments in Quick Stack Update)
-    _userStartingStack = initialStack;
-
-    // Start the session and hand (CRITICAL for proper action order)
-    await sessionManager.startSession(initialStack: initialStack);
-
-    sessionManager.startHand(
-      gameState.handNumber,
-      gameState.buttonPosition,
-      sbSeat: gameState.effectiveSBPosition,
-      bbSeat: gameState.effectiveBBPosition,
-    );
-
-    // Add action messages with proper context
-    if (!widget.isIndividualSession) {
-    }
-
-    setState(() {});
-  }
-
   Future<void> _initializeSession() async {
     // First show seat selection dialog
     final result = await _showSeatSelectionDialog();
@@ -556,8 +415,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
           sessionManager: sessionManager,
           isInitialSetup: true,
           isCashGame: widget.gameType == GameType.cash,
-          isIndividualSession: widget.isIndividualSession,
-          individualCurrentStack: widget.individualCurrentStack,
         ),
       ),
     );
@@ -1048,14 +905,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       await prefs.setDouble('small_blind', sb);
       await prefs.setDouble('big_blind', bb);
 
-      if (widget.isIndividualSession && sessionManager.sessionId != null) {
-        await FirebaseService.updateIndividualSession(
-          sessionId: sessionManager.sessionId!,
-          smallBlind: sb,
-          bigBlind: bb,
-          hasBBante: gameState.hasBBante,
-        ).catchError((e) {});
-      }
     }
   }
 
@@ -1099,97 +948,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     final hasCurrentHandActions = sessionManager.currentHand?.actions.isNotEmpty ?? false;
 
     return hasCompletedHands || hasCurrentHandActions;
-  }
-
-  /// Quick session mode: confirm discarding the current in-progress hand.
-  Future<bool?> _showDiscardHandDialog() async {
-    final l10n = AppLocalizations.of(context);
-    return showDialog<bool>(
-      context: context,
-      barrierDismissible: true,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: AppColors.bgSurface,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppDecorations.radiusXl),
-          ),
-          contentPadding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                l10n.handInProgress,
-                textAlign: TextAlign.center,
-                style: AppTypography.ibm(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
-                  height: 20 / 17,
-                ),
-              ),
-              const SizedBox(height: 7),
-              Text(
-                l10n.handDiscardCurrentHand,
-                textAlign: TextAlign.center,
-                style: AppTypography.ibm(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w400,
-                  color: AppColors.textSecondary,
-                  height: 22 / 15,
-                ),
-              ),
-              const SizedBox(height: 24),
-              // Primary action — Move to Next Hand (top)
-              GestureDetector(
-                onTap: () => Navigator.pop(context, true),
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  decoration: BoxDecoration(
-                    color: AppColors.bgInverse,
-                    borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
-                  ),
-                  child: Text(
-                    l10n.handMoveToNextHand,
-                    textAlign: TextAlign.center,
-                    style: AppTypography.ibm(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textInverse,
-                      height: 20 / 15,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              // Cancel (below)
-              GestureDetector(
-                onTap: () => Navigator.pop(context, false),
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
-                    border: Border.all(color: AppColors.borderStrong),
-                  ),
-                  child: Text(
-                    l10n.commonCancel,
-                    textAlign: TextAlign.center,
-                    style: AppTypography.ibm(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                      height: 20 / 15,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
   }
 
   /// Shows confirmation dialog when user tries to navigate away from active session
@@ -1314,24 +1072,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
   Future<void> _handleNavigationAttempt({bool isBackButton = false}) async {
     if (_isNavigatingAway) return; // Prevent double-tap back
     _isNavigatingAway = true;
-
-    // Quick session mode: just confirm discarding the current hand, then pop back
-    if (widget.isIndividualSession) {
-      final hasActions = sessionManager.currentHand != null &&
-          sessionManager.currentHand!.actions.isNotEmpty;
-      if (!hasActions) {
-        // No actions logged in this hand — just go back
-        if (isBackButton && mounted) Navigator.pop(context);
-        _isNavigatingAway = false;
-        return;
-      }
-      final discard = await _showDiscardHandDialog();
-      if (discard == true && mounted) {
-        Navigator.pop(context);
-      }
-      _isNavigatingAway = false;
-      return;
-    }
 
     if (!_hasUnsavedSessionData()) {
       // No data logged - delete the empty session from Firebase/local storage
@@ -1748,42 +1488,40 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                               ),
                               // Next Hand button — fades out while the raise
                               // drag bar is active (it overlaps the snap labels)
-                              if (!widget.isIndividualSession) ...[
-                                const SizedBox(width: 8),
-                                IgnorePointer(
-                                  ignoring: _isRaiseSnapping,
-                                  child: AnimatedOpacity(
-                                    opacity: _isRaiseSnapping ? 0.05 : 1.0,
-                                    duration: const Duration(milliseconds: 150),
-                                    child: GestureDetector(
-                                      key: _nextHandButtonKey,
-                                      onTap: _skipCurrentAction,
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-                                        decoration: BoxDecoration(
-                                          color: AppColors.bgPrimary,
-                                          borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Text(
-                                              l10n.handNextHand,
-                                              style: AppTypography.ibm(
-                                                fontSize: 13,
-                                                color: Colors.white,
-                                                fontWeight: FontWeight.w600,
-                                              ),
+                              const SizedBox(width: 8),
+                              IgnorePointer(
+                                ignoring: _isRaiseSnapping,
+                                child: AnimatedOpacity(
+                                  opacity: _isRaiseSnapping ? 0.05 : 1.0,
+                                  duration: const Duration(milliseconds: 150),
+                                  child: GestureDetector(
+                                    key: _nextHandButtonKey,
+                                    onTap: _skipCurrentAction,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.bgPrimary,
+                                        borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            l10n.handNextHand,
+                                            style: AppTypography.ibm(
+                                              fontSize: 13,
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.w600,
                                             ),
-                                            const SizedBox(width: 8),
-                                            _buildIcon('assets/icons/CaretRight.svg', 16, Colors.white),
-                                          ],
-                                        ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          _buildIcon('assets/icons/CaretRight.svg', 16, Colors.white),
+                                        ],
                                       ),
                                     ),
                                   ),
                                 ),
-                              ],
+                              ),
                             ],
                           ),
                         ],
@@ -4937,7 +4675,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
   /// Whether to show the "Next Hand" button: hero has folded and
   /// there are 2+ active (non-folded) players still in the hand.
   bool _canShowNextHand() {
-    if (widget.isIndividualSession) return false;
     final heroSeat = sessionManager.ourSeatNumber;
     if (heroSeat == null) return false;
     final heroPlayer = gameState.players[heroSeat - 1];
@@ -5492,8 +5229,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     double currentStack;
     if (ourSeat != null && ourSeat >= 1 && ourSeat <= gameState.players.length) {
       currentStack = gameState.players[ourSeat - 1].currentStack;
-    } else if (widget.individualCurrentStack != null) {
-      currentStack = widget.individualCurrentStack!;
     } else {
       // Last resort: use the starting stack
       currentStack = sessionManager.initialStartingStack ?? widget.startingStack ?? 0.0;
@@ -5503,7 +5238,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     final result = await Navigator.push<Map<String, dynamic>>(
       context,
       MaterialPageRoute(
-        builder: (context) => IndividualSessionTrackingScreen(
+        builder: (context) => SessionDetailsScreen(
           sessionName: sessionManager.sessionName ?? l10n.handPokerSession,
           buyInAmount: widget.buyInAmount ?? sessionManager.totalBuyIn, // Initial buy-in amount (money)
           startingStack: sessionManager.initialStartingStack ?? sessionManager.totalBuyIn, // Starting chips (MTT) or buy-in (cash)
@@ -5513,7 +5248,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
           hasBBante: gameState.hasBBante,
           currentStack: currentStack,
           sessionId: sessionManager.sessionId,
-          isFromActiveSession: true, // Indicate this is from an active poker session
           liveStackHistory: List<Map<String, dynamic>>.from(sessionManager.stackHistory),
           completedHands: List<HandRecord>.from(sessionManager.completedHands),
         ),
@@ -5723,7 +5457,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
 
     // Check if user has existing stack and confirm they want to lose it
     final ourSeat = sessionManager.ourSeatNumber;
-    final currentStack = ourSeat != null ? gameState.players[ourSeat - 1].currentStack : (widget.individualCurrentStack ?? 0.0);
+    final currentStack = ourSeat != null ? gameState.players[ourSeat - 1].currentStack : 0.0;
     if (currentStack > 0) {
       final confirmed = await _showRebuyConfirmationDialog(currentStack);
       if (confirmed != true) {
@@ -6244,24 +5978,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         gameState: gameState,
       );
 
-      // For individual sessions, return to the session tracking screen
-      if (widget.isIndividualSession) {
-        final ourSeat = sessionManager.ourSeatNumber;
-        final finalStack = ourSeat != null ? gameState.players[ourSeat - 1].currentStack : widget.individualCurrentStack ?? 0.0;
-
-        Navigator.pop(context, {
-          'completed': true,
-          'finalStack': finalStack,
-          'startingStack': _userStartingStack ?? finalStack,
-          'potSize': potAmount,
-          'smallBlind': sessionManager.smallBlind,
-          'bigBlind': sessionManager.bigBlind,
-          'hasBBante': gameState.hasBBante,
-          'handRecord': sessionManager.completedHands.isNotEmpty ? sessionManager.completedHands.last : null,
-        });
-        return;
-      }
-
       // During onboarding, don't start the next hand — wait for user to end session
       if (OnboardingState.isGuidedSessionActive) {
         setState(() {});
@@ -6457,26 +6173,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     // Show hole cards dialog for the completed hand
     await _showHoleCardsDialog();
 
-    // For individual sessions, return to the session tracking screen
-    if (widget.isIndividualSession) {
-      final ourSeat = sessionManager.ourSeatNumber;
-      final finalStack = ourSeat != null ? gameState.players[ourSeat - 1].currentStack : widget.individualCurrentStack ?? 0.0;
-      final potSize = gameState.currentPot;
-
-      Navigator.pop(context, {
-        'completed': true,
-        'finalStack': finalStack,
-        'startingStack': _userStartingStack ?? finalStack,
-        'potSize': potSize,
-        'smallBlind': sessionManager.smallBlind,
-        'bigBlind': sessionManager.bigBlind,
-        'hasBBante': gameState.hasBBante,
-        'handRecord': sessionManager.completedHands.isNotEmpty ? sessionManager.completedHands.last : null,
-      });
-      return;
-    }
-
-    // For full sessions, start next hand
     // Check for busted players before starting new hand
     await _checkForBustedPlayers();
     _advanceToNextHand();
@@ -6803,27 +6499,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       }
 
       break; // Hand fully completed — exit the while loop
-    }
-
-    // For individual sessions, return to the session tracking screen
-    if (widget.isIndividualSession) {
-      // Get the user's final stack and pot size
-      final ourSeat = sessionManager.ourSeatNumber;
-      final finalStack = ourSeat != null ? gameState.players[ourSeat - 1].currentStack : widget.individualCurrentStack ?? 0.0;
-      final potSize = potAmount; // Use the potAmount we saved earlier
-
-      // Return to session tracking screen with hand completion data
-      Navigator.pop(context, {
-        'completed': true,
-        'finalStack': finalStack,
-        'startingStack': _userStartingStack ?? finalStack,
-        'potSize': potSize,
-        'smallBlind': sessionManager.smallBlind,
-        'bigBlind': sessionManager.bigBlind,
-        'hasBBante': gameState.hasBBante,
-        'handRecord': sessionManager.completedHands.isNotEmpty ? sessionManager.completedHands.last : null,
-      });
-      return;
     }
 
     // During onboarding, don't start the next hand — wait for user to end session
@@ -7356,27 +7031,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
 
     // Notify guided overlay after all dialogs are done (no opponent dialog in this path)
     _guidedOverlayKey.currentState?.onHoleCardsCompleted();
-
-    // For individual sessions, return to the session tracking screen
-    if (widget.isIndividualSession) {
-      // Get the user's final stack and pot size
-      final ourSeat = sessionManager.ourSeatNumber;
-      final finalStack = ourSeat != null ? gameState.players[ourSeat - 1].currentStack : widget.individualCurrentStack ?? 0.0;
-      final potSize = gameState.currentPot;
-
-      // Return to session tracking screen with hand completion data
-      Navigator.pop(context, {
-        'completed': true,
-        'finalStack': finalStack,
-        'startingStack': _userStartingStack ?? finalStack,
-        'potSize': potSize,
-        'smallBlind': sessionManager.smallBlind,
-        'bigBlind': sessionManager.bigBlind,
-        'hasBBante': gameState.hasBBante,
-        'handRecord': sessionManager.completedHands.isNotEmpty ? sessionManager.completedHands.last : null,
-      });
-      return;
-    }
 
     // During onboarding, don't start the next hand — wait for user to end session
     if (OnboardingState.isGuidedSessionActive) {

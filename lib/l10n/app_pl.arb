@@ -64,8 +64,6 @@
   "settingsGuidedTourSubtitle": "Powtórz samouczek",
   "settingsFullLoggingTour": "Pełne logowanie",
   "settingsFullLoggingTourSubtitle": "Kompletny przepływ śledzenia sesji",
-  "settingsIndividualLoggingTour": "Logowanie pojedyncze",
-  "settingsIndividualLoggingTourSubtitle": "Śledzenie pojedynczej ręki",
   "settingsUnderstandingStats": "Zrozum swoje statystyki",
   "settingsUnderstandingStatsSubtitle": "Dowiedz się co oznacza każda metryka",
   "settingsClubsEvents": "Kluby i wydarzenia",
@@ -1025,48 +1023,6 @@
       }
     }
   },
-  "quickStackTitle": "Zaktualizuj Stack i Button",
-  "quickStackBlinds": "Blindy: {blinds}",
-  "@quickStackBlinds": {
-    "placeholders": {
-      "blinds": {
-        "type": "String"
-      }
-    }
-  },
-  "quickStackInstruction": "Dotknij Stack, aby edytowac  •  Przesun, aby dostosowac  •  Dotknij D, aby ustawic Button",
-  "quickStackContinue": "KONTYNUUJ LOGOWANIE",
-  "quickStackEditStack": "Edytuj Stack",
-  "quickStackStackInBb": "Stack w BB",
-  "quickStackCurrentValue": "Aktualna wartosc: {bbValue} BB = {chipValue}",
-  "@quickStackCurrentValue": {
-    "placeholders": {
-      "bbValue": {
-        "type": "String"
-      },
-      "chipValue": {
-        "type": "String"
-      }
-    }
-  },
-  "quickStackValidationError": "Wprowadz wartosc miedzy 0 a 1000 BB",
-  "quickStackSeat": "Miejsce {number}",
-  "@quickStackSeat": {
-    "placeholders": {
-      "number": {
-        "type": "int"
-      }
-    }
-  },
-  "quickStackEmpty": "Puste",
-  "quickStackPlayerDefault": "Gracz {id}",
-  "@quickStackPlayerDefault": {
-    "placeholders": {
-      "id": {
-        "type": "int"
-      }
-    }
-  },
   "handReviewTitle": "Przeglad rozdania",
   "handReviewYourHoleCards": "Twoje karty",
   "handReviewOptional": "(opcjonalne)",
@@ -1380,18 +1336,12 @@
   },
   "registerClubGotIt": "Rozumiem",
   "loggingModeChooseMode": "Wybierz tryb",
-  "loggingModeFullTitle": "Pelne logowanie",
+  "loggingModeFullTitle": "Tryb logowania",
   "loggingModeFullSubtitle": "Kompletne sledzenie sesji",
   "loggingModeFullFeature1": "Sledzenie wielu rozdan w sesji",
   "loggingModeFullFeature2": "Statystyki w czasie rzeczywistym",
   "loggingModeFullFeature3": "Szczegolowa historia rozdan",
   "loggingModeFullFeature4": "Analityka sesji",
-  "loggingModeIndividualTitle": "Tryb szybkiej sesji",
-  "loggingModeIndividualSubtitle": "Sledzenie pojedynczego rozdania",
-  "loggingModeIndividualFeature1": "Skupienie na pojedynczym rozdaniu",
-  "loggingModeIndividualFeature2": "Szybkie logowanie",
-  "loggingModeIndividualFeature3": "Analiza rozdania",
-  "loggingModeIndividualFeature4": "Natychmiastowe wyniki",
   "loggingModeFeatures": "Funkcje",
   "loggingModeStart": "Rozpocznij",
   "earningsChartAllTimeEarnings": "Zarobki za caly czas",
@@ -2973,20 +2923,6 @@
     }
   },
   "homeTournament": "Tournament",
-  "individualHandSetupBigBlind": "Big Blind",
-  "individualHandSetupGameType": "Typ gry",
-  "individualHandSetupNameHint": "np. \"AA vs KK Cooler\"",
-  "individualHandSetupPlayers": "Gracze",
-  "individualHandSetupSmallBlind": "Small Blind",
-  "individualSetupBigBlind": "Big Blind",
-  "individualSetupBlindsLabel": "Ciemne",
-  "individualSetupCashGame": "Cash Game",
-  "individualSetupEnterAmount": "Wpisz kwotę",
-  "individualSetupEnterChipStack": "Wpisz Stack żetonów",
-  "individualSetupEnterValue": "Wpisz wartość",
-  "individualSetupSessionNameHint": "np. \"Piątkowy poker\"",
-  "individualSetupSmallBlind": "Small Blind",
-  "individualSetupTournament": "Tournament",
   "invitationsDeclined": "Zaproszenie odrzucone",
   "invitationsFailedAccept": "Nie udało się zaakceptować zaproszenia: {error}",
   "@invitationsFailedAccept": {
@@ -3208,7 +3144,6 @@
     }
   },
   "profileVersion": "Wersja 1.0",
-  "quickStackSearchHint": "Szukaj lub dodaj gracza...",
   "raiseSnapReleaseToType": "Puść przy min, aby wpisać",
   "seatSetupFailedSave": "Nie udało się zapisać: {error}",
   "@seatSetupFailedSave": {
@@ -3903,29 +3838,6 @@
   "opponentDetailFoldTo3Bet": "Fold to 3-Bet",
   "opponentDetailStealLabel": "Steal",
   "opponentDetailCheckRaiseLabel": "Check/Raise",
-  "individualSetupSessionSetup": "Ustawienia sesji",
-  "individualSetupSessionNameLabel": "Nazwa sesji",
-  "individualSetupGameTypeLabel": "Typ gry",
-  "individualSetupCashGameLabel": "Cash Game",
-  "individualSetupTournamentLabel": "Tournament",
-  "individualSetupBuyInAmountLabel": "Kwota Buy-in",
-  "individualSetupEnterAmountHint": "Wprowadź kwotę",
-  "individualSetupCashGameNote": "W Cash Game Twój Stack początkowy jest równy kwocie Buy-in.",
-  "individualSetupStartingStackLabel": "Stack początkowy",
-  "individualSetupEnterChipStackHint": "Wprowadź Stack żetonów",
-  "individualSetupStackValidation": "Stack początkowy musi być co najmniej równy Big Blind ({bigBlind})",
-  "@individualSetupStackValidation": {
-    "placeholders": {
-      "bigBlind": {
-        "type": "int"
-      }
-    }
-  },
-  "individualSetupStartSessionBtn": "Rozpocznij sesję",
-  "individualSetupEnterValueHint": "Wprowadź wartość",
-  "individualHandSetupTitle": "Pojedyncza ręka",
-  "individualHandSetupSubtitle": "Szybkie logowanie ręki",
-  "individualHandSetupHandNameLabel": "Nazwa ręki (opcjonalnie)",
   "playerSessionBluff": "Bluff",
   "playerSessionValue": "Value",
   "playerSessionMistake": "Błąd",
@@ -4153,18 +4065,6 @@
   "stackChartScreenStart": "Start",
   "stackChartScreenRebuy": "Rebuy",
   "stackChartScreenEnd": "Koniec",
-  "quickStackSelectPlayer": "Wybierz gracza",
-  "quickStackAddPlayer": "Dodaj \"{name}\"",
-  "@quickStackAddPlayer": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
-  "quickStackSaveToOpponents": "Zapisz na liście przeciwników",
-  "quickStackYou": "Ty",
-  "quickStackNoPlayersFound": "Nie znaleziono graczy.",
   "seatSetupDone": "Gotowe",
   "seatSetupCancel": "Anuluj",
   "authConnectionIssue": "Problem z połączeniem",
@@ -4306,29 +4206,15 @@
   "memberTableFallback": "Stół",
   "memberTablePlayer": "Gracz",
   "memberTableSeatedOpen": "{seated} zajęte  •  {open} wolne",
-  "onboardingAdjustStackBody": "Przeciągnij suwak, aby ustawić stos przeciwnika w BB. Dotknij wartości stosu, aby wpisać dokładną kwotę.",
-  "onboardingAdjustStackTitle": "Dostosuj stos",
   "onboardingAllSetBody": "Jesteś gotowy do śledzenia swoich sesji pokerowych.",
   "onboardingAllSetTitle": "Wszystko gotowe!",
-  "onboardingAssignPlayerBody": "Dotknij imię gracza, aby posadzić siebie lub zapisanego przeciwnika. Twój stos jest automatycznie ustawiany, gdy siadasz.",
-  "onboardingAssignPlayerTitle": "Przypisz gracza",
   "onboardingDealerButtonBody": "Przeciągnij to do miejsca z pozycją dealera. Określa blindy i kolejność akcji.",
-  "onboardingDealerButtonQsuBody": "Dotknij \"D\", aby przypisać guzik dealera do dowolnego miejsca. Kontroluje pozycje blindów i kolejność akcji.",
-  "onboardingDealerButtonQsuTitle": "Guzik dealera",
   "onboardingDealerButtonTitle": "Guzik dealera",
-  "onboardingEndSessionBody": "Dotknij czerwonego przycisku Stop, aby zapisać wyniki sesji i wrócić do ekranu głównego.",
-  "onboardingEndSessionTitle": "Zakończ sesję",
   "onboardingFullModeBody": "Śledź każdą akcję każdego gracza na wszystkich ulicach. Idealne do poważnej analizy.",
   "onboardingFullModeTitle": "Tryb pełnego rejestrowania",
   "onboardingGotIt": "Rozumiem",
-  "onboardingIndividualModeBody": "Szybkie śledzenie zysku/straty dla jednej sesji. Teraz wybierz tryb, aby kontynuować!",
-  "onboardingIndividualModeTitle": "Tryb indywidualnego rejestrowania",
   "onboardingLetsGo": "Zaczynamy",
   "onboardingLetsPlay": "Grajmy",
-  "onboardingLogAHandBody": "Dotknij tutaj, aby skonfigurować stół i zarejestrować rozdanie. Spróbujmy teraz!",
-  "onboardingLogAHandTitle": "Zarejestruj rozdanie",
-  "onboardingMarkSeatOpenBody": "Dotknij znacznika wyboru, aby przełączyć miejsce między zajętym a pustym. Puste miejsca są pomijane w rozdaniu.",
-  "onboardingMarkSeatOpenTitle": "Oznacz miejsce jako wolne",
   "onboardingNext": "Dalej",
   "onboardingPlayerNameBody": "Wpisz imię lub wybierz z zapisanych przeciwników. Zapisani przeciwnicy śledzą statystyki między sesjami.",
   "onboardingPlayerNameTitle": "Imię gracza",
@@ -4346,8 +4232,6 @@
   "onboardingTableSetupTitle": "Skonfiguruj swój stół",
   "onboardingThisIsMySeatBody": "Dotknij tutaj, jeśli to twoje miejsce. Automatycznie wypełnia twoje imię i śledzi twoje osobiste statystyki.",
   "onboardingThisIsMySeatTitle": "To moje miejsce",
-  "onboardingUpdateStackBody": "Użyj tego, aby ręcznie zaktualizować liczbę żetonów w dowolnym momencie bez rejestrowania pełnego rozdania.",
-  "onboardingUpdateStackTitle": "Zaktualizuj stos",
   "onboardingViewSessionsBody": "Dotknij ikony Sesje, aby zobaczyć sesję, którą właśnie rozegrałeś.",
   "onboardingSessionHistoryCardTitle": "Sesja, którą właśnie rozegrałeś",
   "onboardingSessionHistoryCardBody": "To Twoja sesja samouczka – dotknij jej w dowolnym momencie, aby zobaczyć każdą rękę.",
@@ -4472,9 +4356,9 @@
   "onboardingWelcomeSubtitle": "Twój osobisty towarzysz pokerowy do logowania rąk, śledzenia statystyk i doskonalenia gry.",
   "onboardingNicknameTitle": "Zacznijmy od wyboru twojego nicku",
   "onboardingNicknameSubtitle": "Możesz przełączać się między swoim imieniem i nickiem oraz zmieniać go w dowolnym momencie.",
-    "onboardingCurrencyTitle": "W jakiej walucie grasz?",
+  "onboardingCurrencyTitle": "W jakiej walucie grasz?",
   "onboardingCurrencySubtitle": "Wpisowe, wypłaty i statystyki będą jej używać. Możesz ją zmienić w Ustawieniach w każdej chwili.",
-"onboardingGameTypeTitle": "Wybierz typ gry",
+  "onboardingGameTypeTitle": "Wybierz typ gry",
   "onboardingGameTypeSubtitle": "Dostosujemy twoje doświadczenie do tego, w co grasz. Powiedz nam, czy grasz głównie cash czy MTT?",
   "onboardingGameTypeCash": "Cash Game",
   "onboardingGameTypeTournament": "Tournament (MTT)",
@@ -5231,6 +5115,9 @@
   "drillDeleteLineupMessage": "Remove \"{name}\" from your saved lineups?",
   "drillActionJam": "JAM {amount}",
   "loggingTrainingDrillsSubtitle": "Practice preflop spots against your real opponents",
+  "loggingTrainingDrillsFeature1": "Ćwiczenia preflop",
+  "loggingTrainingDrillsFeature2": "Zakresy GTO",
+  "loggingTrainingDrillsFeature3": "Na podstawie przeciwników",
   "@profileUseNicknameDescription": {
     "placeholders": {
       "username": {

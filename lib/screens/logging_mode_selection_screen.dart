@@ -3,7 +3,6 @@ import '../l10n/app_localizations.dart';
 import '../onboarding/onboarding_state.dart';
 import '../onboarding/onboarding_tour.dart';
 import '../onboarding/onboarding_progress_bar.dart';
-import 'individual_session_setup_screen.dart';
 import 'training/drill_setup_screen.dart';
 import 'unified_session_setup_screen.dart';
 import '../services/feature_flag_service.dart';
@@ -22,8 +21,6 @@ class LoggingModeSelectionScreen extends StatefulWidget {
 class _LoggingModeSelectionScreenState
     extends State<LoggingModeSelectionScreen> {
   final GlobalKey _fullModeCardKey = GlobalKey(debugLabel: 'fullModeCard');
-  final GlobalKey _individualModeCardKey =
-      GlobalKey(debugLabel: 'individualModeCard');
 
   @override
   void initState() {
@@ -39,7 +36,6 @@ class _LoggingModeSelectionScreenState
       if (!mounted || _fullModeCardKey.currentContext == null) return;
       LoggingModeTour(
         fullModeCardKey: _fullModeCardKey,
-        individualModeCardKey: _individualModeCardKey,
       ).show(context);
     });
   }
@@ -105,7 +101,7 @@ class _LoggingModeSelectionScreenState
                     ),
                     const SizedBox(height: 16),
 
-                    // Full Logging Mode card
+                    // Logging Mode card
                     _buildModeCard(
                       key: _fullModeCardKey,
                       title: l10n.loggingModeFullTitle,
@@ -116,23 +112,15 @@ class _LoggingModeSelectionScreenState
                         l10n.loggingModeFullFeature3,
                         l10n.loggingModeFullFeature4,
                       ],
-                      onChoose: () => _navigateToMode(context, LoggingMode.full),
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    // Individual Logging Mode card
-                    _buildModeCard(
-                      key: _individualModeCardKey,
-                      title: l10n.loggingModeIndividualTitle,
-                      subtitle: l10n.loggingModeIndividualSubtitle,
-                      features: [
-                        l10n.loggingModeIndividualFeature1,
-                        l10n.loggingModeIndividualFeature2,
-                        l10n.loggingModeIndividualFeature3,
-                        l10n.loggingModeIndividualFeature4,
-                      ],
-                      onChoose: () => _navigateToMode(context, LoggingMode.individual),
+                      onChoose: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                const UnifiedSessionSetupScreen(),
+                          ),
+                        );
+                      },
                     ),
 
                     // Training Drills entry (premium, feature-flagged)
@@ -142,7 +130,24 @@ class _LoggingModeSelectionScreenState
                               .isEnabled(FeatureFlagService.trainingDrills)
                           ? Column(children: [
                               const SizedBox(height: 16),
-                              _buildTrainingRow(context),
+                              _buildModeCard(
+                                title: l10n.loggingTrainingDrills,
+                                subtitle: l10n.loggingTrainingDrillsSubtitle,
+                                features: [
+                                  l10n.loggingTrainingDrillsFeature1,
+                                  l10n.loggingTrainingDrillsFeature2,
+                                  l10n.loggingTrainingDrillsFeature3,
+                                ],
+                                badge: l10n.loggingPro,
+                                onChoose: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (_) =>
+                                            const DrillSetupScreen()),
+                                  );
+                                },
+                              ),
                             ])
                           : const SizedBox.shrink(),
                     ),
@@ -162,6 +167,7 @@ class _LoggingModeSelectionScreenState
     required List<String> features,
     required VoidCallback onChoose,
     Key? key,
+    String? badge,
   }) {
     final l10n = AppLocalizations.of(context);
     return Container(
@@ -176,15 +182,40 @@ class _LoggingModeSelectionScreenState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Title + subtitle
-          Text(
-            title,
-            style: AppTypography.ibm(
-              fontSize: 17,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
-              height: 22 / 17,
-            ),
+          // Title + optional badge
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  title,
+                  style: AppTypography.ibm(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                    height: 22 / 17,
+                  ),
+                ),
+              ),
+              if (badge != null)
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.bgPrimary,
+                    borderRadius:
+                        BorderRadius.circular(AppDecorations.pillRadius),
+                  ),
+                  child: Text(
+                    badge,
+                    style: AppTypography.ibm(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 1.0,
+                      color: AppColors.accentPrimary,
+                    ),
+                  ),
+                ),
+            ],
           ),
           const SizedBox(height: 2),
           Text(
@@ -213,7 +244,7 @@ class _LoggingModeSelectionScreenState
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               decoration: BoxDecoration(
-                color: AppColors.bgInverse,
+                color: AppColors.bgPrimary,
                 borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
               ),
               child: Text(
@@ -222,86 +253,13 @@ class _LoggingModeSelectionScreenState
                 style: AppTypography.ibm(
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textInverse,
+                  color: Colors.white,
                   height: 20 / 15,
                 ),
               ),
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildTrainingRow(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const DrillSetupScreen()),
-        );
-      },
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(
-          color: AppColors.bgElevated,
-          border: Border.all(color: AppColors.borderStrong),
-          borderRadius: BorderRadius.circular(AppDecorations.radiusXl),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    l10n.loggingTrainingDrills,
-                    style: AppTypography.ibm(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                      height: 22 / 17,
-                    ),
-                  ),
-                  Text(
-                    l10n.loggingTrainingDrillsSubtitle,
-                    style: AppTypography.ibm(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w400,
-                      color: AppColors.textSecondary,
-                      height: 18 / 13,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: AppColors.bgPrimary,
-                borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
-              ),
-              child: Text(
-                l10n.loggingPro,
-                style: AppTypography.ibm(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 1.0,
-                  color: AppColors.accentPrimary,
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            const Icon(
-              Icons.chevron_right,
-              size: 20,
-              color: AppColors.textSecondary,
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -324,32 +282,4 @@ class _LoggingModeSelectionScreenState
       ),
     );
   }
-
-  void _navigateToMode(BuildContext context, LoggingMode mode) {
-    if (OnboardingState.isOnboardingActive) {
-      OnboardingState.isIndividualMode = (mode == LoggingMode.individual);
-    }
-    if (mode == LoggingMode.full) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const UnifiedSessionSetupScreen(),
-        ),
-      );
-    } else {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => IndividualSessionSetupScreen(
-            loggingMode: mode,
-          ),
-        ),
-      );
-    }
-  }
-}
-
-enum LoggingMode {
-  full,
-  individual,
 }

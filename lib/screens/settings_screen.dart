@@ -865,18 +865,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 subtitle: l10n.settingsFullLoggingTourSubtitle,
                 onTap: () {
                   Navigator.pop(context);
-                  OnboardingState.startFromPhase(1, individualMode: false);
-                  Navigator.push(context, MaterialPageRoute(builder: (_) => const LoggingModeSelectionScreen()))
-                      .then((_) { if (OnboardingState.isReplay) OnboardingState.completeReplay(); });
-                },
-              ),
-              _buildTourOption(
-                icon: Icons.touch_app_rounded,
-                title: l10n.settingsIndividualLoggingTour,
-                subtitle: l10n.settingsIndividualLoggingTourSubtitle,
-                onTap: () {
-                  Navigator.pop(context);
-                  OnboardingState.startFromPhase(1, individualMode: true);
+                  OnboardingState.startFromPhase(1);
                   Navigator.push(context, MaterialPageRoute(builder: (_) => const LoggingModeSelectionScreen()))
                       .then((_) { if (OnboardingState.isReplay) OnboardingState.completeReplay(); });
                 },
