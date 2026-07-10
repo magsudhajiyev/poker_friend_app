@@ -28,6 +28,7 @@ import 'admin/partner_grants_screen.dart';
 import '../design_system/constants/typography.dart';
 import '../design_system/constants/decorations.dart';
 import '../utils/user_facing_error.dart';
+import 'design_preview_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   @override
@@ -1049,6 +1050,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _devButton('Open Latest Session Analytics', AppColors.warningAmber, _openLatestSession),
           const SizedBox(height: 8),
           _devButton('Diagnose Stats (Latest Session)', AppColors.warningAmber, _diagnoseStats),
+          const SizedBox(height: 8),
+          _devButton('Design Preview', const Color(0xFFAB9FF2), () {
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const DesignPreviewScreen()));
+          }),
         ],
       ),
     );
