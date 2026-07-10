@@ -11,6 +11,7 @@ import '../services/subscription_service.dart';
 import '../widgets/global_loading_spinner.dart';
 import 'opponent_detail_screen.dart';
 import 'opponent_hands_screen.dart';
+import '../design_system/components/buttons/back_button_circle.dart';
 import '../design_system/components/cards/error_state_card.dart';
 import '../design_system/components/headers/top_nav_bar.dart';
 import '../services/app_data_cache.dart';
@@ -392,22 +393,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> with SingleTicker
       key: const ValueKey('floating_bar'),
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        GestureDetector(
-          onTap: () => Navigator.pop(context),
-          child: Container(
-            width: 38,
-            height: 38,
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.arrow_back_ios_new,
-              color: Colors.black,
-              size: 18,
-            ),
-          ),
-        ),
+        const BackButtonCircle(),
         GestureDetector(
           onTap: _openAddForm,
           child: Container(
@@ -544,7 +530,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> with SingleTicker
     final isEditing = _editingOpponent != null;
     return Container(
       decoration: const BoxDecoration(
-        color: Colors.white,
+        color: AppColors.bgSurface,
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(AppDecorations.radiusXl),
           topRight: Radius.circular(AppDecorations.radiusXl),
@@ -568,7 +554,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> with SingleTicker
                     style: AppTypography.ibm(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.textInverse,
+                      color: AppColors.textPrimary,
                       height: 20 / 15,
                     ),
                   ),
@@ -576,7 +562,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> with SingleTicker
                     alignment: Alignment.centerRight,
                     child: GestureDetector(
                       onTap: _closeAddForm,
-                      child: const Icon(Icons.close, color: AppColors.contentInactive, size: 18),
+                      child: const Icon(Icons.close, color: AppColors.textSecondary, size: 18),
                     ),
                   ),
                 ],
@@ -589,16 +575,16 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> with SingleTicker
               style: AppTypography.ibm(
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
-                color: _nameFocusNode.hasFocus ? AppColors.textInverse : AppColors.textSecondary,
+                color: _nameFocusNode.hasFocus ? AppColors.textPrimary : AppColors.textSecondary,
               ),
             ),
             const SizedBox(height: 4),
             Container(
               decoration: BoxDecoration(
-                color: AppColors.bgInputOnInverse,
+                color: AppColors.bgElevated,
                 borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                 border: Border.all(
-                  color: _nameFocusNode.hasFocus ? AppColors.accentPrimary : AppColors.borderOnInverseSubtle,
+                  color: _nameFocusNode.hasFocus ? AppColors.accentPrimary : AppColors.borderStrong,
                   width: _nameFocusNode.hasFocus ? 1.5 : 1.0,
                 ),
               ),
@@ -610,7 +596,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> with SingleTicker
                       controller: _nameController,
                       focusNode: _nameFocusNode,
                       textInputAction: TextInputAction.next,
-                      style: AppTypography.ibm(fontSize: 15, color: AppColors.textInverse),
+                      style: AppTypography.ibm(fontSize: 15, color: AppColors.textPrimary),
                       decoration: InputDecoration(
                         hintText: l10n.opponentsEnterName,
                         hintStyle: AppTypography.ibm(fontSize: 15, color: AppColors.textSecondary),
@@ -627,7 +613,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> with SingleTicker
                   if (_nameController.text.isNotEmpty)
                     GestureDetector(
                       onTap: () => _nameController.clear(),
-                      child: const Icon(Icons.cancel, color: AppColors.contentInactive, size: 16),
+                      child: const Icon(Icons.cancel, color: AppColors.textSecondary, size: 16),
                     ),
                 ],
               ),
@@ -636,7 +622,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> with SingleTicker
               const SizedBox(height: 4),
               Text(
                 _formNameError!,
-                style: AppTypography.ibm(fontSize: 12, color: const Color(0xFFE85A5A)),
+                style: AppTypography.ibm(fontSize: 12, color: AppColors.accentDanger),
               ),
             ],
             const SizedBox(height: 12),
@@ -646,16 +632,16 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> with SingleTicker
               style: AppTypography.ibm(
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
-                color: _notesFocusNode.hasFocus ? AppColors.textInverse : AppColors.textSecondary,
+                color: _notesFocusNode.hasFocus ? AppColors.textPrimary : AppColors.textSecondary,
               ),
             ),
             const SizedBox(height: 4),
             Container(
               decoration: BoxDecoration(
-                color: AppColors.bgInputOnInverse,
+                color: AppColors.bgElevated,
                 borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                 border: Border.all(
-                  color: _notesFocusNode.hasFocus ? AppColors.accentPrimary : AppColors.borderOnInverseSubtle,
+                  color: _notesFocusNode.hasFocus ? AppColors.accentPrimary : AppColors.borderStrong,
                   width: _notesFocusNode.hasFocus ? 1.5 : 1.0,
                 ),
               ),
@@ -667,7 +653,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> with SingleTicker
                     child: TextField(
                       controller: _notesController,
                       focusNode: _notesFocusNode,
-                      style: AppTypography.ibm(fontSize: 15, color: AppColors.textInverse),
+                      style: AppTypography.ibm(fontSize: 15, color: AppColors.textPrimary),
                       decoration: InputDecoration(
                         hintText: l10n.opponentsAddNotes,
                         hintStyle: AppTypography.ibm(fontSize: 15, color: AppColors.textSecondary),
@@ -686,7 +672,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> with SingleTicker
                   if (_notesController.text.isNotEmpty)
                     GestureDetector(
                       onTap: () => _notesController.clear(),
-                      child: const Icon(Icons.cancel, color: AppColors.contentInactive, size: 16),
+                      child: const Icon(Icons.cancel, color: AppColors.textSecondary, size: 16),
                     ),
                 ],
               ),
@@ -719,7 +705,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> with SingleTicker
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         border: isSelected
-                            ? Border.all(color: AppColors.bgPrimary, width: 2)
+                            ? Border.all(color: AppColors.textPrimary, width: 2)
                             : null,
                       ),
                       child: Center(
@@ -745,7 +731,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> with SingleTicker
                       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
-                        border: Border.all(color: AppColors.borderLight),
+                        border: Border.all(color: AppColors.borderStrong),
                       ),
                       child: Text(
                         'Back',
@@ -753,7 +739,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> with SingleTicker
                         style: AppTypography.ibm(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
-                          color: AppColors.textInverse,
+                          color: AppColors.textPrimary,
                         ),
                       ),
                     ),
@@ -766,7 +752,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> with SingleTicker
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                       decoration: BoxDecoration(
-                        color: AppColors.bgPrimary,
+                        color: AppColors.bgInverse,
                         borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
                       ),
                       child: Text(
@@ -775,7 +761,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> with SingleTicker
                         style: AppTypography.ibm(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
-                          color: Colors.white,
+                          color: AppColors.textInverse,
                         ),
                       ),
                     ),
@@ -850,7 +836,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> with SingleTicker
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: AppColors.bgSurface,
                     borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
                   ),
                   child: Row(
@@ -1194,7 +1180,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> with SingleTicker
           width: 370,
           child: Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.bgSurface,
             borderRadius: BorderRadius.circular(AppDecorations.radiusXl),
           ),
           padding: const EdgeInsets.all(24),
@@ -1211,7 +1197,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> with SingleTicker
                     style: AppTypography.ibm(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.textInverse,
+                      color: AppColors.textPrimary,
                       height: 20 / 15,
                     ),
                   ),
@@ -1253,7 +1239,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> with SingleTicker
                           style: AppTypography.ibm(
                             fontSize: 15,
                             fontWeight: FontWeight.w600,
-                            color: AppColors.textInverse,
+                            color: AppColors.textPrimary,
                             height: 20 / 15,
                           ),
                         ),

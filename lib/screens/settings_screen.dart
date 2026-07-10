@@ -149,7 +149,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           style: AppTypography.ibm(
             fontSize: size * 0.35,
             fontWeight: FontWeight.w600,
-            color: AppColors.limeGreen,
+            color: AppColors.accentPrimary,
           ),
         ),
       ),
@@ -185,7 +185,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             return Container(
               constraints: BoxConstraints(maxHeight: maxHeight),
               decoration: const BoxDecoration(
-                color: Colors.white,
+                color: AppColors.bgSurface,
                 borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(AppDecorations.radiusXl),
                   topRight: Radius.circular(AppDecorations.radiusXl),
@@ -208,7 +208,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             style: AppTypography.ibm(
                               fontSize: 15,
                               fontWeight: FontWeight.w600,
-                              color: AppColors.textInverse,
+                              color: AppColors.textPrimary,
                               height: 20 / 15,
                             ),
                           ),
@@ -265,7 +265,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                             style: AppTypography.ibm(
                                               fontSize: 15,
                                               fontWeight: FontWeight.w400,
-                                              color: AppColors.textInverse,
+                                              color: AppColors.textPrimary,
                                               height: 22 / 15,
                                             ),
                                           ),
@@ -408,7 +408,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             return Container(
               constraints: BoxConstraints(maxHeight: maxHeight),
               decoration: const BoxDecoration(
-                color: Colors.white,
+                color: AppColors.bgSurface,
                 borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(AppDecorations.radiusXl),
                   topRight: Radius.circular(AppDecorations.radiusXl),
@@ -430,7 +430,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           style: AppTypography.ibm(
                             fontSize: 15,
                             fontWeight: FontWeight.w600,
-                            color: AppColors.textInverse,
+                            color: AppColors.textPrimary,
                             height: 20 / 15,
                           ),
                         ),
@@ -474,7 +474,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                         style: AppTypography.ibm(
                                           fontSize: 15,
                                           fontWeight: FontWeight.w500,
-                                          color: AppColors.textInverse,
+                                          color: AppColors.textPrimary,
                                         ),
                                       ),
                                     ),
@@ -614,7 +614,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.bar_chart_rounded, color: AppColors.buttonPrimary, size: 48),
+            const Icon(Icons.bar_chart_rounded, color: AppColors.accentPrimary, size: 48),
             const SizedBox(height: 16),
             Text(l10n.navDrawerNoEarningsTitle,
                 style: AppTypography.ibm(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white),
@@ -683,7 +683,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           child: Container(
               width: double.infinity,
               decoration: const BoxDecoration(
-                color: Colors.white,
+                color: AppColors.bgSurface,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(AppDecorations.radiusXl)),
               ),
               padding: EdgeInsets.fromLTRB(24, 24, 24, bottomInset + 32),
@@ -725,7 +725,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 style: AppTypography.ibm(
                                   fontSize: 17,
                                   fontWeight: FontWeight.w600,
-                                  color: AppColors.textInverse,
+                                  color: AppColors.textPrimary,
                                   height: 20 / 17,
                                 ),
                               ),
@@ -757,7 +757,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                       decoration: BoxDecoration(
-                        color: AppColors.bgPrimary,
+                        color: AppColors.bgInverse,
                         borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
                       ),
                       child: Text(
@@ -766,7 +766,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         style: AppTypography.ibm(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
-                          color: Colors.white,
+                          color: AppColors.textInverse,
                           height: 20 / 15,
                         ),
                       ),
@@ -823,7 +823,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               child: Center(
                 child: Text(
                   club.name.length >= 2 ? club.name.substring(0, 2).toUpperCase() : club.name.toUpperCase(),
-                  style: AppTypography.ibm(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.limeGreen),
+                  style: AppTypography.ibm(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.accentPrimary),
                 ),
               ),
             ),
@@ -898,8 +898,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           children: [
             Container(
               width: 40, height: 40,
-              decoration: BoxDecoration(color: AppColors.buttonPrimary.withOpacity(0.12), borderRadius: BorderRadius.circular(AppDecorations.radius10)),
-              child: Icon(icon, color: AppColors.buttonPrimary, size: 22),
+              decoration: BoxDecoration(color: AppColors.accentPrimary.withOpacity(0.12), borderRadius: BorderRadius.circular(AppDecorations.radius10)),
+              child: Icon(icon, color: AppColors.accentPrimary, size: 22),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -972,7 +972,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           TopNavBar(
             title: l10n.settingsTitle,
             onBack: () => Navigator.pop(context),
-            backgroundColor: _bg,
           ),
           Expanded(
             child: SingleChildScrollView(
@@ -1103,7 +1102,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           },
                         ),
                         _buildRow(
-                          icon: const Icon(Icons.notifications_active_rounded, color: AppColors.buttonPrimary, size: 24),
+                          icon: const Icon(Icons.notifications_active_rounded, color: AppColors.accentPrimary, size: 24),
                           title: l10n.settingsNotificationTester,
                           onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationTesterScreen())),
                           isLast: true,
@@ -1140,7 +1139,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               child: Center(
                 child: Text('FT',
-                    style: AppTypography.ibm(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.buttonPrimary)),
+                    style: AppTypography.ibm(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.accentPrimary)),
               ),
             ),
             const SizedBox(width: 12),

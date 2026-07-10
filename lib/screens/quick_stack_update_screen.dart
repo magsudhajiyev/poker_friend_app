@@ -52,7 +52,7 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
   bool _loadingOpponents = true;
 
   static const _cardColor = AppColors.infoCardBg;
-  static const _mint = AppColors.buttonPrimary;
+  static const _mint = AppColors.accentPrimary;
 
   // Onboarding GlobalKeys
   final GlobalKey _seatToggleKey = GlobalKey(debugLabel: 'seatToggle1');
@@ -797,29 +797,9 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: AppColors.bgPrimary,
       body: Stack(
         children: [
-          // Teal radial gradient at top
-          Positioned(
-            top: -MediaQuery.of(context).size.width * 0.5,
-            right: -MediaQuery.of(context).size.width * 0.2,
-            child: Container(
-              width: MediaQuery.of(context).size.width * 1.2,
-              height: MediaQuery.of(context).size.width * 1.2,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    const Color(0xFF1A4A4A).withValues(alpha: 0.6),
-                    AppColors.headerGradientTeal.withValues(alpha: 0.3),
-                    Colors.transparent,
-                  ],
-                  stops: const [0.0, 0.4, 1.0],
-                ),
-              ),
-            ),
-          ),
           SafeArea(
             child: Column(
               children: [

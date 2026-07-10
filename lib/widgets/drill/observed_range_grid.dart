@@ -17,7 +17,7 @@ class ObservedRangeGrid extends StatelessWidget {
 
   static const _ranks = ['A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2'];
   static const _raiseColor = Color(0xFFFFC857);
-  static const _callColor = AppColors.buttonPrimary;
+  static const _callColor = AppColors.accentPrimary;
 
   /// handClass -> (total, raiseCount) drawn from the observed combos.
   Map<String, List<int>> _byClass() {
@@ -154,12 +154,12 @@ class ObservedRangeSheet extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: AppColors.limeGreen.withOpacity(0.15),
+                        color: AppColors.accentPrimary.withOpacity(0.15),
                         borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
                       ),
                       child: Text(range.shape.label,
                           style: AppTypography.ibm(
-                              color: AppColors.limeGreen,
+                              color: AppColors.accentPrimary,
                               fontSize: 12,
                               fontWeight: FontWeight.w600)),
                     ),
@@ -228,7 +228,7 @@ class ObservedRangeSheet extends StatelessWidget {
       runSpacing: 8,
       children: [
         chip(l10n.rangePremium, range.premiumCount, const Color(0xFF54E98A)),
-        chip(l10n.rangeStrong, range.strongCount, AppColors.buttonPrimary),
+        chip(l10n.rangeStrong, range.strongCount, AppColors.accentPrimary),
         chip(l10n.rangeMedium, range.mediumCount, const Color(0xFFFFC857)),
         chip(l10n.rangeWeak, range.wideCount, const Color(0xFFE85D5D)),
       ],
@@ -250,7 +250,7 @@ class ObservedRangeSheet extends StatelessWidget {
       children: [
         dot(l10n.rangeRaisedLabel, const Color(0xFFFFC857)),
         const SizedBox(width: 16),
-        dot(l10n.rangeCalledLimped, AppColors.buttonPrimary),
+        dot(l10n.rangeCalledLimped, AppColors.accentPrimary),
       ],
     );
   }

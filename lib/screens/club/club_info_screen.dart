@@ -52,29 +52,6 @@ class _ClubInfoScreenState extends State<ClubInfoScreen> {
       backgroundColor: AppColors.bgPrimary,
       body: Stack(
         children: [
-          // Teal glow at top
-          Positioned(
-            top: -250 + topPadding,
-            left: -screenWidth * 0.25,
-            right: -screenWidth * 0.25,
-            child: Container(
-              height: 500,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  center: Alignment.center,
-                  radius: 0.5,
-                  colors: [
-                    const Color(0xFF2E5A59).withOpacity(0.9),
-                    const Color(0xFF2E5A59).withOpacity(0.5),
-                    const Color(0xFF0D2B2A).withOpacity(0.3),
-                    Colors.transparent,
-                  ],
-                  stops: const [0.0, 0.3, 0.6, 1.0],
-                ),
-              ),
-            ),
-          ),
 
           // Main content
           SingleChildScrollView(
@@ -89,7 +66,7 @@ class _ClubInfoScreenState extends State<ClubInfoScreen> {
                     padding: EdgeInsets.only(top: 100),
                     child: Center(
                       child: CircularProgressIndicator(
-                        color: AppColors.buttonPrimary,
+                        color: AppColors.accentPrimary,
                       ),
                     ),
                   )
@@ -164,12 +141,12 @@ class _ClubInfoScreenState extends State<ClubInfoScreen> {
                 width: 52,
                 height: 52,
                 decoration: BoxDecoration(
-                  color: AppColors.buttonPrimary.withOpacity(0.15),
+                  color: AppColors.accentPrimary.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(AppDecorations.radius14),
                 ),
                 child: const Icon(
                   Icons.home_rounded,
-                  color: AppColors.buttonPrimary,
+                  color: AppColors.accentPrimary,
                   size: 26,
                 ),
               ),
@@ -359,11 +336,11 @@ class _ClubInfoScreenState extends State<ClubInfoScreen> {
       case ClubRole.owner:
         return const Color(0xFFFFD13F);
       case ClubRole.admin:
-        return AppColors.buttonPrimary;
+        return AppColors.accentPrimary;
       case ClubRole.dealer:
         return const Color(0xFF4A87F2);
       case ClubRole.player:
-        return AppColors.tealPrimary;
+        return AppColors.accentPrimary;
     }
   }
 }

@@ -332,7 +332,7 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
                           decoration: BoxDecoration(
-                            color: AppColors.buttonPrimary,
+                            color: AppColors.accentPrimary,
                             borderRadius: BorderRadius.circular(110),
                           ),
                           child: Text(
@@ -407,7 +407,7 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(AppDecorations.radius14),
-                borderSide: const BorderSide(color: AppColors.buttonPrimary),
+                borderSide: const BorderSide(color: AppColors.accentPrimary),
               ),
               prefixText: showDollarSign ? CurrencyService.prefixText : null,
               prefixStyle: AppTypography.ibm(
@@ -516,7 +516,7 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
                     ),
                     child: const Icon(
                       Icons.swap_vert,
-                      color: AppColors.buttonPrimary,
+                      color: AppColors.accentPrimary,
                       size: 22,
                     ),
                   ),
@@ -538,7 +538,7 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
               Text(
                 dialogL10n.dealerQrScanTakingOverFrom(session.dealerName ?? dialogL10n.dealerTableDealerFallback),
                 style: AppTypography.ibm(
-                  color: AppColors.textMint,
+                  color: AppColors.accentPrimary,
                   fontSize: 14,
                   fontWeight: FontWeight.w400,
                 ),
@@ -578,7 +578,7 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 32, vertical: 12),
                       decoration: BoxDecoration(
-                        color: AppColors.buttonPrimary,
+                        color: AppColors.accentPrimary,
                         borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
                       ),
                       child: Text(
@@ -749,7 +749,7 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: AppColors.bgPrimary,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,

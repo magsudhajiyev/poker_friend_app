@@ -210,7 +210,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
             TextButton(
               onPressed: () => Navigator.pop(context, true),
               style: TextButton.styleFrom(
-                foregroundColor: AppColors.buttonPrimary,
+                foregroundColor: AppColors.accentPrimary,
               ),
               child: Text(
                 AppLocalizations.of(context).eventContinue,
@@ -542,14 +542,14 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
           color: isSelected ? AppColors.neutral800 : Colors.transparent,
           borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
           border: Border.all(
-            color: isSelected ? AppColors.buttonPrimary : AppColors.neutral700,
+            color: isSelected ? AppColors.accentPrimary : AppColors.neutral700,
             width: 1,
           ),
         ),
         child: Text(
           label,
           style: AppTypography.ibm(
-            color: isSelected ? AppColors.buttonPrimary : AppColors.textDisabled,
+            color: isSelected ? AppColors.accentPrimary : AppColors.textDisabled,
             fontSize: 15,
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
           ),
@@ -681,7 +681,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
                           ? AppLocalizations.of(context).eventDeselectAll
                           : AppLocalizations.of(context).eventSelectAll,
                       style: AppTypography.ibm(
-                        color: AppColors.buttonPrimary,
+                        color: AppColors.accentPrimary,
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                       ),
@@ -700,7 +700,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
                     width: 20,
                     height: 20,
                     child: CircularProgressIndicator(
-                      color: AppColors.buttonPrimary,
+                      color: AppColors.accentPrimary,
                       strokeWidth: 2,
                     ),
                   ),
@@ -737,12 +737,12 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                       decoration: BoxDecoration(
                         color: isSelected
-                            ? AppColors.mint900
+                            ? AppColors.accentPrimary
                             : AppColors.neutral800,
                         borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
                         border: Border.all(
                           color: isSelected
-                              ? AppColors.buttonPrimary
+                              ? AppColors.accentPrimary
                               : AppColors.neutral700,
                           width: 1,
                         ),
@@ -753,7 +753,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
                           Icon(
                             isSelected ? Icons.check_circle : Icons.circle_outlined,
                             color: isSelected
-                                ? AppColors.buttonPrimary
+                                ? AppColors.accentPrimary
                                 : AppColors.textDisabled,
                             size: 16,
                           ),
@@ -817,7 +817,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
               ),
               child: const Icon(
                 Icons.notifications_active,
-                color: AppColors.buttonPrimary,
+                color: AppColors.accentPrimary,
                 size: 18,
               ),
             ),
@@ -849,7 +849,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
             Switch(
               value: _notifyMembers,
               onChanged: (value) => setState(() => _notifyMembers = value),
-              activeColor: AppColors.buttonPrimary,
+              activeColor: AppColors.accentPrimary,
               inactiveThumbColor: Colors.white,
               inactiveTrackColor: AppColors.neutral700,
             ),

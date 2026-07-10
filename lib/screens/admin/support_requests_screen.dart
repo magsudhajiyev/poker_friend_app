@@ -111,7 +111,7 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
           ElevatedButton(
             onPressed: () => Navigator.pop(context, responseController.text.trim()),
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.limeGreen,
+              backgroundColor: AppColors.accentPrimary,
               foregroundColor: Colors.black,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDecorations.radius10)),
             ),
@@ -134,7 +134,7 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(l10n.supportRequestsResolved, style: AppTypography.ibm(color: Colors.white)),
-          backgroundColor: AppColors.limeGreen,
+          backgroundColor: AppColors.accentPrimary,
         ),
       );
     } catch (e) {
@@ -241,7 +241,7 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
       context: context,
       barrierDismissible: false,
       builder: (context) => const Center(
-        child: CircularProgressIndicator(color: AppColors.buttonPrimary),
+        child: CircularProgressIndicator(color: AppColors.accentPrimary),
       ),
     );
   }
@@ -320,7 +320,7 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: request.isResolved
-                        ? AppColors.limeGreen.withValues(alpha: 0.1)
+                        ? AppColors.accentPrimary.withValues(alpha: 0.1)
                         : AppColors.errorRed.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
                   ),
@@ -328,7 +328,7 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
                     request.adminResponse!,
                     style: AppTypography.ibm(
                       color: request.isResolved
-                          ? AppColors.limeGreen
+                          ? AppColors.accentPrimary
                           : AppColors.errorRed,
                       fontSize: 13,
                     ),
@@ -343,7 +343,7 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
             onPressed: () => Navigator.pop(context),
             child: Text(
               l10n.commonClose,
-              style: AppTypography.ibm(color: AppColors.buttonPrimary),
+              style: AppTypography.ibm(color: AppColors.accentPrimary),
             ),
           ),
           if (request.isPending) ...[
@@ -365,7 +365,7 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
                 _resolveRequest(request);
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.limeGreen,
+                backgroundColor: AppColors.accentPrimary,
                 foregroundColor: Colors.black,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDecorations.radius10)),
               ),
@@ -423,11 +423,11 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
                 Expanded(
                   child: _isLoading
                       ? const Center(
-                          child: CircularProgressIndicator(color: AppColors.buttonPrimary),
+                          child: CircularProgressIndicator(color: AppColors.accentPrimary),
                         )
                       : RefreshIndicator(
                           onRefresh: _loadRequests,
-                          color: AppColors.buttonPrimary,
+                          color: AppColors.accentPrimary,
                           child: TabBarView(
                             controller: _tabController,
                             children: [
@@ -494,7 +494,7 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
       child: TabBar(
         controller: _tabController,
         indicator: BoxDecoration(
-          color: AppColors.buttonPrimary,
+          color: AppColors.accentPrimary,
           borderRadius: BorderRadius.circular(AppDecorations.radius10),
         ),
         indicatorSize: TabBarIndicatorSize.tab,
@@ -677,7 +677,7 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
                       child: Container(
                         padding: const EdgeInsets.symmetric(vertical: 8),
                         decoration: BoxDecoration(
-                          color: AppColors.limeGreen,
+                          color: AppColors.accentPrimary,
                           borderRadius: BorderRadius.circular(AppDecorations.radius10),
                         ),
                         child: Center(
@@ -709,7 +709,7 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
         color = AppColors.errorRed;
         break;
       case 'Feature Request':
-        color = AppColors.buttonPrimary;
+        color = AppColors.accentPrimary;
         break;
       case 'Account Issue':
         color = const Color(0xFFE8B55A);
@@ -746,7 +746,7 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
         label = l10n.supportRequestsPendingBadge;
         break;
       case SupportRequestStatus.resolved:
-        color = AppColors.limeGreen;
+        color = AppColors.accentPrimary;
         label = l10n.supportRequestsResolvedBadge;
         break;
       case SupportRequestStatus.rejected:

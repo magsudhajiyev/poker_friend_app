@@ -16,6 +16,8 @@ import '../widgets/global_loading_spinner.dart';
 import '../widgets/global_bottom_nav_bar.dart';
 import '../design_system/design_system.dart';
 import '../design_system/components/cards/error_state_card.dart';
+import '../design_system/components/dividers/list_separator.dart';
+import '../design_system/components/headers/top_nav_bar.dart';
 import '../widgets/range_grid/range_grid_view.dart';
 import '../utils/user_facing_error.dart';
 
@@ -435,45 +437,36 @@ class _StatisticsScreenState extends State<StatisticsScreen>
     String fmt(double value, int opportunity) =>
         opportunity == 0 ? na : '${value.toStringAsFixed(1)}%';
 
+    final refreshButton = GestureDetector(
+      onTap: () => _loadStatistics(forceRefresh: true),
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        width: 44,
+        height: 44,
+        decoration: const BoxDecoration(
+          color: AppColors.bgElevated,
+          shape: BoxShape.circle,
+        ),
+        child: const Icon(
+          Icons.refresh_rounded,
+          color: AppColors.textPrimary,
+          size: 24,
+        ),
+      ),
+    );
+
     return Column(
       children: [
-        // Top actions row
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              if (Navigator.canPop(context))
-                GestureDetector(
-                  onTap: () => Navigator.pop(context),
-                  child: Container(
-                    width: 38,
-                    height: 38,
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(Icons.chevron_left, color: Colors.black, size: 22),
-                  ),
-                )
-              else
-                const SizedBox(width: 38),
-              GestureDetector(
-                onTap: () => _loadStatistics(forceRefresh: true),
-                child: Container(
-                  width: 38,
-                  height: 38,
-                  decoration: const BoxDecoration(
-                    color: AppColors.bgSurface,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.refresh_rounded, color: Colors.white, size: 20),
-                ),
+        Navigator.canPop(context)
+            ? TopNavBar(
+                title: l10n.statsStats,
+                onBack: () => Navigator.pop(context),
+                rightAction: refreshButton,
+              )
+            : TopNavBar.landing(
+                title: l10n.statsStats,
+                rightAction: refreshButton,
               ),
-            ],
-          ),
-        ),
-
         const SizedBox(height: 16),
         _buildTabSwitcher(),
 
@@ -493,42 +486,42 @@ class _StatisticsScreenState extends State<StatisticsScreen>
                   value: totalHands.toString(),
                   forceActive: true,
                 ),
-                const SizedBox(height: 8),
+                const ListSeparator(),
                 _buildMetricCard(
                   chipLabel: l10n.statsVpip,
                   value: totalHands > 0 ? '${vpip.toStringAsFixed(1)}%' : na,
                 ),
-                const SizedBox(height: 8),
+                const ListSeparator(),
                 _buildMetricCard(
                   chipLabel: l10n.statsPfr,
                   value: totalHands > 0 ? '${pfr.toStringAsFixed(1)}%' : na,
                 ),
-                const SizedBox(height: 8),
+                const ListSeparator(),
                 _buildMetricCard(
                   chipLabel: l10n.stats3Bet,
                   value: fmt(threeBet, threeBetOpportunity),
                 ),
-                const SizedBox(height: 8),
+                const ListSeparator(),
                 _buildMetricCard(
                   chipLabel: l10n.statsFoldTo3Bet,
                   value: fmt(fold3Bet, facing3BetCount),
                 ),
-                const SizedBox(height: 8),
+                const ListSeparator(),
                 _buildMetricCard(
                   chipLabel: l10n.statsCBet,
                   value: fmt(cbet, cbetOpportunity),
                 ),
-                const SizedBox(height: 8),
+                const ListSeparator(),
                 _buildMetricCard(
                   chipLabel: l10n.statsSteal,
                   value: fmt(steal, stealOpportunity),
                 ),
-                const SizedBox(height: 8),
+                const ListSeparator(),
                 _buildMetricCard(
                   chipLabel: l10n.statsCheckRaise,
                   value: fmt(checkRaise, checkRaiseFlopOpportunity),
                 ),
-                const SizedBox(height: 8),
+                const ListSeparator(),
                 _buildMetricCard(
                   chipLabel: l10n.statsWinRate,
                   value: handsPlayed > 0 ? '${winRate.toStringAsFixed(1)}%' : na,
@@ -567,8 +560,8 @@ class _StatisticsScreenState extends State<StatisticsScreen>
     );
   }
 
-  /// Stats | Ranges segmented toggle — same pattern as Session History's
-  /// cash/tournament tab switcher (white pill outer, dark active segment).
+  /// Stats | Ranges segmented toggle — dark surface pill with elevated
+  /// active segment.
   Widget _buildTabSwitcher() {
     final l10n = AppLocalizations.of(context);
     return Padding(
@@ -580,7 +573,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
           return Container(
             padding: const EdgeInsets.all(2),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.bgSurface,
               borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
             ),
             child: Row(
@@ -594,7 +587,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
                       duration: const Duration(milliseconds: 200),
                       padding: const EdgeInsets.symmetric(vertical: 10),
                       decoration: BoxDecoration(
-                        color: Color.lerp(AppColors.bgSurface, Colors.transparent, t),
+                        color: Color.lerp(AppColors.bgElevated, Colors.transparent, t),
                         borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
                       ),
                       child: Center(
@@ -602,9 +595,9 @@ class _StatisticsScreenState extends State<StatisticsScreen>
                           l10n.statsStats,
                           style: AppTypography.ibm(
                             fontSize: 15,
-                            fontWeight: FontWeight.w500,
+                            fontWeight: FontWeight.w600,
                             letterSpacing: -0.5,
-                            color: Color.lerp(Colors.white, AppColors.textInverse, t),
+                            color: Color.lerp(AppColors.textPrimary, AppColors.textSecondary, t),
                             height: 24 / 15,
                           ),
                         ),
@@ -621,7 +614,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
                       duration: const Duration(milliseconds: 200),
                       padding: const EdgeInsets.symmetric(vertical: 10),
                       decoration: BoxDecoration(
-                        color: Color.lerp(Colors.transparent, AppColors.bgSurface, t),
+                        color: Color.lerp(Colors.transparent, AppColors.bgElevated, t),
                         borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
                       ),
                       child: Center(
@@ -629,9 +622,9 @@ class _StatisticsScreenState extends State<StatisticsScreen>
                           l10n.statsRanges,
                           style: AppTypography.ibm(
                             fontSize: 15,
-                            fontWeight: FontWeight.w500,
+                            fontWeight: FontWeight.w600,
                             letterSpacing: -0.5,
-                            color: Color.lerp(AppColors.textInverse, Colors.white, t),
+                            color: Color.lerp(AppColors.textSecondary, AppColors.textPrimary, t),
                             height: 24 / 15,
                           ),
                         ),
@@ -653,12 +646,8 @@ class _StatisticsScreenState extends State<StatisticsScreen>
     bool forceActive = false,
   }) {
     final isNA = !forceActive && !value.contains('%');
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.bgSurface,
-        borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 14),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -683,9 +672,9 @@ class _StatisticsScreenState extends State<StatisticsScreen>
           Text(
             value,
             style: AppTypography.ibm(
-              fontSize: 22,
+              fontSize: 15,
               fontWeight: FontWeight.w600,
-              color: isNA ? const Color(0xFF4E4E4E) : AppColors.buttonPrimary,
+              color: isNA ? AppColors.textSecondary : AppColors.accentPrimary,
             ),
           ),
         ],
@@ -713,7 +702,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
             style: AppTypography.ibm(
               fontSize: 15,
               fontWeight: FontWeight.w600,
-              color: AppColors.buttonPrimary,
+              color: AppColors.accentPrimary,
               height: 1.0,
             ),
           ),
@@ -732,7 +721,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
       style: AppTypography.ibm(
         fontSize: 12,
         fontWeight: FontWeight.w600,
-        color: AppColors.limeGreen,
+        color: AppColors.accentPrimary,
         letterSpacing: 1.0,
       ),
     );
@@ -925,7 +914,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
     }
     final isPositive = rate >= 0;
     final prefix = isPositive ? '+' : '';
-    final color = isPositive ? AppColors.limeGreen : _kNegativeRed;
+    final color = isPositive ? AppColors.accentPrimary : _kNegativeRed;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 12),
       child: Row(
@@ -1002,7 +991,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
   Widget _buildProfitRow(String label, double value) {
     final isPositive = value >= 0;
     final prefix = isPositive ? '+' : '';
-    final color = isPositive ? AppColors.limeGreen : _kNegativeRed;
+    final color = isPositive ? AppColors.accentPrimary : _kNegativeRed;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 12),
       child: Row(
@@ -1060,7 +1049,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
     }
     final isPositive = rate >= 0;
     final prefix = isPositive ? '+' : '';
-    final color = isPositive ? AppColors.limeGreen : _kNegativeRed;
+    final color = isPositive ? AppColors.accentPrimary : _kNegativeRed;
     final currency = CurrencyService.current;
     final formatted = rate.toStringAsFixed(0);
     final rateText = currency.position == SymbolPosition.prefix
@@ -1102,7 +1091,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
           style: AppTypography.ibm(
             fontSize: 22,
             fontWeight: FontWeight.w600,
-            color: AppColors.buttonPrimary,
+            color: AppColors.accentPrimary,
           ),
         ),
         const SizedBox(height: 4),

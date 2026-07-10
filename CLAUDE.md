@@ -1,7 +1,44 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
 # Poker Friend - Project Documentation
 
 ## Overview
 Flutter/Dart poker hand logging application with Firebase backend, club management, dealer-assisted voice logging, and real-time WebSocket sync. Allows users to track poker hands, sessions, statistics, opponents, and bankroll.
+
+---
+
+## Commands
+
+```bash
+# Run on iOS simulator (iPhone 16 Pro, iOS 18.5 runtime required)
+flutter run
+
+# Run all tests
+flutter test
+
+# Run a single test file
+flutter test test/services/stats_calculator_test.dart
+
+# Run tests by name pattern
+flutter test --name "VPIP"
+
+# Lint / static analysis
+flutter analyze
+
+# Check hardcoded design values (must not increase before committing UI work)
+python3 tool/design_lint.py
+
+# Auto-replace exact token matches
+python3 tool/design_lint.py --fix
+
+# Regenerate l10n classes after editing .arb files
+flutter gen-l10n
+
+# Clean build artifacts
+flutter clean && flutter pub get
+```
 
 ---
 
@@ -55,7 +92,8 @@ Flutter/Dart poker hand logging application with Firebase backend, club manageme
 - **Real-time**: Socket.IO WebSocket + Firestore Snapshot listeners
 - **Voice Recognition**: Deepgram ASR via backend "Dealer Brain" endpoint
 - **Payments**: RevenueCat SDK
-- **State Management**: StatefulWidget pattern (no Provider/BLoC/Riverpod)
+- **State Management**: StatefulWidget pattern (no Provider/BLoC/Riverpod — **exception**: the dealer voice pipeline uses `flutter_bloc` via `lib/features/dealer_voice/cubit/`)
+- **Localization**: Flutter's built-in `gen-l10n` system; `.arb` files in `lib/l10n/`; supported: EN, DE, ES, FR, PT, RU, PL. Use `AppLocalizations.of(context)` — never hardcode UI strings.
 
 ### Data Flow
 1. User logs hand actions during gameplay
@@ -73,6 +111,27 @@ Flutter/Dart poker hand logging application with Firebase backend, club manageme
 - **Session Analytics**: `/api/v1/analytics/sessions` (not deployed yet)
 - **Speech**: `/api/v1/speech/transcribe-brain` (Deepgram via backend)
 - All API calls require `X-API-Key` header
+
+### Environment Configuration (`.env`)
+Loaded at startup via `flutter_dotenv`. Required keys: `SONIOX_API_KEY`, `REVENUECAT_IOS_API_KEY`, `REVENUECAT_ANDROID_API_KEY`, `RESEND_API_KEY`, `AI_API_KEY`, `WEBSOCKET_SERVER_URL`, `API_SERVER_URL`, `ENVIRONMENT`. Access via `EnvConfig.*` (never `dotenv.env` directly).
+
+### Subscription Tiers (RevenueCat)
+Four tiers — check via `SubscriptionService`:
+- **Free**: 10 hands/session, 5 opponents, 30-day session history
+- **Pro** (`isPro`/`isPremium`): 50 hands/session, 15 opponents, 90-day history
+- **Elite** (`isElite`/`isPremium`): unlimited everything, AI analysis, all history
+- **Club** (`isClub`/`isPremium`): like Elite + club creation rights (owner pays; club members operate freely regardless of their own tier)
+
+Feature gates live in `lib/services/free_tier_limits.dart` (hand/opponent caps) and `lib/services/feature_flag_service.dart` (remote Firestore flags for `training_drills`, `ai_hand_analysis`). Use `FreeTierLimits.showHandsLimitDialog()` / `PaywallScreen.show()` for upgrade prompts.
+
+### Caching Pattern (`lib/services/app_data_cache.dart`)
+`AppDataCache` is a static dirty-flag cache. Screens serve from cache if clean; write points (`saveHand`, `endSession`, bankroll/opponent changes) call `markHomeDirty()` / `markSessionsDirty()` / etc. **Always call the appropriate `mark*Dirty()` after any write** or the next screen visit will show stale data.
+
+### Error Presentation
+**Never** show `e.toString()` to users. Always use `UserFacingError.message(e)` (`lib/utils/user_facing_error.dart`) which maps network errors, Firestore permission errors, HTTP status codes, and intentional `throw 'human string'` patterns to localized messages.
+
+### Logging
+`LoggerService` (`lib/services/logger_service.dart`) writes to a local file, Crashlytics breadcrumbs, and Firebase Analytics. Log level controlled remotely via Firebase Remote Config. Use `LoggerService.log(level, tag, message)` — not `print()`.
 
 ---
 
@@ -133,6 +192,11 @@ The app has two themes. **Modern Dark (AppTheme)** is used in all newer screens.
 - **GradientDivider** — 1px white opacity gradient [10%,30%,10%]
 - **CalendarPicker** — glassy card with day cells, green accent
 - **ConfirmDialog** (`modals/confirm_dialog.dart`) — **MANDATORY for ALL delete/destructive confirmation modals**. Style: blurred backdrop (sigmaX/Y 8, black 45% overlay), white card radius 24, padding 24, header row [title 15px w600 black | grey X close], body 15px w400 #B9B9B9, two pill buttons (outlined Cancel + solid-colour action). Use via `ConfirmDialog.show(context, title:, message:, confirmLabel:, onConfirm:)`. Never use `AlertDialog` or custom inline implementations for delete confirmations.
+
+### Design System Unification Status
+See `lib/design_system/README.md` for the full phase plan. **Phase 1 + 2 are DONE** (mechanical token replacements, zero visual change). **Phase 2b + 3** remain and require design judgment. Before committing any UI work: run `python3 tool/design_lint.py` — the hardcoded-value count must not increase.
+
+Top offenders still to migrate (Phase 4): `dealer/dealer_table_screen` (158), `poker_hand_screen` (154), `home_screen` (141), `player/player_session_screen` (113).
 
 ### Legacy Theme (PokerFriendTheme) — Being Phased Out
 - Purple `#AB9FF2` based, Material 3 enabled, Roboto font
@@ -609,12 +673,16 @@ user_notifications/{notificationId}/
 ## Testing
 
 ### Test Files (`test/`)
-- `stats_calculator_test.dart` — 950+ lines, 95+ test cases for all 7 metrics
-- `user_stats_test.dart` — 388 lines, percentage calculations and edge cases
-- `all_in_test.dart` + `all_in_edge_cases_test.dart` — All-in logic
-- `side_pot_calculator_test.dart` — Side pot calculations
-- `mock_hand_actions.dart` — Reusable test fixtures
-- `multi_pot_dialog_selection_test.dart` — Dialog selection logic
+Tests are organized in subdirectories mirroring `lib/`:
+- `test/services/stats_calculator_test.dart` — 950+ lines, 95+ test cases for all 7 metrics
+- `test/models/user_stats_test.dart` — percentage calculations and edge cases
+- `test/all_in_test.dart` + `test/all_in_edge_cases_test.dart` — All-in logic
+- `test/side_pot_calculator_test.dart` — Side pot calculations
+- `test/services/pokerstars_export_test.dart`, `test/services/csv_export_service_test.dart` — Export
+- `test/services/drill_training_test.dart`, `test/services/drill_gto_charts_test.dart` — Training drills
+- `test/utils/user_facing_error_test.dart` — Error message mapping
+- `test/fixtures/mock_hand_actions.dart` — Shared test fixtures
+- `test/multi_pot_dialog_selection_test.dart` — Dialog selection logic
 
 ### Testing Checklist
 - [ ] Test with both cash and tournament games
@@ -649,8 +717,8 @@ flutter test test/services/stats_calculator_test.dart
 - Constants: camelCase or SCREAMING_SNAKE_CASE
 
 ### Debug Logging
-- Comment out debug logs in production: `// print('Debug message')`
-- Keep critical error logs only
+- Use `LoggerService.log(LogLevel.DEBUG, tag, message)` — never `print()` in new code
+- Comment out debug logs before committing: `// print('Debug message')`
 - Never commit active print statements
 
 ### Design System Usage

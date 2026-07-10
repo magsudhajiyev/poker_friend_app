@@ -395,10 +395,10 @@ class _AdminTableManagementScreenState
       ];
     } else if (isOccupied) {
       bgColor = Colors.black;
-      borderColor = AppColors.buttonPrimary;
+      borderColor = AppColors.accentPrimary;
       shadows = [
         BoxShadow(
-          color: AppColors.buttonPrimary.withValues(alpha: 0.3),
+          color: AppColors.accentPrimary.withValues(alpha: 0.3),
           blurRadius: 8,
           spreadRadius: 1,
         ),
@@ -415,7 +415,7 @@ class _AdminTableManagementScreenState
       ];
     } else {
       bgColor = AppColors.surfaceVariant3;
-      borderColor = AppColors.buttonPrimary.withValues(alpha: 0.3);
+      borderColor = AppColors.accentPrimary.withValues(alpha: 0.3);
       shadows = null;
     }
 
@@ -1283,14 +1283,14 @@ class _MemberSearchSheetState extends State<_MemberSearchSheet> {
                         ? Text(
                             seatedAt,
                             style: const TextStyle(
-                              color: AppColors.buttonPrimary,
+                              color: AppColors.accentPrimary,
                               fontSize: 12,
                               fontWeight: FontWeight.w500,
                             ),
                           )
                         : null,
                     trailing: isSeated
-                        ? const Icon(Icons.event_seat, color: AppColors.buttonPrimary, size: 18)
+                        ? const Icon(Icons.event_seat, color: AppColors.accentPrimary, size: 18)
                         : const Icon(Icons.chevron_right, color: Color(0xFF4A4A4E)),
                   ),
                 );

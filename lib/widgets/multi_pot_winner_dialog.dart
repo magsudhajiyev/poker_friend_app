@@ -360,7 +360,7 @@ class _MultiPotWinnerDialogState extends State<MultiPotWinnerDialog> {
                   ),
                   style: AppTypography.ibm(
                     fontSize: 14,
-                    color: AppColors.buttonPrimary,
+                    color: AppColors.accentPrimary,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -599,7 +599,7 @@ class _MultiPotWinnerDialogState extends State<MultiPotWinnerDialog> {
                     height: 38,
                     decoration: BoxDecoration(
                       color: _isFormValid()
-                          ? AppColors.buttonPrimary
+                          ? AppColors.accentPrimary
                           : AppColors.neutral700,
                       borderRadius: BorderRadius.circular(88),
                     ),
@@ -665,7 +665,7 @@ class _MultiPotWinnerDialogState extends State<MultiPotWinnerDialog> {
                               padding: const EdgeInsets.symmetric(vertical: 12),
                               decoration: BoxDecoration(
                                 color: _isFormValid()
-                                    ? AppColors.buttonPrimary
+                                    ? AppColors.accentPrimary
                                     : AppColors.neutral700,
                                 borderRadius: BorderRadius.circular(110),
                               ),
@@ -695,7 +695,7 @@ class _MultiPotWinnerDialogState extends State<MultiPotWinnerDialog> {
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(110),
                                 border: Border.all(
-                                  color: AppColors.textMint,
+                                  color: AppColors.accentPrimary,
                                   width: 1,
                                 ),
                               ),
@@ -704,7 +704,7 @@ class _MultiPotWinnerDialogState extends State<MultiPotWinnerDialog> {
                                   l10n.commonCancel,
                                   style: AppTypography.ibm(
                                     fontSize: 17,
-                                    color: AppColors.textMint,
+                                    color: AppColors.accentPrimary,
                                     fontWeight: FontWeight.w600,
                                     letterSpacing: -0.5,
                                     height: 24 / 17,

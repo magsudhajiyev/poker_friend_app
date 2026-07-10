@@ -267,7 +267,7 @@ class _TableManagementModalState extends State<_TableManagementModal> {
     return Container(
       constraints: BoxConstraints(maxHeight: screenHeight * 0.9),
       decoration: BoxDecoration(
-        color: AppColors.bgInverse,
+        color: AppColors.bgSurface,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(AppDecorations.radiusXl)),
       ),
       child: Column(
@@ -309,7 +309,7 @@ class _TableManagementModalState extends State<_TableManagementModal> {
           width: 36,
           height: 4,
           decoration: BoxDecoration(
-            color: AppColors.borderOnInverseSubtle,
+            color: AppColors.borderStrong,
             borderRadius: BorderRadius.circular(2),
           ),
         ),
@@ -326,7 +326,7 @@ class _TableManagementModalState extends State<_TableManagementModal> {
           style: AppTypography.ibm(
             fontSize: 15,
             fontWeight: FontWeight.w600,
-            color: AppColors.textOnInverse,
+            color: AppColors.textPrimary,
             height: 20 / 15,
           ),
         ),
@@ -379,7 +379,7 @@ class _TableManagementModalState extends State<_TableManagementModal> {
                   style: AppTypography.ibm(
                     fontSize: 11,
                     fontWeight: FontWeight.w500,
-                    color: AppColors.bgInverse,
+                    color: AppColors.textPrimary,
                     height: 16 / 11,
                   ),
                 ),
@@ -389,7 +389,7 @@ class _TableManagementModalState extends State<_TableManagementModal> {
                 'assets/icons/Users.svg',
                 width: 14,
                 height: 14,
-                colorFilter: ColorFilter.mode(AppColors.bgInverse, BlendMode.srcIn),
+                colorFilter: ColorFilter.mode(AppColors.textPrimary, BlendMode.srcIn),
               ),
               const SizedBox(width: 4),
               Text(
@@ -397,7 +397,7 @@ class _TableManagementModalState extends State<_TableManagementModal> {
                 style: AppTypography.ibm(
                   fontSize: 11,
                   fontWeight: FontWeight.w500,
-                  color: AppColors.bgInverse,
+                  color: AppColors.textPrimary,
                   height: 16 / 11,
                 ),
               ),
@@ -416,7 +416,7 @@ class _TableManagementModalState extends State<_TableManagementModal> {
                 style: AppTypography.ibm(
                   fontSize: 15,
                   fontWeight: FontWeight.w500,
-                  color: AppColors.textOnInverse,
+                  color: AppColors.textPrimary,
                   height: 22 / 15,
                 ),
               ),
@@ -434,7 +434,7 @@ class _TableManagementModalState extends State<_TableManagementModal> {
                   style: AppTypography.ibm(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.bgInverse,
+                    color: AppColors.textPrimary,
                     height: 1,
                   ),
                 ),
@@ -447,7 +447,7 @@ class _TableManagementModalState extends State<_TableManagementModal> {
   }
 
   Widget _buildDivider() {
-    return Divider(color: AppColors.borderOnInverseSubtle, height: 1, thickness: 1);
+    return Divider(color: AppColors.borderStrong, height: 1, thickness: 1);
   }
 
   Widget _buildSeatList() {
@@ -491,7 +491,7 @@ class _TableManagementModalState extends State<_TableManagementModal> {
                 style: AppTypography.ibm(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.bgInverse,
+                  color: AppColors.textPrimary,
                   height: 1,
                 ),
               ),
@@ -506,7 +506,7 @@ class _TableManagementModalState extends State<_TableManagementModal> {
                       style: AppTypography.ibm(
                         fontSize: 15,
                         fontWeight: FontWeight.w500,
-                        color: AppColors.textOnInverse,
+                        color: AppColors.textPrimary,
                         height: 22 / 15,
                       ),
                       maxLines: 1,
@@ -519,7 +519,7 @@ class _TableManagementModalState extends State<_TableManagementModal> {
                     style: AppTypography.ibm(
                       fontSize: 15,
                       fontWeight: FontWeight.w500,
-                      color: AppColors.textOnInverse,
+                      color: AppColors.textPrimary,
                       height: 22 / 15,
                     ),
                   ),
@@ -531,7 +531,7 @@ class _TableManagementModalState extends State<_TableManagementModal> {
                 width: 38,
                 padding: const EdgeInsets.symmetric(vertical: 4),
                 decoration: BoxDecoration(
-                  color: AppColors.borderOnInverseSubtle,
+                  color: AppColors.borderStrong,
                   borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
                 ),
                 alignment: Alignment.center,
@@ -540,7 +540,7 @@ class _TableManagementModalState extends State<_TableManagementModal> {
                   style: AppTypography.ibm(
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
-                    color: AppColors.textOnInverse,
+                    color: AppColors.textPrimary,
                     height: 20 / 13,
                   ),
                 ),
@@ -566,7 +566,7 @@ class _TableManagementModalState extends State<_TableManagementModal> {
               width: 24,
               height: 24,
               decoration: BoxDecoration(
-                color: AppColors.borderOnInverseSubtle,
+                color: AppColors.borderStrong,
                 shape: BoxShape.circle,
               ),
               alignment: Alignment.center,
@@ -575,7 +575,7 @@ class _TableManagementModalState extends State<_TableManagementModal> {
                 style: AppTypography.ibm(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textOnInverse,
+                  color: AppColors.textPrimary,
                   height: 1,
                 ),
               ),
@@ -599,7 +599,7 @@ class _TableManagementModalState extends State<_TableManagementModal> {
                 color: AppColors.bgPrimary,
                 shape: BoxShape.circle,
               ),
-              child: Icon(Icons.add, color: AppColors.bgInverse, size: 16),
+              child: Icon(Icons.add, color: AppColors.textPrimary, size: 16),
             ),
           ],
         ),
@@ -626,7 +626,7 @@ class _TableManagementModalState extends State<_TableManagementModal> {
                 style: AppTypography.ibm(
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textOnInverse,
+                  color: AppColors.textPrimary,
                   height: 20 / 15,
                 ),
               ),
@@ -640,7 +640,7 @@ class _TableManagementModalState extends State<_TableManagementModal> {
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 12),
               decoration: BoxDecoration(
-                color: AppColors.bgPrimary,
+                color: AppColors.bgInverse,
                 borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
               ),
               alignment: Alignment.center,
@@ -649,7 +649,7 @@ class _TableManagementModalState extends State<_TableManagementModal> {
                 style: AppTypography.ibm(
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.bgInverse,
+                  color: AppColors.textInverse,
                   height: 20 / 15,
                 ),
               ),
@@ -713,7 +713,7 @@ class _TableManagementModalState extends State<_TableManagementModal> {
     Color? confirmColor,
     required VoidCallback onConfirm,
   }) {
-    final resolvedConfirmColor = confirmColor ?? AppColors.bgPrimary;
+    final resolvedConfirmColor = confirmColor ?? AppColors.bgInverse;
     showDialog(
       context: context,
       barrierColor: Colors.black54,
@@ -723,7 +723,7 @@ class _TableManagementModalState extends State<_TableManagementModal> {
         child: Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: AppColors.bgInverse,
+            color: AppColors.bgSurface,
             borderRadius: BorderRadius.circular(AppDecorations.radiusXl),
           ),
           child: Column(
@@ -766,7 +766,7 @@ class _TableManagementModalState extends State<_TableManagementModal> {
                       ),
                       child: Icon(
                         Icons.warning_rounded,
-                        color: AppColors.bgInverse,
+                        color: AppColors.textPrimary,
                         size: 16,
                       ),
                     ),
@@ -777,7 +777,7 @@ class _TableManagementModalState extends State<_TableManagementModal> {
                       style: AppTypography.ibm(
                         fontSize: 17,
                         fontWeight: FontWeight.w500,
-                        color: AppColors.textOnInverse,
+                        color: AppColors.textPrimary,
                         height: 1.44,
                       ),
                     ),
@@ -814,7 +814,7 @@ class _TableManagementModalState extends State<_TableManagementModal> {
                           style: AppTypography.ibm(
                             fontSize: 15,
                             fontWeight: FontWeight.w600,
-                            color: AppColors.textOnInverse,
+                            color: AppColors.textPrimary,
                             height: 20 / 15,
                           ),
                         ),
@@ -840,7 +840,7 @@ class _TableManagementModalState extends State<_TableManagementModal> {
                           style: AppTypography.ibm(
                             fontSize: 15,
                             fontWeight: FontWeight.w600,
-                            color: AppColors.bgInverse,
+                            color: AppColors.textInverse,
                             height: 20 / 15,
                           ),
                         ),

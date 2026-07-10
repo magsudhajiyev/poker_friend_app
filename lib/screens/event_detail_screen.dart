@@ -80,25 +80,6 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       backgroundColor: AppColors.paper,
       body: Stack(
         children: [
-          // Teal/cyan gradient glow at top (matching calendar screen)
-          Positioned(
-            top: -162,
-            left: 0,
-            right: 0,
-            child: Container(
-              height: 217,
-              decoration: BoxDecoration(
-                gradient: RadialGradient(
-                  colors: [
-                    const Color(0xFF4CDBFF).withValues(alpha: 0.34),
-                    const Color(0xFF2EB46A).withValues(alpha: 0.34),
-                    Colors.transparent,
-                  ],
-                  radius: 1.5,
-                ),
-              ),
-            ),
-          ),
           // Main content (rendered before header so header stays on top for taps)
           Positioned.fill(
             top: 0,

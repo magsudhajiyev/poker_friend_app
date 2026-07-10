@@ -150,7 +150,7 @@ class _EarningsChartScreenState extends State<EarningsChartScreen> {
             begin: Alignment.topRight,
             end: Alignment.bottomLeft,
             colors: [
-              AppColors.headerGradientTeal,
+              AppColors.accentPrimary,
               AppColors.surfaceVariant1,
               AppColors.surfaceVariant1,
             ],

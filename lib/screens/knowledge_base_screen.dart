@@ -27,7 +27,6 @@ class KnowledgeBaseScreen extends StatelessWidget {
           TopNavBar(
             title: l10n.kbStatsTitle,
             onBack: () => Navigator.pop(context),
-            backgroundColor: AppColors.bgPrimary,
           ),
           Expanded(
             child: SingleChildScrollView(
@@ -48,7 +47,6 @@ class KnowledgeBaseScreen extends StatelessWidget {
           TopNavBar(
             title: l10n.kbClubsTitle,
             onBack: () => Navigator.pop(context),
-            backgroundColor: AppColors.bgPrimary,
           ),
           Expanded(
             child: SingleChildScrollView(

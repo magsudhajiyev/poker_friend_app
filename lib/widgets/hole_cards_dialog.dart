@@ -125,7 +125,7 @@ class _HoleCardsDialogState extends State<HoleCardsDialog> {
                           widget.playerName!,
                           style: AppTypography.ibm(
                             fontSize: 17,
-                            color: AppColors.buttonPrimary,
+                            color: AppColors.accentPrimary,
                             fontWeight: FontWeight.w600,
                           ),
                           overflow: TextOverflow.ellipsis,
@@ -193,7 +193,7 @@ class _HoleCardsDialogState extends State<HoleCardsDialog> {
           child: TextButton(
             onPressed: _saveCards,
             style: TextButton.styleFrom(
-              backgroundColor: AppColors.buttonPrimary,
+              backgroundColor: AppColors.accentPrimary,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
               ),

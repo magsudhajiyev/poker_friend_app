@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../constants/colors.dart';
 
 /// Reusable bottom sheet drawer with standardized header (close, title, save).
 ///
@@ -91,16 +92,7 @@ class FormDrawer extends StatelessWidget {
             topRight: Radius.circular(borderRadius),
           ),
           border: showBorderDecoration
-              ? Border.all(color: const Color(0xFF262626))
-              : null,
-          boxShadow: showBorderDecoration
-              ? const [
-                  BoxShadow(
-                    color: Color(0xFF2E5A59),
-                    blurRadius: 64,
-                    offset: Offset(0, -6),
-                  ),
-                ]
+              ? Border.all(color: AppColors.borderStrong)
               : null,
         ),
         child: Column(
@@ -117,10 +109,10 @@ class FormDrawer extends StatelessWidget {
                   GestureDetector(
                     onTap: onClose ?? () => Navigator.pop(context),
                     child: Container(
-                      width: 38,
-                      height: 38,
+                      width: 44,
+                      height: 44,
                       decoration: const BoxDecoration(
-                        color: Color(0xFF2C2C2E),
+                        color: AppColors.bgElevated,
                         shape: BoxShape.circle,
                       ),
                       child: Center(
@@ -129,7 +121,7 @@ class FormDrawer extends StatelessWidget {
                           width: 15,
                           height: 15,
                           colorFilter: const ColorFilter.mode(
-                            Colors.white,
+                            AppColors.textPrimary,
                             BlendMode.srcIn,
                           ),
                         ),
@@ -142,8 +134,7 @@ class FormDrawer extends StatelessWidget {
                     style: GoogleFonts.ibmPlexSans(
                       fontSize: 17,
                       fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                      letterSpacing: -0.43,
+                      color: AppColors.textPrimary,
                       height: 22 / 17,
                     ),
                   ),
@@ -152,10 +143,10 @@ class FormDrawer extends StatelessWidget {
                     key: saveButtonKey,
                     onTap: onSave,
                     child: Container(
-                      width: 38,
-                      height: 38,
+                      width: 44,
+                      height: 44,
                       decoration: const BoxDecoration(
-                        color: Color(0xFF89F1EC),
+                        color: AppColors.accentPrimary,
                         shape: BoxShape.circle,
                       ),
                       child: Center(
@@ -164,7 +155,7 @@ class FormDrawer extends StatelessWidget {
                           width: 24,
                           height: 24,
                           colorFilter: const ColorFilter.mode(
-                            Color(0xFF1A4A4A),
+                            AppColors.textInverse,
                             BlendMode.srcIn,
                           ),
                         ),

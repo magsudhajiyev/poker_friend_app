@@ -135,7 +135,7 @@ class _AllInBoardCardsDialogState extends State<AllInBoardCardsDialog> {
           child: TextButton(
             onPressed: valid ? _saveCards : null,
             style: TextButton.styleFrom(
-              backgroundColor: valid ? AppColors.buttonPrimary : AppColors.neutral800,
+              backgroundColor: valid ? AppColors.accentPrimary : AppColors.neutral800,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
               ),

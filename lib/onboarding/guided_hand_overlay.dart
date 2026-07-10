@@ -1180,14 +1180,14 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
                 borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                 border: Border.all(
                   color: isHero
-                      ? AppColors.buttonPrimary.withValues(alpha: 0.6)
-                      : AppColors.buttonPrimary.withValues(alpha: 0.3),
+                      ? AppColors.accentPrimary.withValues(alpha: 0.6)
+                      : AppColors.accentPrimary.withValues(alpha: 0.3),
                   width: isHero ? 1.5 : 1,
                 ),
                 boxShadow: [
                   BoxShadow(
                     color: isHero
-                        ? AppColors.buttonPrimary.withValues(alpha: 0.15)
+                        ? AppColors.accentPrimary.withValues(alpha: 0.15)
                         : Colors.black.withValues(alpha: 0.5),
                     blurRadius: 16,
                     offset: const Offset(0, 4),
@@ -1205,7 +1205,7 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
                         child: Text(
                           instruction.title,
                           style: AppTypography.ibm(
-                            color: isHero ? AppColors.buttonPrimary : Colors.white,
+                            color: isHero ? AppColors.accentPrimary : Colors.white,
                             fontSize: 18,
                             fontWeight: FontWeight.w600,
                           ),
@@ -1243,13 +1243,13 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: AppColors.buttonPrimary.withValues(alpha: 0.15),
+                        color: AppColors.accentPrimary.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
                       ),
                       child: Text(
                         instruction.gestureHint,
                         style: AppTypography.ibm(
-                          color: AppColors.buttonPrimary,
+                          color: AppColors.accentPrimary,
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
                         ),
@@ -1264,7 +1264,7 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
                       value: _actionsCompleted.clamp(0, 12) / 12,
                       backgroundColor: Colors.white.withValues(alpha: 0.1),
                       valueColor: const AlwaysStoppedAnimation<Color>(
-                        AppColors.buttonPrimary,
+                        AppColors.accentPrimary,
                       ),
                       minHeight: 3,
                     ),

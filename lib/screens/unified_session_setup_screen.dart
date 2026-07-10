@@ -18,6 +18,7 @@ import 'poker_hand_screen.dart';
 import '../design_system/constants/typography.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/decorations.dart';
+import '../design_system/components/headers/top_nav_bar.dart';
 
 class UnifiedSessionSetupScreen extends StatefulWidget {
   const UnifiedSessionSetupScreen({super.key});
@@ -388,53 +389,15 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
   // ─── HEADER ──────────────────────────────────────────────────────
 
   Widget _buildHeader(AppLocalizations l10n) {
-    return Container(
-      color: AppColors.bgSurface,
-      child: SafeArea(
-        bottom: false,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SizedBox(
-              height: 44,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
-                  children: [
-                    GestureDetector(
-                      onTap: () => Navigator.pop(context),
-                      behavior: HitTestBehavior.opaque,
-                      child: const SizedBox(
-                        width: 44,
-                        height: 44,
-                        child: Center(
-                          child: Icon(Icons.chevron_left,
-                              color: Colors.white, size: 24),
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: Text(
-                        l10n.setupSessionSetup,
-                        textAlign: TextAlign.center,
-                        style: AppTypography.ibm(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                          height: 22 / 17,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 44),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 6),
-            if (OnboardingState.isOnboardingActive) const OnboardingProgressBar(),
-          ],
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        TopNavBar(
+          title: l10n.setupSessionSetup,
+          onBack: () => Navigator.pop(context),
         ),
-      ),
+        if (OnboardingState.isOnboardingActive) const OnboardingProgressBar(),
+      ],
     );
   }
 

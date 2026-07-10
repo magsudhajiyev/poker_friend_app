@@ -179,31 +179,11 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
     final screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: AppColors.bgPrimary,
       extendBody: true,
       bottomNavigationBar: GlobalBottomNavBar(currentScreen: 'sessions'),
       body: Stack(
         children: [
-          // Teal radial gradient at top
-          Positioned(
-            top: -screenWidth * 0.5,
-            right: -screenWidth * 0.2,
-            child: Container(
-              width: screenWidth * 1.2,
-              height: screenWidth * 1.2,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    const Color(0xFF1A4A4A).withOpacity(0.6),
-                    AppColors.headerGradientTeal.withOpacity(0.3),
-                    Colors.transparent,
-                  ],
-                  stops: const [0.0, 0.4, 1.0],
-                ),
-              ),
-            ),
-          ),
           SafeArea(
             child: Column(
               children: [
@@ -306,7 +286,7 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                 decoration: BoxDecoration(
-                  color: AppColors.buttonPrimary,
+                  color: AppColors.accentPrimary,
                   borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
                 ),
                 child: Text(
@@ -372,7 +352,7 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
     );
   }
 
-  static const _mint = AppColors.buttonPrimary;
+  static const _mint = AppColors.accentPrimary;
 
   Widget _buildHandCard(Map<String, dynamic> hand, int handNumber, int index) {
     final l10n = AppLocalizations.of(context);

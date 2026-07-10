@@ -7,6 +7,7 @@ import '../../services/event_service.dart';
 import '../../services/websocket_service.dart';
 import '../../config/app_config.dart';
 import '../../l10n/app_localizations.dart';
+import '../../design_system/constants/colors.dart';
 import '../../design_system/constants/decorations.dart';
 
 /// Full-screen leaderboard for TV display mode
@@ -155,7 +156,7 @@ class _PublicLeaderboardScreenState extends State<PublicLeaderboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: AppColors.bgPrimary,
       body: GestureDetector(
         onTap: () {
           // Toggle auto-scroll on tap

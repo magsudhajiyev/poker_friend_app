@@ -144,30 +144,6 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
       extendBodyBehindAppBar: true,
       body: Stack(
         children: [
-          // Cyan ellipse glow at top
-          Positioned(
-            top: -162,
-            left: 0,
-            right: 0,
-            child: Center(
-              child: Container(
-                width: 412,
-                height: 217,
-                decoration: BoxDecoration(
-                  gradient: RadialGradient(
-                    center: Alignment.center,
-                    radius: 1.0,
-                    colors: [
-                      const Color(0xFF4CDBFF).withValues(alpha: 0.25),
-                      const Color(0xFF2EB46A).withValues(alpha: 0.12),
-                      Colors.transparent,
-                    ],
-                    stops: const [0.0, 0.5, 1.0],
-                  ),
-                ),
-              ),
-            ),
-          ),
 
           // Main content
           Column(
@@ -314,7 +290,7 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 12),
               decoration: BoxDecoration(
-                color: AppColors.buttonPrimary,
+                color: AppColors.accentPrimary,
                 borderRadius: BorderRadius.circular(110),
               ),
               child: Center(
@@ -386,7 +362,7 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppDecorations.radius14),
-          borderSide: const BorderSide(color: AppColors.buttonPrimary, width: 1),
+          borderSide: const BorderSide(color: AppColors.accentPrimary, width: 1),
         ),
       ),
     );
@@ -419,7 +395,7 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
                   width: 32,
                   height: 32,
                   decoration: const BoxDecoration(
-                    color: AppColors.buttonPrimary,
+                    color: AppColors.accentPrimary,
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
@@ -616,7 +592,7 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
                   width: 32,
                   height: 32,
                   decoration: const BoxDecoration(
-                    color: AppColors.buttonPrimary,
+                    color: AppColors.accentPrimary,
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
@@ -716,7 +692,7 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             decoration: BoxDecoration(
-              color: AppColors.mint900,
+              color: AppColors.accentPrimary,
               borderRadius: BorderRadius.circular(AppDecorations.radius14),
             ),
             child: Text(
@@ -724,7 +700,7 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
               style: AppTypography.ibm(
                 fontSize: 15,
                 fontWeight: FontWeight.w500,
-                color: AppColors.buttonPrimary,
+                color: AppColors.accentPrimary,
                 height: 1.64,
               ),
             ),
@@ -797,7 +773,7 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.buttonPrimary,
+              backgroundColor: AppColors.accentPrimary,
               foregroundColor: Colors.black,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(110),
@@ -883,7 +859,7 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.buttonPrimary,
+              backgroundColor: AppColors.accentPrimary,
               foregroundColor: Colors.black,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(110),
@@ -1046,7 +1022,7 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
                 style: AppTypography.ibm(),
               ),
               style: TextButton.styleFrom(
-                foregroundColor: AppColors.buttonPrimary,
+                foregroundColor: AppColors.accentPrimary,
               ),
             ),
           TextButton(
@@ -1079,7 +1055,7 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
           ElevatedButton(
             onPressed: () => Navigator.pop(context),
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.buttonPrimary,
+              backgroundColor: AppColors.accentPrimary,
               foregroundColor: Colors.black,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(110),
@@ -1105,7 +1081,7 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
           style: AppTypography.ibm(
             fontSize: 12,
             fontWeight: FontWeight.w600,
-            color: AppColors.limeGreen,
+            color: AppColors.accentPrimary,
             letterSpacing: 1.0,
           ),
         ),
@@ -1127,10 +1103,10 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
                     width: 40,
                     height: 40,
                     decoration: BoxDecoration(
-                      color: AppColors.buttonPrimary.withValues(alpha: 0.12),
+                      color: AppColors.accentPrimary.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                     ),
-                    child: const Icon(Icons.qr_code_rounded, color: AppColors.buttonPrimary, size: 20),
+                    child: const Icon(Icons.qr_code_rounded, color: AppColors.accentPrimary, size: 20),
                   ),
                   const SizedBox(width: 14),
                   Expanded(

@@ -21,7 +21,7 @@ class RangeFrequencyBar extends StatelessWidget {
   });
 
   static const raiseColor = Color(0xFFFFC857);
-  static const callColor = AppColors.buttonPrimary;
+  static const callColor = AppColors.accentPrimary;
   static const checkColor = Color(0xFF3BA55D);
   static const foldColor = Color(0xFFE85D5D);
 

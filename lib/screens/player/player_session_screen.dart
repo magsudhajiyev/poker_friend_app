@@ -406,7 +406,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
             child: Text(
               AppLocalizations.of(context).commonOk,
               style: AppTypography.ibm(
-                color: AppColors.buttonPrimary,
+                color: AppColors.accentPrimary,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -454,7 +454,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
             child: Text(
               AppLocalizations.of(context).commonOk,
               style: AppTypography.ibm(
-                color: AppColors.buttonPrimary,
+                color: AppColors.accentPrimary,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -474,7 +474,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
               : 'Seat $winnerId wins ${_formatAmount(pot)}',
           style: AppTypography.ibm(color: Colors.white),
         ),
-        backgroundColor: isWinner ? AppColors.limeGreen : AppColors.bgSurface,
+        backgroundColor: isWinner ? AppColors.accentPrimary : AppColors.bgSurface,
         duration: const Duration(seconds: 3),
       ),
     );
@@ -717,7 +717,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
                       height: 6,
                       decoration: BoxDecoration(
                         color: _isHandActive
-                            ? AppColors.limeGreen
+                            ? AppColors.accentPrimary
                             : AppColors.textDisabled,
                         shape: BoxShape.circle,
                       ),
@@ -729,7 +729,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
                         color: _isHandActive
-                            ? AppColors.limeGreen
+                            ? AppColors.accentPrimary
                             : AppColors.textDisabled,
                         letterSpacing: 0.5,
                       ),
@@ -757,12 +757,12 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: AppColors.tealPrimary.withValues(alpha: 0.12),
+                  color: AppColors.accentPrimary.withValues(alpha: 0.12),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
                   Icons.leaderboard_rounded,
-                  color: AppColors.tealPrimary,
+                  color: AppColors.accentPrimary,
                   size: 22,
                 ),
               ),
@@ -773,7 +773,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
             decoration: BoxDecoration(
-              color: AppColors.buttonPrimary.withValues(alpha: 0.12),
+              color: AppColors.accentPrimary.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
             ),
             child: Row(
@@ -782,7 +782,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
                 const Icon(
                   Icons.person_rounded,
                   size: 11,
-                  color: AppColors.buttonPrimary,
+                  color: AppColors.accentPrimary,
                 ),
                 const SizedBox(width: 3),
                 Text(
@@ -790,7 +790,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
                   style: AppTypography.ibm(
                     fontSize: 10,
                     fontWeight: FontWeight.w500,
-                    color: AppColors.buttonPrimary,
+                    color: AppColors.accentPrimary,
                   ),
                 ),
               ],
@@ -808,7 +808,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const CircularProgressIndicator(
-              color: AppColors.buttonPrimary,
+              color: AppColors.accentPrimary,
               strokeWidth: 2,
             ),
             const SizedBox(height: 16),
@@ -921,8 +921,8 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _buildStatusItem(AppLocalizations.of(context).playerSessionSeat, '#${widget.seatNumber}', AppColors.buttonPrimary),
-          _buildStatusItem(AppLocalizations.of(context).playerSessionStack, _formatAmount(_myStack), AppColors.limeGreen),
+          _buildStatusItem(AppLocalizations.of(context).playerSessionSeat, '#${widget.seatNumber}', AppColors.accentPrimary),
+          _buildStatusItem(AppLocalizations.of(context).playerSessionStack, _formatAmount(_myStack), AppColors.accentPrimary),
           _buildStatusItem(AppLocalizations.of(context).playerSessionPot, _formatAmount(_potAmount), const Color(0xFFFFA726)),
         ],
       ),
@@ -968,7 +968,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
           borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
           border: Border.all(
             color: hasCards
-                ? AppColors.buttonPrimary.withValues(alpha: 0.3)
+                ? AppColors.accentPrimary.withValues(alpha: 0.3)
                 : AppColors.separatorDark,
           ),
         ),
@@ -976,14 +976,14 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
           children: [
             Icon(
               Icons.style_rounded,
-              color: hasCards ? AppColors.buttonPrimary : AppColors.textDisabled,
+              color: hasCards ? AppColors.accentPrimary : AppColors.textDisabled,
               size: 18,
             ),
             const SizedBox(width: 8),
             Text(
               AppLocalizations.of(context).playerSessionHoleCardsLabel,
               style: AppTypography.ibm(
-                color: hasCards ? AppColors.buttonPrimary : AppColors.textDisabled,
+                color: hasCards ? AppColors.accentPrimary : AppColors.textDisabled,
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
               ),
@@ -998,13 +998,13 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               decoration: BoxDecoration(
-                color: AppColors.buttonPrimary.withValues(alpha: 0.15),
+                color: AppColors.accentPrimary.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
               ),
               child: Text(
                 hasCards ? 'Edit' : 'Add',
                 style: AppTypography.ibm(
-                  color: AppColors.buttonPrimary,
+                  color: AppColors.accentPrimary,
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                 ),
@@ -1219,7 +1219,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
                 Text(
                   street.toUpperCase(),
                   style: AppTypography.ibm(
-                    color: AppColors.limeGreen,
+                    color: AppColors.accentPrimary,
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
                     letterSpacing: 1,
@@ -1268,14 +1268,14 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
         actionColor = AppColors.textDisabled;
         break;
       case 'call':
-        actionColor = AppColors.limeGreen;
+        actionColor = AppColors.accentPrimary;
         break;
       case 'bet':
       case 'raise':
         actionColor = const Color(0xFFFFA726);
         break;
       case 'all-in':
-        actionColor = AppColors.buttonPrimary;
+        actionColor = AppColors.accentPrimary;
         break;
       default:
         actionColor = AppColors.textDisabled;
@@ -1296,7 +1296,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
               height: 16,
               margin: const EdgeInsets.only(right: 8),
               decoration: BoxDecoration(
-                color: AppColors.buttonPrimary,
+                color: AppColors.accentPrimary,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -1341,7 +1341,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
             style: AppTypography.ibm(
               fontSize: 12,
               fontWeight: FontWeight.w600,
-              color: AppColors.limeGreen,
+              color: AppColors.accentPrimary,
               letterSpacing: 1.0,
             ),
           ),
@@ -1373,7 +1373,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
-                borderSide: const BorderSide(color: AppColors.buttonPrimary, width: 1),
+                borderSide: const BorderSide(color: AppColors.accentPrimary, width: 1),
               ),
             ),
             maxLines: 3,
@@ -1402,7 +1402,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
             style: AppTypography.ibm(
               fontSize: 12,
               fontWeight: FontWeight.w600,
-              color: AppColors.limeGreen,
+              color: AppColors.accentPrimary,
               letterSpacing: 1.0,
             ),
           ),
@@ -1426,19 +1426,19 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppColors.buttonPrimary.withValues(alpha: 0.15)
+              ? AppColors.accentPrimary.withValues(alpha: 0.15)
               : AppColors.bgPrimary,
           borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
           border: Border.all(
             color: isSelected
-                ? AppColors.buttonPrimary
+                ? AppColors.accentPrimary
                 : AppColors.separatorDark,
           ),
         ),
         child: Text(
           tag,
           style: AppTypography.ibm(
-            color: isSelected ? AppColors.buttonPrimary : AppColors.textDisabled,
+            color: isSelected ? AppColors.accentPrimary : AppColors.textDisabled,
             fontSize: 13,
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
           ),
@@ -1482,13 +1482,13 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                           decoration: BoxDecoration(
-                            color: AppColors.buttonPrimary.withValues(alpha: 0.15),
+                            color: AppColors.accentPrimary.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
                           ),
                           child: Text(
                             '${_handHistory.length}',
                             style: AppTypography.ibm(
-                              color: AppColors.buttonPrimary,
+                              color: AppColors.accentPrimary,
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
                             ),
@@ -1565,7 +1565,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
               height: 32,
               decoration: BoxDecoration(
                 color: isWinner
-                    ? AppColors.limeGreen.withValues(alpha: 0.15)
+                    ? AppColors.accentPrimary.withValues(alpha: 0.15)
                     : AppColors.bgPrimary,
                 borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
               ),
@@ -1573,7 +1573,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
                 child: Text(
                   '#$handNumber',
                   style: AppTypography.ibm(
-                    color: isWinner ? AppColors.limeGreen : AppColors.textDisabled,
+                    color: isWinner ? AppColors.accentPrimary : AppColors.textDisabled,
                     fontSize: 10,
                     fontWeight: FontWeight.w600,
                   ),
@@ -1589,7 +1589,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
                   Text(
                     isWinner ? 'Won ${_formatAmount(pot)}' : 'Lost',
                     style: AppTypography.ibm(
-                      color: isWinner ? AppColors.limeGreen : AppColors.textDisabled,
+                      color: isWinner ? AppColors.accentPrimary : AppColors.textDisabled,
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                     ),
@@ -1601,7 +1601,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
                           .map((tag) => Text(
                                 tag,
                                 style: AppTypography.ibm(
-                                  color: AppColors.buttonPrimary,
+                                  color: AppColors.accentPrimary,
                                   fontSize: 10,
                                 ),
                               ))
@@ -1621,7 +1621,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
               children: [
                 Icon(
                   hasHoleCards ? Icons.style_rounded : Icons.edit_rounded,
-                  color: hasHoleCards ? AppColors.buttonPrimary : AppColors.textDisabled,
+                  color: hasHoleCards ? AppColors.accentPrimary : AppColors.textDisabled,
                   size: 18,
                 ),
                 if (hasHoleCards)
@@ -1900,7 +1900,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
             Text(
               'Waiting for new dealer to take over...',
               style: AppTypography.ibm(
-                color: AppColors.textMint,
+                color: AppColors.accentPrimary,
                 fontSize: 15,
               ),
             ),
@@ -2003,7 +2003,7 @@ class _EditHandBottomSheetState extends State<_EditHandBottomSheet> {
               'Hand #${widget.handNumber} updated',
               style: AppTypography.ibm(color: Colors.white),
             ),
-            backgroundColor: AppColors.limeGreen,
+            backgroundColor: AppColors.accentPrimary,
             duration: const Duration(seconds: 1),
           ),
         );
@@ -2105,12 +2105,12 @@ class _EditHandBottomSheetState extends State<_EditHandBottomSheet> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.visibility_rounded, size: 16, color: AppColors.buttonPrimary),
+                        const Icon(Icons.visibility_rounded, size: 16, color: AppColors.accentPrimary),
                         const SizedBox(width: 4),
                         Text(
                           'View Details',
                           style: AppTypography.ibm(
-                            color: AppColors.buttonPrimary,
+                            color: AppColors.accentPrimary,
                             fontSize: 13,
                             fontWeight: FontWeight.w500,
                           ),
@@ -2128,7 +2128,7 @@ class _EditHandBottomSheetState extends State<_EditHandBottomSheet> {
                 style: AppTypography.ibm(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.limeGreen,
+                  color: AppColors.accentPrimary,
                   letterSpacing: 1.0,
                 ),
               ),
@@ -2142,7 +2142,7 @@ class _EditHandBottomSheetState extends State<_EditHandBottomSheet> {
                     borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                     border: Border.all(
                       color: hasCards
-                          ? AppColors.buttonPrimary.withValues(alpha: 0.3)
+                          ? AppColors.accentPrimary.withValues(alpha: 0.3)
                           : AppColors.separatorDark,
                     ),
                   ),
@@ -2176,7 +2176,7 @@ class _EditHandBottomSheetState extends State<_EditHandBottomSheet> {
                 style: AppTypography.ibm(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.limeGreen,
+                  color: AppColors.accentPrimary,
                   letterSpacing: 1.0,
                 ),
               ),
@@ -2207,7 +2207,7 @@ class _EditHandBottomSheetState extends State<_EditHandBottomSheet> {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
-                    borderSide: const BorderSide(color: AppColors.buttonPrimary, width: 1),
+                    borderSide: const BorderSide(color: AppColors.accentPrimary, width: 1),
                   ),
                 ),
               ),
@@ -2219,7 +2219,7 @@ class _EditHandBottomSheetState extends State<_EditHandBottomSheet> {
                 style: AppTypography.ibm(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.limeGreen,
+                  color: AppColors.accentPrimary,
                   letterSpacing: 1.0,
                 ),
               ),
@@ -2235,12 +2235,12 @@ class _EditHandBottomSheetState extends State<_EditHandBottomSheet> {
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
                       decoration: BoxDecoration(
                         color: isSelected
-                            ? AppColors.buttonPrimary.withValues(alpha: 0.15)
+                            ? AppColors.accentPrimary.withValues(alpha: 0.15)
                             : AppColors.bgPrimary,
                         borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
                         border: Border.all(
                           color: isSelected
-                              ? AppColors.buttonPrimary
+                              ? AppColors.accentPrimary
                               : AppColors.separatorDark,
                         ),
                       ),
@@ -2248,7 +2248,7 @@ class _EditHandBottomSheetState extends State<_EditHandBottomSheet> {
                         tag,
                         style: AppTypography.ibm(
                           color: isSelected
-                              ? AppColors.buttonPrimary
+                              ? AppColors.accentPrimary
                               : AppColors.textDisabled,
                           fontSize: 13,
                           fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,

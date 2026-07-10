@@ -10,6 +10,7 @@ import 'package:vibration/vibration.dart';
 import '../l10n/app_localizations.dart';
 import '../design_system/poker_friend_theme.dart';
 import '../design_system/design_system.dart';
+import '../design_system/components/buttons/back_button_circle.dart';
 import '../design_system/components/headers/top_nav_bar.dart';
 import '../widgets/drawing_painter.dart';
 import '../widgets/session_end_bankroll_sheet.dart';
@@ -588,7 +589,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: Text(l10n.handChangeTable, style: AppTypography.ibm(color: AppColors.tealPrimary)),
+            child: Text(l10n.handChangeTable, style: AppTypography.ibm(color: AppColors.accentPrimary)),
           ),
         ],
       ),
@@ -641,116 +642,101 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       builder: (BuildContext context) {
         return Dialog(
           backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 24),
           child: Container(
-            width: 309,
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: AppColors.surfaceDark,
-              borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
-              border: Border.all(color: AppColors.neutral800),
-              boxShadow: const [
-                BoxShadow(
-                  color: Colors.black,
-                  blurRadius: 114,
-                  offset: Offset(20, 4),
-                ),
-              ],
+              color: AppColors.bgSurface,
+              borderRadius: BorderRadius.circular(AppDecorations.radiusXl),
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Stop icon - ring with filled square
+                // Stop icon
                 Container(
-                  width: 24,
-                  height: 24,
+                  width: 32,
+                  height: 32,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: AppColors.errorRed,
-                      width: 0.857,
+                      color: AppColors.accentDanger,
+                      width: 1.2,
                     ),
                   ),
                   child: Center(
                     child: Container(
-                      width: 11.14,
-                      height: 11.14,
-                      color: AppColors.errorRed,
+                      width: 14,
+                      height: 14,
+                      color: AppColors.accentDanger,
                     ),
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 12),
                 Text(
                   l10n.handStopSessionTitle,
+                  textAlign: TextAlign.center,
                   style: AppTypography.ibm(
-                    color: Colors.white,
+                    color: AppColors.textPrimary,
                     fontSize: 17,
-                    fontWeight: FontWeight.w500,
-                    height: 1.44,
+                    fontWeight: FontWeight.w600,
+                    height: 20 / 17,
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 7),
                 Text(
                   l10n.handStopSessionMessage,
                   textAlign: TextAlign.center,
                   style: AppTypography.ibm(
-                    color: AppColors.textDisabled,
+                    color: AppColors.textSecondary,
                     fontSize: 15,
-                    height: 1.44,
+                    height: 22 / 15,
                   ),
                 ),
                 const SizedBox(height: 24),
-                Row(
-                  children: [
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () => Navigator.pop(context, false),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(110),
-                            border: Border.all(color: Colors.white),
-                          ),
-                          child: Center(
-                            child: Text(
-                              l10n.commonCancel,
-                              style: AppTypography.ibm(
-                                color: Colors.white,
-                                fontSize: 17,
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: -0.5,
-                                height: 24 / 17,
-                              ),
-                            ),
-                          ),
-                        ),
+                // Primary — Stop (destructive, top)
+                GestureDetector(
+                  onTap: () => Navigator.pop(context, true),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    decoration: BoxDecoration(
+                      color: AppColors.accentDanger,
+                      borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      l10n.handStop,
+                      style: AppTypography.ibm(
+                        color: AppColors.textPrimary,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        height: 20 / 15,
                       ),
                     ),
-                    const SizedBox(width: 11),
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () => Navigator.pop(context, true),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          decoration: BoxDecoration(
-                            color: AppColors.errorRed,
-                            borderRadius: BorderRadius.circular(110),
-                          ),
-                          child: Center(
-                            child: Text(
-                              l10n.handStop,
-                              style: AppTypography.ibm(
-                                color: Colors.black,
-                                fontSize: 17,
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: -0.5,
-                                height: 24 / 17,
-                              ),
-                            ),
-                          ),
-                        ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                // Cancel (outlined, below)
+                GestureDetector(
+                  onTap: () => Navigator.pop(context, false),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
+                      border: Border.all(color: AppColors.borderStrong),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      l10n.commonCancel,
+                      style: AppTypography.ibm(
+                        color: AppColors.textPrimary,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        height: 20 / 15,
                       ),
                     ),
-                  ],
+                  ),
                 ),
               ],
             ),
@@ -911,7 +897,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
           child: Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.bgSurface,
               borderRadius: BorderRadius.circular(AppDecorations.radiusXl),
             ),
             child: Column(
@@ -928,7 +914,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                           style: AppTypography.ibm(
                             fontSize: 15,
                             fontWeight: FontWeight.w600,
-                            color: AppColors.textInverse,
+                            color: AppColors.textPrimary,
                             height: 20 / 15,
                           ),
                         ),
@@ -945,7 +931,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                             width: 18,
                             height: 18,
                             colorFilter: const ColorFilter.mode(
-                                AppColors.contentInactive, BlendMode.srcIn),
+                                AppColors.textSecondary, BlendMode.srcIn),
                           ),
                         ),
                       ),
@@ -1001,7 +987,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                             style: AppTypography.ibm(
                               fontSize: 15,
                               fontWeight: FontWeight.w600,
-                              color: AppColors.textInverse,
+                              color: AppColors.textPrimary,
                               height: 20 / 15,
                             ),
                           ),
@@ -1022,7 +1008,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                         child: Container(
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           decoration: BoxDecoration(
-                            color: AppColors.bgPrimary,
+                            color: AppColors.bgInverse,
                             borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
                           ),
                           alignment: Alignment.center,
@@ -1031,7 +1017,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                             style: AppTypography.ibm(
                               fontSize: 15,
                               fontWeight: FontWeight.w600,
-                              color: Colors.white,
+                              color: AppColors.textInverse,
                               height: 20 / 15,
                             ),
                           ),
@@ -1123,56 +1109,84 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       barrierDismissible: true,
       builder: (BuildContext context) {
         return AlertDialog(
-          backgroundColor: AppColors.surfaceVariant1,
+          backgroundColor: AppColors.bgSurface,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
+            borderRadius: BorderRadius.circular(AppDecorations.radiusXl),
           ),
-          title: Text(
-            l10n.handInProgress,
-            style: AppTypography.pageTitle().copyWith(fontSize: 20),
-            textAlign: TextAlign.center,
-          ),
-          content: Text(
-            l10n.handDiscardCurrentHand,
-            textAlign: TextAlign.center,
-            style: AppTypography.bodySmall(
-              color: Colors.white.withOpacity(0.7),
-            ),
-          ),
-          actionsAlignment: MainAxisAlignment.center,
-          actionsPadding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
-          actions: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context, true),
-                  style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                  ),
-                  child: Text(
-                    l10n.handDiscardHand,
-                    style: AppTypography.bodyLarge(
-                      color: AppColors.lossRed,
-                    ).copyWith(fontWeight: FontWeight.w600),
-                  ),
+          contentPadding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                l10n.handInProgress,
+                textAlign: TextAlign.center,
+                style: AppTypography.ibm(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                  height: 20 / 17,
                 ),
-                const SizedBox(height: 4),
-                TextButton(
-                  onPressed: () => Navigator.pop(context, false),
-                  style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
+              ),
+              const SizedBox(height: 7),
+              Text(
+                l10n.handDiscardCurrentHand,
+                textAlign: TextAlign.center,
+                style: AppTypography.ibm(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w400,
+                  color: AppColors.textSecondary,
+                  height: 22 / 15,
+                ),
+              ),
+              const SizedBox(height: 24),
+              // Primary action — Move to Next Hand (top)
+              GestureDetector(
+                onTap: () => Navigator.pop(context, true),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  decoration: BoxDecoration(
+                    color: AppColors.bgInverse,
+                    borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
                   ),
                   child: Text(
-                    l10n.commonCancel,
-                    style: AppTypography.bodyLarge(
-                      color: Colors.white.withOpacity(0.5),
+                    l10n.handMoveToNextHand,
+                    textAlign: TextAlign.center,
+                    style: AppTypography.ibm(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textInverse,
+                      height: 20 / 15,
                     ),
                   ),
                 ),
-              ],
-            ),
-          ],
+              ),
+              const SizedBox(height: 12),
+              // Cancel (below)
+              GestureDetector(
+                onTap: () => Navigator.pop(context, false),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
+                    border: Border.all(color: AppColors.borderStrong),
+                  ),
+                  child: Text(
+                    l10n.commonCancel,
+                    textAlign: TextAlign.center,
+                    style: AppTypography.ibm(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                      height: 20 / 15,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         );
       },
     );
@@ -1186,73 +1200,111 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       context: context,
       barrierDismissible: false,
       builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: AppColors.surfaceVariant1,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
-          ),
-          title: Text(
-            l10n.handLeaveSession,
-            style: AppTypography.pageTitle().copyWith(fontSize: 20),
-            textAlign: TextAlign.center,
-          ),
-          content: Text(
-            l10n.pokerHandActiveSessionMsg(sessionManager.completedHands.length),
-            textAlign: TextAlign.center,
-            style: AppTypography.bodySmall(
-              color: Colors.white.withOpacity(0.7),
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: AppColors.bgSurface,
+              borderRadius: BorderRadius.circular(AppDecorations.radiusXl),
             ),
-          ),
-          actionsAlignment: MainAxisAlignment.center,
-          actionsPadding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
-          actions: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                // Save & Exit (primary — cyan/mint text)
-                TextButton(
-                  onPressed: () => Navigator.pop(context, 'save'),
-                  style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                  ),
-                  child: Text(
-                    l10n.handSaveAndExit,
-                    style: AppTypography.bodyLarge(
-                      color: AppColors.buttonPrimary,
-                    ).copyWith(fontWeight: FontWeight.w600),
+                Text(
+                  l10n.handLeaveSession,
+                  textAlign: TextAlign.center,
+                  style: AppTypography.ibm(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                    height: 20 / 17,
                   ),
                 ),
-                const SizedBox(height: 4),
-                // Discard & Exit (destructive — red text)
-                TextButton(
-                  onPressed: () => Navigator.pop(context, 'discard'),
-                  style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                  ),
-                  child: Text(
-                    l10n.handDiscardAndExit,
-                    style: AppTypography.bodyLarge(
-                      color: AppColors.lossRed,
-                    ).copyWith(fontWeight: FontWeight.w600),
+                const SizedBox(height: 7),
+                Text(
+                  l10n.pokerHandActiveSessionMsg(sessionManager.completedHands.length),
+                  textAlign: TextAlign.center,
+                  style: AppTypography.ibm(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w400,
+                    color: AppColors.textSecondary,
+                    height: 22 / 15,
                   ),
                 ),
-                const SizedBox(height: 4),
-                // Cancel (secondary — subtle white)
-                TextButton(
-                  onPressed: () => Navigator.pop(context, null),
-                  style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
+                const SizedBox(height: 24),
+                // Save & Exit (primary CTA — white pill)
+                GestureDetector(
+                  onTap: () => Navigator.pop(context, 'save'),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    decoration: BoxDecoration(
+                      color: AppColors.bgInverse,
+                      borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      l10n.handSaveAndExit,
+                      style: AppTypography.ibm(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textInverse,
+                        height: 20 / 15,
+                      ),
+                    ),
                   ),
-                  child: Text(
-                    l10n.commonCancel,
-                    style: AppTypography.bodyLarge(
-                      color: Colors.white.withOpacity(0.5),
+                ),
+                const SizedBox(height: 12),
+                // Discard & Exit (destructive — filled danger)
+                GestureDetector(
+                  onTap: () => Navigator.pop(context, 'discard'),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    decoration: BoxDecoration(
+                      color: AppColors.accentDanger,
+                      borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      l10n.handDiscardAndExit,
+                      style: AppTypography.ibm(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                        height: 20 / 15,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                // Cancel (outlined, bottom)
+                GestureDetector(
+                  onTap: () => Navigator.pop(context, null),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
+                      border: Border.all(color: AppColors.borderStrong),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      l10n.commonCancel,
+                      style: AppTypography.ibm(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                        height: 20 / 15,
+                      ),
                     ),
                   ),
                 ),
               ],
             ),
-          ],
+          ),
         );
       },
     );
@@ -1438,10 +1490,10 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
             hintText: l10n.handEnterStackAmount,
             hintStyle: AppTypography.ibm(color: AppColors.textDisabled),
             enabledBorder: const UnderlineInputBorder(
-              borderSide: BorderSide(color: AppColors.tealPrimary),
+              borderSide: BorderSide(color: AppColors.accentPrimary),
             ),
             focusedBorder: const UnderlineInputBorder(
-              borderSide: BorderSide(color: AppColors.tealPrimary, width: 2),
+              borderSide: BorderSide(color: AppColors.accentPrimary, width: 2),
             ),
           ),
         ),
@@ -1460,7 +1512,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
               }
               Navigator.pop(ctx);
             },
-            child: Text(l10n.commonUpdate, style: AppTypography.ibm(color: AppColors.tealPrimary)),
+            child: Text(l10n.commonUpdate, style: AppTypography.ibm(color: AppColors.accentPrimary)),
           ),
         ],
       ),
@@ -1814,7 +1866,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                             decoration: BoxDecoration(
-                              color: AppColors.tealPrimary.withValues(alpha: 0.9),
+                              color: AppColors.accentPrimary.withValues(alpha: 0.9),
                               borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
                             ),
                             child: Text(
@@ -1866,7 +1918,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                                     _settlingWinnerName!,
                                     style: AppTypography.ibm(
                                       fontSize: 22,
-                                      color: AppColors.tealPrimary,
+                                      color: AppColors.accentPrimary,
                                       fontWeight: FontWeight.w700,
                                       letterSpacing: -0.5,
                                     ),
@@ -1885,7 +1937,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                                     l10n.handHandComplete,
                                     style: AppTypography.ibm(
                                       fontSize: 20,
-                                      color: AppColors.tealPrimary,
+                                      color: AppColors.accentPrimary,
                                       fontWeight: FontWeight.w600,
                                     ),
                                   ),
@@ -1934,7 +1986,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 12, vertical: 8),
                               decoration: BoxDecoration(
-                                color: Colors.white,
+                                color: AppColors.bgSurface,
                                 borderRadius: BorderRadius.circular(AppDecorations.radiusXl),
                               ),
                               child: Text(
@@ -1962,19 +2014,8 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           // Back circle
-                          GestureDetector(
-                            onTap: () => _handleNavigationAttempt(isBackButton: true),
-                            child: Container(
-                              width: 38,
-                              height: 38,
-                              decoration: const BoxDecoration(
-                                color: Colors.white,
-                                shape: BoxShape.circle,
-                              ),
-                              child: Center(
-                                child: _buildIcon('assets/icons/back icon.svg', 24, Colors.black),
-                              ),
-                            ),
+                          BackButtonCircle(
+                            onPressed: () => _handleNavigationAttempt(isBackButton: true),
                           ),
                           // Undo pill — dimmed when nothing to undo; fades out
                           // while the raise drag bar is active (overlaps it)
@@ -2355,7 +2396,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       formatter: _formatCompactAmount,
       duration: const Duration(milliseconds: 350),
       style: AppTypography.ibm(
-        color: isFolded ? Colors.white38 : AppColors.buttonPrimary,
+        color: isFolded ? Colors.white38 : AppColors.accentPrimary,
         fontSize: 11,
         fontWeight: FontWeight.w500,
       ),
@@ -2761,7 +2802,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
             formatter: gameState.formatCurrency,
             pulseOnIncrease: true,
             style: AppTypography.ibm(
-              color: AppColors.textMint,
+              color: AppColors.accentPrimary,
               fontSize: 13,
               fontWeight: FontWeight.w600,
               letterSpacing: -0.3,
@@ -2776,7 +2817,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
             formatter: gameState.formatCurrency,
             pulseOnIncrease: true,
             style: AppTypography.ibm(
-              color: AppColors.textMint,
+              color: AppColors.accentPrimary,
               fontSize: 17,
               fontWeight: FontWeight.w600,
               letterSpacing: -0.5,
@@ -2786,7 +2827,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
           Text(
             'POT',
             style: AppTypography.ibm(
-              color: AppColors.mint500,
+              color: AppColors.accentPrimary,
               fontSize: 11,
               fontWeight: FontWeight.w400,
               height: 1.3,
@@ -2835,7 +2876,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         ),
         borderRadius: BorderRadius.circular(AppDecorations.radius10),
         border: Border.all(
-          color: AppColors.mint500.withOpacity(isMain ? 0.5 : 0.25),
+          color: AppColors.accentPrimary.withOpacity(isMain ? 0.5 : 0.25),
           width: 1,
         ),
       ),
@@ -2845,7 +2886,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
           Text(
             label,
             style: AppTypography.ibm(
-              color: AppColors.mint500.withOpacity(opacity),
+              color: AppColors.accentPrimary.withOpacity(opacity),
               fontSize: 8,
               fontWeight: FontWeight.w500,
               height: 1.0,
@@ -2855,7 +2896,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
           Text(
             gameState.formatCurrency(amount),
             style: AppTypography.ibm(
-              color: AppColors.textMint.withOpacity(opacity),
+              color: AppColors.accentPrimary.withOpacity(opacity),
               fontSize: 10,
               fontWeight: FontWeight.w600,
               height: 1.0,
@@ -2873,14 +2914,14 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         color: const Color(0xFF1A3D3A).withOpacity(0.5),
         borderRadius: BorderRadius.circular(AppDecorations.radius10),
         border: Border.all(
-          color: AppColors.mint500.withOpacity(0.15),
+          color: AppColors.accentPrimary.withOpacity(0.15),
           width: 1,
         ),
       ),
       child: Text(
         '+$count more',
         style: AppTypography.ibm(
-          color: AppColors.mint500.withOpacity(0.5),
+          color: AppColors.accentPrimary.withOpacity(0.5),
           fontSize: 8,
           fontWeight: FontWeight.w500,
           height: 1.0,
@@ -2904,7 +2945,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
           height: 40,
           margin: const EdgeInsets.symmetric(horizontal: 2),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.bgSurface,
             borderRadius: BorderRadius.circular(3),
             boxShadow: [
               BoxShadow(
@@ -3160,7 +3201,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
               height: 20,
               decoration: BoxDecoration(
                 color: value
-                    ? AppColors.tealPrimary
+                    ? AppColors.accentPrimary
                     : Colors.white.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
               ),
@@ -3227,7 +3268,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
               _getCurrentPlayerStackSafely(),
               textAlign: TextAlign.center,
               style: AppTypography.ibm(
-                color: AppColors.tealPrimary,
+                color: AppColors.accentPrimary,
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
                 height: 22 / 15,
@@ -3939,7 +3980,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                           width: double.infinity,
                           height: 48,
                           decoration: BoxDecoration(
-                            color: AppColors.buttonPrimary,
+                            color: AppColors.accentPrimary,
                             borderRadius: BorderRadius.circular(110),
                           ),
                           child: Center(
@@ -4070,7 +4111,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         child: Text(
           label,
           style: AppTypography.ibm(
-            color: AppColors.buttonPrimary,
+            color: AppColors.accentPrimary,
             fontSize: 13,
             fontWeight: FontWeight.w600,
           ),
@@ -4121,7 +4162,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         child: Text(
           label,
           style: AppTypography.ibm(
-            color: AppColors.buttonPrimary,
+            color: AppColors.accentPrimary,
             fontSize: 13,
             fontWeight: FontWeight.w600,
           ),
@@ -4266,7 +4307,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
           child: Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.bgSurface,
               borderRadius: BorderRadius.circular(AppDecorations.radiusXl),
             ),
             child: Column(
@@ -4283,7 +4324,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                           style: AppTypography.ibm(
                             fontSize: 15,
                             fontWeight: FontWeight.w600,
-                            color: AppColors.textInverse,
+                            color: AppColors.textPrimary,
                             height: 20 / 15,
                           ),
                         ),
@@ -4300,7 +4341,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                             width: 18,
                             height: 18,
                             colorFilter: const ColorFilter.mode(
-                                AppColors.contentInactive, BlendMode.srcIn),
+                                AppColors.textSecondary, BlendMode.srcIn),
                           ),
                         ),
                       ),
@@ -4318,56 +4359,51 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                     height: 22 / 15,
                   ),
                 ),
-                const SizedBox(height: 32),
-                // Buttons
-                Row(
-                  children: [
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () => Navigator.pop(ctx, false),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
-                            border: Border.all(color: AppColors.borderLight),
-                          ),
-                          alignment: Alignment.center,
-                          child: Text(
-                            l10n.commonCancel,
-                            style: AppTypography.ibm(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textInverse,
-                              height: 20 / 15,
-                            ),
-                          ),
-                        ),
+                const SizedBox(height: 24),
+                // Primary — Move to Next Hand (top)
+                GestureDetector(
+                  onTap: () => Navigator.pop(ctx, true),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    decoration: BoxDecoration(
+                      color: AppColors.bgInverse,
+                      borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      l10n.handMoveToNextHand,
+                      style: AppTypography.ibm(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textInverse,
+                        height: 20 / 15,
                       ),
                     ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () => Navigator.pop(ctx, true),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          decoration: BoxDecoration(
-                            color: AppColors.bgPrimary,
-                            borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
-                          ),
-                          alignment: Alignment.center,
-                          child: Text(
-                            l10n.handMoveToNextHand,
-                            style: AppTypography.ibm(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
-                              height: 20 / 15,
-                            ),
-                          ),
-                        ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                // Cancel (below)
+                GestureDetector(
+                  onTap: () => Navigator.pop(ctx, false),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
+                      border: Border.all(color: AppColors.borderStrong),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      l10n.commonCancel,
+                      style: AppTypography.ibm(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                        height: 20 / 15,
                       ),
                     ),
-                  ],
+                  ),
                 ),
               ],
             ),
@@ -4582,8 +4618,8 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
   /// Action-specific flash colors.
   static const _actionColors = {
     PlayerAction.fold: (text: Color(0xFFE85D5D), bg: Color(0xFF2A1010)),       // red
-    PlayerAction.check: (text: AppColors.buttonPrimary, bg: Color(0xFF0A1A1A)),      // teal/cyan
-    PlayerAction.call: (text: AppColors.buttonPrimary, bg: Color(0xFF0A1A1A)),       // teal/cyan
+    PlayerAction.check: (text: AppColors.accentPrimary, bg: Color(0xFF0A1A1A)),      // teal/cyan
+    PlayerAction.call: (text: AppColors.accentPrimary, bg: Color(0xFF0A1A1A)),       // teal/cyan
     PlayerAction.bet: (text: Color(0xFFFFC857), bg: Color(0xFF2A2210)),        // gold
     PlayerAction.raise: (text: Color(0xFFFFC857), bg: Color(0xFF2A2210)),      // gold
   };
@@ -4606,7 +4642,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       _spawnChipFlight(
         fromSeat: gameState.currentPlayer,
         color: action == PlayerAction.call
-            ? AppColors.buttonPrimary
+            ? AppColors.accentPrimary
             : const Color(0xFFFFC857),
       );
     }
@@ -4653,7 +4689,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
 
     // Trigger tap flash for check/call (brief color wash on drawing board)
     if (action == PlayerAction.check || action == PlayerAction.call) {
-      _triggerTapFlash(AppColors.buttonPrimary);
+      _triggerTapFlash(AppColors.accentPrimary);
     } else if (action == PlayerAction.bet || action == PlayerAction.raise) {
       _triggerTapFlash(const Color(0xFFFFC857));
     }
@@ -5630,7 +5666,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(110),
                             border: Border.all(
-                              color: AppColors.textMint,
+                              color: AppColors.accentPrimary,
                             ),
                           ),
                           child: Center(
@@ -5639,7 +5675,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                               style: AppTypography.ibm(
                                 fontSize: 17,
                                 fontWeight: FontWeight.w600,
-                                color: AppColors.textMint,
+                                color: AppColors.accentPrimary,
                                 letterSpacing: -0.5,
                               ),
                             ),
@@ -5654,7 +5690,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                         child: Container(
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           decoration: BoxDecoration(
-                            color: AppColors.buttonPrimary,
+                            color: AppColors.accentPrimary,
                             borderRadius: BorderRadius.circular(110),
                           ),
                           child: Center(
@@ -6272,7 +6308,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     if (lastHand?.winnerId != null) {
       _spawnChipFlight(
         toSeat: lastHand!.winnerId,
-        color: AppColors.tealPrimary,
+        color: AppColors.accentPrimary,
         chipCount: 6,
       );
     }
@@ -7569,7 +7605,7 @@ class _BustedPlayerDialogState extends State<_BustedPlayerDialog> {
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
-                  color: AppColors.buttonPrimary,
+                  color: AppColors.accentPrimary,
                   borderRadius: BorderRadius.circular(110),
                 ),
                 child: Center(

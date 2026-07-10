@@ -575,7 +575,7 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> {
 
     if (!isOccupied) {
       bgColor = AppColors.surfaceVariant3;
-      borderColor = AppColors.buttonPrimary.withValues(alpha: 0.3);
+      borderColor = AppColors.accentPrimary.withValues(alpha: 0.3);
     } else if (isMySeat) {
       bgColor = Colors.black;
       borderColor = Colors.blue;
@@ -584,7 +584,7 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> {
       borderColor = Colors.amber;
     } else {
       bgColor = Colors.black;
-      borderColor = AppColors.buttonPrimary;
+      borderColor = AppColors.accentPrimary;
     }
 
     return Stack(

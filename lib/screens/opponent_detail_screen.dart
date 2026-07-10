@@ -9,6 +9,7 @@ import '../services/firebase_service.dart';
 import '../services/opponent_stats_service.dart';
 import 'opponent_hands_screen.dart';
 import '../widgets/global_bottom_nav_bar.dart';
+import '../design_system/components/buttons/back_button_circle.dart';
 import '../design_system/components/drawer_dots.dart';
 import '../design_system/components/modals/confirm_dialog.dart';
 import '../l10n/app_localizations.dart';
@@ -569,24 +570,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           // Back button
-          GestureDetector(
-            onTap: () => Navigator.pop(context),
-            child: Container(
-              width: 38,
-              height: 38,
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-              ),
-              alignment: Alignment.center,
-              child: SvgPicture.asset(
-                'assets/icons/CaretLeft.svg',
-                width: 20,
-                height: 20,
-                colorFilter: const ColorFilter.mode(Colors.black, BlendMode.srcIn),
-              ),
-            ),
-          ),
+          const BackButtonCircle(),
           // Action pill (Edit + Delete)
           Container(
             decoration: BoxDecoration(
@@ -785,7 +769,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                     '${OpponentHandsScreen.filteredHandCounts[_opponent.id] ?? _statistics?['totalHands'] ?? 0}',
                     style: AppTypography.ibm(
                       fontSize: 17,
-                      color: AppColors.textMint,
+                      color: AppColors.accentPrimary,
                       fontWeight: FontWeight.w500,
                       height: 1.44,
                     ),
@@ -1023,7 +1007,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
     if (_isLoadingStats) {
       return const Center(
         child: CircularProgressIndicator(
-          color: AppColors.buttonPrimary,
+          color: AppColors.accentPrimary,
         ),
       );
     }
@@ -1188,7 +1172,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
               }
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.buttonPrimary,
+              backgroundColor: AppColors.accentPrimary,
               foregroundColor: Colors.black,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(110),
@@ -1222,7 +1206,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
         insetPadding: const EdgeInsets.symmetric(horizontal: 24),
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.bgSurface,
             borderRadius: BorderRadius.circular(AppDecorations.radiusXl),
           ),
           padding: const EdgeInsets.all(24),
@@ -1244,7 +1228,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                         width: 18,
                         height: 18,
                         colorFilter: const ColorFilter.mode(
-                          AppColors.contentInactive,
+                          AppColors.textSecondary,
                           BlendMode.srcIn,
                         ),
                       ),
@@ -1258,7 +1242,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                 width: 38,
                 height: 38,
                 decoration: BoxDecoration(
-                  color: AppColors.borderOnInverseSubtle,
+                  color: AppColors.bgElevated,
                   borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                 ),
                 child: Center(
@@ -1267,7 +1251,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                     width: 24,
                     height: 24,
                     colorFilter: const ColorFilter.mode(
-                      AppColors.bgPrimary,
+                      AppColors.textPrimary,
                       BlendMode.srcIn,
                     ),
                   ),
@@ -1281,7 +1265,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                 style: AppTypography.ibm(
                   fontSize: 17,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textInverse,
+                  color: AppColors.textPrimary,
                   height: 20 / 17,
                 ),
               ),
@@ -1305,7 +1289,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                   decoration: BoxDecoration(
-                    color: AppColors.bgPrimary,
+                    color: AppColors.bgInverse,
                     borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
                   ),
                   child: Text(
@@ -1314,7 +1298,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                     style: AppTypography.ibm(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
-                      color: Colors.white,
+                      color: AppColors.textInverse,
                     ),
                   ),
                 ),
@@ -1412,7 +1396,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
             final bottomInset = MediaQuery.of(context).viewInsets.bottom;
             return Container(
               decoration: const BoxDecoration(
-                color: Colors.white,
+                color: AppColors.bgSurface,
                 borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(AppDecorations.radiusXl),
                   topRight: Radius.circular(AppDecorations.radiusXl),
@@ -1436,7 +1420,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                             style: AppTypography.ibm(
                               fontSize: 15,
                               fontWeight: FontWeight.w600,
-                              color: AppColors.textInverse,
+                              color: AppColors.textPrimary,
                               height: 20 / 15,
                             ),
                           ),
@@ -1444,7 +1428,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                             alignment: Alignment.centerRight,
                             child: GestureDetector(
                               onTap: () => Navigator.pop(context),
-                              child: const Icon(Icons.close, color: AppColors.contentInactive, size: 18),
+                              child: const Icon(Icons.close, color: AppColors.textSecondary, size: 18),
                             ),
                           ),
                         ],
@@ -1458,19 +1442,19 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
                         color: nameFocusNode.hasFocus
-                            ? AppColors.textInverse
-                            : AppColors.contentInactive,
+                            ? AppColors.textPrimary
+                            : AppColors.textSecondary,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Container(
                       decoration: BoxDecoration(
-                        color: AppColors.bgInputOnInverse,
+                        color: AppColors.bgElevated,
                         borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                         border: Border.all(
                           color: nameFocusNode.hasFocus
                               ? AppColors.accentPrimary
-                              : AppColors.borderOnInverseSubtle,
+                              : AppColors.borderStrong,
                           width: nameFocusNode.hasFocus ? 1.5 : 1.0,
                         ),
                       ),
@@ -1484,7 +1468,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                               textInputAction: TextInputAction.next,
                               style: AppTypography.ibm(
                                 fontSize: 15,
-                                color: AppColors.textInverse,
+                                color: AppColors.textPrimary,
                               ),
                               decoration: InputDecoration(
                                 hintText: l10n.opponentsEnterName,
@@ -1505,7 +1489,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                           if (nameController.text.isNotEmpty)
                             GestureDetector(
                               onTap: () => nameController.clear(),
-                              child: const Icon(Icons.cancel, color: AppColors.contentInactive, size: 16),
+                              child: const Icon(Icons.cancel, color: AppColors.textSecondary, size: 16),
                             ),
                         ],
                       ),
@@ -1516,7 +1500,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                         nameError!,
                         style: AppTypography.ibm(
                           fontSize: 12,
-                          color: const Color(0xFFE85A5A),
+                          color: AppColors.accentDanger,
                         ),
                       ),
                     ],
@@ -1528,19 +1512,19 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
                         color: notesFocusNode.hasFocus
-                            ? AppColors.textInverse
-                            : AppColors.contentInactive,
+                            ? AppColors.textPrimary
+                            : AppColors.textSecondary,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Container(
                       decoration: BoxDecoration(
-                        color: AppColors.bgInputOnInverse,
+                        color: AppColors.bgElevated,
                         borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                         border: Border.all(
                           color: notesFocusNode.hasFocus
                               ? AppColors.accentPrimary
-                              : AppColors.borderOnInverseSubtle,
+                              : AppColors.borderStrong,
                           width: notesFocusNode.hasFocus ? 1.5 : 1.0,
                         ),
                       ),
@@ -1554,7 +1538,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                               focusNode: notesFocusNode,
                               style: AppTypography.ibm(
                                 fontSize: 15,
-                                color: AppColors.textInverse,
+                                color: AppColors.textPrimary,
                               ),
                               decoration: InputDecoration(
                                 hintText: l10n.opponentsAddNotes,
@@ -1577,7 +1561,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                           if (notesController.text.isNotEmpty)
                             GestureDetector(
                               onTap: () => notesController.clear(),
-                              child: const Icon(Icons.cancel, color: AppColors.contentInactive, size: 16),
+                              child: const Icon(Icons.cancel, color: AppColors.textSecondary, size: 16),
                             ),
                         ],
                       ),
@@ -1607,7 +1591,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               border: isSelected
-                                  ? Border.all(color: AppColors.bgPrimary, width: 2)
+                                  ? Border.all(color: AppColors.textPrimary, width: 2)
                                   : null,
                             ),
                             child: Center(
@@ -1635,7 +1619,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
-                                border: Border.all(color: AppColors.borderLight),
+                                border: Border.all(color: AppColors.borderStrong),
                               ),
                               child: Text(
                                 'Back',
@@ -1643,7 +1627,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                                 style: AppTypography.ibm(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w600,
-                                  color: AppColors.textInverse,
+                                  color: AppColors.textPrimary,
                                 ),
                               ),
                             ),
@@ -1656,7 +1640,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                             child: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                               decoration: BoxDecoration(
-                                color: AppColors.bgPrimary,
+                                color: AppColors.bgInverse,
                                 borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
                               ),
                               child: Text(
@@ -1665,7 +1649,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                                 style: AppTypography.ibm(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w600,
-                                  color: Colors.white,
+                                  color: AppColors.textInverse,
                                 ),
                               ),
                             ),

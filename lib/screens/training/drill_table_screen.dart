@@ -42,7 +42,7 @@ class _DrillTableScreenState extends State<DrillTableScreen>
   static const _accent = AppColors.accentPrimary;
   static const _gold = Color(0xFFFFC857);
   static const _red = Color(0xFFE85D5D);
-  static const _green = AppColors.accentGreenBright;
+  static const _green = AppColors.accentPrimary;
   static const _chipWhite = Color(0xFFCCCCCC);
 
   late final DrillEngine _engine;
@@ -1283,10 +1283,10 @@ class _DrillSummarySheet extends StatelessWidget {
             const SizedBox(height: AppSpacing.md),
             Row(
               children: [
-                _stat(l10n.drillAccuracy, '$accuracy%', AppColors.accentGreenBright),
+                _stat(l10n.drillAccuracy, '$accuracy%', AppColors.accentPrimary),
                 _stat(l10n.drillDecisions, '${records.length}',
                     AppColors.textPrimary),
-                _stat(l10n.drillCorrectLabel, '$correct', AppColors.accentGreenBright),
+                _stat(l10n.drillCorrectLabel, '$correct', AppColors.accentPrimary),
                 _stat(l10n.drillCloseLabel, '$ok', AppColors.accentTertiary),
                 _stat(l10n.drillMistakes, '${mistakes.length}',
                     AppColors.accentDanger),

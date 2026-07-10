@@ -144,8 +144,8 @@ class _CashBodyState extends State<_CashBody> {
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Container(
         decoration: BoxDecoration(
-          color: AppColors.infoCardBg,
-          borderRadius: BorderRadius.circular(AppDecorations.radius18),
+          color: AppColors.bgSurface,
+          borderRadius: BorderRadius.circular(AppDecorations.radiusXl),
         ),
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         child: Column(
@@ -161,7 +161,7 @@ class _CashBodyState extends State<_CashBody> {
                     style: AppTypography.ibm(
                       fontSize: 13,
                       fontWeight: FontWeight.w400,
-                      color: AppColors.textDisabled,
+                      color: AppColors.textSecondary,
                     ),
                   ),
                   Text(
@@ -169,7 +169,7 @@ class _CashBodyState extends State<_CashBody> {
                     style: AppTypography.ibm(
                       fontSize: 13,
                       fontWeight: FontWeight.w400,
-                      color: AppColors.textDisabled,
+                      color: AppColors.textSecondary,
                     ),
                   ),
                 ],
@@ -200,7 +200,7 @@ class _CashBodyState extends State<_CashBody> {
                               fontSize: 28,
                               fontWeight: FontWeight.w600,
                               color: isPositive
-                                  ? AppColors.tealPrimary
+                                  ? AppColors.accentPrimary
                                   : AppColors.errorRed,
                             ),
                             onChanged: (_) => setState(() {}),
@@ -210,7 +210,7 @@ class _CashBodyState extends State<_CashBody> {
                                 fontSize: 28,
                                 fontWeight: FontWeight.w600,
                                 color: isPositive
-                                    ? AppColors.tealPrimary
+                                    ? AppColors.accentPrimary
                                     : AppColors.errorRed,
                               ),
                               border: InputBorder.none,
@@ -231,7 +231,7 @@ class _CashBodyState extends State<_CashBody> {
                                 fontSize: 16,
                                 fontWeight: FontWeight.w500,
                                 color: isPositive
-                                    ? AppColors.tealPrimary.withValues(alpha: 0.6)
+                                    ? AppColors.accentPrimary.withValues(alpha: 0.6)
                                     : AppColors.errorRed.withValues(alpha: 0.6),
                               ),
                             ),
@@ -245,7 +245,7 @@ class _CashBodyState extends State<_CashBody> {
                     style: AppTypography.mono(
                       fontSize: 17,
                       fontWeight: FontWeight.w500,
-                      color: Colors.white,
+                      color: AppColors.textPrimary,
                     ),
                   ),
                 ],
@@ -305,8 +305,8 @@ class _TournamentBodyState extends State<_TournamentBody> {
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Container(
         decoration: BoxDecoration(
-          color: AppColors.infoCardBg,
-          borderRadius: BorderRadius.circular(AppDecorations.radius18),
+          color: AppColors.bgSurface,
+          borderRadius: BorderRadius.circular(AppDecorations.radiusXl),
         ),
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         child: Column(
@@ -348,7 +348,7 @@ class _TournamentBodyState extends State<_TournamentBody> {
                     style: AppTypography.mono(
                       fontSize: 17,
                       fontWeight: FontWeight.w500,
-                      color: Colors.white,
+                      color: AppColors.textPrimary,
                     ),
                   ),
                 ],
@@ -378,7 +378,7 @@ class _TournamentBodyState extends State<_TournamentBody> {
                         fontSize: 17,
                         fontWeight: FontWeight.w600,
                         color: _calculatedProfit! >= 0
-                            ? AppColors.tealPrimary
+                            ? AppColors.accentPrimary
                             : AppColors.errorRed,
                       ),
                     ),
@@ -423,20 +423,20 @@ class _TournamentBodyState extends State<_TournamentBody> {
               style: AppTypography.ibm(
                 fontSize: 17,
                 fontWeight: FontWeight.w500,
-                color: Colors.white,
+                color: AppColors.textPrimary,
               ),
               decoration: InputDecoration(
                 prefixText: prefix,
                 prefixStyle: AppTypography.ibm(
                   fontSize: 17,
                   fontWeight: FontWeight.w500,
-                  color: AppColors.textDisabled,
+                  color: AppColors.textSecondary,
                 ),
                 suffixText: suffix,
                 suffixStyle: AppTypography.ibm(
                   fontSize: 17,
                   fontWeight: FontWeight.w500,
-                  color: AppColors.textDisabled,
+                  color: AppColors.textSecondary,
                 ),
                 contentPadding: const EdgeInsets.symmetric(vertical: 8),
                 border: InputBorder.none,

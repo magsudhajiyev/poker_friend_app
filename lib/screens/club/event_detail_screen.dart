@@ -150,7 +150,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         final l10n = AppLocalizations.of(context);
         if (newStatus == EventStatus.active) {
           message = l10n.eventDetailLiveNow;
-          bgColor = AppColors.buttonPrimary;
+          bgColor = AppColors.accentPrimary;
         } else if (newStatus == EventStatus.completed) {
           message = l10n.eventDetailEnded;
           bgColor = Colors.white.withOpacity(0.3);
@@ -368,7 +368,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             TextButton(
               onPressed: () => Navigator.pop(context),
               style: TextButton.styleFrom(
-                foregroundColor: AppColors.buttonPrimary,
+                foregroundColor: AppColors.accentPrimary,
               ),
               child: Text(
                 AppLocalizations.of(context).commonOk,
@@ -446,7 +446,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(
-              foregroundColor: isLive ? AppColors.buttonPrimary : AppColors.lossRed,
+              foregroundColor: isLive ? AppColors.accentPrimary : AppColors.lossRed,
             ),
             child: Text(
               confirmButtonText,
@@ -523,7 +523,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(AppLocalizations.of(context).eventDetailAddedToCalendar),
-            backgroundColor: AppColors.buttonPrimary,
+            backgroundColor: AppColors.accentPrimary,
           ),
         );
       }
@@ -567,26 +567,6 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         backgroundColor: AppColors.paper,
         body: Stack(
           children: [
-            // Teal radial gradient background
-            Positioned(
-              top: -screenWidth * 0.5,
-              right: -screenWidth * 0.2,
-              child: Container(
-                width: screenWidth * 1.2,
-                height: screenWidth * 1.2,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(
-                    colors: [
-                      const Color(0xFF1A4A4A).withOpacity(0.6),
-                      AppColors.headerGradientTeal.withOpacity(0.6),
-                      Colors.transparent,
-                    ],
-                    stops: const [0.0, 0.4, 1.0],
-                  ),
-                ),
-              ),
-            ),
             // Content
             SafeArea(
               child: Column(
@@ -596,7 +576,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                     child: _isLoading
                         ? Center(
                             child: CircularProgressIndicator(
-                              color: AppColors.buttonPrimary,
+                              color: AppColors.accentPrimary,
                             ),
                           )
                         : _loadError != null
@@ -651,7 +631,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                     content: Text(
                                       CurrencyService.formatCash((_event.buyInAmount ?? 0).toDouble()),
                                       style: AppTypography.ibm(
-                                        color: AppColors.buttonPrimary,
+                                        color: AppColors.accentPrimary,
                                         fontSize: 20,
                                         fontWeight: FontWeight.w700,
                                       ),
@@ -700,7 +680,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                     AppLocalizations.of(context).eventDetailAbout,
                                     style: AppTypography.ibm(
                                       fontSize: 12,
-                                      color: AppColors.limeGreen,
+                                      color: AppColors.accentPrimary,
                                       fontWeight: FontWeight.w600,
                                       letterSpacing: 1.0,
                                     ),
@@ -839,7 +819,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                 ),
                 child: const Icon(
                   Icons.edit,
-                  color: AppColors.buttonPrimary,
+                  color: AppColors.accentPrimary,
                   size: 20,
                 ),
               ),
@@ -881,8 +861,8 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       textColor = Colors.white.withOpacity(0.7);
       text = l10n.eventDetailCompletedBadge;
     } else {
-      bgColor = AppColors.buttonPrimary.withOpacity(0.2);
-      textColor = AppColors.buttonPrimary;
+      bgColor = AppColors.accentPrimary.withOpacity(0.2);
+      textColor = AppColors.accentPrimary;
       text = l10n.eventDetailUpcomingBadge;
     }
 
@@ -936,12 +916,12 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             width: 38,
             height: 38,
             decoration: BoxDecoration(
-              color: AppColors.buttonPrimary.withOpacity(0.1),
+              color: AppColors.accentPrimary.withOpacity(0.1),
               borderRadius: BorderRadius.circular(AppDecorations.radius10),
             ),
             child: Icon(
               icon,
-              color: AppColors.buttonPrimary,
+              color: AppColors.accentPrimary,
               size: 18,
             ),
           ),
@@ -1002,12 +982,12 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: AppColors.mint800,
+                        color: AppColors.accentPrimary,
                         borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
                       ),
                       child: const Icon(
                         Icons.event_seat,
-                        color: AppColors.buttonPrimary,
+                        color: AppColors.accentPrimary,
                         size: 24,
                       ),
                     ),
@@ -1101,7 +1081,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           AppLocalizations.of(context).eventDetailAreYouGoing,
           style: AppTypography.ibm(
             fontSize: 12,
-            color: AppColors.limeGreen,
+            color: AppColors.accentPrimary,
             fontWeight: FontWeight.w600,
             letterSpacing: 1.0,
           ),
@@ -1114,7 +1094,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                 status: AttendanceStatus.going,
                 icon: Icons.check_circle,
                 label: AppLocalizations.of(context).eventDetailRsvpGoing,
-                color: AppColors.buttonPrimary,
+                color: AppColors.accentPrimary,
               ),
             ),
             const SizedBox(width: 8),
@@ -1198,7 +1178,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         decoration: BoxDecoration(
           color: _addedToCalendar
               ? Colors.white.withOpacity(0.05)
-              : AppColors.buttonPrimary,
+              : AppColors.accentPrimary,
           borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
         ),
         child: Row(
@@ -1257,7 +1237,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                   AppLocalizations.of(context).eventDetailSeeAll,
                   style: AppTypography.ibm(
                     fontSize: 17,
-                    color: AppColors.textMint,
+                    color: AppColors.accentPrimary,
                     fontWeight: FontWeight.w500,
                     height: 1.44,
                   ),
@@ -1273,7 +1253,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           _buildAttendanceRow(
             label: AppLocalizations.of(context).eventDetailRsvpGoing,
             count: goingCount,
-            countColor: AppColors.buttonPrimary,
+            countColor: AppColors.accentPrimary,
           ),
           const SizedBox(height: 20),
 
@@ -1336,7 +1316,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: AppColors.buttonPrimary,
+          color: AppColors.accentPrimary,
           borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
         ),
         child: Row(
@@ -1382,7 +1362,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           color: AppColors.surfaceDark,
           borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
           border: Border.all(
-            color: AppColors.buttonPrimary.withOpacity(0.3),
+            color: AppColors.accentPrimary.withOpacity(0.3),
           ),
         ),
         child: Row(
@@ -1390,7 +1370,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           children: [
             const Icon(
               Icons.leaderboard,
-              color: AppColors.buttonPrimary,
+              color: AppColors.accentPrimary,
               size: 22,
             ),
             const SizedBox(width: 10),
@@ -1399,7 +1379,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
               style: AppTypography.ibm(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: AppColors.buttonPrimary,
+                color: AppColors.accentPrimary,
               ),
             ),
           ],
@@ -1479,7 +1459,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           color: AppColors.surfaceDark,
           borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
           border: Border.all(
-            color: AppColors.buttonPrimary.withOpacity(0.3),
+            color: AppColors.accentPrimary.withOpacity(0.3),
           ),
         ),
         child: Row(
@@ -1487,7 +1467,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           children: [
             const Icon(
               Icons.event_seat,
-              color: AppColors.buttonPrimary,
+              color: AppColors.accentPrimary,
               size: 22,
             ),
             const SizedBox(width: 10),
@@ -1496,7 +1476,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
               style: AppTypography.ibm(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: AppColors.buttonPrimary,
+                color: AppColors.accentPrimary,
               ),
             ),
           ],
@@ -1558,7 +1538,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: AppColors.buttonPrimary,
+          color: AppColors.accentPrimary,
           borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
         ),
         child: Row(
@@ -1594,7 +1574,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           color: AppColors.surfaceDark,
           borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
           border: Border.all(
-            color: AppColors.buttonPrimary.withOpacity(0.3),
+            color: AppColors.accentPrimary.withOpacity(0.3),
           ),
         ),
         child: Row(
@@ -1602,7 +1582,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           children: [
             const Icon(
               Icons.event_seat,
-              color: AppColors.buttonPrimary,
+              color: AppColors.accentPrimary,
               size: 22,
             ),
             const SizedBox(width: 10),
@@ -1611,7 +1591,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
               style: AppTypography.ibm(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: AppColors.buttonPrimary,
+                color: AppColors.accentPrimary,
               ),
             ),
           ],
@@ -1626,10 +1606,10 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 12),
       decoration: BoxDecoration(
-        color: AppColors.buttonPrimary.withOpacity(0.1),
+        color: AppColors.accentPrimary.withOpacity(0.1),
         borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
         border: Border.all(
-          color: AppColors.buttonPrimary.withOpacity(0.3),
+          color: AppColors.accentPrimary.withOpacity(0.3),
         ),
       ),
       child: Row(
@@ -1637,7 +1617,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         children: [
           const Icon(
             Icons.check_circle,
-            color: AppColors.buttonPrimary,
+            color: AppColors.accentPrimary,
             size: 22,
           ),
           const SizedBox(width: 10),
@@ -1646,7 +1626,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             style: AppTypography.ibm(
               fontSize: 16,
               fontWeight: FontWeight.w600,
-              color: AppColors.buttonPrimary,
+              color: AppColors.accentPrimary,
             ),
           ),
         ],
@@ -1729,7 +1709,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           AppLocalizations.of(context).eventDetailAdminActions,
           style: AppTypography.ibm(
             fontSize: 12,
-            color: AppColors.limeGreen,
+            color: AppColors.accentPrimary,
             fontWeight: FontWeight.w600,
             letterSpacing: 1.0,
           ),
@@ -1743,7 +1723,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                   onTap: _startEvent,
                   icon: Icons.play_arrow,
                   label: AppLocalizations.of(context).eventDetailStartEvent,
-                  color: AppColors.buttonPrimary,
+                  color: AppColors.accentPrimary,
                 ),
               ),
             if (_event.status == EventStatus.scheduled)
@@ -1764,7 +1744,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                       : AppLocalizations.of(context).commonCancel,
                   color: (_event.status == EventStatus.active ||
                           _event.status == EventStatus.paused)
-                      ? AppColors.buttonPrimary
+                      ? AppColors.accentPrimary
                       : AppColors.lossRed,
                 ),
               ),

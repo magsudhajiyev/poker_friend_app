@@ -107,7 +107,7 @@ class _StackGrowthChartState extends State<StackGrowthChart> {
     // Line color based on profit/loss
     final currentStack = spots.last.y;
     final lineColor = currentStack >= widget.startingStack
-        ? AppColors.buttonPrimary
+        ? AppColors.accentPrimary
         : const Color(0xFFFF6B6B);
 
     // Viewport: show _visiblePoints worth of space
@@ -593,7 +593,7 @@ class _StackGrowthChartFullScreenState
   @override
   Widget build(BuildContext context) {
     final lineColor = widget.profitLoss >= 0
-        ? AppColors.buttonPrimary
+        ? AppColors.accentPrimary
         : const Color(0xFFFF6B6B);
 
     return Scaffold(

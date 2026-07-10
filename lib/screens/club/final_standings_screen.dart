@@ -84,29 +84,6 @@ class _FinalStandingsScreenState extends State<FinalStandingsScreen> {
       backgroundColor: AppColors.bgPrimary,
       body: Stack(
         children: [
-          // Teal glow at top
-          Positioned(
-            top: -250 + topPadding,
-            left: -screenWidth * 0.25,
-            right: -screenWidth * 0.25,
-            child: Container(
-              height: 500,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  center: Alignment.center,
-                  radius: 0.5,
-                  colors: [
-                    const Color(0xFF2E5A59).withOpacity(0.9),
-                    const Color(0xFF2E5A59).withOpacity(0.5),
-                    const Color(0xFF0D2B2A).withOpacity(0.3),
-                    Colors.transparent,
-                  ],
-                  stops: const [0.0, 0.3, 0.6, 1.0],
-                ),
-              ),
-            ),
-          ),
 
           // Content
           SafeArea(
@@ -117,7 +94,7 @@ class _FinalStandingsScreenState extends State<FinalStandingsScreen> {
                   const Expanded(
                     child: Center(
                       child: CircularProgressIndicator(
-                        color: AppColors.buttonPrimary,
+                        color: AppColors.accentPrimary,
                       ),
                     ),
                   )
@@ -230,7 +207,7 @@ class _FinalStandingsScreenState extends State<FinalStandingsScreen> {
                   style: AppTypography.ibm(
                     fontSize: 13,
                     fontWeight: FontWeight.w400,
-                    color: AppColors.textMint,
+                    color: AppColors.accentPrimary,
                     height: 1.47,
                   ),
                   overflow: TextOverflow.ellipsis,
@@ -341,7 +318,7 @@ class _FinalStandingsScreenState extends State<FinalStandingsScreen> {
           Text(
             value,
             textAlign: TextAlign.center,
-            style: AppTypography.listRowLabel(color: AppColors.buttonPrimary),
+            style: AppTypography.listRowLabel(color: AppColors.accentPrimary),
           ),
           const SizedBox(height: AppSpacing.xxxs),
           Text(
@@ -426,21 +403,21 @@ class _FinalStandingsScreenState extends State<FinalStandingsScreen> {
         return const (
           bg: _kRank1Bg,
           rankBg: AppColors.neutral800,
-          rankColor: AppColors.buttonPrimary,
+          rankColor: AppColors.accentPrimary,
           trophy: _TrophyKind.gold,
         );
       case 2:
         return const (
           bg: _kRank2Bg,
           rankBg: AppColors.neutral800,
-          rankColor: AppColors.mint500,
+          rankColor: AppColors.accentPrimary,
           trophy: _TrophyKind.silver,
         );
       case 3:
         return const (
           bg: AppColors.neutral800,
           rankBg: AppColors.bgSurface,
-          rankColor: AppColors.mint700,
+          rankColor: AppColors.accentPrimary,
           trophy: _TrophyKind.bronze,
         );
       default:

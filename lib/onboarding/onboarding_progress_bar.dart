@@ -38,7 +38,7 @@ class OnboardingProgressBar extends StatelessWidget {
                     alignment: Alignment.centerLeft,
                     child: Container(
                       decoration: const BoxDecoration(
-                        color: AppColors.buttonPrimary,
+                        color: AppColors.accentPrimary,
                       ),
                     ),
                   ),

@@ -144,31 +144,6 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       backgroundColor: AppColors.bgPrimary, // #02050B
       body: Stack(
         children: [
-          // Cyan ellipse glow at top (Figma node 343:4912)
-          // Position adjusted lower for better visual appearance
-          Positioned(
-            top: -50,
-            left: 0,
-            right: 0,
-            child: Center(
-              child: Container(
-                width: 412,
-                height: 217,
-                decoration: BoxDecoration(
-                  gradient: RadialGradient(
-                    center: Alignment.center,
-                    radius: 1.0,
-                    colors: [
-                      const Color(0xFF4CDBFF).withValues(alpha: 0.25),
-                      const Color(0xFF2EB46A).withValues(alpha: 0.12),
-                      Colors.transparent,
-                    ],
-                    stops: const [0.0, 0.5, 1.0],
-                  ),
-                ),
-              ),
-            ),
-          ),
 
           // Main content column
           Positioned.fill(
@@ -188,7 +163,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   child: _isLoading
                       ? const Center(
                           child: CircularProgressIndicator(
-                            color: AppColors.buttonPrimary,
+                            color: AppColors.accentPrimary,
                           ),
                         )
                       : _notifications.isEmpty
@@ -352,7 +327,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                     style: AppTypography.ibm(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.buttonPrimary, // mint/300
+                      color: AppColors.accentPrimary, // mint/300
                       height: 1.47,
                     ),
                   ),
@@ -404,7 +379,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   Widget _buildNotificationsList(Map<String, List<ClubNotification>> groupedNotifications) {
     return RefreshIndicator(
       onRefresh: _loadNotifications,
-      color: AppColors.buttonPrimary,
+      color: AppColors.accentPrimary,
       child: ListView.builder(
         // Figma: notifications list starts at y:218 (60px below separator)
         padding: const EdgeInsets.only(top: 24, bottom: 100),
@@ -447,7 +422,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   style: AppTypography.ibm(
                     fontSize: 17,
                     fontWeight: FontWeight.w400,
-                    color: AppColors.textMint, // #D3FFFD
+                    color: AppColors.accentPrimary, // #D3FFFD
                     height: 1.44,
                   ),
                 ),
@@ -565,7 +540,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           children: [
             Icon(
               isResolved ? Icons.check_circle : Icons.cancel,
-              color: isResolved ? AppColors.limeGreen : AppColors.errorRed,
+              color: isResolved ? AppColors.accentPrimary : AppColors.errorRed,
               size: 22,
             ),
             const SizedBox(width: 8),
@@ -618,7 +593,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: isResolved
-                      ? AppColors.limeGreen.withValues(alpha: 0.1)
+                      ? AppColors.accentPrimary.withValues(alpha: 0.1)
                       : AppColors.errorRed.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(AppDecorations.radius10),
                 ),
@@ -640,7 +615,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             child: Text(
               AppLocalizations.of(context).commonOk,
               style: AppTypography.ibm(
-                color: AppColors.buttonPrimary,
+                color: AppColors.accentPrimary,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -664,7 +639,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       context: context,
       barrierDismissible: false,
       builder: (context) => const Center(
-        child: CircularProgressIndicator(color: AppColors.buttonPrimary),
+        child: CircularProgressIndicator(color: AppColors.accentPrimary),
       ),
     );
 
@@ -794,7 +769,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       context: context,
       barrierDismissible: false,
       builder: (context) => const Center(
-        child: CircularProgressIndicator(color: AppColors.buttonPrimary),
+        child: CircularProgressIndicator(color: AppColors.accentPrimary),
       ),
     );
 
@@ -916,7 +891,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       context: context,
       barrierDismissible: false,
       builder: (context) => const Center(
-        child: CircularProgressIndicator(color: AppColors.buttonPrimary),
+        child: CircularProgressIndicator(color: AppColors.accentPrimary),
       ),
     );
 
@@ -976,7 +951,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       context: context,
       barrierDismissible: false,
       builder: (context) => const Center(
-        child: CircularProgressIndicator(color: AppColors.buttonPrimary),
+        child: CircularProgressIndicator(color: AppColors.accentPrimary),
       ),
     );
 
@@ -1235,7 +1210,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
-                  color: AppColors.buttonPrimary, // #89F1EC
+                  color: AppColors.accentPrimary, // #89F1EC
                   borderRadius: BorderRadius.circular(86),
                 ),
                 child: Text(
@@ -1296,10 +1271,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     switch (type) {
       case NotificationType.eventCreated:
       case NotificationType.eventUpdated:
-        return AppColors.buttonPrimary;
+        return AppColors.accentPrimary;
       case NotificationType.eventStarting:
       case NotificationType.eventStarted:
-        return AppColors.limeGreen;
+        return AppColors.accentPrimary;
       case NotificationType.eventCancelled:
       case NotificationType.clubRejected:
       case NotificationType.invitationDeclined:
@@ -1307,7 +1282,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       case NotificationType.memberRSVP:
       case NotificationType.clubApproved:
       case NotificationType.invitationAccepted:
-        return AppColors.limeGreen;
+        return AppColors.accentPrimary;
       case NotificationType.newClubRequest:
       case NotificationType.memberInvited:
         return const Color(0xFFFFD13F);
@@ -1315,7 +1290,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         return const Color(0xFF4A87F2);
       case NotificationType.newSupportRequest:
       case NotificationType.supportRequestUpdated:
-        return AppColors.textMint;
+        return AppColors.accentPrimary;
       case NotificationType.partnerGranted:
         return AppColors.accentPrimary;
     }

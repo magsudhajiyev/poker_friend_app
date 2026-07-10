@@ -82,7 +82,7 @@ class EventSuccessPopup extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(6),
                     decoration: BoxDecoration(
-                      color: AppColors.buttonPrimary,
+                      color: AppColors.accentPrimary,
                       borderRadius: BorderRadius.circular(28),
                     ),
                     child: SvgPicture.asset(

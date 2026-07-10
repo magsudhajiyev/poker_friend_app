@@ -294,7 +294,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
                     border: Border.all(
-                      color: AppColors.buttonPrimary.withValues(alpha: 0.5),
+                      color: AppColors.accentPrimary.withValues(alpha: 0.5),
                       width: 1,
                     ),
                   ),
@@ -303,7 +303,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
                     style: AppTypography.ibm(
                       fontSize: 17,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.buttonPrimary,
+                      color: AppColors.accentPrimary,
                       letterSpacing: -0.5,
                     ),
                   ),

@@ -237,7 +237,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
                 child: Text(
                   l10n.quotaUpgradeToElite,
                   style: AppTypography.ibm(
-                    color: AppColors.buttonPrimary,
+                    color: AppColors.accentPrimary,
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
@@ -248,7 +248,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
                 child: Text(
                   l10n.quotaOk,
                   style: AppTypography.ibm(
-                    color: AppColors.buttonPrimary,
+                    color: AppColors.accentPrimary,
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
@@ -312,7 +312,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
             child: Text(
               AppLocalizations.of(ctx).sessionAnalyticsExport,
               style: AppTypography.ibm(
-                color: AppColors.buttonPrimary,
+                color: AppColors.accentPrimary,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -553,41 +553,12 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final screenWidth = MediaQuery.of(context).size.width;
-
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: AppColors.bgPrimary,
       extendBody: true,
       bottomNavigationBar: GlobalBottomNavBar(currentScreen: 'sessions'),
       body: Stack(
         children: [
-          // Teal radial gradient at top
-          Positioned(
-            top: -screenWidth * 0.5,
-            right: -screenWidth * 0.25,
-            child: Transform.scale(
-              scaleX: 1.0,
-              scaleY: 0.7,
-              child: Container(
-                width: screenWidth * 1.5,
-                height: screenWidth * 1.2,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(
-                    center: Alignment.center,
-                    radius: 0.5,
-                    colors: [
-                      const Color(0xFF1A4A4A),
-                      AppColors.headerGradientTeal.withOpacity(0.7),
-                      AppColors.headerGradientTeal.withOpacity(0.3),
-                      Colors.transparent,
-                    ],
-                    stops: const [0.0, 0.3, 0.6, 1.0],
-                  ),
-                ),
-              ),
-            ),
-          ),
           SafeArea(
             child: Column(
               children: [
@@ -653,7 +624,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
                                     valueColor: AlwaysStoppedAnimation<Color>(
-                                        AppColors.buttonPrimary),
+                                        AppColors.accentPrimary),
                                   ),
                                 )
                               : Icon(Icons.ios_share,
@@ -697,7 +668,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
                   child: _isLoading
                       ? Center(
                           child: CircularProgressIndicator(
-                            valueColor: AlwaysStoppedAnimation<Color>(AppColors.buttonPrimary),
+                            valueColor: AlwaysStoppedAnimation<Color>(AppColors.accentPrimary),
                           ),
                         )
                       : SingleChildScrollView(
@@ -726,8 +697,8 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
     final l10n = AppLocalizations.of(context);
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.infoCardBg,
-        borderRadius: BorderRadius.circular(AppDecorations.radius18),
+        color: AppColors.bgSurface,
+        borderRadius: BorderRadius.circular(AppDecorations.radiusXl),
       ),
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -790,7 +761,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
                       ? '${pl >= 0 ? '+' : ''}${CurrencyService.formatCash(pl)}'
                       : l10n.sessionAnalyticsNotAvailableFull,
                   valueColor: pl != null
-                      ? (pl >= 0 ? AppColors.buttonPrimary : const Color(0xFFFF6B6B))
+                      ? (pl >= 0 ? AppColors.accentPrimary : const Color(0xFFFF6B6B))
                       : null,
                 );
               })),
@@ -799,7 +770,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
           const SizedBox(height: 16),
           Container(
             height: 1,
-            color: Colors.white.withOpacity(0.1),
+            color: AppColors.borderStrong,
           ),
           // Rebuys (tournament) / Add-ons (cash)
           Padding(
@@ -821,7 +792,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
                   style: AppTypography.ibm(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.buttonPrimary,
+                    color: AppColors.accentPrimary,
                     height: 1.0,
                   ),
                 ),
@@ -837,7 +808,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: AppColors.bgElevated,
         borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
       ),
       child: Column(
@@ -870,8 +841,8 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
     return Container(
       key: _stackChartKey,
       decoration: BoxDecoration(
-        color: AppColors.infoCardBg,
-        borderRadius: BorderRadius.circular(AppDecorations.radius18),
+        color: AppColors.bgSurface,
+        borderRadius: BorderRadius.circular(AppDecorations.radiusXl),
       ),
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -955,7 +926,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
         ? spots.length * pointWidth
         : screenWidth - 92;
 
-    final lineColor = _profitLoss >= 0 ? AppColors.buttonPrimary : const Color(0xFFFF6B6B);
+    final lineColor = _profitLoss >= 0 ? AppColors.accentPrimary : const Color(0xFFFF6B6B);
 
     final minY = spots.isNotEmpty ? spots.map((e) => e.y).reduce((a, b) => a < b ? a : b) * 0.9 : 0.0;
     final maxY = spots.isNotEmpty ? spots.map((e) => e.y).reduce((a, b) => a > b ? a : b) * 1.1 : 100.0;
@@ -1252,7 +1223,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
         width: double.infinity,
         height: 52,
         decoration: BoxDecoration(
-          color: AppColors.buttonPrimary,
+          color: AppColors.accentPrimary,
           borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
         ),
         child: Center(

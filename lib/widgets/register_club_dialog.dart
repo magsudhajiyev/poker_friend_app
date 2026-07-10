@@ -146,7 +146,7 @@ class _RegisterClubSheetState extends State<_RegisterClubSheet> {
 
     return Container(
       decoration: const BoxDecoration(
-        color: Colors.white,
+        color: AppColors.bgSurface,
         borderRadius: BorderRadius.vertical(top: Radius.circular(AppDecorations.radiusXl)),
       ),
       padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + bottomInset),
@@ -166,14 +166,14 @@ class _RegisterClubSheetState extends State<_RegisterClubSheet> {
                     style: AppTypography.ibm(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.textInverse,
+                      color: AppColors.textPrimary,
                     ),
                   ),
                   Align(
                     alignment: Alignment.centerRight,
                     child: GestureDetector(
                       onTap: () => Navigator.pop(context),
-                      child: const Icon(Icons.close, size: 18, color: AppColors.contentInactive),
+                      child: const Icon(Icons.close, size: 18, color: AppColors.textSecondary),
                     ),
                   ),
                 ],
@@ -227,7 +227,7 @@ class _RegisterClubSheetState extends State<_RegisterClubSheet> {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.info_outline, size: 12, color: AppColors.contentInactive),
+                const Icon(Icons.info_outline, size: 12, color: AppColors.textSecondary),
                 const SizedBox(width: 4),
                 Expanded(
                   child: Text(
@@ -235,7 +235,7 @@ class _RegisterClubSheetState extends State<_RegisterClubSheet> {
                     style: AppTypography.ibm(
                       fontSize: 12,
                       fontWeight: FontWeight.w400,
-                      color: AppColors.textInverse,
+                      color: AppColors.textSecondary,
                     ),
                   ),
                 ),
@@ -255,7 +255,7 @@ class _RegisterClubSheetState extends State<_RegisterClubSheet> {
                       decoration: BoxDecoration(
                         color: Colors.transparent,
                         borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
-                        border: Border.all(color: AppColors.borderLight, width: 1),
+                        border: Border.all(color: AppColors.borderStrong, width: 1),
                       ),
                       child: Center(
                         child: Text(
@@ -263,7 +263,7 @@ class _RegisterClubSheetState extends State<_RegisterClubSheet> {
                           style: AppTypography.ibm(
                             fontSize: 15,
                             fontWeight: FontWeight.w500,
-                            color: AppColors.textInverse,
+                            color: AppColors.textPrimary,
                           ),
                         ),
                       ),
@@ -277,7 +277,7 @@ class _RegisterClubSheetState extends State<_RegisterClubSheet> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       decoration: BoxDecoration(
-                        color: AppColors.bgPrimary,
+                        color: AppColors.bgInverse,
                         borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
                       ),
                       child: Center(
@@ -286,7 +286,7 @@ class _RegisterClubSheetState extends State<_RegisterClubSheet> {
                                 width: 18,
                                 height: 18,
                                 child: CircularProgressIndicator(
-                                  color: Colors.white,
+                                  color: AppColors.textInverse,
                                   strokeWidth: 2,
                                 ),
                               )
@@ -295,7 +295,7 @@ class _RegisterClubSheetState extends State<_RegisterClubSheet> {
                                 style: AppTypography.ibm(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w500,
-                                  color: Colors.white,
+                                  color: AppColors.textInverse,
                                 ),
                               ),
                       ),
@@ -326,7 +326,7 @@ class _SuccessDialogContent extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 24),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.bgSurface,
         borderRadius: BorderRadius.circular(AppDecorations.radiusXl),
       ),
       padding: const EdgeInsets.all(24),
@@ -337,7 +337,7 @@ class _SuccessDialogContent extends StatelessWidget {
             width: 56,
             height: 56,
             decoration: BoxDecoration(
-              color: const Color(0xFFEEFBF3),
+              color: AppColors.accentPrimary.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(28),
             ),
             child: const Icon(
@@ -354,7 +354,7 @@ class _SuccessDialogContent extends StatelessWidget {
             style: AppTypography.ibm(
               fontSize: 20,
               fontWeight: FontWeight.w600,
-              color: AppColors.textInverse,
+              color: AppColors.textPrimary,
               letterSpacing: -0.5,
             ),
             textAlign: TextAlign.center,
@@ -381,7 +381,7 @@ class _SuccessDialogContent extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 12),
               decoration: BoxDecoration(
-                color: AppColors.bgPrimary,
+                color: AppColors.bgInverse,
                 borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
               ),
               child: Center(
@@ -390,7 +390,7 @@ class _SuccessDialogContent extends StatelessWidget {
                   style: AppTypography.ibm(
                     fontSize: 15,
                     fontWeight: FontWeight.w500,
-                    color: Colors.white,
+                    color: AppColors.textInverse,
                   ),
                 ),
               ),

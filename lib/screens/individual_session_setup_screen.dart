@@ -13,6 +13,7 @@ import '../onboarding/onboarding_progress_bar.dart';
 import '../services/currency_service.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/typography.dart';
+import '../design_system/components/headers/top_nav_bar.dart';
 import '../design_system/constants/decorations.dart';
 
 class IndividualSessionSetupScreen extends StatefulWidget {

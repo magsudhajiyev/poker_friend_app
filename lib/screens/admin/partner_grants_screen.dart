@@ -77,7 +77,7 @@ class _PartnerGrantsScreenState extends State<PartnerGrantsScreen> {
                   child: _isLoading
                       ? const Center(
                           child: CircularProgressIndicator(
-                              color: AppColors.buttonPrimary))
+                              color: AppColors.accentPrimary))
                       : _grants.isEmpty
                           ? _buildEmptyState()
                           : _buildGrantList(),
@@ -319,7 +319,7 @@ class _PartnerGrantsScreenState extends State<PartnerGrantsScreen> {
     final String label;
     switch (status) {
       case 'active':
-        color = AppColors.limeGreen;
+        color = AppColors.accentPrimary;
         label = 'Active';
       case 'expired':
         color = const Color(0xFFF59E0B); // amber
@@ -1427,7 +1427,7 @@ class _EditGrantSheetState extends State<_EditGrantSheet> {
                 child: ElevatedButton(
                   onPressed: _isSaving ? null : _reactivateGrant,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.limeGreen,
+                    backgroundColor: AppColors.accentPrimary,
                     foregroundColor: Colors.black,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(

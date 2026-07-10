@@ -124,7 +124,7 @@ class NotificationTesterScreen extends StatelessWidget {
       body: 'John D.: [Bug Report] App crashes on hand save',
       clubName: '',
       icon: Icons.support_agent,
-      iconColor: AppColors.buttonPrimary,
+      iconColor: AppColors.accentPrimary,
     ),
     _NotificationMock(
       type: NotificationType.supportRequestUpdated,
@@ -132,7 +132,7 @@ class NotificationTesterScreen extends StatelessWidget {
       body: 'Your request "App crashes on hand save" has been resolved.',
       clubName: '',
       icon: Icons.check_circle,
-      iconColor: AppColors.limeGreen,
+      iconColor: AppColors.accentPrimary,
     ),
   ];
 
@@ -203,10 +203,10 @@ class NotificationTesterScreen extends StatelessWidget {
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                     decoration: BoxDecoration(
-                      color: AppColors.buttonPrimary.withValues(alpha: 0.08),
+                      color: AppColors.accentPrimary.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                       border: Border.all(
-                        color: AppColors.buttonPrimary.withValues(alpha: 0.2),
+                        color: AppColors.accentPrimary.withValues(alpha: 0.2),
                       ),
                     ),
                     child: Text(
@@ -214,7 +214,7 @@ class NotificationTesterScreen extends StatelessWidget {
                       'Tap the list icon to preview it as a notification list item.',
                       style: AppTypography.ibm(
                         fontSize: 13,
-                        color: AppColors.buttonPrimary,
+                        color: AppColors.accentPrimary,
                         height: 1.4,
                       ),
                     ),
@@ -370,7 +370,7 @@ class NotificationTesterScreen extends StatelessWidget {
                 style: AppTypography.ibm(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.limeGreen,
+                  color: AppColors.accentPrimary,
                   letterSpacing: 1.0,
                 ),
               ),
@@ -408,7 +408,7 @@ class NotificationTesterScreen extends StatelessWidget {
           width: 24,
           height: 24,
           decoration: BoxDecoration(
-            color: AppColors.accentGreenBright,
+            color: AppColors.accentPrimary,
             borderRadius: BorderRadius.circular(52.5),
           ),
           child: const Center(
@@ -449,7 +449,7 @@ class NotificationTesterScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: AppColors.buttonPrimary,
+              color: AppColors.accentPrimary,
               borderRadius: BorderRadius.circular(86),
             ),
             child: Text(

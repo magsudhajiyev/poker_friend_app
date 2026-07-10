@@ -91,7 +91,7 @@ class RaiseSnapOverlay extends StatelessWidget {
                         formattedAmount,
                         style: AppTypography.mono(
                           fontSize: 32,
-                          color: AppColors.buttonPrimary,
+                          color: AppColors.accentPrimary,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
@@ -153,7 +153,7 @@ class RaiseSnapOverlay extends StatelessWidget {
                 width: progressWidth,
                 height: trackHeight * clampedProgress,
                 decoration: BoxDecoration(
-                  color: AppColors.buttonPrimary,
+                  color: AppColors.accentPrimary,
                   borderRadius: BorderRadius.circular(progressWidth / 2),
                 ),
               ),
@@ -190,7 +190,7 @@ class RaiseSnapOverlay extends StatelessWidget {
                     style: AppTypography.ibm(
                       fontSize: isActive ? 15 : (isKeyPoint ? 13 : 11),
                       color: isActive
-                          ? AppColors.buttonPrimary
+                          ? AppColors.accentPrimary
                           : isPassed
                               ? Colors.white.withValues(alpha: isKeyPoint ? 0.7 : 0.45)
                               : Colors.white.withValues(alpha: isKeyPoint ? 0.4 : 0.25),
@@ -205,14 +205,14 @@ class RaiseSnapOverlay extends StatelessWidget {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: isActive
-                          ? AppColors.buttonPrimary
+                          ? AppColors.accentPrimary
                           : isPassed
                               ? Colors.white.withValues(alpha: 0.5)
                               : Colors.white.withValues(alpha: 0.2),
                       boxShadow: isActive
                           ? [
                               BoxShadow(
-                                color: AppColors.buttonPrimary.withValues(alpha: 0.5),
+                                color: AppColors.accentPrimary.withValues(alpha: 0.5),
                                 blurRadius: 8,
                               )
                             ]

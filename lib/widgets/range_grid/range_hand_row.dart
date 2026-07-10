@@ -82,7 +82,7 @@ class RangeHandRow extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
               decoration: BoxDecoration(
                 color: entry.won
-                    ? AppColors.tealPrimary.withValues(alpha: 0.14)
+                    ? AppColors.accentPrimary.withValues(alpha: 0.14)
                     : Colors.white.withValues(alpha: 0.06),
                 borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
               ),
@@ -92,7 +92,7 @@ class RangeHandRow extends StatelessWidget {
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
                   color: entry.won
-                      ? AppColors.tealPrimary
+                      ? AppColors.accentPrimary
                       : Colors.white.withValues(alpha: 0.5),
                 ),
               ),

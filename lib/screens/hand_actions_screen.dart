@@ -293,7 +293,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
         ),
         child: Row(
           children: [
-            Icon(icon, color: AppColors.tealPrimary, size: 22),
+            Icon(icon, color: AppColors.accentPrimary, size: 22),
             const SizedBox(width: 14),
             Expanded(
               child: Column(
@@ -379,7 +379,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
               child: Text(
                 l10n.quotaUpgradeToElite,
                 style: AppTypography.ibm(
-                  color: AppColors.buttonPrimary,
+                  color: AppColors.accentPrimary,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
@@ -390,7 +390,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
               child: Text(
                 l10n.quotaOk,
                 style: AppTypography.ibm(
-                  color: AppColors.buttonPrimary,
+                  color: AppColors.accentPrimary,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
@@ -527,7 +527,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                 child: Text(
                   'OK',
                   style: AppTypography.ibm(
-                    color: AppColors.tealPrimary,
+                    color: AppColors.accentPrimary,
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
@@ -652,29 +652,9 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
     final heroPosition = widget.ourSeat ?? heroSeatNumber ?? widget.hand['heroPosition'] ?? 1;
 
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: AppColors.bgPrimary,
       body: Stack(
         children: [
-          // Teal radial gradient at top
-          Positioned(
-            top: -screenWidth * 0.5,
-            right: -screenWidth * 0.2,
-            child: Container(
-              width: screenWidth * 1.2,
-              height: screenWidth * 1.2,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    const Color(0xFF1A4A4A).withOpacity(0.6),
-                    AppColors.headerGradientTeal.withOpacity(0.3),
-                    Colors.transparent,
-                  ],
-                  stops: const [0.0, 0.4, 1.0],
-                ),
-              ),
-            ),
-          ),
           SafeArea(
             child: Column(
               children: [
@@ -741,7 +721,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                               height: 40,
                               decoration: BoxDecoration(
                                 color: _showBB
-                                    ? AppColors.tealPrimary.withOpacity(0.2)
+                                    ? AppColors.accentPrimary.withOpacity(0.2)
                                     : AppColors.bgElevated,
                                 shape: BoxShape.circle,
                               ),
@@ -752,7 +732,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                                     fontSize: 13,
                                     fontWeight: FontWeight.w700,
                                     color: _showBB
-                                        ? AppColors.tealPrimary
+                                        ? AppColors.accentPrimary
                                         : Colors.white,
                                   ),
                                 ),
@@ -938,19 +918,19 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
               decoration: BoxDecoration(
                 color: AppColors.bgSurface,
                 borderRadius: BorderRadius.circular(AppDecorations.radius18),
-                border: Border.all(color: AppColors.tealPrimary.withOpacity(0.4)),
+                border: Border.all(color: AppColors.accentPrimary.withOpacity(0.4)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.style, color: AppColors.tealPrimary, size: 16),
+                      Icon(Icons.style, color: AppColors.accentPrimary, size: 16),
                       const SizedBox(width: 6),
                       Text(
                         AppLocalizations.of(context).handActionsYourCards,
                         style: AppTypography.ibm(
-                          color: AppColors.tealPrimary,
+                          color: AppColors.accentPrimary,
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
                         ),
@@ -1152,7 +1132,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
         Text(
           value,
           style: AppTypography.ibm(
-            color: isWinner ? const Color(0xFFFFD700) : AppColors.tealPrimary,
+            color: isWinner ? const Color(0xFFFFD700) : AppColors.accentPrimary,
             fontSize: 15,
             fontWeight: FontWeight.w600,
           ),
@@ -1209,10 +1189,10 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: AppColors.tealPrimary.withOpacity(0.1),
+        color: AppColors.accentPrimary.withOpacity(0.1),
         borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
         border: Border.all(
-          color: AppColors.tealPrimary.withOpacity(0.3),
+          color: AppColors.accentPrimary.withOpacity(0.3),
           width: 1,
         ),
       ),
@@ -1222,14 +1202,14 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
           Icon(
             tagIcon,
             size: 14,
-            color: AppColors.tealPrimary,
+            color: AppColors.accentPrimary,
           ),
           const SizedBox(width: 6),
           Text(
             tag,
             style: AppTypography.ibm(
               fontSize: 13,
-              color: AppColors.tealPrimary,
+              color: AppColors.accentPrimary,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -1370,7 +1350,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                     Text(
                       streetName,
                       style: AppTypography.ibm(
-                        color: AppColors.tealPrimary,
+                        color: AppColors.accentPrimary,
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 1.0,
@@ -1390,14 +1370,14 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: AppColors.tealPrimary.withOpacity(0.1),
+                      color: AppColors.accentPrimary.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(AppDecorations.radius10),
-                      border: Border.all(color: AppColors.tealPrimary.withOpacity(0.3)),
+                      border: Border.all(color: AppColors.accentPrimary.withOpacity(0.3)),
                     ),
                     child: Text(
                       _formatPotAmount(potAmount as double, gameType),
                       style: AppTypography.ibm(
-                        color: AppColors.tealPrimary,
+                        color: AppColors.accentPrimary,
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
                       ),
@@ -1555,7 +1535,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                 Text(
                   label,
                   style: AppTypography.ibm(
-                    color: AppColors.tealPrimary,
+                    color: AppColors.accentPrimary,
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 1.2,
@@ -1668,7 +1648,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
         break;
       case 'call':
       case 'check':
-        actionColor = AppColors.tealPrimary;
+        actionColor = AppColors.accentPrimary;
         break;
       case 'raise':
       case 'bet':
@@ -1693,7 +1673,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                 child: Text(
                   playerDisplay,
                   style: AppTypography.ibm(
-                    color: isHero ? AppColors.tealPrimary : Colors.white,
+                    color: isHero ? AppColors.accentPrimary : Colors.white,
                     fontSize: 11,
                     fontWeight: isHero ? FontWeight.w600 : FontWeight.normal,
                   ),
@@ -1866,7 +1846,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
       buttonColor = Colors.white.withOpacity(0.1);
       textColor = Colors.white.withOpacity(0.4);
     } else {
-      buttonColor = AppColors.tealPrimary;
+      buttonColor = AppColors.accentPrimary;
       textColor = Colors.black;
     }
 
@@ -2078,7 +2058,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
               child: Text(
                 l10n.quotaUpgradeToElite,
                 style: AppTypography.ibm(
-                  color: AppColors.buttonPrimary,
+                  color: AppColors.accentPrimary,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
@@ -2089,7 +2069,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
             child: Text(
               l10n.quotaOk,
               style: AppTypography.ibm(
-                color: AppColors.buttonPrimary,
+                color: AppColors.accentPrimary,
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
               ),
@@ -2166,12 +2146,12 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.psychology, color: AppColors.tealPrimary, size: 20),
+                    const Icon(Icons.psychology, color: AppColors.accentPrimary, size: 20),
                     const SizedBox(width: 8),
                     Text(
                       AppLocalizations.of(context).handActionsAiAnalysis,
                       style: AppTypography.ibm(
-                        color: AppColors.tealPrimary,
+                        color: AppColors.accentPrimary,
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                       ),
@@ -2237,12 +2217,12 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.school_rounded, color: AppColors.limeGreen, size: 20),
+                    const Icon(Icons.school_rounded, color: AppColors.accentPrimary, size: 20),
                     const SizedBox(width: 8),
                     Text(
                       AppLocalizations.of(context).handActionsStreetByStreetBreakdown,
                       style: AppTypography.ibm(
-                        color: AppColors.limeGreen,
+                        color: AppColors.accentPrimary,
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                       ),
@@ -2365,7 +2345,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
   Color _gradeColor(String grade) {
     switch (grade.toUpperCase()) {
       case 'A': return const Color(0xFF54E98A);
-      case 'B': return AppColors.tealPrimary;
+      case 'B': return AppColors.accentPrimary;
       case 'C': return const Color(0xFFFFD700);
       case 'D': return Colors.orange;
       case 'F': return Colors.red;

@@ -173,10 +173,10 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         decoration: BoxDecoration(
-          color: AppColors.borderOnInverseSubtle,
+          color: AppColors.bgElevated,
           borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
           border: isSelected
-              ? Border.all(color: AppColors.textOnInverse, width: 1.5)
+              ? Border.all(color: AppColors.textPrimary, width: 1.5)
               : null,
         ),
         child: Row(
@@ -188,22 +188,22 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
                 shape: BoxShape.circle,
                 border: Border.all(
                   color: isSelected
-                      ? AppColors.textOnInverse
+                      ? AppColors.textPrimary
                       : AppColors.borderLight,
                   width: isSelected ? 2 : 1.5,
                 ),
-                color: isSelected ? AppColors.textOnInverse : Colors.transparent,
+                color: isSelected ? AppColors.textPrimary : Colors.transparent,
               ),
               child: isSelected
                   ? Center(
                       child: isChoppedPot
-                          ? Icon(Icons.check, size: 11, color: AppColors.bgInverse)
+                          ? Icon(Icons.check, size: 11, color: AppColors.textPrimary)
                           : Container(
                               width: 8,
                               height: 8,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: AppColors.bgInverse,
+                                color: AppColors.textPrimary,
                               ),
                             ),
                     )
@@ -216,7 +216,7 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
                 style: AppTypography.ibm(
                   fontSize: 17,
                   fontWeight: FontWeight.w400,
-                  color: AppColors.textOnInverse,
+                  color: AppColors.textPrimary,
                   height: 1.44,
                 ),
               ),
@@ -239,7 +239,7 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
         height: MediaQuery.of(context).size.height -
             MediaQuery.of(context).padding.top,
         decoration: BoxDecoration(
-          color: AppColors.bgInverse,
+          color: AppColors.bgSurface,
           borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(AppDecorations.radiusXl),
             topRight: Radius.circular(AppDecorations.radiusXl),
@@ -255,7 +255,7 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
                 width: 36,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: AppColors.borderOnInverseSubtle,
+                  color: AppColors.bgElevated,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -276,7 +276,7 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
                         style: AppTypography.ibm(
                           fontSize: 17,
                           fontWeight: FontWeight.w600,
-                          color: AppColors.textOnInverse,
+                          color: AppColors.textPrimary,
                           letterSpacing: -0.43,
                         ),
                       ),
@@ -323,14 +323,14 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
                         child: Row(
                           children: [
                             Icon(Icons.call_split,
-                                color: AppColors.textOnInverse, size: 18),
+                                color: AppColors.textPrimary, size: 18),
                             const SizedBox(width: 10),
                             Text(
                               l10n.winnerSelectionChoppedPot,
                               style: AppTypography.ibm(
                                 fontSize: 15,
                                 fontWeight: FontWeight.w500,
-                                color: AppColors.textOnInverse,
+                                color: AppColors.textPrimary,
                                 height: 1.44,
                               ),
                             ),
@@ -346,7 +346,7 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 16, vertical: 14),
                         decoration: BoxDecoration(
-                          color: AppColors.borderOnInverseSubtle,
+                          color: AppColors.bgElevated,
                           borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
                         ),
                         child: Column(
@@ -378,7 +378,7 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
                                         playerDisplayName,
                                         style: AppTypography.ibm(
                                           fontSize: 14,
-                                          color: AppColors.textOnInverse,
+                                          color: AppColors.textPrimary,
                                         ),
                                         overflow: TextOverflow.ellipsis,
                                       ),
@@ -388,7 +388,7 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
                                       style: AppTypography.ibm(
                                         fontSize: 14,
                                         fontWeight: FontWeight.w600,
-                                        color: AppColors.textOnInverse,
+                                        color: AppColors.textPrimary,
                                       ),
                                     ),
                                   ],
@@ -410,7 +410,7 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
                       style: AppTypography.ibm(
                         fontSize: 15,
                         fontWeight: FontWeight.w500,
-                        color: AppColors.textOnInverse,
+                        color: AppColors.textPrimary,
                         height: 1.44,
                       ),
                     ),
@@ -455,7 +455,7 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
                         width: double.infinity,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         decoration: BoxDecoration(
-                          color: AppColors.bgPrimary,
+                          color: AppColors.bgInverse,
                           borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
                         ),
                         child: Center(
@@ -466,7 +466,7 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
                             style: AppTypography.ibm(
                               fontSize: 15,
                               fontWeight: FontWeight.w600,
-                              color: AppColors.bgInverse,
+                              color: AppColors.textInverse,
                               letterSpacing: -0.5,
                               height: 20 / 15,
                             ),
@@ -500,7 +500,7 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
                             style: AppTypography.ibm(
                               fontSize: 15,
                               fontWeight: FontWeight.w600,
-                              color: AppColors.textOnInverse,
+                              color: AppColors.textPrimary,
                               letterSpacing: -0.5,
                               height: 20 / 15,
                             ),

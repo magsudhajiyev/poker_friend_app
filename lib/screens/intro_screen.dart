@@ -150,7 +150,7 @@ class _IntroScreenState extends State<IntroScreen> {
                         height: 8,
                         decoration: BoxDecoration(
                           color: isActive
-                              ? AppColors.buttonPrimary
+                              ? AppColors.accentPrimary
                               : Colors.white.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(4),
                         ),

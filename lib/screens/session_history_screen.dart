@@ -365,7 +365,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
                 return Container(
                   padding: const EdgeInsets.all(2),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: AppColors.bgSurface,
                     borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
                   ),
                   child: Row(
@@ -379,7 +379,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
                             duration: const Duration(milliseconds: 200),
                             padding: const EdgeInsets.symmetric(vertical: 10),
                             decoration: BoxDecoration(
-                              color: Color.lerp(AppColors.bgSurface, Colors.transparent, t),
+                              color: Color.lerp(AppColors.bgElevated, Colors.transparent, t),
                               borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
                             ),
                             child: Center(
@@ -387,9 +387,9 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
                                 l10n.sessionHistoryCash,
                                 style: AppTypography.ibm(
                                   fontSize: 15,
-                                  fontWeight: FontWeight.w500,
+                                  fontWeight: FontWeight.w600,
                                   letterSpacing: -0.5,
-                                  color: Color.lerp(Colors.white, AppColors.textInverse, t),
+                                  color: Color.lerp(AppColors.textPrimary, AppColors.textSecondary, t),
                                   height: 24 / 15,
                                 ),
                               ),
@@ -406,7 +406,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
                             duration: const Duration(milliseconds: 200),
                             padding: const EdgeInsets.symmetric(vertical: 10),
                             decoration: BoxDecoration(
-                              color: Color.lerp(Colors.transparent, AppColors.bgSurface, t),
+                              color: Color.lerp(Colors.transparent, AppColors.bgElevated, t),
                               borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
                             ),
                             child: Center(
@@ -414,9 +414,9 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
                                 l10n.sessionHistoryTournament,
                                 style: AppTypography.ibm(
                                   fontSize: 15,
-                                  fontWeight: FontWeight.w500,
+                                  fontWeight: FontWeight.w600,
                                   letterSpacing: -0.5,
-                                  color: Color.lerp(AppColors.textInverse, Colors.white, t),
+                                  color: Color.lerp(AppColors.textSecondary, AppColors.textPrimary, t),
                                   height: 24 / 15,
                                 ),
                               ),

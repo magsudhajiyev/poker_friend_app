@@ -322,7 +322,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       child: Center(
         child: Text(initials,
             style: AppTypography.ibm(
-                fontSize: size * 0.35, fontWeight: FontWeight.w600, color: AppColors.limeGreen)),
+                fontSize: size * 0.35, fontWeight: FontWeight.w600, color: AppColors.accentPrimary)),
       ),
     );
   }
@@ -348,16 +348,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
         width: double.infinity,
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: AppColors.tealPrimary.withValues(alpha: 0.10),
+          color: AppColors.accentPrimary.withValues(alpha: 0.10),
           borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
           border: Border.all(
-            color: AppColors.tealPrimary.withValues(alpha: 0.35),
+            color: AppColors.accentPrimary.withValues(alpha: 0.35),
           ),
         ),
         child: Row(
           children: [
             const Icon(Icons.cloud_upload_outlined,
-                color: AppColors.tealPrimary, size: 28),
+                color: AppColors.accentPrimary, size: 28),
             const SizedBox(width: 14),
             Expanded(
               child: Column(
@@ -385,7 +385,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             const SizedBox(width: 8),
             const Icon(Icons.chevron_right,
-                color: AppColors.tealPrimary, size: 22),
+                color: AppColors.accentPrimary, size: 22),
           ],
         ),
       ),
@@ -400,7 +400,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       return Scaffold(
         backgroundColor: _bg,
         body: const Center(child: CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation(AppColors.buttonPrimary))),
+            valueColor: AlwaysStoppedAnimation(AppColors.accentPrimary))),
       );
     }
 
@@ -415,7 +415,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           TopNavBar(
             title: l10n.profileSettings,
             onBack: () => Navigator.pop(context),
-            backgroundColor: _surface,
             rightAction: GestureDetector(
               onTap: _isSaving ? null : _save,
               behavior: HitTestBehavior.opaque,
@@ -893,20 +892,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
           color: AppColors.surfaceDark,
           borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
           border: Border.all(
-              color: AppColors.tealPrimary.withValues(alpha: 0.3)),
+              color: AppColors.accentPrimary.withValues(alpha: 0.3)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(children: [
               const Icon(Icons.flag_outlined,
-                  color: AppColors.tealPrimary, size: 20),
+                  color: AppColors.accentPrimary, size: 20),
               const SizedBox(width: 8),
               Text('Feature Flags',
                   style: AppTypography.ibm(
                       fontSize: 17,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.tealPrimary)),
+                      color: AppColors.accentPrimary)),
             ]),
             const SizedBox(height: 4),
             Text(
@@ -947,7 +946,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _flagModeChip(String flagKey, FlagMode mode, String label) {
     final selected = FeatureFlagService.modeOf(flagKey) == mode;
     final accent = switch (mode) {
-      FlagMode.on => AppColors.tealPrimary,
+      FlagMode.on => AppColors.accentPrimary,
       FlagMode.adminOnly => AppColors.warningAmber, // preview state
       FlagMode.off => AppColors.errorRed,
     };
@@ -1022,7 +1021,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               Switch(
                 value: SubscriptionService.isPremium,
                 onChanged: (v) async { await SubscriptionService.setDebugPremiumOverride(v); setState(() {}); },
-                activeColor: AppColors.tealPrimary,
+                activeColor: AppColors.accentPrimary,
                 inactiveThumbColor: AppColors.textDisabled,
                 inactiveTrackColor: AppColors.neutral700,
               ),
@@ -1032,8 +1031,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             GestureDetector(
               onTap: () async { await SubscriptionService.setDebugPremiumOverride(null); setState(() {}); },
               child: Text('Reset to real', style: AppTypography.ibm(
-                  fontSize: 13, color: AppColors.buttonPrimary,
-                  decoration: TextDecoration.underline, decorationColor: AppColors.buttonPrimary)),
+                  fontSize: 13, color: AppColors.accentPrimary,
+                  decoration: TextDecoration.underline, decorationColor: AppColors.accentPrimary)),
             ),
             const SizedBox(height: 8),
           ],

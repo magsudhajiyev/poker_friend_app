@@ -180,12 +180,12 @@ class _InviteMemberDialogState extends State<InviteMemberDialog> {
               width: 52,
               height: 52,
               decoration: BoxDecoration(
-                color: AppColors.buttonPrimary.withOpacity(0.1),
+                color: AppColors.accentPrimary.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
                 Icons.check_circle,
-                color: AppColors.buttonPrimary,
+                color: AppColors.accentPrimary,
                 size: 28,
               ),
             ),
@@ -215,7 +215,7 @@ class _InviteMemberDialogState extends State<InviteMemberDialog> {
             child: Text(
               AppLocalizations.of(context).commonDone,
               style: AppTypography.ibm(
-                color: AppColors.buttonPrimary,
+                color: AppColors.accentPrimary,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -256,12 +256,12 @@ class _InviteMemberDialogState extends State<InviteMemberDialog> {
                 width: 38,
                 height: 38,
                 decoration: BoxDecoration(
-                  color: AppColors.buttonPrimary.withOpacity(0.1),
+                  color: AppColors.accentPrimary.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(AppDecorations.radius10),
                 ),
                 child: const Icon(
                   Icons.person_add,
-                  color: AppColors.buttonPrimary,
+                  color: AppColors.accentPrimary,
                   size: 20,
                 ),
               ),
@@ -335,7 +335,7 @@ class _InviteMemberDialogState extends State<InviteMemberDialog> {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
-                borderSide: const BorderSide(color: AppColors.buttonPrimary, width: 1),
+                borderSide: const BorderSide(color: AppColors.accentPrimary, width: 1),
               ),
               errorBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
@@ -429,7 +429,7 @@ class _InviteMemberDialogState extends State<InviteMemberDialog> {
                     padding: const EdgeInsets.symmetric(vertical: 13),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
-                      color: AppColors.buttonPrimary,
+                      color: AppColors.accentPrimary,
                     ),
                     child: Center(
                       child: _isSubmitting
@@ -466,7 +466,7 @@ class _InviteMemberDialogState extends State<InviteMemberDialog> {
     required String label,
   }) {
     final isSelected = _selectedRole == role;
-    const mint = AppColors.buttonPrimary;
+    const mint = AppColors.accentPrimary;
 
     return GestureDetector(
       onTap: () {

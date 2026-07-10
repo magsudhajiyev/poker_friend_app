@@ -3,6 +3,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import '../../l10n/app_localizations.dart';
 import '../../services/qr_service.dart';
 import 'qr_join_screen.dart';
+import '../../design_system/constants/colors.dart';
 import '../../design_system/constants/decorations.dart';
 import '../../utils/user_facing_error.dart';
 
@@ -96,7 +97,7 @@ class _QRScanScreenState extends State<QRScanScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: AppColors.bgPrimary,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,

@@ -73,7 +73,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
         SnackBar(
           content: Text(l10n.supportSubmitted,
               style: AppTypography.ibm(color: Colors.white)),
-          backgroundColor: AppColors.limeGreen,
+          backgroundColor: AppColors.accentPrimary,
         ),
       );
 
@@ -108,7 +108,6 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
           TopNavBar(
             title: l10n.supportTitle,
             onBack: () => Navigator.pop(context),
-            backgroundColor: _surface,
           ),
           Expanded(
             child: GestureDetector(

@@ -252,11 +252,11 @@ class _HandReviewDialogState extends State<HandReviewDialog> {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppColors.buttonPrimary.withValues(alpha: 0.15)
+              ? AppColors.accentPrimary.withValues(alpha: 0.15)
               : AppColors.neutral800,
           borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
           border: Border.all(
-            color: isSelected ? AppColors.buttonPrimary : AppColors.neutral700,
+            color: isSelected ? AppColors.accentPrimary : AppColors.neutral700,
             width: 1,
           ),
         ),
@@ -266,14 +266,14 @@ class _HandReviewDialogState extends State<HandReviewDialog> {
             Icon(
               icon,
               size: 14,
-              color: isSelected ? AppColors.buttonPrimary : AppColors.textDisabled,
+              color: isSelected ? AppColors.accentPrimary : AppColors.textDisabled,
             ),
             const SizedBox(width: 6),
             Text(
               label,
               style: AppTypography.ibm(
                 fontSize: 13,
-                color: isSelected ? AppColors.buttonPrimary : Colors.white70,
+                color: isSelected ? AppColors.accentPrimary : Colors.white70,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
               ),
             ),
@@ -332,7 +332,7 @@ class _HandReviewDialogState extends State<HandReviewDialog> {
           child: TextButton(
             onPressed: _saveHand,
             style: TextButton.styleFrom(
-              backgroundColor: AppColors.buttonPrimary,
+              backgroundColor: AppColors.accentPrimary,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
               ),

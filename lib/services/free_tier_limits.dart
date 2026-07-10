@@ -167,12 +167,12 @@ class FreeTierLimits {
                       width: 40,
                       height: 40,
                       decoration: BoxDecoration(
-                        color: AppColors.buttonPrimary.withOpacity(0.15),
+                        color: AppColors.accentPrimary.withOpacity(0.15),
                         borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                       ),
                       child: Icon(
                         Icons.lock_outline,
-                        color: AppColors.buttonPrimary,
+                        color: AppColors.accentPrimary,
                         size: 22,
                       ),
                     ),

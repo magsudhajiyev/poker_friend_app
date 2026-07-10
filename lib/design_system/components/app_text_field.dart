@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../constants/colors.dart';
 
-/// Reusable light-theme text input.
+/// Reusable dark-theme text input.
 ///
 /// States
 /// ──────
-/// Default  — border #EFEFEF 1px, label #B9B9B9
-/// Focused  — border #4CDE78 1.5px, label #0C0C0C
-/// Filled   — border #EFEFEF 1px, text #0C0C0C
-/// Error    — border #E85A5A 1px, red message below
-/// Disabled — bg #F5F5F5, text #B9B9B9
+/// Default  — border `borderStrong` 1px, label `textSecondary`
+/// Focused  — border `accentPrimary` 1.5px, label `textPrimary`
+/// Filled   — border `borderStrong` 1px, text `textPrimary`
+/// Error    — border `accentDanger` 1px, red message below
+/// Disabled — bg `bgSurface`, text `textSecondary`
 class AppTextField extends StatefulWidget {
   const AppTextField({
     super.key,
@@ -81,18 +82,18 @@ class _AppTextFieldState extends State<AppTextField> {
     final Color borderColor;
     final double borderWidth;
     if (hasError) {
-      borderColor = const Color(0xFFE85A5A);
+      borderColor = AppColors.accentDanger;
       borderWidth = 1.0;
     } else if (isFocused) {
-      borderColor = const Color(0xFF4CDE78);
+      borderColor = AppColors.accentPrimary;
       borderWidth = 1.5;
     } else {
-      borderColor = const Color(0xFFEFEFEF);
+      borderColor = AppColors.borderStrong;
       borderWidth = 1.0;
     }
 
-    final labelColor = isFocused ? const Color(0xFF0C0C0C) : const Color(0xFFB9B9B9);
-    final bgColor = isDisabled ? const Color(0xFFF5F5F5) : const Color(0xFFFDFDFD);
+    final labelColor = isFocused ? AppColors.textPrimary : AppColors.textSecondary;
+    final bgColor = isDisabled ? AppColors.bgSurface : AppColors.bgElevated;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -131,14 +132,14 @@ class _AppTextFieldState extends State<AppTextField> {
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: 15,
                     color: isDisabled
-                        ? const Color(0xFFB9B9B9)
-                        : const Color(0xFF0C0C0C),
+                        ? AppColors.textSecondary
+                        : AppColors.textPrimary,
                   ),
                   decoration: InputDecoration(
                     hintText: widget.hint,
                     hintStyle: GoogleFonts.ibmPlexSans(
                       fontSize: 15,
-                      color: const Color(0xFFB9B9B9),
+                      color: AppColors.textSecondary,
                     ),
                     filled: true,
                     fillColor: Colors.transparent,
@@ -159,7 +160,7 @@ class _AppTextFieldState extends State<AppTextField> {
                   },
                   child: const Padding(
                     padding: EdgeInsets.only(left: 8),
-                    child: Icon(Icons.cancel, color: Color(0xFFB9B9B9), size: 16),
+                    child: Icon(Icons.cancel, color: AppColors.textSecondary, size: 16),
                   ),
                 ),
             ],
@@ -171,7 +172,7 @@ class _AppTextFieldState extends State<AppTextField> {
             widget.errorText!,
             style: GoogleFonts.ibmPlexSans(
               fontSize: 12,
-              color: const Color(0xFFE85A5A),
+              color: AppColors.accentDanger,
             ),
           ),
         ],

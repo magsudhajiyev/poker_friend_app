@@ -162,8 +162,8 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
                           radius: 0.5,
                           colors: [
                             const Color(0xFF1A4A4A).withOpacity(0.6),
-                            AppColors.headerGradientTeal.withOpacity(0.4),
-                            AppColors.headerGradientTeal.withOpacity(0.2),
+                            AppColors.accentPrimary.withOpacity(0.4),
+                            AppColors.accentPrimary.withOpacity(0.2),
                             Colors.transparent,
                           ],
                           stops: const [0.0, 0.3, 0.6, 1.0],
@@ -321,7 +321,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
                 color: const Color(0xFF104034).withOpacity(0.6),
                 borderRadius: BorderRadius.circular(AppDecorations.navBarRadius),
                 border: Border.all(
-                  color: AppColors.buttonPrimary,
+                  color: AppColors.accentPrimary,
                   width: 1,
                 ),
                 boxShadow: [
@@ -337,7 +337,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
                 children: [
                   const Icon(
                     Icons.diamond_outlined,
-                    color: AppColors.buttonPrimary,
+                    color: AppColors.accentPrimary,
                     size: 18,
                   ),
                   const SizedBox(width: 6),
@@ -346,7 +346,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
                     style: AppTypography.ibm(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.buttonPrimary,
+                      color: AppColors.accentPrimary,
                     ),
                   ),
                 ],
@@ -679,7 +679,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
                     height: 20,
                     decoration: BoxDecoration(
                       color: isAdmin
-                          ? AppColors.mint900
+                          ? AppColors.accentPrimary
                           : AppColors.neutral800,
                       borderRadius: BorderRadius.circular(6),
                     ),
@@ -690,7 +690,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
                           fontSize: 10,
                           fontWeight: FontWeight.w600,
                           color: isAdmin
-                              ? AppColors.buttonPrimary
+                              ? AppColors.accentPrimary
                               : AppColors.neutral500,
                         ),
                       ),
@@ -848,7 +848,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
           style: AppTypography.interLegacy(
             fontSize: size * 0.357,
             fontWeight: FontWeight.w600,
-            color: AppColors.limeGreen,
+            color: AppColors.accentPrimary,
           ),
         ),
       ),
@@ -947,7 +947,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
                           // Icon
                           const Icon(
                             Icons.show_chart_rounded,
-                            color: AppColors.buttonPrimary,
+                            color: AppColors.accentPrimary,
                             size: 48,
                           ),
 
@@ -1007,7 +1007,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
                                 l10n.commonOk,
                                 style: AppTypography.ibm(
                                   fontSize: 16,
-                                  color: AppColors.buttonPrimary,
+                                  color: AppColors.accentPrimary,
                                   fontWeight: FontWeight.w600,
                                   letterSpacing: 0,
                                   height: 1.2,

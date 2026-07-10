@@ -90,29 +90,9 @@ class _EventAttendeesScreenState extends State<EventAttendeesScreen>
     final screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: AppColors.bgPrimary,
       body: Stack(
         children: [
-          // Teal radial gradient background
-          Positioned(
-            top: -screenWidth * 0.5,
-            right: -screenWidth * 0.2,
-            child: Container(
-              width: screenWidth * 1.2,
-              height: screenWidth * 1.2,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    const Color(0xFF1A4A4A).withOpacity(0.6),
-                    AppColors.headerGradientTeal.withOpacity(0.6),
-                    Colors.transparent,
-                  ],
-                  stops: const [0.0, 0.4, 1.0],
-                ),
-              ),
-            ),
-          ),
           // Content
           SafeArea(
             child: Column(
@@ -125,7 +105,7 @@ class _EventAttendeesScreenState extends State<EventAttendeesScreen>
                   child: _isLoading
                       ? const Center(
                           child: CircularProgressIndicator(
-                            color: AppColors.buttonPrimary,
+                            color: AppColors.accentPrimary,
                           ),
                         )
                       : TabBarView(
@@ -207,7 +187,7 @@ class _EventAttendeesScreenState extends State<EventAttendeesScreen>
       child: TabBar(
         controller: _tabController,
         indicator: BoxDecoration(
-          color: AppColors.buttonPrimary,
+          color: AppColors.accentPrimary,
           borderRadius: BorderRadius.circular(AppDecorations.radius10),
         ),
         indicatorSize: TabBarIndicatorSize.tab,
@@ -269,7 +249,7 @@ class _EventAttendeesScreenState extends State<EventAttendeesScreen>
 
     return RefreshIndicator(
       onRefresh: _loadData,
-      color: AppColors.buttonPrimary,
+      color: AppColors.accentPrimary,
       child: ListView.builder(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         itemCount: attendees.length,
@@ -293,7 +273,7 @@ class _EventAttendeesScreenState extends State<EventAttendeesScreen>
       case AttendanceStatus.going:
         message = l10n.eventAttendeesNoConfirmed;
         icon = Icons.check_circle_outline;
-        color = AppColors.buttonPrimary;
+        color = AppColors.accentPrimary;
         break;
       case AttendanceStatus.maybe:
         message = l10n.eventAttendeesNoMaybes;
@@ -345,7 +325,7 @@ class _EventAttendeesScreenState extends State<EventAttendeesScreen>
     Color statusColor;
     switch (status) {
       case AttendanceStatus.going:
-        statusColor = AppColors.buttonPrimary;
+        statusColor = AppColors.accentPrimary;
         break;
       case AttendanceStatus.maybe:
         statusColor = Colors.amber;
@@ -415,13 +395,13 @@ class _EventAttendeesScreenState extends State<EventAttendeesScreen>
             Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: AppColors.buttonPrimary.withOpacity(0.1),
+                color: AppColors.accentPrimary.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
               ),
               child: const Icon(
                 Icons.event_available,
                 size: 16,
-                color: AppColors.buttonPrimary,
+                color: AppColors.accentPrimary,
               ),
             ),
         ],

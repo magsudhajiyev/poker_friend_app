@@ -9,7 +9,7 @@ class AppTypography {
   // Section Headers (Lime green uppercase titles)
   static TextStyle sectionHeader({Color? color}) => GoogleFonts.ibmPlexSans(
     fontSize: 12,
-    color: color ?? AppColors.limeGreen,
+    color: color ?? AppColors.accentPrimary,
     fontWeight: FontWeight.w600,
     letterSpacing: 1.0,
   );
@@ -47,7 +47,7 @@ class AppTypography {
   // Card Titles
   static TextStyle cardTitle({Color? color}) => GoogleFonts.ibmPlexSans(
     fontSize: 24,
-    color: color ?? AppColors.limeGreen,
+    color: color ?? AppColors.accentPrimary,
     fontWeight: FontWeight.w700,
     letterSpacing: 1.0,
     height: 1.0,
@@ -121,7 +121,7 @@ class AppTypography {
 
   static TextStyle homeSubtitle({Color? color}) => GoogleFonts.ibmPlexSans(
     fontSize: 17,
-    color: color ?? AppColors.textMint,
+    color: color ?? AppColors.accentPrimary,
     fontWeight: FontWeight.w500,
     height: 1.44,
   );
@@ -166,7 +166,7 @@ class AppTypography {
 
   static TextStyle viewAllButton({Color? color}) => GoogleFonts.ibmPlexSans(
     fontSize: 17,
-    color: color ?? AppColors.textMint,
+    color: color ?? AppColors.accentPrimary,
     fontWeight: FontWeight.w500,
     height: 1.44,
   );
@@ -193,7 +193,7 @@ class AppTypography {
 
   static TextStyle infoCardAccent({Color? color}) => GoogleFonts.ibmPlexSans(
     fontSize: 17,
-    color: color ?? AppColors.textMint,
+    color: color ?? AppColors.accentPrimary,
     fontWeight: FontWeight.w400,
     height: 1.44,
   );
@@ -201,7 +201,7 @@ class AppTypography {
   // Info Card Pill Text (12px medium, used in session/event card pills)
   static TextStyle infoCardPill({Color? color}) => GoogleFonts.ibmPlexSans(
     fontSize: 12,
-    color: color ?? AppColors.buttonPrimary,
+    color: color ?? AppColors.accentPrimary,
     fontWeight: FontWeight.w500,
   );
 

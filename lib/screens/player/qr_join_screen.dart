@@ -242,7 +242,7 @@ class _QRJoinScreenState extends State<QRJoinScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const CircularProgressIndicator(
-              color: AppColors.buttonPrimary,
+              color: AppColors.accentPrimary,
               strokeWidth: 2,
             ),
             const SizedBox(height: 16),
@@ -410,12 +410,12 @@ class _QRJoinScreenState extends State<QRJoinScreen> {
                 width: 64,
                 height: 64,
                 decoration: BoxDecoration(
-                  color: AppColors.buttonPrimary.withValues(alpha: 0.15),
+                  color: AppColors.accentPrimary.withValues(alpha: 0.15),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
                   Icons.event_seat_rounded,
-                  color: AppColors.buttonPrimary,
+                  color: AppColors.accentPrimary,
                   size: 32,
                 ),
               ),
@@ -441,7 +441,7 @@ class _QRJoinScreenState extends State<QRJoinScreen> {
                   style: AppTypography.ibm(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
-                    color: AppColors.textMint,
+                    color: AppColors.accentPrimary,
                   ),
                 ),
               ),
@@ -458,7 +458,7 @@ class _QRJoinScreenState extends State<QRJoinScreen> {
       style: AppTypography.ibm(
         fontSize: 12,
         fontWeight: FontWeight.w600,
-        color: AppColors.limeGreen,
+        color: AppColors.accentPrimary,
         letterSpacing: 1.0,
       ),
     );
@@ -508,7 +508,7 @@ class _QRJoinScreenState extends State<QRJoinScreen> {
             label: l10n.qrJoinStatusLabel,
             value: isActive ? l10n.qrJoinActiveGame : l10n.qrJoinWaitingStatus,
             valueColor: isActive
-                ? AppColors.limeGreen
+                ? AppColors.accentPrimary
                 : const Color(0xFFFFA726),
           ),
         ],
@@ -596,7 +596,7 @@ class _QRJoinScreenState extends State<QRJoinScreen> {
               width: 96,
               height: 96,
               decoration: BoxDecoration(
-                color: AppColors.buttonPrimary.withValues(alpha: 0.1),
+                color: AppColors.accentPrimary.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: const Center(
@@ -604,7 +604,7 @@ class _QRJoinScreenState extends State<QRJoinScreen> {
                   width: 48,
                   height: 48,
                   child: CircularProgressIndicator(
-                    color: AppColors.buttonPrimary,
+                    color: AppColors.accentPrimary,
                     strokeWidth: 3,
                   ),
                 ),
@@ -625,7 +625,7 @@ class _QRJoinScreenState extends State<QRJoinScreen> {
               AppLocalizations.of(context).qrJoinRequestSent(widget.qrData.seatNumber),
               textAlign: TextAlign.center,
               style: AppTypography.ibm(
-                color: AppColors.textMint,
+                color: AppColors.accentPrimary,
                 fontSize: 15,
                 height: 1.44,
               ),
@@ -671,13 +671,13 @@ class _QRJoinScreenState extends State<QRJoinScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: AppColors.buttonPrimary.withValues(alpha: 0.15),
+                      color: AppColors.accentPrimary.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
                     ),
                     child: Text(
                       AppLocalizations.of(context).qrJoinSeat(widget.qrData.seatNumber),
                       style: AppTypography.ibm(
-                        color: AppColors.buttonPrimary,
+                        color: AppColors.accentPrimary,
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                       ),

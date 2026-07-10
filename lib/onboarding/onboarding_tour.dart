@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import '../design_system/constants/colors.dart';
+import '../design_system/constants/spacing.dart';
 import '../design_system/constants/typography.dart';
 import '../l10n/app_localizations.dart';
 import '../screens/paywall_screen.dart';
@@ -61,58 +62,82 @@ TutorialCoachMark _createCoachMark({
   );
 }
 
-Widget buildWelcomeCard({required VoidCallback onNext, required BuildContext context}) {
+Widget buildWelcomeCard({
+  required VoidCallback onNext,
+  required BuildContext context,
+  VoidCallback? onClose,
+}) {
   final l10n = AppLocalizations.of(context);
   return Container(
-    padding: const EdgeInsets.all(28),
-    margin: const EdgeInsets.symmetric(horizontal: 24),
+    padding: const EdgeInsets.all(AppSpacing.space6),
+    margin: const EdgeInsets.symmetric(horizontal: AppSpacing.space4),
     decoration: BoxDecoration(
-      color: AppColors.surfaceDark,
-      borderRadius: BorderRadius.circular(AppDecorations.radius20),
-      border: Border.all(
-        color: AppColors.tealPrimary.withValues(alpha: 0.15),
-        width: 1,
-      ),
-      boxShadow: [
-        BoxShadow(
-          color: AppColors.tealPrimary.withValues(alpha: 0.08),
-          blurRadius: 20,
-          offset: const Offset(0, 4),
-        ),
-      ],
+      color: AppColors.bgSurface,
+      borderRadius: BorderRadius.circular(AppDecorations.radiusXl),
     ),
     child: Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
-          l10n.onboardingWelcomeTitle,
-          style: AppTypography.pageTitle().copyWith(fontSize: 24),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 12),
-        Text(
-          l10n.onboardingWelcomeBody,
-          style: AppTypography.bodySmall(
-            color: Colors.white.withValues(alpha: 0.8),
-          ).copyWith(fontSize: 15, height: 1.5),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 24),
-        SizedBox(
-          width: double.infinity,
-          child: TextButton(
-            onPressed: onNext,
-            style: TextButton.styleFrom(
-              backgroundColor: AppColors.tealPrimary,
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
+        Row(
+          children: [
+            const Spacer(),
+            GestureDetector(
+              onTap: onClose ?? onNext,
+              behavior: HitTestBehavior.opaque,
+              child: const SizedBox(
+                width: 18,
+                height: 18,
+                child: Icon(
+                  Icons.close,
+                  size: 18,
+                  color: AppColors.textPrimary,
+                ),
               ),
             ),
-            child: Text(
-              l10n.onboardingLetsGo,
-              style: AppTypography.bodyLarge(color: Colors.black).copyWith(
-                fontWeight: FontWeight.w600,
+          ],
+        ),
+        const SizedBox(height: AppSpacing.space6),
+        Text(
+          l10n.onboardingWelcomeTitle,
+          textAlign: TextAlign.center,
+          style: AppTypography.ibm(
+            fontSize: 17,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
+            height: 20 / 17,
+          ),
+        ),
+        const SizedBox(height: 7),
+        Text(
+          l10n.onboardingWelcomeBody,
+          textAlign: TextAlign.center,
+          style: AppTypography.bodyMd(color: AppColors.textSecondary),
+        ),
+        const SizedBox(height: AppSpacing.space6),
+        SizedBox(
+          width: double.infinity,
+          child: GestureDetector(
+            onTap: onNext,
+            behavior: HitTestBehavior.opaque,
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.space5,
+                vertical: AppSpacing.space3,
+              ),
+              decoration: BoxDecoration(
+                color: AppColors.accentPrimary,
+                borderRadius:
+                    BorderRadius.circular(AppDecorations.radiusFull),
+              ),
+              child: Text(
+                l10n.onboardingLetsGo,
+                textAlign: TextAlign.center,
+                style: AppTypography.ibm(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textInverse,
+                  height: 20 / 15,
+                ),
               ),
             ),
           ),
@@ -137,11 +162,11 @@ Widget buildTooltip({
       color: AppColors.surfaceDark,
       borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
       border: Border.all(
-        color: AppColors.tealPrimary.withValues(alpha: 0.15),
+        color: AppColors.accentPrimary.withValues(alpha: 0.15),
       ),
       boxShadow: [
         BoxShadow(
-          color: AppColors.tealPrimary.withValues(alpha: 0.08),
+          color: AppColors.accentPrimary.withValues(alpha: 0.08),
           blurRadius: 20,
           offset: const Offset(0, 4),
         ),
@@ -173,12 +198,12 @@ Widget buildTooltip({
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                color: AppColors.tealPrimary.withValues(alpha: 0.08),
+                color: AppColors.accentPrimary.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
               ),
               child: Text(
                 isLast ? l10n.onboardingGotIt : l10n.onboardingNext,
-                style: AppTypography.bodyLarge(color: AppColors.tealPrimary)
+                style: AppTypography.bodyLarge(color: AppColors.accentPrimary)
                     .copyWith(fontWeight: FontWeight.w600),
               ),
             ),
@@ -221,7 +246,11 @@ class HomeTour {
                   0.3,
             ),
             builder: (context, controller) {
-              return buildWelcomeCard(onNext: () => controller.next(), context: context);
+              return buildWelcomeCard(
+                onNext: () => controller.next(),
+                onClose: () => controller.skip(),
+                context: context,
+              );
             },
           ),
         ],
@@ -838,7 +867,7 @@ class _GuestSignupGateState extends State<GuestSignupGate> {
     return const Scaffold(
       backgroundColor: AppColors.bgPrimary,
       body: Center(
-        child: CircularProgressIndicator(color: AppColors.tealPrimary),
+        child: CircularProgressIndicator(color: AppColors.accentPrimary),
       ),
     );
   }
@@ -1273,7 +1302,7 @@ class _OnboardingCompleteDialog extends StatelessWidget {
           children: [
             const Icon(
               Icons.check_circle_outline,
-              color: AppColors.tealPrimary,
+              color: AppColors.accentPrimary,
               size: 48,
             ),
             const SizedBox(height: 16),

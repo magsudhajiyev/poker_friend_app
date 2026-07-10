@@ -196,7 +196,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                         Text(
                           l10n.calendarEventType,
                           style: AppTypography.ibm(
-                            color: AppColors.textMint,
+                            color: AppColors.accentPrimary,
                             fontSize: 17,
                             fontWeight: FontWeight.w500,
                             height: 1.44,
@@ -912,16 +912,16 @@ class _CalendarScreenState extends State<CalendarScreen> {
         height: 48,
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: filled ? AppColors.buttonPrimary : Colors.transparent,
+          color: filled ? AppColors.accentPrimary : Colors.transparent,
           borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
           border: filled
               ? null
-              : Border.all(color: AppColors.buttonPrimary, width: 1),
+              : Border.all(color: AppColors.accentPrimary, width: 1),
         ),
         child: Text(
           label,
           style: AppTypography.ibm(
-            color: filled ? Colors.black : AppColors.buttonPrimary,
+            color: filled ? Colors.black : AppColors.accentPrimary,
             fontSize: 15,
             fontWeight: FontWeight.w600,
             letterSpacing: -0.43,
@@ -1028,25 +1028,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
       backgroundColor: AppColors.paper,
       body: Stack(
         children: [
-          // Top gradient blur
-          Positioned(
-            top: -162,
-            left: 0,
-            right: 0,
-            child: Container(
-              height: 217,
-              decoration: BoxDecoration(
-                gradient: RadialGradient(
-                  colors: [
-                    const Color(0xFF4CDBFF).withOpacity(0.34),
-                    const Color(0xFF2EB46A).withOpacity(0.34),
-                    Colors.transparent,
-                  ],
-                  radius: 1.5,
-                ),
-              ),
-            ),
-          ),
           // Main content
           Column(
             children: [
@@ -1152,7 +1133,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
               Icon(
                 Icons.calendar_today_outlined,
                 size: 24,
-                color: AppColors.buttonPrimary,
+                color: AppColors.accentPrimary,
               ),
               const SizedBox(height: 6),
               // Title
@@ -1172,7 +1153,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 style: AppTypography.ibm(
                   fontSize: 17,
                   fontWeight: FontWeight.w400,
-                  color: AppColors.textMint,
+                  color: AppColors.accentPrimary,
                   height: 1.44,
                 ),
                 textAlign: TextAlign.center,
@@ -1185,7 +1166,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   decoration: BoxDecoration(
-                    color: AppColors.buttonPrimary,
+                    color: AppColors.accentPrimary,
                     borderRadius: BorderRadius.circular(110),
                   ),
                   child: Row(
@@ -1361,7 +1342,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                           style: AppTypography.ibm(
                             fontSize: 17,
                             fontWeight: FontWeight.w500,
-                            color: AppColors.textMint,
+                            color: AppColors.accentPrimary,
                             height: 1.44,
                           ),
                           textAlign: TextAlign.right,

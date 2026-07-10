@@ -51,7 +51,7 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
   List<Map<String, dynamic>>? _allFilteredHands;
 
   static const _cardColor = AppColors.infoCardBg;
-  static const _mint = AppColors.buttonPrimary;
+  static const _mint = AppColors.accentPrimary;
 
   @override
   void initState() {
@@ -300,31 +300,11 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
     final l10n = AppLocalizations.of(context);
     final screenWidth = MediaQuery.of(context).size.width;
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: AppColors.bgPrimary,
       extendBody: true,
       bottomNavigationBar: GlobalBottomNavBar(currentScreen: 'opponents'),
       body: Stack(
         children: [
-          // Teal radial gradient at top
-          Positioned(
-            top: -screenWidth * 0.5,
-            right: -screenWidth * 0.2,
-            child: Container(
-              width: screenWidth * 1.2,
-              height: screenWidth * 1.2,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    const Color(0xFF1A4A4A).withValues(alpha: 0.6),
-                    AppColors.headerGradientTeal.withValues(alpha: 0.3),
-                    Colors.transparent,
-                  ],
-                  stops: const [0.0, 0.4, 1.0],
-                ),
-              ),
-            ),
-          ),
           SafeArea(
             child: Column(
               children: [

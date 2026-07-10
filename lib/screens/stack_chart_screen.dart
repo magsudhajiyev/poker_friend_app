@@ -172,7 +172,7 @@ class _StackChartScreenState extends State<StackChartScreen> {
   @override
   Widget build(BuildContext context) {
     final lineColor = widget.profitLoss >= 0
-        ? AppColors.buttonPrimary
+        ? AppColors.accentPrimary
         : const Color(0xFFFF6B6B);
 
     return Scaffold(

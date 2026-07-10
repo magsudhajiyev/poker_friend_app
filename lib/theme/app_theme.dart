@@ -39,9 +39,9 @@ class AppTheme {
         seedColor: const Color(0xFF1B4332),
         brightness: Brightness.dark,
       ).copyWith(
-        primary: AppColors.tealPrimary,
-        secondary: AppColors.buttonPrimary,
-        tertiary: AppColors.limeGreen,
+        primary: AppColors.accentPrimary,
+        secondary: AppColors.accentPrimary,
+        tertiary: AppColors.accentPrimary,
         surface: AppColors.infoCardBg,
         onSurface: Colors.white,
         background: Colors.black,
@@ -134,7 +134,7 @@ class AppTheme {
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.tealPrimary,
+          backgroundColor: AppColors.accentPrimary,
           foregroundColor: Colors.black,
           padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
           shape: RoundedRectangleBorder(
@@ -150,7 +150,7 @@ class AppTheme {
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: AppColors.buttonPrimary,
+          foregroundColor: AppColors.accentPrimary,
           textStyle: AppTypography.ibm(
             fontSize: 17,
             fontWeight: FontWeight.w500,
@@ -163,19 +163,19 @@ class AppTheme {
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
           borderSide: BorderSide(
-            color: AppColors.buttonPrimary.withOpacity(0.2),
+            color: AppColors.accentPrimary.withOpacity(0.2),
           ),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
           borderSide: BorderSide(
-            color: AppColors.buttonPrimary.withOpacity(0.2),
+            color: AppColors.accentPrimary.withOpacity(0.2),
           ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
           borderSide: const BorderSide(
-            color: AppColors.buttonPrimary,
+            color: AppColors.accentPrimary,
           ),
         ),
         hintStyle: AppTypography.ibm(
@@ -210,7 +210,7 @@ class AppTheme {
       ),
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
         backgroundColor: AppColors.infoCardBg,
-        selectedItemColor: AppColors.tealPrimary,
+        selectedItemColor: AppColors.accentPrimary,
         unselectedItemColor: Colors.white.withOpacity(0.5),
         selectedLabelStyle: AppTypography.ibm(
           fontSize: 12,
@@ -222,23 +222,23 @@ class AppTheme {
         ),
       ),
       dialogTheme: DialogThemeData(
-        backgroundColor: AppColors.surfaceVariant4,
+        backgroundColor: AppColors.bgSurface,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppDecorations.radius20),
+          borderRadius: BorderRadius.circular(AppDecorations.radiusXl),
         ),
         titleTextStyle: AppTypography.ibm(
           fontSize: 17,
           fontWeight: FontWeight.w600,
-          color: Colors.white,
+          color: AppColors.textPrimary,
         ),
         contentTextStyle: AppTypography.ibm(
           fontSize: 15,
           fontWeight: FontWeight.w400,
-          color: Colors.white,
+          color: AppColors.textPrimary,
         ),
       ),
       snackBarTheme: SnackBarThemeData(
-        backgroundColor: AppColors.tealPrimary,
+        backgroundColor: AppColors.accentPrimary,
         contentTextStyle: AppTypography.ibm(
           fontSize: 14,
           fontWeight: FontWeight.w500,

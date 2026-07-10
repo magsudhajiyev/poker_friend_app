@@ -363,16 +363,16 @@ Widget _pickerFooterButton({
       height: 48,
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: filled ? AppColors.buttonPrimary : Colors.transparent,
+        color: filled ? AppColors.accentPrimary : Colors.transparent,
         borderRadius: BorderRadius.circular(60),
         border: filled
             ? null
-            : Border.all(color: AppColors.buttonPrimary, width: 1),
+            : Border.all(color: AppColors.accentPrimary, width: 1),
       ),
       child: Text(
         label,
         style: GoogleFonts.ibmPlexSans(
-          color: filled ? Colors.black : AppColors.buttonPrimary,
+          color: filled ? Colors.black : AppColors.accentPrimary,
           fontSize: 15,
           fontWeight: FontWeight.w600,
           letterSpacing: -0.43,

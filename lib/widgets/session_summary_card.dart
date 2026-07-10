@@ -191,7 +191,7 @@ class _SessionSummaryCardState extends State<SessionSummaryCard> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         decoration: BoxDecoration(
-                          color: AppColors.tealPrimary,
+                          color: AppColors.accentPrimary,
                           borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
                         ),
                         child: Center(
@@ -275,7 +275,7 @@ class _SessionSummaryCardState extends State<SessionSummaryCard> {
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
                             color: data.isCash
-                                ? AppColors.tealPrimary.withValues(alpha: 0.15)
+                                ? AppColors.accentPrimary.withValues(alpha: 0.15)
                                 : AppColors.warningAmber.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
                           ),
@@ -285,7 +285,7 @@ class _SessionSummaryCardState extends State<SessionSummaryCard> {
                               fontSize: 10,
                               fontWeight: FontWeight.w700,
                               color: data.isCash
-                                  ? AppColors.tealPrimary
+                                  ? AppColors.accentPrimary
                                   : AppColors.warningAmber,
                               letterSpacing: 0.8,
                             ),
@@ -382,7 +382,7 @@ class _SessionSummaryCardState extends State<SessionSummaryCard> {
     final data = widget.data;
     final prefix = data.isProfit ? '+' : '';
     final color = data.isProfit
-        ? AppColors.tealPrimary
+        ? AppColors.accentPrimary
         : AppColors.errorRed;
 
     return Center(
@@ -403,7 +403,7 @@ class _SessionSummaryCardState extends State<SessionSummaryCard> {
   Widget _buildTournamentHeroStat() {
     final data = widget.data;
     final color = data.isProfit
-        ? AppColors.tealPrimary
+        ? AppColors.accentPrimary
         : AppColors.errorRed;
 
     return Center(

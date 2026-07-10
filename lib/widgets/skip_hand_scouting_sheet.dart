@@ -67,7 +67,7 @@ class SkipHandScoutingSheet extends StatelessWidget {
 
     return Container(
       decoration: const BoxDecoration(
-        color: Colors.white,
+        color: AppColors.bgSurface,
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(AppDecorations.radiusXl),
           topRight: Radius.circular(AppDecorations.radiusXl),
@@ -89,13 +89,13 @@ class SkipHandScoutingSheet extends StatelessWidget {
                   style: AppTypography.ibm(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textInverse,
+                    color: AppColors.textPrimary,
                     height: 20 / 15,
                   ),
                 ),
                 GestureDetector(
                   onTap: () => Navigator.pop(context),
-                  child: const Icon(Icons.close, size: 18, color: AppColors.contentInactive),
+                  child: const Icon(Icons.close, size: 18, color: AppColors.textSecondary),
                 ),
               ],
             ),
@@ -134,7 +134,7 @@ class SkipHandScoutingSheet extends StatelessWidget {
             const SizedBox(height: 16),
 
             // Divider + Skip link
-            const Divider(height: 1, color: Color(0xFFE5E5E5)),
+            const Divider(height: 1, color: AppColors.borderOnInverse),
             const SizedBox(height: 12),
             Center(
               child: GestureDetector(
@@ -176,7 +176,7 @@ class _ActionPill extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
-          border: Border.all(color: AppColors.borderLight),
+          border: Border.all(color: AppColors.borderStrong),
         ),
         alignment: Alignment.center,
         child: Text(
@@ -184,7 +184,7 @@ class _ActionPill extends StatelessWidget {
           style: AppTypography.ibm(
             fontSize: 15,
             fontWeight: FontWeight.w600,
-            color: AppColors.textInverse,
+            color: AppColors.textPrimary,
             height: 20 / 15,
           ),
         ),
@@ -212,7 +212,7 @@ class _OpponentChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: const Color(0xFFF5F5F5),
+          color: AppColors.bgElevated,
           borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
         ),
         child: Row(
@@ -223,7 +223,7 @@ class _OpponentChip extends StatelessWidget {
               style: AppTypography.ibm(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
-                color: AppColors.textInverse,
+                color: AppColors.textPrimary,
                 height: 20 / 14,
               ),
             ),
@@ -231,7 +231,7 @@ class _OpponentChip extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
-                color: const Color(0xFFE0E0E0),
+                color: AppColors.bgOverlay,
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text(
@@ -239,7 +239,7 @@ class _OpponentChip extends StatelessWidget {
                 style: AppTypography.ibm(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
-                  color: const Color(0xFF666666),
+                  color: AppColors.textSecondary,
                   height: 14 / 11,
                 ),
               ),

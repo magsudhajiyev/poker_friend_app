@@ -9,9 +9,10 @@ import '../screens/logging_mode_selection_screen.dart';
 import '../screens/player/qr_scan_screen.dart' show QRScanScreen;
 import '../design_system/constants/colors.dart';
 
-/// Nav bar — Figma node 139:1186
-/// Layout: [Home | Clubs | Opponents | Statistics | Scan] ··· [+ FAB]
-/// Active icon: green (#4CDE78). Inactive: gray (#808285).
+/// Nav bar — Figma node 139:1182
+/// Layout: [Home | Opponents | Statistics | Sessions | Scan] ··· [+ FAB]
+/// Active icon: brand green (accentPrimary). Inactive: gray (#808285).
+/// FAB: 44px circle, bgElevated (#2C2C2E), white plus icon.
 class GlobalBottomNavBar extends StatefulWidget {
   final String currentScreen;
   final Future<bool> Function()? onNavigationAttempt;
@@ -68,7 +69,7 @@ class _GlobalBottomNavBarState extends State<GlobalBottomNavBar> {
               ),
               const SizedBox(width: 28),
               _NavIcon(
-                path: 'icons/figma_icons/stats.svg',
+                path: 'assets/icons/ChartBar.svg',
                 isSvg: true,
                 isActive: _isActive('statistics'),
                 onTap: () => _navigateTo(context, 'statistics'),
@@ -144,15 +145,18 @@ class _GlobalBottomNavBarState extends State<GlobalBottomNavBar> {
               width: 44,
               height: 44,
               decoration: const BoxDecoration(
-                color: Colors.white,
+                color: AppColors.bgElevated,
                 shape: BoxShape.circle,
               ),
               child: Center(
                 child: SvgPicture.asset(
                   'icons/figma_icons/plus.svg',
-                  width: 20,
-                  height: 20,
-                  colorFilter: const ColorFilter.mode(Colors.black, BlendMode.srcIn),
+                  width: 25,
+                  height: 25,
+                  colorFilter: const ColorFilter.mode(
+                    AppColors.textPrimary,
+                    BlendMode.srcIn,
+                  ),
                 ),
               ),
             ),

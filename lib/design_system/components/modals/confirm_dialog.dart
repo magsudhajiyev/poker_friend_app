@@ -1,11 +1,12 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../constants/colors.dart';
 
 /// Standard confirmation dialog used for destructive actions (delete, remove, etc.).
 ///
-/// Style: blurred backdrop, white rounded card (radius 24), grey body text,
-/// outlined Cancel pill on the left, solid-colour action pill on the right.
+/// Style: blurred backdrop, dark-surface rounded card (radius 24), grey body
+/// text, outlined Cancel pill on the left, solid-colour action pill on the right.
 ///
 /// Usage:
 /// ```dart
@@ -89,7 +90,7 @@ class ConfirmDialog extends StatelessWidget {
               child: Container(
                 width: 370,
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: AppColors.bgSurface,
                   borderRadius: BorderRadius.circular(24),
                 ),
                 padding: const EdgeInsets.all(24),
@@ -107,7 +108,7 @@ class ConfirmDialog extends StatelessWidget {
                             style: GoogleFonts.ibmPlexSans(
                               fontSize: 15,
                               fontWeight: FontWeight.w600,
-                              color: const Color(0xFF0C0C0C),
+                              color: AppColors.textPrimary,
                               height: 20 / 15,
                             ),
                           ),
@@ -115,7 +116,7 @@ class ConfirmDialog extends StatelessWidget {
                         const SizedBox(width: 12),
                         GestureDetector(
                           onTap: () => Navigator.pop(context),
-                          child: const Icon(Icons.close, size: 18, color: Color(0xFFB9B9B9)),
+                          child: const Icon(Icons.close, size: 18, color: AppColors.textSecondary),
                         ),
                       ],
                     ),
@@ -126,7 +127,7 @@ class ConfirmDialog extends StatelessWidget {
                       style: GoogleFonts.ibmPlexSans(
                         fontSize: 15,
                         fontWeight: FontWeight.w400,
-                        color: const Color(0xFFB9B9B9),
+                        color: AppColors.textSecondary,
                         height: 22 / 15,
                       ),
                     ),
@@ -141,7 +142,7 @@ class ConfirmDialog extends StatelessWidget {
                               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(999),
-                                border: Border.all(color: const Color(0xFFB9B9B9)),
+                                border: Border.all(color: AppColors.borderStrong),
                               ),
                               child: Text(
                                 'Cancel',
@@ -149,7 +150,7 @@ class ConfirmDialog extends StatelessWidget {
                                 style: GoogleFonts.ibmPlexSans(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w600,
-                                  color: const Color(0xFF0C0C0C),
+                                  color: AppColors.textPrimary,
                                   height: 20 / 15,
                                 ),
                               ),

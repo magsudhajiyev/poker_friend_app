@@ -123,29 +123,9 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
     final screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: AppColors.bgPrimary,
       body: Stack(
         children: [
-          // Teal radial gradient background
-          Positioned(
-            top: -screenWidth * 0.5,
-            right: -screenWidth * 0.2,
-            child: Container(
-              width: screenWidth * 1.2,
-              height: screenWidth * 1.2,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    const Color(0xFF1A4A4A).withOpacity(0.6),
-                    AppColors.headerGradientTeal.withOpacity(0.6),
-                    Colors.transparent,
-                  ],
-                  stops: const [0.0, 0.4, 1.0],
-                ),
-              ),
-            ),
-          ),
           // Content
           SafeArea(
             child: Column(
@@ -155,7 +135,7 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
                   child: _isLoading
                       ? const Center(
                           child: CircularProgressIndicator(
-                            color: AppColors.buttonPrimary,
+                            color: AppColors.accentPrimary,
                           ),
                         )
                       : _error != null
@@ -214,7 +194,7 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
                       widget.event.name,
                       style: AppTypography.ibm(
                         fontSize: 13,
-                        color: AppColors.buttonPrimary,
+                        color: AppColors.accentPrimary,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -265,13 +245,13 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
           _buildStatItem(
             label: l10n.leaderboardPlayers,
             value: '$activePlayers / ${data.totalPlayers}',
-            color: AppColors.buttonPrimary,
+            color: AppColors.accentPrimary,
           ),
           Container(width: 1, height: 32, color: Colors.white.withOpacity(0.06)),
           _buildStatItem(
             label: l10n.leaderboardTotalChips,
             value: formatCompactNumber(data.totalChips),
-            color: AppColors.buttonPrimary,
+            color: AppColors.accentPrimary,
           ),
           if (_bigBlind > 0) ...[
             Container(width: 1, height: 32, color: Colors.white.withOpacity(0.06)),
@@ -380,7 +360,7 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
 
     return RefreshIndicator(
       onRefresh: () => _loadRankings(),
-      color: AppColors.buttonPrimary,
+      color: AppColors.accentPrimary,
       child: ListView(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         children: items,
@@ -565,13 +545,13 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
             width: 56,
             height: 56,
             decoration: BoxDecoration(
-              color: AppColors.buttonPrimary.withOpacity(0.08),
+              color: AppColors.accentPrimary.withOpacity(0.08),
               borderRadius: BorderRadius.circular(AppDecorations.radius14),
             ),
             child: Icon(
               Icons.event_seat_outlined,
               size: 28,
-              color: AppColors.buttonPrimary.withOpacity(0.5),
+              color: AppColors.accentPrimary.withOpacity(0.5),
             ),
           ),
           const SizedBox(height: 14),
@@ -646,7 +626,7 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
               decoration: BoxDecoration(
-                color: AppColors.buttonPrimary,
+                color: AppColors.accentPrimary,
                 borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
               ),
               child: Text(

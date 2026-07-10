@@ -336,7 +336,7 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
             ),
             child: Container(
               decoration: const BoxDecoration(
-                color: Colors.white,
+                color: AppColors.bgSurface,
                 borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(AppDecorations.radiusXl),
                   topRight: Radius.circular(AppDecorations.radiusXl),
@@ -359,7 +359,7 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                               style: AppTypography.ibm(
                                 fontSize: 15,
                                 fontWeight: FontWeight.w600,
-                                color: AppColors.textInverse,
+                                color: AppColors.textPrimary,
                                 height: 20 / 15,
                               ),
                             ),
@@ -439,7 +439,7 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                             style: AppTypography.ibm(
                               fontSize: 15,
                               fontWeight: FontWeight.w400,
-                              color: AppColors.textInverse,
+                              color: AppColors.textPrimary,
                             ),
                           ),
                         ],
@@ -464,9 +464,9 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                         const SizedBox(height: 4),
                         Container(
                           decoration: BoxDecoration(
-                            color: AppColors.bgInputOnInverse,
+                            color: AppColors.bgElevated,
                             border: Border.all(
-                                color: AppColors.borderOnInverseSubtle, width: 1.5),
+                                color: AppColors.borderStrong, width: 1.5),
                             borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                           ),
                           child: TextField(
@@ -474,7 +474,7 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                             enabled: !_areSeatChangesLocked(),
                             style: AppTypography.ibm(
                               fontSize: 15,
-                              color: AppColors.textInverse,
+                              color: AppColors.textPrimary,
                             ),
                             textCapitalization: TextCapitalization.words,
                             decoration: InputDecoration(
@@ -858,7 +858,7 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(AppLocalizations.of(context).seatSetupOpponentSaved),
-          backgroundColor: AppColors.tealPrimary,
+          backgroundColor: AppColors.accentPrimary,
         ));
       }
     } catch (_) {}
@@ -870,36 +870,9 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
     final screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: AppColors.bgPrimary,
       body: Stack(
         children: [
-          // Teal gradient background
-          Positioned(
-            top: -screenWidth * 0.3,
-            right: -screenWidth * 0.25,
-            child: Transform.scale(
-              scaleX: 1.0,
-              scaleY: 0.7,
-              child: Container(
-                width: screenWidth * 1.5,
-                height: screenWidth * 1.2,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(
-                    center: Alignment.center,
-                    radius: 0.5,
-                    colors: [
-                      Color(0xFF1A4A4A),
-                      AppColors.headerGradientTeal.withOpacity(0.7),
-                      AppColors.headerGradientTeal.withOpacity(0.3),
-                      Colors.transparent,
-                    ],
-                    stops: [0.0, 0.3, 0.6, 1.0],
-                  ),
-                ),
-              ),
-            ),
-          ),
           SafeArea(
             child: Column(
               children: [
@@ -1001,7 +974,7 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                                   width: double.infinity,
                                   padding: const EdgeInsets.symmetric(vertical: 16),
                                   decoration: BoxDecoration(
-                                    color: AppColors.tealPrimary,
+                                    color: AppColors.accentPrimary,
                                     borderRadius: BorderRadius.circular(110),
                                   ),
                                   child: Center(
@@ -1207,7 +1180,7 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: Text(l10n.seatMove, style: AppTypography.ibm(color: AppColors.tealPrimary)),
+            child: Text(l10n.seatMove, style: AppTypography.ibm(color: AppColors.accentPrimary)),
           ),
         ],
       ),

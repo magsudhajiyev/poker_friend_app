@@ -233,7 +233,7 @@ class _GroupedCashGameScreenState extends State<GroupedCashGameScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(AppLocalizations.of(context).clubCashGameAlreadySeated),
-          backgroundColor: AppColors.mint700,
+          backgroundColor: AppColors.accentPrimary,
         ),
       );
       return;
@@ -247,7 +247,7 @@ class _GroupedCashGameScreenState extends State<GroupedCashGameScreen> {
           content: Text(
             AppLocalizations.of(context).clubCashGameSeatAvailable,
           ),
-          backgroundColor: AppColors.mint700,
+          backgroundColor: AppColors.accentPrimary,
         ),
       );
       return;
@@ -272,7 +272,7 @@ class _GroupedCashGameScreenState extends State<GroupedCashGameScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(AppLocalizations.of(context).clubCashGameJoinedWaitlist(position ?? 0)),
-          backgroundColor: AppColors.mint700,
+          backgroundColor: AppColors.accentPrimary,
         ),
       );
     } catch (e) {
@@ -358,29 +358,6 @@ class _GroupedCashGameScreenState extends State<GroupedCashGameScreen> {
       backgroundColor: AppColors.bgPrimary,
       body: Stack(
         children: [
-          // Teal glow at top (matches final_standings_screen pattern)
-          Positioned(
-            top: -250 + topPadding,
-            left: -screenWidth * 0.25,
-            right: -screenWidth * 0.25,
-            child: Container(
-              height: 500,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  center: Alignment.center,
-                  radius: 0.5,
-                  colors: [
-                    const Color(0xFF2E5A59).withOpacity(0.9),
-                    const Color(0xFF2E5A59).withOpacity(0.5),
-                    const Color(0xFF0D2B2A).withOpacity(0.3),
-                    Colors.transparent,
-                  ],
-                  stops: const [0.0, 0.3, 0.6, 1.0],
-                ),
-              ),
-            ),
-          ),
 
           SafeArea(
             child: Column(
@@ -390,7 +367,7 @@ class _GroupedCashGameScreenState extends State<GroupedCashGameScreen> {
                   const Expanded(
                     child: Center(
                       child: CircularProgressIndicator(
-                        color: AppColors.buttonPrimary,
+                        color: AppColors.accentPrimary,
                       ),
                     ),
                   )
@@ -473,7 +450,7 @@ class _GroupedCashGameScreenState extends State<GroupedCashGameScreen> {
                   style: AppTypography.ibm(
                     fontSize: 13,
                     fontWeight: FontWeight.w400,
-                    color: AppColors.textMint,
+                    color: AppColors.accentPrimary,
                     height: 1.47,
                   ),
                   overflow: TextOverflow.ellipsis,
@@ -489,7 +466,7 @@ class _GroupedCashGameScreenState extends State<GroupedCashGameScreen> {
                 width: 44,
                 height: 44,
                 decoration: const BoxDecoration(
-                  color: AppColors.buttonPrimary,
+                  color: AppColors.accentPrimary,
                   shape: BoxShape.circle,
                 ),
                 alignment: Alignment.center,
@@ -744,7 +721,7 @@ class _GroupedCashGameScreenState extends State<GroupedCashGameScreen> {
                   fontSize: labelSize,
                   fontWeight: FontWeight.w500,
                   height: 1.44,
-                  color: AppColors.buttonPrimary,
+                  color: AppColors.accentPrimary,
                 ),
               ),
             ),
@@ -755,11 +732,11 @@ class _GroupedCashGameScreenState extends State<GroupedCashGameScreen> {
   }
 
   Widget _buildSeatedPill(_GroupedTable t) {
-    final fg = t.isFull ? Colors.white : AppColors.buttonPrimary;
+    final fg = t.isFull ? Colors.white : AppColors.accentPrimary;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
       decoration: BoxDecoration(
-        color: t.isFull ? AppColors.errorRed : AppColors.mint800,
+        color: t.isFull ? AppColors.errorRed : AppColors.accentPrimary,
         borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
       ),
       child: Row(
@@ -867,7 +844,7 @@ class _GroupedCashGameScreenState extends State<GroupedCashGameScreen> {
                           vertical: 3,
                         ),
                         decoration: BoxDecoration(
-                          color: AppColors.mint900,
+                          color: AppColors.accentPrimary,
                           borderRadius: BorderRadius.circular(AppDecorations.radius20),
                         ),
                         child: Text(
@@ -875,7 +852,7 @@ class _GroupedCashGameScreenState extends State<GroupedCashGameScreen> {
                           style: AppTypography.ibm(
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
-                            color: AppColors.buttonPrimary,
+                            color: AppColors.accentPrimary,
                             height: 1.0,
                           ),
                         ),
@@ -926,7 +903,7 @@ class _GroupedCashGameScreenState extends State<GroupedCashGameScreen> {
             onPressed: () => Navigator.pop(ctx, false),
             child: Text(
               AppLocalizations.of(context).clubCashGameKeep,
-              style: AppTypography.ibm(color: AppColors.textMint),
+              style: AppTypography.ibm(color: AppColors.accentPrimary),
             ),
           ),
           TextButton(
@@ -1049,7 +1026,7 @@ class _AdminWaitlistSheetState extends State<_AdminWaitlistSheet> {
             AppLocalizations.of(context).clubCashGameNotified(entry.userDisplayName),
             style: AppTypography.ibm(),
           ),
-          backgroundColor: AppColors.mint700,
+          backgroundColor: AppColors.accentPrimary,
         ),
       );
     } catch (e) {
@@ -1116,7 +1093,7 @@ class _AdminWaitlistSheetState extends State<_AdminWaitlistSheet> {
                       style: AppTypography.ibm(
                         fontSize: 13,
                         fontWeight: FontWeight.w400,
-                        color: AppColors.textMint,
+                        color: AppColors.accentPrimary,
                       ),
                     ),
                     const Spacer(),
@@ -1126,13 +1103,13 @@ class _AdminWaitlistSheetState extends State<_AdminWaitlistSheet> {
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: AppColors.mint900,
+                        color: AppColors.accentPrimary,
                         borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                       ),
                       child: Text(
                         '${entries.length}',
                         style: AppTypography.ibm(
-                          color: AppColors.buttonPrimary,
+                          color: AppColors.accentPrimary,
                           fontWeight: FontWeight.bold,
                           fontSize: 13,
                         ),
@@ -1208,7 +1185,7 @@ class _AdminWaitlistSheetState extends State<_AdminWaitlistSheet> {
         padding: EdgeInsets.symmetric(vertical: 48),
         child: Center(
           child: CircularProgressIndicator(
-            color: AppColors.buttonPrimary,
+            color: AppColors.accentPrimary,
           ),
         ),
       );
@@ -1265,7 +1242,7 @@ class _AdminWaitlistSheetState extends State<_AdminWaitlistSheet> {
         color: AppColors.surfaceVariant2,
         borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
         border: isNotified
-            ? Border.all(color: AppColors.buttonPrimary, width: 1)
+            ? Border.all(color: AppColors.accentPrimary, width: 1)
             : null,
       ),
       child: Row(
@@ -1276,9 +1253,9 @@ class _AdminWaitlistSheetState extends State<_AdminWaitlistSheet> {
             height: 32,
             decoration: BoxDecoration(
               color: isNotified
-                  ? AppColors.mint900
+                  ? AppColors.accentPrimary
                   : (position == 1
-                      ? AppColors.mint900
+                      ? AppColors.accentPrimary
                       : AppColors.surfaceVariant3),
               shape: BoxShape.circle,
             ),
@@ -1286,14 +1263,14 @@ class _AdminWaitlistSheetState extends State<_AdminWaitlistSheet> {
               child: isNotified
                   ? const Icon(
                       Icons.notifications_active,
-                      color: AppColors.buttonPrimary,
+                      color: AppColors.accentPrimary,
                       size: 16,
                     )
                   : Text(
                       '$position',
                       style: AppTypography.ibm(
                         color: position == 1
-                            ? AppColors.buttonPrimary
+                            ? AppColors.accentPrimary
                             : Colors.white,
                         fontWeight: FontWeight.bold,
                       ),
@@ -1326,7 +1303,7 @@ class _AdminWaitlistSheetState extends State<_AdminWaitlistSheet> {
                   style: AppTypography.ibm(
                     fontSize: 11,
                     color: isNotified
-                        ? AppColors.buttonPrimary
+                        ? AppColors.accentPrimary
                         : AppColors.textDisabled,
                   ),
                 ),
@@ -1342,8 +1319,8 @@ class _AdminWaitlistSheetState extends State<_AdminWaitlistSheet> {
               height: 36,
               decoration: BoxDecoration(
                 color: isNotified
-                    ? AppColors.mint900
-                    : AppColors.mint900.withOpacity(0.4),
+                    ? AppColors.accentPrimary
+                    : AppColors.accentPrimary.withOpacity(0.4),
                 borderRadius: BorderRadius.circular(AppDecorations.radius10),
               ),
               alignment: Alignment.center,
@@ -1353,7 +1330,7 @@ class _AdminWaitlistSheetState extends State<_AdminWaitlistSheet> {
                       height: 16,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: AppColors.buttonPrimary,
+                        color: AppColors.accentPrimary,
                       ),
                     )
                   : Icon(
@@ -1361,7 +1338,7 @@ class _AdminWaitlistSheetState extends State<_AdminWaitlistSheet> {
                           ? Icons.notifications_active
                           : Icons.notifications_none,
                       size: 18,
-                      color: AppColors.buttonPrimary,
+                      color: AppColors.accentPrimary,
                     ),
             ),
           ),
@@ -1509,7 +1486,7 @@ class _AddTableSheetState extends State<_AddTableSheet> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(AppLocalizations.of(context).clubCashGameAddedToGroup(newTable.name)),
-          backgroundColor: AppColors.mint700,
+          backgroundColor: AppColors.accentPrimary,
         ),
       );
     } catch (e) {
@@ -1539,7 +1516,7 @@ class _AddTableSheetState extends State<_AddTableSheet> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(AppLocalizations.of(context).clubCashGameAddedToGroup(table.name)),
-          backgroundColor: AppColors.mint700,
+          backgroundColor: AppColors.accentPrimary,
         ),
       );
     } catch (e) {
@@ -1587,7 +1564,7 @@ class _AddTableSheetState extends State<_AddTableSheet> {
                   style: AppTypography.ibm(
                     fontSize: 13,
                     fontWeight: FontWeight.w400,
-                    color: AppColors.textMint,
+                    color: AppColors.accentPrimary,
                   ),
                 ),
               ],
@@ -1643,7 +1620,7 @@ class _AddTableSheetState extends State<_AddTableSheet> {
   Widget _buildBody() {
     if (_isLoading) {
       return const Center(
-        child: CircularProgressIndicator(color: AppColors.buttonPrimary),
+        child: CircularProgressIndicator(color: AppColors.accentPrimary),
       );
     }
     if (_error != null) {
@@ -1707,7 +1684,7 @@ class _AddTableSheetState extends State<_AddTableSheet> {
             child: TextField(
               controller: _nameController,
               enabled: !_isCreating,
-              cursorColor: AppColors.buttonPrimary,
+              cursorColor: AppColors.accentPrimary,
               style: AppTypography.ibm(
                 color: Colors.white,
                 fontSize: 14,
@@ -1736,8 +1713,8 @@ class _AddTableSheetState extends State<_AddTableSheet> {
             padding: const EdgeInsets.symmetric(horizontal: 20),
             decoration: BoxDecoration(
               color: _isCreating
-                  ? AppColors.mint900
-                  : AppColors.buttonPrimary,
+                  ? AppColors.accentPrimary
+                  : AppColors.accentPrimary,
               borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
             ),
             alignment: Alignment.center,
@@ -1747,7 +1724,7 @@ class _AddTableSheetState extends State<_AddTableSheet> {
                     height: 18,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      color: AppColors.buttonPrimary,
+                      color: AppColors.accentPrimary,
                     ),
                   )
                 : Text(
@@ -1865,13 +1842,13 @@ class _AddTableSheetState extends State<_AddTableSheet> {
                   height: 18,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    color: AppColors.buttonPrimary,
+                    color: AppColors.accentPrimary,
                   ),
                 )
               else if (!isBusy)
                 const Icon(
                   Icons.add_circle_outline,
-                  color: AppColors.buttonPrimary,
+                  color: AppColors.accentPrimary,
                   size: 20,
                 ),
             ],

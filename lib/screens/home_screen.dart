@@ -354,11 +354,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         break;
       case NotificationType.newSupportRequest:
         icon = Icons.support_agent;
-        iconColor = AppColors.buttonPrimary;
+        iconColor = AppColors.accentPrimary;
         break;
       case NotificationType.supportRequestUpdated:
         icon = Icons.check_circle;
-        iconColor = AppColors.limeGreen;
+        iconColor = AppColors.accentPrimary;
         break;
       case NotificationType.partnerGranted:
         icon = Icons.card_giftcard;
@@ -732,7 +732,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           children: [
             Icon(
               isResolved ? Icons.check_circle : Icons.cancel,
-              color: isResolved ? AppColors.limeGreen : AppColors.errorRed,
+              color: isResolved ? AppColors.accentPrimary : AppColors.errorRed,
               size: 22,
             ),
             const SizedBox(width: 8),
@@ -785,7 +785,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: isResolved
-                      ? AppColors.limeGreen.withValues(alpha: 0.1)
+                      ? AppColors.accentPrimary.withValues(alpha: 0.1)
                       : AppColors.errorRed.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(AppDecorations.radius10),
                 ),
@@ -807,7 +807,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             child: Text(
               'OK',
               style: AppTypography.ibm(
-                color: AppColors.buttonPrimary,
+                color: AppColors.accentPrimary,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -2232,7 +2232,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(l10n.bankrollSheetBankrollUpdated),
-          backgroundColor: AppColors.tealPrimary,
+          backgroundColor: AppColors.accentPrimary,
         ),
       );
     }
@@ -2578,7 +2578,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         child: Container(
           padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.bgSurface,
             borderRadius: BorderRadius.circular(AppDecorations.radiusXl),
           ),
           child: Column(
@@ -2626,7 +2626,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     style: AppTypography.ibm(
                       fontSize: 17,
                       fontWeight: FontWeight.w500,
-                      color: AppColors.textInverse,
+                      color: AppColors.textPrimary,
                       height: 1.44,
                     ),
                   ),
@@ -2647,7 +2647,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                       decoration: BoxDecoration(
-                        color: AppColors.bgPrimary,
+                        color: AppColors.bgInverse,
                         borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
                       ),
                       child: Text(
@@ -2656,7 +2656,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         style: AppTypography.ibm(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
-                          color: Colors.white,
+                          color: AppColors.textInverse,
                           height: 20 / 15,
                         ),
                       ),
@@ -3297,7 +3297,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 buyIn,
                 style: AppTypography.mono(
                   fontSize: 22,
-                  color: AppColors.limeGreen,
+                  color: AppColors.accentPrimary,
                   fontWeight: FontWeight.w600,
                   letterSpacing: 0,
                   height: 1.0,
@@ -3361,7 +3361,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               ),
               child: Text(
                 gameType,
-                style: AppTypography.infoCardPill(color: AppColors.buttonPrimary),
+                style: AppTypography.infoCardPill(color: AppColors.accentPrimary),
               ),
             ),
             const SizedBox(height: 8),
@@ -4651,7 +4651,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           // Icon
                           Icon(
                             Icons.show_chart_rounded,
-                            color: AppColors.buttonPrimary,
+                            color: AppColors.accentPrimary,
                             size: 48,
                           ),
 
@@ -4711,7 +4711,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 'OK',
                                 style: AppTypography.ibm(
                                   fontSize: 16,
-                                  color: AppColors.buttonPrimary,
+                                  color: AppColors.accentPrimary,
                                   fontWeight: FontWeight.w600,
                                   letterSpacing: 0,
                                   height: 1.2,

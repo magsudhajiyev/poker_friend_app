@@ -290,7 +290,7 @@ class _CardKeyboardState extends State<CardKeyboard> {
           borderRadius: BorderRadius.circular(AppDecorations.radius10),
           border: Border.all(
             color: isActive
-                ? AppColors.buttonPrimary
+                ? AppColors.accentPrimary
                 : isLocked
                     ? const Color(0xFF2A5A3A)
                     : isEmpty
@@ -374,15 +374,15 @@ class _CardKeyboardState extends State<CardKeyboard> {
         height: 44,
         decoration: BoxDecoration(
           color: isDragging
-              ? AppColors.buttonPrimary.withValues(alpha: 0.25)
+              ? AppColors.accentPrimary.withValues(alpha: 0.25)
               : isArmed
-                  ? AppColors.buttonPrimary.withValues(alpha: 0.15)
+                  ? AppColors.accentPrimary.withValues(alpha: 0.15)
                   : isFullyExcluded
                       ? const Color(0xFF0A0A0E)
                       : AppColors.neutral800,
           border: Border.all(
             color: (isArmed || isDragging)
-                ? AppColors.buttonPrimary
+                ? AppColors.accentPrimary
                 : isFullyExcluded
                     ? AppColors.neutral800
                     : AppColors.neutral700,
@@ -397,7 +397,7 @@ class _CardKeyboardState extends State<CardKeyboard> {
               fontSize: 16,
               fontWeight: FontWeight.w600,
               color: (isArmed || isDragging)
-                  ? AppColors.buttonPrimary
+                  ? AppColors.accentPrimary
                   : isFullyExcluded
                       ? AppColors.neutral700
                       : Colors.white,
@@ -430,15 +430,15 @@ class _CardKeyboardState extends State<CardKeyboard> {
                 height: 56,
                 decoration: BoxDecoration(
                   color: isHovered
-                      ? AppColors.buttonPrimary.withValues(alpha: 0.2)
+                      ? AppColors.accentPrimary.withValues(alpha: 0.2)
                       : isExcluded
                           ? const Color(0xFF0A0A0E)
                           : AppColors.neutral800,
                   border: Border.all(
                     color: isHovered
-                        ? AppColors.buttonPrimary
+                        ? AppColors.accentPrimary
                         : (hasActiveRank && !isExcluded)
-                            ? AppColors.buttonPrimary.withValues(alpha: 0.4)
+                            ? AppColors.accentPrimary.withValues(alpha: 0.4)
                             : isExcluded
                                 ? AppColors.neutral800
                                 : AppColors.neutral700,

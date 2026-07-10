@@ -234,11 +234,9 @@ class _SeatConfigSheetState extends State<SeatConfigSheet> {
       width: 38,
       height: 24,
       decoration: BoxDecoration(
-        color: value ? AppColors.textOnInverse : AppColors.borderLight,
+        color: AppColors.bgPrimary,
         borderRadius: BorderRadius.circular(74),
-        border: Border.all(
-          color: value ? AppColors.textOnInverse : AppColors.borderLight,
-        ),
+        border: Border.all(color: AppColors.borderDefault),
       ),
       child: AnimatedAlign(
         duration: const Duration(milliseconds: 180),
@@ -264,7 +262,7 @@ class _SeatConfigSheetState extends State<SeatConfigSheet> {
       padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       child: Container(
         decoration: BoxDecoration(
-          color: AppColors.bgInverse,
+          color: AppColors.bgSurface,
           borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(AppDecorations.radiusXl),
             topRight: Radius.circular(AppDecorations.radiusXl),
@@ -287,7 +285,7 @@ class _SeatConfigSheetState extends State<SeatConfigSheet> {
                         style: AppTypography.ibm(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
-                          color: AppColors.textOnInverse,
+                          color: AppColors.textPrimary,
                           height: 20 / 15,
                         ),
                       ),
@@ -296,7 +294,7 @@ class _SeatConfigSheetState extends State<SeatConfigSheet> {
                   GestureDetector(
                     onTap: () => Navigator.pop(context),
                     child: Icon(Icons.close,
-                        size: 18, color: AppColors.borderLight),
+                        size: 18, color: AppColors.textSecondary),
                   ),
                 ],
               ),
@@ -341,8 +339,8 @@ class _SeatConfigSheetState extends State<SeatConfigSheet> {
                         shape: BoxShape.circle,
                         border: Border.all(
                           color: _isHero
-                              ? AppColors.textOnInverse
-                              : AppColors.borderLight,
+                              ? AppColors.textPrimary
+                              : AppColors.textSecondary,
                           width: 1.5,
                         ),
                       ),
@@ -353,7 +351,7 @@ class _SeatConfigSheetState extends State<SeatConfigSheet> {
                                 height: 10,
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
-                                  color: AppColors.textOnInverse,
+                                  color: AppColors.textPrimary,
                                 ),
                               ),
                             )
@@ -365,7 +363,7 @@ class _SeatConfigSheetState extends State<SeatConfigSheet> {
                       style: AppTypography.ibm(
                         fontSize: 15,
                         fontWeight: FontWeight.w400,
-                        color: AppColors.textOnInverse,
+                        color: AppColors.textPrimary,
                       ),
                     ),
                   ],
@@ -381,19 +379,19 @@ class _SeatConfigSheetState extends State<SeatConfigSheet> {
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
                   color: _nameFocusNode.hasFocus
-                      ? AppColors.textOnInverse
-                      : AppColors.borderLight,
+                      ? AppColors.textPrimary
+                      : AppColors.textSecondary,
                 ),
               ),
               const SizedBox(height: 4),
               Container(
                 decoration: BoxDecoration(
-                  color: AppColors.bgInputOnInverse,
+                  color: AppColors.bgElevated,
                   borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                   border: Border.all(
                     color: _nameFocusNode.hasFocus
                         ? AppColors.accentPrimary
-                        : AppColors.borderOnInverseSubtle,
+                        : AppColors.borderStrong,
                     width: _nameFocusNode.hasFocus ? 1.5 : 1.0,
                   ),
                 ),
@@ -407,11 +405,11 @@ class _SeatConfigSheetState extends State<SeatConfigSheet> {
                         textInputAction: TextInputAction.next,
                         textCapitalization: TextCapitalization.words,
                         style: AppTypography.ibm(
-                            fontSize: 15, color: AppColors.textOnInverse),
+                            fontSize: 15, color: AppColors.textPrimary),
                         decoration: InputDecoration(
                           hintText: l10n.seatConfigSearchOrEnterName,
                           hintStyle: AppTypography.ibm(
-                              fontSize: 15, color: AppColors.borderLight),
+                              fontSize: 15, color: AppColors.textSecondary),
                           filled: true,
                           fillColor: Colors.transparent,
                           border: InputBorder.none,
@@ -426,7 +424,7 @@ class _SeatConfigSheetState extends State<SeatConfigSheet> {
                       GestureDetector(
                         onTap: () => _nameController.clear(),
                         child: Icon(Icons.cancel,
-                            color: AppColors.borderLight, size: 16),
+                            color: AppColors.textSecondary, size: 16),
                       ),
                   ],
                 ),
@@ -491,7 +489,7 @@ class _SeatConfigSheetState extends State<SeatConfigSheet> {
                                 style: AppTypography.ibm(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w500,
-                                  color: AppColors.textOnInverse,
+                                  color: AppColors.textPrimary,
                                   height: 16 / 11,
                                 ),
                               ),
@@ -519,9 +517,9 @@ class _SeatConfigSheetState extends State<SeatConfigSheet> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
                   decoration: BoxDecoration(
-                    color: AppColors.bgInputOnInverse,
-                    border: Border.all(color: AppColors.borderOnInverseSubtle),
-                    borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
+                    color: AppColors.bgElevated,
+                    border: Border.all(color: AppColors.borderDefault),
+                    borderRadius: BorderRadius.circular(AppDecorations.radius14),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -531,7 +529,7 @@ class _SeatConfigSheetState extends State<SeatConfigSheet> {
                         style: AppTypography.ibm(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
-                          color: AppColors.borderLight,
+                          color: AppColors.textSecondary,
                         ),
                       ),
                       _buildToggle(_saveAsOpponent),
@@ -550,19 +548,19 @@ class _SeatConfigSheetState extends State<SeatConfigSheet> {
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
                   color: _stackFocusNode.hasFocus
-                      ? AppColors.textOnInverse
-                      : AppColors.borderLight,
+                      ? AppColors.textPrimary
+                      : AppColors.textSecondary,
                 ),
               ),
               const SizedBox(height: 4),
               Container(
                 decoration: BoxDecoration(
-                  color: AppColors.bgInputOnInverse,
+                  color: AppColors.bgElevated,
                   borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                   border: Border.all(
                     color: _stackFocusNode.hasFocus
                         ? AppColors.accentPrimary
-                        : AppColors.borderOnInverseSubtle,
+                        : AppColors.borderStrong,
                     width: _stackFocusNode.hasFocus ? 1.5 : 1.0,
                   ),
                 ),
@@ -576,8 +574,8 @@ class _SeatConfigSheetState extends State<SeatConfigSheet> {
                           fontSize: 15,
                           fontWeight: FontWeight.w400,
                           color: _stackFocusNode.hasFocus
-                              ? AppColors.textOnInverse
-                              : AppColors.borderLight,
+                              ? AppColors.textPrimary
+                              : AppColors.textSecondary,
                         ),
                       ),
                     ],
@@ -591,11 +589,11 @@ class _SeatConfigSheetState extends State<SeatConfigSheet> {
                           FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
                         ],
                         style: AppTypography.ibm(
-                            fontSize: 15, color: AppColors.textOnInverse),
+                            fontSize: 15, color: AppColors.textPrimary),
                         decoration: InputDecoration(
                           hintText: '',
                           hintStyle: AppTypography.ibm(
-                              fontSize: 15, color: AppColors.borderLight),
+                              fontSize: 15, color: AppColors.textSecondary),
                           filled: true,
                           fillColor: Colors.transparent,
                           border: InputBorder.none,
@@ -613,8 +611,8 @@ class _SeatConfigSheetState extends State<SeatConfigSheet> {
                           fontSize: 15,
                           fontWeight: FontWeight.w400,
                           color: _stackFocusNode.hasFocus
-                              ? AppColors.textOnInverse
-                              : AppColors.borderLight,
+                              ? AppColors.textPrimary
+                              : AppColors.textSecondary,
                         ),
                       ),
                     ],
@@ -622,7 +620,7 @@ class _SeatConfigSheetState extends State<SeatConfigSheet> {
                       GestureDetector(
                         onTap: () => _stackController.clear(),
                         child: Icon(Icons.cancel,
-                            color: AppColors.borderLight, size: 16),
+                            color: AppColors.textSecondary, size: 16),
                       ),
                   ],
                 ),
@@ -663,7 +661,7 @@ class _SeatConfigSheetState extends State<SeatConfigSheet> {
                             horizontal: 20, vertical: 12),
                         decoration: BoxDecoration(
                           border:
-                              Border.all(color: AppColors.borderLight),
+                              Border.all(color: AppColors.textPrimary),
                           borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
                         ),
                         child: Center(
@@ -672,7 +670,7 @@ class _SeatConfigSheetState extends State<SeatConfigSheet> {
                             style: AppTypography.ibm(
                               fontSize: 15,
                               fontWeight: FontWeight.w600,
-                              color: AppColors.textOnInverse,
+                              color: AppColors.textPrimary,
                               height: 20 / 15,
                             ),
                           ),
@@ -688,7 +686,7 @@ class _SeatConfigSheetState extends State<SeatConfigSheet> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 20, vertical: 12),
                         decoration: BoxDecoration(
-                          color: AppColors.bgPrimary,
+                          color: AppColors.bgInverse,
                           borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
                         ),
                         child: Center(
@@ -697,7 +695,7 @@ class _SeatConfigSheetState extends State<SeatConfigSheet> {
                             style: AppTypography.ibm(
                               fontSize: 15,
                               fontWeight: FontWeight.w600,
-                              color: AppColors.bgInverse,
+                              color: AppColors.textInverse,
                               height: 20 / 15,
                             ),
                           ),

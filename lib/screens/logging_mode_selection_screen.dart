@@ -60,11 +60,11 @@ class _LoggingModeSelectionScreenState
               child: const SizedBox.expand(),
             ),
           ),
-          // White modal panel
+          // Modal panel (dark surface)
           Container(
             width: double.infinity,
             decoration: const BoxDecoration(
-              color: Colors.white,
+              color: AppColors.bgSurface,
               borderRadius: BorderRadius.only(
                 topLeft: Radius.circular(AppDecorations.radiusXl),
                 topRight: Radius.circular(AppDecorations.radiusXl),
@@ -88,7 +88,7 @@ class _LoggingModeSelectionScreenState
                             style: AppTypography.ibm(
                               fontSize: 15,
                               fontWeight: FontWeight.w600,
-                              color: AppColors.textInverse,
+                              color: AppColors.textPrimary,
                               height: 20 / 15,
                             ),
                           ),
@@ -98,7 +98,7 @@ class _LoggingModeSelectionScreenState
                           child: const Icon(
                             Icons.close,
                             size: 18,
-                            color: AppColors.contentInactive,
+                            color: AppColors.textSecondary,
                           ),
                         ),
                       ],
@@ -169,8 +169,8 @@ class _LoggingModeSelectionScreenState
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.bgInputOnInverse,
-        border: Border.all(color: AppColors.borderOnInverseSubtle),
+        color: AppColors.bgElevated,
+        border: Border.all(color: AppColors.borderStrong),
         borderRadius: BorderRadius.circular(AppDecorations.radiusXl),
       ),
       child: Column(
@@ -182,7 +182,7 @@ class _LoggingModeSelectionScreenState
             style: AppTypography.ibm(
               fontSize: 17,
               fontWeight: FontWeight.w600,
-              color: AppColors.textInverse,
+              color: AppColors.textPrimary,
               height: 22 / 17,
             ),
           ),
@@ -192,7 +192,7 @@ class _LoggingModeSelectionScreenState
             style: AppTypography.ibm(
               fontSize: 15,
               fontWeight: FontWeight.w400,
-              color: AppColors.textInverse,
+              color: AppColors.textPrimary,
               height: 22 / 15,
             ),
           ),
@@ -213,7 +213,7 @@ class _LoggingModeSelectionScreenState
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               decoration: BoxDecoration(
-                color: AppColors.bgPrimary,
+                color: AppColors.bgInverse,
                 borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
               ),
               child: Text(
@@ -222,7 +222,7 @@ class _LoggingModeSelectionScreenState
                 style: AppTypography.ibm(
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
-                  color: Colors.white,
+                  color: AppColors.textInverse,
                   height: 20 / 15,
                 ),
               ),
@@ -246,8 +246,8 @@ class _LoggingModeSelectionScreenState
         width: double.infinity,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: AppColors.bgInputOnInverse,
-          border: Border.all(color: AppColors.borderOnInverseSubtle),
+          color: AppColors.bgElevated,
+          border: Border.all(color: AppColors.borderStrong),
           borderRadius: BorderRadius.circular(AppDecorations.radiusXl),
         ),
         child: Row(
@@ -261,7 +261,7 @@ class _LoggingModeSelectionScreenState
                     style: AppTypography.ibm(
                       fontSize: 17,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.textInverse,
+                      color: AppColors.textPrimary,
                       height: 22 / 17,
                     ),
                   ),
@@ -270,7 +270,7 @@ class _LoggingModeSelectionScreenState
                     style: AppTypography.ibm(
                       fontSize: 13,
                       fontWeight: FontWeight.w400,
-                      color: const Color(0xFF6B6B6B),
+                      color: AppColors.textSecondary,
                       height: 18 / 13,
                     ),
                   ),
@@ -290,7 +290,7 @@ class _LoggingModeSelectionScreenState
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 1.0,
-                  color: AppColors.buttonPrimary,
+                  color: AppColors.accentPrimary,
                 ),
               ),
             ),
@@ -298,7 +298,7 @@ class _LoggingModeSelectionScreenState
             const Icon(
               Icons.chevron_right,
               size: 20,
-              color: AppColors.contentInactive,
+              color: AppColors.textSecondary,
             ),
           ],
         ),
@@ -310,7 +310,7 @@ class _LoggingModeSelectionScreenState
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
       decoration: BoxDecoration(
-        border: Border.all(color: AppColors.borderOnInverse),
+        border: Border.all(color: AppColors.borderStrong),
         borderRadius: BorderRadius.circular(AppDecorations.navBarRadius),
       ),
       child: Text(
@@ -318,7 +318,7 @@ class _LoggingModeSelectionScreenState
         style: AppTypography.ibm(
           fontSize: 13,
           fontWeight: FontWeight.w400,
-          color: AppColors.textInverse,
+          color: AppColors.textPrimary,
           height: 20 / 13,
         ),
       ),

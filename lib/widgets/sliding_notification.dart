@@ -213,7 +213,7 @@ class _SlidingNotificationState extends State<SlidingNotification>
                       width: 44,
                       height: 44,
                       decoration: BoxDecoration(
-                        color: AppColors.mint800,
+                        color: AppColors.accentPrimary,
                         borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
                       ),
                       child: Icon(
