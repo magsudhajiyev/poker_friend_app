@@ -379,7 +379,7 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
     if (_currentStack == _initialStack) {
       return Colors.white;
     } else if (_currentStack > _initialStack) {
-      return AppColors.buttonPrimary;
+      return AppColors.accentPrimary;
     } else {
       return Colors.red;
     }
@@ -456,7 +456,7 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
                           ? CurrencyService.formatCash(_currentStack)
                           : _currentStack.toStringAsFixed(0),
                       style: AppTypography.ibm(
-                        color: AppColors.buttonPrimary,
+                        color: AppColors.accentPrimary,
                         fontSize: 17,
                         fontWeight: FontWeight.w600,
                       ),
@@ -634,7 +634,7 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
                       behavior: HitTestBehavior.opaque,
                       child: Row(
                         children: [
-                          const Icon(Icons.add_circle_outline, color: AppColors.buttonPrimary, size: 16),
+                          const Icon(Icons.add_circle_outline, color: AppColors.accentPrimary, size: 16),
                           const SizedBox(width: 10),
                           Expanded(
                             child: Padding(
@@ -666,7 +666,7 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
                       behavior: HitTestBehavior.opaque,
                       child: Row(
                         children: [
-                          const Icon(Icons.attach_money, color: AppColors.buttonPrimary, size: 16),
+                          const Icon(Icons.attach_money, color: AppColors.accentPrimary, size: 16),
                           const SizedBox(width: 10),
                           Expanded(
                             child: Padding(
@@ -778,7 +778,7 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
               child: Text(
                 l10n.commonUpdate,
                 style: AppTypography.ibm(
-                  color: AppColors.buttonPrimary,
+                  color: AppColors.accentPrimary,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -913,7 +913,7 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
         ),
         title: Row(
           children: [
-            const Icon(Icons.attach_money, color: AppColors.buttonPrimary, size: 24),
+            const Icon(Icons.attach_money, color: AppColors.accentPrimary, size: 24),
             const SizedBox(width: 12),
             Text(
               l10n.individualAddOn,
@@ -1005,7 +1005,7 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               decoration: BoxDecoration(
-                color: AppColors.buttonPrimary,
+                color: AppColors.accentPrimary,
                 borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
               ),
               child: Text(
@@ -1070,7 +1070,7 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
         ),
         title: Row(
           children: [
-            const Icon(Icons.add_circle_outline, color: AppColors.buttonPrimary, size: 24),
+            const Icon(Icons.add_circle_outline, color: AppColors.accentPrimary, size: 24),
             const SizedBox(width: 12),
             Text(
               l10n.individualRebuy,
@@ -1228,7 +1228,7 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               decoration: BoxDecoration(
-                color: AppColors.buttonPrimary,
+                color: AppColors.accentPrimary,
                 borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
               ),
               child: Text(
@@ -1288,7 +1288,7 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
                 ? l10n.individualRebuyAddedSimple(rebuyAmount.toStringAsFixed(2))
                 : l10n.individualRebuyAddedWithStack(rebuyAmount.toStringAsFixed(2), newStack.toStringAsFixed(0)),
           ),
-          backgroundColor: AppColors.buttonPrimary,
+          backgroundColor: AppColors.accentPrimary,
         ),
       );
     }
@@ -1319,7 +1319,7 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
                 gradient: RadialGradient(
                   colors: [
                     const Color(0xFF1A4A4A).withOpacity(0.6),
-                    AppColors.headerGradientTeal.withOpacity(0.3),
+                    AppColors.accentPrimary.withOpacity(0.3),
                     Colors.transparent,
                   ],
                   stops: const [0.0, 0.4, 1.0],
@@ -1376,7 +1376,7 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
                                 _formatDuration(_sessionDuration),
                                 style: AppTypography.ibm(
                                   fontSize: 14,
-                                  color: AppColors.buttonPrimary,
+                                  color: AppColors.accentPrimary,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
@@ -1460,20 +1460,20 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
                                 key: _updateStackBtnKey,
                                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                                 decoration: BoxDecoration(
-                                  color: AppColors.buttonPrimary.withOpacity(0.15),
+                                  color: AppColors.accentPrimary.withOpacity(0.15),
                                   borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
                                   border: Border.all(
-                                    color: AppColors.buttonPrimary.withOpacity(0.3),
+                                    color: AppColors.accentPrimary.withOpacity(0.3),
                                   ),
                                 ),
                                 child: Row(
                                   children: [
-                                    const Icon(Icons.edit, color: AppColors.buttonPrimary, size: 14),
+                                    const Icon(Icons.edit, color: AppColors.accentPrimary, size: 14),
                                     const SizedBox(width: 4),
                                     Text(
                                       l10n.commonUpdate,
                                       style: AppTypography.ibm(
-                                        color: AppColors.buttonPrimary,
+                                        color: AppColors.accentPrimary,
                                         fontSize: 13,
                                         fontWeight: FontWeight.w600,
                                       ),
@@ -1513,7 +1513,7 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
                                     : '${profitLoss >= 0 ? '+' : ''}${profitLoss.toStringAsFixed(0)}',
                                 style: AppTypography.ibm(
                                   fontSize: 18,
-                                  color: isProfit ? AppColors.buttonPrimary : (profitLoss < 0 ? Colors.red : Colors.white),
+                                  color: isProfit ? AppColors.accentPrimary : (profitLoss < 0 ? Colors.red : Colors.white),
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
@@ -1768,7 +1768,7 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
             value,
             style: AppTypography.ibm(
               fontSize: 15,
-              color: AppColors.buttonPrimary,
+              color: AppColors.accentPrimary,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -1799,14 +1799,14 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
                   value,
                   style: AppTypography.ibm(
                     fontSize: 15,
-                    color: AppColors.buttonPrimary,
+                    color: AppColors.accentPrimary,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
                 const SizedBox(width: 8),
                 const Icon(
                   Icons.edit,
-                  color: AppColors.buttonPrimary,
+                  color: AppColors.accentPrimary,
                   size: 14,
                 ),
               ],

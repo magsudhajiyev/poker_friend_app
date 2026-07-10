@@ -70,12 +70,12 @@ Widget buildWelcomeCard({required VoidCallback onNext, required BuildContext con
       color: AppColors.surfaceDark,
       borderRadius: BorderRadius.circular(AppDecorations.radius20),
       border: Border.all(
-        color: AppColors.limeGreen.withValues(alpha: 0.15),
+        color: AppColors.accentPrimary.withValues(alpha: 0.15),
         width: 1,
       ),
       boxShadow: [
         BoxShadow(
-          color: AppColors.limeGreen.withValues(alpha: 0.08),
+          color: AppColors.accentPrimary.withValues(alpha: 0.08),
           blurRadius: 20,
           offset: const Offset(0, 4),
         ),
@@ -103,7 +103,7 @@ Widget buildWelcomeCard({required VoidCallback onNext, required BuildContext con
           child: TextButton(
             onPressed: onNext,
             style: TextButton.styleFrom(
-              backgroundColor: AppColors.limeGreen,
+              backgroundColor: AppColors.accentPrimary,
               padding: const EdgeInsets.symmetric(vertical: 14),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
@@ -137,11 +137,11 @@ Widget buildTooltip({
       color: AppColors.surfaceDark,
       borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
       border: Border.all(
-        color: AppColors.limeGreen.withValues(alpha: 0.15),
+        color: AppColors.accentPrimary.withValues(alpha: 0.15),
       ),
       boxShadow: [
         BoxShadow(
-          color: AppColors.limeGreen.withValues(alpha: 0.08),
+          color: AppColors.accentPrimary.withValues(alpha: 0.08),
           blurRadius: 20,
           offset: const Offset(0, 4),
         ),
@@ -173,12 +173,12 @@ Widget buildTooltip({
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                color: AppColors.limeGreen.withValues(alpha: 0.08),
+                color: AppColors.accentPrimary.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
               ),
               child: Text(
                 isLast ? l10n.onboardingGotIt : l10n.onboardingNext,
-                style: AppTypography.bodyLarge(color: AppColors.limeGreen)
+                style: AppTypography.bodyLarge(color: AppColors.accentPrimary)
                     .copyWith(fontWeight: FontWeight.w600),
               ),
             ),
@@ -799,7 +799,7 @@ class _GuestSignupGateState extends State<GuestSignupGate> {
     return const Scaffold(
       backgroundColor: AppColors.bgPrimary,
       body: Center(
-        child: CircularProgressIndicator(color: AppColors.limeGreen),
+        child: CircularProgressIndicator(color: AppColors.accentPrimary),
       ),
     );
   }
@@ -1234,7 +1234,7 @@ class _OnboardingCompleteDialog extends StatelessWidget {
           children: [
             const Icon(
               Icons.check_circle_outline,
-              color: AppColors.limeGreen,
+              color: AppColors.accentPrimary,
               size: 48,
             ),
             const SizedBox(height: 16),

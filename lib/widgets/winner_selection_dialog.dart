@@ -435,17 +435,17 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
                         child: Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: AppColors.limeGreen.withValues(alpha: 0.12),
+                            color: AppColors.accentPrimary.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                             border: Border.all(
-                              color: AppColors.limeGreen.withValues(alpha: 0.3),
+                              color: AppColors.accentPrimary.withValues(alpha: 0.3),
                             ),
                           ),
                           child: Row(
                             children: [
                               Icon(
                                 Icons.touch_app_rounded,
-                                color: AppColors.limeGreen,
+                                color: AppColors.accentPrimary,
                                 size: 22,
                               ),
                               const SizedBox(width: 10),
@@ -455,7 +455,7 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
                                   style: AppTypography.ibm(
                                     fontSize: 13,
                                     fontWeight: FontWeight.w500,
-                                    color: AppColors.limeGreen,
+                                    color: AppColors.accentPrimary,
                                     height: 1.4,
                                   ),
                                 ),
