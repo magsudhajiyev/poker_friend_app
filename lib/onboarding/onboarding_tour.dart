@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/typography.dart';
+import '../design_system/components/dialogs/app_dialog.dart';
+import '../design_system/components/dialogs/dialog_action_bar.dart';
 import '../l10n/app_localizations.dart';
 import '../screens/paywall_screen.dart';
 import '../screens/auth_screen_experimental.dart';
@@ -689,7 +691,7 @@ Future<void> finishOnboardingTour(BuildContext context,
     context: context,
     barrierDismissible: false,
     builder: (ctx) => _OnboardingCompleteDialog(
-      onDone: () => Navigator.of(ctx).pop(),
+      onDone: () {},
     ),
   );
   if (!context.mounted) return;
@@ -1212,80 +1214,43 @@ class _OnboardingCompleteDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return Center(
-      child: Container(
-        width: 309,
-        margin: const EdgeInsets.symmetric(horizontal: 32),
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: AppColors.surfaceDark,
-          borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
-          border: Border.all(color: AppColors.neutral800),
-          boxShadow: const [
-            BoxShadow(
-              color: Colors.black,
-              blurRadius: 114,
-              offset: Offset(20, 4),
+    return AppDialog(
+      showCloseButton: false,
+      barrierDismissible: false,
+      body: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(
+            Icons.check_circle_outline,
+            color: AppColors.accentPrimary,
+            size: 48,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            l10n.guidedTourCompleteTitle,
+            style: AppTypography.ibm(
+              color: AppColors.textPrimary,
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              height: 1.3,
             ),
-          ],
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(
-              Icons.check_circle_outline,
-              color: AppColors.accentPrimary,
-              size: 48,
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 12),
+          Text(
+            l10n.guidedTourCompleteBody,
+            style: AppTypography.ibm(
+              color: AppColors.textSecondary,
+              fontSize: 15,
+              height: 1.44,
             ),
-            const SizedBox(height: 16),
-            Text(
-              l10n.guidedTourCompleteTitle,
-              style: AppTypography.ibm(
-                color: Colors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-                height: 1.3,
-                decoration: TextDecoration.none,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 12),
-            Text(
-              l10n.guidedTourCompleteBody,
-              style: AppTypography.ibm(
-                color: AppColors.textDisabled,
-                fontSize: 15,
-                height: 1.44,
-                decoration: TextDecoration.none,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            GestureDetector(
-              onTap: onDone,
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
-                ),
-                child: Center(
-                  child: Text(
-                    l10n.commonDone,
-                    style: AppTypography.ibm(
-                      color: Colors.black,
-                      fontSize: 17,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: -0.5,
-                      decoration: TextDecoration.none,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+      actions: DialogActionBar.single(
+        cancelLabel: l10n.commonDone,
+        onCancel: onDone,
       ),
     );
   }

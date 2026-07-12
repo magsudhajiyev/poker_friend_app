@@ -12,7 +12,7 @@ import '../models/club_event.dart';
 import '../design_system/design_system.dart';
 import '../design_system/components/drawer_dots.dart';
 import '../widgets/global_bottom_nav_bar.dart';
-import '../widgets/event_success_popup.dart';
+import '../design_system/components/overlays/event_success_popup.dart';
 import 'club/event_detail_screen.dart' as club_detail;
 import 'event_detail_screen.dart';
 import '../l10n/app_localizations.dart';

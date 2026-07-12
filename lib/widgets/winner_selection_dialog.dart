@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import '../l10n/app_localizations.dart';
 import '../models/game_types.dart';
 import '../onboarding/onboarding_state.dart';
 import '../services/currency_service.dart';
+import '../design_system/components/bodies/player_selection_list.dart';
+import '../design_system/components/sheets/app_sheet.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/decorations.dart';
 import '../design_system/constants/typography.dart';
@@ -27,6 +28,34 @@ class WinnerSelectionDialog extends StatefulWidget {
     this.gameType = GameType.cash,
     this.heroSeat,
   });
+
+  /// Present as a modal bottom sheet and resolve with the caller-selected
+  /// winner map (null if dismissed).
+  static Future<Map<String, dynamic>?> show({
+    required BuildContext context,
+    required List<int> activePlayers,
+    required List<String> playerNames,
+    required double potAmount,
+    required int buttonPosition,
+    required int playerCount,
+    GameType gameType = GameType.cash,
+    int? heroSeat,
+  }) {
+    return showModalBottomSheet<Map<String, dynamic>>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => WinnerSelectionDialog(
+        activePlayers: activePlayers,
+        playerNames: playerNames,
+        potAmount: potAmount,
+        buttonPosition: buttonPosition,
+        playerCount: playerCount,
+        gameType: gameType,
+        heroSeat: heroSeat,
+      ),
+    );
+  }
 
   @override
   State<WinnerSelectionDialog> createState() => _WinnerSelectionDialogState();
@@ -136,15 +165,16 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
 
   Widget _buildPlayerRow(int playerId) {
     final playerDisplayName = _getPlayerDisplayName(playerId);
-    final bool isSelected;
-
-    if (isChoppedPot) {
-      isSelected = selectedWinners.contains(playerId);
-    } else {
-      isSelected = selectedWinner == playerId;
-    }
-
-    return GestureDetector(
+    final bool isSelected = isChoppedPot
+        ? selectedWinners.contains(playerId)
+        : selectedWinner == playerId;
+    return PlayerSelectionRow(
+      label: playerDisplayName,
+      selected: isSelected,
+      mode: isChoppedPot
+          ? PlayerSelectionMode.checkbox
+          : PlayerSelectionMode.radio,
+      accentColor: AppColors.textPrimary,
       onTap: () {
         if (isChoppedPot) {
           setState(() {
@@ -170,144 +200,18 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
           });
         }
       },
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-        decoration: BoxDecoration(
-          color: AppColors.bgElevated,
-          borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
-          border: isSelected
-              ? Border.all(color: AppColors.textPrimary, width: 1.5)
-              : null,
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 20,
-              height: 20,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: isSelected
-                      ? AppColors.textPrimary
-                      : AppColors.borderLight,
-                  width: isSelected ? 2 : 1.5,
-                ),
-                color: isSelected ? AppColors.textPrimary : Colors.transparent,
-              ),
-              child: isSelected
-                  ? Center(
-                      child: isChoppedPot
-                          ? Icon(Icons.check, size: 11, color: AppColors.textPrimary)
-                          : Container(
-                              width: 8,
-                              height: 8,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: AppColors.textPrimary,
-                              ),
-                            ),
-                    )
-                  : null,
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Text(
-                playerDisplayName,
-                style: AppTypography.ibm(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w400,
-                  color: AppColors.textPrimary,
-                  height: 1.44,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return Dialog(
-      backgroundColor: Colors.transparent,
-      insetPadding: EdgeInsets.zero,
-      alignment: Alignment.bottomCenter,
-      child: Container(
-        width: MediaQuery.of(context).size.width,
-        height: MediaQuery.of(context).size.height -
-            MediaQuery.of(context).padding.top,
-        decoration: BoxDecoration(
-          color: AppColors.bgSurface,
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(AppDecorations.radiusXl),
-            topRight: Radius.circular(AppDecorations.radiusXl),
-          ),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Drag handle
-            Padding(
-              padding: const EdgeInsets.only(top: 12),
-              child: Container(
-                width: 36,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: AppColors.bgElevated,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-
-            // Header: spacer | title (centered) | X
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-              child: Row(
-                children: [
-                  const SizedBox(width: 28),
-                  Expanded(
-                    child: Center(
-                      child: Text(
-                        isChoppedPot
-                            ? l10n.winnerSelectionWhoChopped
-                            : l10n.winnerSelectionWhoWon,
-                        style: AppTypography.ibm(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
-                          letterSpacing: -0.43,
-                        ),
-                      ),
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: SizedBox(
-                      width: 28,
-                      height: 28,
-                      child: Center(
-                        child: SvgPicture.asset(
-                          'assets/icons/X.svg',
-                          width: 18,
-                          height: 18,
-                          colorFilter: ColorFilter.mode(
-                              AppColors.borderLight, BlendMode.srcIn),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // Scrollable content
-            Flexible(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(16, 28, 16, 0),
-                child: Column(
+    return AppSheet(
+      title: isChoppedPot
+          ? l10n.winnerSelectionWhoChopped
+          : l10n.winnerSelectionWhoWon,
+      heightFraction: 0.95,
+      body: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Chopped pot indicator
@@ -474,86 +378,77 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
                         child: _buildPlayerRow(playerId),
                       );
                     }),
+                    const SizedBox(height: 24),
+                    // Confirm button
+                    GestureDetector(
+                      onTap: _canSave ? _saveChanges : null,
+                      child: Opacity(
+                        opacity: _canSave ? 1.0 : 0.35,
+                        child: Container(
+                          width: double.infinity,
+                          padding:
+                              const EdgeInsets.symmetric(vertical: 14),
+                          decoration: BoxDecoration(
+                            color: AppColors.bgInverse,
+                            borderRadius: BorderRadius.circular(
+                                AppDecorations.radiusFull),
+                          ),
+                          child: Center(
+                            child: Text(
+                              isChoppedPot
+                                  ? l10n.winnerSelectionConfirmChop
+                                  : l10n.winnerSelectionConfirmWinner,
+                              style: AppTypography.ibm(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.textInverse,
+                                letterSpacing: -0.5,
+                                height: 20 / 15,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    if (isChoppedPot) ...[
+                      const SizedBox(height: 12),
+                      GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            isChoppedPot = false;
+                            selectedWinners.clear();
+                            selectedWinner = null;
+                          });
+                        },
+                        child: Container(
+                          width: double.infinity,
+                          padding:
+                              const EdgeInsets.symmetric(vertical: 14),
+                          decoration: BoxDecoration(
+                            color: Colors.transparent,
+                            borderRadius: BorderRadius.circular(
+                                AppDecorations.radiusFull),
+                            border:
+                                Border.all(color: AppColors.borderLight),
+                          ),
+                          child: Center(
+                            child: Text(
+                              l10n.winnerSelectionBackToSingle,
+                              style: AppTypography.ibm(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.textPrimary,
+                                letterSpacing: -0.5,
+                                height: 20 / 15,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 24),
                   ],
                 ),
-              ),
-            ),
-
-            // Bottom buttons
-            Padding(
-              padding: EdgeInsets.fromLTRB(
-                  16, 24, 16, MediaQuery.of(context).padding.bottom + 24),
-              child: Column(
-                children: [
-                  // Confirm button
-                  GestureDetector(
-                    onTap: _canSave ? _saveChanges : null,
-                    child: Opacity(
-                      opacity: _canSave ? 1.0 : 0.35,
-                      child: Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        decoration: BoxDecoration(
-                          color: AppColors.bgInverse,
-                          borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
-                        ),
-                        child: Center(
-                          child: Text(
-                            isChoppedPot
-                                ? l10n.winnerSelectionConfirmChop
-                                : l10n.winnerSelectionConfirmWinner,
-                            style: AppTypography.ibm(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textInverse,
-                              letterSpacing: -0.5,
-                              height: 20 / 15,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  // Back to single winner (chopped mode only)
-                  if (isChoppedPot) ...[
-                    const SizedBox(height: 12),
-                    GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          isChoppedPot = false;
-                          selectedWinners.clear();
-                          selectedWinner = null;
-                        });
-                      },
-                      child: Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        decoration: BoxDecoration(
-                          color: Colors.transparent,
-                          borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
-                          border: Border.all(color: AppColors.borderLight),
-                        ),
-                        child: Center(
-                          child: Text(
-                            l10n.winnerSelectionBackToSingle,
-                            style: AppTypography.ibm(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textPrimary,
-                              letterSpacing: -0.5,
-                              height: 20 / 15,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

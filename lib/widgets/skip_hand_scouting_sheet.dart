@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
 import '../utils/poker_positions.dart';
 import '../services/skip_hand_scouting_service.dart';
+import '../design_system/components/sheets/app_sheet.dart';
 import '../design_system/constants/typography.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/decorations.dart';
@@ -62,99 +63,69 @@ class SkipHandScoutingSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final named = _namedOpponents();
-    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
     final sortedSeats = activeSeats.toList()..sort();
 
-    return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.bgSurface,
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(AppDecorations.radiusXl),
-          topRight: Radius.circular(AppDecorations.radiusXl),
-        ),
-      ),
-      padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + bottomInset),
-      child: SafeArea(
-        top: false,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  l10n.skipScoutTitle,
-                  style: AppTypography.ibm(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
-                    height: 20 / 15,
-                  ),
-                ),
-                GestureDetector(
-                  onTap: () => Navigator.pop(context),
-                  child: const Icon(Icons.close, size: 18, color: AppColors.textSecondary),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
+    return AppSheet(
+      title: l10n.skipScoutTitle,
+      onClose: () => Navigator.pop(context),
+      heightFraction: null,
+      body: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // "No one raised" pill
+          _ActionPill(
+            label: l10n.skipScoutNoRaise,
+            onTap: () => Navigator.pop(context, const SkipScoutResult.noRaise()),
+          ),
 
-            // "No one raised" pill
-            _ActionPill(
-              label: l10n.skipScoutNoRaise,
-              onTap: () => Navigator.pop(context, const SkipScoutResult.noRaise()),
-            ),
-
-            // Opponent chips
-            if (named.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: named.map((entry) {
-                  final position = PokerPositions.getPositionNameForActivePlayers(
-                    entry.key,
-                    buttonPosition,
-                    sortedSeats,
-                  );
-                  return _OpponentChip(
-                    name: entry.value,
-                    position: position,
-                    onTap: () => Navigator.pop(
-                      context,
-                      SkipScoutResult.raised(entry.key),
-                    ),
-                  );
-                }).toList(),
-              ),
-            ],
-
-            const SizedBox(height: 16),
-
-            // Divider + Skip link
-            const Divider(height: 1, color: AppColors.borderOnInverse),
+          // Opponent chips
+          if (named.isNotEmpty) ...[
             const SizedBox(height: 12),
-            Center(
-              child: GestureDetector(
-                onTap: () => Navigator.pop(context),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4),
-                  child: Text(
-                    l10n.skipScoutSkip,
-                    style: AppTypography.ibm(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.textSecondary,
-                      height: 20 / 14,
-                    ),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: named.map((entry) {
+                final position = PokerPositions.getPositionNameForActivePlayers(
+                  entry.key,
+                  buttonPosition,
+                  sortedSeats,
+                );
+                return _OpponentChip(
+                  name: entry.value,
+                  position: position,
+                  onTap: () => Navigator.pop(
+                    context,
+                    SkipScoutResult.raised(entry.key),
                   ),
-                ),
-              ),
+                );
+              }).toList(),
             ),
           ],
-        ),
+
+          const SizedBox(height: 16),
+
+          // Divider + Skip link
+          const Divider(height: 1, color: AppColors.borderOnInverse),
+          const SizedBox(height: 12),
+          Center(
+            child: GestureDetector(
+              onTap: () => Navigator.pop(context),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Text(
+                  l10n.skipScoutSkip,
+                  style: AppTypography.ibm(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.textSecondary,
+                    height: 20 / 14,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

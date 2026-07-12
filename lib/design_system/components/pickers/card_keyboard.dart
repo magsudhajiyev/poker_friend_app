@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../design_system/constants/colors.dart';
-import '../design_system/constants/typography.dart';
-import '../design_system/constants/decorations.dart';
+import '../../constants/colors.dart';
+import '../../constants/typography.dart';
+import '../../constants/decorations.dart';
+import '../cards/suit_icon.dart';
 
 /// Shared card selection keyboard with three input paths:
 /// - Path A: Drag from rank button to suit button
@@ -417,8 +418,6 @@ class _CardKeyboardState extends State<CardKeyboard> {
         final suit = _suits[i];
         final isHovered = _hoveredSuit == suit;
         final isExcluded = activeRank != null && _isCardExcluded(activeRank, suit);
-        final suitColor = _getSuitColor(suit);
-
         return Expanded(
           key: _suitKeys[i],
           child: Padding(
@@ -447,15 +446,10 @@ class _CardKeyboardState extends State<CardKeyboard> {
                   borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
                 ),
                 child: Center(
-                  child: Text(
-                    suit,
-                    style: TextStyle(
-                      fontSize: isHovered ? 24 : 20,
-                      fontWeight: FontWeight.bold,
-                      color: isExcluded
-                          ? AppColors.neutral700
-                          : suitColor,
-                    ),
+                  child: SuitIcon(
+                    suitChar: suit,
+                    size: isHovered ? 26 : 22,
+                    color: isExcluded ? AppColors.neutral700 : null,
                   ),
                 ),
               ),
@@ -472,8 +466,4 @@ class _CardKeyboardState extends State<CardKeyboard> {
     return const Color(0xFF2D2D2D);
   }
 
-  Color _getSuitColor(String suit) {
-    if (suit == '♥' || suit == '♦') return const Color(0xFFE85D5D);
-    return Colors.white;
-  }
 }

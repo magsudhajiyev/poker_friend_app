@@ -6,6 +6,7 @@ import '../onboarding/onboarding_progress_bar.dart';
 import 'training/drill_setup_screen.dart';
 import 'unified_session_setup_screen.dart';
 import '../services/feature_flag_service.dart';
+import '../design_system/components/sheets/sheet_header.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/typography.dart';
 import '../design_system/constants/decorations.dart';
@@ -73,31 +74,10 @@ class _LoggingModeSelectionScreenState
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Header: centered title + X
-                    Row(
-                      children: [
-                        const SizedBox(width: 18),
-                        Expanded(
-                          child: Text(
-                            l10n.loggingModeChooseMode,
-                            textAlign: TextAlign.center,
-                            style: AppTypography.ibm(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textPrimary,
-                              height: 20 / 15,
-                            ),
-                          ),
-                        ),
-                        GestureDetector(
-                          onTap: () => Navigator.pop(context),
-                          child: const Icon(
-                            Icons.close,
-                            size: 18,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ],
+                    // Header: title + glass X
+                    SheetHeader(
+                      title: l10n.loggingModeChooseMode,
+                      onClose: () => Navigator.pop(context),
                     ),
                     const SizedBox(height: 16),
 

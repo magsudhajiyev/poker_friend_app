@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
 import '../models/hand_state_machine.dart';
+import '../design_system/components/dialogs/app_dialog.dart';
+import '../design_system/components/dialogs/dialog_action_bar.dart';
+import '../design_system/constants/colors.dart';
 import '../design_system/constants/decorations.dart';
+import '../design_system/constants/spacing.dart';
+import '../design_system/constants/typography.dart';
+import '../design_system/components/pickers/card_keyboard.dart';
 
 class ShowdownDialog extends StatefulWidget {
   final int playerCount;
-  final List<int> activePlayers; // Players who reached showdown
+  final List<int> activePlayers;
   final ShowdownData? existingData;
 
   const ShowdownDialog({
@@ -21,164 +27,171 @@ class ShowdownDialog extends StatefulWidget {
 
 class _ShowdownDialogState extends State<ShowdownDialog> {
   late ShowdownData _showdownData;
-  final List<String> _suits = ['♠', '♥', '♦', '♣'];
-  final List<String> _ranks = ['A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2'];
+  final TextEditingController _descriptionController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _showdownData = widget.existingData ?? ShowdownData();
-    
-    // Initialize empty hole cards for active players if not already set
-    for (int player in widget.activePlayers) {
+    _descriptionController.text = _showdownData.handDescription ?? '';
+    for (final player in widget.activePlayers) {
       _showdownData.playerCards[player] ??= HoleCards();
     }
   }
 
   @override
+  void dispose() {
+    _descriptionController.dispose();
+    super.dispose();
+  }
+
+  Set<String> get _allUsedCards {
+    final used = <String>{};
+    for (final cards in _showdownData.playerCards.values) {
+      final c1 = cards.card1;
+      final c2 = cards.card2;
+      if (c1 != null && c1.length > 1) used.add(c1);
+      if (c2 != null && c2.length > 1) used.add(c2);
+    }
+    return used;
+  }
+
+  @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return AlertDialog(
-      title: Text(l10n.showdownTitle),
-      content: Container(
-        width: double.maxFinite,
-        constraints: BoxConstraints(maxHeight: 500),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(l10n.showdownEnterOpponentCards),
-              SizedBox(height: 16),
-              
-              // Player cards section
-              ...widget.activePlayers.map((player) => _buildPlayerSection(player)),
-              
-              SizedBox(height: 16),
-              
-              // Winner selection
-              _buildWinnerSection(),
-              
-              SizedBox(height: 16),
-              
-              // Hand description (optional)
-              _buildHandDescriptionSection(),
-            ],
-          ),
+    return AppDialog(
+      title: l10n.showdownTitle,
+      body: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              l10n.showdownEnterOpponentCards,
+              style: AppTypography.ibm(
+                fontSize: 15,
+                fontWeight: FontWeight.w400,
+                color: AppColors.textSecondary,
+                height: 22 / 15,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            ...widget.activePlayers.map(_buildPlayerRow),
+            const SizedBox(height: AppSpacing.xs),
+            _buildWinnerSection(),
+            const SizedBox(height: AppSpacing.md),
+            _buildHandDescriptionField(),
+          ],
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(l10n.showdownSkip),
-        ),
-        ElevatedButton(
-          onPressed: () => _saveShowdown(),
-          child: Text(l10n.showdownSave),
-        ),
-      ],
+      actions: DialogActionBar(
+        cancelLabel: l10n.showdownSkip,
+        confirmLabel: l10n.showdownSave,
+        onConfirm: () => Navigator.pop(context, _showdownData),
+      ),
     );
   }
 
-  Widget _buildPlayerSection(int player) {
+  Widget _buildPlayerRow(int player) {
     final playerCards = _showdownData.playerCards[player]!;
-    
+    final l10n = AppLocalizations.of(context);
     return Container(
-      margin: EdgeInsets.only(bottom: 16),
-      padding: EdgeInsets.all(12),
+      margin: const EdgeInsets.only(bottom: AppSpacing.xs),
+      padding: const EdgeInsets.all(AppSpacing.xs),
       decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey[300]!),
+        color: AppColors.bgElevated,
         borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
-        color: Colors.grey[50],
+        border: Border.all(color: AppColors.borderStrong, width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(AppLocalizations.of(context).showdownPlayerLabel(player), style: TextStyle(fontWeight: FontWeight.bold)),
-          SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              _buildPlayerCardSelector(
-                player,
-                AppLocalizations.of(context).showdownCard1,
-                playerCards.card1 ?? '',
-                (card) => setState(() => playerCards.card1 = card.isEmpty ? null : card)
-              ),
-              _buildPlayerCardSelector(
-                player,
-                AppLocalizations.of(context).showdownCard2,
-                playerCards.card2 ?? '',
-                (card) => setState(() => playerCards.card2 = card.isEmpty ? null : card)
-              ),
+          Text(
+            l10n.showdownPlayerLabel(player),
+            style: AppTypography.ibm(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xxs),
+          _PlayerCardKeyboard(
+            slots: [
+              playerCards.card1 ?? '',
+              playerCards.card2 ?? '',
             ],
+            excludedCards: _allUsedCards,
+            onCommitted: (i, card) => setState(() {
+              if (i == 0) playerCards.card1 = card;
+              if (i == 1) playerCards.card2 = card;
+            }),
+            onCleared: (i) => setState(() {
+              if (i == 0) playerCards.card1 = null;
+              if (i == 1) playerCards.card2 = null;
+            }),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildPlayerCardSelector(int player, String label, String currentCard, Function(String) onChanged) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(label, style: TextStyle(fontSize: 12)),
-        SizedBox(height: 4),
-        GestureDetector(
-          onTap: () => _showCardPicker(onChanged),
-          child: Container(
-            width: 50,
-            height: 65,
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey),
-              borderRadius: BorderRadius.circular(6),
-              color: currentCard.isEmpty ? Colors.grey[100] : Colors.white,
-            ),
-            child: Center(
-              child: Text(
-                currentCard.isEmpty ? '?' : currentCard,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: _getCardColor(currentCard),
-                ),
-              ),
-            ),
-          ),
-        ),
-        if (currentCard.isNotEmpty)
-          TextButton(
-            onPressed: () => onChanged(''),
-            child: Text(AppLocalizations.of(context).showdownClear, style: TextStyle(fontSize: 8)),
-          ),
-      ],
-    );
-  }
-
   Widget _buildWinnerSection() {
+    final l10n = AppLocalizations.of(context);
     return Container(
-      padding: EdgeInsets.all(12),
+      padding: const EdgeInsets.all(AppSpacing.xs),
       decoration: BoxDecoration(
-        border: Border.all(color: Colors.blue[300]!),
+        color: AppColors.bgElevated,
         borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
-        color: Colors.blue[50],
+        border: Border.all(color: AppColors.borderStrong, width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(AppLocalizations.of(context).showdownWinner, style: TextStyle(fontWeight: FontWeight.bold)),
-          SizedBox(height: 8),
+          Text(
+            l10n.showdownWinner,
+            style: AppTypography.ibm(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xxs),
           Wrap(
+            spacing: AppSpacing.xxs,
+            runSpacing: AppSpacing.xxs,
             children: widget.activePlayers.map((player) {
-              return Container(
-                margin: EdgeInsets.only(right: 8, bottom: 4),
-                child: ChoiceChip(
-                  label: Text(AppLocalizations.of(context).showdownPlayerLabel(player)),
-                  selected: _showdownData.winner == player,
-                  onSelected: (selected) {
-                    setState(() {
-                      _showdownData.winner = selected ? player : null;
-                    });
-                  },
+              final selected = _showdownData.winner == player;
+              return GestureDetector(
+                onTap: () => setState(() {
+                  _showdownData.winner = selected ? null : player;
+                }),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.xs,
+                    vertical: AppSpacing.xxs,
+                  ),
+                  decoration: BoxDecoration(
+                    color: selected
+                        ? AppColors.accentPrimary
+                        : AppColors.bgPrimary,
+                    borderRadius:
+                        BorderRadius.circular(AppDecorations.radiusFull),
+                    border: Border.all(
+                      color: selected
+                          ? AppColors.accentPrimary
+                          : AppColors.borderStrong,
+                    ),
+                  ),
+                  child: Text(
+                    l10n.showdownPlayerLabel(player),
+                    style: AppTypography.ibm(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: selected
+                          ? AppColors.textInverse
+                          : AppColors.textPrimary,
+                    ),
+                  ),
                 ),
               );
             }).toList(),
@@ -188,123 +201,66 @@ class _ShowdownDialogState extends State<ShowdownDialog> {
     );
   }
 
-  Widget _buildHandDescriptionSection() {
-    return Container(
-      width: double.infinity,
-      child: TextField(
-        decoration: InputDecoration(
-          labelText: AppLocalizations.of(context).showdownHandDescriptionLabel,
-          hintText: AppLocalizations.of(context).showdownHandDescriptionHint,
-          border: OutlineInputBorder(),
+  Widget _buildHandDescriptionField() {
+    final l10n = AppLocalizations.of(context);
+    return TextField(
+      controller: _descriptionController,
+      style: AppTypography.ibm(fontSize: 15, color: AppColors.textPrimary),
+      decoration: InputDecoration(
+        labelText: l10n.showdownHandDescriptionLabel,
+        hintText: l10n.showdownHandDescriptionHint,
+        labelStyle: AppTypography.ibm(
+          fontSize: 13,
+          color: AppColors.textSecondary,
         ),
-        onChanged: (value) {
-          _showdownData.handDescription = value.isEmpty ? null : value;
-        },
-        controller: TextEditingController(text: _showdownData.handDescription),
+        hintStyle: AppTypography.ibm(
+          fontSize: 15,
+          color: AppColors.textSecondary,
+        ),
+        filled: true,
+        fillColor: AppColors.bgElevated,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
+          borderSide: const BorderSide(color: AppColors.borderStrong),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
+          borderSide: const BorderSide(color: AppColors.borderStrong),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
+          borderSide: const BorderSide(color: AppColors.accentPrimary),
+        ),
       ),
+      onChanged: (value) {
+        _showdownData.handDescription = value.isEmpty ? null : value;
+      },
     );
-  }
-
-  void _showCardPicker(Function(String) onChanged) {
-    // Collect all already selected cards to exclude them
-    List<String> excludedCards = [];
-    for (var playerCards in _showdownData.playerCards.values) {
-      if (playerCards.card1 != null && playerCards.card1!.isNotEmpty) {
-        excludedCards.add(playerCards.card1!);
-      }
-      if (playerCards.card2 != null && playerCards.card2!.isNotEmpty) {
-        excludedCards.add(playerCards.card2!);
-      }
-    }
-
-    showDialog(
-      context: context,
-      builder: (context) => _CardPickerDialog(
-        onCardSelected: onChanged,
-        excludedCards: excludedCards,
-      ),
-    );
-  }
-
-  Color _getCardColor(String card) {
-    if (card.isEmpty) return Colors.grey;
-    if (card.contains('♥') || card.contains('♦')) {
-      return Colors.red;
-    }
-    return Colors.black;
-  }
-
-  void _saveShowdown() {
-    Navigator.pop(context, _showdownData);
   }
 }
 
-class _CardPickerDialog extends StatelessWidget {
-  final Function(String) onCardSelected;
-  final List<String> excludedCards;
+/// Thin adapter around [CardKeyboard] scoped to a single player's two hole cards.
+class _PlayerCardKeyboard extends StatelessWidget {
+  final List<String> slots;
+  final Set<String> excludedCards;
+  final void Function(int slotIndex, String card) onCommitted;
+  final void Function(int slotIndex) onCleared;
 
-  const _CardPickerDialog({
-    required this.onCardSelected,
-    this.excludedCards = const [],
+  const _PlayerCardKeyboard({
+    required this.slots,
+    required this.excludedCards,
+    required this.onCommitted,
+    required this.onCleared,
   });
-
-  final List<String> _suits = const ['♠', '♥', '♦', '♣'];
-  final List<String> _ranks = const ['A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2'];
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text(AppLocalizations.of(context).showdownSelectCard),
-      content: Container(
-        width: double.maxFinite,
-        height: 400,
-        child: GridView.builder(
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 4,
-            childAspectRatio: 0.7,
-          ),
-          itemCount: 52,
-          itemBuilder: (context, index) {
-            final suit = _suits[index % 4];
-            final rank = _ranks[index ~/ 4];
-            final card = '$rank$suit';
-            final isExcluded = excludedCards.contains(card);
-            
-            return GestureDetector(
-              onTap: isExcluded ? null : () {
-                onCardSelected(card);
-                Navigator.pop(context);
-              },
-              child: Container(
-                margin: EdgeInsets.all(2),
-                decoration: BoxDecoration(
-                  border: Border.all(color: isExcluded ? Colors.grey[300]! : Colors.grey),
-                  borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
-                  color: isExcluded ? Colors.grey[200] : Colors.white,
-                ),
-                child: Center(
-                  child: Text(
-                    card,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: isExcluded 
-                        ? Colors.grey
-                        : (suit == '♥' || suit == '♦') ? Colors.red : Colors.black,
-                    ),
-                  ),
-                ),
-              ),
-            );
-          },
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(AppLocalizations.of(context).commonCancel),
-        ),
-      ],
+    return CardKeyboard(
+      slotCount: 2,
+      slots: slots,
+      excludedCards: excludedCards,
+      onCardCommitted: onCommitted,
+      onCardCleared: onCleared,
     );
   }
 }

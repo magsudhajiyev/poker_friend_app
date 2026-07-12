@@ -2,6 +2,13 @@ import 'package:flutter/material.dart';
 import '../design_system/components/headers/top_nav_bar.dart';
 import '../design_system/components/headers/section_header.dart';
 import '../design_system/components/modals/confirm_dialog.dart';
+import '../design_system/components/dialogs/app_dialog.dart';
+import '../design_system/components/dialogs/dialog_action_bar.dart';
+import '../design_system/components/sheets/app_sheet.dart';
+import '../design_system/components/bodies/form_fields.dart';
+import '../design_system/components/bodies/message_body.dart';
+import '../design_system/components/buttons/close_circle_button.dart';
+import '../design_system/components/bodies/player_selection_list.dart';
 import '../design_system/components/form_drawer.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/typography.dart';
@@ -19,7 +26,16 @@ import '../widgets/session_summary_card.dart';
 import '../widgets/multi_pot_winner_dialog.dart';
 import '../widgets/seat_config_sheet.dart';
 import '../widgets/skip_hand_scouting_sheet.dart';
-import '../widgets/event_success_popup.dart';
+import '../design_system/components/overlays/event_success_popup.dart';
+import '../design_system/components/overlays/sliding_notification.dart';
+import '../design_system/components/pickers/card_keyboard.dart';
+import '../design_system/components/pickers/date/calendar_picker.dart';
+import '../design_system/components/pickers/date/custom_date_picker.dart';
+import '../design_system/components/pickers/date/time_picker_row.dart';
+import '../design_system/components/cards/glassy_card.dart';
+import '../design_system/components/cards/info_card.dart';
+import '../design_system/components/cards/semi_transparent_card.dart';
+import '../design_system/components/cards/error_state_card.dart';
 import '../widgets/register_club_dialog.dart';
 import '../services/locale_service.dart';
 import '../services/currency_service.dart';
@@ -46,6 +62,26 @@ class DesignPreviewScreen extends StatelessWidget {
               children: [
                 // ── Section 1: Dialogs ──────────────────────────
                 const SectionHeader(title: 'Dialogs'),
+                const SizedBox(height: 8),
+                _devButton('AppDialog (base scaffold)', const Color(0xFFFF6B6B),
+                    () {
+                  AppDialog.show<void>(
+                    context,
+                    title: 'AppDialog Preview',
+                    subtitle: 'Canonical dark surface, radius 24, blur backdrop',
+                    body: Text(
+                      'This is what every migrated dialog now uses under the hood. Pass a title, a body widget, and an optional actions widget (typically a DialogActionBar).',
+                      style: AppTypography.ibm(
+                        fontSize: 15,
+                        color: AppColors.textSecondary,
+                        height: 22 / 15,
+                      ),
+                    ),
+                    actions: const DialogActionBar(
+                      confirmLabel: 'Got it',
+                    ),
+                  );
+                }),
                 const SizedBox(height: 8),
                 _devButton('ConfirmDialog', const Color(0xFFFF6B6B), () {
                   ConfirmDialog.show(
@@ -76,17 +112,15 @@ class DesignPreviewScreen extends StatelessWidget {
                 }),
                 const SizedBox(height: 8),
                 _devButton('WinnerSelectionDialog', const Color(0xFFFF6B6B), () {
-                  showDialog(
+                  WinnerSelectionDialog.show(
                     context: context,
-                    builder: (_) => WinnerSelectionDialog(
-                      activePlayers: const [1, 2, 3],
-                      playerNames: const ['Hero', 'Villain 1', 'Villain 2'],
-                      potAmount: 1500,
-                      buttonPosition: 1,
-                      playerCount: 3,
-                      gameType: GameType.cash,
-                      heroSeat: 1,
-                    ),
+                    activePlayers: const [1, 2, 3],
+                    playerNames: const ['Hero', 'Villain 1', 'Villain 2'],
+                    potAmount: 1500,
+                    buttonPosition: 1,
+                    playerCount: 3,
+                    gameType: GameType.cash,
+                    heroSeat: 1,
                   );
                 }),
                 const SizedBox(height: 8),
@@ -116,6 +150,80 @@ class DesignPreviewScreen extends StatelessWidget {
                 const SizedBox(height: 8),
                 _devButton('EventSuccessPopup', const Color(0xFFFF6B6B), () {
                   EventSuccessPopup.show(context);
+                }),
+                const SizedBox(height: 8),
+                _devButton('Intro Blind Input', const Color(0xFFFF6B6B), () {
+                  final controller = TextEditingController(text: '20');
+                  AppDialog.show<void>(
+                    context,
+                    title: 'Enter Big Blind',
+                    body: TextField(
+                      controller: controller,
+                      keyboardType: TextInputType.number,
+                      autofocus: true,
+                      style: AppTypography.ibm(
+                          fontSize: 16, color: AppColors.textPrimary),
+                      decoration: InputDecoration(
+                        hintText: 'Enter amount',
+                        hintStyle:
+                            AppTypography.ibm(color: AppColors.textSecondary),
+                        enabledBorder: const UnderlineInputBorder(
+                          borderSide:
+                              BorderSide(color: AppColors.borderStrong),
+                        ),
+                        focusedBorder: const UnderlineInputBorder(
+                          borderSide: BorderSide(
+                              color: AppColors.accentPrimary, width: 2),
+                        ),
+                      ),
+                    ),
+                    actions: DialogActionBar(
+                      confirmLabel: 'OK',
+                      confirmColor: AppColors.accentPrimary,
+                      confirmTextColor: AppColors.textInverse,
+                      onConfirm: () {},
+                    ),
+                  );
+                }),
+                const SizedBox(height: 8),
+                _devButton('Onboarding Complete', const Color(0xFFFF6B6B), () {
+                  AppDialog.show<void>(
+                    context,
+                    showCloseButton: false,
+                    barrierDismissible: false,
+                    body: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.check_circle_outline,
+                          color: AppColors.accentPrimary,
+                          size: 48,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'You\'re all set!',
+                          style: AppTypography.ibm(
+                            color: AppColors.textPrimary,
+                            fontSize: 20,
+                            fontWeight: FontWeight.w600,
+                            height: 1.3,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          'You now know how to log a hand from start to finish. Time to fire up your first session.',
+                          style: AppTypography.ibm(
+                            color: AppColors.textSecondary,
+                            fontSize: 15,
+                            height: 1.44,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                    actions: const DialogActionBar.single(cancelLabel: 'Done'),
+                  );
                 }),
 
                 const SizedBox(height: 24),
@@ -256,6 +364,121 @@ class DesignPreviewScreen extends StatelessWidget {
                     ),
                   );
                 }),
+                const SizedBox(height: 8),
+                _devButton('GlassyCard', const Color(0xFF54E98A), () {
+                  showDialog(
+                    context: context,
+                    builder: (_) => Center(
+                      child: SizedBox(
+                        width: 320,
+                        child: GlassyCard(
+                          padding: const EdgeInsets.all(20),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('GlassyCard',
+                                  style: AppTypography.ibm(
+                                      color: AppColors.textPrimary,
+                                      fontSize: 17,
+                                      fontWeight: FontWeight.w600)),
+                              const SizedBox(height: 8),
+                              Text('Blurred glassy surface used on Home, Sessions, and Events.',
+                                  style: AppTypography.ibm(
+                                      color: AppColors.textSecondary,
+                                      fontSize: 14)),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }),
+                const SizedBox(height: 8),
+                _devButton('InfoCard', const Color(0xFF54E98A), () {
+                  showDialog(
+                    context: context,
+                    builder: (_) => Center(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: InfoCard(
+                          child: Padding(
+                            padding: const EdgeInsets.all(20),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('InfoCard',
+                                    style: AppTypography.ibm(
+                                        color: AppColors.textPrimary,
+                                        fontSize: 17,
+                                        fontWeight: FontWeight.w600)),
+                                const SizedBox(height: 8),
+                                Text('Dark surface card with an empty-state mode.',
+                                    style: AppTypography.ibm(
+                                        color: AppColors.textSecondary,
+                                        fontSize: 14)),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }),
+                const SizedBox(height: 8),
+                _devButton('SemiTransparentCard', const Color(0xFF54E98A), () {
+                  showDialog(
+                    context: context,
+                    builder: (_) => Center(
+                      child: SizedBox(
+                        width: 320,
+                        child: SemiTransparentCard(
+                          padding: const EdgeInsets.all(20),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('SemiTransparentCard',
+                                  style: AppTypography.ibm(
+                                      color: AppColors.textPrimary,
+                                      fontSize: 17,
+                                      fontWeight: FontWeight.w600)),
+                              const SizedBox(height: 8),
+                              Text('Same as glassy, no blur. Cheaper to render.',
+                                  style: AppTypography.ibm(
+                                      color: AppColors.textSecondary,
+                                      fontSize: 14)),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }),
+                const SizedBox(height: 8),
+                _devButton('ErrorStateCard', const Color(0xFF54E98A), () {
+                  showDialog(
+                    context: context,
+                    builder: (dialogCtx) => Scaffold(
+                      backgroundColor: AppColors.bgPrimary,
+                      body: ErrorStateCard(
+                        title: 'Something went wrong',
+                        message: 'We couldn\u2019t load your data.\nPlease check your connection and try again.',
+                        onRetry: () => Navigator.pop(dialogCtx),
+                      ),
+                    ),
+                  );
+                }),
+                const SizedBox(height: 8),
+                _devButton('SlidingNotification', const Color(0xFF54E98A), () {
+                  SlidingNotificationOverlay.show(
+                    context: context,
+                    title: 'Seat available',
+                    subtitle: 'Table 2 \u00b7 Seat 4',
+                    detail: '\$1/\$2 NLHE',
+                  );
+                }),
 
                 const SizedBox(height: 24),
 
@@ -269,12 +492,776 @@ class DesignPreviewScreen extends StatelessWidget {
                 _devButton('Currency Picker', const Color(0xFFE8B55A), () {
                   _showCurrencyPicker(context);
                 }),
+                const SizedBox(height: 8),
+                _devButton('CardKeyboard', const Color(0xFFE8B55A), () {
+                  final slots = ['', ''];
+                  final selected = <String>{};
+                  AppDialog.show<void>(
+                    context,
+                    title: 'CardKeyboard preview',
+                    body: StatefulBuilder(builder: (ctx, setState) {
+                      return CardKeyboard(
+                        slotCount: 2,
+                        slots: slots,
+                        excludedCards: selected,
+                        onCardCommitted: (i, card) => setState(() {
+                          slots[i] = card;
+                          selected.add(card);
+                        }),
+                        onCardCleared: (i) => setState(() {
+                          if (slots[i].length > 1) selected.remove(slots[i]);
+                          slots[i] = '';
+                        }),
+                      );
+                    }),
+                  );
+                }),
+                const SizedBox(height: 8),
+                _devButton('CalendarPicker', const Color(0xFFE8B55A), () {
+                  final now = DateTime.now();
+                  showDialog(
+                    context: context,
+                    builder: (_) => Center(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: CalendarPicker(
+                          selectedDate: now,
+                          displayedMonth: DateTime(now.year, now.month),
+                          selectedTime: TimeOfDay.now(),
+                        ),
+                      ),
+                    ),
+                  );
+                }),
+                const SizedBox(height: 8),
+                _devButton('CustomDatePicker', const Color(0xFFE8B55A), () async {
+                  await showCustomDatePicker(
+                    context,
+                    initialDate: DateTime.now(),
+                  );
+                }),
+                const SizedBox(height: 8),
+                _devButton('TimePickerRow', const Color(0xFFE8B55A), () {
+                  showDialog(
+                    context: context,
+                    builder: (_) => Center(
+                      child: SizedBox(
+                        width: 320,
+                        child: Material(
+                          color: AppColors.bgSurface,
+                          borderRadius:
+                              BorderRadius.circular(AppDecorations.radiusLg),
+                          child: TimePickerRow(time: TimeOfDay.now()),
+                        ),
+                      ),
+                    ),
+                  );
+                }),
+
+                const SizedBox(height: 24),
+
+                // ── Section 5: Session-details dialogs ─────────
+                const SectionHeader(title: 'Session Details'),
+                const SizedBox(height: 8),
+                _devButton('Update Blinds (session_details)', const Color(0xFFFF6B6B), () {
+                  final sb = TextEditingController(text: '25');
+                  final bb = TextEditingController(text: '50');
+                  AppDialog.show<void>(
+                    context,
+                    title: 'Update blinds',
+                    body: FormFields(children: [
+                      AppFormField(controller: sb, label: 'Small blind', keyboardType: TextInputType.number),
+                      AppFormField(controller: bb, label: 'Big blind', keyboardType: TextInputType.number),
+                    ]),
+                    actions: DialogActionBar(
+                      confirmLabel: 'Update',
+                      confirmColor: AppColors.accentPrimary,
+                      confirmTextColor: AppColors.textInverse,
+                      onConfirm: () {},
+                    ),
+                  );
+                }),
+                const SizedBox(height: 8),
+                _devButton('Confirm Rebuy (session_details)', const Color(0xFFFF6B6B), () {
+                  ConfirmDialog.show(
+                    context,
+                    title: 'Confirm rebuy',
+                    message: 'Current stack: \$4,500\n\nYou\'re about to rebuy for \$500. This will replace your existing stack.',
+                    confirmLabel: 'Rebuy',
+                    onConfirm: () {},
+                  );
+                }),
+                const SizedBox(height: 8),
+                _devButton('Add-On (session_details)', const Color(0xFFFF6B6B), () {
+                  final price = TextEditingController();
+                  final chips = TextEditingController();
+                  AppDialog.show<void>(
+                    context,
+                    title: 'Add-on',
+                    body: FormFields(children: [
+                      AppFormField(controller: price, label: 'Price', prefixText: '\$ ', keyboardType: const TextInputType.numberWithOptions(decimal: true)),
+                      AppFormField(controller: chips, label: 'Chips added', keyboardType: TextInputType.number),
+                    ]),
+                    actions: DialogActionBar(
+                      confirmLabel: 'Confirm',
+                      confirmColor: AppColors.accentPrimary,
+                      confirmTextColor: AppColors.textInverse,
+                      onConfirm: () {},
+                    ),
+                  );
+                }),
+                const SizedBox(height: 8),
+                _devButton('Rebuy (session_details)', const Color(0xFFFF6B6B), () {
+                  final amt = TextEditingController();
+                  final stack = TextEditingController();
+                  AppDialog.show<void>(
+                    context,
+                    title: 'Rebuy',
+                    body: FormFields(children: [
+                      AppFormField(controller: amt, label: 'Rebuy amount', prefixText: '\$ ', keyboardType: const TextInputType.numberWithOptions(decimal: true)),
+                      AppFormField(controller: stack, label: 'New stack size', keyboardType: TextInputType.number),
+                    ]),
+                    actions: DialogActionBar(
+                      confirmLabel: 'Rebuy',
+                      confirmColor: AppColors.accentPrimary,
+                      confirmTextColor: AppColors.textInverse,
+                      onConfirm: () {},
+                    ),
+                  );
+                }),
+                const SizedBox(height: 8),
+                _devButton('Delete Session (session_analytics)', const Color(0xFFFF6B6B), () {
+                  ConfirmDialog.show(
+                    context,
+                    title: 'Delete this session?',
+                    message: 'This will permanently remove the session and all logged hands. This action cannot be undone.',
+                    confirmLabel: 'Delete',
+                    onConfirm: () {},
+                  );
+                }),
+                const SizedBox(height: 8),
+                _devButton('Export Limit (session_analytics)', const Color(0xFFFF6B6B), () {
+                  AppDialog.show<void>(
+                    context,
+                    title: 'Monthly export limit reached',
+                    body: const MessageBody(
+                      'You\'ve used all 30 of your Pro tier session exports this month. Upgrade to Elite for unlimited exports.',
+                    ),
+                    actions: DialogActionBar(
+                      cancelLabel: 'OK',
+                      confirmLabel: 'Upgrade to Elite',
+                      confirmColor: AppColors.accentPrimary,
+                      confirmTextColor: AppColors.textInverse,
+                      onConfirm: () {},
+                    ),
+                  );
+                }),
+                const SizedBox(height: 8),
+                _devButton('Export Session (session_analytics)', const Color(0xFFFF6B6B), () {
+                  ConfirmDialog.show(
+                    context,
+                    title: 'Export this session?',
+                    message: 'Send 87 hands to turaljumshud@gmail.com?',
+                    confirmLabel: 'Export',
+                    confirmColor: AppColors.accentPrimary,
+                    confirmTextColor: AppColors.textInverse,
+                    onConfirm: () {},
+                  );
+                }),
+
+                const SizedBox(height: 24),
+
+                // ── Section 6: Notifications / Dealer / Misc ─────
+                const SectionHeader(title: 'Notifications & Dealer'),
+                const SizedBox(height: 8),
+                _devButton('Support Response (notifications)', const Color(0xFFFF6B6B), () {
+                  AppDialog.show<void>(
+                    context,
+                    title: 'Request resolved',
+                    body: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(children: [
+                          const Icon(Icons.check_circle, color: AppColors.accentPrimary, size: 22),
+                          const SizedBox(width: 8),
+                          Expanded(child: Text('Cash-out issue on tournament results',
+                            style: AppTypography.ibm(color: AppColors.textPrimary, fontSize: 15, fontWeight: FontWeight.w500))),
+                        ]),
+                        const SizedBox(height: 4),
+                        Text('Session tracking', style: AppTypography.ibm(color: AppColors.textDisabled, fontSize: 13)),
+                        const SizedBox(height: 16),
+                        Text('RESPONSE', style: AppTypography.ibm(color: AppColors.textDisabled, fontSize: 12, fontWeight: FontWeight.w600, letterSpacing: 0.5)),
+                        const SizedBox(height: 6),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: AppColors.accentPrimary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(AppDecorations.radius10),
+                          ),
+                          child: Text(
+                            'Thanks for the report — we\'ve pushed a fix in the 1.0.4 update. Please pull the latest and reach out if the issue persists.',
+                            style: AppTypography.ibm(color: AppColors.textPrimary, fontSize: 14, height: 1.5),
+                          ),
+                        ),
+                      ],
+                    ),
+                    actions: const DialogActionBar.single(cancelLabel: 'OK'),
+                  );
+                }),
+                const SizedBox(height: 8),
+                _devButton('Invitation Response (notifications)', const Color(0xFFFF6B6B), () {
+                  AppDialog.show<void>(
+                    context,
+                    title: 'Club invitation',
+                    body: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 60, height: 60,
+                          decoration: BoxDecoration(
+                            color: AppColors.accentPurple.withValues(alpha: 0.15),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.mail, color: AppColors.accentPurple, size: 32),
+                        ),
+                        const SizedBox(height: 16),
+                        Text('You\'ve been invited to join', textAlign: TextAlign.center,
+                          style: AppTypography.ibm(color: AppColors.textSecondary, fontSize: 14)),
+                        const SizedBox(height: 8),
+                        Text('Blue Chip Poker', textAlign: TextAlign.center,
+                          style: AppTypography.ibm(color: AppColors.accentPurple, fontSize: 20, fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 8),
+                        Text('Michael sent you an invitation. Tap Accept to join their club.', textAlign: TextAlign.center,
+                          style: AppTypography.ibm(color: AppColors.textSecondary, fontSize: 13)),
+                      ],
+                    ),
+                    actions: DialogActionBar(
+                      cancelLabel: 'Decline',
+                      confirmLabel: 'Accept',
+                      confirmColor: AppColors.accentPrimary,
+                      confirmTextColor: AppColors.textInverse,
+                      onConfirm: () {},
+                    ),
+                  );
+                }),
+                const SizedBox(height: 8),
+                _devButton('Session Settings (Dealer)', const Color(0xFFFF6B6B), () {
+                  final sb = TextEditingController(text: '1');
+                  final bb = TextEditingController(text: '2');
+                  AppDialog.show<void>(
+                    context,
+                    title: 'Session settings',
+                    body: FormFields(children: [
+                      AppFormField(controller: sb, label: 'Small blind', keyboardType: TextInputType.number),
+                      AppFormField(controller: bb, label: 'Big blind', keyboardType: TextInputType.number),
+                    ]),
+                    actions: DialogActionBar(
+                      confirmLabel: 'Start session',
+                      confirmColor: AppColors.accentPrimary,
+                      confirmTextColor: AppColors.textInverse,
+                      onConfirm: () {},
+                    ),
+                  );
+                }),
+                const SizedBox(height: 8),
+                _devButton('QR Codes (Dealer)', const Color(0xFFFF6B6B), () {
+                  AppDialog.show<void>(
+                    context,
+                    title: 'Blue Chip Poker · Seat 3',
+                    body: Column(mainAxisSize: MainAxisSize.min, children: [
+                      Container(
+                        width: 200, height: 200,
+                        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14)),
+                        child: const Center(child: Icon(Icons.qr_code_2, size: 180, color: Colors.black)),
+                      ),
+                      const SizedBox(height: 16),
+                      Text('Scan to join Seat 3', style: AppTypography.ibm(color: AppColors.accentPrimary, fontSize: 13)),
+                    ]),
+                    actions: const DialogActionBar.single(cancelLabel: 'Close'),
+                  );
+                }),
+                const SizedBox(height: 8),
+                _devButton('User Search (Dealer)', const Color(0xFFFF6B6B), () {
+                  final search = TextEditingController();
+                  final stack = TextEditingController(text: '5000');
+                  AppDialog.show<void>(
+                    context,
+                    title: 'Add player to Seat 3',
+                    body: FormFields(children: [
+                      AppFormField(controller: search, label: 'Search by name', autofocus: true),
+                      AppFormField(controller: stack, label: 'Starting chip stack', keyboardType: TextInputType.number),
+                    ]),
+                    actions: DialogActionBar(
+                      confirmLabel: 'Add player',
+                      confirmColor: AppColors.accentPrimary,
+                      confirmTextColor: AppColors.textInverse,
+                      onConfirm: () {},
+                    ),
+                  );
+                }),
+                const SizedBox(height: 8),
+                _devButton('Invite Member', const Color(0xFFFF6B6B), () {
+                  final email = TextEditingController();
+                  AppDialog.show<void>(
+                    context,
+                    title: 'Invite a member',
+                    body: FormFields(children: [
+                      AppFormField(controller: email, label: 'Email address', keyboardType: TextInputType.emailAddress, autofocus: true),
+                    ]),
+                    actions: DialogActionBar(
+                      confirmLabel: 'Send invite',
+                      confirmColor: AppColors.accentPrimary,
+                      confirmTextColor: AppColors.textInverse,
+                      onConfirm: () {},
+                    ),
+                  );
+                }),
+                const SizedBox(height: 8),
+                _devButton('Seat Management', const Color(0xFFFF6B6B), () {
+                  bool aSel = true;
+                  AppDialog.show<void>(
+                    context,
+                    title: 'Manage seats',
+                    body: StatefulBuilder(builder: (ctx, setSt) {
+                      return PlayerSelectionList(children: [
+                        PlayerSelectionRow(label: 'Seat 1 · Hero', selected: aSel, onTap: () => setSt(() => aSel = true)),
+                        PlayerSelectionRow(label: 'Seat 3 · Villain', selected: !aSel, onTap: () => setSt(() => aSel = false)),
+                      ]);
+                    }),
+                    actions: DialogActionBar(
+                      confirmLabel: 'Confirm',
+                      confirmColor: AppColors.accentPrimary,
+                      confirmTextColor: AppColors.textInverse,
+                      onConfirm: () {},
+                    ),
+                  );
+                }),
+                const SizedBox(height: 8),
+                _devButton('Table Selection', const Color(0xFFFF6B6B), () {
+                  bool one = true;
+                  AppDialog.show<void>(
+                    context,
+                    title: 'Pick a table',
+                    body: StatefulBuilder(builder: (ctx, setSt) {
+                      return PlayerSelectionList(children: [
+                        PlayerSelectionRow(label: 'Table 1 · \$1/\$2', selected: one, onTap: () => setSt(() => one = true)),
+                        PlayerSelectionRow(label: 'Table 2 · \$2/\$5', selected: !one, onTap: () => setSt(() => one = false)),
+                      ]);
+                    }),
+                    actions: DialogActionBar(
+                      confirmLabel: 'Choose',
+                      confirmColor: AppColors.accentPrimary,
+                      confirmTextColor: AppColors.textInverse,
+                      onConfirm: () {},
+                    ),
+                  );
+                }),
+
+                const SizedBox(height: 24),
+
+                // ── Section 7: Club sheets & Training ─────
+                const SectionHeader(title: 'Club Sheets & Training'),
+                const SizedBox(height: 8),
+                _devButton('_MemberSearchSheet', const Color(0xFF6B9FFF), () {
+                  AppSheet.show<void>(
+                    context: context,
+                    title: 'Select member',
+                    heightFraction: 0.75,
+                    body: PlayerSelectionList(children: [
+                      PlayerSelectionRow(label: 'Michael', selected: true, onTap: () {}),
+                      PlayerSelectionRow(label: 'Sarah', selected: false, onTap: () {}),
+                      PlayerSelectionRow(label: 'James', selected: false, onTap: () {}),
+                    ]),
+                  );
+                }),
+                const SizedBox(height: 8),
+                _devButton('_AdminWaitlistSheet', const Color(0xFF6B9FFF), () {
+                  AppSheet.show<void>(
+                    context: context,
+                    title: 'Waitlist (\$1/\$2)',
+                    heightFraction: 0.75,
+                    body: PlayerSelectionList(children: [
+                      PlayerSelectionRow(label: '#1 · Michael', selected: false, trailing: const Icon(Icons.notifications, color: AppColors.accentPrimary, size: 20), onTap: () {}),
+                      PlayerSelectionRow(label: '#2 · Sarah', selected: false, trailing: const Icon(Icons.notifications, color: AppColors.accentPrimary, size: 20), onTap: () {}),
+                    ]),
+                  );
+                }),
+                const SizedBox(height: 8),
+                _devButton('_AddTableSheet', const Color(0xFF6B9FFF), () {
+                  AppSheet.show<void>(
+                    context: context,
+                    title: 'Add table to event',
+                    heightFraction: 0.75,
+                    body: PlayerSelectionList(children: [
+                      PlayerSelectionRow(label: 'Sunday Grind', selected: true, onTap: () {}),
+                      PlayerSelectionRow(label: 'Midweek Freeroll', selected: false, onTap: () {}),
+                    ]),
+                  );
+                }),
+                const SizedBox(height: 8),
+                _devButton('_OpponentPickerSheet', const Color(0xFF6B9FFF), () {
+                  AppSheet.show<void>(
+                    context: context,
+                    title: 'Pick an opponent',
+                    heightFraction: 0.65,
+                    body: PlayerSelectionList(children: [
+                      PlayerSelectionRow(label: 'Loose Larry', selected: false, onTap: () {}),
+                      PlayerSelectionRow(label: 'Tight Tim', selected: false, onTap: () {}),
+                      PlayerSelectionRow(label: 'Balanced Bob', selected: true, onTap: () {}),
+                    ]),
+                  );
+                }),
+                const SizedBox(height: 8),
+                _devButton('_DrillSummarySheet', const Color(0xFF6B9FFF), () {
+                  AppSheet.show<void>(
+                    context: context,
+                    title: 'Drill summary',
+                    heightFraction: 0.75,
+                    body: const MessageBody('Accuracy 78% · 12 decisions · 9 correct · 2 close · 1 mistake'),
+                  );
+                }),
+                const SizedBox(height: 8),
+                _devButton('TableManagementSheet', const Color(0xFF6B9FFF), () {
+                  AppSheet.show<void>(
+                    context: context,
+                    title: 'Table state',
+                    heightFraction: 0.85,
+                    body: PlayerSelectionList(children: [
+                      PlayerSelectionRow(label: 'Seat 1 · Hero (BTN)', selected: true, onTap: () {}),
+                      PlayerSelectionRow(label: 'Seat 3 · Villain 1', selected: false, onTap: () {}),
+                      PlayerSelectionRow(label: 'Seat 5 · Villain 2', selected: false, onTap: () {}),
+                    ]),
+                  );
+                }),
+                const SizedBox(height: 8),
+                _devButton('CreateEventDrawer', const Color(0xFF6B9FFF), () {
+                  final name = TextEditingController();
+                  final buyIn = TextEditingController();
+                  AppSheet.show<void>(
+                    context: context,
+                    title: 'Create event',
+                    heightFraction: 0.9,
+                    body: FormFields(children: [
+                      AppFormField(controller: name, label: 'Event name', autofocus: true),
+                      AppFormField(controller: buyIn, label: 'Buy-in', prefixText: '\$ ', keyboardType: TextInputType.number),
+                    ]),
+                    trailing: GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: Container(
+                        width: 38, height: 38,
+                        decoration: const BoxDecoration(color: AppColors.accentPrimary, shape: BoxShape.circle),
+                        child: const Icon(Icons.check, color: AppColors.textInverse),
+                      ),
+                    ),
+                  );
+                }),
+
+                const SizedBox(height: 24),
+
+                // ── Section 8: Overlays & novel shapes ─────
+                const SectionHeader(title: 'Overlays & Novel Shapes'),
+                const SizedBox(height: 8),
+                _devButton('AmountInputDialog', const Color(0xFFFFA500), () {
+                  int amount = 4500;
+                  AppDialog.show<void>(
+                    context,
+                    title: 'Adjust stack',
+                    body: StatefulBuilder(builder: (ctx, setSt) {
+                      return Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                        _amountStepper('−', () => setSt(() => amount = (amount - 500).clamp(0, 100000))),
+                        const SizedBox(width: 16),
+                        Text(amount.toString(),
+                          style: AppTypography.ibm(color: AppColors.textPrimary, fontSize: 40, fontWeight: FontWeight.bold)),
+                        const SizedBox(width: 16),
+                        _amountStepper('+', () => setSt(() => amount += 500)),
+                      ]);
+                    }),
+                    actions: DialogActionBar(
+                      confirmLabel: 'Confirm',
+                      confirmColor: AppColors.accentPrimary,
+                      confirmTextColor: AppColors.textInverse,
+                      onConfirm: () {},
+                    ),
+                  );
+                }),
+                const SizedBox(height: 8),
+                _devButton('YearPicker', const Color(0xFFFFA500), () {
+                  int selectedYear = 2026;
+                  AppDialog.show<void>(
+                    context,
+                    title: 'Pick year',
+                    body: StatefulBuilder(builder: (ctx, setSt) {
+                      return Column(mainAxisSize: MainAxisSize.min, children: [
+                        for (final row in [[2022, 2023, 2024], [2025, 2026, 2027]])
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 10),
+                            child: Row(children: [
+                              for (final y in row) ...[
+                                Expanded(child: _yearCell(y, selectedYear == y, () => setSt(() => selectedYear = y))),
+                                if (y != row.last) const SizedBox(width: 10),
+                              ],
+                            ]),
+                          ),
+                      ]);
+                    }),
+                    actions: DialogActionBar(
+                      confirmLabel: 'Choose',
+                      confirmColor: AppColors.accentPrimary,
+                      confirmTextColor: AppColors.textInverse,
+                      onConfirm: () {},
+                    ),
+                  );
+                }),
+                const SizedBox(height: 8),
+                _devButton('PopupMenuDialog', const Color(0xFFFFA500), () {
+                  showDialog(
+                    context: context,
+                    barrierColor: Colors.black45,
+                    builder: (_) => Align(
+                      alignment: Alignment.topRight,
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 80, right: 16),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: Container(
+                            width: 220,
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: AppColors.bgSurface,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: AppColors.borderStrong),
+                            ),
+                            child: Column(mainAxisSize: MainAxisSize.min, children: [
+                              for (final item in const [
+                                ['Edit', Icons.edit, false],
+                                ['Duplicate', Icons.copy, false],
+                                ['Share', Icons.share, false],
+                                ['Star', Icons.star, false],
+                                ['Delete', Icons.delete, true],
+                              ])
+                                InkWell(
+                                  onTap: () => Navigator.pop(context),
+                                  borderRadius: BorderRadius.circular(10),
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                    child: Row(children: [
+                                      Icon(item[1] as IconData, size: 18,
+                                        color: item[2] as bool ? AppColors.accentDanger : AppColors.textPrimary),
+                                      const SizedBox(width: 10),
+                                      Text(item[0] as String,
+                                        style: AppTypography.ibm(
+                                          color: item[2] as bool ? AppColors.accentDanger : AppColors.textPrimary,
+                                          fontSize: 14)),
+                                    ]),
+                                  ),
+                                ),
+                            ]),
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }),
+                const SizedBox(height: 8),
+                _devButton('HandsLimitDialog (paywall)', const Color(0xFFFFA500), () {
+                  AppDialog.show<void>(
+                    context,
+                    title: 'You\'ve hit your Free limit',
+                    body: Column(mainAxisSize: MainAxisSize.min, children: [
+                      Text('\$9.99', textAlign: TextAlign.center,
+                        style: AppTypography.ibm(color: AppColors.accentPrimary, fontSize: 48, fontWeight: FontWeight.bold)),
+                      Text('PRO · billed monthly', textAlign: TextAlign.center,
+                        style: AppTypography.ibm(color: AppColors.textSecondary, fontSize: 13)),
+                      const SizedBox(height: 16),
+                      ...[
+                        '✓  50 hands/session',
+                        '✓  15 opponents',
+                        '✓  90-day history',
+                        '✓  Advanced stats',
+                      ].map((line) => Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        child: SizedBox(width: double.infinity, child: Text(line, style: AppTypography.ibm(color: AppColors.textPrimary, fontSize: 14))),
+                      )),
+                    ]),
+                    actions: DialogActionBar(
+                      confirmLabel: 'Upgrade',
+                      confirmColor: AppColors.accentPrimary,
+                      confirmTextColor: AppColors.textInverse,
+                      onConfirm: () {},
+                    ),
+                  );
+                }),
+                const SizedBox(height: 8),
+                _devButton('AppNavigationDrawer (preview)', const Color(0xFFFFA500), () {
+                  AppSheet.show<void>(
+                    context: context,
+                    title: 'Navigation drawer',
+                    subtitle: 'Preview only — normally opens from Home',
+                    heightFraction: 0.85,
+                    body: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        Row(children: [
+                          const CircleAvatar(radius: 22, backgroundColor: AppColors.accentPrimary),
+                          const SizedBox(width: 12),
+                          Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                            Text('Tural', style: AppTypography.ibm(color: AppColors.textPrimary, fontSize: 17, fontWeight: FontWeight.w600)),
+                            Text('Pro · \$9.99/mo', style: AppTypography.ibm(color: AppColors.accentPrimary, fontSize: 13)),
+                          ]),
+                        ]),
+                        const SizedBox(height: 20),
+                        for (final item in const [
+                          [Icons.home, 'Home'],
+                          [Icons.bar_chart, 'Statistics'],
+                          [Icons.calendar_today, 'Calendar'],
+                          [Icons.emoji_events, 'Clubs'],
+                          [Icons.settings, 'Settings'],
+                          [Icons.menu_book, 'Knowledge base'],
+                          [Icons.help_outline, 'Help & support'],
+                          [Icons.logout, 'Log out'],
+                        ])
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 6),
+                            child: Row(children: [
+                              Icon(item[0] as IconData, color: AppColors.textPrimary, size: 20),
+                              const SizedBox(width: 14),
+                              Text(item[1] as String, style: AppTypography.ibm(color: AppColors.textPrimary, fontSize: 15)),
+                            ]),
+                          ),
+                      ]),
+                    ),
+                  );
+                }),
+                const SizedBox(height: 8),
+                _devButton('RaiseSnapOverlay (concept)', const Color(0xFFFFA500), () {
+                  AppDialog.show<void>(
+                    context,
+                    title: 'Raise amount',
+                    body: Column(mainAxisSize: MainAxisSize.min, children: [
+                      Text('\$1,500', textAlign: TextAlign.center,
+                        style: AppTypography.ibm(color: AppColors.accentPrimary, fontSize: 48, fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 20),
+                      Container(
+                        height: 12,
+                        decoration: BoxDecoration(color: AppColors.bgElevated, borderRadius: BorderRadius.circular(999)),
+                        child: FractionallySizedBox(
+                          alignment: Alignment.centerLeft,
+                          widthFactor: 0.67,
+                          child: Container(
+                            decoration: BoxDecoration(color: AppColors.accentPrimary, borderRadius: BorderRadius.circular(999)),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                        Text('MIN 100', style: AppTypography.ibm(color: AppColors.textSecondary, fontSize: 12)),
+                        Text('MAX 2,200 (all-in)', style: AppTypography.ibm(color: AppColors.textSecondary, fontSize: 12)),
+                      ]),
+                    ]),
+                    actions: DialogActionBar(
+                      confirmLabel: 'Confirm',
+                      confirmColor: AppColors.accentPrimary,
+                      confirmTextColor: AppColors.textInverse,
+                      onConfirm: () {},
+                    ),
+                  );
+                }),
+                const SizedBox(height: 8),
+                _devButton('OnboardingTour tooltip (concept)', const Color(0xFFFFA500), () {
+                  AppDialog.show<void>(
+                    context,
+                    showCloseButton: false,
+                    body: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      Text('This is your Bankroll',
+                        style: AppTypography.ibm(color: AppColors.textPrimary, fontSize: 17, fontWeight: FontWeight.w600)),
+                      const SizedBox(height: 12),
+                      Text('Tap the goal to set a target. Progress updates automatically after every session.',
+                        style: AppTypography.ibm(color: AppColors.textSecondary, fontSize: 14, height: 1.4)),
+                    ]),
+                    actions: DialogActionBar(
+                      confirmLabel: 'Next  →',
+                      confirmColor: AppColors.accentPrimary,
+                      confirmTextColor: AppColors.textInverse,
+                      onConfirm: () {},
+                    ),
+                  );
+                }),
+                const SizedBox(height: 8),
+                _devButton('_BustedPlayerDialog', const Color(0xFFFFA500), () {
+                  final rank = TextEditingController(text: '11');
+                  final cash = TextEditingController(text: '0');
+                  AppDialog.show<void>(
+                    context,
+                    title: 'Villain 2 busted',
+                    body: FormFields(children: [
+                      AppFormField(controller: rank, label: 'Finish rank', keyboardType: TextInputType.number),
+                      AppFormField(controller: cash, label: 'Prize won', prefixText: '\$ ', keyboardType: const TextInputType.numberWithOptions(decimal: true)),
+                    ]),
+                    actions: DialogActionBar(
+                      confirmLabel: 'Record',
+                      confirmColor: AppColors.accentPrimary,
+                      confirmTextColor: AppColors.textInverse,
+                      onConfirm: () {},
+                    ),
+                  );
+                }),
 
                 const SizedBox(height: 120), // bottom nav clearance
               ],
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  // ── Helpers used by the Section 5–8 modal previews ─────────────────
+
+  static Widget _amountStepper(String symbol, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 56, height: 56,
+        decoration: BoxDecoration(
+          color: AppColors.bgElevated,
+          shape: BoxShape.circle,
+          border: Border.all(color: AppColors.borderStrong),
+        ),
+        child: Center(
+          child: Text(
+            symbol,
+            style: AppTypography.ibm(
+              color: AppColors.textPrimary,
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  static Widget _yearCell(int year, bool selected, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 48,
+        decoration: BoxDecoration(
+          color: selected ? AppColors.accentPrimary : AppColors.bgElevated,
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: Center(
+          child: Text(
+            '$year',
+            style: AppTypography.ibm(
+              color: selected ? AppColors.textInverse : AppColors.textPrimary,
+              fontSize: 17,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -349,10 +1336,7 @@ class DesignPreviewScreen extends StatelessWidget {
                               style: AppTypography.ibm(
                                   fontSize: 15, fontWeight: FontWeight.w600,
                                   color: AppColors.textPrimary, height: 20 / 15)),
-                          GestureDetector(
-                            onTap: () => Navigator.pop(context),
-                            child: const Icon(Icons.close, size: 18, color: AppColors.contentInactive),
-                          ),
+                          CloseCircleButton(onTap: () => Navigator.pop(context)),
                         ],
                       ),
                       const SizedBox(height: 24),
@@ -431,10 +1415,7 @@ class DesignPreviewScreen extends StatelessWidget {
                             style: AppTypography.ibm(
                                 fontSize: 15, fontWeight: FontWeight.w600,
                                 color: AppColors.textPrimary, height: 20 / 15)),
-                        GestureDetector(
-                          onTap: () => Navigator.pop(context),
-                          child: const Icon(Icons.close, size: 18, color: AppColors.contentInactive),
-                        ),
+                        CloseCircleButton(onTap: () => Navigator.pop(context)),
                       ],
                     ),
                     const SizedBox(height: 8),

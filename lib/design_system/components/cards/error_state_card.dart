@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+
+import '../../constants/colors.dart';
+import '../../constants/typography.dart';
 
 /// Friendly error state shown when screen data fails to load.
 /// Replaces infinite loading spinners with a message and retry button.
@@ -12,7 +14,8 @@ class ErrorStateCard extends StatelessWidget {
     Key? key,
     this.onRetry,
     this.title = 'Something went wrong',
-    this.message = 'We couldn\'t load your data.\nPlease check your connection and try again.',
+    this.message =
+        'We couldn\'t load your data.\nPlease check your connection and try again.',
   }) : super(key: key);
 
   @override
@@ -32,26 +35,26 @@ class ErrorStateCard extends StatelessWidget {
               ),
               child: const Icon(
                 Icons.cloud_off_rounded,
-                color: Color(0xFF8C8C8C),
+                color: AppColors.textDisabled,
                 size: 32,
               ),
             ),
             const SizedBox(height: 24),
             Text(
               title,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 fontSize: 17,
                 fontWeight: FontWeight.w600,
-                color: Colors.white,
+                color: AppColors.textPrimary,
               ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
             Text(
               message,
-              style: GoogleFonts.ibmPlexSans(
+              style: AppTypography.ibm(
                 fontSize: 14,
-                color: const Color(0xFF8C8C8C),
+                color: AppColors.textDisabled,
                 height: 1.4,
               ),
               textAlign: TextAlign.center,
@@ -68,16 +71,16 @@ class ErrorStateCard extends StatelessWidget {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(40),
                     border: Border.all(
-                      color: const Color(0xFF89F1EC).withValues(alpha: 0.5),
+                      color: AppColors.accentSecondary.withValues(alpha: 0.5),
                       width: 1,
                     ),
                   ),
                   child: Text(
                     'Try Again',
-                    style: GoogleFonts.ibmPlexSans(
+                    style: AppTypography.ibm(
                       fontSize: 17,
                       fontWeight: FontWeight.w600,
-                      color: const Color(0xFF89F1EC),
+                      color: AppColors.accentSecondary,
                       letterSpacing: -0.5,
                     ),
                   ),

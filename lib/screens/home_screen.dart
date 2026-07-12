@@ -39,6 +39,7 @@ import '../onboarding/onboarding_state.dart';
 import '../onboarding/onboarding_progress_bar.dart';
 import '../design_system/design_system.dart';
 import '../design_system/poker_friend_theme.dart';
+import '../design_system/components/buttons/close_circle_button.dart';
 import '../design_system/components/drawer_dots.dart';
 import '../design_system/components/cards/error_state_card.dart';
 import '../services/seat_service.dart';
@@ -49,7 +50,7 @@ import '../services/event_service.dart';
 import '../models/seat_assignment.dart';
 import '../models/club_notification.dart';
 import '../models/club.dart';
-import '../widgets/sliding_notification.dart';
+import '../design_system/components/overlays/sliding_notification.dart';
 import '../widgets/navigation_drawer.dart';
 import 'player/qr_scan_screen.dart';
 import 'club/event_detail_screen.dart';
@@ -1697,43 +1698,29 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   // ── Figma v2 Header ──────────────────────────────────────────────
   Widget _buildNewHeader(BuildContext context, double topPadding, double extraTopPadding) {
-    return Container(
-      color: AppColors.borderDefault, // #161719 surface
-      padding: EdgeInsets.fromLTRB(16, topPadding + extraTopPadding + 6, 16, 12),
-      child: Row(
+    return ClipRect(
+      child: BackdropFilter(
+        filter: ui.ImageFilter.blur(sigmaX: 30, sigmaY: 30),
+        child: Container(
+          color: AppColors.bgPrimary.withValues(alpha: 0.6),
+          padding: EdgeInsets.fromLTRB(16, topPadding + extraTopPadding + 6, 16, 12),
+          child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           // Logo
           Image.asset('assets/icons/Logo horizontal-text.png', height: 34, fit: BoxFit.contain),
 
-          // Right: bell + menu
+          // Right: bell + menu (Figma spec — 38×38 bgElevated circles, 8px gap)
           Row(
             children: [
-              GestureDetector(
+              _TopNavCircleButton(
                 onTap: () => _showNotificationsDropdown(context),
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    _buildIcon('icons/flat_icons/bell.png', 24, Colors.white),
-                    if (_unreadNotificationCount > 0)
-                      Positioned(
-                        right: -2,
-                        top: -2,
-                        child: Container(
-                          width: 8,
-                          height: 8,
-                          decoration: const BoxDecoration(
-                            color: Color(0xFFEF5350),
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
+                svgAsset: 'icons/figma_icons/notification.svg',
+                showBadge: _unreadNotificationCount > 0,
               ),
-              const SizedBox(width: 16),
-              GestureDetector(
+              const SizedBox(width: 8),
+              _TopNavCircleButton(
                 onTap: () => Navigator.push(
                   context,
                   PageRouteBuilder(
@@ -1755,11 +1742,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     },
                   ),
                 ),
-                child: const Icon(Icons.menu, color: Colors.white, size: 24),
+                svgAsset: 'assets/icons/card icons/List.svg',
               ),
             ],
           ),
         ],
+      ),
+        ),
       ),
     );
   }
@@ -2604,10 +2593,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               // Close button
               Align(
                 alignment: Alignment.centerRight,
-                child: GestureDetector(
-                  onTap: () => Navigator.of(ctx).pop(),
-                  child: const Icon(Icons.close, size: 18, color: AppColors.contentInactive),
-                ),
+                child: CloseCircleButton(onTap: () => Navigator.of(ctx).pop()),
               ),
               const SizedBox(height: 16),
               Column(
@@ -4872,5 +4858,66 @@ class _DownArrowPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_DownArrowPainter old) => false;
+}
+
+/// Home top-nav circular action button (bell / list).
+/// 38×38 bgElevated circle with a centered 21.375×21.375 icon. Optional
+/// unread-count dot in the top-right.
+class _TopNavCircleButton extends StatelessWidget {
+  final VoidCallback onTap;
+  final String svgAsset;
+  final bool showBadge;
+
+  const _TopNavCircleButton({
+    required this.onTap,
+    required this.svgAsset,
+    this.showBadge = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Container(
+            width: 38,
+            height: 38,
+            decoration: const BoxDecoration(
+              color: AppColors.bgElevated,
+              shape: BoxShape.circle,
+            ),
+            child: Center(
+              child: SvgPicture.asset(
+                svgAsset,
+                width: 21.375,
+                height: 21.375,
+                colorFilter: const ColorFilter.mode(
+                  Colors.white,
+                  BlendMode.srcIn,
+                ),
+              ),
+            ),
+          ),
+          if (showBadge)
+            Positioned(
+              right: -1,
+              top: -1,
+              child: Container(
+                width: 10,
+                height: 10,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEF5350),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: AppColors.borderDefault, width: 1.5),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
 }
 

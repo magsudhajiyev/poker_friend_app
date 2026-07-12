@@ -3,7 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../../constants/colors.dart';
 
 /// Circular back button — Figma node 766:5417.
-/// 44px circle, bgElevated (#2C2C2E) background, 24px white CaretLeft icon.
+/// 38px circle, bgElevated (#2C2C2E) background, 24px white CaretLeft icon.
 /// Defaults to popping the current route; pass [onPressed] to override.
 class BackButtonCircle extends StatelessWidget {
   final VoidCallback? onPressed;
@@ -12,7 +12,7 @@ class BackButtonCircle extends StatelessWidget {
   const BackButtonCircle({
     Key? key,
     this.onPressed,
-    this.size = 44,
+    this.size = 38,
   }) : super(key: key);
 
   @override

@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import '../l10n/app_localizations.dart';
-import '../design_system/constants/colors.dart';
-import '../design_system/constants/typography.dart';
-import '../design_system/constants/decorations.dart';
+import '../../../l10n/app_localizations.dart';
+import '../../constants/colors.dart';
+import '../../constants/typography.dart';
+import '../../constants/decorations.dart';
 
 /// A sliding in-app notification that appears from the top of the screen.
 /// Swipe up to dismiss, or tap to trigger an action.

@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../constants/colors.dart';
+import 'sheets/app_sheet.dart';
 
-/// Reusable bottom sheet drawer with standardized header (close, title, save).
+/// Reusable bottom sheet drawer with a standardized header (close, title,
+/// checkmark save).
 ///
-/// Use [FormDrawer.show] to display as a modal bottom sheet.
-/// Pass your form content as [body] — it will be scrollable with keyboard inset handling.
+/// Public API preserved; internally delegates to [AppSheet]. The legacy
+/// [backgroundColor] and [borderRadius] parameters are accepted but ignored —
+/// [AppSheet] applies the canonical [AppColors.bgPrimary] surface and
+/// [AppDecorations.radiusXl] top corners so every drawer looks the same.
 class FormDrawer extends StatelessWidget {
   final String title;
   final VoidCallback onSave;
@@ -49,138 +52,64 @@ class FormDrawer extends StatelessWidget {
     bool scrollable = true,
     Key? saveButtonKey,
   }) {
-    return showModalBottomSheet<T>(
+    return AppSheet.show<T>(
       context: context,
-      isScrollControlled: true,
+      title: title,
+      body: body,
+      trailing: _SaveCheckButton(onTap: onSave, buttonKey: saveButtonKey),
+      onClose: onClose,
+      heightFraction: heightFraction,
+      scrollable: scrollable,
+      showTopBorder: showBorderDecoration,
       isDismissible: isDismissible,
       enableDrag: enableDrag,
-      backgroundColor: Colors.transparent,
-      builder: (context) => FormDrawer(
-        title: title,
-        onSave: onSave,
-        onClose: onClose,
-        body: body,
-        heightFraction: heightFraction,
-        backgroundColor: backgroundColor,
-        borderRadius: borderRadius,
-        showBorderDecoration: showBorderDecoration,
-        scrollable: scrollable,
-        saveButtonKey: saveButtonKey,
-      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
-    final topPadding = MediaQuery.of(context).padding.top;
-    final screenHeight = MediaQuery.of(context).size.height;
-    // Desired height but capped so drawer + keyboard don't exceed safe area
-    final desiredHeight = screenHeight * heightFraction;
-    final maxAvailable = screenHeight - bottomInset - topPadding;
-    final drawerHeight = desiredHeight > maxAvailable ? maxAvailable : desiredHeight;
+    return AppSheet(
+      title: title,
+      body: body,
+      trailing: _SaveCheckButton(onTap: onSave, buttonKey: saveButtonKey),
+      onClose: onClose,
+      heightFraction: heightFraction,
+      scrollable: scrollable,
+      showTopBorder: showBorderDecoration,
+    );
+  }
+}
+
+class _SaveCheckButton extends StatelessWidget {
+  final VoidCallback onTap;
+  final Key? buttonKey;
+
+  const _SaveCheckButton({required this.onTap, this.buttonKey});
+
+  @override
+  Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => FocusScope.of(context).unfocus(),
-      child: Padding(
-      padding: EdgeInsets.only(bottom: bottomInset),
+      key: buttonKey,
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
       child: Container(
-        height: drawerHeight,
-        decoration: BoxDecoration(
-          color: backgroundColor,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(borderRadius),
-            topRight: Radius.circular(borderRadius),
-          ),
-          border: showBorderDecoration
-              ? Border.all(color: AppColors.borderStrong)
-              : null,
+        width: 38,
+        height: 38,
+        decoration: const BoxDecoration(
+          color: AppColors.accentPrimary,
+          shape: BoxShape.circle,
         ),
-        child: Column(
-          children: [
-            // Header
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 15, 16, 0),
-              child: SizedBox(
-                height: 68,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  // Close (X) button
-                  GestureDetector(
-                    onTap: onClose ?? () => Navigator.pop(context),
-                    child: Container(
-                      width: 44,
-                      height: 44,
-                      decoration: const BoxDecoration(
-                        color: AppColors.bgElevated,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Center(
-                        child: SvgPicture.asset(
-                          'icons/figma_icons/close.svg',
-                          width: 15,
-                          height: 15,
-                          colorFilter: const ColorFilter.mode(
-                            AppColors.textPrimary,
-                            BlendMode.srcIn,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  // Title
-                  Text(
-                    title,
-                    style: GoogleFonts.ibmPlexSans(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                      height: 22 / 17,
-                    ),
-                  ),
-                  // Save (checkmark) button
-                  GestureDetector(
-                    key: saveButtonKey,
-                    onTap: onSave,
-                    child: Container(
-                      width: 44,
-                      height: 44,
-                      decoration: const BoxDecoration(
-                        color: AppColors.accentPrimary,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Center(
-                        child: SvgPicture.asset(
-                          'icons/figma_icons/check.svg',
-                          width: 24,
-                          height: 24,
-                          colorFilter: const ColorFilter.mode(
-                            AppColors.textInverse,
-                            BlendMode.srcIn,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+        child: Center(
+          child: SvgPicture.asset(
+            'icons/figma_icons/check.svg',
+            width: 20,
+            height: 20,
+            colorFilter: const ColorFilter.mode(
+              AppColors.textInverse,
+              BlendMode.srcIn,
             ),
           ),
-          // Body
-          Expanded(
-            child: scrollable
-                ? SingleChildScrollView(
-                    padding: const EdgeInsets.only(top: 22),
-                    child: body,
-                  )
-                : Padding(
-                    padding: const EdgeInsets.only(top: 22),
-                    child: body,
-                  ),
-          ),
-        ],
-      ),
-      ),
+        ),
       ),
     );
   }

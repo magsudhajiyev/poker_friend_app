@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../l10n/app_localizations.dart';
-import '../design_system/constants/colors.dart';
-import '../design_system/constants/typography.dart';
+import '../../../l10n/app_localizations.dart';
+import '../../constants/colors.dart';
+import '../../constants/typography.dart';
 
 /// A snap point for the raise slider.
 class SnapPoint {

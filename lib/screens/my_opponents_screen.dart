@@ -12,6 +12,8 @@ import '../widgets/global_loading_spinner.dart';
 import 'opponent_detail_screen.dart';
 import 'opponent_hands_screen.dart';
 import '../design_system/components/buttons/back_button_circle.dart';
+import '../design_system/components/buttons/close_circle_button.dart';
+import '../design_system/components/sheets/sheet_header.dart';
 import '../design_system/components/cards/error_state_card.dart';
 import '../design_system/components/headers/top_nav_bar.dart';
 import '../services/app_data_cache.dart';
@@ -529,12 +531,13 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> with SingleTicker
   Widget _buildInlineForm(AppLocalizations l10n, double bottomInset) {
     final isEditing = _editingOpponent != null;
     return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.bgSurface,
-        borderRadius: BorderRadius.only(
+      decoration: BoxDecoration(
+        color: AppColors.bgPrimary,
+        borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(AppDecorations.radiusXl),
           topRight: Radius.circular(AppDecorations.radiusXl),
         ),
+        border: Border.all(color: AppColors.borderStrong),
       ),
       padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + bottomInset),
       child: SafeArea(
@@ -544,29 +547,9 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> with SingleTicker
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Header
-            SizedBox(
-              height: 20,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  Text(
-                    isEditing ? l10n.opponentsEditDialogTitle : l10n.opponentsAddDialogTitle,
-                    style: AppTypography.ibm(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                      height: 20 / 15,
-                    ),
-                  ),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: GestureDetector(
-                      onTap: _closeAddForm,
-                      child: const Icon(Icons.close, color: AppColors.textSecondary, size: 18),
-                    ),
-                  ),
-                ],
-              ),
+            SheetHeader(
+              title: isEditing ? l10n.opponentsEditDialogTitle : l10n.opponentsAddDialogTitle,
+              onClose: _closeAddForm,
             ),
             const SizedBox(height: 16),
             // Opponent Name
@@ -1201,10 +1184,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> with SingleTicker
                       height: 20 / 15,
                     ),
                   ),
-                  GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: const Icon(Icons.close, size: 18, color: AppColors.contentInactive),
-                  ),
+                  CloseCircleButton(onTap: () => Navigator.pop(context)),
                 ],
               ),
               const SizedBox(height: 16),

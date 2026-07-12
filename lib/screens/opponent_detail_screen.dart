@@ -10,6 +10,8 @@ import '../services/opponent_stats_service.dart';
 import 'opponent_hands_screen.dart';
 import '../widgets/global_bottom_nav_bar.dart';
 import '../design_system/components/buttons/back_button_circle.dart';
+import '../design_system/components/buttons/close_circle_button.dart';
+import '../design_system/components/sheets/sheet_header.dart';
 import '../design_system/components/drawer_dots.dart';
 import '../design_system/components/modals/confirm_dialog.dart';
 import '../l10n/app_localizations.dart';
@@ -1213,27 +1215,11 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Header row: spacer + X close
+              // Header row: spacer + glass X close
               Row(
                 children: [
                   const Expanded(child: SizedBox()),
-                  GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    behavior: HitTestBehavior.opaque,
-                    child: SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: SvgPicture.asset(
-                        'assets/icons/X.svg',
-                        width: 18,
-                        height: 18,
-                        colorFilter: const ColorFilter.mode(
-                          AppColors.textSecondary,
-                          BlendMode.srcIn,
-                        ),
-                      ),
-                    ),
-                  ),
+                  CloseCircleButton(onTap: () => Navigator.pop(context)),
                 ],
               ),
               const SizedBox(height: 24),
@@ -1395,12 +1381,13 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
             sheetSetState = setSheetState;
             final bottomInset = MediaQuery.of(context).viewInsets.bottom;
             return Container(
-              decoration: const BoxDecoration(
-                color: AppColors.bgSurface,
-                borderRadius: BorderRadius.only(
+              decoration: BoxDecoration(
+                color: AppColors.bgPrimary,
+                borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(AppDecorations.radiusXl),
                   topRight: Radius.circular(AppDecorations.radiusXl),
                 ),
+                border: Border.all(color: AppColors.borderStrong),
               ),
               padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + bottomInset),
               child: SafeArea(
@@ -1410,29 +1397,9 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Header
-                    SizedBox(
-                      height: 20,
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          Text(
-                            l10n.opponentDetailEditOpponent,
-                            style: AppTypography.ibm(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textPrimary,
-                              height: 20 / 15,
-                            ),
-                          ),
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: GestureDetector(
-                              onTap: () => Navigator.pop(context),
-                              child: const Icon(Icons.close, color: AppColors.textSecondary, size: 18),
-                            ),
-                          ),
-                        ],
-                      ),
+                    SheetHeader(
+                      title: l10n.opponentDetailEditOpponent,
+                      onClose: () => Navigator.pop(context),
                     ),
                     const SizedBox(height: 16),
                     // Name label

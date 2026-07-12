@@ -9,6 +9,10 @@ import '../widgets/loading_screen.dart';
 import 'logging_mode_selection_screen.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/decorations.dart';
+import '../design_system/constants/typography.dart';
+import '../design_system/components/app_text_field.dart';
+import '../design_system/components/dialogs/app_dialog.dart';
+import '../design_system/components/dialogs/dialog_action_bar.dart';
 
 class IntroductionScreen extends StatefulWidget {
   const IntroductionScreen({super.key});
@@ -342,58 +346,37 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
 
   Future<void> _showBlindInputDialog(String title, double currentValue, Function(double) onChanged) async {
     final l10n = AppLocalizations.of(context);
-    final TextEditingController controller = TextEditingController(text: formatBlindValue(currentValue));
+    final controller =
+        TextEditingController(text: formatBlindValue(currentValue));
 
-    return showDialog<void>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: AppColors.surfaceVariant2,
-          title: Text(
-            l10n.introEnterField(title),
-            style: TextStyle(color: Colors.white, fontSize: 18),
-          ),
-          content: TextField(
-            controller: controller,
-            keyboardType: TextInputType.number,
-            autofocus: true,
-            style: TextStyle(color: Colors.white, fontSize: 16),
-            decoration: InputDecoration(
-              hintText: l10n.introEnterAmount,
-              hintStyle: TextStyle(color: AppColors.textMuted),
-              enabledBorder: UnderlineInputBorder(
-                borderSide: BorderSide(color: AppColors.errorRedVariant),
+    return AppDialog.show<void>(
+      context,
+      title: l10n.introEnterField(title),
+      body: AppTextField(
+        controller: controller,
+        label: title,
+        hint: l10n.introEnterAmount,
+        keyboardType: TextInputType.number,
+        autofocus: true,
+      ),
+      actions: DialogActionBar(
+        confirmLabel: l10n.commonOk,
+        confirmColor: AppColors.accentPrimary,
+        confirmTextColor: AppColors.textInverse,
+        onConfirm: () {
+          final value = double.tryParse(controller.text);
+          if (value != null && value > 0) {
+            onChanged(value);
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(l10n.introPleaseEnterValidNumber),
+                backgroundColor: AppColors.accentDanger,
               ),
-              focusedBorder: UnderlineInputBorder(
-                borderSide: BorderSide(color: AppColors.errorRedVariant, width: 2),
-              ),
-            ),
-          ),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text(l10n.commonCancel, style: TextStyle(color: AppColors.textMuted)),
-            ),
-            TextButton(
-              onPressed: () {
-                final value = double.tryParse(controller.text);
-                if (value != null && value > 0) {
-                  onChanged(value);
-                  Navigator.of(context).pop();
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(l10n.introPleaseEnterValidNumber),
-                      backgroundColor: AppColors.errorRedVariant,
-                    ),
-                  );
-                }
-              },
-              child: Text(l10n.commonOk, style: TextStyle(color: AppColors.errorRedVariant)),
-            ),
-          ],
-        );
-      },
+            );
+          }
+        },
+      ),
     );
   }
   

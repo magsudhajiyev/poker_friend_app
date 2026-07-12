@@ -5,6 +5,7 @@ import '../design_system/constants/decorations.dart';
 import '../design_system/constants/spacing.dart';
 import '../design_system/constants/typography.dart';
 import '../design_system/components/backgrounds/gradient_background.dart';
+import '../design_system/components/buttons/close_circle_button.dart';
 
 /// Intermediate screen shown after the user taps a tier CTA on the paywall.
 /// Explains the free-trial timeline (Today → reminder → billing) and lets the
@@ -81,22 +82,7 @@ class TrialConfirmationScreen extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          GestureDetector(
-            onTap: () => Navigator.of(context).pop(),
-            child: Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                color: AppColors.iconButtonBg,
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: AppColors.whiteBorder(),
-                  width: AppDecorations.borderThin,
-                ),
-              ),
-              child: const Icon(Icons.close, color: Colors.white, size: 20),
-            ),
-          ),
+          CloseCircleButton(onTap: () => Navigator.of(context).pop()),
         ],
       ),
     );

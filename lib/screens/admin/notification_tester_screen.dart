@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../design_system/constants/colors.dart';
 import '../../design_system/components/backgrounds/gradient_background.dart';
 import '../../models/club_notification.dart';
-import '../../widgets/sliding_notification.dart';
+import '../../design_system/components/overlays/sliding_notification.dart';
 import '../../design_system/constants/typography.dart';
 import '../../design_system/constants/decorations.dart';
 

@@ -26,6 +26,7 @@ class AppTextField extends StatefulWidget {
     this.errorText,
     this.onChanged,
     this.showClearButton = true,
+    this.autofocus = false,
   });
 
   final String label;
@@ -40,6 +41,7 @@ class AppTextField extends StatefulWidget {
   final String? errorText;
   final ValueChanged<String>? onChanged;
   final bool showClearButton;
+  final bool autofocus;
 
   @override
   State<AppTextField> createState() => _AppTextFieldState();
@@ -124,6 +126,7 @@ class _AppTextFieldState extends State<AppTextField> {
                 child: TextField(
                   controller: widget.controller,
                   focusNode: _focusNode,
+                  autofocus: widget.autofocus,
                   keyboardType: widget.keyboardType,
                   textInputAction: widget.textInputAction,
                   maxLines: widget.maxLines,

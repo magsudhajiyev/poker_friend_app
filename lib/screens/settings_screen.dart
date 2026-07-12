@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import '../design_system/components/buttons/close_circle_button.dart';
 import '../design_system/components/headers/top_nav_bar.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../design_system/constants/colors.dart';
@@ -212,10 +213,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               height: 20 / 15,
                             ),
                           ),
-                          GestureDetector(
-                            onTap: () => Navigator.pop(context),
-                            child: const Icon(Icons.close, size: 18, color: AppColors.contentInactive),
-                          ),
+                          CloseCircleButton(onTap: () => Navigator.pop(context)),
                         ],
                       ),
                       const SizedBox(height: 24),
@@ -434,10 +432,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             height: 20 / 15,
                           ),
                         ),
-                        GestureDetector(
-                          onTap: () => Navigator.pop(context),
-                          child: const Icon(Icons.close, size: 18, color: AppColors.contentInactive),
-                        ),
+                        CloseCircleButton(onTap: () => Navigator.pop(context)),
                       ],
                     ),
                     const SizedBox(height: 8),
@@ -699,10 +694,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       Row(
                         children: [
                           const Expanded(child: SizedBox()),
-                          GestureDetector(
-                            onTap: () => Navigator.pop(dialogContext),
-                            child: const Icon(Icons.close, size: 18, color: AppColors.contentInactive),
-                          ),
+                          CloseCircleButton(onTap: () => Navigator.pop(dialogContext)),
                         ],
                       ),
                       const SizedBox(height: 24),

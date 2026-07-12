@@ -18,6 +18,11 @@ import '../services/currency_service.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/typography.dart';
 import '../design_system/constants/decorations.dart';
+import '../design_system/components/bodies/form_fields.dart';
+import '../design_system/components/app_text_field.dart';
+import '../design_system/components/dialogs/app_dialog.dart';
+import '../design_system/components/dialogs/dialog_action_bar.dart';
+import '../design_system/components/modals/confirm_dialog.dart';
 
 class SessionDetailsScreen extends StatefulWidget {
   final String sessionName;
@@ -700,91 +705,45 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
     final smallBlindController = TextEditingController(text: formatBlindValue(_currentSmallBlind));
     final bigBlindController = TextEditingController(text: formatBlindValue(_currentBigBlind));
 
-    final result = await showDialog<Map<String, dynamic>>(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          backgroundColor: AppColors.infoCardBg,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppDecorations.radius18),
+    final result = await AppDialog.show<Map<String, dynamic>>(
+      context,
+      title: l10n.individualUpdateBlinds,
+      body: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          AppTextField(
+            controller: smallBlindController,
+            label: l10n.individualSmallBlind,
+            hint: '',
+            keyboardType: TextInputType.number,
           ),
-          title: Text(
-            l10n.individualUpdateBlinds,
-            style: AppTypography.ibm(
-              color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-            ),
+          const SizedBox(height: 16),
+          AppTextField(
+            controller: bigBlindController,
+            label: l10n.individualBigBlind,
+            hint: '',
+            keyboardType: TextInputType.number,
           ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: smallBlindController,
-                keyboardType: TextInputType.number,
-                style: AppTypography.ibm(color: Colors.white, fontSize: 18),
-                decoration: InputDecoration(
-                  labelText: l10n.individualSmallBlind,
-                  labelStyle: AppTypography.ibm(color: Colors.white.withOpacity(0.5)),
-                  filled: true,
-                  fillColor: Colors.white.withOpacity(0.05),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
-                    borderSide: BorderSide.none,
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: bigBlindController,
-                keyboardType: TextInputType.number,
-                style: AppTypography.ibm(color: Colors.white, fontSize: 18),
-                decoration: InputDecoration(
-                  labelText: l10n.individualBigBlind,
-                  labelStyle: AppTypography.ibm(color: Colors.white.withOpacity(0.5)),
-                  filled: true,
-                  fillColor: Colors.white.withOpacity(0.05),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
-                    borderSide: BorderSide.none,
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(
-                l10n.commonCancel,
-                style: AppTypography.ibm(color: Colors.white.withOpacity(0.5)),
-              ),
-            ),
-            TextButton(
-              onPressed: () {
-                final smallBlind = double.tryParse(smallBlindController.text);
-                final bigBlind = double.tryParse(bigBlindController.text);
-
-                if (smallBlind != null && bigBlind != null &&
-                    smallBlind > 0 && bigBlind > smallBlind) {
-                  Navigator.pop(context, {
-                    'smallBlind': smallBlind,
-                    'bigBlind': bigBlind,
-                  });
-                }
-              },
-              child: Text(
-                l10n.commonUpdate,
-                style: AppTypography.ibm(
-                  color: AppColors.accentPrimary,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ],
-        ),
+        ],
+      ),
+      actions: DialogActionBar(
+        confirmLabel: l10n.commonUpdate,
+        confirmColor: AppColors.accentPrimary,
+        confirmTextColor: AppColors.textInverse,
+        autoDismiss: false,
+        onConfirm: () {
+          final smallBlind = double.tryParse(smallBlindController.text);
+          final bigBlind = double.tryParse(bigBlindController.text);
+          if (smallBlind != null &&
+              bigBlind != null &&
+              smallBlind > 0 &&
+              bigBlind > smallBlind) {
+            Navigator.pop(context, {
+              'smallBlind': smallBlind,
+              'bigBlind': bigBlind,
+            });
+          }
+        },
       ),
     );
 
@@ -824,77 +783,12 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
 
   Future<bool?> _showRebuyConfirmationDialog() async {
     final l10n = AppLocalizations.of(context);
-    return await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppColors.infoCardBg,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppDecorations.radius18),
-        ),
-        title: Row(
-          children: [
-            const Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 24),
-            const SizedBox(width: 12),
-            Text(
-              l10n.individualConfirmRebuy,
-              style: AppTypography.ibm(
-                color: Colors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              l10n.individualRebuyCurrentStack(_formatStackValue(_currentStack)),
-              style: AppTypography.ibm(
-                color: Colors.white.withOpacity(0.5),
-                fontSize: 16,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              l10n.individualRebuyReplaceMessage,
-              style: AppTypography.ibm(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(
-              l10n.commonCancel,
-              style: AppTypography.ibm(color: Colors.white.withOpacity(0.5)),
-            ),
-          ),
-          GestureDetector(
-            onTap: () => Navigator.pop(context, true),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              decoration: BoxDecoration(
-                color: Colors.red,
-                borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
-              ),
-              child: Text(
-                l10n.individualProceedWithRebuy,
-                style: AppTypography.ibm(
-                  color: Colors.white,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
+    return ConfirmDialog.confirm(
+      context,
+      title: l10n.individualConfirmRebuy,
+      message:
+          '${l10n.individualRebuyCurrentStack(_formatStackValue(_currentStack))}\n\n${l10n.individualRebuyReplaceMessage}',
+      confirmLabel: l10n.individualProceedWithRebuy,
     );
   }
 
@@ -904,121 +798,60 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
     final priceController = TextEditingController();
     final chipsController = TextEditingController();
 
-    final result = await showDialog<Map<String, dynamic>>(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppColors.infoCardBg,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppDecorations.radius18),
-        ),
-        title: Row(
-          children: [
-            const Icon(Icons.attach_money, color: AppColors.accentPrimary, size: 24),
-            const SizedBox(width: 12),
-            Text(
-              l10n.individualAddOn,
-              style: AppTypography.ibm(
-                color: Colors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-              ),
+    final result = await AppDialog.show<Map<String, dynamic>>(
+      context,
+      title: l10n.individualAddOn,
+      body: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            isTournament
+                ? l10n.individualAddOnDescriptionTournament
+                : l10n.individualAddOnDescription,
+            style: AppTypography.ibm(
+              color: AppColors.textSecondary,
+              fontSize: 14,
+            ),
+          ),
+          const SizedBox(height: 20),
+          AppFormField(
+            controller: priceController,
+            label: isTournament
+                ? l10n.individualAddOnPrice
+                : l10n.individualAddOnAmount,
+            prefixText: CurrencyService.prefixText,
+            suffixText: CurrencyService.suffixText,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            autofocus: true,
+          ),
+          if (isTournament) ...[
+            const SizedBox(height: 16),
+            AppFormField(
+              controller: chipsController,
+              label: l10n.individualAddOnChips,
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
             ),
           ],
-        ),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                isTournament
-                    ? l10n.individualAddOnDescriptionTournament
-                    : l10n.individualAddOnDescription,
-                style: AppTypography.ibm(
-                  color: Colors.white.withValues(alpha: 0.5),
-                  fontSize: 14,
-                ),
-              ),
-              const SizedBox(height: 20),
-              TextField(
-                controller: priceController,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                autofocus: true,
-                style: AppTypography.ibm(color: Colors.white, fontSize: 16),
-                decoration: InputDecoration(
-                  labelText: isTournament ? l10n.individualAddOnPrice : l10n.individualAddOnAmount,
-                  labelStyle: AppTypography.ibm(color: Colors.white.withValues(alpha: 0.5)),
-                  prefixText: CurrencyService.prefixText,
-                  suffixText: CurrencyService.suffixText,
-                  prefixStyle: AppTypography.ibm(color: Colors.white, fontSize: 16),
-                  filled: true,
-                  fillColor: Colors.white.withValues(alpha: 0.05),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
-                    borderSide: BorderSide.none,
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                ),
-              ),
-              if (isTournament) ...[
-                const SizedBox(height: 16),
-                TextField(
-                  controller: chipsController,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  style: AppTypography.ibm(color: Colors.white, fontSize: 16),
-                  decoration: InputDecoration(
-                    labelText: l10n.individualAddOnChips,
-                    labelStyle: AppTypography.ibm(color: Colors.white.withValues(alpha: 0.5)),
-                    filled: true,
-                    fillColor: Colors.white.withValues(alpha: 0.05),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
-                      borderSide: BorderSide.none,
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              l10n.commonCancel,
-              style: AppTypography.ibm(color: Colors.white.withValues(alpha: 0.5)),
-            ),
-          ),
-          GestureDetector(
-            onTap: () {
-              final price = double.tryParse(priceController.text);
-              if (price == null || price <= 0) return;
-              if (isTournament) {
-                final chips = double.tryParse(chipsController.text);
-                if (chips == null || chips <= 0) return;
-                Navigator.pop(context, {'price': price, 'chips': chips});
-              } else {
-                Navigator.pop(context, {'price': price, 'chips': price});
-              }
-            },
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              decoration: BoxDecoration(
-                color: AppColors.accentPrimary,
-                borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
-              ),
-              child: Text(
-                l10n.individualAddOnConfirm,
-                style: AppTypography.ibm(
-                  fontSize: 15,
-                  color: Colors.black,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ),
         ],
+      ),
+      actions: DialogActionBar(
+        confirmLabel: l10n.individualAddOnConfirm,
+        confirmColor: AppColors.accentPrimary,
+        confirmTextColor: AppColors.textInverse,
+        autoDismiss: false,
+        onConfirm: () {
+          final price = double.tryParse(priceController.text);
+          if (price == null || price <= 0) return;
+          if (isTournament) {
+            final chips = double.tryParse(chipsController.text);
+            if (chips == null || chips <= 0) return;
+            Navigator.pop(context, {'price': price, 'chips': chips});
+          } else {
+            Navigator.pop(context, {'price': price, 'chips': price});
+          }
+        },
       ),
     );
 
@@ -1061,187 +894,121 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
     final rebuyAmountController = TextEditingController();
     final stackSizeController = TextEditingController();
 
-    final result = await showDialog<Map<String, dynamic>>(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppColors.infoCardBg,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppDecorations.radius18),
-        ),
-        title: Row(
-          children: [
-            const Icon(Icons.add_circle_outline, color: AppColors.accentPrimary, size: 24),
-            const SizedBox(width: 12),
-            Text(
-              l10n.individualRebuy,
-              style: AppTypography.ibm(
-                color: Colors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-              ),
+    final result = await AppDialog.show<Map<String, dynamic>>(
+      context,
+      title: l10n.individualRebuy,
+      body: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            widget.gameType == GameType.cash
+                ? l10n.individualEnterRebuyAmount
+                : l10n.individualEnterRebuyAmountAndStack,
+            style: AppTypography.ibm(
+              color: AppColors.textSecondary,
+              fontSize: 14,
+            ),
+          ),
+          const SizedBox(height: 20),
+          AppFormField(
+            controller: rebuyAmountController,
+            label: l10n.individualRebuyAmount,
+            prefixText: CurrencyService.prefixText,
+            suffixText: CurrencyService.suffixText,
+            keyboardType:
+                const TextInputType.numberWithOptions(decimal: true),
+            autofocus: true,
+          ),
+          if (widget.gameType == GameType.tournament) ...[
+            const SizedBox(height: 16),
+            AppFormField(
+              controller: stackSizeController,
+              label: l10n.individualNewStackSize,
+              hintText: l10n.individualChipCountAfterRebuy,
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
             ),
           ],
-        ),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                widget.gameType == GameType.cash
-                    ? l10n.individualEnterRebuyAmount
-                    : l10n.individualEnterRebuyAmountAndStack,
-                style: AppTypography.ibm(
-                  color: Colors.white.withOpacity(0.5),
-                  fontSize: 14,
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              TextField(
-                controller: rebuyAmountController,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                autofocus: true,
-                style: AppTypography.ibm(color: Colors.white, fontSize: 16),
-                decoration: InputDecoration(
-                  labelText: l10n.individualRebuyAmount,
-                  labelStyle: AppTypography.ibm(color: Colors.white.withOpacity(0.5)),
-                  prefixText: CurrencyService.prefixText,
-                  suffixText: CurrencyService.suffixText,
-                  prefixStyle: AppTypography.ibm(color: Colors.white, fontSize: 16),
-                  filled: true,
-                  fillColor: Colors.white.withOpacity(0.05),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
-                    borderSide: BorderSide.none,
+          const SizedBox(height: 20),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.bgElevated,
+              borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.individualSessionInfo,
+                  style: AppTypography.ibm(
+                    color: AppColors.textPrimary,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
                   ),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 ),
-              ),
-
-              if (widget.gameType == GameType.tournament) ...[
-                const SizedBox(height: 16),
-                TextField(
-                  controller: stackSizeController,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  style: AppTypography.ibm(color: Colors.white, fontSize: 16),
-                  decoration: InputDecoration(
-                    labelText: l10n.individualNewStackSize,
-                    labelStyle: AppTypography.ibm(color: Colors.white.withOpacity(0.5)),
-                    hintText: l10n.individualChipCountAfterRebuy,
-                    hintStyle: AppTypography.ibm(color: Colors.white.withOpacity(0.3)),
-                    filled: true,
-                    fillColor: Colors.white.withOpacity(0.05),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
-                      borderSide: BorderSide.none,
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  ),
+                const SizedBox(height: 4),
+                Text(
+                  l10n.individualTotalInvestedAmount(
+                      _totalBuyIn.toStringAsFixed(2)),
+                  style: AppTypography.ibm(
+                      color: AppColors.textSecondary, fontSize: 12),
+                ),
+                Text(
+                  l10n.individualCurrentStackAmount(
+                      _formatStackValue(_currentStack)),
+                  style: AppTypography.ibm(
+                      color: AppColors.textSecondary, fontSize: 12),
+                ),
+                Text(
+                  l10n.individualRebuysCount(_rebuys.length),
+                  style: AppTypography.ibm(
+                      color: AppColors.textSecondary, fontSize: 12),
                 ),
               ],
-
-              const SizedBox(height: 20),
-
-              // Current session info
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.05),
-                  borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      l10n.individualSessionInfo,
-                      style: AppTypography.ibm(
-                        color: Colors.white,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      l10n.individualTotalInvestedAmount(_totalBuyIn.toStringAsFixed(2)),
-                      style: AppTypography.ibm(color: Colors.white.withOpacity(0.5), fontSize: 12),
-                    ),
-                    Text(
-                      l10n.individualCurrentStackAmount(_formatStackValue(_currentStack)),
-                      style: AppTypography.ibm(color: Colors.white.withOpacity(0.5), fontSize: 12),
-                    ),
-                    Text(
-                      l10n.individualRebuysCount(_rebuys.length),
-                      style: AppTypography.ibm(color: Colors.white.withOpacity(0.5), fontSize: 12),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              l10n.commonCancel,
-              style: AppTypography.ibm(color: Colors.white.withOpacity(0.5)),
-            ),
-          ),
-          GestureDetector(
-            onTap: () {
-              final rebuyAmount = double.tryParse(rebuyAmountController.text);
-
-              if (rebuyAmount == null || rebuyAmount <= 0) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(l10n.individualPleaseEnterValidRebuy),
-                    backgroundColor: Colors.red,
-                  ),
-                );
-                return;
-              }
-
-              if (widget.gameType == GameType.cash) {
-                Navigator.pop(context, {
-                  'rebuyAmount': rebuyAmount,
-                  'newStack': rebuyAmount,
-                });
-              } else {
-                final stackSize = double.tryParse(stackSizeController.text);
-                if (stackSize == null || stackSize <= 0) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(l10n.individualPleaseEnterValidStack),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                  return;
-                }
-
-                Navigator.pop(context, {
-                  'rebuyAmount': rebuyAmount,
-                  'newStack': stackSize,
-                });
-              }
-            },
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              decoration: BoxDecoration(
-                color: AppColors.accentPrimary,
-                borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
-              ),
-              child: Text(
-                l10n.individualAddRebuy,
-                style: AppTypography.ibm(
-                  color: Colors.black,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
             ),
           ),
         ],
+      ),
+      actions: DialogActionBar(
+        confirmLabel: l10n.individualRebuy,
+        confirmColor: AppColors.accentPrimary,
+        confirmTextColor: AppColors.textInverse,
+        autoDismiss: false,
+        onConfirm: () {
+          final rebuyAmount = double.tryParse(rebuyAmountController.text);
+          if (rebuyAmount == null || rebuyAmount <= 0) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(l10n.individualPleaseEnterValidRebuy),
+                backgroundColor: AppColors.accentDanger,
+              ),
+            );
+            return;
+          }
+          if (widget.gameType == GameType.cash) {
+            Navigator.pop(context, {
+              'rebuyAmount': rebuyAmount,
+              'newStack': rebuyAmount,
+            });
+          } else {
+            final stackSize = double.tryParse(stackSizeController.text);
+            if (stackSize == null || stackSize <= 0) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(l10n.individualPleaseEnterValidStack),
+                  backgroundColor: AppColors.accentDanger,
+                ),
+              );
+              return;
+            }
+            Navigator.pop(context, {
+              'rebuyAmount': rebuyAmount,
+              'newStack': stackSize,
+            });
+          }
+        },
       ),
     );
 
@@ -1816,4 +1583,5 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
       ),
     );
   }
+
 }

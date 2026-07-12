@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import '../l10n/app_localizations.dart';
-import '../design_system/constants/colors.dart';
-import '../design_system/constants/typography.dart';
-import '../design_system/constants/decorations.dart';
+import '../../../l10n/app_localizations.dart';
+import '../../constants/colors.dart';
+import '../../constants/typography.dart';
+import '../../constants/decorations.dart';
 
 /// Success popup shown after successfully adding a calendar event.
 /// Slides up from the bottom of the screen with two action buttons.

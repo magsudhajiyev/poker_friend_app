@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import '../l10n/app_localizations.dart';
 import '../models/hand_state_machine.dart';
-import 'card_keyboard.dart';
+import '../design_system/components/pickers/card_keyboard.dart';
+import '../design_system/components/dialogs/app_dialog.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/typography.dart';
 import '../design_system/constants/decorations.dart';
@@ -61,66 +61,27 @@ class _AllInBoardCardsDialogState extends State<AllInBoardCardsDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      backgroundColor: Colors.transparent,
-      elevation: 0,
-      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-      child: Container(
-        constraints: const BoxConstraints(maxWidth: 400),
-        decoration: BoxDecoration(
-          color: AppColors.surfaceDark,
-          borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
-          border: Border.all(color: AppColors.neutral800, width: 1),
-        ),
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildHeader(),
-                const SizedBox(height: 16),
-                CardKeyboard(
-                  slotCount: 5,
-                  slots: _slots,
-                  excludedCards: _allExcluded,
-                  onCardCommitted: _onCardCommitted,
-                  onCardCleared: _onCardCleared,
-                  lockedSlotIndices: _lockedSlots,
-                ),
-                const SizedBox(height: 24),
-                _buildActionButtons(),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHeader() {
     final l10n = AppLocalizations.of(context);
-    return Row(
-      children: [
-        SvgPicture.asset(
-          'icons/figma_icons/Capa_1.svg',
-          width: 22,
-          height: 22,
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            l10n.allInBoardTitle,
-            style: AppTypography.ibm(
-              fontSize: 17,
-              fontWeight: FontWeight.w600,
-              color: Colors.white,
-              letterSpacing: -0.43,
-            ),
+    return AppDialog(
+      title: l10n.allInBoardTitle,
+      showCloseButton: false,
+      padding: const EdgeInsets.all(20),
+      body: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          CardKeyboard(
+            slotCount: 5,
+            slots: _slots,
+            excludedCards: _allExcluded,
+            onCardCommitted: _onCardCommitted,
+            onCardCleared: _onCardCleared,
+            lockedSlotIndices: _lockedSlots,
           ),
-        ),
-      ],
+          const SizedBox(height: 24),
+          _buildActionButtons(),
+        ],
+      ),
     );
   }
 

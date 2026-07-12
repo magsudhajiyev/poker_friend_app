@@ -140,9 +140,7 @@ class _CashBodyState extends State<_CashBody> {
     final profit = double.tryParse(widget.amountController.text) ?? 0.0;
     final isPositive = profit >= 0;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Container(
+    return Container(
         decoration: BoxDecoration(
           color: AppColors.bgSurface,
           borderRadius: BorderRadius.circular(AppDecorations.radiusXl),
@@ -253,8 +251,7 @@ class _CashBodyState extends State<_CashBody> {
             ),
           ],
         ),
-      ),
-    );
+      );
   }
 }
 
@@ -301,9 +298,7 @@ class _TournamentBodyState extends State<_TournamentBody> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Container(
+    return Container(
         decoration: BoxDecoration(
           color: AppColors.bgSurface,
           borderRadius: BorderRadius.circular(AppDecorations.radiusXl),
@@ -388,8 +383,7 @@ class _TournamentBodyState extends State<_TournamentBody> {
             ],
           ],
         ),
-      ),
-    );
+      );
   }
 
   Widget _buildField({

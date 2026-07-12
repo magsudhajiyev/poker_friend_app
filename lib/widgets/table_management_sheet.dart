@@ -267,8 +267,9 @@ class _TableManagementModalState extends State<_TableManagementModal> {
     return Container(
       constraints: BoxConstraints(maxHeight: screenHeight * 0.9),
       decoration: BoxDecoration(
-        color: AppColors.bgSurface,
+        color: AppColors.bgPrimary,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(AppDecorations.radiusXl)),
+        border: Border.all(color: AppColors.borderStrong),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,

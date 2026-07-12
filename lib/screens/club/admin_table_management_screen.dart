@@ -18,6 +18,7 @@ import '../../widgets/poker_table_widget.dart';
 import '../../l10n/app_localizations.dart';
 import '../../design_system/constants/colors.dart';
 import '../../design_system/constants/decorations.dart';
+import '../../design_system/components/sheets/app_sheet.dart';
 import '../../utils/user_facing_error.dart';
 
 /// Full-screen elliptic table view for admin seat management
@@ -1129,26 +1130,18 @@ class _SeatPlayerSheet extends StatelessWidget {
 
   void _showMemberSearch(BuildContext context) {
     Navigator.pop(context);
-    showModalBottomSheet(
+    AppSheet.show<void>(
       context: context,
-      backgroundColor: AppColors.surfaceVariant1,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(AppDecorations.radius20)),
-      ),
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.7,
-        minChildSize: 0.5,
-        maxChildSize: 0.9,
-        expand: false,
-        builder: (context, scrollController) => _MemberSearchSheet(
-          members: members,
-          seatedInfoByUserId: seatedInfoByUserId,
-          onMemberSelected: (member) {
-            Navigator.pop(context);
-            onSeatMember(member);
-          },
-        ),
+      title: AppLocalizations.of(context).adminTableSelectMember,
+      heightFraction: 0.85,
+      scrollable: false,
+      body: _MemberSearchSheet(
+        members: members,
+        seatedInfoByUserId: seatedInfoByUserId,
+        onMemberSelected: (member) {
+          Navigator.pop(context);
+          onSeatMember(member);
+        },
       ),
     );
   }
@@ -1232,16 +1225,11 @@ class _MemberSearchSheetState extends State<_MemberSearchSheet> {
       return aSeated ? 1 : -1;
     });
 
-    return Container(
-      padding: const EdgeInsets.all(24),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            AppLocalizations.of(context).adminTableSelectMember,
-            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
-          ),
-          const SizedBox(height: 16),
           TextField(
             onChanged: (v) => setState(() => _searchQuery = v),
             style: const TextStyle(color: Colors.white),

@@ -9,7 +9,11 @@ import '../../services/table_service.dart';
 import '../../services/dealer_service.dart';
 import '../../services/auth_service.dart';
 import 'dealer_table_screen.dart';
+import '../../design_system/constants/colors.dart';
 import '../../design_system/constants/decorations.dart';
+import '../../design_system/constants/typography.dart';
+import '../../design_system/components/dialogs/app_dialog.dart';
+import '../../design_system/components/dialogs/dialog_action_bar.dart';
 import '../../utils/user_facing_error.dart';
 
 /// Home screen for dealers to select a club and table
@@ -803,163 +807,123 @@ class _SessionSettingsDialogState extends State<_SessionSettingsDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      backgroundColor: const Color(0xFF1E1E2E),
-      title: Text(
-        AppLocalizations.of(context).dealerHomeSessionSettings,
-        style: const TextStyle(color: Colors.white),
-      ),
-      content: SingleChildScrollView(
+    final l10n = AppLocalizations.of(context);
+    return AppDialog(
+      title: l10n.dealerHomeSessionSettings,
+      body: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Blinds
             Row(
               children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        AppLocalizations.of(context).dealerHomeSmallBlind,
-                        style: const TextStyle(color: Colors.white70, fontSize: 12),
-                      ),
-                      const SizedBox(height: 4),
-                      TextFormField(
-                        initialValue: formatBlindValue(_smallBlind),
-                        keyboardType: TextInputType.number,
-                        style: const TextStyle(color: Colors.white),
-                        decoration: InputDecoration(
-                          filled: true,
-                          fillColor: Colors.white.withValues(alpha: 0.1),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
-                            borderSide: BorderSide.none,
-                          ),
-                        ),
-                        onChanged: (v) {
-                          _smallBlind = double.tryParse(v) ?? _smallBlind;
-                        },
-                      ),
-                    ],
-                  ),
-                ),
+                Expanded(child: _blindField(l10n.dealerHomeSmallBlind, _smallBlind, (v) => _smallBlind = v)),
                 const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        AppLocalizations.of(context).dealerHomeBigBlind,
-                        style: const TextStyle(color: Colors.white70, fontSize: 12),
-                      ),
-                      const SizedBox(height: 4),
-                      TextFormField(
-                        initialValue: formatBlindValue(_bigBlind),
-                        keyboardType: TextInputType.number,
-                        style: const TextStyle(color: Colors.white),
-                        decoration: InputDecoration(
-                          filled: true,
-                          fillColor: Colors.white.withValues(alpha: 0.1),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
-                            borderSide: BorderSide.none,
-                          ),
-                        ),
-                        onChanged: (v) {
-                          _bigBlind = double.tryParse(v) ?? _bigBlind;
-                        },
-                      ),
-                    ],
-                  ),
-                ),
+                Expanded(child: _blindField(l10n.dealerHomeBigBlind, _bigBlind, (v) => _bigBlind = v)),
               ],
             ),
-
             const SizedBox(height: 16),
-
-            // BB Ante toggle
             SwitchListTile(
               value: _hasBBante,
               onChanged: (v) => setState(() => _hasBBante = v),
               title: Text(
-                AppLocalizations.of(context).dealerHomeBBAnte,
-                style: const TextStyle(color: Colors.white),
+                l10n.dealerHomeBBAnte,
+                style: AppTypography.ibm(color: AppColors.textPrimary),
               ),
               contentPadding: EdgeInsets.zero,
             ),
-
             const SizedBox(height: 16),
-
-            // Game type
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  AppLocalizations.of(context).dealerHomeGameType,
-                  style: const TextStyle(color: Colors.white70, fontSize: 12),
-                ),
-                const SizedBox(height: 8),
-                SegmentedButton<String>(
-                  segments: [
-                    ButtonSegment(value: 'cash', label: Text(AppLocalizations.of(context).dealerHomeCash)),
-                    ButtonSegment(value: 'tournament', label: Text(AppLocalizations.of(context).dealerHomeTournament)),
-                  ],
-                  selected: {_gameType},
-                  onSelectionChanged: (v) {
-                    setState(() => _gameType = v.first);
-                  },
-                ),
-              ],
+            Text(
+              l10n.dealerHomeGameType,
+              style: AppTypography.ibm(
+                fontSize: 12,
+                color: AppColors.textSecondary,
+              ),
             ),
-
-            const SizedBox(height: 16),
-
-            // Button position
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  AppLocalizations.of(context).dealerHomeButtonPosition,
-                  style: const TextStyle(color: Colors.white70, fontSize: 12),
-                ),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  children: List.generate(9, (i) {
-                    final seat = i + 1;
-                    return ChoiceChip(
-                      label: Text(seat.toString()),
-                      selected: _buttonPosition == seat,
-                      onSelected: (selected) {
-                        if (selected) {
-                          setState(() => _buttonPosition = seat);
-                        }
-                      },
-                    );
-                  }),
-                ),
+            const SizedBox(height: 8),
+            SegmentedButton<String>(
+              segments: [
+                ButtonSegment(value: 'cash', label: Text(l10n.dealerHomeCash)),
+                ButtonSegment(value: 'tournament', label: Text(l10n.dealerHomeTournament)),
               ],
+              selected: {_gameType},
+              onSelectionChanged: (v) {
+                setState(() => _gameType = v.first);
+              },
+            ),
+            const SizedBox(height: 16),
+            Text(
+              l10n.dealerHomeButtonPosition,
+              style: AppTypography.ibm(
+                fontSize: 12,
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              children: List.generate(9, (i) {
+                final seat = i + 1;
+                return ChoiceChip(
+                  label: Text(seat.toString()),
+                  selected: _buttonPosition == seat,
+                  onSelected: (selected) {
+                    if (selected) {
+                      setState(() => _buttonPosition = seat);
+                    }
+                  },
+                );
+              }),
             ),
           ],
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(AppLocalizations.of(context).commonCancel),
+      actions: DialogActionBar(
+        confirmLabel: l10n.dealerHomeStartSession,
+        confirmColor: AppColors.accentPrimary,
+        confirmTextColor: AppColors.textInverse,
+        autoDismiss: false,
+        onConfirm: () {
+          Navigator.pop(context, {
+            'smallBlind': _smallBlind,
+            'bigBlind': _bigBlind,
+            'hasBBante': _hasBBante,
+            'gameType': _gameType,
+            'buttonPosition': _buttonPosition,
+          });
+        },
+      ),
+    );
+  }
+
+  Widget _blindField(String label, double current, ValueChanged<double> onChanged) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: AppTypography.ibm(
+            fontSize: 12,
+            color: AppColors.textSecondary,
+          ),
         ),
-        ElevatedButton(
-          onPressed: () {
-            Navigator.pop(context, {
-              'smallBlind': _smallBlind,
-              'bigBlind': _bigBlind,
-              'hasBBante': _hasBBante,
-              'gameType': _gameType,
-              'buttonPosition': _buttonPosition,
-            });
+        const SizedBox(height: 4),
+        TextFormField(
+          initialValue: formatBlindValue(current),
+          keyboardType: TextInputType.number,
+          style: AppTypography.ibm(color: AppColors.textPrimary),
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: AppColors.bgElevated,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
+              borderSide: BorderSide.none,
+            ),
+          ),
+          onChanged: (v) {
+            final parsed = double.tryParse(v);
+            if (parsed != null) onChanged(parsed);
           },
-          child: Text(AppLocalizations.of(context).dealerHomeStartSession),
         ),
       ],
     );

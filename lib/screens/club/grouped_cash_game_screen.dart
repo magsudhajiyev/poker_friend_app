@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../../design_system/constants/colors.dart';
 import '../../design_system/constants/spacing.dart';
+import '../../design_system/components/sheets/app_sheet.dart';
 import '../../models/club.dart';
 import '../../models/club_event.dart';
 import '../../models/poker_table.dart';
@@ -1049,24 +1050,10 @@ class _AdminWaitlistSheetState extends State<_AdminWaitlistSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: MediaQuery.of(context).size.height * 0.9,
-      decoration: BoxDecoration(
-        color: Colors.black,
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(32),
-          topRight: Radius.circular(32),
-        ),
-        border: Border.all(color: const Color(0xFF262626), width: 1),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0xFF2E5A59),
-            blurRadius: 64,
-            offset: Offset(0, -6),
-          ),
-        ],
-      ),
-      child: StreamBuilder<List<WaitlistEntry>>(
+    return AppSheet(
+      title: AppLocalizations.of(context).clubCashGameWaitlistTitle,
+      scrollable: false,
+      body: StreamBuilder<List<WaitlistEntry>>(
         stream: WaitlistService.watchStakesWaitlist(
           clubId: widget.clubId,
           stakesKey: widget.stakesKey,
@@ -1080,97 +1067,51 @@ class _AdminWaitlistSheetState extends State<_AdminWaitlistSheet> {
 
           return Column(
             children: [
-              // Standard drawer header — close (left), title (center), spacer (right)
-              _buildHeader(),
-              const SizedBox(height: 24),
+              const SizedBox(height: 8),
               // Stakes + count subtitle
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Row(
-                  children: [
-                    Text(
-                      AppLocalizations.of(context).clubCashGameStakes(widget.stakesDisplay),
+              Row(
+                children: [
+                  Text(
+                    AppLocalizations.of(context).clubCashGameStakes(widget.stakesDisplay),
+                    style: AppTypography.ibm(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w400,
+                      color: AppColors.accentPrimary,
+                    ),
+                  ),
+                  const Spacer(),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.accentPrimary,
+                      borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
+                    ),
+                    child: Text(
+                      '${entries.length}',
                       style: AppTypography.ibm(
+                        color: AppColors.accentPrimary,
+                        fontWeight: FontWeight.bold,
                         fontSize: 13,
-                        fontWeight: FontWeight.w400,
-                        color: AppColors.accentPrimary,
                       ),
                     ),
-                    const Spacer(),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.accentPrimary,
-                        borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
-                      ),
-                      child: Text(
-                        '${entries.length}',
-                        style: AppTypography.ibm(
-                          color: AppColors.accentPrimary,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
               const SizedBox(height: 20),
               // Body — list / loading / empty / error
               Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: _buildBody(
-                    entries: entries,
-                    isLoading: isLoading,
-                    hasError: hasError,
-                  ),
+                child: _buildBody(
+                  entries: entries,
+                  isLoading: isLoading,
+                  hasError: hasError,
                 ),
               ),
             ],
           );
         },
-      ),
-    );
-  }
-
-  Widget _buildHeader() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 15, 16, 0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          // Close button — left
-          GestureDetector(
-            onTap: () => Navigator.pop(context),
-            child: Container(
-              width: 38,
-              height: 38,
-              decoration: const BoxDecoration(
-                color: AppColors.neutral700,
-                shape: BoxShape.circle,
-              ),
-              child: const Center(
-                child: Icon(Icons.close, color: Colors.white, size: 20),
-              ),
-            ),
-          ),
-          // Title — center
-          Text(
-            AppLocalizations.of(context).clubCashGameWaitlistTitle,
-            style: AppTypography.ibm(
-              color: Colors.white,
-              fontSize: 17,
-              fontWeight: FontWeight.w600,
-              letterSpacing: -0.43,
-            ),
-          ),
-          // Right-side spacer to keep title centered
-          const SizedBox(width: 38, height: 38),
-        ],
       ),
     );
   }
@@ -1533,85 +1474,29 @@ class _AddTableSheetState extends State<_AddTableSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: MediaQuery.of(context).size.height * 0.9,
-      decoration: BoxDecoration(
-        color: Colors.black,
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(32),
-          topRight: Radius.circular(32),
-        ),
-        border: Border.all(color: const Color(0xFF262626), width: 1),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0xFF2E5A59),
-            blurRadius: 64,
-            offset: Offset(0, -6),
-          ),
-        ],
-      ),
-      child: Column(
+    return AppSheet(
+      title: AppLocalizations.of(context).clubCashGameAddTable,
+      scrollable: false,
+      body: Column(
         children: [
-          _buildHeader(),
-          const SizedBox(height: 24),
+          const SizedBox(height: 8),
           // Subtitle — which group we're adding to.
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Row(
-              children: [
-                Text(
-                  AppLocalizations.of(context).clubCashGameStakes(widget.stakes),
-                  style: AppTypography.ibm(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w400,
-                    color: AppColors.accentPrimary,
-                  ),
+          Row(
+            children: [
+              Text(
+                AppLocalizations.of(context).clubCashGameStakes(widget.stakes),
+                style: AppTypography.ibm(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w400,
+                  color: AppColors.accentPrimary,
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
           const SizedBox(height: 20),
           Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: _buildBody(),
-            ),
+            child: _buildBody(),
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHeader() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 15, 16, 0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          GestureDetector(
-            onTap: () => Navigator.pop(context),
-            child: Container(
-              width: 38,
-              height: 38,
-              decoration: const BoxDecoration(
-                color: AppColors.neutral700,
-                shape: BoxShape.circle,
-              ),
-              child: const Center(
-                child: Icon(Icons.close, color: Colors.white, size: 20),
-              ),
-            ),
-          ),
-          Text(
-            AppLocalizations.of(context).clubCashGameAddTable,
-            style: AppTypography.ibm(
-              color: Colors.white,
-              fontSize: 17,
-              fontWeight: FontWeight.w600,
-              letterSpacing: -0.43,
-            ),
-          ),
-          const SizedBox(width: 38, height: 38),
         ],
       ),
     );

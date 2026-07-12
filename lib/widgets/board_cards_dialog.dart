@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import '../l10n/app_localizations.dart';
 import '../models/hand_state_machine.dart';
 import '../models/poker_game_state.dart';
-import 'card_keyboard.dart';
+import '../design_system/components/pickers/card_keyboard.dart';
+import '../design_system/components/cards/suit_icon.dart';
+import '../design_system/components/dialogs/app_dialog.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/typography.dart';
 import '../design_system/constants/decorations.dart';
@@ -55,71 +56,32 @@ class _BoardCardsDialogState extends State<BoardCardsDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      backgroundColor: Colors.transparent,
-      elevation: 0,
-      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-      child: Container(
-        constraints: const BoxConstraints(maxWidth: 400),
-        decoration: BoxDecoration(
-          color: AppColors.surfaceDark,
-          borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
-          border: Border.all(color: AppColors.neutral800, width: 1),
-        ),
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildHeader(),
-                const SizedBox(height: 16),
-                // Show existing cards from previous streets (read-only)
-                if (widget.currentRound != BettingRound.flop) ...[
-                  _buildExistingCardsDisplay(),
-                  const SizedBox(height: 12),
-                ],
-                // Active card keyboard for this street
-                CardKeyboard(
-                  slotCount: _slots.length,
-                  slots: _slots,
-                  excludedCards: _allExcluded,
-                  onCardCommitted: _onCardCommitted,
-                  onCardCleared: _onCardCleared,
-                ),
-                const SizedBox(height: 24),
-                _buildActionButtons(),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHeader() {
     final l10n = AppLocalizations.of(context);
-    return Row(
-      children: [
-        SvgPicture.asset(
-          'icons/figma_icons/Capa_1.svg',
-          width: 22,
-          height: 22,
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            '${_getStreetName()} ${widget.currentRound == BettingRound.flop ? l10n.boardCardsCards : l10n.boardCardsCard}',
-            style: AppTypography.ibm(
-              fontSize: 17,
-              fontWeight: FontWeight.w600,
-              color: Colors.white,
-              letterSpacing: -0.43,
-            ),
+    final title =
+        '${_getStreetName()} ${widget.currentRound == BettingRound.flop ? l10n.boardCardsCards : l10n.boardCardsCard}';
+    return AppDialog(
+      title: title,
+      showCloseButton: false,
+      padding: const EdgeInsets.all(20),
+      body: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (widget.currentRound != BettingRound.flop) ...[
+            _buildExistingCardsDisplay(),
+            const SizedBox(height: 12),
+          ],
+          CardKeyboard(
+            slotCount: _slots.length,
+            slots: _slots,
+            excludedCards: _allExcluded,
+            onCardCommitted: _onCardCommitted,
+            onCardCleared: _onCardCleared,
           ),
-        ),
-      ],
+          const SizedBox(height: 24),
+          _buildActionButtons(),
+        ],
+      ),
     );
   }
 
@@ -148,6 +110,8 @@ class _BoardCardsDialogState extends State<BoardCardsDialog> {
   }
 
   Widget _buildReadOnlyCard(String card) {
+    final rank = card.length > 1 ? card.substring(0, card.length - 1) : card;
+    final suitChar = card.length > 1 ? card[card.length - 1] : null;
     return Container(
       width: 44,
       height: 60,
@@ -156,15 +120,22 @@ class _BoardCardsDialogState extends State<BoardCardsDialog> {
         borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
         border: Border.all(color: Colors.grey[400]!, width: 1),
       ),
-      child: Center(
-        child: Text(
-          card,
-          style: AppTypography.ibm(
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-            color: _getCardColor(card),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            rank,
+            style: AppTypography.ibm(
+              fontSize: 15,
+              fontWeight: FontWeight.bold,
+              color: _getCardColor(card),
+            ),
           ),
-        ),
+          if (suitChar != null) ...[
+            const SizedBox(height: 2),
+            SuitIcon(suitChar: suitChar, size: 16),
+          ],
+        ],
       ),
     );
   }

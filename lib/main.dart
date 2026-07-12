@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -42,6 +43,10 @@ StreamSubscription<bool>? _subscriptionStatusListener;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Lock to portrait globally. Individual chart screens (earnings, stack,
+  // public leaderboard) opt into landscape and restore this lock on dispose.
+  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 
   // Load environment configuration
   try {

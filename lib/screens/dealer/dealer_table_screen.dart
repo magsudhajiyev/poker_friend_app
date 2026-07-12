@@ -37,6 +37,8 @@ import '../../widgets/multi_pot_winner_dialog.dart';
 import '../../design_system/constants/colors.dart';
 import '../../design_system/constants/typography.dart';
 import '../../design_system/constants/decorations.dart';
+import '../../design_system/components/dialogs/app_dialog.dart';
+import '../../design_system/components/dialogs/dialog_action_bar.dart';
 import '../../utils/user_facing_error.dart';
 // Removed: showdown_dialog - dealers don't enter player hole cards
 // Players enter their own hole cards on their devices
@@ -944,17 +946,14 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
   Future<void> _showWinnerSelectionDialog() async {
     final activePlayers = _activePlayers;
 
-    final result = await showDialog<Map<String, dynamic>>(
+    final result = await WinnerSelectionDialog.show(
       context: context,
-      barrierDismissible: false,
-      builder: (context) => WinnerSelectionDialog(
-        activePlayers: activePlayers,
-        playerNames: _getPlayerNamesList(),
-        potAmount: _gameState!.currentPot,
-        buttonPosition: _gameState!.buttonPosition,
-        playerCount: 9,
-        gameType: _dealerSession.gameType == 'cash' ? GameType.cash : GameType.tournament,
-      ),
+      activePlayers: activePlayers,
+      playerNames: _getPlayerNamesList(),
+      potAmount: _gameState!.currentPot,
+      buttonPosition: _gameState!.buttonPosition,
+      playerCount: 9,
+      gameType: _dealerSession.gameType == 'cash' ? GameType.cash : GameType.tournament,
     );
 
     if (result != null) {
@@ -5068,48 +5067,12 @@ class _QRCodesDialogState extends State<_QRCodesDialog> {
     final isOccupied = _seatAssignments[_selectedSeat]?.isOccupied ?? false;
     final occupantName = _seatAssignments[_selectedSeat]?.playerName;
 
-    return Dialog(
-      backgroundColor: AppColors.surfaceDark,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
-        side: const BorderSide(color: AppColors.neutral800),
-      ),
-      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Title + close
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    '${widget.tableName} · Seat $_selectedSeat',
-                    style: AppTypography.ibm(
-                      color: Colors.white,
-                      fontSize: 19,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: -0.3,
-                    ),
-                  ),
-                ),
-                GestureDetector(
-                  onTap: () => Navigator.pop(context),
-                  behavior: HitTestBehavior.opaque,
-                  child: Container(
-                    width: 32,
-                    height: 32,
-                    decoration: const BoxDecoration(
-                      color: AppColors.neutral800,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(Icons.close, color: Colors.white, size: 18),
-                  ),
-                ),
-              ],
-            ),
+    return AppDialog(
+      title: '${widget.tableName} · Seat $_selectedSeat',
+      body: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
             if (!isOccupied) ...[
               const SizedBox(height: 4),
               Text(
@@ -5303,7 +5266,6 @@ class _QRCodesDialogState extends State<_QRCodesDialog> {
             ),
           ],
         ),
-      ),
     );
   }
 
@@ -5397,13 +5359,10 @@ class _UserSearchDialogState extends State<_UserSearchDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      backgroundColor: const Color(0xFF1E1E2E),
-      title: Text(
-        AppLocalizations.of(context).dealerTableAddPlayerToSeat(widget.seatNumber),
-        style: const TextStyle(color: Colors.white),
-      ),
-      content: SizedBox(
+    final l10n = AppLocalizations.of(context);
+    return AppDialog(
+      title: l10n.dealerTableAddPlayerToSeat(widget.seatNumber),
+      body: SizedBox(
         width: 320,
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -5631,16 +5590,14 @@ class _UserSearchDialogState extends State<_UserSearchDialog> {
           ],
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(AppLocalizations.of(context).commonCancel),
-        ),
-        ElevatedButton(
-          onPressed: _canSubmit() ? _submit : null,
-          child: Text(AppLocalizations.of(context).dealerTableAddPlayer),
-        ),
-      ],
+      actions: DialogActionBar(
+        confirmLabel: l10n.dealerTableAddPlayer,
+        confirmColor: AppColors.accentPrimary,
+        confirmTextColor: AppColors.textInverse,
+        enabled: _canSubmit(),
+        autoDismiss: false,
+        onConfirm: _submit,
+      ),
     );
   }
 

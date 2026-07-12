@@ -9,6 +9,7 @@ import '../../design_system/constants/spacing.dart';
 import '../../design_system/constants/typography.dart';
 import '../../design_system/components/buttons/app_button.dart';
 import '../../design_system/components/modals/confirm_dialog.dart';
+import '../../design_system/components/sheets/app_sheet.dart';
 import '../../models/drill_models.dart';
 import '../../models/opponent.dart';
 import '../../services/drill_lineup_store.dart';
@@ -168,15 +169,11 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
   Future<void> _tapSeat(int seat) async {
     // Move yourself by tapping another seat and choosing "This is me"
     if (seat == _heroSeat) return;
-    final pick = await showModalBottomSheet<_SeatPick?>(
+    final pick = await AppSheet.show<_SeatPick?>(
       context: context,
-      backgroundColor: AppColors.infoCardBg,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-            top: Radius.circular(AppDecorations.radiusXl)),
-      ),
-      isScrollControlled: true,
-      builder: (context) => _OpponentPickerSheet(
+      heightFraction: 0.65,
+      scrollable: false,
+      body: _OpponentPickerSheet(
         opponents: _opponents,
         showHeroOption: seat != _heroSeat,
       ),
@@ -777,22 +774,8 @@ class _OpponentPickerSheetState extends State<_OpponentPickerSheet> {
         .where((o) => o.name.toLowerCase().contains(_query.toLowerCase()))
         .toList();
 
-    return Padding(
-      padding:
-          EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-      child: SizedBox(
-        height: MediaQuery.of(context).size.height * 0.6,
-        child: Column(
-          children: [
-            const SizedBox(height: AppSpacing.xs),
-            Container(
-              width: 36,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppColors.whiteOverlay(opacity: 0.2),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
+    return Column(
+      children: [
             Padding(
               padding: const EdgeInsets.all(AppSpacing.md),
               child: TextField(
@@ -870,8 +853,6 @@ class _OpponentPickerSheetState extends State<_OpponentPickerSheet> {
               ),
             ),
           ],
-        ),
-      ),
     );
   }
 }

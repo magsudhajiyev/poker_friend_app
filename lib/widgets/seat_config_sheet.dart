@@ -5,6 +5,7 @@ import '../services/currency_service.dart';
 import '../services/opponent_service.dart';
 import '../services/free_tier_limits.dart';
 import '../models/opponent.dart';
+import '../design_system/components/sheets/app_sheet.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/decorations.dart';
 import '../design_system/constants/typography.dart';
@@ -258,49 +259,14 @@ class _SeatConfigSheetState extends State<SeatConfigSheet> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
 
-    return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppColors.bgSurface,
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(AppDecorations.radiusXl),
-            topRight: Radius.circular(AppDecorations.radiusXl),
-          ),
-        ),
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // ─── HEADER ──────────────────────────────────────────
-              Row(
-                children: [
-                  const SizedBox(width: 18),
-                  Expanded(
-                    child: Center(
-                      child: Text(
-                        widget.titleOverride ?? l10n.seatConfigSeatTitle(widget.seatNumber),
-                        style: AppTypography.ibm(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
-                          height: 20 / 15,
-                        ),
-                      ),
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: Icon(Icons.close,
-                        size: 18, color: AppColors.textSecondary),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 24),
-
+    return AppSheet(
+      title: widget.titleOverride ?? l10n.seatConfigSeatTitle(widget.seatNumber),
+      onClose: () => Navigator.pop(context),
+      heightFraction: 0.85,
+      body: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
               // ─── THIS IS MY SEAT ─────────────────────────────────
               GestureDetector(
                 onTap: () => setState(() {
@@ -710,8 +676,6 @@ class _SeatConfigSheetState extends State<SeatConfigSheet> {
                   height: MediaQuery.of(context).padding.bottom + 24),
             ],
           ),
-        ),
-      ),
-    );
+        );
   }
 }

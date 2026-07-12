@@ -20,6 +20,10 @@ import '../services/currency_service.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/typography.dart';
 import '../design_system/constants/decorations.dart';
+import '../design_system/components/buttons/back_button_circle.dart';
+import '../design_system/components/dialogs/app_dialog.dart';
+import '../design_system/components/dialogs/dialog_action_bar.dart';
+import '../design_system/components/modals/confirm_dialog.dart';
 import '../utils/user_facing_error.dart';
 import '../onboarding/onboarding_state.dart';
 import '../onboarding/onboarding_tour.dart';
@@ -90,47 +94,15 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
   Future<void> _handleDeleteSession() async {
     if (_isDeleting) return;
 
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1A1A2E),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDecorations.radiusLg)),
-        title: Text(
-          AppLocalizations.of(ctx).sessionAnalyticsDeleteTitle,
-          style: AppTypography.ibm(
-            color: Colors.white,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        content: Text(
-          AppLocalizations.of(ctx).sessionAnalyticsDeleteMessage,
-          style: AppTypography.ibm(
-            color: Colors.white.withValues(alpha: 0.8),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(
-              AppLocalizations.of(ctx).commonCancel,
-              style: AppTypography.ibm(color: Colors.white54),
-            ),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(
-              AppLocalizations.of(ctx).commonDelete,
-              style: AppTypography.ibm(
-                color: const Color(0xFFFF6B6B),
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
-      ),
+    final l10n = AppLocalizations.of(context);
+    final confirmed = await ConfirmDialog.confirm(
+      context,
+      title: l10n.sessionAnalyticsDeleteTitle,
+      message: l10n.sessionAnalyticsDeleteMessage,
+      confirmLabel: l10n.commonDelete,
     );
 
-    if (confirmed != true || !mounted) return;
+    if (!confirmed || !mounted) return;
 
     setState(() => _isDeleting = true);
 
@@ -207,54 +179,24 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
       if (usedCount >= _maxMonthlySessionExportsPro) {
         if (!mounted) return;
         final l10n = AppLocalizations.of(context);
-        showDialog(
-          context: context,
-          builder: (ctx) => AlertDialog(
-            backgroundColor: AppColors.infoCardBg,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDecorations.radius18)),
-            title: Text(
-              l10n.quotaExportLimitTitle,
-              style: AppTypography.ibm(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+        AppDialog.show<void>(
+          context,
+          title: l10n.quotaExportLimitTitle,
+          body: Text(
+            l10n.quotaSessionExportLimitPro(_maxMonthlySessionExportsPro),
+            style: AppTypography.ibm(
+              fontSize: 14,
+              color: AppColors.textSecondary,
+              height: 1.5,
             ),
-            content: Text(
-              l10n.quotaSessionExportLimitPro(_maxMonthlySessionExportsPro),
-              style: AppTypography.ibm(
-                color: Colors.white.withValues(alpha: 0.5),
-                fontSize: 14,
-                height: 1.5,
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(ctx);
-                  PaywallScreen.show(context, featureName: 'Unlimited Exports');
-                },
-                child: Text(
-                  l10n.quotaUpgradeToElite,
-                  style: AppTypography.ibm(
-                    color: AppColors.accentPrimary,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(ctx),
-                child: Text(
-                  l10n.quotaOk,
-                  style: AppTypography.ibm(
-                    color: AppColors.accentPrimary,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
+          ),
+          actions: DialogActionBar(
+            cancelLabel: l10n.quotaOk,
+            confirmLabel: l10n.quotaUpgradeToElite,
+            confirmColor: AppColors.accentPrimary,
+            confirmTextColor: AppColors.textInverse,
+            onConfirm: () =>
+                PaywallScreen.show(context, featureName: 'Unlimited Exports'),
           ),
         );
         return;
@@ -281,47 +223,17 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
 
     // Show confirmation dialog
     if (!mounted) return;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1A1A2E),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDecorations.radiusLg)),
-        title: Text(
-          AppLocalizations.of(ctx).sessionAnalyticsExportSession,
-          style: AppTypography.ibm(
-            color: Colors.white,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        content: Text(
-          AppLocalizations.of(ctx).sessionAnalyticsExportConfirm(_hands.length, email),
-          style: AppTypography.ibm(
-            color: Colors.white.withValues(alpha: 0.8),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(
-              AppLocalizations.of(ctx).commonCancel,
-              style: AppTypography.ibm(color: Colors.white54),
-            ),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(
-              AppLocalizations.of(ctx).sessionAnalyticsExport,
-              style: AppTypography.ibm(
-                color: AppColors.accentPrimary,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
-      ),
+    final l10n = AppLocalizations.of(context);
+    final confirmed = await ConfirmDialog.confirm(
+      context,
+      title: l10n.sessionAnalyticsExportSession,
+      message: l10n.sessionAnalyticsExportConfirm(_hands.length, email),
+      confirmLabel: l10n.sessionAnalyticsExport,
+      confirmColor: AppColors.accentPrimary,
+      confirmTextColor: AppColors.textInverse,
     );
 
-    if (confirmed != true || !mounted) return;
+    if (!confirmed || !mounted) return;
 
     setState(() => _isExporting = true);
 
@@ -559,55 +471,58 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
       bottomNavigationBar: GlobalBottomNavBar(currentScreen: 'sessions'),
       body: Stack(
         children: [
-          SafeArea(
-            child: Column(
+          Column(
               children: [
-                // Header
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-                  child: Row(
+                // Header — matches TopNavBar geometry (statusBar + 56 + 12)
+                Container(
+                  padding: EdgeInsets.only(
+                    top: MediaQuery.of(context).padding.top,
+                    bottom: 12,
+                  ),
+                  child: SizedBox(
+                    height: 56,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Row(
                     children: [
-                      GestureDetector(
-                        onTap: () => Navigator.pop(context),
-                        child: Container(
-                          width: 44,
-                          height: 44,
-                          decoration: const BoxDecoration(
-                            color: AppColors.surfaceDark,
-                            shape: BoxShape.circle,
+                      SizedBox(
+                        width: 44,
+                        height: 44,
+                        child: Center(
+                          child: BackButtonCircle(
+                            onPressed: () => Navigator.pop(context),
                           ),
-                          child: const Icon(Icons.arrow_back, color: Colors.white, size: 22),
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 8),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
                               l10n.sessionAnalyticsTitle,
                               style: AppTypography.ibm(
-                                fontSize: 20,
+                                fontSize: 17,
                                 color: Colors.white,
                                 fontWeight: FontWeight.w600,
-                                letterSpacing: -0.5,
-                                height: 1.2,
+                                height: 22 / 17,
+                                letterSpacing: -0.43,
                               ),
                             ),
-                            const SizedBox(height: 2),
                             Text(
                               l10n.sessionAnalyticsHandsLogged(widget.sessionData['handsLogged'] ?? widget.sessionData['totalHands'] ?? _hands.length),
                               style: AppTypography.ibm(
-                                fontSize: 15,
-                                color: Colors.white.withOpacity(0.6),
+                                fontSize: 13,
+                                color: AppColors.textSecondary,
                                 fontWeight: FontWeight.w400,
-                                height: 1.2,
+                                height: 18 / 13,
                               ),
                             ),
                           ],
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 8),
                       GestureDetector(
                         onTap: _isExporting || _hands.isEmpty ? null : _handleSessionExport,
                         child: Container(
@@ -662,6 +577,8 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
                       ),
                     ],
                   ),
+                    ),
+                  ),
                 ),
                 // Content
                 Expanded(
@@ -687,7 +604,6 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
                 ),
               ],
             ),
-          ),
         ],
       ),
     );

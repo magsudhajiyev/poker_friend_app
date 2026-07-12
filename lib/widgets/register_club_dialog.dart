@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../design_system/components/app_text_field.dart';
+import '../design_system/components/sheets/app_sheet.dart';
 import '../l10n/app_localizations.dart';
 import '../services/club_request_service.dart';
 import '../design_system/constants/typography.dart';
@@ -142,46 +143,15 @@ class _RegisterClubSheetState extends State<_RegisterClubSheet> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
-    return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.bgSurface,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(AppDecorations.radiusXl)),
-      ),
-      padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + bottomInset),
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header
-            SizedBox(
-              height: 20,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  Text(
-                    l10n.registerClubTitle,
-                    style: AppTypography.ibm(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: GestureDetector(
-                      onTap: () => Navigator.pop(context),
-                      child: const Icon(Icons.close, size: 18, color: AppColors.textSecondary),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 20),
-
+    return AppSheet(
+      title: l10n.registerClubTitle,
+      onClose: () => Navigator.pop(context),
+      heightFraction: null,
+      body: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
             // Fields
             AppTextField(
               label: l10n.registerClubNameLabel,
@@ -306,7 +276,6 @@ class _RegisterClubSheetState extends State<_RegisterClubSheet> {
             ),
           ],
         ),
-      ),
     );
   }
 }

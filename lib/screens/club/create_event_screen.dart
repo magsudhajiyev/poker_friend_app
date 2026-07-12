@@ -8,7 +8,8 @@ import '../../models/poker_table.dart';
 import '../../services/event_service.dart';
 import '../../services/table_service.dart';
 import '../../services/club_notification_service.dart';
-import '../../design_system/components/calendar/custom_date_picker.dart';
+import '../../design_system/components/buttons/close_circle_button.dart';
+import '../../design_system/components/pickers/date/custom_date_picker.dart';
 import '../../design_system/constants/colors.dart';
 import '../../design_system/constants/typography.dart';
 import '../../design_system/constants/decorations.dart';
@@ -381,20 +382,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           // Close button
-          GestureDetector(
-            onTap: () => Navigator.pop(context),
-            child: Container(
-              width: 38,
-              height: 38,
-              decoration: const BoxDecoration(
-                color: AppColors.neutral700,
-                shape: BoxShape.circle,
-              ),
-              child: const Center(
-                child: Icon(Icons.close, color: Colors.white, size: 20),
-              ),
-            ),
-          ),
+          CloseCircleButton(onTap: () => Navigator.pop(context)),
           // Title
           Text(
             _isEditMode ? AppLocalizations.of(context).eventEditTitle : AppLocalizations.of(context).eventNewTitle,

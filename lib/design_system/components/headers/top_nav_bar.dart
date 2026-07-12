@@ -7,7 +7,7 @@ import '../buttons/back_button_circle.dart';
 /// Reusable top nav bar — unified spec.
 ///
 /// Container: `bgPrimary` (`#0C0C0C`), 56px content + status bar + 12px bottom.
-/// Left:      `BackButtonCircle` (44px `bgElevated` circle, white 24px caret).
+/// Left:      `BackButtonCircle` (38px `bgElevated` circle, white 24px caret).
 /// Center:    17px SemiBold title, optional 13px `textSecondary` subtitle.
 /// Right:     44px `bgElevated` circle with 24px white icon, OR custom widget.
 ///
@@ -68,9 +68,10 @@ class TopNavBar extends StatelessWidget {
   Widget _buildLanding() => _threeSlotRow(centerTitle: false);
 
   /// Unified 3-slot layout: [44px left] [flexible center] [44px right].
-  /// Left/right slots are always exactly 44px wide (or empty spacer),
-  /// so the back button and right action stay at identical X positions
-  /// across every screen using this nav bar.
+  /// Left/right slots are always 44px wide (or empty spacer) so the back
+  /// button and right action stay at identical X positions across every
+  /// screen using this nav bar. The back button itself renders at 38px,
+  /// centered within its 44px slot.
   Widget _threeSlotRow({required bool centerTitle}) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -79,7 +80,7 @@ class TopNavBar extends StatelessWidget {
           width: 44,
           height: 44,
           child: onBack != null
-              ? BackButtonCircle(onPressed: onBack)
+              ? Center(child: BackButtonCircle(onPressed: onBack))
               : null,
         ),
         Expanded(

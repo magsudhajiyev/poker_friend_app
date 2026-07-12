@@ -26,7 +26,7 @@ import '../widgets/action_button_grid.dart';
 import '../widgets/table_management_sheet.dart';
 import '../widgets/seat_config_sheet.dart';
 import '../widgets/poker_table_widget.dart';
-import '../widgets/raise_snap_overlay.dart';
+import '../design_system/components/overlays/raise_snap_overlay.dart';
 import '../widgets/session_summary_card.dart';
 import '../widgets/winner_selection_dialog.dart';
 import '../widgets/multi_pot_winner_dialog.dart';
@@ -4872,18 +4872,15 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         );
       } else {
         await LoggerService.debug('  Showing regular winner selection dialog (${sidePots.length} pot)');
-        winnerResult = await showDialog<Map<String, dynamic>>(
+        winnerResult = await WinnerSelectionDialog.show(
           context: context,
-          barrierDismissible: false,
-          builder: (context) => WinnerSelectionDialog(
-            activePlayers: activePlayers,
-            playerNames: playerNames,
-            potAmount: potAmount,
-            gameType: widget.gameType,
-            buttonPosition: gameState.buttonPosition,
-            playerCount: gameState.numberOfPlayers,
-            heroSeat: sessionManager.ourSeatNumber,
-          ),
+          activePlayers: activePlayers,
+          playerNames: playerNames,
+          potAmount: potAmount,
+          gameType: widget.gameType,
+          buttonPosition: gameState.buttonPosition,
+          playerCount: gameState.numberOfPlayers,
+          heroSeat: sessionManager.ourSeatNumber,
         );
       }
 
@@ -6260,18 +6257,15 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       } else {
         await LoggerService.debug('  Showing regular winner selection dialog (${sidePots.length} pot)');
         // ALWAYS show winner selection dialog
-        winnerResult = await showDialog<Map<String, dynamic>>(
+        winnerResult = await WinnerSelectionDialog.show(
           context: context,
-          barrierDismissible: false,
-          builder: (context) => WinnerSelectionDialog(
-            activePlayers: activePlayers,
-            playerNames: playerNames,
-            potAmount: potAmount, // Use saved pot amount
-            gameType: widget.gameType, // Pass game type
-            buttonPosition: gameState.buttonPosition,
-            playerCount: gameState.numberOfPlayers,
-            heroSeat: sessionManager.ourSeatNumber,
-          ),
+          activePlayers: activePlayers,
+          playerNames: playerNames,
+          potAmount: potAmount,
+          gameType: widget.gameType,
+          buttonPosition: gameState.buttonPosition,
+          playerCount: gameState.numberOfPlayers,
+          heroSeat: sessionManager.ourSeatNumber,
         );
       }
 

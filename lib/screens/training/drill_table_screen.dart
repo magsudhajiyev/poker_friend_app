@@ -6,6 +6,7 @@ import '../../design_system/constants/decorations.dart';
 import '../../design_system/constants/spacing.dart';
 import '../../design_system/constants/typography.dart';
 import '../../design_system/components/buttons/app_button.dart';
+import '../../design_system/components/sheets/app_sheet.dart';
 import '../../models/drill_models.dart';
 import '../../services/drill_engine.dart';
 import '../../widgets/hand_micro_animations.dart';
@@ -308,15 +309,12 @@ class _DrillTableScreenState extends State<DrillTableScreen>
   }
 
   Future<void> _showSummary() async {
-    final leave = await showModalBottomSheet<bool>(
+    final leave = await AppSheet.show<bool>(
       context: context,
-      backgroundColor: AppColors.infoCardBg,
-      isScrollControlled: true,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-            top: Radius.circular(AppDecorations.radiusXl)),
-      ),
-      builder: (context) => _DrillSummarySheet(records: _records),
+      title: AppLocalizations.of(context).drillSummaryTitle,
+      heightFraction: 0.75,
+      scrollable: false,
+      body: _DrillSummarySheet(records: _records),
     );
     if (leave == true && mounted) Navigator.pop(context);
   }
@@ -1266,22 +1264,13 @@ class _DrillSummarySheet extends StatelessWidget {
         ? 0
         : ((correct + ok * 0.5) / records.length * 100).round();
 
-    return SafeArea(
-      child: Container(
-        constraints: BoxConstraints(
-            maxHeight: MediaQuery.of(context).size.height * 0.75),
-        padding: const EdgeInsets.all(AppSpacing.space5),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(l10n.drillSummaryTitle,
-                style: AppTypography.ibm(
-                    color: AppColors.textPrimary,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600)),
-            const SizedBox(height: AppSpacing.md),
-            Row(
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space5),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
               children: [
                 _stat(l10n.drillAccuracy, '$accuracy%', AppColors.accentPrimary),
                 _stat(l10n.drillDecisions, '${records.length}',
@@ -1353,9 +1342,8 @@ class _DrillSummarySheet extends StatelessWidget {
                   ),
                 ),
               ],
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

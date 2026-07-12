@@ -40,16 +40,33 @@ export 'components/lists/stat_list_row.dart';
 export 'components/cards/info_card.dart';
 export 'components/cards/error_state_card.dart';
 
-// Drawers
+// Dialogs (unified modal scaffold)
+export 'components/dialogs/app_dialog.dart';
+export 'components/dialogs/dialog_header.dart';
+export 'components/dialogs/dialog_action_bar.dart';
+export 'components/modals/confirm_dialog.dart';
+
+// Sheets (unified bottom-sheet scaffold)
+export 'components/sheets/app_sheet.dart';
+export 'components/sheets/sheet_header.dart';
+
+// Drawers (legacy wrapper — delegates to AppSheet)
 export 'components/form_drawer.dart';
 
 // Toggles
 export 'components/app_toggle.dart';
 
-// Calendar
-export 'components/calendar/calendar_picker.dart';
-export 'components/calendar/calendar_day_cell.dart';
-export 'components/calendar/time_picker_row.dart';
+// Overlays (transient floating UI: notifications, snap overlays, success popups)
+export 'components/overlays/sliding_notification.dart';
+export 'components/overlays/raise_snap_overlay.dart';
+export 'components/overlays/event_success_popup.dart';
+
+// Pickers
+export 'components/pickers/card_keyboard.dart';
+export 'components/pickers/date/calendar_picker.dart';
+export 'components/pickers/date/calendar_day_cell.dart';
+export 'components/pickers/date/custom_date_picker.dart';
+export 'components/pickers/date/time_picker_row.dart';
 
 // Buttons (v2)
 export 'components/buttons/app_button.dart';

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
 import '../models/hand_state_machine.dart';
-import 'card_keyboard.dart';
+import '../design_system/components/pickers/card_keyboard.dart';
+import '../design_system/components/dialogs/app_dialog.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/typography.dart';
 import '../design_system/constants/decorations.dart';
@@ -46,40 +47,30 @@ class _HoleCardsDialogState extends State<HoleCardsDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      backgroundColor: Colors.transparent,
-      elevation: 0,
-      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-      child: Container(
-        constraints: const BoxConstraints(maxWidth: 400),
-        decoration: BoxDecoration(
-          color: AppColors.surfaceDark,
-          borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
-          border: Border.all(color: AppColors.neutral800, width: 1),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _buildHeader(),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  CardKeyboard(
-                    slotCount: 2,
-                    slots: _slots,
-                    excludedCards: _allExcluded,
-                    onCardCommitted: _onCardCommitted,
-                    onCardCleared: _onCardCleared,
-                  ),
-                  const SizedBox(height: 24),
-                  _buildActions(),
-                ],
-              ),
+    return AppDialog(
+      padding: EdgeInsets.zero,
+      body: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildHeader(),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CardKeyboard(
+                  slotCount: 2,
+                  slots: _slots,
+                  excludedCards: _allExcluded,
+                  onCardCommitted: _onCardCommitted,
+                  onCardCleared: _onCardCleared,
+                ),
+                const SizedBox(height: 24),
+                _buildActions(),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

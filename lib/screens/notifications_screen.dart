@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:ui' as ui;
 import '../design_system/constants/colors.dart';
 import '../l10n/app_localizations.dart';
 import '../models/club_notification.dart';
@@ -18,6 +17,9 @@ import '../services/support_request_service.dart';
 import '../models/support_request.dart';
 import '../design_system/constants/typography.dart';
 import '../design_system/constants/decorations.dart';
+import '../design_system/components/dialogs/app_dialog.dart';
+import '../design_system/components/dialogs/dialog_action_bar.dart';
+import '../design_system/components/headers/top_nav_bar.dart';
 import '../utils/user_facing_error.dart';
 
 /// Dedicated notifications screen matching Figma design (node 324:4769)
@@ -186,111 +188,13 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     );
   }
 
-  /// Header with back button, title, and bell icon
-  /// Figma node 343:4869: backdrop-blur 20px, h:84px (auto), p:16, gap:12
+  /// Header — canonical [TopNavBar] with a bell right action.
   Widget _buildHeader(bool hasUnread) {
-    return ClipRect(
-      child: BackdropFilter(
-        filter: ui.ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-        child: Container(
-          height: 84,
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              // Back button (Figma node 13:926): 44x44, bg #101115, rounded 88.733px, p:9.68
-              GestureDetector(
-                onTap: () => Navigator.pop(context),
-                child: Container(
-                  width: 44,
-                  height: 44,
-                  padding: const EdgeInsets.all(9.68),
-                  decoration: BoxDecoration(
-                    color: AppColors.bgSurface, // #101115
-                    borderRadius: BorderRadius.circular(88.733),
-                  ),
-                  child: Center(
-                    child: Image.asset(
-                      'icons/flat_icons/back.png',
-                      width: 24,
-                      height: 24,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ),
-
-              const SizedBox(width: 12),
-
-              // Title container (Figma node 343:4875): flex-1, items-start, justify-center
-              // Inner container (Figma node 350:4927): pl-12
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(left: 12),
-                      child: Text(
-                        AppLocalizations.of(context).notificationsScreenTitle,
-                        style: AppTypography.ibm(
-                          fontSize: 27,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                          letterSpacing: -0.5,
-                          height: 1.0,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Bell icon with pink dot (Figma node 350:4969): 44x44, rounded 100px
-              // Icon (node 350:4970): 28x28, centered
-              // Dot (node 350:4971): left:25, top:12, 5x5
-              SizedBox(
-                width: 44,
-                height: 44,
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    // Bell icon container (rounded 100px = full circle)
-                    Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(100),
-                      ),
-                      child: Center(
-                        child: Image.asset(
-                          'icons/flat_icons/bell.png',
-                          width: 28,
-                          height: 28,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                    // Pink notification dot (Figma node 350:4971)
-                    if (hasUnread)
-                      Positioned(
-                        left: 25,
-                        top: 12,
-                        child: Container(
-                          width: 5,
-                          height: 5,
-                          decoration: const BoxDecoration(
-                            color: Color(0xFFE91E63), // Magenta/pink
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+    return TopNavBar(
+      title: AppLocalizations.of(context).notificationsScreenTitle,
+      onBack: () => Navigator.pop(context),
+      includeStatusBarPadding: false,
+      rightAction: _NotificationsBellAction(hasUnread: hasUnread),
     );
   }
 
@@ -531,97 +435,82 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
     final isResolved = request.isResolved;
 
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppColors.surfaceDark,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDecorations.radius20)),
-        title: Row(
-          children: [
-            Icon(
-              isResolved ? Icons.check_circle : Icons.cancel,
-              color: isResolved ? AppColors.accentPrimary : AppColors.errorRed,
-              size: 22,
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                isResolved ? AppLocalizations.of(context).notificationsScreenRequestResolved : AppLocalizations.of(context).notificationsScreenRequestClosed,
-                style: AppTypography.ibm(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                ),
+    final l10n = AppLocalizations.of(context);
+    AppDialog.show<void>(
+      context,
+      title: isResolved
+          ? l10n.notificationsScreenRequestResolved
+          : l10n.notificationsScreenRequestClosed,
+      body: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                isResolved ? Icons.check_circle : Icons.cancel,
+                color: isResolved
+                    ? AppColors.accentPrimary
+                    : AppColors.errorRed,
+                size: 22,
               ),
-            ),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              request.subject,
-              style: AppTypography.ibm(
-                color: Colors.white,
-                fontSize: 15,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              request.category,
-              style: AppTypography.ibm(
-                color: AppColors.textDisabled,
-                fontSize: 13,
-              ),
-            ),
-            if (request.adminResponse != null && request.adminResponse!.isNotEmpty) ...[
-              const SizedBox(height: 16),
-              Text(
-                AppLocalizations.of(context).notificationsScreenResponse,
-                style: AppTypography.ibm(
-                  color: AppColors.textDisabled,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.5,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: isResolved
-                      ? AppColors.accentPrimary.withValues(alpha: 0.1)
-                      : AppColors.errorRed.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(AppDecorations.radius10),
-                ),
+              const SizedBox(width: 8),
+              Expanded(
                 child: Text(
-                  request.adminResponse!,
+                  request.subject,
                   style: AppTypography.ibm(
-                    color: Colors.white,
-                    fontSize: 14,
-                    height: 1.5,
+                    color: AppColors.textPrimary,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ),
             ],
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              AppLocalizations.of(context).commonOk,
-              style: AppTypography.ibm(
-                color: AppColors.accentPrimary,
-                fontWeight: FontWeight.w600,
-              ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            request.category,
+            style: AppTypography.ibm(
+              color: AppColors.textDisabled,
+              fontSize: 13,
             ),
           ),
+          if (request.adminResponse != null &&
+              request.adminResponse!.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            Text(
+              l10n.notificationsScreenResponse,
+              style: AppTypography.ibm(
+                color: AppColors.textDisabled,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.5,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: (isResolved
+                        ? AppColors.accentPrimary
+                        : AppColors.errorRed)
+                    .withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(AppDecorations.radius10),
+              ),
+              child: Text(
+                request.adminResponse!,
+                style: AppTypography.ibm(
+                  color: AppColors.textPrimary,
+                  fontSize: 14,
+                  height: 1.5,
+                ),
+              ),
+            ),
+          ],
         ],
       ),
+      actions: DialogActionBar.single(cancelLabel: l10n.commonOk),
     );
   }
 
@@ -676,88 +565,67 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   /// Show dialog to accept or decline invitation
   void _showInvitationResponseDialog(ClubNotification notification, Club club) {
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: const Color(0xFF1A1A2E),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDecorations.radius20)),
-        title: Text(
-          AppLocalizations.of(context).notificationsScreenClubInvitation,
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-          textAlign: TextAlign.center,
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 60,
-              height: 60,
-              decoration: BoxDecoration(
-                color: const Color(0xFFA855F7).withValues(alpha: 0.15),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.mail,
-                color: Color(0xFFA855F7),
-                size: 32,
-              ),
+    final l10n = AppLocalizations.of(context);
+    AppDialog.show<void>(
+      context,
+      title: l10n.notificationsScreenClubInvitation,
+      body: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 60,
+            height: 60,
+            decoration: BoxDecoration(
+              color: AppColors.accentPurple.withValues(alpha: 0.15),
+              shape: BoxShape.circle,
             ),
-            const SizedBox(height: 16),
-            Text(
-              AppLocalizations.of(context).notificationsScreenInvitedToJoin,
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.7),
-                fontSize: 14,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              club.name,
-              style: const TextStyle(
-                color: Color(0xFFA855F7),
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              notification.body,
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.6),
-                fontSize: 13,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(dialogContext);
-              await _respondToInvitation(notification, club, false);
-            },
-            child: Text(
-              AppLocalizations.of(context).notificationsScreenDecline,
-              style: TextStyle(color: Color(0xFFEF5350)),
+            child: const Icon(
+              Icons.mail,
+              color: AppColors.accentPurple,
+              size: 32,
             ),
           ),
-          ElevatedButton(
-            onPressed: () async {
-              Navigator.pop(dialogContext);
-              await _respondToInvitation(notification, club, true);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF4CAF50),
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
-              ),
+          const SizedBox(height: 16),
+          Text(
+            l10n.notificationsScreenInvitedToJoin,
+            style: AppTypography.ibm(
+              fontSize: 14,
+              color: AppColors.textSecondary,
             ),
-            child: Text(AppLocalizations.of(context).commonAccept),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            club.name,
+            style: AppTypography.ibm(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: AppColors.accentPurple,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            notification.body,
+            style: AppTypography.ibm(
+              fontSize: 13,
+              color: AppColors.textSecondary,
+            ),
+            textAlign: TextAlign.center,
           ),
         ],
+      ),
+      actions: DialogActionBar(
+        cancelLabel: l10n.notificationsScreenDecline,
+        confirmLabel: l10n.commonAccept,
+        confirmColor: AppColors.accentPrimary,
+        onCancel: () async {
+          Navigator.pop(context);
+          await _respondToInvitation(notification, club, false);
+        },
+        onConfirm: () async {
+          await _respondToInvitation(notification, club, true);
+        },
       ),
     );
   }
@@ -1294,5 +1162,51 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       case NotificationType.partnerGranted:
         return AppColors.accentPrimary;
     }
+  }
+}
+
+/// Right-slot bell for the notifications top nav — 44×44 bgElevated circle
+/// with a 5×5 pink dot when [hasUnread] is true.
+class _NotificationsBellAction extends StatelessWidget {
+  final bool hasUnread;
+
+  const _NotificationsBellAction({required this.hasUnread});
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Container(
+          width: 44,
+          height: 44,
+          decoration: const BoxDecoration(
+            color: AppColors.bgElevated,
+            shape: BoxShape.circle,
+          ),
+          child: Center(
+            child: Image.asset(
+              'icons/flat_icons/bell.png',
+              width: 24,
+              height: 24,
+              color: Colors.white,
+            ),
+          ),
+        ),
+        if (hasUnread)
+          Positioned(
+            right: 10,
+            top: 10,
+            child: Container(
+              width: 5,
+              height: 5,
+              decoration: const BoxDecoration(
+                color: Color(0xFFE91E63),
+                shape: BoxShape.circle,
+              ),
+            ),
+          ),
+      ],
+    );
   }
 }

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../design_system/components/app_toggle.dart';
+import '../design_system/components/bodies/player_selection_list.dart';
+import '../design_system/components/sheets/app_sheet.dart';
 import '../l10n/app_localizations.dart';
 import '../models/game_types.dart';
 import '../models/poker_game_state.dart';
@@ -225,148 +227,56 @@ class _MultiPotWinnerDialogState extends State<MultiPotWinnerDialog> {
   }
 
   Widget _buildPlayerRadio(int potIndex, int playerId, String playerName) {
-    final isSelected = singleWinners[potIndex] == playerId;
-
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          singleWinners[potIndex] = playerId;
-          _updateAutoAwards();
-        });
-      },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.surfaceDark : Colors.transparent,
-          borderRadius: BorderRadius.circular(AppDecorations.radius18),
-          border: Border.all(
-            color: isSelected ? const Color(0xFF73D4CF) : AppColors.neutral800,
-            width: 1,
-          ),
-        ),
-        child: Row(
-          children: [
-            // Radio dot
-            Container(
-              width: 20,
-              height: 20,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: isSelected ? const Color(0xFF73D4CF) : const Color(0xFF555555),
-                  width: 1,
-                ),
-              ),
-              child: isSelected
-                  ? Center(
-                      child: Container(
-                        width: 12,
-                        height: 12,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: const Color(0xFF73D4CF),
-                          border: Border.all(color: const Color(0xFF73D4CF), width: 2),
-                        ),
-                      ),
-                    )
-                  : null,
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Text(
-                playerName,
-                style: AppTypography.ibm(
-                  fontSize: 17,
-                  color: Colors.white,
-                  fontWeight: FontWeight.w400,
-                  height: 1.44,
-                ),
-              ),
-            ),
-          ],
-        ),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: PlayerSelectionRow(
+        label: playerName,
+        selected: singleWinners[potIndex] == playerId,
+        mode: PlayerSelectionMode.radio,
+        onTap: () {
+          setState(() {
+            singleWinners[potIndex] = playerId;
+            _updateAutoAwards();
+          });
+        },
       ),
     );
   }
 
   Widget _buildPlayerCheckbox(int potIndex, int playerId, String playerName) {
     final isSelected = choppedWinners[potIndex]?.contains(playerId) ?? false;
-
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          if (isSelected) {
-            choppedWinners[potIndex]!.remove(playerId);
-          } else {
-            choppedWinners[potIndex]!.add(playerId);
-          }
-          _updateAutoAwards();
-        });
-      },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.surfaceDark : Colors.transparent,
-          borderRadius: BorderRadius.circular(AppDecorations.radius18),
-          border: Border.all(
-            color: isSelected ? const Color(0xFF73D4CF) : AppColors.neutral800,
-            width: 1,
-          ),
+    final winners = choppedWinners[potIndex] ?? <int>{};
+    Widget? trailing;
+    if (isSelected && winners.length > 1) {
+      final share = _calculateIndividualShares(
+              potIndex, widget.sidePots[potIndex].amount, winners)[playerId] ??
+          0;
+      trailing = Text(
+        _formatAmount(share),
+        style: AppTypography.ibm(
+          fontSize: 14,
+          color: AppColors.accentPrimary,
+          fontWeight: FontWeight.w500,
         ),
-        child: Row(
-          children: [
-            // Checkbox
-            Container(
-              width: 20,
-              height: 20,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(4),
-                color: isSelected ? const Color(0xFF73D4CF) : Colors.transparent,
-                border: Border.all(
-                  color: isSelected ? const Color(0xFF73D4CF) : const Color(0xFF555555),
-                  width: 1,
-                ),
-              ),
-              child: isSelected
-                  ? const Center(
-                      child: Icon(Icons.check, size: 14, color: Colors.black),
-                    )
-                  : null,
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Text(
-                playerName,
-                style: AppTypography.ibm(
-                  fontSize: 17,
-                  color: Colors.white,
-                  fontWeight: FontWeight.w400,
-                  height: 1.44,
-                ),
-              ),
-            ),
-            if (isSelected) ...[
-              // Show share amount if chopped
-              if (choppedWinners[potIndex]!.length > 1)
-                Text(
-                  _formatAmount(
-                    _calculateIndividualShares(
-                      potIndex,
-                      widget.sidePots[potIndex].amount,
-                      choppedWinners[potIndex]!,
-                    )[playerId] ?? 0,
-                  ),
-                  style: AppTypography.ibm(
-                    fontSize: 14,
-                    color: AppColors.accentPrimary,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-            ],
-          ],
-        ),
+      );
+    }
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: PlayerSelectionRow(
+        label: playerName,
+        selected: isSelected,
+        mode: PlayerSelectionMode.checkbox,
+        trailing: trailing,
+        onTap: () {
+          setState(() {
+            if (isSelected) {
+              choppedWinners[potIndex]!.remove(playerId);
+            } else {
+              choppedWinners[potIndex]!.add(playerId);
+            }
+            _updateAutoAwards();
+          });
+        },
       ),
     );
   }
@@ -533,196 +443,65 @@ class _MultiPotWinnerDialogState extends State<MultiPotWinnerDialog> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return Container(
-      height: MediaQuery.of(context).size.height * 0.9,
-      decoration: BoxDecoration(
-        color: Colors.black,
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(32),
-          topRight: Radius.circular(32),
-        ),
-        border: Border.all(color: const Color(0xFF262626)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0xFF2E5A59),
-            blurRadius: 64,
-            offset: Offset(0, -6),
+    final valid = _isFormValid();
+    return AppSheet(
+      title: l10n.multiPotSelectWinnersTitle,
+      trailing: _SaveCheck(enabled: valid, onTap: _onSave),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n.multiPotMultiplePots,
+            style: AppTypography.ibm(
+              fontSize: 17,
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.w400,
+              height: 1.44,
+            ),
           ),
+          const SizedBox(height: 24),
+          Column(
+            children: List.generate(
+              widget.sidePots.length,
+              (index) => _buildPotSection(index),
+            ),
+          ),
+          const SizedBox(height: 20),
         ],
       ),
-      child: Column(
-        children: [
-          // Header
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 15, 16, 0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // Close button
-                GestureDetector(
-                  onTap: () => Navigator.pop(context),
-                  child: Container(
-                    width: 38,
-                    height: 38,
-                    decoration: BoxDecoration(
-                      color: AppColors.neutral700,
-                      borderRadius: BorderRadius.circular(88),
-                    ),
-                    child: Center(
-                      child: SvgPicture.asset(
-                        'icons/figma_icons/close.svg',
-                        width: 15,
-                        height: 15,
-                        colorFilter: const ColorFilter.mode(
-                          Colors.white,
-                          BlendMode.srcIn,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                // Title
-                Text(
-                  l10n.multiPotSelectWinnersTitle,
-                  style: AppTypography.ibm(
-                    fontSize: 17,
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: -0.43,
-                  ),
-                ),
-                // Save button
-                GestureDetector(
-                  onTap: _isFormValid() ? _onSave : null,
-                  child: Container(
-                    width: 38,
-                    height: 38,
-                    decoration: BoxDecoration(
-                      color: _isFormValid()
-                          ? AppColors.accentPrimary
-                          : AppColors.neutral700,
-                      borderRadius: BorderRadius.circular(88),
-                    ),
-                    child: Center(
-                      child: SvgPicture.asset(
-                        'icons/figma_icons/check.svg',
-                        width: 24,
-                        height: 24,
-                        colorFilter: ColorFilter.mode(
-                          _isFormValid()
-                              ? const Color(0xFF1A4A4A)
-                              : AppColors.textDisabled,
-                          BlendMode.srcIn,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+    );
+  }
+}
+
+class _SaveCheck extends StatelessWidget {
+  final bool enabled;
+  final VoidCallback onTap;
+
+  const _SaveCheck({required this.enabled, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: enabled ? onTap : null,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        width: 38,
+        height: 38,
+        decoration: BoxDecoration(
+          color: enabled ? AppColors.accentPrimary : AppColors.neutral700,
+          shape: BoxShape.circle,
+        ),
+        child: Center(
+          child: SvgPicture.asset(
+            'icons/figma_icons/check.svg',
+            width: 20,
+            height: 20,
+            colorFilter: ColorFilter.mode(
+              enabled ? AppColors.textInverse : AppColors.textDisabled,
+              BlendMode.srcIn,
             ),
           ),
-
-          // Scrollable content
-          Expanded(
-            child: Padding(
-              padding: EdgeInsets.only(
-                bottom: MediaQuery.of(context).viewInsets.bottom,
-              ),
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(16, 34, 16, 20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Description
-                    Text(
-                      l10n.multiPotMultiplePots,
-                      style: AppTypography.ibm(
-                        fontSize: 17,
-                        color: Colors.white,
-                        fontWeight: FontWeight.w400,
-                        height: 1.44,
-                      ),
-                    ),
-                    const SizedBox(height: 34),
-
-                    // Pot sections
-                    ...List.generate(
-                      widget.sidePots.length,
-                      (index) => _buildPotSection(index),
-                    ),
-
-                    // Bottom buttons
-                    const SizedBox(height: 14),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Column(
-                        children: [
-                          // Save button
-                          GestureDetector(
-                            onTap: _isFormValid() ? _onSave : null,
-                            child: Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              decoration: BoxDecoration(
-                                color: _isFormValid()
-                                    ? AppColors.accentPrimary
-                                    : AppColors.neutral700,
-                                borderRadius: BorderRadius.circular(110),
-                              ),
-                              child: Center(
-                                child: Text(
-                                  l10n.commonSave,
-                                  style: AppTypography.ibm(
-                                    fontSize: 17,
-                                    color: _isFormValid()
-                                        ? Colors.black
-                                        : AppColors.textDisabled,
-                                    fontWeight: FontWeight.w600,
-                                    letterSpacing: -0.5,
-                                    height: 24 / 17,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 14),
-                          // Cancel button
-                          GestureDetector(
-                            onTap: () => Navigator.pop(context),
-                            child: Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(110),
-                                border: Border.all(
-                                  color: AppColors.accentPrimary,
-                                  width: 1,
-                                ),
-                              ),
-                              child: Center(
-                                child: Text(
-                                  l10n.commonCancel,
-                                  style: AppTypography.ibm(
-                                    fontSize: 17,
-                                    color: AppColors.accentPrimary,
-                                    fontWeight: FontWeight.w600,
-                                    letterSpacing: -0.5,
-                                    height: 24 / 17,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

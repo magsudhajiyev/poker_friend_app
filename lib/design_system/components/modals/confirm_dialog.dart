@@ -1,12 +1,13 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+
 import '../../constants/colors.dart';
+import '../bodies/message_body.dart';
+import '../dialogs/app_dialog.dart';
+import '../dialogs/dialog_action_bar.dart';
 
 /// Standard confirmation dialog used for destructive actions (delete, remove, etc.).
 ///
-/// Style: blurred backdrop, dark-surface rounded card (radius 24), grey body
-/// text, outlined Cancel pill on the left, solid-colour action pill on the right.
+/// Public API preserved; renders on the shared [AppDialog] scaffold.
 ///
 /// Usage:
 /// ```dart
@@ -18,47 +19,23 @@ import '../../constants/colors.dart';
 ///   onConfirm: () async => await _deleteAccount(),
 /// );
 /// ```
-///
-/// For non-destructive confirmations pass a different [confirmColor].
-class ConfirmDialog extends StatelessWidget {
-  final String title;
-  final String message;
-  final String confirmLabel;
-  final Color confirmColor;
-  final Color confirmTextColor;
-  final VoidCallback? onConfirm;
-
-  const ConfirmDialog._({
-    required this.title,
-    required this.message,
-    required this.confirmLabel,
-    required this.confirmColor,
-    required this.confirmTextColor,
-    this.onConfirm,
-  });
+class ConfirmDialog {
+  ConfirmDialog._();
 
   static Future<void> show(
     BuildContext context, {
     required String title,
     required String message,
     required String confirmLabel,
-    Color confirmColor = const Color(0xFFFF3B30),
-    Color confirmTextColor = Colors.white,
+    Color confirmColor = AppColors.accentDanger,
+    Color confirmTextColor = AppColors.textPrimary,
     VoidCallback? onConfirm,
   }) {
-    return showGeneralDialog(
-      context: context,
-      barrierDismissible: true,
-      barrierLabel: title,
-      barrierColor: Colors.transparent,
-      transitionDuration: const Duration(milliseconds: 200),
-      transitionBuilder: (_, animation, __, child) => FadeTransition(
-        opacity: animation,
-        child: child,
-      ),
-      pageBuilder: (dialogContext, _, __) => ConfirmDialog._(
-        title: title,
-        message: message,
+    return AppDialog.show<void>(
+      context,
+      title: title,
+      body: MessageBody(message),
+      actions: DialogActionBar(
         confirmLabel: confirmLabel,
         confirmColor: confirmColor,
         confirmTextColor: confirmTextColor,
@@ -67,131 +44,28 @@ class ConfirmDialog extends StatelessWidget {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        // Blurred backdrop — tap to dismiss
-        Positioned.fill(
-          child: GestureDetector(
-            onTap: () => Navigator.pop(context),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-              child: Container(color: Colors.black.withValues(alpha: 0.45)),
-            ),
-          ),
-        ),
-        Center(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Dialog(
-              backgroundColor: Colors.transparent,
-              insetPadding: EdgeInsets.zero,
-              child: Container(
-                width: 370,
-                decoration: BoxDecoration(
-                  color: AppColors.bgSurface,
-                  borderRadius: BorderRadius.circular(24),
-                ),
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Header: title + X
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            title,
-                            style: GoogleFonts.ibmPlexSans(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textPrimary,
-                              height: 20 / 15,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        GestureDetector(
-                          onTap: () => Navigator.pop(context),
-                          child: const Icon(Icons.close, size: 18, color: AppColors.textSecondary),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    // Body
-                    Text(
-                      message,
-                      style: GoogleFonts.ibmPlexSans(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w400,
-                        color: AppColors.textSecondary,
-                        height: 22 / 15,
-                      ),
-                    ),
-                    const SizedBox(height: 32),
-                    // Buttons
-                    Row(
-                      children: [
-                        Expanded(
-                          child: GestureDetector(
-                            onTap: () => Navigator.pop(context),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(999),
-                                border: Border.all(color: AppColors.borderStrong),
-                              ),
-                              child: Text(
-                                'Cancel',
-                                textAlign: TextAlign.center,
-                                style: GoogleFonts.ibmPlexSans(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.textPrimary,
-                                  height: 20 / 15,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: GestureDetector(
-                            onTap: () {
-                              Navigator.pop(context);
-                              onConfirm?.call();
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                              decoration: BoxDecoration(
-                                color: confirmColor,
-                                borderRadius: BorderRadius.circular(999),
-                              ),
-                              child: Text(
-                                confirmLabel,
-                                textAlign: TextAlign.center,
-                                style: GoogleFonts.ibmPlexSans(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w600,
-                                  color: confirmTextColor,
-                                  height: 20 / 15,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ],
+  /// Await-friendly variant that resolves to `true` if the user confirmed and
+  /// `false` if they cancelled or dismissed by tapping the backdrop.
+  static Future<bool> confirm(
+    BuildContext context, {
+    required String title,
+    required String message,
+    required String confirmLabel,
+    Color confirmColor = AppColors.accentDanger,
+    Color confirmTextColor = AppColors.textPrimary,
+  }) async {
+    bool confirmed = false;
+    await AppDialog.show<void>(
+      context,
+      title: title,
+      body: MessageBody(message),
+      actions: DialogActionBar(
+        confirmLabel: confirmLabel,
+        confirmColor: confirmColor,
+        confirmTextColor: confirmTextColor,
+        onConfirm: () => confirmed = true,
+      ),
     );
+    return confirmed;
   }
 }
