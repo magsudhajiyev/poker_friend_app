@@ -41,13 +41,13 @@ class SuitIcon extends StatelessWidget {
   static String assetPath(Suit s) {
     switch (s) {
       case Suit.clubs:
-        return 'assets/icons/card icons/Property 1=Clubs.svg';
+        return 'assets/icons/card icons/Property 1=Spades.svg';  // file visually = club
       case Suit.diamonds:
         return 'assets/icons/card icons/Property 1=Diamonds.svg';
       case Suit.hearts:
         return 'assets/icons/card icons/Property 1=Hearts.svg';
       case Suit.spades:
-        return 'assets/icons/card icons/Property 1=Spades.svg';
+        return 'assets/icons/card icons/Property 1=Clubs.svg';   // file visually = spade
     }
   }
 

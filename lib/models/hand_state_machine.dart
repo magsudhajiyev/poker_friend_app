@@ -1544,9 +1544,9 @@ class PokerSessionManager {
       }
     }
 
-    // If no custom name assigned or name is just the position, show "Seat X (Position)"
-    if (playerName == null || playerName == currentPosition || PokerPositions.isPositionName(playerName)) {
-      return 'Seat $seatNumber ($currentPosition)';
+    // If no custom name assigned or name is just the position, show "Player X (Position)"
+    if (playerName == null || playerName.isEmpty || playerName == currentPosition || PokerPositions.isPositionName(playerName)) {
+      return 'Player $seatNumber ($currentPosition)';
     }
 
     // If custom name exists, show it with current position in brackets

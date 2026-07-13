@@ -1100,9 +1100,10 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
       final isSplitPot = widget.hand['isSplitPot'] == true;
       String nameOf(dynamic w) {
         if (playerNamesData is Map) {
-          return (playerNamesData[w.toString()] ?? 'P$w') as String;
+          final name = playerNamesData[w.toString()] as String?;
+          return (name != null && name.isNotEmpty) ? name : 'Player $w';
         }
-        return 'P$w';
+        return 'Player $w';
       }
 
       if (isSplitPot || choppedWinners.length <= 2) {
@@ -1111,9 +1112,10 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
       return AppLocalizations.of(context).handActionsPlayersCount(choppedWinners.length);
     } else if (winnerId != null) {
       if (playerNamesData is Map) {
-        return playerNamesData[winnerId.toString()] ?? 'P$winnerId';
+        final name = playerNamesData[winnerId.toString()] as String?;
+        return (name != null && name.isNotEmpty) ? name : 'Player $winnerId';
       }
-      return 'P$winnerId';
+      return 'Player $winnerId';
     }
     return null;
   }

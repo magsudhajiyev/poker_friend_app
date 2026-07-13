@@ -2485,7 +2485,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
               gameState.setPlayerActive(existingSeat, false);
             }
           }
-          sessionManager.playerNames[seatNumber] = name;
+          sessionManager.setPlayerName(seatNumber, name);
           sessionManager.playerStacks[seatNumber] = stack;
           sessionManager.activeSeats.add(seatNumber);
           // Activating an already-active player would reset their betting
