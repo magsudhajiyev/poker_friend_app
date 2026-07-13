@@ -75,6 +75,21 @@ class GuidedHandOverlay extends StatefulWidget {
   /// rebuild (e.g. to hide the progress bar).
   final VoidCallback? onSkipOrFinish;
 
+  /// Called when the tour needs a fresh hand dealt (between hand 1 and 2).
+  final VoidCallback? onDealNextHand;
+
+  /// Returns the GlobalKey for the first empty seat on the table (for the
+  /// "Add Your Opponents" spotlight). Evaluated lazily at tour time.
+  final GlobalKey? Function()? firstEmptySeatKey;
+
+  /// Called after the user adds an opponent during the tour, so the parent
+  /// can re-initialize the pot with the updated player configuration.
+  final VoidCallback? onReinitializeHand;
+
+  /// Returns the number of active (seated) players. Used to decide whether
+  /// the "Add Opponents" step is needed after the drawing board intro.
+  final int Function()? activePlayerCount;
+
   const GuidedHandOverlay({
     super.key,
     required this.gestureInfoKey,
@@ -93,6 +108,10 @@ class GuidedHandOverlay extends StatefulWidget {
     required this.currentRound,
     this.liveCurrentPlayer,
     this.onSkipOrFinish,
+    this.onDealNextHand,
+    this.firstEmptySeatKey,
+    this.onReinitializeHand,
+    this.activePlayerCount,
   });
 
   @override
@@ -181,14 +200,14 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
 
   /// Called after hole cards dialog completes.
   void onHoleCardsCompleted() {
-    // Second (free-play) tour hand just finished — time to finish the session:
-    // spotlight the 3-dot game menu and let the user pick "Stop Session".
+    // Second (free-play) tour hand just finished — spotlight the ⓘ button
+    // so the user can return to Session Details and see their stack chart.
     if (OnboardingState.isOnboardingActive &&
         !OnboardingState.isReplay &&
         OnboardingState.currentPhase == 4 &&
         OnboardingState.secondTourHandPending) {
       OnboardingState.secondTourHandPending = false;
-      _showFinishMenuCoachMark();
+      _showReturnToDetailsCoachMark();
       return;
     }
 
@@ -197,10 +216,10 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
       _setPhase(GuidedPhase.handComplete);
       Future.delayed(const Duration(seconds: 2), () {
         if (mounted && OnboardingState.guidedHandPhase == GuidedPhase.handComplete) {
-          // Skip the (unattached) table-button step — go straight to the
-          // Blinds spotlight, then Next Hand, then the ⓘ Session Details step.
-          _setPhase(GuidedPhase.blindsPill);
-          _showBlindsPillCoachMark();
+          // Hand 1 complete — show BB pill + Next Hand spotlights, then prompt hand 2
+          OnboardingState.guidedHandPhase = GuidedPhase.done;
+          widget.onSkipOrFinish?.call();
+          _showPostHandCoachMarks();
         }
       });
     }
@@ -244,7 +263,6 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
 
   void _showGestureInfoCoachMark() {
     if (!mounted) return;
-
     // Wait for gesture info key to attach
     Future.delayed(const Duration(milliseconds: 800), () {
       if (!mounted) return;
@@ -305,9 +323,142 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
 
   void _startGuidedHand() {
     if (!mounted) return;
-    // Intro: spotlight the table/drawing board and explain the gestures,
-    // then begin the scripted hand ("Open the Pot").
     _showDrawingBoardCoachMark();
+  }
+
+  /// Whether the overlay is waiting for the user to add an opponent before
+  /// continuing to the drawing board intro.
+  bool _waitingForOpponentAdd = false;
+
+  void _showAddOpponentsCoachMark() {
+    if (!mounted) return;
+
+    _showAddOpponentsCoachMarkAttempt(0);
+  }
+
+  void _showAddOpponentsCoachMarkAttempt(int attempt) {
+    if (!mounted) return;
+
+    // Try to find an empty seat key, with retries
+    final seatKey = widget.firstEmptySeatKey?.call();
+    final hasContext = seatKey != null && seatKey.currentContext != null;
+    if (!hasContext && attempt < 5) {
+      // Retry after next frame (seats may not have rendered yet)
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _showAddOpponentsCoachMarkAttempt(attempt + 1);
+      });
+      return;
+    }
+
+    // Use the empty seat key if available, otherwise fall back to table button
+    final targetKey = hasContext ? seatKey! : widget.tableButtonKey;
+    if (targetKey == null || targetKey.currentContext == null) {
+      // No valid target at all — skip to scripted hand
+      _beginScriptedHand();
+      return;
+    }
+
+    final targets = <TargetFocus>[
+      TargetFocus(
+        identify: 'add_opponents',
+        keyTarget: targetKey,
+        shape: ShapeLightFocus.Circle,
+        paddingFocus: 14,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (context, controller) {
+              final l10n = AppLocalizations.of(context);
+              return buildTooltip(
+                title: l10n.guidedAddOpponentsTitle,
+                body: l10n.guidedAddOpponentsBody,
+                onNext: () => controller.next(),
+                context: context,
+                isLast: true,
+              );
+            },
+          ),
+        ],
+      ),
+    ];
+
+    final coach = TutorialCoachMark(
+      targets: targets,
+      colorShadow: Colors.black,
+      opacityShadow: 0.85,
+      paddingFocus: 12,
+      hideSkip: true,
+      onFinish: () {
+        // Coach mark dismissed — now the user can tap any seat to add an
+        // opponent. We wait for the callback from [onOpponentAdded] before
+        // continuing to the drawing board.
+        _waitingForOpponentAdd = true;
+      },
+      onSkip: () {
+        _beginScriptedHand();
+        return true;
+      },
+    );
+    coach.show(context: context);
+  }
+
+  /// Called by the poker hand screen after the SeatConfigSheet closes and
+  /// an opponent was added. Re-initializes the hand with the new player
+  /// configuration, shows stack ring instruction, then begins the scripted hand.
+  void onOpponentAdded({GlobalKey? addedSeatKey}) {
+    if (!_waitingForOpponentAdd) return;
+    _waitingForOpponentAdd = false;
+    // Re-initialize pot/blinds with the updated player configuration
+    widget.onReinitializeHand?.call();
+    // Show stack ring instruction for the newly added opponent
+    _showStackAdjustHint(addedSeatKey);
+  }
+
+  /// Shows a coach mark on the newly seated opponent explaining the
+  /// long-press stack ring gesture.
+  void _showStackAdjustHint(GlobalKey? seatKey) {
+    if (!mounted || seatKey == null || seatKey.currentContext == null) {
+      _beginScriptedHand();
+      return;
+    }
+
+    final l10n = AppLocalizations.of(context);
+    final targets = <TargetFocus>[
+      TargetFocus(
+        identify: 'stack_adjust_hint',
+        keyTarget: seatKey,
+        shape: ShapeLightFocus.Circle,
+        paddingFocus: 14,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (context, controller) {
+              return buildTooltip(
+                title: l10n.guidedStackAdjustTitle,
+                body: l10n.guidedStackAdjustBody,
+                onNext: () => controller.next(),
+                context: context,
+                isLast: true,
+              );
+            },
+          ),
+        ],
+      ),
+    ];
+
+    final coach = TutorialCoachMark(
+      targets: targets,
+      colorShadow: Colors.black,
+      opacityShadow: 0.85,
+      paddingFocus: 12,
+      hideSkip: true,
+      onFinish: () => _beginScriptedHand(),
+      onSkip: () {
+        _beginScriptedHand();
+        return true;
+      },
+    );
+    coach.show(context: context);
   }
 
   // ---------------------------------------------------------------------------
@@ -318,7 +469,7 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
     if (!mounted) return;
     final drawKey = widget.drawingAreaKey;
     if (_drawingBoardShown || drawKey == null || drawKey.currentContext == null) {
-      _beginScriptedHand();
+      _checkOpponentsBeforeScriptedHand();
       return;
     }
     _drawingBoardShown = true;
@@ -354,13 +505,24 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
       opacityShadow: 0.85,
       paddingFocus: 12,
       hideSkip: true,
-      onFinish: () => _beginScriptedHand(),
+      onFinish: () => _checkOpponentsBeforeScriptedHand(),
       onSkip: () {
-        _beginScriptedHand();
+        _checkOpponentsBeforeScriptedHand();
         return true;
       },
     );
     coach.show(context: context);
+  }
+
+  /// After the drawing board intro, check if we have enough players.
+  /// If not, show the "Add Opponents" step before starting the scripted hand.
+  void _checkOpponentsBeforeScriptedHand() {
+    final count = widget.activePlayerCount?.call() ?? 0;
+    if (count >= 2) {
+      _beginScriptedHand();
+    } else {
+      _showAddOpponentsCoachMark();
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -653,23 +815,18 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
   }
 
   // ---------------------------------------------------------------------------
-  // Blinds Pill Coach Mark
+  // Post-hand 1 coach marks: BB pill + Next Hand button spotlights
   // ---------------------------------------------------------------------------
 
-  void _showBlindsPillCoachMark() {
-    _animController.reverse();
+  void _showPostHandCoachMarks() {
+    if (!mounted) return;
 
-    Future.delayed(const Duration(milliseconds: 400), () {
-      if (!mounted) return;
+    final targets = <TargetFocus>[];
 
-      final blindsKey = widget.blindsPillKey;
-      if (blindsKey == null || blindsKey.currentContext == null) {
-        _setPhase(GuidedPhase.nextHandButton);
-        _showNextHandButtonCoachMark();
-        return;
-      }
-
-      final targets = <TargetFocus>[
+    // 1. Blinds pill
+    final blindsKey = widget.blindsPillKey;
+    if (blindsKey != null && blindsKey.currentContext != null) {
+      targets.add(
         TargetFocus(
           identify: 'blinds_pill',
           keyTarget: blindsKey,
@@ -691,50 +848,19 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
             ),
           ],
         ),
-      ];
-
-      final coach = TutorialCoachMark(
-        targets: targets,
-        colorShadow: Colors.black,
-        opacityShadow: 0.85,
-        paddingFocus: 12,
-        hideSkip: false,
-        alignSkip: Alignment.topLeft,
-        skipWidget: _buildSkipWidget(),
-        onSkip: () {
-          _finishOnboarding();
-          return true;
-        },
-        onFinish: () {
-          _setPhase(GuidedPhase.nextHandButton);
-          _showNextHandButtonCoachMark();
-        },
       );
-      coach.show(context: context);
-    });
-  }
+    }
 
-  // ---------------------------------------------------------------------------
-  // Next Hand Button Coach Mark
-  // ---------------------------------------------------------------------------
-
-  void _showNextHandButtonCoachMark() {
-    Future.delayed(const Duration(milliseconds: 400), () {
-      if (!mounted) return;
-
-      final nextKey = widget.nextHandButtonKey;
-      if (nextKey == null || nextKey.currentContext == null) {
-        _showSessionInfoCoachMark();
-        return;
-      }
-
-      final targets = <TargetFocus>[
+    // 2. Next Hand button
+    final nextKey = widget.nextHandButtonKey;
+    if (nextKey != null && nextKey.currentContext != null) {
+      targets.add(
         TargetFocus(
           identify: 'next_hand_button',
           keyTarget: nextKey,
           shape: ShapeLightFocus.RRect,
-          radius: 17,
-          paddingFocus: 8,
+          radius: 40,
+          paddingFocus: 4,
           contents: [
             TargetContent(
               align: ContentAlign.bottom,
@@ -745,29 +871,36 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
                   body: l10n.guidedNextHandBody,
                   onNext: () => controller.next(),
                   context: context,
+                  isLast: true,
                 );
               },
             ),
           ],
         ),
-      ];
-
-      final coach = TutorialCoachMark(
-        targets: targets,
-        colorShadow: Colors.black,
-        opacityShadow: 0.85,
-        paddingFocus: 12,
-        hideSkip: false,
-        alignSkip: Alignment.topLeft,
-        skipWidget: _buildSkipWidget(),
-        onSkip: () {
-          _finishOnboarding();
-          return true;
-        },
-        onFinish: () => _showSessionInfoCoachMark(),
       );
-      coach.show(context: context);
-    });
+    }
+
+    if (targets.isEmpty) {
+      // No targets available — go straight to prompt
+      promptSecondHand();
+      return;
+    }
+
+    final coach = TutorialCoachMark(
+      targets: targets,
+      colorShadow: Colors.black,
+      opacityShadow: 0.85,
+      paddingFocus: 12,
+      hideSkip: false,
+      alignSkip: Alignment.topLeft,
+      skipWidget: _buildSkipWidget(),
+      onFinish: () => promptSecondHand(),
+      onSkip: () {
+        _finishOnboarding();
+        return true;
+      },
+    );
+    coach.show(context: context);
   }
 
   /// After returning from the first (explain) session-details visit: show a
@@ -799,8 +932,8 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
             builder: (context, controller) {
               final l10n = AppLocalizations.of(context);
               return buildTooltip(
-                title: l10n.guidedLogOneMoreTitle,
-                body: l10n.guidedLogOneMoreBody,
+                title: l10n.guidedHandTwoTitle,
+                body: l10n.guidedHandTwoBody,
                 onNext: () => controller.next(),
                 context: context,
                 isLast: true,
@@ -824,36 +957,40 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
         return true;
       },
       onFinish: () {
-        // User will now play hand 2 freely (a fresh hand is already dealt).
+        // Deal a fresh hand with scripted guidance for hand 2.
         OnboardingState.secondTourHandPending = true;
+        OnboardingState.resetForSecondHand();
+        _preflopOpenerDone = false;
+        widget.onDealNextHand?.call();
+        // Begin scripted guidance after the new hand renders
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          Future.delayed(const Duration(milliseconds: 300), () {
+            if (mounted) _beginScriptedHand();
+          });
+        });
       },
     );
     coach.show(context: context);
   }
 
-  // ---------------------------------------------------------------------------
-  // Session Info Button Coach Mark — spotlight the ⓘ next to the 3-dot menu
-  // ---------------------------------------------------------------------------
-
-  /// Spotlights the ⓘ session-details button after hand 1 — the EXPLAIN detour.
-  /// When the user taps it, the session-details screen shows the current-stack
-  /// card, Update button and stack chart, then a "go back" step; returning here
-  /// prompts the user to log one more hand ([promptSecondHand]).
-  void _showSessionInfoCoachMark() {
+  /// Spotlights the ⓘ session-details button after hand 2 — asking the user
+  /// to return to Session Details to see the stack chart.
+  void _showReturnToDetailsCoachMark() {
     Future.delayed(const Duration(milliseconds: 400), () {
       if (!mounted) return;
 
       final infoKey = widget.sessionInfoButtonKey;
       if (infoKey == null || infoKey.currentContext == null) {
-        // Degrade gracefully if the ⓘ can't be spotlighted.
+        // Degrade gracefully — set the flag and let the user navigate manually
+        OnboardingState.stackChartReturnTourPending = true;
         OnboardingState.guidedHandPhase = GuidedPhase.done;
-        promptSecondHand();
+        widget.onSkipOrFinish?.call();
         return;
       }
 
       final targets = <TargetFocus>[
         TargetFocus(
-          identify: 'session_info_button',
+          identify: 'return_to_details',
           keyTarget: infoKey,
           shape: ShapeLightFocus.Circle,
           paddingFocus: 12,
@@ -863,8 +1000,8 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
               builder: (context, controller) {
                 final l10n = AppLocalizations.of(context);
                 return buildTooltip(
-                  title: l10n.guidedSessionInfoTitle,
-                  body: l10n.guidedSessionInfoBody,
+                  title: l10n.guidedReturnToDetailsTitle,
+                  body: l10n.guidedReturnToDetailsBody,
                   onNext: () => controller.next(),
                   context: context,
                   isLast: true,
@@ -888,72 +1025,8 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
           return true;
         },
         onFinish: () {
-          // The session-details screen picks up the explain tour on open.
-          OnboardingState.sessionDetailsTourPending = true;
-          OnboardingState.sessionDetailsExplainReturnPending = true;
-          OnboardingState.guidedHandPhase = GuidedPhase.done;
-          widget.onSkipOrFinish?.call();
-        },
-      );
-      coach.show(context: context);
-    });
-  }
-
-  /// Spotlights the 3-dot game menu after hand 2 so the user can open it and
-  /// pick "Stop Session" to finish the tutorial. The menu's Stop Session item
-  /// calls the poker screen's `_stopSession`, which (while onboarding is active)
-  /// advances to phase 5 and lands on Home to continue the tour.
-  void _showFinishMenuCoachMark() {
-    Future.delayed(const Duration(milliseconds: 400), () {
-      if (!mounted) return;
-
-      final menuKey = widget.menuButtonKey;
-      if (menuKey == null || menuKey.currentContext == null) {
-        // Degrade gracefully if the menu can't be spotlighted — advance anyway.
-        OnboardingState.guidedHandPhase = GuidedPhase.done;
-        OnboardingState.advanceTo(5);
-        return;
-      }
-
-      final targets = <TargetFocus>[
-        TargetFocus(
-          identify: 'finish_menu_button',
-          keyTarget: menuKey,
-          shape: ShapeLightFocus.Circle,
-          paddingFocus: 12,
-          contents: [
-            TargetContent(
-              align: ContentAlign.bottom,
-              builder: (context, controller) {
-                final l10n = AppLocalizations.of(context);
-                return buildTooltip(
-                  title: l10n.guidedEndSessionTitle,
-                  body: l10n.guidedEndSessionBody,
-                  onNext: () => controller.next(),
-                  context: context,
-                  isLast: true,
-                );
-              },
-            ),
-          ],
-        ),
-      ];
-
-      final coach = TutorialCoachMark(
-        targets: targets,
-        colorShadow: Colors.black,
-        opacityShadow: 0.85,
-        paddingFocus: 12,
-        hideSkip: false,
-        alignSkip: Alignment.topLeft,
-        skipWidget: _buildSkipWidget(),
-        onSkip: () {
-          _finishOnboarding();
-          return true;
-        },
-        onFinish: () {
-          // Dismiss the coach; the user now opens the 3-dot menu and taps
-          // Stop Session, which drives the finish routing in _stopSession.
+          // User will now tap ⓘ to return to session details
+          OnboardingState.stackChartReturnTourPending = true;
           OnboardingState.guidedHandPhase = GuidedPhase.done;
           widget.onSkipOrFinish?.call();
         },
@@ -967,16 +1040,18 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
   // ---------------------------------------------------------------------------
 
   Widget _buildSkipWidget() {
+    final sw = MediaQuery.of(context).size.width;
+    final s = (sw / 393).clamp(0.8, 1.1);
     return Padding(
       padding: EdgeInsets.only(
-          left: 16, top: MediaQuery.of(context).padding.top + 8),
+          left: 14 * s, top: MediaQuery.of(context).padding.top + 6 * s),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        padding: EdgeInsets.symmetric(horizontal: 16 * s, vertical: 8 * s),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
           border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
         ),
-        child: Text(AppLocalizations.of(context).guidedSkip, style: AppTypography.bodySmall(color: Colors.white70).copyWith(fontSize: 15)),
+        child: Text(AppLocalizations.of(context).guidedSkip, style: AppTypography.bodySmall(color: Colors.white70).copyWith(fontSize: (14 * s).clamp(12.0, 16.0))),
       ),
     );
   }
@@ -1115,9 +1190,15 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
       return '${_actionLabel(l10n, a)} ($hint)';
     }).toList();
 
+    String body = parts.join('  ·  ');
+    if (validActions.contains(PlayerAction.bet) ||
+        validActions.contains(PlayerAction.raise)) {
+      body += '\n${l10n.guidedGestureManualBet}';
+    }
+
     return _InstructionData(
       title: l10n.guidedYourTurn,
-      body: parts.join('  ·  '),
+      body: body,
       isHighlight: true,
     );
   }
@@ -1164,6 +1245,9 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
 
     final isHero = phase == GuidedPhase.heroTurn || instruction.isHighlight;
 
+    final screenW = MediaQuery.of(context).size.width;
+    final scale = (screenW / 393).clamp(0.8, 1.1);
+
     return Positioned(
       top: 0,
       left: 0,
@@ -1172,9 +1256,9 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
         opacity: _fadeAnim,
         child: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            padding: EdgeInsets.fromLTRB(14 * scale, 6 * scale, 14 * scale, 0),
             child: Container(
-              padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+              padding: EdgeInsets.fromLTRB(14 * scale, 12 * scale, 14 * scale, 12 * scale),
               decoration: BoxDecoration(
                 color: AppColors.surfaceDark,
                 borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
@@ -1206,7 +1290,7 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
                           instruction.title,
                           style: AppTypography.ibm(
                             color: isHero ? AppColors.accentPrimary : Colors.white,
-                            fontSize: 18,
+                            fontSize: (16 * scale).clamp(14.0, 18.0),
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -1214,7 +1298,7 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
                       GestureDetector(
                         onTap: skip,
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                          padding: EdgeInsets.symmetric(horizontal: 10 * scale, vertical: 4 * scale),
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
                             border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
@@ -1222,26 +1306,26 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
                           child: Text(
                             AppLocalizations.of(context).guidedSkip,
                             style: AppTypography.bodySmall(color: Colors.white60)
-                                .copyWith(fontSize: 14),
+                                .copyWith(fontSize: (13 * scale).clamp(11.0, 15.0)),
                           ),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 6),
+                  SizedBox(height: 5 * scale),
                   // Body text
                   Text(
                     instruction.body,
                     style: AppTypography.ibm(
                       color: Colors.white.withValues(alpha: 0.8),
-                      fontSize: 15,
+                      fontSize: (14 * scale).clamp(12.0, 16.0),
                       height: 1.5,
                     ),
                   ),
                   if (instruction.gestureHint.isNotEmpty) ...[
-                    const SizedBox(height: 8),
+                    SizedBox(height: 6 * scale),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: EdgeInsets.symmetric(horizontal: 8 * scale, vertical: 3 * scale),
                       decoration: BoxDecoration(
                         color: AppColors.accentPrimary.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
@@ -1250,13 +1334,13 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
                         instruction.gestureHint,
                         style: AppTypography.ibm(
                           color: AppColors.accentPrimary,
-                          fontSize: 14,
+                          fontSize: (13 * scale).clamp(11.0, 15.0),
                           fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
                   ],
-                  const SizedBox(height: 8),
+                  SizedBox(height: 6 * scale),
                   // Progress bar
                   ClipRRect(
                     borderRadius: BorderRadius.circular(2),

@@ -132,9 +132,18 @@ Widget buildTooltip({
   bool isLast = false,
 }) {
   final l10n = AppLocalizations.of(context);
+  final screenW = MediaQuery.of(context).size.width;
+  // Scale factor: 1.0 on iPhone 16 Pro (393pt), smaller on smaller devices
+  final scale = (screenW / 393).clamp(0.8, 1.1);
+  final pad = (20 * scale).roundToDouble();
+  final margin = (20 * scale).roundToDouble();
+  final titleSize = (18 * scale).clamp(15.0, 20.0);
+  final bodySize = (14 * scale).clamp(12.0, 16.0);
+  final btnSize = (15 * scale).clamp(13.0, 17.0);
+
   return Container(
-    padding: const EdgeInsets.all(24),
-    margin: const EdgeInsets.symmetric(horizontal: 24),
+    padding: EdgeInsets.all(pad),
+    margin: EdgeInsets.symmetric(horizontal: margin),
     decoration: BoxDecoration(
       color: AppColors.surfaceDark,
       borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
@@ -156,24 +165,27 @@ Widget buildTooltip({
         Text(
           title,
           style: AppTypography.bodyLarge(color: Colors.white).copyWith(
-            fontSize: 19,
+            fontSize: titleSize,
             fontWeight: FontWeight.w600,
           ),
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: 6 * scale),
         Text(
           body,
           style: AppTypography.bodySmall(
             color: Colors.white.withValues(alpha: 0.8),
-          ).copyWith(fontSize: 15, height: 1.5),
+          ).copyWith(fontSize: bodySize, height: 1.5),
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: 12 * scale),
         Align(
-          alignment: Alignment.centerRight,
+          alignment: isLast ? Alignment.center : Alignment.centerRight,
           child: GestureDetector(
             onTap: onNext,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: EdgeInsets.symmetric(
+                horizontal: 14 * scale,
+                vertical: 7 * scale,
+              ),
               decoration: BoxDecoration(
                 color: AppColors.accentPrimary.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
@@ -181,7 +193,7 @@ Widget buildTooltip({
               child: Text(
                 isLast ? l10n.onboardingGotIt : l10n.onboardingNext,
                 style: AppTypography.bodyLarge(color: AppColors.accentPrimary)
-                    .copyWith(fontWeight: FontWeight.w600),
+                    .copyWith(fontSize: btnSize, fontWeight: FontWeight.w600),
               ),
             ),
           ),

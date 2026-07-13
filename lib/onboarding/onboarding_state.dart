@@ -47,6 +47,9 @@ class OnboardingState {
   /// Whether the session details tour needs to run (after tapping ⓘ in full session mode).
   static bool sessionDetailsTourPending = false;
 
+  /// Whether the Session Details hub tour needs to run (after session setup → hub screen).
+  static bool sessionDetailsHubTourPending = false;
+
   /// Set on the first (explain) ⓘ visit so the poker screen knows, when the
   /// session-details screen pops, to prompt the user to log one more hand.
   static bool sessionDetailsExplainReturnPending = false;
@@ -55,6 +58,10 @@ class OnboardingState {
   /// Set when the Next Hand coach mark finishes; consumed when that hand
   /// completes, triggering the finish-session (ⓘ) spotlight.
   static bool secondTourHandPending = false;
+
+  /// Whether the stack chart return tour needs to run when popping back to
+  /// SessionDetailsScreen after both tour hands are complete.
+  static bool stackChartReturnTourPending = false;
 
   /// Set after the phase-6 AI-analysis step so the tour completion (and guest
   /// sign-up) fires only once the user LEAVES the hand-details screen — not
@@ -103,8 +110,11 @@ class OnboardingState {
     buttonTokenTourPending = false;
     tableTourPending = false;
     sessionDetailsTourPending = false;
+    sessionDetailsHubTourPending = false;
     sessionDetailsExplainReturnPending = false;
     secondTourHandPending = false;
+
+    stackChartReturnTourPending = false;
     tourCompletionPending = false;
     sessionHistoryTourPending = false;
     handListTourPending = false;
@@ -124,8 +134,11 @@ class OnboardingState {
     isOnboardingActive = false;
     currentPhase = 0;
     sessionDetailsTourPending = false;
+    sessionDetailsHubTourPending = false;
     sessionDetailsExplainReturnPending = false;
     secondTourHandPending = false;
+
+    stackChartReturnTourPending = false;
     tourCompletionPending = false;
     sessionHistoryTourPending = false;
     handListTourPending = false;
@@ -142,8 +155,11 @@ class OnboardingState {
     buttonTokenTourPending = false;
     tableTourPending = false;
     sessionDetailsTourPending = false;
+    sessionDetailsHubTourPending = false;
     sessionDetailsExplainReturnPending = false;
     secondTourHandPending = false;
+
+    stackChartReturnTourPending = false;
     tourCompletionPending = false;
     sessionHistoryTourPending = false;
     handListTourPending = false;
@@ -166,8 +182,11 @@ class OnboardingState {
     buttonTokenTourPending = false;
     tableTourPending = false;
     sessionDetailsTourPending = false;
+    sessionDetailsHubTourPending = false;
     sessionDetailsExplainReturnPending = false;
     secondTourHandPending = false;
+
+    stackChartReturnTourPending = false;
     tourCompletionPending = false;
     sessionHistoryTourPending = false;
     handListTourPending = false;
@@ -183,8 +202,11 @@ class OnboardingState {
     currentPhase = 0;
     _isReplay = false;
     sessionDetailsTourPending = false;
+    sessionDetailsHubTourPending = false;
     sessionDetailsExplainReturnPending = false;
     secondTourHandPending = false;
+
+    stackChartReturnTourPending = false;
     tourCompletionPending = false;
     sessionHistoryTourPending = false;
     handListTourPending = false;
@@ -199,6 +221,16 @@ class OnboardingState {
     nextScriptedAction = null;
     openerSeat = null;
     heroFolded = false;
+  }
+
+  /// Resets guided hand state for the second tour hand so scripted guidance
+  /// re-activates, but preserves one-time coach mark flags (gesture info,
+  /// drawing board, stack ring, undo) that were already shown in hand 1.
+  static void resetForSecondHand() {
+    guidedHandPhase = GuidedPhase.scriptedAction;
+    openerSeat = null;
+    heroFolded = false;
+    // Do NOT reset nextScriptedAction — _beginScriptedHand() will set it
   }
 
   /// Maps internal phase to display step.

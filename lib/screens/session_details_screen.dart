@@ -13,6 +13,8 @@ import '../onboarding/onboarding_progress_bar.dart';
 import '../design_system/components/app_toggle.dart';
 import '../models/hand_state_machine.dart';
 import '../widgets/stack_growth_chart.dart';
+import '../widgets/session_end_bankroll_sheet.dart';
+import '../widgets/session_summary_card.dart';
 import '../l10n/app_localizations.dart';
 import '../services/currency_service.dart';
 import '../design_system/constants/colors.dart';
@@ -23,6 +25,9 @@ import '../design_system/components/app_text_field.dart';
 import '../design_system/components/dialogs/app_dialog.dart';
 import '../design_system/components/dialogs/dialog_action_bar.dart';
 import '../design_system/components/modals/confirm_dialog.dart';
+import 'poker_hand_screen.dart';
+import 'home_screen.dart';
+import '../utils/user_facing_error.dart';
 
 class SessionDetailsScreen extends StatefulWidget {
   final String sessionName;
@@ -41,6 +46,12 @@ class SessionDetailsScreen extends StatefulWidget {
   final List<Map<String, dynamic>>? liveStackHistory;
   final List<HandRecord>? completedHands;
 
+  // Hub mode params (non-null = hub mode, null = legacy push-on-top mode)
+  final PokerSessionManager? sessionManager;
+  final int? heroSeat;
+  final int? initialButtonPosition;
+  final double? ante;
+
   const SessionDetailsScreen({
     super.key,
     required this.sessionName,
@@ -54,6 +65,10 @@ class SessionDetailsScreen extends StatefulWidget {
     this.sessionId,
     this.liveStackHistory,
     this.completedHands,
+    this.sessionManager,
+    this.heroSeat,
+    this.initialButtonPosition,
+    this.ante,
   });
 
   @override
@@ -61,6 +76,10 @@ class SessionDetailsScreen extends StatefulWidget {
 }
 
 class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
+  /// Hub mode: SessionDetailsScreen is the base screen, launched from setup.
+  /// Legacy mode: pushed on top of PokerHandScreen via ⓘ button.
+  bool get _isHubMode => widget.sessionManager != null;
+
   // Stack management
   late double _currentStack;
   late double _initialStack;
@@ -109,6 +128,7 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
   final GlobalKey _updateStackBtnKey = GlobalKey(debugLabel: 'updateStackBtn');
   final GlobalKey _logHandBtnKey = GlobalKey(debugLabel: 'logHandBtn');
   final GlobalKey _stackChartKey = GlobalKey(debugLabel: 'stackChart');
+  final GlobalKey _endSessionRowKey = GlobalKey(debugLabel: 'endSessionRow');
 
   @override
   void initState() {
@@ -141,7 +161,12 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
     _resumeSession();
     _loadBBMode();
     _startTimer();
-    _scheduleSessionDetailsTour();
+
+    if (_isHubMode) {
+      _scheduleSessionDetailsHubTour();
+    } else {
+      _scheduleSessionDetailsTour();
+    }
   }
 
   Future<void> _loadBBMode() async {
@@ -156,6 +181,30 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
     await prefs.setBool(_bbModeKey, value);
   }
 
+  Widget _buildTourSkipWidget() {
+    final l10n = AppLocalizations.of(context);
+    final sw = MediaQuery.of(context).size.width;
+    final s = (sw / 393).clamp(0.8, 1.1);
+    return Padding(
+      padding: EdgeInsets.only(
+          left: 14 * s, top: MediaQuery.of(context).padding.top + 6 * s),
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 16 * s, vertical: 8 * s),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+        ),
+        child: Text(
+          l10n.onboardingSkipTour,
+          style: AppTypography.ibm(
+            color: Colors.white70,
+            fontSize: (14 * s).clamp(12.0, 16.0),
+          ),
+        ),
+      ),
+    );
+  }
+
   void _scheduleSessionDetailsTour() {
     if (!OnboardingState.isOnboardingActive ||
         !OnboardingState.sessionDetailsTourPending) return;
@@ -166,6 +215,249 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
       if (!mounted) return;
       _showSessionDetailsTour();
     });
+  }
+
+  void _scheduleSessionDetailsHubTour() {
+    if (!OnboardingState.isOnboardingActive ||
+        !OnboardingState.sessionDetailsHubTourPending) return;
+    OnboardingState.sessionDetailsHubTourPending = false;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await Future.delayed(const Duration(milliseconds: 500));
+      if (!mounted) return;
+      _showSessionDetailsHubTour();
+    });
+  }
+
+  void _showSessionDetailsHubTour() {
+    final l10n = AppLocalizations.of(context);
+
+    final targets = <TargetFocus>[];
+
+    // Step 1: Spotlight the stack card
+    if (_currentStackCardKey.currentContext != null) {
+      targets.add(
+        TargetFocus(
+          identify: 'hub_stack_card',
+          keyTarget: _currentStackCardKey,
+          shape: ShapeLightFocus.RRect,
+          radius: 18,
+          paddingFocus: 6,
+          contents: [
+            TargetContent(
+              align: ContentAlign.bottom,
+              builder: (context, controller) {
+                return buildTooltip(
+                  title: l10n.onboardingSessionDetailsHubTitle,
+                  body: l10n.onboardingSessionDetailsHubBody,
+                  onNext: () => controller.next(),
+                  context: context,
+                );
+              },
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Step 2: Spotlight the 3-dot menu
+    if (_dotsKey.currentContext != null) {
+      targets.add(
+        TargetFocus(
+          identify: 'hub_dots_menu',
+          keyTarget: _dotsKey,
+          shape: ShapeLightFocus.Circle,
+          paddingFocus: 12,
+          contents: [
+            TargetContent(
+              align: ContentAlign.bottom,
+              builder: (context, controller) {
+                return buildTooltip(
+                  title: l10n.onboardingHubMenuTitle,
+                  body: l10n.onboardingHubMenuBody,
+                  onNext: () => controller.next(),
+                  context: context,
+                );
+              },
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Step 3: Spotlight the "Log a Hand" button
+    targets.add(
+      TargetFocus(
+        identify: 'hub_log_hand',
+        keyTarget: _logHandBtnKey,
+        shape: ShapeLightFocus.RRect,
+        radius: 20,
+        paddingFocus: 6,
+        contents: [
+          TargetContent(
+            align: ContentAlign.top,
+            builder: (context, controller) {
+              return buildTooltip(
+                title: l10n.onboardingHubLogHandTitle,
+                body: l10n.onboardingHubLogHandBody,
+                onNext: () => controller.next(),
+                context: context,
+                isLast: true,
+              );
+            },
+          ),
+        ],
+      ),
+    );
+
+    final coach = TutorialCoachMark(
+      targets: targets,
+      colorShadow: Colors.black,
+      opacityShadow: 0.85,
+      paddingFocus: 12,
+      hideSkip: false,
+      alignSkip: Alignment.topLeft,
+      skipWidget: _buildTourSkipWidget(),
+      onFinish: () {
+        // Tour finished — advance to phase 4 when user taps "Log a Hand"
+      },
+      onSkip: () {
+        final wasReplay = OnboardingState.isReplay;
+        OnboardingState.cancel();
+        OnboardingPrefs.markOnboardingSeen();
+        if (!wasReplay) {
+          OnboardingPrefs.setPostTourPaywallPending();
+        }
+        return true;
+      },
+    );
+    coach.show(context: context);
+  }
+
+  void _showStackChartReturnTour() {
+    final l10n = AppLocalizations.of(context);
+
+    final targets = <TargetFocus>[];
+
+    if (_stackChartKey.currentContext != null) {
+      targets.add(
+        TargetFocus(
+          identify: 'stack_chart_return',
+          keyTarget: _stackChartKey,
+          shape: ShapeLightFocus.RRect,
+          radius: 18,
+          paddingFocus: 6,
+          contents: [
+            TargetContent(
+              align: ContentAlign.custom,
+              customPosition: CustomTargetContentPosition(
+                top: MediaQueryData.fromView(
+                  WidgetsBinding.instance.platformDispatcher.views.first,
+                ).size.height *
+                    0.12,
+              ),
+              builder: (context, controller) {
+                return buildTooltip(
+                  title: l10n.guidedStackChartReturnTitle,
+                  body: l10n.guidedStackChartReturnBody,
+                  onNext: () => controller.next(),
+                  context: context,
+                  isLast: true,
+                );
+              },
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (targets.isEmpty) {
+      // No chart to spotlight — advance to phase 5
+      OnboardingState.advanceTo(5);
+      return;
+    }
+
+    final coach = TutorialCoachMark(
+      targets: targets,
+      colorShadow: Colors.black,
+      opacityShadow: 0.85,
+      paddingFocus: 12,
+      hideSkip: false,
+      alignSkip: Alignment.topLeft,
+      skipWidget: _buildTourSkipWidget(),
+      onFinish: () {
+        _showEndSessionTour();
+      },
+      onSkip: () {
+        final wasReplay = OnboardingState.isReplay;
+        OnboardingState.cancel();
+        OnboardingPrefs.markOnboardingSeen();
+        if (!wasReplay) {
+          OnboardingPrefs.setPostTourPaywallPending();
+        }
+        return true;
+      },
+    );
+    coach.show(context: context);
+  }
+
+  void _showEndSessionTour() {
+    if (!mounted) return;
+
+    if (_dotsKey.currentContext == null) {
+      // Dots menu not visible — fall back to auto-end
+      _endSessionFromHub();
+      return;
+    }
+
+    final l10n = AppLocalizations.of(context);
+    final targets = <TargetFocus>[
+      TargetFocus(
+        identify: 'end_session_dots',
+        keyTarget: _dotsKey,
+        shape: ShapeLightFocus.Circle,
+        paddingFocus: 12,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (context, controller) {
+              return buildTooltip(
+                title: l10n.guidedEndSessionTitle,
+                body: l10n.guidedEndSessionBody,
+                onNext: () => controller.next(),
+                context: context,
+                isLast: true,
+              );
+            },
+          ),
+        ],
+      ),
+    ];
+
+    final coach = TutorialCoachMark(
+      targets: targets,
+      colorShadow: Colors.black,
+      opacityShadow: 0.85,
+      paddingFocus: 12,
+      hideSkip: false,
+      alignSkip: Alignment.topLeft,
+      skipWidget: _buildTourSkipWidget(),
+      onFinish: () {
+        // User dismissed the spotlight — they should now tap the dots menu
+        // and select "End Session" themselves. The advanceTo(5) call happens
+        // inside _endSessionFromHub() when they actually end the session.
+      },
+      onSkip: () {
+        final wasReplay = OnboardingState.isReplay;
+        OnboardingState.cancel();
+        OnboardingPrefs.markOnboardingSeen();
+        if (!wasReplay) {
+          OnboardingPrefs.setPostTourPaywallPending();
+        }
+        return true;
+      },
+    );
+    coach.show(context: context);
   }
 
   void _showSessionDetailsTour() {
@@ -690,6 +982,41 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
                         ],
                       ),
                     ),
+                    if (_isHubMode) ...[
+                      Container(
+                        height: 1,
+                        color: Colors.white.withValues(alpha: 0.06),
+                      ),
+                      // End Session row
+                      GestureDetector(
+                        key: _endSessionRowKey,
+                        onTap: () {
+                          Navigator.pop(context);
+                          _endSessionFromHub();
+                        },
+                        behavior: HitTestBehavior.opaque,
+                        child: Row(
+                          children: [
+                            const Icon(Icons.stop_circle_outlined, color: AppColors.accentDanger, size: 16),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                child: Text(
+                                  l10n.sessionDetailsEndSession,
+                                  style: AppTypography.ibm(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w500,
+                                    color: AppColors.accentDanger,
+                                    height: 1.44,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -766,19 +1093,253 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
   }
 
   void _goBackToHand() {
-    final Map<String, dynamic> result = {
-      'updatedStack': _currentStack,
-      'totalBuyIn': _totalBuyIn,
-      'stackHistory': _stackHistory,
-    };
+    if (_isHubMode) {
+      _navigateToHandLogging();
+    } else {
+      final Map<String, dynamic> result = {
+        'updatedStack': _currentStack,
+        'totalBuyIn': _totalBuyIn,
+        'stackHistory': _stackHistory,
+      };
 
+      if (_blindsWereChanged) {
+        result['smallBlind'] = _currentSmallBlind;
+        result['bigBlind'] = _currentBigBlind;
+        result['hasBBante'] = _currentHasBBante;
+      }
+
+      Navigator.pop(context, result);
+    }
+  }
+
+  Future<void> _navigateToHandLogging() async {
+    if (!_isHubMode) return;
+    final sm = widget.sessionManager!;
+
+    // Sync any blind changes made in session details back to session manager
     if (_blindsWereChanged) {
-      result['smallBlind'] = _currentSmallBlind;
-      result['bigBlind'] = _currentBigBlind;
-      result['hasBBante'] = _currentHasBBante;
+      sm.smallBlind = _currentSmallBlind;
+      sm.bigBlind = _currentBigBlind;
     }
 
-    Navigator.pop(context, result);
+    // Advance onboarding to phase 4 (hand logging)
+    if (OnboardingState.isOnboardingActive && OnboardingState.currentPhase < 4) {
+      OnboardingState.advanceTo(4);
+    }
+
+    final result = await Navigator.push<Map<String, dynamic>>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PokerHandScreen(
+          smallBlind: _currentSmallBlind,
+          bigBlind: _currentBigBlind,
+          numberOfPlayers: 9,
+          gameType: widget.gameType,
+          hasBBante: _currentHasBBante,
+          ante: widget.ante ?? (_currentHasBBante ? _currentBigBlind : 0),
+          sessionName: widget.sessionName,
+          buyInAmount: widget.buyInAmount,
+          startingStack: widget.startingStack,
+          initialSeat: widget.heroSeat,
+          initialButtonPosition: widget.initialButtonPosition,
+          sessionManager: sm,
+          isHubMode: true,
+        ),
+      ),
+    );
+
+    // Update state from hand logging results
+    if (result != null && mounted) {
+      setState(() {
+        if (result['updatedStack'] != null) {
+          _currentStack = (result['updatedStack'] as num).toDouble();
+        }
+        if (result['totalBuyIn'] != null) {
+          _totalBuyIn = (result['totalBuyIn'] as num).toDouble();
+        }
+        if (result['stackHistory'] != null) {
+          _stackHistory = List<Map<String, dynamic>>.from(result['stackHistory']);
+        }
+        if (result['smallBlind'] != null) {
+          _currentSmallBlind = (result['smallBlind'] as num).toDouble();
+        }
+        if (result['bigBlind'] != null) {
+          _currentBigBlind = (result['bigBlind'] as num).toDouble();
+        }
+        if (result['handsLogged'] != null) {
+          _handsLogged = result['handsLogged'] as int;
+        }
+        if (result['biggestPot'] != null) {
+          _biggestPot = (result['biggestPot'] as num).toDouble();
+        }
+        if (result['completedHands'] != null) {
+          _completedHands = List<HandRecord>.from(result['completedHands']);
+        }
+      });
+    }
+
+    // If PokerHandScreen ended the session (e.g. via stop button), navigate home
+    if (result != null && result['sessionEnded'] == true && mounted) {
+      Navigator.of(context).popUntil((route) => route.isFirst);
+      return;
+    }
+
+    // After returning from hand logging during onboarding: show stack chart tour
+    if (OnboardingState.isOnboardingActive &&
+        OnboardingState.stackChartReturnTourPending &&
+        _stackHistory.length > 1 &&
+        mounted) {
+      OnboardingState.stackChartReturnTourPending = false;
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        await Future.delayed(const Duration(milliseconds: 500));
+        if (!mounted) return;
+        _showStackChartReturnTour();
+      });
+    }
+  }
+
+  Future<void> _handleHubBackButton() async {
+    if (!_isHubMode) {
+      _goBackToHand();
+      return;
+    }
+
+    final l10n = AppLocalizations.of(context);
+    final confirmed = await ConfirmDialog.confirm(
+      context,
+      title: l10n.sessionDetailsLeaveConfirmTitle,
+      message: l10n.sessionDetailsLeaveConfirmBody,
+      confirmLabel: l10n.sessionDetailsEndSession,
+    );
+
+    if (confirmed == true && mounted) {
+      await _endSessionFromHub();
+    }
+  }
+
+  Future<void> _endSessionFromHub() async {
+    if (!_isHubMode) return;
+    final sm = widget.sessionManager!;
+
+    try {
+      // Capture final stack
+      final ourSeat = sm.ourSeatNumber ?? widget.heroSeat;
+      if (ourSeat != null) {
+        sm.addFinalStackEntry(_currentStack);
+      }
+
+      await sm.endSession();
+
+      if (!mounted) return;
+
+      // Show bankroll sheet (skip for tutorial)
+      final isTourSession = OnboardingState.isOnboardingActive;
+      final stackHistory = sm.stackHistory;
+      Map<String, dynamic>? bankrollResult;
+
+      if (stackHistory.isNotEmpty && !isTourSession) {
+        final lastStack = (stackHistory.last['stackSize'] as num).toDouble();
+        final profit = lastStack - sm.totalBuyIn;
+        final sessionDuration = sm.sessionStartTime != null
+            ? DateTime.now().difference(sm.sessionStartTime!).inMinutes
+            : null;
+        bankrollResult = await SessionEndBankrollSheet.show(
+          context: context,
+          gameType: sm.gameType,
+          profitLoss: profit,
+          totalBuyIn: sm.totalBuyIn,
+          durationMinutes: sessionDuration,
+        );
+
+        // Save tournament finish data
+        if (bankrollResult != null) {
+          final fPlace = bankrollResult['finishedPlace'] as int?;
+          final fSize = bankrollResult['fieldSize'] as int?;
+          final fPrize = bankrollResult['prizeWon'] as double?;
+          if (fPlace != null || fSize != null || fPrize != null) {
+            try {
+              await FirebaseService.updateIndividualSession(
+                sessionId: sm.sessionId!,
+                finishedPlace: fPlace,
+                fieldSize: fSize,
+                prizeWon: fPrize,
+              );
+            } catch (_) {}
+          }
+        }
+      }
+
+      if (!mounted) return;
+
+      // Show session summary
+      if (stackHistory.isNotEmpty) {
+        final double profitLoss;
+        final int? finishedPlace;
+        final int? fieldSize;
+        final double? prizeWon;
+        if (bankrollResult != null) {
+          profitLoss = (bankrollResult['profitLoss'] as num?)?.toDouble() ?? 0.0;
+          finishedPlace = bankrollResult['finishedPlace'] as int?;
+          fieldSize = bankrollResult['fieldSize'] as int?;
+          prizeWon = bankrollResult['prizeWon'] as double?;
+        } else if (widget.gameType == GameType.cash) {
+          final lastStack = (stackHistory.last['stackSize'] as num).toDouble();
+          profitLoss = lastStack - sm.totalBuyIn;
+          finishedPlace = null;
+          fieldSize = null;
+          prizeWon = null;
+        } else {
+          profitLoss = 0.0;
+          finishedPlace = null;
+          fieldSize = null;
+          prizeWon = null;
+        }
+
+        final duration = sm.sessionStartTime != null
+            ? DateTime.now().difference(sm.sessionStartTime!).inMinutes
+            : 0;
+
+        await SessionSummaryCard.show(
+          context: context,
+          data: SessionSummaryData(
+            sessionName: widget.sessionName,
+            gameType: widget.gameType,
+            profitLoss: profitLoss,
+            totalBuyIn: sm.totalBuyIn,
+            handsPlayed: sm.completedHands.length,
+            biggestPot: sm.biggestPot,
+            biggestPotBB: sm.biggestPotBB,
+            durationMinutes: duration,
+            finishedPlace: finishedPlace,
+            fieldSize: fieldSize,
+            prizeWon: prizeWon,
+            biggestPotWonCards: sm.biggestPotWonCards,
+            biggestPotLostCards: sm.biggestPotLostCards,
+          ),
+        );
+      }
+
+      if (!mounted) return;
+
+      // Navigate home
+      if (OnboardingState.isOnboardingActive) {
+        OnboardingState.advanceTo(5);
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => HomeScreen()),
+          (route) => false,
+        );
+      } else {
+        Navigator.of(context).popUntil((route) => route.isFirst);
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(UserFacingError.message(e)),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   Future<bool?> _showRebuyConfirmationDialog() async {
@@ -1070,7 +1631,14 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
     final profitLoss = _currentStack - _initialStack;
     final isProfit = _currentStack > _initialStack;
 
-    return Scaffold(
+    return PopScope(
+      canPop: !_isHubMode,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop && _isHubMode) {
+          _handleHubBackButton();
+        }
+      },
+      child: Scaffold(
       backgroundColor: Colors.black,
       body: Stack(
         children: [
@@ -1108,7 +1676,7 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
                       children: [
                         // Back arrow
                         GestureDetector(
-                          onTap: _goBackToHand,
+                          onTap: _isHubMode ? _handleHubBackButton : _goBackToHand,
                           child: Container(
                             width: 44,
                             height: 44,
@@ -1150,12 +1718,14 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
                             ],
                           ),
                         ),
-                        // Add menu button
+                        // Menu button — 3-dot menu in hub mode / cash game shows add-on directly in legacy
                         GestureDetector(
                           key: _dotsKey,
-                          onTap: () => widget.gameType == GameType.cash
-                              ? _showAddOnDialog()
-                              : _showOptionsMenu(),
+                          onTap: _isHubMode
+                              ? _showOptionsMenu
+                              : (widget.gameType == GameType.cash
+                                  ? _showAddOnDialog
+                                  : _showOptionsMenu),
                           child: Container(
                             width: 32,
                             height: 32,
@@ -1163,7 +1733,11 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
                               color: Colors.white.withValues(alpha: 0.08),
                               shape: BoxShape.circle,
                             ),
-                            child: const Icon(Icons.add, color: Colors.white, size: 18),
+                            child: Icon(
+                              _isHubMode ? Icons.more_vert : Icons.add,
+                              color: Colors.white,
+                              size: 18,
+                            ),
                           ),
                         ),
                       ],
@@ -1375,7 +1949,7 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
 
                   const SizedBox(height: 24),
 
-                  // Go Back to Hand Button
+                  // Log a Hand / Go Back to Hand Button
                   GestureDetector(
                     onTap: _goBackToHand,
                     child: Container(
@@ -1383,21 +1957,37 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       decoration: BoxDecoration(
-                        color: AppColors.infoCardBg,
+                        color: (_isHubMode && _handsLogged == 0)
+                            ? AppColors.accentPrimary
+                            : AppColors.infoCardBg,
                         borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
-                        border: Border.all(color: Colors.white.withOpacity(0.1)),
+                        border: (_isHubMode && _handsLogged == 0)
+                            ? null
+                            : Border.all(color: Colors.white.withOpacity(0.1)),
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.arrow_back, color: Colors.white, size: 20),
+                          Icon(
+                            (_isHubMode && _handsLogged == 0)
+                                ? Icons.play_arrow_rounded
+                                : Icons.arrow_back,
+                            color: (_isHubMode && _handsLogged == 0)
+                                ? Colors.black
+                                : Colors.white,
+                            size: 20,
+                          ),
                           const SizedBox(width: 8),
                           Text(
-                            l10n.individualGoBackToHand,
+                            (_isHubMode && _handsLogged == 0)
+                                ? l10n.sessionDetailsLogAHand
+                                : l10n.individualGoBackToHand,
                             style: AppTypography.ibm(
                               fontSize: 17,
                               fontWeight: FontWeight.w600,
-                              color: Colors.white,
+                              color: (_isHubMode && _handsLogged == 0)
+                                  ? Colors.black
+                                  : Colors.white,
                             ),
                           ),
                         ],
@@ -1412,6 +2002,7 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
           ),
         ],
       ),
+    ),
     );
   }
 
