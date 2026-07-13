@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/decorations.dart';
 import '../design_system/constants/typography.dart';
-import '../design_system/components/backgrounds/gradient_background.dart';
 import '../l10n/app_localizations.dart';
 import '../services/auth_service.dart';
 import '../utils/user_facing_error.dart';
@@ -68,19 +67,6 @@ class _IntroScreenState extends State<IntroScreen> {
       backgroundColor: AppColors.bgPrimary,
       body: Stack(
         children: [
-          const GradientBackground(),
-
-          Positioned.fill(
-            child: Opacity(
-              opacity: 0.4,
-              child: Image.asset(
-                'assets/main_background.png',
-                fit: BoxFit.cover,
-                alignment: Alignment.center,
-              ),
-            ),
-          ),
-
           SafeArea(
             child: Column(
               children: [

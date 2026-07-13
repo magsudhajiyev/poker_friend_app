@@ -21,6 +21,7 @@ import 'paywall_screen.dart';
 import '../services/currency_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/feature_flag_service.dart';
+import '../design_system/components/buttons/back_button_circle.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/typography.dart';
 import '../design_system/constants/decorations.dart';
@@ -663,21 +664,13 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
                   child: Row(
                     children: [
-                      // Back button — unified top chevron (same as TopNavBar,
-                      // no circular background)
-                      GestureDetector(
-                        onTap: () => Navigator.pop(context),
-                        behavior: HitTestBehavior.opaque,
-                        child: SizedBox(
-                          width: 44,
-                          height: 44,
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: SvgPicture.asset(
-                              'assets/icons/CaretLeft.svg',
-                              width: 20,
-                              height: 20,
-                            ),
+                      // Canonical BackButtonCircle for consistent nav.
+                      SizedBox(
+                        width: 44,
+                        height: 44,
+                        child: Center(
+                          child: BackButtonCircle(
+                            onPressed: () => Navigator.pop(context),
                           ),
                         ),
                       ),

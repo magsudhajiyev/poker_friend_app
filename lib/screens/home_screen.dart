@@ -40,6 +40,8 @@ import '../onboarding/onboarding_progress_bar.dart';
 import '../design_system/design_system.dart';
 import '../design_system/poker_friend_theme.dart';
 import '../design_system/components/buttons/close_circle_button.dart';
+import '../design_system/components/dialogs/app_dialog.dart';
+import '../design_system/components/dialogs/dialog_action_bar.dart';
 import '../design_system/components/drawer_dots.dart';
 import '../design_system/components/cards/error_state_card.dart';
 import '../services/seat_service.dart';
@@ -739,97 +741,77 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
     final isResolved = request.isResolved;
 
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppColors.surfaceDark,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDecorations.radius20)),
-        title: Row(
-          children: [
-            Icon(
-              isResolved ? Icons.check_circle : Icons.cancel,
-              color: isResolved ? AppColors.accentPrimary : AppColors.errorRed,
-              size: 22,
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                isResolved ? AppLocalizations.of(context).homeRequestResolved : AppLocalizations.of(context).homeRequestClosed,
-                style: AppTypography.ibm(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                ),
+    AppDialog.show<void>(
+      context,
+      title: isResolved
+          ? AppLocalizations.of(context).homeRequestResolved
+          : AppLocalizations.of(context).homeRequestClosed,
+      body: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                isResolved ? Icons.check_circle : Icons.cancel,
+                color: isResolved ? AppColors.accentPrimary : AppColors.errorRed,
+                size: 22,
               ),
-            ),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              request.subject,
-              style: AppTypography.ibm(
-                color: Colors.white,
-                fontSize: 15,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              request.category,
-              style: AppTypography.ibm(
-                color: AppColors.textDisabled,
-                fontSize: 13,
-              ),
-            ),
-            if (request.adminResponse != null && request.adminResponse!.isNotEmpty) ...[
-              const SizedBox(height: 16),
-              Text(
-                AppLocalizations.of(context).homeResponse,
-                style: AppTypography.ibm(
-                  color: AppColors.textDisabled,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.5,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: isResolved
-                      ? AppColors.accentPrimary.withValues(alpha: 0.1)
-                      : AppColors.errorRed.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(AppDecorations.radius10),
-                ),
+              const SizedBox(width: 8),
+              Expanded(
                 child: Text(
-                  request.adminResponse!,
+                  request.subject,
                   style: AppTypography.ibm(
-                    color: Colors.white,
-                    fontSize: 14,
-                    height: 1.5,
+                    color: AppColors.textPrimary,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ),
             ],
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              'OK',
-              style: AppTypography.ibm(
-                color: AppColors.accentPrimary,
-                fontWeight: FontWeight.w600,
-              ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            request.category,
+            style: AppTypography.ibm(
+              color: AppColors.textDisabled,
+              fontSize: 13,
             ),
           ),
+          if (request.adminResponse != null && request.adminResponse!.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            Text(
+              AppLocalizations.of(context).homeResponse,
+              style: AppTypography.ibm(
+                color: AppColors.textDisabled,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.5,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: isResolved
+                    ? AppColors.accentPrimary.withValues(alpha: 0.1)
+                    : AppColors.errorRed.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(AppDecorations.radius10),
+              ),
+              child: Text(
+                request.adminResponse!,
+                style: AppTypography.ibm(
+                  color: AppColors.textPrimary,
+                  fontSize: 14,
+                  height: 1.5,
+                ),
+              ),
+            ),
+          ],
         ],
       ),
+      actions: const DialogActionBar.single(cancelLabel: 'OK'),
     );
   }
 
@@ -882,88 +864,62 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   /// Show dialog to accept or decline invitation
   void _showInvitationResponseDialog(ClubNotification notification, Club club) {
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: const Color(0xFF1A1A2E),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDecorations.radius20)),
-        title: Text(
-          AppLocalizations.of(context).homeClubInvitation,
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-          textAlign: TextAlign.center,
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 60,
-              height: 60,
-              decoration: BoxDecoration(
-                color: const Color(0xFFA855F7).withValues(alpha: 0.15),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.mail,
-                color: Color(0xFFA855F7),
-                size: 32,
-              ),
+    AppDialog.show<void>(
+      context,
+      title: AppLocalizations.of(context).homeClubInvitation,
+      body: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Container(
+            width: 60,
+            height: 60,
+            decoration: BoxDecoration(
+              color: AppColors.accentPurple.withValues(alpha: 0.15),
+              shape: BoxShape.circle,
             ),
-            const SizedBox(height: 16),
-            Text(
-              AppLocalizations.of(context).homeYouveBeenInvitedToJoin,
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.7),
-                fontSize: 14,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              club.name,
-              style: const TextStyle(
-                color: Color(0xFFA855F7),
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              notification.body,
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.6),
-                fontSize: 13,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(dialogContext);
-              await _respondToInvitation(notification, club, false);
-            },
-            child: Text(
-              AppLocalizations.of(context).homeDecline,
-              style: TextStyle(color: Color(0xFFEF5350)),
+            child: const Icon(
+              Icons.mail,
+              color: AppColors.accentPurple,
+              size: 32,
             ),
           ),
-          ElevatedButton(
-            onPressed: () async {
-              Navigator.pop(dialogContext);
-              await _respondToInvitation(notification, club, true);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF4CAF50),
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
-              ),
+          const SizedBox(height: 16),
+          Text(
+            AppLocalizations.of(context).homeYouveBeenInvitedToJoin,
+            style: AppTypography.ibm(
+              color: AppColors.textSecondary,
+              fontSize: 14,
             ),
-            child: Text(AppLocalizations.of(context).homeAccept),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            club.name,
+            style: AppTypography.ibm(
+              color: AppColors.accentPurple,
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            notification.body,
+            style: AppTypography.ibm(
+              color: AppColors.textSecondary,
+              fontSize: 13,
+            ),
+            textAlign: TextAlign.center,
           ),
         ],
+      ),
+      actions: DialogActionBar(
+        cancelLabel: AppLocalizations.of(context).homeDecline,
+        confirmLabel: AppLocalizations.of(context).homeAccept,
+        confirmColor: AppColors.accentPrimary,
+        onCancel: () => _respondToInvitation(notification, club, false),
+        onConfirm: () => _respondToInvitation(notification, club, true),
       ),
     );
   }
@@ -1319,72 +1275,28 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       final invitations = await InvitationService.getPendingInvitations();
       if (invitations.isNotEmpty && mounted) {
         // Show a dialog prompting user to view their invitations
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            backgroundColor: PokerFriendColors.dark2,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
+        AppDialog.show<void>(
+          context,
+          title: AppLocalizations.of(context).homeClubInvitations,
+          body: Text(
+            AppLocalizations.of(context).homePendingInvitationsMsg(invitations.length),
+            style: AppTypography.ibm(
+              color: AppColors.textSecondary,
+              fontSize: 15,
+              height: 22 / 15,
             ),
-            title: Row(
-              children: [
-                Icon(
-                  Icons.mail_outline,
-                  color: PokerFriendColors.purple,
+          ),
+          actions: DialogActionBar(
+            cancelLabel: AppLocalizations.of(context).homeLater,
+            confirmLabel: AppLocalizations.of(context).homeViewInvitations,
+            onConfirm: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const InvitationsScreen(),
                 ),
-                const SizedBox(width: 12),
-                Text(
-                  AppLocalizations.of(context).homeClubInvitations,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-            content: Text(
-              AppLocalizations.of(context).homePendingInvitationsMsg(invitations.length),
-              style: TextStyle(
-                color: PokerFriendColors.dark11,
-                fontSize: 14,
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text(
-                  AppLocalizations.of(context).homeLater,
-                  style: TextStyle(
-                    color: PokerFriendColors.dark9,
-                  ),
-                ),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const InvitationsScreen(),
-                    ),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: PokerFriendColors.purple,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
-                  ),
-                ),
-                child: Text(
-                  AppLocalizations.of(context).homeViewInvitations,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
+              );
+            },
           ),
         );
       }
@@ -1709,7 +1621,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           // Logo
-          Image.asset('assets/icons/Logo horizontal-text.png', height: 34, fit: BoxFit.contain),
+          Image.asset('assets/icons/Logo horizontal-text.png', height: 38, fit: BoxFit.contain),
 
           // Right: bell + menu (Figma spec — 38×38 bgElevated circles, 8px gap)
           Row(
@@ -1723,23 +1635,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               _TopNavCircleButton(
                 onTap: () => Navigator.push(
                   context,
-                  PageRouteBuilder(
-                    pageBuilder: (_, __, ___) => const SettingsScreen(),
-                    transitionDuration: const Duration(milliseconds: 350),
-                    reverseTransitionDuration: const Duration(milliseconds: 300),
-                    transitionsBuilder: (_, animation, __, child) {
-                      final curved = CurvedAnimation(
-                        parent: animation,
-                        curve: Curves.easeInOut,
-                      );
-                      return SlideTransition(
-                        position: Tween<Offset>(
-                          begin: const Offset(1.0, 0.0),
-                          end: Offset.zero,
-                        ).animate(curved),
-                        child: child,
-                      );
-                    },
+                  MaterialPageRoute(
+                    builder: (_) => const SettingsScreen(),
                   ),
                 ),
                 svgAsset: 'assets/icons/card icons/List.svg',
@@ -2941,7 +2838,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             onTap: onAddTap,
             child: Container(
               decoration: BoxDecoration(
-                color: const Color(0xFF62D5B6).withValues(alpha: 0.14),
+                color: AppColors.bgElevated,
                 borderRadius: BorderRadius.circular(AppDecorations.radius10),
               ),
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
@@ -4892,8 +4789,8 @@ class _TopNavCircleButton extends StatelessWidget {
             child: Center(
               child: SvgPicture.asset(
                 svgAsset,
-                width: 21.375,
-                height: 21.375,
+                width: 24,
+                height: 24,
                 colorFilter: const ColorFilter.mode(
                   Colors.white,
                   BlendMode.srcIn,

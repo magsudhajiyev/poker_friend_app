@@ -92,10 +92,9 @@ class _GlobalBottomNavBarState extends State<GlobalBottomNavBar> {
             ],
           ),
 
-          // Right: white circle FAB (44px)
-          GestureDetector(
-            key: widget.fabKey,
-            behavior: HitTestBehavior.opaque,
+          // Right: circle FAB (44px) with tactile press animation
+          _FabButton(
+            fabKey: widget.fabKey,
             onTap: () async {
               if (widget.onNavigationAttempt != null) {
                 final ok = await widget.onNavigationAttempt!();
@@ -141,25 +140,6 @@ class _GlobalBottomNavBarState extends State<GlobalBottomNavBar> {
                 );
               }
             },
-            child: Container(
-              width: 44,
-              height: 44,
-              decoration: const BoxDecoration(
-                color: AppColors.bgElevated,
-                shape: BoxShape.circle,
-              ),
-              child: Center(
-                child: SvgPicture.asset(
-                  'icons/figma_icons/plus.svg',
-                  width: 25,
-                  height: 25,
-                  colorFilter: const ColorFilter.mode(
-                    AppColors.textPrimary,
-                    BlendMode.srcIn,
-                  ),
-                ),
-              ),
-            ),
           ),
         ],
       ),
@@ -268,6 +248,65 @@ class _NavIcon extends StatelessWidget {
                   height: 28,
                   color: useActivePath ? null : color,
                 ),
+        ),
+      ),
+    );
+  }
+}
+
+
+/// 44×44 bgElevated FAB circle with an obvious tactile press animation:
+/// scales to 1.28× with a spring-back curve so the tap is unmistakably
+/// registered by the user.
+class _FabButton extends StatefulWidget {
+  final GlobalKey? fabKey;
+  final Future<void> Function() onTap;
+
+  const _FabButton({required this.fabKey, required this.onTap});
+
+  @override
+  State<_FabButton> createState() => _FabButtonState();
+}
+
+class _FabButtonState extends State<_FabButton> {
+  bool _pressed = false;
+
+  void _setPressed(bool value) {
+    if (!mounted || _pressed == value) return;
+    setState(() => _pressed = value);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      key: widget.fabKey,
+      onTap: widget.onTap,
+      onTapDown: (_) => _setPressed(true),
+      onTapUp: (_) => _setPressed(false),
+      onTapCancel: () => _setPressed(false),
+      behavior: HitTestBehavior.opaque,
+      child: AnimatedScale(
+        scale: _pressed ? 1.28 : 1.0,
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeOutBack,
+        child: Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            color: _pressed ? AppColors.accentPrimary : AppColors.bgElevated,
+            shape: BoxShape.circle,
+          ),
+          child: Center(
+            child: SvgPicture.asset(
+              'icons/figma_icons/plus.svg',
+              width: 25,
+              height: 25,
+              colorFilter: ColorFilter.mode(
+                _pressed ? AppColors.textInverse : AppColors.textPrimary,
+                BlendMode.srcIn,
+              ),
+            ),
+          ),
         ),
       ),
     );

@@ -1,7 +1,10 @@
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../l10n/app_localizations.dart';
+import '../design_system/components/buttons/back_button_circle.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/spacing.dart';
 import '../services/subscription_service.dart';
@@ -182,30 +185,43 @@ class _PaywallScreenState extends State<PaywallScreen> {
     final l10n = AppLocalizations.of(context);
     final bottomPadding = MediaQuery.of(context).padding.bottom;
 
+    final topPadding = MediaQuery.of(context).padding.top;
+    final topBarHeight = topPadding + 56;
     return Scaffold(
       backgroundColor: AppColors.bgPrimary,
       body: Column(
         children: [
-          _buildTopBar(l10n),
           Expanded(
-            child: SingleChildScrollView(
-              padding: EdgeInsets.only(
-                top: AppSpacing.xl,
-                left: AppSpacing.md,
-                right: AppSpacing.md,
-                bottom: AppSpacing.xl,
-              ),
-              child: Column(
-                children: [
-                  _buildHeader(l10n),
-                  const SizedBox(height: 24),
-                  _buildBillingToggle(l10n),
-                  const SizedBox(height: 24),
-                  _buildPlanCards(l10n),
-                  const SizedBox(height: 24),
-                  _buildFooter(l10n),
-                ],
-              ),
+            child: Stack(
+              children: [
+                // Scroll region — pads top so content clears the blurred bar.
+                SingleChildScrollView(
+                  padding: EdgeInsets.only(
+                    top: topBarHeight + AppSpacing.xl,
+                    left: AppSpacing.md,
+                    right: AppSpacing.md,
+                    bottom: AppSpacing.xl,
+                  ),
+                  child: Column(
+                    children: [
+                      _buildHeader(l10n),
+                      const SizedBox(height: 24),
+                      _buildBillingToggle(l10n),
+                      const SizedBox(height: 24),
+                      _buildPlanCards(l10n),
+                      const SizedBox(height: 24),
+                      _buildFooter(l10n),
+                    ],
+                  ),
+                ),
+                // Blurred translucent top bar overlays the scroll region.
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  child: _buildTopBar(l10n),
+                ),
+              ],
             ),
           ),
           _buildBottomButton(l10n, bottomPadding),
@@ -216,31 +232,29 @@ class _PaywallScreenState extends State<PaywallScreen> {
 
   Widget _buildTopBar(AppLocalizations l10n) {
     final topPadding = MediaQuery.of(context).padding.top;
-    return Container(
-      color: AppColors.bgSurface,
-      padding: EdgeInsets.only(top: topPadding, bottom: 12),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          SizedBox(
-            height: 44,
+    return ClipRect(
+      child: BackdropFilter(
+        filter: ui.ImageFilter.blur(sigmaX: 30, sigmaY: 30),
+        child: Container(
+          color: AppColors.bgPrimary.withValues(alpha: 0.6),
+          padding: EdgeInsets.only(top: topPadding, bottom: 12),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                height: 44,
             child: Stack(
               children: [
-                // Back chevron — hidden when the Skip button is shown
+                // Back button — hidden when the Skip button is shown
                 // (onboarding paywall), kept for feature-gate paywalls so they
                 // stay dismissible.
                 if (!widget.showSkip)
                   Align(
                     alignment: Alignment.centerLeft,
-                    child: GestureDetector(
-                      onTap: () => Navigator.of(context).pop(),
-                      child: Padding(
-                        padding: EdgeInsets.only(left: AppSpacing.md),
-                        child: const Icon(
-                          Icons.arrow_back_ios_new,
-                          color: Colors.white,
-                          size: 20,
-                        ),
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: AppSpacing.md),
+                      child: BackButtonCircle(
+                        onPressed: () => Navigator.of(context).pop(),
                       ),
                     ),
                   ),
@@ -281,6 +295,8 @@ class _PaywallScreenState extends State<PaywallScreen> {
             ),
           ),
         ],
+      ),
+        ),
       ),
     );
   }
@@ -327,7 +343,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
   Widget _buildBillingToggle(AppLocalizations l10n) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.separatorDark,
+        color: AppColors.bgSurface,
         borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
       ),
       padding: const EdgeInsets.all(4),
@@ -340,7 +356,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                 duration: const Duration(milliseconds: 200),
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 decoration: BoxDecoration(
-                  color: !_isAnnual ? Colors.white : Colors.transparent,
+                  color: !_isAnnual ? AppColors.bgElevated : Colors.transparent,
                   borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
                 ),
                 child: Center(
@@ -351,7 +367,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                       color: !_isAnnual
-                          ? AppColors.textInverse
+                          ? AppColors.textPrimary
                           : AppColors.textSecondary,
                     ),
                   ),
@@ -366,7 +382,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                 duration: const Duration(milliseconds: 200),
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 decoration: BoxDecoration(
-                  color: _isAnnual ? Colors.white : Colors.transparent,
+                  color: _isAnnual ? AppColors.bgElevated : Colors.transparent,
                   borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
                 ),
                 child: Center(
@@ -377,7 +393,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                       color: _isAnnual
-                          ? AppColors.textInverse
+                          ? AppColors.textPrimary
                           : AppColors.textSecondary,
                     ),
                   ),

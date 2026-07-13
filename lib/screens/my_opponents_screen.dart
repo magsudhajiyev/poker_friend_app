@@ -812,34 +812,8 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> with SingleTicker
                 ),
               ),
             ),
-            if (searchQuery.isEmpty) ...[
-              const SizedBox(height: 24),
-              GestureDetector(
-                onTap: _openAddForm,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                  decoration: BoxDecoration(
-                    color: AppColors.bgSurface,
-                    borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.add, color: AppColors.bgPrimary, size: 16),
-                      const SizedBox(width: 8),
-                      Text(
-                        l10n.opponentsAddButton,
-                        style: AppTypography.ibm(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textInverse,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
+            // Add-opponent CTA lives in the bottom pill, so no duplicate
+            // button in the empty state.
           ],
           ),
         ),

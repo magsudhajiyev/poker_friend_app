@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../design_system/constants/colors.dart';
-import '../../design_system/components/backgrounds/gradient_background.dart';
 import '../../l10n/app_localizations.dart';
 import '../../design_system/constants/typography.dart';
 import '../../design_system/constants/decorations.dart';
+import 'onboarding_scaffold.dart';
 
 class GameTypeStep extends StatefulWidget {
   final ValueChanged<String> onContinue;
@@ -26,130 +26,53 @@ class _GameTypeStepState extends State<GameTypeStep>
   Widget build(BuildContext context) {
     super.build(context);
     final l10n = AppLocalizations.of(context);
-    final bottomPadding = MediaQuery.of(context).padding.bottom;
 
-    return Stack(
-      children: [
-        const GradientBackground(),
-        Positioned.fill(
-          child: Opacity(
-            opacity: 0.4,
-            child: Image.asset(
-              'assets/main_background.png',
-              fit: BoxFit.cover,
-              alignment: Alignment.center,
+    return OnboardingScaffold(
+      currentStep: 2,
+      onBack: widget.onBack,
+      onContinue:
+          _selected != null ? () => widget.onContinue(_selected!) : null,
+      continueLabel: l10n.onboardingContinue,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 48),
+          Text(
+            l10n.onboardingGameTypeTitle,
+            textAlign: TextAlign.left,
+            style: AppTypography.ibm(
+              fontSize: 32,
+              fontWeight: FontWeight.w700,
+              color: Colors.white,
+              height: 1.15,
+              letterSpacing: -1.4,
             ),
           ),
-        ),
-        SafeArea(
-          bottom: false,
-          child: Column(
-            children: [
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 16),
-                      if (widget.onBack != null)
-                        _buildBackChevron(widget.onBack!),
-                      const SizedBox(height: 16),
-                      Text(
-                        l10n.onboardingGameTypeTitle,
-                        style: AppTypography.ibm(
-                          fontSize: 32,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                          letterSpacing: -0.5,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        l10n.onboardingGameTypeSubtitle,
-                        style: AppTypography.ibm(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w400,
-                          color: AppColors.textDisabled,
-                          height: 1.5,
-                        ),
-                      ),
-                      const SizedBox(height: 40),
-                      _OptionCard(
-                        label: l10n.onboardingGameTypeCash,
-                        isSelected: _selected == 'cash',
-                        onTap: () => setState(() => _selected = 'cash'),
-                      ),
-                      const SizedBox(height: 12),
-                      _OptionCard(
-                        label: l10n.onboardingGameTypeTournament,
-                        isSelected: _selected == 'tournament',
-                        onTap: () => setState(() => _selected = 'tournament'),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              // Continue button
-              Padding(
-                padding: EdgeInsets.fromLTRB(
-                  24,
-                  0,
-                  24,
-                  bottomPadding > 0 ? bottomPadding + 16 : 40,
-                ),
-                child: SizedBox(
-                  width: double.infinity,
-                  height: 56,
-                  child: ElevatedButton(
-                    onPressed:
-                        _selected != null ? () => widget.onContinue(_selected!) : null,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: AppColors.bgPrimary,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(110),
-                      ),
-                      elevation: 0,
-                      disabledBackgroundColor:
-                          Colors.white.withValues(alpha: 0.5),
-                    ),
-                    child: Text(
-                      l10n.onboardingContinue,
-                      style: AppTypography.ibm(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.bgPrimary,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
+          const SizedBox(height: 8),
+          Text(
+            l10n.onboardingGameTypeSubtitle,
+            textAlign: TextAlign.left,
+            style: AppTypography.ibm(
+              fontSize: 17,
+              fontWeight: FontWeight.w400,
+              color: AppColors.textSecondary,
+              height: 1.5,
+              letterSpacing: -0.5,
+            ),
           ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildBackChevron(VoidCallback onTap) {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.1),
-            shape: BoxShape.circle,
+          const SizedBox(height: 40),
+          _OptionCard(
+            label: l10n.onboardingGameTypeCash,
+            isSelected: _selected == 'cash',
+            onTap: () => setState(() => _selected = 'cash'),
           ),
-          child: const Icon(
-            Icons.arrow_back_ios_new,
-            color: Colors.white,
-            size: 18,
+          const SizedBox(height: 12),
+          _OptionCard(
+            label: l10n.onboardingGameTypeTournament,
+            isSelected: _selected == 'tournament',
+            onTap: () => setState(() => _selected = 'tournament'),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -175,12 +98,12 @@ class _OptionCard extends StatelessWidget {
         height: 56,
         padding: const EdgeInsets.symmetric(horizontal: 16),
         decoration: BoxDecoration(
-          color: AppColors.surfaceDark.withValues(alpha: 0.8),
+          color: AppColors.bgElevated,
           borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
           border: Border.all(
             color: isSelected
-                ? AppColors.accentSecondary.withValues(alpha: 0.5)
-                : Colors.white.withValues(alpha: 0.08),
+                ? AppColors.accentPrimary
+                : AppColors.borderStrong,
             width: isSelected ? 1.5 : 1,
           ),
         ),
@@ -204,8 +127,8 @@ class _OptionCard extends StatelessWidget {
                 shape: BoxShape.circle,
                 border: Border.all(
                   color: isSelected
-                      ? AppColors.accentSecondary
-                      : Colors.white.withValues(alpha: 0.3),
+                      ? AppColors.accentPrimary
+                      : AppColors.borderStrong,
                   width: 2,
                 ),
               ),
@@ -216,7 +139,7 @@ class _OptionCard extends StatelessWidget {
                         height: 12,
                         decoration: const BoxDecoration(
                           shape: BoxShape.circle,
-                          color: AppColors.accentSecondary,
+                          color: AppColors.accentPrimary,
                         ),
                       ),
                     )

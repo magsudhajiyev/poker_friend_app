@@ -11,6 +11,7 @@ import '../widgets/loading_screen.dart';
 import '../widgets/global_bottom_nav_bar.dart';
 import '../design_system/components/cards/error_state_card.dart';
 import '../design_system/components/headers/top_nav_bar.dart';
+import '../design_system/components/modals/confirm_dialog.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/typography.dart';
 import '../services/app_data_cache.dart';
@@ -734,7 +735,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
 
   Widget _buildChip(String iconPath, String text) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
         color: AppColors.bgElevated,
         borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
@@ -742,13 +743,6 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          SvgPicture.asset(
-            iconPath,
-            width: 12,
-            height: 12,
-            colorFilter: const ColorFilter.mode(AppColors.contentInactive, BlendMode.srcIn),
-          ),
-          const SizedBox(width: 4),
           Text(
             text,
             style: AppTypography.ibm(
@@ -1043,49 +1037,12 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
 
   void _showClearConfirmation() {
     final l10n = AppLocalizations.of(context);
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Row(
-          children: [
-            Icon(Icons.warning, color: Colors.red),
-            SizedBox(width: 8),
-            Text(l10n.sessionClearAllTitle),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(l10n.sessionClearAllDescription),
-            SizedBox(height: 8),
-            Text(
-              l10n.sessionClearAllWarning,
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Colors.red,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(l10n.commonCancel),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _clearAllSessions();
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-            ),
-            child: Text(l10n.sessionClearAll),
-          ),
-        ],
-      ),
+    ConfirmDialog.show(
+      context,
+      title: l10n.sessionClearAllTitle,
+      message: '${l10n.sessionClearAllDescription}\n\n${l10n.sessionClearAllWarning}',
+      confirmLabel: l10n.sessionClearAll,
+      onConfirm: _clearAllSessions,
     );
   }
 

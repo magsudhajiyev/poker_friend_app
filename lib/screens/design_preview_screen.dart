@@ -14,6 +14,7 @@ import '../design_system/constants/colors.dart';
 import '../design_system/constants/typography.dart';
 import '../design_system/constants/decorations.dart';
 import '../models/game_types.dart';
+import '../models/hand_state_machine.dart';
 import '../models/poker_game_state.dart';
 import '../widgets/hole_cards_dialog.dart';
 import '../widgets/board_cards_dialog.dart';
@@ -37,6 +38,7 @@ import '../design_system/components/cards/info_card.dart';
 import '../design_system/components/cards/semi_transparent_card.dart';
 import '../design_system/components/cards/error_state_card.dart';
 import '../widgets/register_club_dialog.dart';
+import 'logging_mode_selection_screen.dart';
 import '../services/locale_service.dart';
 import '../services/currency_service.dart';
 import '../models/currency.dart';
@@ -1205,6 +1207,192 @@ class DesignPreviewScreen extends StatelessWidget {
                       confirmTextColor: AppColors.textInverse,
                       onConfirm: () {},
                     ),
+                  );
+                }),
+
+                const SizedBox(height: 24),
+
+                // ── Section 9: Log Hand Flow ────────────────────
+                // All modals surfaced during a single log-hand session,
+                // in the order the user typically hits them.
+                const SectionHeader(title: 'Log Hand Flow'),
+                const SizedBox(height: 8),
+
+                // 1. Entry
+                _devButton('LoggingModeSelectionScreen', const Color(0xFFF6B26B), () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const LoggingModeSelectionScreen(),
+                    ),
+                  );
+                }),
+                const SizedBox(height: 8),
+
+                // 2. Seat / table config
+                _devButton('SeatConfigSheet', const Color(0xFFF6B26B), () {
+                  SeatConfigSheet.show(
+                    context: context,
+                    seatNumber: 3,
+                    initialName: 'Player 3',
+                    initialStack: 1000,
+                    isHero: false,
+                    isActive: true,
+                    defaultStack: 1000,
+                    onSave: ({required name, required stack, required isHero, required isActive}) {},
+                  );
+                }),
+                const SizedBox(height: 8),
+                _devButton('TableManagementSheet (needs live session)', const Color(0xFFF6B26B), () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('TableManagementSheet requires a live PokerSessionManager — preview from an active session.'),
+                      duration: Duration(seconds: 3),
+                    ),
+                  );
+                }),
+                const SizedBox(height: 8),
+
+                // 3. Cards
+                _devButton('HoleCardsDialog', const Color(0xFFF6B26B), () {
+                  showDialog(
+                    context: context,
+                    builder: (_) => const HoleCardsDialog(usedCards: {}),
+                  );
+                }),
+                const SizedBox(height: 8),
+                _devButton('BoardCardsDialog (Flop)', const Color(0xFFF6B26B), () {
+                  showDialog(
+                    context: context,
+                    builder: (_) => const BoardCardsDialog(
+                      currentRound: BettingRound.flop,
+                      excludedCards: [],
+                      usedCards: {},
+                    ),
+                  );
+                }),
+                const SizedBox(height: 8),
+                _devButton('BoardCardsDialog (Turn)', const Color(0xFFF6B26B), () {
+                  showDialog(
+                    context: context,
+                    builder: (_) => BoardCardsDialog(
+                      currentRound: BettingRound.turn,
+                      existingCards: BoardCards(flop: const ['A♠', 'K♥', '2♣']),
+                      excludedCards: const [],
+                      usedCards: const {'A♠', 'K♥', '2♣'},
+                    ),
+                  );
+                }),
+                const SizedBox(height: 8),
+                _devButton('BoardCardsDialog (River)', const Color(0xFFF6B26B), () {
+                  showDialog(
+                    context: context,
+                    builder: (_) => BoardCardsDialog(
+                      currentRound: BettingRound.river,
+                      existingCards: BoardCards(flop: const ['A♠', 'K♥', '2♣'], turn: '9♦'),
+                      excludedCards: const [],
+                      usedCards: const {'A♠', 'K♥', '2♣', '9♦'},
+                    ),
+                  );
+                }),
+                const SizedBox(height: 8),
+                _devButton('AllInBoardCardsDialog', const Color(0xFFF6B26B), () {
+                  showDialog(
+                    context: context,
+                    builder: (_) => const AllInBoardCardsDialog(excludedCards: []),
+                  );
+                }),
+                const SizedBox(height: 8),
+
+                // 4. Winner + showdown
+                _devButton('WinnerSelectionDialog', const Color(0xFFF6B26B), () {
+                  WinnerSelectionDialog.show(
+                    context: context,
+                    activePlayers: const [1, 2, 3],
+                    playerNames: const ['Hero', 'Villain 1', 'Villain 2'],
+                    potAmount: 1500,
+                    buttonPosition: 1,
+                    playerCount: 3,
+                    gameType: GameType.cash,
+                    heroSeat: 1,
+                  );
+                }),
+                const SizedBox(height: 8),
+                _devButton('MultiPotWinnerDialog', const Color(0xFFF6B26B), () {
+                  MultiPotWinnerDialog.show(
+                    context: context,
+                    sidePots: [
+                      SidePot(amount: 900, eligiblePlayers: [1, 2, 3, 4], maxContribution: 300),
+                      SidePot(amount: 600, eligiblePlayers: [1, 2, 3], maxContribution: 200),
+                    ],
+                    playerNames: ['Hero', 'Villain 1', 'Villain 2', 'Villain 3'],
+                    playerIdToName: {1: 'Hero (BTN)', 2: 'Villain 1 (SB)', 3: 'Villain 2 (BB)', 4: 'Villain 3 (UTG)'},
+                    buttonPosition: 1,
+                    playerCount: 4,
+                    gameType: GameType.cash,
+                    heroSeat: 1,
+                  );
+                }),
+                const SizedBox(height: 8),
+                _devButton('ShowdownDialog', const Color(0xFFF6B26B), () {
+                  showDialog(
+                    context: context,
+                    builder: (_) => const ShowdownDialog(
+                      playerCount: 3,
+                      activePlayers: [1, 2, 3],
+                    ),
+                  );
+                }),
+                const SizedBox(height: 8),
+
+                // 5. Skip / review
+                _devButton('SkipHandScoutingSheet', const Color(0xFFF6B26B), () {
+                  SkipHandScoutingSheet.show(
+                    context: context,
+                    playerNames: {1: 'Hero', 2: 'Villain 1', 3: 'Villain 2', 4: 'Villain 3', 5: 'Villain 4'},
+                    activeSeats: {1, 2, 3, 4, 5},
+                    heroSeat: 1,
+                    buttonPosition: 3,
+                  );
+                }),
+                const SizedBox(height: 8),
+                _devButton('HandReviewDialog', const Color(0xFFF6B26B), () {
+                  showDialog(
+                    context: context,
+                    builder: (_) => const HandReviewDialog(usedCards: {}),
+                  );
+                }),
+                const SizedBox(height: 8),
+
+                // 6. Confirmations
+                _devButton('ConfirmDialog (Exit active session)', const Color(0xFFF6B26B), () {
+                  ConfirmDialog.show(
+                    context,
+                    title: 'Exit session?',
+                    message: 'Your current hand and session progress will be saved. You can resume from Sessions.',
+                    confirmLabel: 'Exit',
+                    onConfirm: () {},
+                  );
+                }),
+                const SizedBox(height: 8),
+
+                // 7. End of session
+                _devButton('SessionEndBankrollSheet (Cash)', const Color(0xFFF6B26B), () {
+                  SessionEndBankrollSheet.show(
+                    context: context,
+                    gameType: GameType.cash,
+                    totalBuyIn: 500,
+                    profitLoss: 150,
+                    durationMinutes: 180,
+                  );
+                }),
+                const SizedBox(height: 8),
+                _devButton('SessionEndBankrollSheet (Tournament)', const Color(0xFFF6B26B), () {
+                  SessionEndBankrollSheet.show(
+                    context: context,
+                    gameType: GameType.tournament,
+                    totalBuyIn: 200,
+                    durationMinutes: 300,
                   );
                 }),
 

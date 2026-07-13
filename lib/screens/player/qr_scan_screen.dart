@@ -3,6 +3,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import '../../l10n/app_localizations.dart';
 import '../../services/qr_service.dart';
 import 'qr_join_screen.dart';
+import '../../design_system/components/buttons/back_button_circle.dart';
 import '../../design_system/constants/colors.dart';
 import '../../design_system/constants/decorations.dart';
 import '../../utils/user_facing_error.dart';
@@ -102,9 +103,15 @@ class _QRScanScreenState extends State<QRScanScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         title: Text(AppLocalizations.of(context).qrScanTitle),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
+        leadingWidth: 56,
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 16),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: BackButtonCircle(
+              onPressed: () => Navigator.pop(context),
+            ),
+          ),
         ),
         actions: [
           IconButton(

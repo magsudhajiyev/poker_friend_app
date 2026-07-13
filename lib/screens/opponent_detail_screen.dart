@@ -1315,12 +1315,12 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
     StateSetter? sheetSetState;
 
     const colorSwatches = [
-      (OpponentColor.green,  Color(0xFF39FF14)),
+      (OpponentColor.green,  AppColors.opponentGreen),
       (OpponentColor.orange, AppColors.accentTertiary),
       (OpponentColor.red,    AppColors.accentDanger),
       (OpponentColor.blue,   AppColors.accentInfo),
-      (OpponentColor.purple, Color(0xFFBF5AF2)),
-      (OpponentColor.teal,   Color(0xFFFFD60A)),
+      (OpponentColor.purple, AppColors.opponentPurple),
+      (OpponentColor.teal,   AppColors.opponentYellow),
     ];
 
     void refreshSheet() => sheetSetState?.call(() {});

@@ -174,7 +174,7 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
       mode: isChoppedPot
           ? PlayerSelectionMode.checkbox
           : PlayerSelectionMode.radio,
-      accentColor: AppColors.textPrimary,
+      accentColor: AppColors.accentSecondary,
       onTap: () {
         if (isChoppedPot) {
           setState(() {
@@ -210,7 +210,7 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
       title: isChoppedPot
           ? l10n.winnerSelectionWhoChopped
           : l10n.winnerSelectionWhoWon,
-      heightFraction: 0.95,
+      heightFraction: 0.75,
       body: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [

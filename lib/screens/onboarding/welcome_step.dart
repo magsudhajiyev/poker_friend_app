@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../../design_system/constants/colors.dart';
-import '../../design_system/components/backgrounds/gradient_background.dart';
-import '../../l10n/app_localizations.dart';
 import '../../design_system/constants/typography.dart';
+import '../../l10n/app_localizations.dart';
+import 'onboarding_scaffold.dart';
 
 class WelcomeStep extends StatelessWidget {
   final VoidCallback onContinue;
@@ -12,92 +13,57 @@ class WelcomeStep extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final bottomPadding = MediaQuery.of(context).padding.bottom;
 
-    return Stack(
-      children: [
-        const GradientBackground(),
-        // Background poker chip image
-        Positioned.fill(
-          child: Opacity(
-            opacity: 0.4,
-            child: Image.asset(
-              'assets/main_background.png',
-              fit: BoxFit.cover,
-              alignment: Alignment.center,
+    return OnboardingScaffold(
+      currentStep: 1,
+      onBack: null,
+      onContinue: onContinue,
+      continueLabel: l10n.onboardingContinue,
+      scrollable: false,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Figma places the logo at ~47% down the screen. Smaller top flex
+          // pushes content up so the layout matches.
+          const Spacer(flex: 4),
+          // Logo — Figma node 1822:14020. The SVG already ships the
+          // 56×56 bgPrimary rounded rectangle, the 1.27px white border,
+          // and the "final table" wordmark, so we render it directly at
+          // its intrinsic size without any wrapper.
+          Center(
+            child: SvgPicture.asset(
+              'assets/icons/card icons/Group 8.svg',
+              width: 56,
+              height: 56,
             ),
           ),
-        ),
-        SafeArea(
-          bottom: false,
-          child: Column(
-            children: [
-              const Spacer(flex: 3),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      l10n.onboardingWelcomeTitle,
-                      style: AppTypography.ibm(
-                        fontSize: 42,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                        height: 1.1,
-                        letterSpacing: -1.5,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      l10n.onboardingWelcomeSubtitle,
-                      style: AppTypography.ibm(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w400,
-                        color: AppColors.textDisabled,
-                        height: 1.5,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const Spacer(flex: 2),
-              // Continue button
-              Padding(
-                padding: EdgeInsets.fromLTRB(
-                  24,
-                  0,
-                  24,
-                  bottomPadding > 0 ? bottomPadding + 16 : 40,
-                ),
-                child: SizedBox(
-                  width: double.infinity,
-                  height: 56,
-                  child: ElevatedButton(
-                    onPressed: onContinue,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: AppColors.bgPrimary,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(110),
-                      ),
-                      elevation: 0,
-                    ),
-                    child: Text(
-                      l10n.onboardingContinue,
-                      style: AppTypography.ibm(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.bgPrimary,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
+          const SizedBox(height: 36),
+          Text(
+            l10n.onboardingWelcomeTitle,
+            textAlign: TextAlign.center,
+            style: AppTypography.ibm(
+              fontSize: 44,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+              height: 1.1,
+              letterSpacing: -2.2,
+            ),
           ),
-        ),
-      ],
+          const SizedBox(height: 8),
+          Text(
+            l10n.onboardingWelcomeSubtitle,
+            textAlign: TextAlign.center,
+            style: AppTypography.ibm(
+              fontSize: 17,
+              fontWeight: FontWeight.w400,
+              color: AppColors.textSecondary,
+              height: 1.5,
+              letterSpacing: -0.85,
+            ),
+          ),
+          const Spacer(flex: 5),
+        ],
+      ),
     );
   }
 }

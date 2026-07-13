@@ -7,6 +7,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/components/headers/top_nav_bar.dart';
 import '../design_system/components/modals/confirm_dialog.dart';
+import '../design_system/components/sheets/app_sheet.dart';
 import '../services/auth_service.dart';
 import '../services/username_service.dart';
 import '../services/display_identity_service.dart';
@@ -213,39 +214,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final message = AuthService.isAnonymous
         ? l10n.anonSignOutWarning
         : l10n.profileSignOutConfirmation;
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.surfaceVariant4,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDecorations.radius20)),
-        title: Text(l10n.profileSignOut, style: AppTypography.ibm(color: Colors.white, fontWeight: FontWeight.w600)),
-        content: Text(message,
-            style: AppTypography.ibm(color: Colors.white, fontSize: 14)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(l10n.commonCancel, style: AppTypography.ibm(color: _secondary, fontWeight: FontWeight.w500)),
-          ),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(ctx);
-              // Navigate to Intro FIRST so the logout registers on the first
-              // tap, regardless of auth-stream timing. Awaiting signOut() before
-              // navigating meant its auth-stream churn (worse for guests) could
-              // trip AuthWrapper's "unexpected logout" recovery loading and leave
-              // the user on the same screen. Removing AuthWrapper from the stack
-              // here bypasses that; the sign-out clears the session in the
-              // background.
-              Navigator.pushAndRemoveUntil(
-                  context, MaterialPageRoute(builder: (_) => IntroScreen()), (_) => false);
-              try {
-                await AuthService.signOut();
-              } catch (_) {}
-            },
-            child: Text(l10n.profileSignOut, style: AppTypography.ibm(color: _danger, fontWeight: FontWeight.w500)),
-          ),
-        ],
-      ),
+    ConfirmDialog.show(
+      context,
+      title: l10n.profileSignOut,
+      message: message,
+      confirmLabel: l10n.profileSignOut,
+      onConfirm: () async {
+        // Navigate to Intro FIRST so the logout registers on the first tap
+        // regardless of auth-stream timing. Awaiting signOut() before
+        // navigating meant its auth-stream churn (worse for guests) could
+        // trip AuthWrapper's "unexpected logout" recovery loading and leave
+        // the user on the same screen. Removing AuthWrapper from the stack
+        // here bypasses that; the sign-out clears the session in the
+        // background.
+        Navigator.pushAndRemoveUntil(
+            context, MaterialPageRoute(builder: (_) => IntroScreen()), (_) => false);
+        try {
+          await AuthService.signOut();
+        } catch (_) {}
+      },
     );
   }
 
@@ -833,51 +820,48 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   void _showChangePasswordSheet() {
     final l10n = AppLocalizations.of(context);
-    showModalBottomSheet(
+    AppSheet.show<void>(
       context: context,
-      backgroundColor: _surface,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(AppDecorations.radiusXl))),
-      builder: (ctx) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(l10n.profileChangePasswordTitle,
-                  style: AppTypography.ibm(fontSize: 20, fontWeight: FontWeight.w600, color: Colors.white)),
-              const SizedBox(height: 8),
-              Text(l10n.profileChangePasswordMessage,
-                  style: AppTypography.ibm(fontSize: 14, color: _secondary), textAlign: TextAlign.center),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                child: GestureDetector(
-                  onTap: () async {
-                    Navigator.pop(ctx);
-                    final email = AuthService.currentUser?.email;
-                    if (email != null) {
-                      try {
-                        await AuthService.sendPasswordReset(email);
-                        if (mounted) _showSnack(l10n.profileResetEmailSent(email), isSuccess: true);
-                      } catch (e) {
-                        if (mounted) _showSnack(l10n.profileResetEmailFailed);
-                      }
-                    }
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    decoration: BoxDecoration(
-                        color: _elevated, borderRadius: BorderRadius.circular(AppDecorations.buttonRadius)),
-                    child: Text(l10n.profileSendResetEmail,
-                        textAlign: TextAlign.center,
-                        style: AppTypography.ibm(
-                            fontSize: 17, fontWeight: FontWeight.w600, color: Colors.white)),
-                  ),
+      title: l10n.profileChangePasswordTitle,
+      heightFraction: null,
+      body: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n.profileChangePasswordMessage,
+            style: AppTypography.ibm(fontSize: 14, color: _secondary),
+          ),
+          const SizedBox(height: 24),
+          SizedBox(
+            width: double.infinity,
+            child: GestureDetector(
+              onTap: () async {
+                Navigator.pop(context);
+                final email = AuthService.currentUser?.email;
+                if (email != null) {
+                  try {
+                    await AuthService.sendPasswordReset(email);
+                    if (mounted) _showSnack(l10n.profileResetEmailSent(email), isSuccess: true);
+                  } catch (e) {
+                    if (mounted) _showSnack(l10n.profileResetEmailFailed);
+                  }
+                }
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                decoration: BoxDecoration(
+                    color: _elevated, borderRadius: BorderRadius.circular(AppDecorations.buttonRadius)),
+                child: Text(
+                  l10n.profileSendResetEmail,
+                  textAlign: TextAlign.center,
+                  style: AppTypography.ibm(
+                      fontSize: 17, fontWeight: FontWeight.w600, color: Colors.white),
                 ),
               ),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }

@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../design_system/components/buttons/close_circle_button.dart';
+import '../design_system/components/dialogs/app_dialog.dart';
 import '../design_system/components/headers/top_nav_bar.dart';
+import '../design_system/components/sheets/app_sheet.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../design_system/constants/colors.dart';
 import '../l10n/app_localizations.dart';
@@ -185,12 +187,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
             final maxHeight = MediaQuery.of(context).size.height * 0.85;
             return Container(
               constraints: BoxConstraints(maxHeight: maxHeight),
-              decoration: const BoxDecoration(
-                color: AppColors.bgSurface,
-                borderRadius: BorderRadius.only(
+              decoration: BoxDecoration(
+                color: AppColors.bgPrimary,
+                borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(AppDecorations.radiusXl),
                   topRight: Radius.circular(AppDecorations.radiusXl),
                 ),
+                border: Border.all(color: AppColors.borderStrong),
               ),
               padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + bottomInset),
               child: SafeArea(
@@ -218,15 +221,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                       const SizedBox(height: 24),
                       // Bordered language list
-                      Container(
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          border: Border.all(color: AppColors.borderOnInverseSubtle),
-                          borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
-                        ),
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          children: _languageOptions.asMap().entries.map((entry) {
+                      Column(
+                        children: _languageOptions.asMap().entries.map((entry) {
                             final idx = entry.key;
                             final opt = entry.value;
                             final isSelected = opt.code == selectedCode;
@@ -238,14 +234,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   child: Container(
                                     padding: const EdgeInsets.all(8),
                                     decoration: BoxDecoration(
-                                      color: isSelected ? AppColors.borderOnInverseSubtle : Colors.transparent,
+                                      color: isSelected ? AppColors.bgElevated : Colors.transparent,
                                       borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
                                     ),
                                     child: Row(
                                       children: [
                                         // Icon: globe for system default, flag for others
                                         if (opt.flagAsset == null)
-                                          const Icon(Icons.public, size: 24, color: AppColors.bgPrimary)
+                                          const Icon(Icons.public, size: 24, color: AppColors.textPrimary)
                                         else
                                           ClipRRect(
                                             borderRadius: BorderRadius.circular(2),
@@ -280,7 +276,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             );
                           }).toList(),
                         ),
-                      ),
                       const SizedBox(height: 16),
                       // Info row
                       Row(
@@ -308,7 +303,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 padding: const EdgeInsets.symmetric(vertical: 12),
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
-                                  border: Border.all(color: AppColors.borderLight),
+                                  border: Border.all(color: AppColors.borderStrong),
                                 ),
                                 child: Text(
                                   l10n.commonCancel,
@@ -316,7 +311,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   style: AppTypography.ibm(
                                     fontSize: 15,
                                     fontWeight: FontWeight.w600,
-                                    color: AppColors.textInverse,
+                                    color: AppColors.textPrimary,
                                     height: 20 / 15,
                                   ),
                                 ),
@@ -336,7 +331,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               child: Container(
                                 padding: const EdgeInsets.symmetric(vertical: 12),
                                 decoration: BoxDecoration(
-                                  color: AppColors.bgPrimary,
+                                  color: AppColors.bgInverse,
                                   borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
                                 ),
                                 child: Text(
@@ -345,7 +340,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   style: AppTypography.ibm(
                                     fontSize: 15,
                                     fontWeight: FontWeight.w600,
-                                    color: Colors.white,
+                                    color: AppColors.textInverse,
                                     height: 20 / 15,
                                   ),
                                 ),
@@ -405,12 +400,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
             final maxHeight = MediaQuery.of(context).size.height * 0.78;
             return Container(
               constraints: BoxConstraints(maxHeight: maxHeight),
-              decoration: const BoxDecoration(
-                color: AppColors.bgSurface,
-                borderRadius: BorderRadius.only(
+              decoration: BoxDecoration(
+                color: AppColors.bgPrimary,
+                borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(AppDecorations.radiusXl),
                   topRight: Radius.circular(AppDecorations.radiusXl),
                 ),
+                border: Border.all(color: AppColors.borderStrong),
               ),
               padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + bottomInset),
               child: SafeArea(
@@ -457,7 +453,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               child: Container(
                                 padding: const EdgeInsets.all(8),
                                 decoration: BoxDecoration(
-                                  color: isSelected ? const Color(0xFFF5F5F5) : Colors.transparent,
+                                  color: isSelected ? AppColors.bgElevated : Colors.transparent,
                                   borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
                                 ),
                                 child: Row(
@@ -481,8 +477,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                           fontSize: 15,
                                           fontWeight: FontWeight.w400,
                                           color: isSelected
-                                              ? AppColors.textInverse
-                                              : AppColors.contentInactive,
+                                              ? AppColors.textPrimary
+                                              : AppColors.textSecondary,
                                         ),
                                       ),
                                     ),
@@ -528,7 +524,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                       padding: const EdgeInsets.symmetric(vertical: 12),
                                       decoration: BoxDecoration(
                                         borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
-                                        border: Border.all(color: AppColors.borderLight),
+                                        border: Border.all(color: AppColors.borderStrong),
                                       ),
                                       child: Text(
                                         l10n.commonCancel,
@@ -536,7 +532,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                         style: AppTypography.ibm(
                                           fontSize: 15,
                                           fontWeight: FontWeight.w600,
-                                          color: AppColors.textInverse,
+                                          color: AppColors.textPrimary,
                                           height: 20 / 15,
                                         ),
                                       ),
@@ -554,7 +550,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                     child: Container(
                                       padding: const EdgeInsets.symmetric(vertical: 12),
                                       decoration: BoxDecoration(
-                                        color: AppColors.bgPrimary,
+                                        color: AppColors.bgInverse,
                                         borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
                                       ),
                                       child: Text(
@@ -563,7 +559,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                         style: AppTypography.ibm(
                                           fontSize: 15,
                                           fontWeight: FontWeight.w600,
-                                          color: Colors.white,
+                                          color: AppColors.textInverse,
                                           height: 20 / 15,
                                         ),
                                       ),
@@ -657,117 +653,71 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void _showClubs() {
     final l10n = AppLocalizations.of(context);
     if (_clubs.isEmpty) {
-      final bottomInset = MediaQuery.of(context).padding.bottom;
-      showGeneralDialog(
-        context: context,
-        barrierDismissible: true,
-        barrierLabel: l10n.settingsNoClubs,
-        barrierColor: Colors.black.withValues(alpha: 0.45),
-        transitionDuration: const Duration(milliseconds: 300),
-        transitionBuilder: (_, animation, __, child) => SlideTransition(
-          position: Tween<Offset>(
-            begin: const Offset(0, 1),
-            end: Offset.zero,
-          ).animate(CurvedAnimation(parent: animation, curve: Curves.easeInOut)),
-          child: child,
-        ),
-        pageBuilder: (dialogContext, _, __) => Material(
-          color: Colors.transparent,
-          child: Align(
-          alignment: Alignment.bottomCenter,
-          child: Container(
-              width: double.infinity,
-              decoration: const BoxDecoration(
-                color: AppColors.bgSurface,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(AppDecorations.radiusXl)),
+      AppDialog.show<void>(
+        context,
+        title: l10n.settingsNoClubsYet,
+        showCloseButton: true,
+        body: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            const SizedBox(height: 4),
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: AppColors.bgElevated,
+                shape: BoxShape.circle,
               ),
-              padding: EdgeInsets.fromLTRB(24, 24, 24, bottomInset + 32),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  // Content block (gap 24 between header row and icon+text)
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      // Header row: empty flex spacer + X close
-                      Row(
-                        children: [
-                          const Expanded(child: SizedBox()),
-                          CloseCircleButton(onTap: () => Navigator.pop(dialogContext)),
-                        ],
-                      ),
-                      const SizedBox(height: 24),
-                      // Icon + text block
-                      Column(
-                        children: [
-                          SvgPicture.asset(
-                            'assets/icons/Club.svg',
-                            width: 38,
-                            height: 38,
-                            colorFilter: const ColorFilter.mode(AppColors.bgPrimary, BlendMode.srcIn),
-                          ),
-                          const SizedBox(height: 16),
-                          // Title + body
-                          Column(
-                            children: [
-                              Text(
-                                l10n.settingsNoClubsYet,
-                                textAlign: TextAlign.center,
-                                style: AppTypography.ibm(
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.textPrimary,
-                                  height: 20 / 17,
-                                ),
-                              ),
-                              const SizedBox(height: 7),
-                              Text(
-                                l10n.settingsNoClubsHint,
-                                textAlign: TextAlign.center,
-                                style: AppTypography.ibm(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w400,
-                                  color: AppColors.textSecondary,
-                                  height: 22 / 15,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ],
+              child: Center(
+                child: SvgPicture.asset(
+                  'assets/icons/Club.svg',
+                  width: 28,
+                  height: 28,
+                  colorFilter: const ColorFilter.mode(
+                    AppColors.textPrimary,
+                    BlendMode.srcIn,
                   ),
-                  const SizedBox(height: 24),
-                  // Full-width black pill button
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.pop(dialogContext);
-                      _openRegisterClub();
-                    },
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                      decoration: BoxDecoration(
-                        color: AppColors.bgInverse,
-                        borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
-                      ),
-                      child: Text(
-                        l10n.settingsRegisterAClub,
-                        textAlign: TextAlign.center,
-                        style: AppTypography.ibm(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textInverse,
-                          height: 20 / 15,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
-          ),
+            const SizedBox(height: 16),
+            Text(
+              l10n.settingsNoClubsHint,
+              textAlign: TextAlign.center,
+              style: AppTypography.ibm(
+                fontSize: 15,
+                fontWeight: FontWeight.w400,
+                color: AppColors.textSecondary,
+                height: 22 / 15,
+              ),
+            ),
+            const SizedBox(height: 24),
+            GestureDetector(
+              onTap: () {
+                Navigator.pop(context);
+                _openRegisterClub();
+              },
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                decoration: BoxDecoration(
+                  color: AppColors.bgInverse,
+                  borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
+                ),
+                child: Text(
+                  l10n.settingsRegisterAClub,
+                  textAlign: TextAlign.center,
+                  style: AppTypography.ibm(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textInverse,
+                    height: 20 / 15,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       );
       return;

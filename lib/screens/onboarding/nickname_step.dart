@@ -1,13 +1,13 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../design_system/constants/colors.dart';
-import '../../design_system/components/backgrounds/gradient_background.dart';
 import '../../l10n/app_localizations.dart';
 import '../../services/auth_service.dart';
 import '../../services/username_service.dart';
 import '../../services/display_identity_service.dart';
 import '../../design_system/constants/typography.dart';
 import '../../design_system/constants/decorations.dart';
+import 'onboarding_scaffold.dart';
 
 class NicknameStep extends StatefulWidget {
   final VoidCallback onContinue;
@@ -137,197 +137,123 @@ class _NicknameStepState extends State<NicknameStep>
   Widget build(BuildContext context) {
     super.build(context);
     final l10n = AppLocalizations.of(context);
-    final bottomPadding = MediaQuery.of(context).padding.bottom;
-    final viewInsets = MediaQuery.of(context).viewInsets;
 
-    return Stack(
-      children: [
-        const GradientBackground(),
-        Positioned.fill(
-          child: Opacity(
-            opacity: 0.4,
-            child: Image.asset(
-              'assets/main_background.png',
-              fit: BoxFit.cover,
-              alignment: Alignment.center,
-            ),
+    return OnboardingScaffold(
+      currentStep: 2,
+      onBack: widget.onBack,
+      onContinue: _canClaim ? _claimUsername : null,
+      continueLabel: l10n.usernameSetupClaimButton,
+      secondaryAction: GestureDetector(
+        onTap: _isClaiming ? null : _skip,
+        child: Text(
+          l10n.onboardingSkipNickname,
+          style: AppTypography.ibm(
+            fontSize: 15,
+            color: AppColors.textSecondary,
+            decoration: TextDecoration.underline,
+            decorationColor: AppColors.textSecondary,
           ),
         ),
-        SafeArea(
-          bottom: false,
-          child: Column(
-            children: [
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 16),
-                      if (widget.onBack != null)
-                        _buildBackChevron(widget.onBack!),
-                      const SizedBox(height: 16),
-                      Text(
-                        l10n.onboardingNicknameTitle,
-                        style: AppTypography.ibm(
-                          fontSize: 32,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                          letterSpacing: -0.5,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        l10n.onboardingNicknameSubtitle,
-                        style: AppTypography.ibm(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w400,
-                          color: AppColors.textDisabled,
-                          height: 1.5,
-                        ),
-                      ),
-                      const SizedBox(height: 40),
-                      // Username input
-                      TextFormField(
-                        controller: _controller,
-                        onChanged: _onUsernameChanged,
-                        style: AppTypography.ibm(
-                          fontSize: 16,
-                          color: Colors.white,
-                        ),
-                        textInputAction: TextInputAction.done,
-                        autocorrect: false,
-                        enableSuggestions: false,
-                        decoration: InputDecoration(
-                          labelText: l10n.usernameSetupLabel,
-                          labelStyle: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.5),
-                            fontSize: 16,
-                          ),
-                          prefixIcon: Padding(
-                            padding: const EdgeInsets.only(left: 16, right: 4),
-                            child: Text(
-                              '@',
-                              style: AppTypography.ibm(
-                                fontSize: 18,
-                                color: AppColors.accentPrimary,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                          prefixIconConstraints:
-                              const BoxConstraints(minWidth: 0, minHeight: 0),
-                          suffixIcon: _buildSuffixIcon(),
-                          filled: true,
-                          fillColor: Colors.white.withValues(alpha: 0.1),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
-                            borderSide: BorderSide.none,
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
-                            borderSide: BorderSide(
-                              color: Colors.white.withValues(alpha: 0.2),
-                              width: 1,
-                            ),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
-                            borderSide: BorderSide(
-                              color: _hasChecked && !_isAvailable
-                                  ? Colors.red
-                                  : AppColors.accentPrimary,
-                              width: 2,
-                            ),
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 18),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      _buildAvailabilityStatus(),
-                      const SizedBox(height: 8),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 4),
-                        child: Text(
-                          l10n.usernameSetupRulesHint,
-                          style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.35),
-                            fontSize: 13,
-                          ),
-                        ),
-                      ),
-                    ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            l10n.onboardingNicknameTitle,
+            textAlign: TextAlign.center,
+            style: AppTypography.ibm(
+              fontSize: 44,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+              height: 1.1,
+              letterSpacing: -2.2,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            l10n.onboardingNicknameSubtitle,
+            textAlign: TextAlign.center,
+            style: AppTypography.ibm(
+              fontSize: 17,
+              fontWeight: FontWeight.w400,
+              color: AppColors.textSecondary,
+              height: 1.5,
+              letterSpacing: -0.85,
+            ),
+          ),
+          const SizedBox(height: 40),
+          // Username input
+          TextFormField(
+            controller: _controller,
+            onChanged: _onUsernameChanged,
+            style: AppTypography.ibm(
+              fontSize: 16,
+              color: Colors.white,
+            ),
+            textInputAction: TextInputAction.done,
+            autocorrect: false,
+            enableSuggestions: false,
+            decoration: InputDecoration(
+              labelText: l10n.usernameSetupLabel,
+              labelStyle: AppTypography.ibm(
+                color: AppColors.textSecondary,
+                fontSize: 16,
+              ),
+              prefixIcon: Padding(
+                padding: const EdgeInsets.only(left: 16, right: 4),
+                child: Text(
+                  '@',
+                  style: AppTypography.ibm(
+                    fontSize: 18,
+                    color: AppColors.accentPrimary,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
-              // Bottom buttons
-              Padding(
-                padding: EdgeInsets.fromLTRB(
-                  24,
-                  16,
-                  24,
-                  (bottomPadding > 0 ? bottomPadding + 16 : 40) +
-                      viewInsets.bottom,
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SizedBox(
-                      width: double.infinity,
-                      height: 56,
-                      child: ElevatedButton(
-                        onPressed: _canClaim ? _claimUsername : null,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          foregroundColor: AppColors.bgPrimary,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(110),
-                          ),
-                          elevation: 0,
-                          disabledBackgroundColor:
-                              Colors.white.withValues(alpha: 0.5),
-                        ),
-                        child: _isClaiming
-                            ? SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                      AppColors.bgPrimary),
-                                ),
-                              )
-                            : Text(
-                                l10n.usernameSetupClaimButton,
-                                style: AppTypography.ibm(
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.bgPrimary,
-                                ),
-                              ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    TextButton(
-                      onPressed: _isClaiming ? null : _skip,
-                      child: Text(
-                        l10n.onboardingSkipNickname,
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.5),
-                          fontSize: 15,
-                          decoration: TextDecoration.underline,
-                          decorationColor: Colors.white.withValues(alpha: 0.5),
-                        ),
-                      ),
-                    ),
-                  ],
+              prefixIconConstraints:
+                  const BoxConstraints(minWidth: 0, minHeight: 0),
+              suffixIcon: _buildSuffixIcon(),
+              filled: true,
+              fillColor: AppColors.bgElevated,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
+                borderSide: BorderSide.none,
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
+                borderSide: const BorderSide(
+                  color: AppColors.borderStrong,
+                  width: 1,
                 ),
               ),
-            ],
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
+                borderSide: BorderSide(
+                  color: _hasChecked && !_isAvailable
+                      ? AppColors.accentDanger
+                      : AppColors.accentPrimary,
+                  width: 2,
+                ),
+              ),
+              contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16, vertical: 18),
+            ),
           ),
-        ),
-      ],
+          const SizedBox(height: 8),
+          _buildAvailabilityStatus(),
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: Text(
+              l10n.usernameSetupRulesHint,
+              style: AppTypography.ibm(
+                color: AppColors.textDisabled,
+                fontSize: 13,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -341,7 +267,7 @@ class _NicknameStepState extends State<NicknameStep>
             width: 16,
             child: CircularProgressIndicator(
               strokeWidth: 1.5,
-              valueColor: AlwaysStoppedAnimation<Color>(Colors.white54),
+              valueColor: AlwaysStoppedAnimation<Color>(AppColors.textSecondary),
             ),
           ),
         ),
@@ -356,7 +282,7 @@ class _NicknameStepState extends State<NicknameStep>
     if (_hasChecked && !_isAvailable) {
       return const Padding(
         padding: EdgeInsets.only(right: 12),
-        child: Icon(Icons.cancel, color: Colors.red, size: 20),
+        child: Icon(Icons.cancel, color: AppColors.accentDanger, size: 20),
       );
     }
     return null;
@@ -369,8 +295,8 @@ class _NicknameStepState extends State<NicknameStep>
         padding: const EdgeInsets.symmetric(horizontal: 4),
         child: Text(
           l10n.usernameSetupCheckingAvailability,
-          style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.5), fontSize: 13),
+          style: AppTypography.ibm(
+              color: AppColors.textSecondary, fontSize: 13),
         ),
       );
     }
@@ -379,7 +305,8 @@ class _NicknameStepState extends State<NicknameStep>
         padding: const EdgeInsets.symmetric(horizontal: 4),
         child: Text(
           l10n.usernameSetupAvailable,
-          style: const TextStyle(color: AppColors.accentPrimary, fontSize: 13),
+          style: AppTypography.ibm(
+              color: AppColors.accentPrimary, fontSize: 13),
         ),
       );
     }
@@ -388,32 +315,11 @@ class _NicknameStepState extends State<NicknameStep>
         padding: const EdgeInsets.symmetric(horizontal: 4),
         child: Text(
           _availabilityError!,
-          style: const TextStyle(color: Colors.red, fontSize: 13),
+          style: AppTypography.ibm(
+              color: AppColors.accentDanger, fontSize: 13),
         ),
       );
     }
     return const SizedBox.shrink();
-  }
-
-  Widget _buildBackChevron(VoidCallback onTap) {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.1),
-            shape: BoxShape.circle,
-          ),
-          child: const Icon(
-            Icons.arrow_back_ios_new,
-            color: Colors.white,
-            size: 18,
-          ),
-        ),
-      ),
-    );
   }
 }

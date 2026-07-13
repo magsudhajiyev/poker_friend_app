@@ -59,29 +59,35 @@ class _ShowdownDialogState extends State<ShowdownDialog> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    // Cap the scrollable body at ~55% of the screen so multi-player
+    // showdowns scroll internally instead of overflowing the dialog card.
+    final maxBodyHeight = MediaQuery.of(context).size.height * 0.55;
     return AppDialog(
       title: l10n.showdownTitle,
-      body: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              l10n.showdownEnterOpponentCards,
-              style: AppTypography.ibm(
-                fontSize: 15,
-                fontWeight: FontWeight.w400,
-                color: AppColors.textSecondary,
-                height: 22 / 15,
+      body: ConstrainedBox(
+        constraints: BoxConstraints(maxHeight: maxBodyHeight),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                l10n.showdownEnterOpponentCards,
+                style: AppTypography.ibm(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w400,
+                  color: AppColors.textSecondary,
+                  height: 22 / 15,
+                ),
               ),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            ...widget.activePlayers.map(_buildPlayerRow),
-            const SizedBox(height: AppSpacing.xs),
-            _buildWinnerSection(),
-            const SizedBox(height: AppSpacing.md),
-            _buildHandDescriptionField(),
-          ],
+              const SizedBox(height: AppSpacing.md),
+              ...widget.activePlayers.map(_buildPlayerRow),
+              const SizedBox(height: AppSpacing.xs),
+              _buildWinnerSection(),
+              const SizedBox(height: AppSpacing.md),
+              _buildHandDescriptionField(),
+            ],
+          ),
         ),
       ),
       actions: DialogActionBar(

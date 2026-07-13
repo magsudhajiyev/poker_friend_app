@@ -1143,7 +1143,6 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
           initialSeat: widget.heroSeat,
           initialButtonPosition: widget.initialButtonPosition,
           sessionManager: sm,
-          isHubMode: true,
         ),
       ),
     );

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../design_system/constants/colors.dart';
 import '../l10n/app_localizations.dart';
 import '../models/club_notification.dart';
@@ -1165,8 +1166,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   }
 }
 
-/// Right-slot bell for the notifications top nav — 44×44 bgElevated circle
-/// with a 5×5 pink dot when [hasUnread] is true.
+/// Right-slot bell for the notifications top nav — matches the home top-nav
+/// bell exactly: 38×38 bgElevated circle with the 24×24
+/// `notification.svg` icon, centered inside the parent's 44×44 slot.
 class _NotificationsBellAction extends StatelessWidget {
   final bool hasUnread;
 
@@ -1174,39 +1176,45 @@ class _NotificationsBellAction extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        Container(
-          width: 44,
-          height: 44,
-          decoration: const BoxDecoration(
-            color: AppColors.bgElevated,
-            shape: BoxShape.circle,
-          ),
-          child: Center(
-            child: Image.asset(
-              'icons/flat_icons/bell.png',
-              width: 24,
-              height: 24,
-              color: Colors.white,
+    return Center(
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Container(
+            width: 38,
+            height: 38,
+            decoration: const BoxDecoration(
+              color: AppColors.bgElevated,
+              shape: BoxShape.circle,
             ),
-          ),
-        ),
-        if (hasUnread)
-          Positioned(
-            right: 10,
-            top: 10,
-            child: Container(
-              width: 5,
-              height: 5,
-              decoration: const BoxDecoration(
-                color: Color(0xFFE91E63),
-                shape: BoxShape.circle,
+            child: Center(
+              child: SvgPicture.asset(
+                'icons/figma_icons/notification.svg',
+                width: 24,
+                height: 24,
+                colorFilter: const ColorFilter.mode(
+                  Colors.white,
+                  BlendMode.srcIn,
+                ),
               ),
             ),
           ),
-      ],
+          if (hasUnread)
+            Positioned(
+              right: -1,
+              top: -1,
+              child: Container(
+                width: 10,
+                height: 10,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEF5350),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: AppColors.bgPrimary, width: 1.5),
+                ),
+              ),
+            ),
+        ],
+      ),
     );
   }
 }

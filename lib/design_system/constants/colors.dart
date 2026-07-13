@@ -69,6 +69,13 @@ class AppColors {
   static const Color textDisabled  = Color(0xFF8C8C8C);  // Muted text labels
   static const Color errorRed      = Color(0xFFD55A41);  // Error state (distinct from accentDanger)
 
+  // Opponent avatar palette — vibrant, visually distinct swatches used only
+  // for opponent icons/avatars. Intentionally not derived from accent tokens
+  // because opponents need to be distinguishable from status/state colors.
+  static const Color opponentGreen  = Color(0xFF39FF14);  // neon green
+  static const Color opponentPurple = Color(0xFFBF5AF2);  // light violet
+  static const Color opponentYellow = Color(0xFFFFD60A);  // amber-yellow
+
   // Core brand palette (were hardcoded across screens; tokenized 2026-07)
   static const Color paper       = Color(0xFF02050B);  // App background "Paper"
   static const Color surfaceDark = Color(0xFF101115);  // Card/sheet surface

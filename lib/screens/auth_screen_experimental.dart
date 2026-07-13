@@ -6,7 +6,6 @@ import 'package:url_launcher/url_launcher.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/decorations.dart';
 import '../design_system/constants/typography.dart';
-import '../design_system/components/backgrounds/gradient_background.dart';
 import '../design_system/components/buttons/glassy_icon_button.dart';
 import '../l10n/app_localizations.dart';
 import '../services/auth_service.dart';
@@ -494,26 +493,21 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
       canPop: widget.canDismiss,
       child: Scaffold(
         backgroundColor: AppColors.bgPrimary,
-        body: Stack(
-          children: [
-            const GradientBackground(),
-            SafeArea(
-              child: SingleChildScrollView(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      const SizedBox(height: 20),
-                      _buildHeader(),
-                      const SizedBox(height: 40),
-                      _isSignUp ? _buildSignUpForm() : _buildSignInForm(),
-                    ],
-                  ),
-                ),
+        body: SafeArea(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const SizedBox(height: 20),
+                  _buildHeader(),
+                  const SizedBox(height: 40),
+                  _isSignUp ? _buildSignUpForm() : _buildSignInForm(),
+                ],
               ),
             ),
-          ],
+          ),
         ),
       ),
     );

@@ -233,6 +233,7 @@ class _MultiPotWinnerDialogState extends State<MultiPotWinnerDialog> {
         label: playerName,
         selected: singleWinners[potIndex] == playerId,
         mode: PlayerSelectionMode.radio,
+        accentColor: AppColors.accentSecondary,
         onTap: () {
           setState(() {
             singleWinners[potIndex] = playerId;
@@ -266,6 +267,7 @@ class _MultiPotWinnerDialogState extends State<MultiPotWinnerDialog> {
         label: playerName,
         selected: isSelected,
         mode: PlayerSelectionMode.checkbox,
+        accentColor: AppColors.accentSecondary,
         trailing: trailing,
         onTap: () {
           setState(() {

@@ -6,6 +6,7 @@ import '../models/hand_state_machine.dart';
 import '../models/game_types.dart';
 import '../utils/poker_positions.dart';
 import '../services/display_identity_service.dart';
+import '../design_system/components/buttons/close_circle_button.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/decorations.dart';
 import 'seat_config_sheet.dart';
@@ -321,36 +322,20 @@ class _TableManagementModalState extends State<_TableManagementModal> {
   Widget _buildHeader() {
     final l10n = AppLocalizations.of(context);
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Text(
           l10n.tableManageTitle,
           style: AppTypography.ibm(
-            fontSize: 15,
+            fontSize: 17,
             fontWeight: FontWeight.w600,
             color: AppColors.textPrimary,
-            height: 20 / 15,
+            height: 22 / 17,
+            letterSpacing: -0.43,
           ),
         ),
         const Spacer(),
-        GestureDetector(
-          onTap: () => Navigator.pop(context),
-          behavior: HitTestBehavior.opaque,
-          child: SizedBox(
-            width: 28,
-            height: 28,
-            child: Center(
-              child: SvgPicture.asset(
-                'assets/icons/X.svg',
-                width: 18,
-                height: 18,
-                colorFilter: ColorFilter.mode(
-                  AppColors.borderLight,
-                  BlendMode.srcIn,
-                ),
-              ),
-            ),
-          ),
-        ),
+        CloseCircleButton(onTap: () => Navigator.pop(context)),
       ],
     );
   }

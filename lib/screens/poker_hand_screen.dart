@@ -1733,7 +1733,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 12, vertical: 8),
                               decoration: BoxDecoration(
-                                color: AppColors.bgSurface,
+                                color: AppColors.bgInverse,
                                 borderRadius: BorderRadius.circular(AppDecorations.radiusXl),
                               ),
                               child: Text(

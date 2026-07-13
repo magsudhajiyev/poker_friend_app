@@ -9,6 +9,7 @@ import '../utils/poker_positions.dart';
 import '../widgets/loading_screen.dart';
 import 'hand_actions_page_view.dart';
 import '../widgets/global_bottom_nav_bar.dart';
+import '../design_system/components/buttons/back_button_circle.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/typography.dart';
 import '../design_system/constants/decorations.dart';
@@ -184,61 +185,67 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
       bottomNavigationBar: GlobalBottomNavBar(currentScreen: 'sessions'),
       body: Stack(
         children: [
-          SafeArea(
-            child: Column(
+          Column(
               children: [
-                // Header
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
-                  child: Row(
-                    children: [
-                      // Back button - glassy circle
-                      GestureDetector(
-                        onTap: () => Navigator.pop(context),
-                        child: Container(
-                          width: 44,
-                          height: 44,
-                          decoration: const BoxDecoration(
-                            color: AppColors.surfaceDark,
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.arrow_back,
-                            color: Colors.white,
-                            size: 22,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      // Session info
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              widget.session['sessionName'] != null &&
-                              widget.session['sessionName'].isNotEmpty
-                                  ? widget.session['sessionName']
-                                  : AppLocalizations.of(context).sessionHistorySessionId(widget.session['id'].substring(0, 8)),
-                              style: AppTypography.ibm(
-                                fontSize: 20,
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600,
+                // Header — matches TopNavBar geometry (statusBar + 56 + 12)
+                Container(
+                  padding: EdgeInsets.only(
+                    top: MediaQuery.of(context).padding.top,
+                    bottom: 12,
+                  ),
+                  child: SizedBox(
+                    height: 56,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Row(
+                        children: [
+                          SizedBox(
+                            width: 44,
+                            height: 44,
+                            child: Center(
+                              child: BackButtonCircle(
+                                onPressed: () => Navigator.pop(context),
                               ),
                             ),
-                            const SizedBox(height: 2),
-                            Text(
-                              AppLocalizations.of(context).sessionHandsHandsLogged(hands.length),
-                              style: AppTypography.ibm(
-                                fontSize: 13,
-                                color: Colors.white.withOpacity(0.5),
-                                fontWeight: FontWeight.w400,
-                              ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  widget.session['sessionName'] != null &&
+                                          widget.session['sessionName'].isNotEmpty
+                                      ? widget.session['sessionName']
+                                      : AppLocalizations.of(context).sessionHistorySessionId(widget.session['id'].substring(0, 8)),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: AppTypography.ibm(
+                                    fontSize: 17,
+                                    color: AppColors.textPrimary,
+                                    fontWeight: FontWeight.w600,
+                                    height: 22 / 17,
+                                    letterSpacing: -0.43,
+                                  ),
+                                ),
+                                Text(
+                                  AppLocalizations.of(context).sessionHandsHandsLogged(hands.length),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: AppTypography.ibm(
+                                    fontSize: 13,
+                                    color: AppColors.textSecondary,
+                                    fontWeight: FontWeight.w400,
+                                    height: 18 / 13,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
                 ),
 
@@ -248,7 +255,6 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
                 ),
               ],
             ),
-          ),
         ],
       ),
     );

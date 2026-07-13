@@ -1,8 +1,11 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/typography.dart';
 import '../design_system/constants/decorations.dart';
 
+/// Legacy no-op transition — kept for the (rare) case a caller wants
+/// an explicit instant swap. New screens should not use this.
 class NoTransitionsBuilder extends PageTransitionsBuilder {
   const NoTransitionsBuilder();
 
@@ -27,10 +30,14 @@ class AppTheme {
   static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: false,
+      // iOS-style horizontal slide + parallax fade on every platform, so
+      // detail pushes feel consistent between iOS sim, Android, and macOS.
+      // Enables edge-swipe-back on iOS for free.
       pageTransitionsTheme: const PageTransitionsTheme(
         builders: {
-          TargetPlatform.iOS: NoTransitionsBuilder(),
-          TargetPlatform.android: NoTransitionsBuilder(),
+          TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+          TargetPlatform.android: CupertinoPageTransitionsBuilder(),
+          TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
         },
       ),
       // Set IBM Plex Sans as the default font family

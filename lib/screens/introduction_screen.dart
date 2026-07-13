@@ -7,6 +7,7 @@ import '../models/poker_game_state.dart' show formatBlindValue;
 import 'poker_hand_screen.dart';
 import '../widgets/loading_screen.dart';
 import 'logging_mode_selection_screen.dart';
+import '../design_system/components/buttons/close_circle_button.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/decorations.dart';
 import '../design_system/constants/typography.dart';
@@ -76,22 +77,7 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
                           ),
                         ],
                       ),
-                      Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          color: AppColors.surfaceVariant2,
-                          borderRadius: BorderRadius.circular(AppDecorations.radius14),
-                        ),
-                        child: IconButton(
-                          onPressed: () => Navigator.pop(context),
-                          icon: Icon(
-                            Icons.close_rounded,
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                        ),
-                      ),
+                      CloseCircleButton(onTap: () => Navigator.pop(context)),
                     ],
                   ),
                 ),

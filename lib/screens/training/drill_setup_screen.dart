@@ -8,6 +8,7 @@ import '../../design_system/constants/decorations.dart';
 import '../../design_system/constants/spacing.dart';
 import '../../design_system/constants/typography.dart';
 import '../../design_system/components/buttons/app_button.dart';
+import '../../design_system/components/buttons/back_button_circle.dart';
 import '../../design_system/components/modals/confirm_dialog.dart';
 import '../../design_system/components/sheets/app_sheet.dart';
 import '../../models/drill_models.dart';
@@ -235,6 +236,7 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
     return Scaffold(
       backgroundColor: AppColors.bgPrimary,
       body: SafeArea(
+        top: false,
         child: Column(
           children: [
             _buildHeader(),
@@ -299,35 +301,45 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
 
   Widget _buildHeader() {
     final l10n = AppLocalizations.of(context);
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-          AppSpacing.md, AppSpacing.xs, AppSpacing.md, AppSpacing.md),
-      child: Row(
-        children: [
-          GestureDetector(
-            onTap: () => Navigator.pop(context),
-            child: Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                color: AppColors.whiteOverlay(opacity: 0.1),
-                shape: BoxShape.circle,
+    // Matches TopNavBar geometry (statusBar + 56 + 12) so the back button
+    // sits at the same X/Y as every other detail screen.
+    return Container(
+      padding: EdgeInsets.only(
+        top: MediaQuery.of(context).padding.top,
+        bottom: 12,
+      ),
+      child: SizedBox(
+        height: 56,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              SizedBox(
+                width: 44,
+                height: 44,
+                child: Center(
+                  child: BackButtonCircle(
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ),
               ),
-              child: const Icon(Icons.arrow_back,
-                  color: AppColors.textPrimary, size: 20),
-            ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  l10n.drillTitle,
+                  style: AppTypography.ibm(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                    height: 22 / 17,
+                    letterSpacing: -0.43,
+                  ),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: Text(
-              l10n.drillTitle,
-              style: AppTypography.ibm(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -704,6 +716,7 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
     return Scaffold(
       backgroundColor: AppColors.bgPrimary,
       body: SafeArea(
+        top: false,
         child: Column(
           children: [
             _buildHeader(),
