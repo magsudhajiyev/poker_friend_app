@@ -105,6 +105,7 @@ class _SeatConfigSheetState extends State<SeatConfigSheet> {
   late bool _isHero;
   late bool _isActive;
   bool _saveAsOpponent = false;
+  bool _selectedFromSaved = false;
   List<Opponent> _allOpponents = [];
   List<Opponent> _filteredOpponents = [];
   // The pre-filled stack text at open time — used to tell an untouched
@@ -152,6 +153,16 @@ class _SeatConfigSheetState extends State<SeatConfigSheet> {
 
   void _onNameChanged() {
     final query = _nameController.text.trim().toLowerCase();
+
+    // If user edits the name after selecting a saved opponent, re-enable toggle
+    if (_selectedFromSaved) {
+      final stillMatchesSaved = _allOpponents
+          .any((o) => o.name.toLowerCase() == query);
+      if (!stillMatchesSaved) {
+        _selectedFromSaved = false;
+      }
+    }
+
     if (query.isEmpty) {
       setState(() => _filteredOpponents = []);
       return;
@@ -168,7 +179,11 @@ class _SeatConfigSheetState extends State<SeatConfigSheet> {
     _nameController.removeListener(_onNameChanged);
     _nameController.text = opponent.name;
     _nameController.addListener(_onNameChanged);
-    setState(() => _filteredOpponents = []);
+    setState(() {
+      _filteredOpponents = [];
+      _selectedFromSaved = true;
+      _saveAsOpponent = false;
+    });
     FocusScope.of(context).unfocus();
   }
 
@@ -235,9 +250,11 @@ class _SeatConfigSheetState extends State<SeatConfigSheet> {
       width: 38,
       height: 24,
       decoration: BoxDecoration(
-        color: AppColors.bgPrimary,
+        color: value ? AppColors.accentPrimary : AppColors.bgPrimary,
         borderRadius: BorderRadius.circular(74),
-        border: Border.all(color: AppColors.borderDefault),
+        border: Border.all(
+          color: value ? AppColors.accentPrimary : AppColors.borderDefault,
+        ),
       ),
       child: AnimatedAlign(
         duration: const Duration(milliseconds: 180),
@@ -469,7 +486,7 @@ class _SeatConfigSheetState extends State<SeatConfigSheet> {
               ],
 
               // ─── SAVE AS OPPONENT ─────────────────────────────────
-              if (widget.showSaveAsOpponent) ...[
+              if (widget.showSaveAsOpponent && !_selectedFromSaved) ...[
                 const SizedBox(height: 8),
                 GestureDetector(
                 onTap: () => setState(() {

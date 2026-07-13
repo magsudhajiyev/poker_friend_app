@@ -1264,10 +1264,7 @@ class _DrillSummarySheet extends StatelessWidget {
         ? 0
         : ((correct + ok * 0.5) / records.length * 100).round();
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space5),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
+    return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
@@ -1344,7 +1341,6 @@ class _DrillSummarySheet extends StatelessWidget {
               ],
           ),
         ],
-      ),
     );
   }
 

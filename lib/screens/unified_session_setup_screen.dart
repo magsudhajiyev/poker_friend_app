@@ -15,6 +15,7 @@ import '../onboarding/onboarding_state.dart';
 import '../onboarding/onboarding_tour.dart';
 import '../onboarding/onboarding_progress_bar.dart';
 import 'poker_hand_screen.dart';
+import 'session_details_screen.dart';
 import '../design_system/constants/typography.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/decorations.dart';
@@ -247,22 +248,26 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
       }
     }
 
+    // Set onboarding flag for the new Session Details hub tour step
+    if (OnboardingState.isOnboardingActive) {
+      OnboardingState.sessionDetailsHubTourPending = true;
+    }
+
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
-        builder: (context) => PokerHandScreen(
-          smallBlind: _smallBlind,
-          bigBlind: _bigBlind,
-          numberOfPlayers: 9,
-          gameType: _gameType,
-          hasBBante: _hasBBante,
-          ante: _hasBBante ? _bigBlind : 0,
+        builder: (context) => SessionDetailsScreen(
           sessionName: sessionName,
           buyInAmount: buyIn,
           startingStack: startingStack,
-          initialSeat: _heroSeat,
-          initialButtonPosition: buttonPos,
+          gameType: _gameType,
+          smallBlind: _smallBlind,
+          bigBlind: _bigBlind,
+          hasBBante: _hasBBante,
           sessionManager: sessionManager,
+          heroSeat: _heroSeat,
+          initialButtonPosition: buttonPos,
+          ante: _hasBBante ? _bigBlind : 0,
         ),
       ),
     );
@@ -374,6 +379,19 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
                   _buildFormSection(l10n),
                   const SizedBox(height: 24),
                   _buildTableCard(l10n),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10, left: 4),
+                    child: Text(
+                      l10n.setupTableOptionalHint,
+                      style: AppTypography.ibm(
+                        fontSize: 13,
+                        color: Colors.white.withValues(alpha: 0.4),
+                        fontWeight: FontWeight.w400,
+                        height: 1.4,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ),
                   const SizedBox(height: 32),
                   _buildStartButton(l10n),
                   const SizedBox(height: 48),

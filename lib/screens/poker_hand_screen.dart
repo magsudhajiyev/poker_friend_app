@@ -70,6 +70,10 @@ class PokerHandScreen extends StatefulWidget {
   final int? initialButtonPosition;
   final PokerSessionManager? sessionManager;
 
+  /// When true, SessionDetailsScreen is the hub below this screen.
+  /// ⓘ button pops back with result; end session pops to home.
+  final bool isHubMode;
+
   const PokerHandScreen({
     super.key,
     required this.smallBlind,
@@ -84,6 +88,7 @@ class PokerHandScreen extends StatefulWidget {
     this.initialSeat,
     this.initialButtonPosition,
     this.sessionManager,
+    this.isHubMode = false,
   });
 
   @override
@@ -186,6 +191,9 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
   final GlobalKey _nextHandButtonKey = GlobalKey(debugLabel: 'nextHandButton');
   final GlobalKey _undoButtonKey = GlobalKey(debugLabel: 'undoButton');
   final GlobalKey _sessionInfoButtonKey = GlobalKey(debugLabel: 'sessionInfoButton');
+  final GlobalKey _emptySeatSpotlightKey = GlobalKey(debugLabel: 'emptySeatSpotlight');
+  final GlobalKey _seatedOpponentCircleKey = GlobalKey(debugLabel: 'seatedOpponentCircle');
+  int? _lastAddedOpponentSeat;
 
   @override
   void initState() {
@@ -672,6 +680,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
             (route) => false,
           );
         } else {
+          // Pop all the way to home (works for both hub mode and legacy)
           Navigator.of(context).popUntil((route) => route.isFirst);
         }
       } catch (e) {
@@ -1830,6 +1839,41 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
           currentRound: gameState.currentRound,
           liveCurrentPlayer: () => gameState.currentPlayer,
           onSkipOrFinish: () => setState(() {}),
+          onDealNextHand: () {
+            if (!mounted) return;
+            setState(() {
+              gameState.startNewHand();
+              gameState.initializePot();
+              sessionManager.startHand(
+                gameState.handNumber,
+                gameState.buttonPosition,
+                sbSeat: gameState.effectiveSBPosition,
+                bbSeat: gameState.effectiveBBPosition,
+              );
+            });
+          },
+          firstEmptySeatKey: () {
+            // Return the spotlight key attached to the first non-hero empty seat's circle
+            if (_emptySeatSpotlightKey.currentContext != null) {
+              return _emptySeatSpotlightKey;
+            }
+            return null;
+          },
+          onReinitializeHand: () {
+            // Re-initialize the hand after opponents are added during tour
+            if (!mounted) return;
+            setState(() {
+              gameState.finalizeInitialization();
+              gameState.initializePot();
+              sessionManager.startHand(
+                gameState.handNumber,
+                gameState.buttonPosition,
+                sbSeat: gameState.effectiveSBPosition,
+                bbSeat: gameState.effectiveBBPosition,
+              );
+            });
+          },
+          activePlayerCount: () => sessionManager.activeSeats.length,
         ),
         // Gesture tooltip backdrop (closes tooltip when tapping outside drawing area)
         if (_showGestureTooltip)
@@ -2015,6 +2059,17 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     }
   }
 
+  /// Returns the first empty seat number that isn't the hero's seat.
+  int? _firstNonHeroEmptySeat() {
+    final heroSeat = sessionManager.ourSeatNumber ?? -1;
+    for (int seat = 1; seat <= 9; seat++) {
+      if (seat != heroSeat && !sessionManager.activeSeats.contains(seat)) {
+        return seat;
+      }
+    }
+    return null;
+  }
+
   /// Builds a compact seat widget showing player state (name, stack, bet, fold/all-in).
   Widget _buildHandSeat(int seatNumber, bool isActive, String label) {
     final playerState = gameState.players[seatNumber - 1];
@@ -2075,11 +2130,19 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         : buildCircle(0.0);
 
     if (!isActive) {
+      // Attach spotlight key to the circle of the first non-hero empty seat
+      final heroSeat = sessionManager.ourSeatNumber ?? -1;
+      final isSpotlightSeat = OnboardingState.isOnboardingActive &&
+          seatNumber != heroSeat &&
+          _firstNonHeroEmptySeat() == seatNumber;
+      final spotlightCircle = isSpotlightSeat
+          ? Container(key: _emptySeatSpotlightKey, child: circle)
+          : circle;
       // Empty seat — just the pill and "Player" label
       return Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          circle,
+          spotlightCircle,
           const SizedBox(height: 2),
           Text(
             AppLocalizations.of(context).pokerTablePlayerFallback,
@@ -2092,6 +2155,14 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
           ),
         ],
       );
+    }
+
+    // Attach spotlight key to the circle of the last-added opponent (for tour)
+    final Widget activeCircle;
+    if (_lastAddedOpponentSeat == seatNumber && OnboardingState.isOnboardingActive) {
+      activeCircle = Container(key: _seatedOpponentCircleKey, child: circle);
+    } else {
+      activeCircle = circle;
     }
 
     // Player name
@@ -2170,7 +2241,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          circle,
+          activeCircle,
           const SizedBox(height: 2),
           nameWidget,
           stackWidget,
@@ -2315,7 +2386,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     });
   }
 
-  void _onSeatTapped(int seatNumber) {
+  Future<void> _onSeatTapped(int seatNumber) async {
     final isActive = sessionManager.activeSeats.contains(seatNumber);
     final isHero = seatNumber == (sessionManager.ourSeatNumber ?? -1);
 
@@ -2347,7 +2418,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     final heroLatestStack = sessionManager.latestHeroStack(gameState);
 
     final l10n = AppLocalizations.of(context);
-    SeatConfigSheet.show(
+    await SeatConfigSheet.show(
       context: context,
       seatNumber: seatNumber,
       initialName: isHero ? heroName : currentName,
@@ -2428,6 +2499,18 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         setState(() {});
       },
     );
+
+    // After SeatConfigSheet closes: notify the guided tour to continue
+    if (OnboardingState.isGuidedSessionActive && mounted) {
+      _lastAddedOpponentSeat = seatNumber;
+      setState(() {}); // rebuild so _seatedOpponentCircleKey attaches
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _guidedOverlayKey.currentState?.onOpponentAdded(
+          addedSeatKey: _seatedOpponentCircleKey,
+        );
+      });
+    }
   }
 
   // ─── SEAT LONG-PRESS STACK RING ────────────────────────────────
@@ -2683,7 +2766,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
           height: 40,
           margin: const EdgeInsets.symmetric(horizontal: 2),
           decoration: BoxDecoration(
-            color: AppColors.bgSurface,
+            color: Colors.white,
             borderRadius: BorderRadius.circular(3),
             boxShadow: [
               BoxShadow(
@@ -5231,7 +5314,23 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       currentStack = sessionManager.initialStartingStack ?? widget.startingStack ?? 0.0;
     }
 
-    // Navigate to individual session tracking screen with current data
+    // Hub mode: pop back to SessionDetailsScreen with result
+    if (widget.isHubMode) {
+      final resultMap = <String, dynamic>{
+        'updatedStack': currentStack,
+        'totalBuyIn': sessionManager.totalBuyIn,
+        'stackHistory': List<Map<String, dynamic>>.from(sessionManager.stackHistory),
+        'smallBlind': sessionManager.smallBlind,
+        'bigBlind': sessionManager.bigBlind,
+        'handsLogged': sessionManager.completedHands.length,
+        'biggestPot': sessionManager.biggestPot,
+        'completedHands': List<HandRecord>.from(sessionManager.completedHands),
+      };
+      Navigator.pop(context, resultMap);
+      return;
+    }
+
+    // Legacy mode: push SessionDetailsScreen on top
     final result = await Navigator.push<Map<String, dynamic>>(
       context,
       MaterialPageRoute(
@@ -5300,12 +5399,12 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       }
     }
 
-    // Guided tour: returning from the first (explain) session-details visit —
-    // deal a fresh hand (auto-advance is suppressed during the guided session,
-    // so hand 1's completion never dealt one), then prompt the user to log it.
-    // guidedHandPhase is already `done` here, so hand 2 is free play (not
-    // re-scripted). Mirrors _skipSettling()'s deal without the settling overlay.
-    if (OnboardingState.sessionDetailsExplainReturnPending && mounted) {
+    // Legacy (non-hub) tour: returning from the first (explain) session-details
+    // visit — deal a fresh hand and prompt the user to log one more hand.
+    // In hub mode this is no longer used (hands are back-to-back).
+    if (!widget.isHubMode &&
+        OnboardingState.sessionDetailsExplainReturnPending &&
+        mounted) {
       OnboardingState.sessionDetailsExplainReturnPending = false;
       setState(() {
         gameState.startNewHand();
