@@ -40,8 +40,10 @@ import '../onboarding/onboarding_progress_bar.dart';
 import '../design_system/design_system.dart';
 import '../design_system/poker_friend_theme.dart';
 import '../design_system/components/buttons/close_circle_button.dart';
+import '../design_system/components/cards/swipe_to_delete_cell.dart';
 import '../design_system/components/dialogs/app_dialog.dart';
 import '../design_system/components/dialogs/dialog_action_bar.dart';
+import '../design_system/components/modals/confirm_dialog.dart';
 import '../design_system/components/drawer_dots.dart';
 import '../design_system/components/cards/error_state_card.dart';
 import '../services/seat_service.dart';
@@ -2781,7 +2783,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           else
             Column(
               children: recentSessions.take(3).map((session) {
-                return _buildSessionRow(session);
+                return SwipeToDeleteCell(
+                  key: ValueKey('session-${session['id']}'),
+                  onDelete: () => _confirmDeleteSession(session),
+                  child: _buildSessionRow(session),
+                );
               }).toList(),
             ),
         ],
@@ -2911,6 +2917,33 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 ),
         ),
       ],
+    );
+  }
+
+  /// Confirms + deletes a session (invoked from the swipe-to-delete cell
+  /// on Recent Sessions rows). Both Firebase and local mirror stores are
+  /// removed, then the visible list is refreshed.
+  Future<void> _confirmDeleteSession(Map<String, dynamic> session) async {
+    final l10n = AppLocalizations.of(context);
+    final sessionId = session['id'] as String?;
+    if (sessionId == null) return;
+
+    ConfirmDialog.show(
+      context,
+      title: l10n.sessionAnalyticsDeleteTitle,
+      message: l10n.sessionAnalyticsDeleteMessage,
+      confirmLabel: l10n.commonDelete,
+      onConfirm: () async {
+        try {
+          await FirebaseService.deleteSession(sessionId);
+          await LocalStorageService.deleteSession(sessionId);
+        } catch (_) {}
+        if (!mounted) return;
+        setState(() {
+          recentSessions.removeWhere((s) => s['id'] == sessionId);
+        });
+        AppDataCache.markSessionsDirty();
+      },
     );
   }
 

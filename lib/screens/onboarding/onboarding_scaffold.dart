@@ -67,26 +67,13 @@ class OnboardingScaffold extends StatelessWidget {
         bottom: false,
         child: Column(
           children: [
-            // Progress bar — only the CURRENT segment is highlighted.
+            // Progress bar — the current-step highlight slides between
+            // positions when [currentStep] changes.
             Padding(
               padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
-              child: Row(
-                children: [
-                  for (int i = 0; i < totalSteps; i++) ...[
-                    if (i > 0) const SizedBox(width: 8),
-                    Expanded(
-                      child: Container(
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: i == currentStep - 1
-                              ? AppColors.accentPrimary
-                              : AppColors.borderStrong,
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                    ),
-                  ],
-                ],
+              child: _AnimatedProgressBar(
+                currentStep: currentStep,
+                totalSteps: totalSteps,
               ),
             ),
             const SizedBox(height: 24),
@@ -202,6 +189,75 @@ class _BackPillButton extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Progress bar with a **slide highlight** — renders 6 gray track segments
+/// and a single overlaid green bar positioned over the current step. When
+/// [currentStep] changes the green bar animates its `left` position, so the
+/// highlight appears to glide between steps rather than snapping.
+class _AnimatedProgressBar extends StatelessWidget {
+  final int currentStep;
+  final int totalSteps;
+  final double gap;
+  final double height;
+
+  const _AnimatedProgressBar({
+    required this.currentStep,
+    required this.totalSteps,
+    this.gap = 8,
+    this.height = 4,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final segmentWidth =
+            (constraints.maxWidth - gap * (totalSteps - 1)) / totalSteps;
+        final highlightLeft = (currentStep - 1) * (segmentWidth + gap);
+        return SizedBox(
+          height: height,
+          width: constraints.maxWidth,
+          child: Stack(
+            children: [
+              // Gray track — all segments always visible.
+              Row(
+                children: [
+                  for (int i = 0; i < totalSteps; i++) ...[
+                    if (i > 0) SizedBox(width: gap),
+                    Container(
+                      width: segmentWidth,
+                      height: height,
+                      decoration: BoxDecoration(
+                        color: AppColors.borderStrong,
+                        borderRadius:
+                            BorderRadius.circular(height / 2),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+              // Green highlight — slides to the current step position.
+              AnimatedPositioned(
+                duration: const Duration(milliseconds: 320),
+                curve: Curves.easeOutCubic,
+                left: highlightLeft.clamp(0.0, double.infinity),
+                top: 0,
+                bottom: 0,
+                width: segmentWidth,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.accentPrimary,
+                    borderRadius: BorderRadius.circular(height / 2),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
