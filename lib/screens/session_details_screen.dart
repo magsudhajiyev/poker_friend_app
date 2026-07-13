@@ -1638,29 +1638,9 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
         }
       },
       child: Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: AppColors.bgPrimary,
       body: Stack(
         children: [
-          // Teal radial gradient at top
-          Positioned(
-            top: -screenWidth * 0.5,
-            right: -screenWidth * 0.2,
-            child: Container(
-              width: screenWidth * 1.2,
-              height: screenWidth * 1.2,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    const Color(0xFF1A4A4A).withOpacity(0.6),
-                    AppColors.accentPrimary.withOpacity(0.3),
-                    Colors.transparent,
-                  ],
-                  stops: const [0.0, 0.4, 1.0],
-                ),
-              ),
-            ),
-          ),
           SafeArea(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -1967,16 +1947,17 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(
-                            (_isHubMode && _handsLogged == 0)
-                                ? Icons.play_arrow_rounded
-                                : Icons.arrow_back,
-                            color: (_isHubMode && _handsLogged == 0)
-                                ? Colors.black
-                                : Colors.white,
-                            size: 20,
-                          ),
-                          const SizedBox(width: 8),
+                          // Hub-mode "Log a Hand" is a clean text-only
+                          // primary CTA — resume mode keeps the back arrow
+                          // to signal returning to an active hand.
+                          if (!(_isHubMode && _handsLogged == 0)) ...[
+                            const Icon(
+                              Icons.arrow_back,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 8),
+                          ],
                           Text(
                             (_isHubMode && _handsLogged == 0)
                                 ? l10n.sessionDetailsLogAHand

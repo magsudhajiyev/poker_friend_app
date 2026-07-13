@@ -66,22 +66,27 @@ class DialogActionBar extends StatelessWidget {
         onTap: _wrap(context, onCancel),
       );
     }
-    return Row(
+    // Stacked layout — solid Confirm on top, outlined Cancel below.
+    // Better mobile tap targets and matches iOS/Android modern dialogs.
+    return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Expanded(
-          child: _OutlinedPill(
-            label: cancelLabel,
-            onTap: _wrap(context, onCancel),
-          ),
-        ),
-        const SizedBox(width: AppSpacing.md),
-        Expanded(
+        SizedBox(
+          width: double.infinity,
           child: _SolidPill(
             label: confirmLabel,
             color: confirmColor,
             textColor: confirmTextColor,
             enabled: enabled,
             onTap: enabled ? _wrap(context, onConfirm) : null,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        SizedBox(
+          width: double.infinity,
+          child: _OutlinedPill(
+            label: cancelLabel,
+            onTap: _wrap(context, onCancel),
           ),
         ),
       ],
