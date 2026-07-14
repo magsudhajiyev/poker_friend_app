@@ -28,9 +28,6 @@ class GlobalBottomNavBar extends StatefulWidget {
     this.sessionsKey,
   }) : super(key: key);
 
-  static const Color _activeColor = AppColors.accentPrimary;
-  static const Color _inactiveColor = Color(0xFF808285);
-
   @override
   State<GlobalBottomNavBar> createState() => _GlobalBottomNavBarState();
 }
@@ -38,8 +35,13 @@ class GlobalBottomNavBar extends StatefulWidget {
 class _GlobalBottomNavBarState extends State<GlobalBottomNavBar> {
   String? _pendingScreen;
 
-  bool _isActive(String screen) =>
-      widget.currentScreen == screen || _pendingScreen == screen;
+  static const _tabOrder = ['home', 'opponents', 'statistics', 'sessions', 'scan'];
+
+  int _activeIndex() {
+    final key = _pendingScreen ?? widget.currentScreen;
+    final i = _tabOrder.indexOf(key);
+    return i < 0 ? 0 : i;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -49,51 +51,35 @@ class _GlobalBottomNavBarState extends State<GlobalBottomNavBar> {
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
         child: Container(
-          color: AppColors.bgPrimary.withValues(alpha: 0.5),
+          color: AppColors.bgPrimary.withValues(alpha: 0.7),
           padding: EdgeInsets.fromLTRB(24, 12, 24, 12 + systemBottomPad),
           child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Left: 5 icon buttons, gap 28px
-          Row(
+          // Left: 5 icon buttons behind a sliding ellipse pill that fluidly
+          // transitions to the active tab.
+          _SlidingIconRow(
+            activeIndex: _activeIndex(),
             children: [
               _NavIcon(
                 path: 'assets/icons/HouseSimple.svg',
-                isSvg: true,
-                isActive: _isActive('home'),
                 onTap: () => _navigateTo(context, 'home'),
               ),
-              const SizedBox(width: 28),
               _NavIcon(
                 path: 'assets/icons/UsersThree.svg',
-                activePath: 'assets/icons/UsersThree-1.svg',
-                isSvg: true,
-                isActive: _isActive('opponents'),
                 onTap: () => _navigateTo(context, 'opponents'),
               ),
-              const SizedBox(width: 28),
               _NavIcon(
                 path: 'assets/icons/ChartBar.svg',
-                activePath: 'assets/icons/ChartBar-1.svg',
-                isSvg: true,
-                isActive: _isActive('statistics'),
                 onTap: () => _navigateTo(context, 'statistics'),
               ),
-              const SizedBox(width: 28),
               _NavIcon(
                 path: 'icons/figma_icons/clock.svg',
-                activePath: 'assets/icons/card icons/Clock filled.svg',
-                isSvg: true,
-                isActive: _isActive('sessions'),
                 itemKey: widget.sessionsKey,
                 onTap: () => _navigateTo(context, 'sessions'),
               ),
-              const SizedBox(width: 28),
               _NavIcon(
                 path: 'icons/flat_icons/scanner.png',
-                activePath: 'assets/icons/card icons/Frame.svg',
-                isSvg: false,
-                isActive: _isActive('scan'),
                 onTap: () => _navigateTo(context, 'scan'),
               ),
             ],
@@ -186,101 +172,113 @@ class _GlobalBottomNavBarState extends State<GlobalBottomNavBar> {
 
 }
 
-/// Single nav icon button — 28×28 touch target.
-/// When [activePath] is provided, that SVG is shown as-is (native colors)
-/// when the icon is active, and [path] is shown with the inactive color filter
-/// when inactive.
-class _NavIcon extends StatefulWidget {
+/// Row of 5 [_NavIcon]s with a sliding ellipse pill that fluidly moves
+/// behind the active tab. The pill uses `Curves.easeOutBack` for a bouncy
+/// arrival at the new tab position.
+class _SlidingIconRow extends StatelessWidget {
+  final int activeIndex;
+  final List<Widget> children;
+
+  static const double _slotWidth = 40;
+  static const double _slotHeight = 40;
+  static const double _gap = 18;
+  static const double _pillWidth = 52;
+  static const double _pillHeight = 36;
+
+  const _SlidingIconRow({required this.activeIndex, required this.children});
+
+  @override
+  Widget build(BuildContext context) {
+    final totalW = children.length * _slotWidth + (children.length - 1) * _gap;
+    final activeCenter =
+        activeIndex * (_slotWidth + _gap) + _slotWidth / 2;
+
+    return SizedBox(
+      width: totalW,
+      height: _slotHeight,
+      child: Stack(
+        alignment: Alignment.center,
+        // Never clip children — the pill (52×36) intentionally overhangs
+        // slot 0 and slot 4 by 6px on each side.
+        clipBehavior: Clip.none,
+        children: [
+          // Sliding ellipse pill — glides between slots.
+          AnimatedPositioned(
+            left: activeCenter - _pillWidth / 2,
+            top: (_slotHeight - _pillHeight) / 2,
+            width: _pillWidth,
+            height: _pillHeight,
+            duration: const Duration(milliseconds: 450),
+            curve: Curves.easeOutBack,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(999),
+              ),
+            ),
+          ),
+          // Icons row.
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              for (int i = 0; i < children.length; i++) ...[
+                if (i > 0) SizedBox(width: _gap),
+                SizedBox(
+                  width: _slotWidth,
+                  height: _slotHeight,
+                  child: Center(child: children[i]),
+                ),
+              ],
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Single nav icon button — 28×28 white glyph.
+///
+/// All tabs render in white; the active state is signalled by the sliding
+/// pill behind them (see [_SlidingIconRow]) rather than a color change.
+class _NavIcon extends StatelessWidget {
   final String path;
-  final String? activePath;
-  final bool isSvg;
-  final bool isActive;
   final VoidCallback onTap;
   final GlobalKey? itemKey;
 
   const _NavIcon({
     required this.path,
-    required this.isSvg,
-    required this.isActive,
     required this.onTap,
-    this.activePath,
     this.itemKey,
   });
 
   @override
-  State<_NavIcon> createState() => _NavIconState();
-}
-
-class _NavIconState extends State<_NavIcon>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _bounce;
-  late final Animation<double> _scale;
-
-  @override
-  void initState() {
-    super.initState();
-    _bounce = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 320),
-    );
-    // Up to 1.18, then settle back to 1.0. Elastic release feels tactile.
-    _scale = TweenSequence<double>([
-      TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.18), weight: 35),
-      TweenSequenceItem(tween: Tween(begin: 1.18, end: 1.0), weight: 65),
-    ]).animate(CurvedAnimation(parent: _bounce, curve: Curves.easeOut));
-  }
-
-  @override
-  void didUpdateWidget(_NavIcon oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    // Bounce when the icon transitions to active (not on initial mount).
-    if (!oldWidget.isActive && widget.isActive) {
-      _bounce.forward(from: 0);
-    }
-  }
-
-  @override
-  void dispose() {
-    _bounce.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final useActivePath = widget.isActive && widget.activePath != null;
-    final resolvedPath = useActivePath ? widget.activePath! : widget.path;
-    final color = widget.isActive
-        ? GlobalBottomNavBar._activeColor
-        : GlobalBottomNavBar._inactiveColor;
-
-    final resolvedIsSvg = resolvedPath.toLowerCase().endsWith('.svg');
-
+    final isSvg = path.toLowerCase().endsWith('.svg');
     return GestureDetector(
-      key: widget.itemKey,
-      onTap: widget.onTap,
+      key: itemKey,
+      onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: SizedBox(
         width: 28,
         height: 28,
         child: Center(
-          child: ScaleTransition(
-            scale: _scale,
-            child: resolvedIsSvg
-                ? SvgPicture.asset(
-                    resolvedPath,
-                    width: 28,
-                    height: 28,
-                    colorFilter: useActivePath
-                        ? null
-                        : ColorFilter.mode(color, BlendMode.srcIn),
-                  )
-                : Image.asset(
-                    resolvedPath,
-                    width: 28,
-                    height: 28,
-                    color: useActivePath ? null : color,
+          child: isSvg
+              ? SvgPicture.asset(
+                  path,
+                  width: 28,
+                  height: 28,
+                  colorFilter: const ColorFilter.mode(
+                    Colors.white,
+                    BlendMode.srcIn,
                   ),
-          ),
+                )
+              : Image.asset(
+                  path,
+                  width: 28,
+                  height: 28,
+                  color: Colors.white,
+                ),
         ),
       ),
     );

@@ -1637,6 +1637,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 onTap: () => _showNotificationsDropdown(context),
                 svgAsset: 'icons/figma_icons/notification.svg',
                 showBadge: _unreadNotificationCount > 0,
+                shakeOnTap: true,
               ),
               const SizedBox(width: 8),
               _TopNavCircleButton(
@@ -4768,59 +4769,119 @@ class _DownArrowPainter extends CustomPainter {
 /// Home top-nav circular action button (bell / list).
 /// 38×38 bgElevated circle with a centered 21.375×21.375 icon. Optional
 /// unread-count dot in the top-right.
-class _TopNavCircleButton extends StatelessWidget {
+class _TopNavCircleButton extends StatefulWidget {
   final VoidCallback onTap;
   final String svgAsset;
   final bool showBadge;
+
+  /// When true, the inner icon plays a quick wiggle rotation on tap.
+  /// Used for the notification bell.
+  final bool shakeOnTap;
 
   const _TopNavCircleButton({
     required this.onTap,
     required this.svgAsset,
     this.showBadge = false,
+    this.shakeOnTap = false,
   });
+
+  @override
+  State<_TopNavCircleButton> createState() => _TopNavCircleButtonState();
+}
+
+class _TopNavCircleButtonState extends State<_TopNavCircleButton>
+    with SingleTickerProviderStateMixin {
+  bool _pressed = false;
+  late final AnimationController _shakeController;
+  late final Animation<double> _shakeAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    _shakeController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 480),
+    );
+    // Bell-like wiggle in radians — a few decaying oscillations.
+    _shakeAnim = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 0.0, end: -0.22), weight: 1),
+      TweenSequenceItem(tween: Tween(begin: -0.22, end: 0.18), weight: 2),
+      TweenSequenceItem(tween: Tween(begin: 0.18, end: -0.10), weight: 2),
+      TweenSequenceItem(tween: Tween(begin: -0.10, end: 0.05), weight: 2),
+      TweenSequenceItem(tween: Tween(begin: 0.05, end: 0.0), weight: 1),
+    ]).animate(CurvedAnimation(parent: _shakeController, curve: Curves.easeOut));
+  }
+
+  @override
+  void dispose() {
+    _shakeController.dispose();
+    super.dispose();
+  }
+
+  void _handleTap() {
+    if (widget.shakeOnTap) {
+      _shakeController.forward(from: 0);
+    }
+    widget.onTap();
+  }
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: _handleTap,
+      onTapDown: (_) => setState(() => _pressed = true),
+      onTapUp: (_) => setState(() => _pressed = false),
+      onTapCancel: () => setState(() => _pressed = false),
       behavior: HitTestBehavior.opaque,
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Container(
-            width: 38,
-            height: 38,
-            decoration: const BoxDecoration(
-              color: AppColors.bgElevated,
-              shape: BoxShape.circle,
-            ),
-            child: Center(
-              child: SvgPicture.asset(
-                svgAsset,
-                width: 24,
-                height: 24,
-                colorFilter: const ColorFilter.mode(
-                  Colors.white,
-                  BlendMode.srcIn,
+      child: AnimatedScale(
+        scale: _pressed ? 0.92 : 1.0,
+        duration: const Duration(milliseconds: 120),
+        curve: Curves.easeOut,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Container(
+              width: 38,
+              height: 38,
+              decoration: const BoxDecoration(
+                color: AppColors.bgElevated,
+                shape: BoxShape.circle,
+              ),
+              child: Center(
+                child: AnimatedBuilder(
+                  animation: _shakeAnim,
+                  builder: (_, child) => Transform.rotate(
+                    angle: _shakeAnim.value,
+                    child: child,
+                  ),
+                  child: SvgPicture.asset(
+                    widget.svgAsset,
+                    width: 24,
+                    height: 24,
+                    colorFilter: const ColorFilter.mode(
+                      Colors.white,
+                      BlendMode.srcIn,
+                    ),
+                  ),
                 ),
               ),
             ),
-          ),
-          if (showBadge)
-            Positioned(
-              right: -1,
-              top: -1,
-              child: Container(
-                width: 10,
-                height: 10,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFEF5350),
-                  shape: BoxShape.circle,
-                  border: Border.all(color: AppColors.borderDefault, width: 1.5),
+            if (widget.showBadge)
+              Positioned(
+                right: -1,
+                top: -1,
+                child: Container(
+                  width: 10,
+                  height: 10,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEF5350),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: AppColors.borderDefault, width: 1.5),
+                  ),
                 ),
               ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }
