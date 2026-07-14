@@ -12,6 +12,10 @@ import '../widgets/global_loading_spinner.dart';
 import 'opponent_detail_screen.dart';
 import 'opponent_hands_screen.dart';
 import '../design_system/components/buttons/close_circle_button.dart';
+import '../design_system/components/buttons/primary_pill_button.dart';
+import '../design_system/components/buttons/outlined_pill_button.dart';
+import '../design_system/components/buttons/destructive_pill_button.dart';
+import '../design_system/components/cards/swipe_to_delete_cell.dart';
 import '../design_system/components/sheets/sheet_header.dart';
 import '../design_system/components/cards/error_state_card.dart';
 import '../design_system/components/headers/top_nav_bar.dart';
@@ -668,46 +672,16 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> with SingleTicker
             Row(
               children: [
                 Expanded(
-                  child: GestureDetector(
+                  child: OutlinedPillButton(
+                    label: 'Back',
                     onTap: _closeAddForm,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
-                        border: Border.all(color: AppColors.borderStrong),
-                      ),
-                      child: Text(
-                        'Back',
-                        textAlign: TextAlign.center,
-                        style: AppTypography.ibm(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                    ),
                   ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
-                  child: GestureDetector(
+                  child: PrimaryPillButton(
+                    label: 'Save',
                     onTap: _saveOpponent,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                      decoration: BoxDecoration(
-                        color: AppColors.bgInverse,
-                        borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
-                      ),
-                      child: Text(
-                        'Save',
-                        textAlign: TextAlign.center,
-                        style: AppTypography.ibm(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textInverse,
-                        ),
-                      ),
-                    ),
                   ),
                 ),
               ],
@@ -810,21 +784,23 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> with SingleTicker
         ?? opponentHandsCounts[opponent.id]
         ?? 0;
 
-    return GestureDetector(
-      onTap: () async {
-        final result = await Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => OpponentDetailScreen(opponent: opponent),
-          ),
-        );
-        if (result == true) _loadOpponents(useCache: false);
+    return SwipeToDeleteCell(
+      onEdit: () => _showEditOpponentDialog(opponent),
+      onDelete: () async {
+        _showDeleteConfirmation(opponent);
       },
-      onLongPressStart: (details) {
-        _showOpponentOptionsMenu(opponent, details.globalPosition);
-      },
-      behavior: HitTestBehavior.opaque,
-      child: Container(
+      child: GestureDetector(
+        onTap: () async {
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => OpponentDetailScreen(opponent: opponent),
+            ),
+          );
+          if (result == true) _loadOpponents(useCache: false);
+        },
+        behavior: HitTestBehavior.opaque,
+        child: Container(
         decoration: const BoxDecoration(
           border: Border(
             bottom: BorderSide(color: AppColors.borderDefault, width: 1),
@@ -917,127 +893,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> with SingleTicker
             const Icon(Icons.chevron_right, color: Colors.white, size: 16),
           ],
         ),
-      ),
-    );
-  }
-
-  void _showOpponentOptionsMenu(Opponent opponent, Offset tapPosition) {
-    final l10n = AppLocalizations.of(context);
-    final screenSize = MediaQuery.of(context).size;
-    const menuWidth = 200.0;
-    const menuHeight = 89.0; // two 44px rows + 1px divider
-
-    // Position: prefer to show above tap, shift left/right to stay on screen
-    double left = tapPosition.dx - menuWidth / 2;
-    left = left.clamp(16.0, screenSize.width - menuWidth - 16.0);
-
-    double top = tapPosition.dy - menuHeight - 8;
-    if (top < 60) top = tapPosition.dy + 8;
-
-    showDialog(
-      context: context,
-      barrierColor: Colors.transparent,
-      useSafeArea: false,
-      builder: (context) => Stack(
-        children: [
-          Positioned.fill(
-            child: GestureDetector(
-              onTap: () => Navigator.pop(context),
-              behavior: HitTestBehavior.opaque,
-              child: const SizedBox.expand(),
-            ),
-          ),
-          Positioned(
-            left: left,
-            top: top,
-            child: Material(
-              color: Colors.transparent,
-              child: Container(
-                width: menuWidth,
-                decoration: BoxDecoration(
-                  color: AppColors.bgPrimary,
-                  borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.5),
-                      blurRadius: 24,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Edit row
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.pop(context);
-                        _showEditOpponentDialog(opponent);
-                      },
-                      behavior: HitTestBehavior.opaque,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              l10n.opponentsEditMenu,
-                              style: AppTypography.ibm(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w400,
-                                color: Colors.white,
-                                height: 22 / 15,
-                              ),
-                            ),
-                            SvgPicture.asset(
-                              'assets/icons/UsersThree.svg',
-                              width: 16,
-                              height: 16,
-                              colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    // Divider
-                    Container(height: 1, color: AppColors.separatorDark),
-                    // Delete row
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.pop(context);
-                        _showDeleteConfirmation(opponent);
-                      },
-                      behavior: HitTestBehavior.opaque,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              l10n.opponentsDeleteMenu,
-                              style: AppTypography.ibm(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w400,
-                                color: AppColors.accentDanger,
-                                height: 22 / 15,
-                              ),
-                            ),
-                            SvgPicture.asset(
-                              'icons/figma_icons/delete.svg',
-                              width: 16,
-                              height: 16,
-                              colorFilter: const ColorFilter.mode(AppColors.accentDanger, BlendMode.srcIn),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -1136,34 +992,16 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> with SingleTicker
               // Buttons row
               Row(
                 children: [
-                  // Cancel
                   Expanded(
-                    child: GestureDetector(
+                    child: OutlinedPillButton(
+                      label: l10n.commonCancel,
                       onTap: () => Navigator.pop(context),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                        decoration: BoxDecoration(
-                          color: Colors.transparent,
-                          borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
-                          border: Border.all(color: AppColors.borderLight),
-                        ),
-                        child: Text(
-                          l10n.commonCancel,
-                          textAlign: TextAlign.center,
-                          style: AppTypography.ibm(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary,
-                            height: 20 / 15,
-                          ),
-                        ),
-                      ),
                     ),
                   ),
                   const SizedBox(width: 16),
-                  // Confirm
                   Expanded(
-                    child: GestureDetector(
+                    child: DestructivePillButton(
+                      label: 'Confirm',
                       onTap: () async {
                         try {
                           await OpponentService.deleteOpponent(opponent.id);
@@ -1181,23 +1019,6 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> with SingleTicker
                           }
                         }
                       },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                        decoration: BoxDecoration(
-                          color: AppColors.accentDanger,
-                          borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
-                        ),
-                        child: Text(
-                          'Confirm',
-                          textAlign: TextAlign.center,
-                          style: AppTypography.ibm(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                            height: 20 / 15,
-                          ),
-                        ),
-                      ),
                     ),
                   ),
                 ],
@@ -1249,7 +1070,7 @@ class _AddOpponentButton extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             Text(
-              'Add New Opponent',
+              'Add New',
               style: AppTypography.ibm(
                 fontSize: 15,
                 fontWeight: FontWeight.w400,

@@ -1656,14 +1656,15 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
                       children: [
                         // Stop / end-session button — hub mode prompts to end
                         // the session, legacy hand-in-progress goes back to
-                        // the hand screen.
+                        // the hand screen. Uses the canonical top-nav circle
+                        // style (bgElevated, 24px white icon).
                         GestureDetector(
                           onTap: _isHubMode ? _handleHubBackButton : _goBackToHand,
                           child: Container(
                             width: 44,
                             height: 44,
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.08),
+                            decoration: const BoxDecoration(
+                              color: AppColors.bgElevated,
                               shape: BoxShape.circle,
                             ),
                             child: Center(
@@ -1672,7 +1673,7 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
                                 width: 24,
                                 height: 24,
                                 colorFilter: const ColorFilter.mode(
-                                  Colors.white,
+                                  AppColors.textPrimary,
                                   BlendMode.srcIn,
                                 ),
                               ),

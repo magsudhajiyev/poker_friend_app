@@ -11,6 +11,8 @@ import 'opponent_hands_screen.dart';
 import '../widgets/global_bottom_nav_bar.dart';
 import '../design_system/components/buttons/back_button_circle.dart';
 import '../design_system/components/buttons/close_circle_button.dart';
+import '../design_system/components/buttons/primary_pill_button.dart';
+import '../design_system/components/buttons/outlined_pill_button.dart';
 import '../design_system/components/sheets/sheet_header.dart';
 import '../design_system/components/drawer_dots.dart';
 import '../design_system/components/modals/confirm_dialog.dart';
@@ -37,6 +39,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
   Map<String, dynamic>? _statistics;
   OpponentStats? _opponentStats;
   bool _isLoadingStats = true;
+  final GlobalKey _dotsMenuKey = GlobalKey(debugLabel: 'opponent-dots-menu');
 
   @override
   void initState() {
@@ -458,37 +461,27 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final bottomPad = MediaQuery.of(context).padding.bottom;
     return Scaffold(
       backgroundColor: AppColors.bgPrimary,
-      body: Stack(
+      body: Column(
         children: [
-          Column(
-            children: [
-              _buildHeader(),
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: EdgeInsets.fromLTRB(16, 24, 16, 100 + bottomPad),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildStatisticsSection(),
-                      const SizedBox(height: 64),
-                      _buildViewHandHistoryButton(),
-                    ],
-                  ),
-                ),
+          _buildHeader(),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(16, 24, 16, 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildStatisticsSection(),
+                  const SizedBox(height: 64),
+                  _buildViewHandHistoryButton(),
+                ],
               ),
-            ],
-          ),
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: _buildBottomBar(),
+            ),
           ),
         ],
       ),
+      bottomNavigationBar: const GlobalBottomNavBar(currentScreen: 'opponents'),
     );
   }
 
@@ -512,6 +505,8 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
+          BackButtonCircle(onPressed: () => Navigator.pop(context)),
+          const SizedBox(width: 12),
           // Avatar
           Container(
             width: 40,
@@ -558,90 +553,24 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
               ],
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBottomBar() {
-    final bottomPad = MediaQuery.of(context).padding.bottom;
-    return Container(
-      color: Colors.transparent,
-      padding: EdgeInsets.fromLTRB(16, 16, 16, 16 + bottomPad),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          // Back button
-          const BackButtonCircle(),
-          // Action pill (Edit + Delete)
-          Container(
-            decoration: BoxDecoration(
-              color: AppColors.bgSurface,
-              border: Border.all(color: AppColors.borderStrong),
-              borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Edit group
-                GestureDetector(
-                  onTap: _showEditOpponentDialog,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 24,
-                        height: 24,
-                        decoration: const BoxDecoration(
-                          color: AppColors.accentTertiary,
-                          shape: BoxShape.circle,
-                        ),
-                        alignment: Alignment.center,
-                        child: _buildIcon('icons/figma_icons/edit.svg', 16, Colors.white),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Edit',
-                        style: AppTypography.ibm(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w400,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 16),
-                // Delete group
-                GestureDetector(
-                  onTap: _showDeleteConfirmation,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 24,
-                        height: 24,
-                        decoration: const BoxDecoration(
-                          color: AppColors.accentDanger,
-                          shape: BoxShape.circle,
-                        ),
-                        alignment: Alignment.center,
-                        child: _buildIcon('icons/figma_icons/delete.svg', 16, Colors.white),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Delete',
-                        style: AppTypography.ibm(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w400,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+          const SizedBox(width: 8),
+          // 3-dot overflow — hosts Edit + Delete.
+          GestureDetector(
+            key: _dotsMenuKey,
+            onTap: () => _showOpponentOptionsMenu(_dotsMenuKey),
+            behavior: HitTestBehavior.opaque,
+            child: Container(
+              width: 44,
+              height: 44,
+              decoration: const BoxDecoration(
+                color: AppColors.bgElevated,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.more_vert,
+                color: AppColors.textPrimary,
+                size: 22,
+              ),
             ),
           ),
         ],
@@ -1582,46 +1511,16 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                     Row(
                       children: [
                         Expanded(
-                          child: GestureDetector(
+                          child: OutlinedPillButton(
+                            label: 'Back',
                             onTap: () => Navigator.pop(context),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
-                                border: Border.all(color: AppColors.borderStrong),
-                              ),
-                              child: Text(
-                                'Back',
-                                textAlign: TextAlign.center,
-                                style: AppTypography.ibm(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.textPrimary,
-                                ),
-                              ),
-                            ),
                           ),
                         ),
                         const SizedBox(width: 16),
                         Expanded(
-                          child: GestureDetector(
+                          child: PrimaryPillButton(
+                            label: 'Save',
                             onTap: saveOpponent,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                              decoration: BoxDecoration(
-                                color: AppColors.bgInverse,
-                                borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
-                              ),
-                              child: Text(
-                                'Save',
-                                textAlign: TextAlign.center,
-                                style: AppTypography.ibm(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.textInverse,
-                                ),
-                              ),
-                            ),
                           ),
                         ),
                       ],

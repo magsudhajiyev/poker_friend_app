@@ -6,6 +6,8 @@ import '../services/opponent_service.dart';
 import '../services/free_tier_limits.dart';
 import '../models/opponent.dart';
 import '../design_system/components/sheets/app_sheet.dart';
+import '../design_system/components/buttons/primary_pill_button.dart';
+import '../design_system/components/buttons/outlined_pill_button.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/decorations.dart';
 import '../design_system/constants/typography.dart';
@@ -637,53 +639,16 @@ class _SeatConfigSheetState extends State<SeatConfigSheet> {
               Row(
                 children: [
                   Expanded(
-                    child: GestureDetector(
+                    child: OutlinedPillButton(
+                      label: 'Back',
                       onTap: () => Navigator.pop(context),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 20, vertical: 12),
-                        decoration: BoxDecoration(
-                          border:
-                              Border.all(color: AppColors.textPrimary),
-                          borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
-                        ),
-                        child: Center(
-                          child: Text(
-                            'Back',
-                            style: AppTypography.ibm(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textPrimary,
-                              height: 20 / 15,
-                            ),
-                          ),
-                        ),
-                      ),
                     ),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
-                    child: GestureDetector(
+                    child: PrimaryPillButton(
+                      label: 'Save',
                       onTap: _save,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 20, vertical: 12),
-                        decoration: BoxDecoration(
-                          color: AppColors.bgInverse,
-                          borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
-                        ),
-                        child: Center(
-                          child: Text(
-                            'Save',
-                            style: AppTypography.ibm(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textInverse,
-                              height: 20 / 15,
-                            ),
-                          ),
-                        ),
-                      ),
                     ),
                   ),
                 ],

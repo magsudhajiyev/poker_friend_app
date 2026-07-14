@@ -11,6 +11,8 @@ import '../l10n/app_localizations.dart';
 import '../design_system/poker_friend_theme.dart';
 import '../design_system/design_system.dart';
 import '../design_system/components/buttons/back_button_circle.dart';
+import '../design_system/components/buttons/primary_pill_button.dart';
+import '../design_system/components/buttons/outlined_pill_button.dart';
 import '../design_system/components/headers/top_nav_bar.dart';
 import '../widgets/drawing_painter.dart';
 import '../widgets/session_end_bankroll_sheet.dart';
@@ -4182,49 +4184,15 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                 ),
                 const SizedBox(height: 24),
                 // Primary — Move to Next Hand (top)
-                GestureDetector(
+                PrimaryPillButton(
+                  label: l10n.handMoveToNextHand,
                   onTap: () => Navigator.pop(ctx, true),
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    decoration: BoxDecoration(
-                      color: AppColors.accentSecondary,
-                      borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      l10n.handMoveToNextHand,
-                      style: AppTypography.ibm(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textInverse,
-                        height: 20 / 15,
-                      ),
-                    ),
-                  ),
                 ),
                 const SizedBox(height: 12),
                 // Cancel (below)
-                GestureDetector(
+                OutlinedPillButton(
+                  label: l10n.commonCancel,
                   onTap: () => Navigator.pop(ctx, false),
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
-                      border: Border.all(color: AppColors.borderStrong),
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      l10n.commonCancel,
-                      style: AppTypography.ibm(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
-                        height: 20 / 15,
-                      ),
-                    ),
-                  ),
                 ),
               ],
             ),

@@ -7,6 +7,8 @@ import '../screens/paywall_screen.dart';
 import '../onboarding/onboarding_state.dart';
 import 'subscription_service.dart';
 import '../design_system/constants/decorations.dart';
+import '../design_system/components/buttons/primary_pill_button.dart';
+import '../design_system/components/buttons/outlined_pill_button.dart';
 
 /// Free-tier limits for the 4-tier subscription system.
 ///
@@ -198,53 +200,16 @@ class FreeTierLimits {
                 Row(
                   children: [
                     Expanded(
-                      child: TextButton(
-                        onPressed: () {
-                          Navigator.of(dialogContext).pop('dismiss');
-                        },
-                        style: TextButton.styleFrom(
-                          padding: EdgeInsets.symmetric(
-                            vertical: AppSpacing.sm,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
-                            side: BorderSide(
-                              color: AppColors.whiteBorder(opacity: 0.2),
-                              width: 1,
-                            ),
-                          ),
-                        ),
-                        child: Text(
-                          resolvedDismissLabel,
-                          style: AppTypography.bodyMedium(
-                            color: Colors.white,
-                          ).copyWith(fontWeight: FontWeight.w500),
-                        ),
+                      child: OutlinedPillButton(
+                        label: resolvedDismissLabel,
+                        onTap: () => Navigator.of(dialogContext).pop('dismiss'),
                       ),
                     ),
                     SizedBox(width: AppSpacing.xs),
                     Expanded(
-                      child: GestureDetector(
-                        onTap: () {
-                          Navigator.of(dialogContext).pop('upgrade');
-                        },
-                        child: Container(
-                          padding: EdgeInsets.symmetric(
-                            vertical: AppSpacing.sm,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
-                          ),
-                          child: Center(
-                            child: Text(
-                              l10n.freeTierUpgrade,
-                              style: AppTypography.buttonText().copyWith(
-                                fontSize: 15,
-                              ),
-                            ),
-                          ),
-                        ),
+                      child: PrimaryPillButton(
+                        label: l10n.freeTierUpgrade,
+                        onTap: () => Navigator.of(dialogContext).pop('upgrade'),
                       ),
                     ),
                   ],
