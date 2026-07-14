@@ -23,6 +23,7 @@ import '../design_system/constants/typography.dart';
 import '../design_system/constants/decorations.dart';
 import '../design_system/components/buttons/primary_pill_button.dart';
 import '../design_system/components/buttons/outlined_pill_button.dart';
+import '../design_system/components/app_toggle.dart';
 
 class SeatSetupScreen extends StatefulWidget {
   final int? playerCount;
@@ -455,7 +456,7 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                         const SizedBox(height: 4),
                         Container(
                           decoration: BoxDecoration(
-                            color: AppColors.bgElevated,
+                            color: AppColors.bgSurface,
                             border: Border.all(
                                 color: AppColors.borderStrong, width: 1.5),
                             borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
@@ -609,19 +610,10 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                               color: const Color(0xFFB2B2B2),
                             ),
                           ),
-                          Switch(
+                          AppToggle(
                             value: tempSaveAsOpponent,
                             onChanged: (val) =>
                                 setDialogState(() => tempSaveAsOpponent = val),
-                            thumbColor: WidgetStateProperty.all(Colors.white),
-                            trackColor: WidgetStateProperty.resolveWith((s) {
-                              if (s.contains(WidgetState.selected)) {
-                                return AppColors.bgPrimary;
-                              }
-                              return AppColors.contentInactive;
-                            }),
-                            trackOutlineColor:
-                                WidgetStateProperty.all(Colors.transparent),
                           ),
                         ],
                       ),
@@ -830,7 +822,6 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
           SafeArea(
             child: Column(
               children: [
-                OnboardingProgressBar(),
                 // Header
                 Padding(
                   padding: EdgeInsets.fromLTRB(16, 16, 16, 0),

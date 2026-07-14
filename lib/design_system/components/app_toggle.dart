@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
+import '../constants/colors.dart';
 
-/// Toggle switch matching Figma v2 spec (node: Toggle).
+/// Canonical toggle switch — iOS-style green.
 ///
-/// Dimensions: 38×24px, thumb 18×18px round, radius 74px.
-/// Off: `#0C0C0C` track + `#3A3A3C` border, `#B9B9B9` thumb.
-/// On:  `#0C0C0C` track (no border), white thumb.
+/// - Track ON: `accentPrimary` green
+/// - Track OFF: white @ 20% opacity (reads as muted grey on dark surfaces)
+/// - Thumb: white circle
+/// - Dimensions: 38×24 track, 18×18 thumb, 74 radius, 3px inset padding
+///
+/// Use this for every boolean toggle in the app. Do NOT reach for
+/// `Switch`, `Switch.adaptive`, or `CupertinoSwitch` — they don't match
+/// the design system.
 class AppToggle extends StatelessWidget {
   final bool value;
   final ValueChanged<bool>? onChanged;
@@ -20,27 +26,25 @@ class AppToggle extends StatelessWidget {
     return GestureDetector(
       onTap: onChanged != null ? () => onChanged!(!value) : null,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
+        duration: const Duration(milliseconds: 180),
         width: 38,
         height: 24,
         decoration: BoxDecoration(
-          color: const Color(0xFF0C0C0C),
+          color: value
+              ? AppColors.accentPrimary
+              : Colors.white.withValues(alpha: 0.2),
           borderRadius: BorderRadius.circular(74),
-          border: value
-              ? null
-              : Border.all(color: const Color(0xFF3A3A3C), width: 1),
         ),
         padding: const EdgeInsets.all(3),
         child: AnimatedAlign(
-          duration: const Duration(milliseconds: 200),
+          duration: const Duration(milliseconds: 180),
           curve: Curves.easeInOut,
           alignment: value ? Alignment.centerRight : Alignment.centerLeft,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
+          child: Container(
             width: 18,
             height: 18,
-            decoration: BoxDecoration(
-              color: value ? Colors.white : const Color(0xFFB9B9B9),
+            decoration: const BoxDecoration(
+              color: Colors.white,
               shape: BoxShape.circle,
             ),
           ),

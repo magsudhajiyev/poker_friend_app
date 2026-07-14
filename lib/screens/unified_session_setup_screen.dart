@@ -20,6 +20,7 @@ import '../design_system/constants/typography.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/decorations.dart';
 import '../design_system/components/headers/top_nav_bar.dart';
+import '../design_system/components/app_toggle.dart';
 
 class UnifiedSessionSetupScreen extends StatefulWidget {
   const UnifiedSessionSetupScreen({super.key});
@@ -426,7 +427,6 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
           title: l10n.setupSessionSetup,
           onBack: () => Navigator.pop(context),
         ),
-        if (OnboardingState.isOnboardingActive) const OnboardingProgressBar(),
       ],
     );
   }
@@ -960,36 +960,7 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
   }
 
   Widget _buildSwitch(bool value, ValueChanged<bool> onChanged) {
-    return GestureDetector(
-      onTap: () => onChanged(!value),
-      child: Container(
-        width: 51,
-        height: 31,
-        padding: const EdgeInsets.all(2),
-        decoration: BoxDecoration(
-          color: value
-              ? AppColors.accentPrimary
-              : AppColors.bgSurface,
-          borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
-          border: value
-              ? null
-              : Border.all(color: AppColors.borderOnInverse),
-        ),
-        child: AnimatedAlign(
-          duration: const Duration(milliseconds: 200),
-          alignment:
-              value ? Alignment.centerRight : Alignment.centerLeft,
-          child: Container(
-            width: 27,
-            height: 27,
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-            ),
-          ),
-        ),
-      ),
-    );
+    return AppToggle(value: value, onChanged: onChanged);
   }
 
   // ─── TABLE CARD ──────────────────────────────────────────────────

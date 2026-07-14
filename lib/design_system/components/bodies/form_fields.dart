@@ -8,8 +8,9 @@ import '../../constants/typography.dart';
 /// Standard filled text-input row used inside modals.
 ///
 /// Renders a small [AppColors.textSecondary] label above an
-/// [AppColors.bgElevated] filled TextField with a matching border-strong hint
-/// style. Matches the Figma `Input / Dark` component (State=Filled).
+/// [AppColors.bgSurface] filled TextField. Uses the same token as the modal
+/// card so the input reads as flush with the surface, not a raised chip.
+/// Matches the Figma `Input / Dark` component (State=Filled).
 class AppFormField extends StatelessWidget {
   final TextEditingController? controller;
   final String label;
@@ -71,7 +72,7 @@ class AppFormField extends StatelessWidget {
               color: AppColors.textSecondary,
             ),
             filled: true,
-            fillColor: AppColors.bgElevated,
+            fillColor: AppColors.bgSurface,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
               borderSide: BorderSide.none,

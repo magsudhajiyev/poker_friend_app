@@ -528,7 +528,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> with SingleTicker
             const SizedBox(height: 4),
             Container(
               decoration: BoxDecoration(
-                color: AppColors.bgElevated,
+                color: AppColors.bgSurface,
                 borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                 border: Border.all(
                   color: _nameFocusNode.hasFocus ? AppColors.accentPrimary : AppColors.borderStrong,
@@ -585,7 +585,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> with SingleTicker
             const SizedBox(height: 4),
             Container(
               decoration: BoxDecoration(
-                color: AppColors.bgElevated,
+                color: AppColors.bgSurface,
                 borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                 border: Border.all(
                   color: _notesFocusNode.hasFocus ? AppColors.accentPrimary : AppColors.borderStrong,
@@ -890,7 +890,12 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> with SingleTicker
             ),
             const SizedBox(width: 8),
             // Caret right
-            const Icon(Icons.chevron_right, color: Colors.white, size: 16),
+            SvgPicture.asset(
+              'assets/icons/CaretRight.svg',
+              width: 16,
+              height: 16,
+              colorFilter: const ColorFilter.mode(AppColors.contentInactive, BlendMode.srcIn),
+            ),
           ],
         ),
         ),

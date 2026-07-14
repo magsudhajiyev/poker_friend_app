@@ -9,6 +9,7 @@ import '../services/opponent_service.dart';
 import '../models/opponent.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/decorations.dart';
+import '../design_system/components/app_toggle.dart';
 import '../utils/user_facing_error.dart';
 
 class SeatManagementDialog extends StatefulWidget {
@@ -694,11 +695,8 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
                                       // Active toggle
                                       Column(
                                         children: [
-                                          Switch(
+                                          AppToggle(
                                             value: isActive,
-                                            activeColor: AppColors.profitGreen,
-                                            inactiveThumbColor: Colors.white,
-                                            inactiveTrackColor: AppColors.surfaceVariant3,
                                             onChanged: (value) {
                                               setState(() {
                                                 seatActive[seatNumber] = value;

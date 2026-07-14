@@ -1575,7 +1575,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    OnboardingProgressBar(),
                     _buildNewHeader(context, topPadding, extraTopPadding),
                   ],
                 ),
@@ -3017,7 +3016,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   isTournament ? 'assets/icons/Trophy.svg' : 'assets/icons/Coin.svg',
                   width: 20,
                   height: 20,
-                  colorFilter: const ColorFilter.mode(AppColors.textSecondary, BlendMode.srcIn),
+                  colorFilter: const ColorFilter.mode(AppColors.accentSecondary, BlendMode.srcIn),
                 ),
               ),
             ),
@@ -3051,8 +3050,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               ),
             ),
             const SizedBox(width: 8),
-            // Caret right
-            const Icon(Icons.chevron_right, color: Color(0xFF808285), size: 16),
+            // Caret right — same asset as session history + opponent cards.
+            SvgPicture.asset(
+              'assets/icons/CaretRight.svg',
+              width: 16,
+              height: 16,
+              colorFilter: const ColorFilter.mode(AppColors.contentInactive, BlendMode.srcIn),
+            ),
           ],
         ),
       ),

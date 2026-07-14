@@ -8,6 +8,7 @@ import '../design_system/constants/colors.dart';
 import '../design_system/components/headers/top_nav_bar.dart';
 import '../design_system/components/modals/confirm_dialog.dart';
 import '../design_system/components/sheets/app_sheet.dart';
+import '../design_system/components/app_toggle.dart';
 import '../services/auth_service.dart';
 import '../services/username_service.dart';
 import '../services/display_identity_service.dart';
@@ -1003,12 +1004,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   style: AppTypography.ibm(fontSize: 12, color: _secondary),
                 ),
               ]),
-              Switch(
+              AppToggle(
                 value: SubscriptionService.isPremium,
                 onChanged: (v) async { await SubscriptionService.setDebugPremiumOverride(v); setState(() {}); },
-                activeColor: AppColors.accentPrimary,
-                inactiveThumbColor: AppColors.textDisabled,
-                inactiveTrackColor: AppColors.neutral700,
               ),
             ],
           ),

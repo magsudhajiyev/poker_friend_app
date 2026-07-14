@@ -324,20 +324,19 @@ class _SeatConfigSheetState extends State<SeatConfigSheet> {
                         shape: BoxShape.circle,
                         border: Border.all(
                           color: _isHero
-                              ? AppColors.textPrimary
+                              ? AppColors.accentSecondary
                               : AppColors.textSecondary,
-                          width: 1.5,
+                          width: _isHero ? 2 : 1.5,
                         ),
                       ),
                       child: _isHero
-                          ? Center(
-                              child: Container(
-                                width: 10,
-                                height: 10,
+                          ? const Center(
+                              child: DecoratedBox(
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
-                                  color: AppColors.textPrimary,
+                                  color: AppColors.accentSecondary,
                                 ),
+                                child: SizedBox(width: 10, height: 10),
                               ),
                             )
                           : null,
@@ -371,7 +370,7 @@ class _SeatConfigSheetState extends State<SeatConfigSheet> {
               const SizedBox(height: 4),
               Container(
                 decoration: BoxDecoration(
-                  color: AppColors.bgElevated,
+                  color: AppColors.bgSurface,
                   borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                   border: Border.all(
                     color: _nameFocusNode.hasFocus
@@ -502,7 +501,7 @@ class _SeatConfigSheetState extends State<SeatConfigSheet> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
                   decoration: BoxDecoration(
-                    color: AppColors.bgElevated,
+                    color: AppColors.bgSurface,
                     border: Border.all(color: AppColors.borderDefault),
                     borderRadius: BorderRadius.circular(AppDecorations.radius14),
                   ),
@@ -540,7 +539,7 @@ class _SeatConfigSheetState extends State<SeatConfigSheet> {
               const SizedBox(height: 4),
               Container(
                 decoration: BoxDecoration(
-                  color: AppColors.bgElevated,
+                  color: AppColors.bgSurface,
                   borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                   border: Border.all(
                     color: _stackFocusNode.hasFocus

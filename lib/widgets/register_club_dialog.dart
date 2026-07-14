@@ -247,7 +247,9 @@ class _RegisterClubSheetState extends State<_RegisterClubSheet> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       decoration: BoxDecoration(
-                        color: AppColors.bgInverse,
+                        color: _isSubmitting
+                            ? AppColors.accentSecondary.withValues(alpha: 0.6)
+                            : AppColors.accentSecondary,
                         borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
                       ),
                       child: Center(

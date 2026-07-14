@@ -13,6 +13,7 @@ import '../../design_system/components/pickers/date/custom_date_picker.dart';
 import '../../design_system/constants/colors.dart';
 import '../../design_system/constants/typography.dart';
 import '../../design_system/constants/decorations.dart';
+import '../../design_system/components/app_toggle.dart';
 import '../../utils/user_facing_error.dart';
 
 /// Shows the Create/Edit Event drawer as a modal bottom sheet.
@@ -834,12 +835,9 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
                 ],
               ),
             ),
-            Switch(
+            AppToggle(
               value: _notifyMembers,
               onChanged: (value) => setState(() => _notifyMembers = value),
-              activeColor: AppColors.accentPrimary,
-              inactiveThumbColor: Colors.white,
-              inactiveTrackColor: AppColors.neutral700,
             ),
           ],
         ),

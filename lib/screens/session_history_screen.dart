@@ -754,24 +754,6 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
         ),
         child: Row(
           children: [
-            // Icon box
-            Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                color: AppColors.bgElevated,
-                borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
-              ),
-              child: Center(
-                child: SvgPicture.asset(
-                  isTournament ? 'assets/icons/Trophy.svg' : 'assets/icons/Coin.svg',
-                  width: 20,
-                  height: 20,
-                  colorFilter: const ColorFilter.mode(AppColors.textSecondary, BlendMode.srcIn),
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
             // Content
             Expanded(
               child: Column(

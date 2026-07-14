@@ -7,6 +7,8 @@ import '../models/game_types.dart';
 import '../utils/poker_positions.dart';
 import '../services/display_identity_service.dart';
 import '../design_system/components/buttons/close_circle_button.dart';
+import '../design_system/components/buttons/primary_pill_button.dart';
+import '../design_system/components/buttons/outlined_pill_button.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/decorations.dart';
 import 'seat_config_sheet.dart';
@@ -598,48 +600,16 @@ class _TableManagementModalState extends State<_TableManagementModal> {
     return Row(
       children: [
         Expanded(
-          child: GestureDetector(
+          child: OutlinedPillButton(
+            label: l10n.commonCancel,
             onTap: () => Navigator.pop(context),
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
-                border: Border.all(color: AppColors.borderLight),
-              ),
-              alignment: Alignment.center,
-              child: Text(
-                l10n.commonCancel,
-                style: AppTypography.ibm(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
-                  height: 20 / 15,
-                ),
-              ),
-            ),
           ),
         ),
         const SizedBox(width: 16),
         Expanded(
-          child: GestureDetector(
+          child: PrimaryPillButton(
+            label: l10n.commonSave,
             onTap: () => Navigator.pop(context),
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              decoration: BoxDecoration(
-                color: AppColors.bgInverse,
-                borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
-              ),
-              alignment: Alignment.center,
-              child: Text(
-                l10n.commonSave,
-                style: AppTypography.ibm(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textInverse,
-                  height: 20 / 15,
-                ),
-              ),
-            ),
           ),
         ),
       ],

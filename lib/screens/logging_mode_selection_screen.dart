@@ -89,7 +89,6 @@ class _LoggingModeSelectionScreenState
       backgroundColor: Colors.transparent,
       body: Column(
         children: [
-          OnboardingProgressBar(),
           Expanded(
             child: GestureDetector(
               onTap: () => Navigator.pop(context),

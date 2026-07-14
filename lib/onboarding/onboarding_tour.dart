@@ -30,21 +30,31 @@ TutorialCoachMark _createCoachMark({
     opacityShadow: 0.85,
     paddingFocus: 12,
     hideSkip: false,
-    // Top-left so it never overlaps the bottom-right + FAB / action buttons
-    alignSkip: Alignment.topLeft,
+    // Bottom-center so it never overlaps tooltips (which now render centered).
+    alignSkip: Alignment.bottomCenter,
     skipWidget: Padding(
       padding: EdgeInsets.only(
-          left: 16, top: MediaQuery.of(context).padding.top + 8),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
-        ),
-        child: Text(
-          l10n.onboardingSkipTour,
-          style: AppTypography.bodySmall(color: Colors.white70).copyWith(fontSize: 15),
-        ),
+          left: 24,
+          right: 24,
+          bottom: MediaQuery.of(context).padding.bottom),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+            ),
+            child: Text(
+              l10n.onboardingSkipTour,
+              style: AppTypography.bodySmall(color: Colors.white70)
+                  .copyWith(fontSize: 15),
+            ),
+          ),
+          const SizedBox(height: 12),
+          const _TourProgressIndicator(),
+        ],
       ),
     ),
     onSkip: () {
@@ -203,6 +213,29 @@ Widget buildTooltip({
   );
 }
 
+/// Centered-modal tooltip content for a [TargetFocus]. Always renders the
+/// tooltip at the vertical center of the screen with safe insets — 24px
+/// below the status bar and 140px reserved at the bottom for the Skip pill.
+/// Use in place of `TargetContent(align: ContentAlign.top/bottom, ...)`
+/// so tooltips never spill off-screen on smaller viewports.
+TargetContent centeredTooltipContent(
+  Widget Function(BuildContext, TutorialCoachMarkController) builder,
+) {
+  return TargetContent(
+    align: ContentAlign.custom,
+    customPosition: CustomTargetContentPosition(
+      top: 0,
+      bottom: 0,
+      left: 0,
+      right: 0,
+    ),
+    builder: (context, controller) => SafeArea(
+      minimum: const EdgeInsets.only(top: 24, bottom: 140),
+      child: Center(child: builder(context, controller)),
+    ),
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Phase 0 — Home Screen Tour
 // ---------------------------------------------------------------------------
@@ -251,9 +284,7 @@ class HomeTour {
           shape: ShapeLightFocus.Circle,
           paddingFocus: 8,
           contents: [
-            TargetContent(
-              align: ContentAlign.top,
-              builder: (context, controller) {
+            centeredTooltipContent((context, controller) {
                 final l10n = AppLocalizations.of(context);
                 return buildTooltip(
                   title: l10n.onboardingStartLoggingTitle,
@@ -317,9 +348,7 @@ class LoggingModeTour {
           radius: AppDecorations.radiusXl,
           paddingFocus: 4,
           contents: [
-            TargetContent(
-              align: ContentAlign.top,
-              builder: (context, controller) {
+            centeredTooltipContent((context, controller) {
                 final l10n = AppLocalizations.of(context);
                 return buildTooltip(
                   title: l10n.onboardingFullModeTitle,
@@ -498,9 +527,7 @@ class SeatDialogTour {
           radius: 12,
           paddingFocus: 8,
           contents: [
-            TargetContent(
-              align: ContentAlign.bottom,
-              builder: (context, controller) {
+            centeredTooltipContent((context, controller) {
                 final l10n = AppLocalizations.of(context);
                 return buildTooltip(
                   title: l10n.onboardingSeatOpenTitle,
@@ -524,9 +551,7 @@ class SeatDialogTour {
           radius: 12,
           paddingFocus: 8,
           contents: [
-            TargetContent(
-              align: ContentAlign.bottom,
-              builder: (context, controller) {
+            centeredTooltipContent((context, controller) {
                 final l10n = AppLocalizations.of(context);
                 return buildTooltip(
                   title: l10n.onboardingThisIsMySeatTitle,
@@ -550,9 +575,7 @@ class SeatDialogTour {
           radius: 12,
           paddingFocus: 4,
           contents: [
-            TargetContent(
-              align: ContentAlign.bottom,
-              builder: (context, controller) {
+            centeredTooltipContent((context, controller) {
                 final l10n = AppLocalizations.of(context);
                 return buildTooltip(
                   title: l10n.onboardingPlayerNameTitle,
@@ -576,9 +599,7 @@ class SeatDialogTour {
           radius: 8,
           paddingFocus: 4,
           contents: [
-            TargetContent(
-              align: ContentAlign.bottom,
-              builder: (context, controller) {
+            centeredTooltipContent((context, controller) {
                 final l10n = AppLocalizations.of(context);
                 return buildTooltip(
                   title: l10n.onboardingSaveOpponentTitle,
@@ -635,9 +656,7 @@ class ButtonTokenTour {
           shape: ShapeLightFocus.Circle,
           paddingFocus: 16,
           contents: [
-            TargetContent(
-              align: ContentAlign.bottom,
-              builder: (context, controller) {
+            centeredTooltipContent((context, controller) {
                 final l10n = AppLocalizations.of(context);
                 return buildTooltip(
                   title: l10n.onboardingDealerButtonTitle,
@@ -844,9 +863,7 @@ class SessionResultTour {
           radius: 12,
           paddingFocus: 8,
           contents: [
-            TargetContent(
-              align: ContentAlign.top,
-              builder: (context, controller) {
+            centeredTooltipContent((context, controller) {
                 final l10n = AppLocalizations.of(context);
                 return buildTooltip(
                   title: l10n.onboardingViewSessionsTitle,
@@ -907,9 +924,7 @@ class SessionHistoryTour {
           radius: 12,
           paddingFocus: 4,
           contents: [
-            TargetContent(
-              align: ContentAlign.bottom,
-              builder: (context, controller) {
+            centeredTooltipContent((context, controller) {
                 final l10n = AppLocalizations.of(context);
                 return buildTooltip(
                   title: l10n.onboardingSessionHistoryCardTitle,
@@ -1004,9 +1019,7 @@ class HandListTour {
           radius: 26,
           paddingFocus: 4,
           contents: [
-            TargetContent(
-              align: ContentAlign.top,
-              builder: (context, controller) {
+            centeredTooltipContent((context, controller) {
                 final l10n = AppLocalizations.of(context);
                 return buildTooltip(
                   title: l10n.onboardingHandListTitle,
@@ -1064,9 +1077,7 @@ class HandCardTour {
           radius: 12,
           paddingFocus: 4,
           contents: [
-            TargetContent(
-              align: ContentAlign.bottom,
-              builder: (context, controller) {
+            centeredTooltipContent((context, controller) {
                 final l10n = AppLocalizations.of(context);
                 return buildTooltip(
                   title: l10n.onboardingHandCardTitle,
@@ -1130,9 +1141,7 @@ class HandToolsTour {
         radius: 24,
         paddingFocus: 8,
         contents: [
-          TargetContent(
-            align: ContentAlign.bottom,
-            builder: (context, controller) {
+          centeredTooltipContent((context, controller) {
               final l10n = AppLocalizations.of(context);
               return buildTooltip(
                 title: l10n.onboardingHandToolsTitle,
@@ -1181,9 +1190,7 @@ class AiAnalysisTour {
           radius: 16,
           paddingFocus: 4,
           contents: [
-            TargetContent(
-              align: ContentAlign.top,
-              builder: (context, controller) {
+            centeredTooltipContent((context, controller) {
                 final l10n = AppLocalizations.of(context);
                 return buildTooltip(
                   title: l10n.onboardingAiAnalysisTitle,
@@ -1288,9 +1295,7 @@ class BankrollCardTour {
         radius: 16,
         paddingFocus: 4,
         contents: [
-          TargetContent(
-            align: ContentAlign.bottom,
-            builder: (context, controller) {
+          centeredTooltipContent((context, controller) {
               final l10n = AppLocalizations.of(context);
               return buildTooltip(
                 title: l10n.onboardingBankrollCardTitle,
@@ -1318,5 +1323,100 @@ class BankrollCardTour {
       },
     );
     coach.show(context: context);
+  }
+}
+
+/// Bottom-of-tour progress bar — thin `accentPrimary` fill + "Step X of Y"
+/// caption. Reads from [OnboardingState.notifier] so it self-rebuilds as
+/// steps advance. Rendered inside [_createCoachMark]'s skipWidget so it
+/// lives with the Skip pill at the bottom of the overlay.
+class _TourProgressIndicator extends StatelessWidget {
+  const _TourProgressIndicator();
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<int>(
+      valueListenable: OnboardingState.notifier,
+      builder: (context, _, __) {
+        if (!OnboardingState.isOnboardingActive) {
+          return const SizedBox.shrink();
+        }
+        final step = OnboardingState.displayStep;
+        final total = OnboardingState.displayTotalSteps;
+        final progress = OnboardingState.progress;
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(2),
+              child: Container(
+                height: 4,
+                width: double.infinity,
+                color: Colors.white.withValues(alpha: 0.12),
+                child: AnimatedFractionallySizedBox(
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeInOut,
+                  widthFactor: progress,
+                  alignment: Alignment.centerLeft,
+                  child: Container(color: AppColors.accentPrimary),
+                ),
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              AppLocalizations.of(context).onboardingStepOf(step, total),
+              style: AppTypography.bodySmall(
+                color: Colors.white.withValues(alpha: 0.54),
+              ).copyWith(fontSize: 11),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+/// Local animated width helper — duplicated here to avoid a cross-file
+/// private-widget import from `onboarding_progress_bar.dart`.
+class AnimatedFractionallySizedBox extends ImplicitlyAnimatedWidget {
+  final double widthFactor;
+  final AlignmentGeometry alignment;
+  final Widget? child;
+
+  const AnimatedFractionallySizedBox({
+    super.key,
+    required Duration duration,
+    Curve curve = Curves.linear,
+    required this.widthFactor,
+    required this.alignment,
+    this.child,
+  }) : super(duration: duration, curve: curve);
+
+  @override
+  AnimatedWidgetBaseState<AnimatedFractionallySizedBox> createState() =>
+      _AnimatedFractionallySizedBoxState();
+}
+
+class _AnimatedFractionallySizedBoxState
+    extends AnimatedWidgetBaseState<AnimatedFractionallySizedBox> {
+  Tween<double>? _widthFactor;
+
+  @override
+  void forEachTween(TweenVisitor<dynamic> visitor) {
+    _widthFactor = visitor(
+      _widthFactor,
+      widget.widthFactor,
+      (dynamic value) => Tween<double>(begin: value as double),
+    ) as Tween<double>?;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FractionallySizedBox(
+      widthFactor: _widthFactor?.evaluate(animation) ?? widget.widthFactor,
+      alignment: widget.alignment,
+      child: widget.child,
+    );
   }
 }

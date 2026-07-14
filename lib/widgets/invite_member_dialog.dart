@@ -11,6 +11,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/typography.dart';
 import '../design_system/constants/decorations.dart';
+import '../design_system/components/buttons/outlined_pill_button.dart';
 import '../utils/user_facing_error.dart';
 
 /// Dialog for club admins to invite dealers or other admins
@@ -400,25 +401,9 @@ class _InviteMemberDialogState extends State<InviteMemberDialog> {
           Row(
             children: [
               Expanded(
-                child: GestureDetector(
+                child: OutlinedPillButton(
+                  label: l10n.commonCancel,
                   onTap: _isSubmitting ? null : () => Navigator.pop(context),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 13),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
-                      color: Colors.white.withOpacity(0.05),
-                    ),
-                    child: Center(
-                      child: Text(
-                        l10n.commonCancel,
-                        style: AppTypography.ibm(
-                          color: Colors.white.withOpacity(0.5),
-                          fontWeight: FontWeight.w600,
-                          fontSize: 15,
-                        ),
-                      ),
-                    ),
-                  ),
                 ),
               ),
               const SizedBox(width: 10),

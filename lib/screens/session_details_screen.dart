@@ -1713,7 +1713,6 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const OnboardingProgressBar(),
                   // Header
                   Padding(
                     padding: const EdgeInsets.only(top: 16, bottom: 24),

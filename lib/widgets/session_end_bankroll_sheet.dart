@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import '../design_system/components/form_drawer.dart';
+import '../design_system/components/sheets/app_sheet.dart';
+import '../design_system/components/buttons/primary_pill_button.dart';
+import '../design_system/components/buttons/outlined_pill_button.dart';
 import '../l10n/app_localizations.dart';
 import '../models/game_types.dart';
 import '../services/bankroll_service.dart';
@@ -39,59 +41,83 @@ class SessionEndBankrollSheet {
 
     Map<String, dynamic>? result;
 
-    await FormDrawer.show(
+    Future<void> handleSave(BuildContext sheetCtx) async {
+      double profit;
+      if (isCash) {
+        profit = double.tryParse(amountController.text) ?? 0.0;
+      } else {
+        final prize = double.tryParse(prizeController.text) ?? 0.0;
+        profit = prize - totalBuyIn;
+      }
+
+      await BankrollService.addToBankroll(profit);
+      await SessionResultService.addSessionResult(
+        amount: profit,
+        gameType: isCash ? 'cash' : 'tournament',
+        buyInAmount: totalBuyIn,
+        prizeWon: isCash ? null : (double.tryParse(prizeController.text) ?? 0.0),
+        finishedPlace: isCash ? null : int.tryParse(positionController.text),
+        fieldSize: isCash ? null : int.tryParse(fieldSizeController.text),
+        durationMinutes: durationMinutes,
+      );
+      AppDataCache.markHomeDirty();
+      AppDataCache.markStatsDirty();
+
+      result = {
+        'profitLoss': profit,
+        'finishedPlace': isCash ? null : int.tryParse(positionController.text),
+        'fieldSize': isCash ? null : int.tryParse(fieldSizeController.text),
+        'prizeWon': isCash ? null : (double.tryParse(prizeController.text) ?? 0.0),
+      };
+
+      if (sheetCtx.mounted) {
+        Navigator.pop(sheetCtx);
+      }
+    }
+
+    await AppSheet.show(
       context: context,
       title: isCash
           ? l10n.sessionEndResultTitle
           : l10n.sessionEndTournamentTitle,
-      heightFraction: isCash ? 0.45 : 0.55,
-      onSave: () async {
-        double profit;
-        if (isCash) {
-          profit = double.tryParse(amountController.text) ?? 0.0;
-        } else {
-          final prize = double.tryParse(prizeController.text) ?? 0.0;
-          profit = prize - totalBuyIn;
-        }
-
-        await BankrollService.addToBankroll(profit);
-        await SessionResultService.addSessionResult(
-          amount: profit,
-          gameType: isCash ? 'cash' : 'tournament',
-          buyInAmount: totalBuyIn,
-          prizeWon: isCash ? null : (double.tryParse(prizeController.text) ?? 0.0),
-          finishedPlace: isCash ? null : int.tryParse(positionController.text),
-          fieldSize: isCash ? null : int.tryParse(fieldSizeController.text),
-          durationMinutes: durationMinutes,
-        );
-        AppDataCache.markHomeDirty();
-        AppDataCache.markStatsDirty();
-
-        result = {
-          'profitLoss': profit,
-          'finishedPlace': isCash ? null : int.tryParse(positionController.text),
-          'fieldSize': isCash ? null : int.tryParse(fieldSizeController.text),
-          'prizeWon': isCash ? null : (double.tryParse(prizeController.text) ?? 0.0),
-        };
-
-        if (context.mounted) {
-          Navigator.pop(context);
-        }
-      },
-      onClose: () {
-        Navigator.pop(context);
-      },
-      body: isCash
-          ? _CashBody(
-              amountController: amountController,
-              totalBuyIn: totalBuyIn,
-            )
-          : _TournamentBody(
-              positionController: positionController,
-              fieldSizeController: fieldSizeController,
-              prizeController: prizeController,
-              totalBuyIn: totalBuyIn,
+      heightFraction: null,
+      body: Builder(builder: (sheetCtx) {
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            isCash
+                ? _CashBody(
+                    amountController: amountController,
+                    totalBuyIn: totalBuyIn,
+                  )
+                : _TournamentBody(
+                    positionController: positionController,
+                    fieldSizeController: fieldSizeController,
+                    prizeController: prizeController,
+                    totalBuyIn: totalBuyIn,
+                  ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedPillButton(
+                    label: l10n.commonCancel,
+                    onTap: () => Navigator.pop(sheetCtx),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: PrimaryPillButton(
+                    label: l10n.commonSave,
+                    onTap: () => handleSave(sheetCtx),
+                  ),
+                ),
+              ],
             ),
+            SizedBox(height: MediaQuery.of(sheetCtx).padding.bottom + 16),
+          ],
+        );
+      }),
     );
 
     // Delay disposal to let closing animation finish
@@ -145,7 +171,7 @@ class _CashBodyState extends State<_CashBody> {
           color: AppColors.bgSurface,
           borderRadius: BorderRadius.circular(AppDecorations.radiusXl),
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         child: Column(
           children: [
             // Profit/Loss label + Total Invested label
@@ -303,7 +329,7 @@ class _TournamentBodyState extends State<_TournamentBody> {
           color: AppColors.bgSurface,
           borderRadius: BorderRadius.circular(AppDecorations.radiusXl),
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         child: Column(
           children: [
             _buildField(
@@ -326,7 +352,7 @@ class _TournamentBodyState extends State<_TournamentBody> {
             _buildDivider(),
             // Total invested (read-only)
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -353,7 +379,7 @@ class _TournamentBodyState extends State<_TournamentBody> {
             if (_calculatedProfit != null) ...[
               _buildDivider(),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -393,7 +419,7 @@ class _TournamentBodyState extends State<_TournamentBody> {
     String? suffix,
   }) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         children: [
           Expanded(
@@ -432,8 +458,12 @@ class _TournamentBodyState extends State<_TournamentBody> {
                   fontWeight: FontWeight.w500,
                   color: AppColors.textSecondary,
                 ),
-                contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                contentPadding: EdgeInsets.zero,
+                filled: false,
                 border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                disabledBorder: InputBorder.none,
                 isDense: true,
               ),
             ),
@@ -445,7 +475,7 @@ class _TournamentBodyState extends State<_TournamentBody> {
 
   Widget _buildDivider() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Divider(height: 1, color: AppColors.bgOverlay),
     );
   }

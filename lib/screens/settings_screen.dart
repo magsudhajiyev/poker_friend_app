@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../design_system/components/buttons/close_circle_button.dart';
+import '../design_system/components/buttons/secondary_pill_button.dart';
+import '../design_system/components/app_toggle.dart';
 import '../design_system/components/dialogs/app_dialog.dart';
 import '../design_system/components/headers/top_nav_bar.dart';
 import '../design_system/components/sheets/app_sheet.dart';
@@ -693,29 +695,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
             const SizedBox(height: 24),
-            GestureDetector(
+            SecondaryPillButton(
+              label: l10n.settingsRegisterAClub,
               onTap: () {
                 Navigator.pop(context);
                 _openRegisterClub();
               },
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                decoration: BoxDecoration(
-                  color: AppColors.bgInverse,
-                  borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
-                ),
-                child: Text(
-                  l10n.settingsRegisterAClub,
-                  textAlign: TextAlign.center,
-                  style: AppTypography.ibm(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textInverse,
-                    height: 20 / 15,
-                  ),
-                ),
-              ),
             ),
           ],
         ),
@@ -1223,14 +1208,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ],
             ),
           ),
-          SizedBox(
-            height: 28,
-            child: Switch.adaptive(
-              value: value,
-              onChanged: onChanged,
-              activeColor: AppColors.accentPrimary,
-            ),
-          ),
+          AppToggle(value: value, onChanged: onChanged),
         ],
       ),
     );

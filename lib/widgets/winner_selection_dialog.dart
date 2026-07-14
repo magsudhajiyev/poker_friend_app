@@ -389,7 +389,7 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
                           padding:
                               const EdgeInsets.symmetric(vertical: 14),
                           decoration: BoxDecoration(
-                            color: AppColors.bgInverse,
+                            color: AppColors.accentSecondary,
                             borderRadius: BorderRadius.circular(
                                 AppDecorations.radiusFull),
                           ),

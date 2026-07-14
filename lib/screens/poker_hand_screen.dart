@@ -13,6 +13,7 @@ import '../design_system/design_system.dart';
 import '../design_system/components/buttons/back_button_circle.dart';
 import '../design_system/components/buttons/primary_pill_button.dart';
 import '../design_system/components/buttons/outlined_pill_button.dart';
+import '../design_system/components/dialogs/app_dialog.dart';
 import '../design_system/components/headers/top_nav_bar.dart';
 import '../widgets/drawing_painter.dart';
 import '../widgets/session_end_bankroll_sheet.dart';
@@ -709,201 +710,101 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     final sbController = TextEditingController(text: formatBlindValue(gameState.smallBlind));
     final bbController = TextEditingController(text: formatBlindValue(gameState.bigBlind));
 
-    final result = await showDialog<Map<String, double>>(
-      context: context,
-      barrierDismissible: true,
-      barrierColor: Colors.black54,
-      builder: (ctx) {
-        Widget buildBlindField(
-          String label,
-          TextEditingController ctrl, {
-          bool autofocus = false,
-        }) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: AppTypography.ibm(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-              const SizedBox(height: 4),
-              TextField(
-                controller: ctrl,
-                autofocus: autofocus,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[\d.]'))],
-                style: AppTypography.ibm(
-                  fontSize: 15,
-                  color: AppColors.textInverse,
-                ),
-                decoration: InputDecoration(
-                  filled: true,
-                  fillColor: AppColors.bgInputOnInverse,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
-                    borderSide: const BorderSide(color: AppColors.borderOnInverseSubtle),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
-                    borderSide: const BorderSide(color: AppColors.borderOnInverseSubtle),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
-                    borderSide: const BorderSide(
-                        color: AppColors.bgPrimary, width: 1.5),
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 12),
-                ),
-              ),
-            ],
-          );
-        }
-
-        return Dialog(
-          backgroundColor: Colors.transparent,
-          insetPadding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: AppColors.bgSurface,
-              borderRadius: BorderRadius.circular(AppDecorations.radiusXl),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Header: spacer | title | X
-                Row(
-                  children: [
-                    const SizedBox(width: 28),
-                    Expanded(
-                      child: Center(
-                        child: Text(
-                          l10n.handBlinds,
-                          style: AppTypography.ibm(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary,
-                            height: 20 / 15,
-                          ),
-                        ),
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: () => Navigator.pop(ctx),
-                      child: SizedBox(
-                        width: 28,
-                        height: 28,
-                        child: Center(
-                          child: SvgPicture.asset(
-                            'assets/icons/X.svg',
-                            width: 18,
-                            height: 18,
-                            colorFilter: const ColorFilter.mode(
-                                AppColors.textSecondary, BlendMode.srcIn),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                // Subtitle
-                Text(
-                  l10n.handTakesEffectNextHand,
-                  textAlign: TextAlign.center,
-                  style: AppTypography.ibm(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w400,
-                    color: AppColors.textSecondary,
-                    height: 22 / 15,
-                  ),
-                ),
-                const SizedBox(height: 24),
-                // SB / BB inputs
-                Row(
-                  children: [
-                    Expanded(
-                      child: buildBlindField(
-                        l10n.setupSmallBlind,
-                        sbController,
-                        autofocus: true,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: buildBlindField(l10n.setupBigBlind, bbController),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 32),
-                // Buttons
-                Row(
-                  children: [
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () => Navigator.pop(ctx),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
-                            border:
-                                Border.all(color: AppColors.borderLight),
-                          ),
-                          alignment: Alignment.center,
-                          child: Text(
-                            l10n.commonCancel,
-                            style: AppTypography.ibm(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textPrimary,
-                              height: 20 / 15,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () {
-                          final sb = double.tryParse(sbController.text) ??
-                              gameState.smallBlind;
-                          final bb = double.tryParse(bbController.text) ??
-                              gameState.bigBlind;
-                          Navigator.pop(
-                              ctx, {'sb': sb, 'bb': bb >= sb ? bb : sb});
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          decoration: BoxDecoration(
-                            color: AppColors.bgInverse,
-                            borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
-                          ),
-                          alignment: Alignment.center,
-                          child: Text(
-                            l10n.commonApply,
-                            style: AppTypography.ibm(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textInverse,
-                              height: 20 / 15,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+    Widget buildBlindField(
+      String label,
+      TextEditingController ctrl, {
+      bool autofocus = false,
+    }) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: AppTypography.ibm(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: AppColors.textSecondary,
             ),
           ),
-        );
-      },
+          const SizedBox(height: 4),
+          TextField(
+            controller: ctrl,
+            autofocus: autofocus,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[\d.]'))],
+            style: AppTypography.ibm(
+              fontSize: 15,
+              color: AppColors.textPrimary,
+            ),
+            decoration: InputDecoration(
+              filled: true,
+              fillColor: AppColors.bgSurface,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
+                borderSide: const BorderSide(color: AppColors.borderStrong),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
+                borderSide: const BorderSide(color: AppColors.borderStrong),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
+                borderSide: const BorderSide(
+                    color: AppColors.accentPrimary, width: 1.5),
+              ),
+              contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16, vertical: 12),
+            ),
+          ),
+        ],
+      );
+    }
+
+    final result = await AppDialog.show<Map<String, double>>(
+      context,
+      title: l10n.handBlinds,
+      subtitle: l10n.handTakesEffectNextHand,
+      body: Row(
+        children: [
+          Expanded(
+            child: buildBlindField(
+              l10n.setupSmallBlind,
+              sbController,
+              autofocus: true,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: buildBlindField(l10n.setupBigBlind, bbController),
+          ),
+        ],
+      ),
+      actions: Builder(
+        builder: (ctx) => Row(
+          children: [
+            Expanded(
+              child: OutlinedPillButton(
+                label: l10n.commonCancel,
+                onTap: () => Navigator.pop(ctx),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: PrimaryPillButton(
+                label: l10n.commonApply,
+                onTap: () {
+                  final sb = double.tryParse(sbController.text) ??
+                      gameState.smallBlind;
+                  final bb = double.tryParse(bbController.text) ??
+                      gameState.bigBlind;
+                  Navigator.pop(
+                      ctx, {'sb': sb, 'bb': bb >= sb ? bb : sb});
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
     );
 
     if (result != null) {
@@ -1330,7 +1231,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         children: [
           Column(
             children: [
-                OnboardingProgressBar(),
                 // Header
                 Builder(builder: (context) {
                   final baseSubtitle =
@@ -1354,11 +1254,18 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                 flex: 2,
                 child: _buildHandTable(),
               ),
-              // Gesture input area — 16px h-margin, all corners rounded
+              // Gesture input area — 16px inset on all sides + safe-area
+              // clearance at the bottom so the board doesn't run under the
+              // home indicator.
               Expanded(
                 flex: 3,
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  padding: EdgeInsets.fromLTRB(
+                    16,
+                    0,
+                    16,
+                    16 + MediaQuery.of(context).padding.bottom,
+                  ),
                   child: Container(
                     key: _drawingAreaKey,
                     decoration: BoxDecoration(
@@ -1757,20 +1664,15 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                           ),
                         ),
                       ),
-                    // Bottom bar INSIDE the drawing board — back chevron
-                    // (left) + undo pill (right), inset from the board's
-                    // rounded corners and the home indicator.
+                    // Bottom bar INSIDE the drawing board — undo pill on the
+                    // right. Back nav lives in the top nav; no duplicate here.
                     Positioned(
-                      bottom: MediaQuery.of(context).padding.bottom + 12,
+                      bottom: 12,
                       left: 12,
                       right: 12,
                       child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        mainAxisAlignment: MainAxisAlignment.end,
                         children: [
-                          // Back circle
-                          BackButtonCircle(
-                            onPressed: () => _handleNavigationAttempt(isBackButton: true),
-                          ),
                           // Undo pill — dimmed when nothing to undo; fades out
                           // while the raise drag bar is active (overlaps it)
                           IgnorePointer(
@@ -3327,22 +3229,15 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
             ),
           ),
           SizedBox(height: 4),
-          Container(height: 0.5, width: 140, color: Color(0xFF555555)),
+          Container(height: 0.5, color: Color(0xFF555555)),
           SizedBox(height: 6),
-          SizedBox(
-            width: 140,
-            child: Column(
-              children: [
-                _buildGestureRow(l10n.handGestureTap, l10n.handGestureCheckCall),
-                Container(height: 0.5, color: Color(0xFF555555)),
-                SizedBox(height: 6),
-                _buildGestureRow(l10n.handGestureSwipeOut, 'Fold'),
-                Container(height: 0.5, color: Color(0xFF555555)),
-                SizedBox(height: 6),
-                _buildGestureRow(l10n.handGestureSwipeUp, l10n.handGestureBetRaise),
-              ],
-            ),
-          ),
+          _buildGestureRow(l10n.handGestureTap, l10n.handGestureCheckCall),
+          Container(height: 0.5, color: Color(0xFF555555)),
+          SizedBox(height: 6),
+          _buildGestureRow(l10n.handGestureSwipeOut, 'Fold'),
+          Container(height: 0.5, color: Color(0xFF555555)),
+          SizedBox(height: 6),
+          _buildGestureRow(l10n.handGestureSwipeUp, l10n.handGestureBetRaise),
         ],
       ),
     );
@@ -3352,6 +3247,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     return Padding(
       padding: EdgeInsets.only(bottom: 6),
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
           Text(
             '$gesture:',

@@ -12,6 +12,7 @@ import '../design_system/constants/colors.dart';
 import '../design_system/constants/decorations.dart';
 import '../design_system/constants/typography.dart';
 import '../design_system/components/app_text_field.dart';
+import '../design_system/components/app_toggle.dart';
 import '../design_system/components/dialogs/app_dialog.dart';
 import '../design_system/components/dialogs/dialog_action_bar.dart';
 
@@ -233,16 +234,13 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
                             ],
                           ),
                         ),
-                        Switch(
+                        AppToggle(
                           value: bbAnteEnabled,
                           onChanged: (value) {
                             setState(() {
                               bbAnteEnabled = value;
                             });
                           },
-                          activeColor: AppColors.errorRedVariant,
-                          inactiveThumbColor: Colors.white,
-                          inactiveTrackColor: AppColors.surfaceVariant3,
                         ),
                       ],
                     ),
