@@ -217,7 +217,8 @@ class _SlidingIconRow extends StatelessWidget {
               ),
             ),
           ),
-          // Icons row.
+          // Icons row — inject the active flag into each _NavIcon so the
+          // selected glyph tints green.
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -226,7 +227,12 @@ class _SlidingIconRow extends StatelessWidget {
                 SizedBox(
                   width: _slotWidth,
                   height: _slotHeight,
-                  child: Center(child: children[i]),
+                  child: Center(
+                    child: (children[i] is _NavIcon)
+                        ? (children[i] as _NavIcon)
+                            .copyWithActive(i == activeIndex)
+                        : children[i],
+                  ),
                 ),
               ],
             ],
@@ -237,24 +243,35 @@ class _SlidingIconRow extends StatelessWidget {
   }
 }
 
-/// Single nav icon button — 28×28 white glyph.
+/// Single nav icon button — 28×28 glyph.
 ///
-/// All tabs render in white; the active state is signalled by the sliding
-/// pill behind them (see [_SlidingIconRow]) rather than a color change.
+/// Inactive tabs render in white; the active tab renders in
+/// `accentSecondary` (green). The sliding pill behind lives in
+/// [_SlidingIconRow] and is orthogonal to this widget.
 class _NavIcon extends StatelessWidget {
   final String path;
   final VoidCallback onTap;
   final GlobalKey? itemKey;
+  final bool isActive;
 
   const _NavIcon({
     required this.path,
     required this.onTap,
     this.itemKey,
+    this.isActive = false,
   });
+
+  _NavIcon copyWithActive(bool active) => _NavIcon(
+        path: path,
+        onTap: onTap,
+        itemKey: itemKey,
+        isActive: active,
+      );
 
   @override
   Widget build(BuildContext context) {
     final isSvg = path.toLowerCase().endsWith('.svg');
+    final color = isActive ? AppColors.accentSecondary : Colors.white;
     return GestureDetector(
       key: itemKey,
       onTap: onTap,
@@ -268,16 +285,13 @@ class _NavIcon extends StatelessWidget {
                   path,
                   width: 28,
                   height: 28,
-                  colorFilter: const ColorFilter.mode(
-                    Colors.white,
-                    BlendMode.srcIn,
-                  ),
+                  colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
                 )
               : Image.asset(
                   path,
                   width: 28,
                   height: 28,
-                  color: Colors.white,
+                  color: color,
                 ),
         ),
       ),
