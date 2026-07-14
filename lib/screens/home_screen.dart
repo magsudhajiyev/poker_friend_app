@@ -2342,7 +2342,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             border: Border.all(color: AppColors.borderStrong),
             color: AppColors.bgSurface,
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 10),
           child: TextField(
             controller: controller,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
@@ -2354,16 +2353,16 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               prefixText: CurrencyService.prefixText,
               suffixText: CurrencyService.suffixText,
               prefixStyle: AppTypography.mono(
-                fontSize: 15, color: AppColors.contentInactive,
+                fontSize: 15, color: Colors.white.withValues(alpha: 0.5),
               ),
               suffixStyle: AppTypography.mono(
-                fontSize: 15, color: AppColors.contentInactive,
+                fontSize: 15, color: Colors.white.withValues(alpha: 0.5),
               ),
               border: InputBorder.none,
               enabledBorder: InputBorder.none,
               focusedBorder: InputBorder.none,
               isDense: true,
-              contentPadding: const EdgeInsets.symmetric(vertical: 10),
+              contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
             ),
             onSubmitted: (_) => _saveBankrollEdit(),
           ),

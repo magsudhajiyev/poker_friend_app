@@ -48,6 +48,7 @@ import '../services/free_tier_limits.dart';
 import '../services/subscription_service.dart';
 import '../services/skip_hand_scouting_service.dart';
 import '../widgets/skip_hand_scouting_sheet.dart';
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import '../onboarding/onboarding_state.dart';
 import 'home_screen.dart';
 import '../onboarding/onboarding_tour.dart';
@@ -666,7 +667,11 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
           }
 
           if (!mounted) return;
-          await _showSessionSummary(bankrollResult: bankrollResult);
+          // Skip summary card during onboarding — tour money is meaningless
+          // and the dialog could block the phase-5 handoff to HomeScreen.
+          if (!isTourSession) {
+            await _showSessionSummary(bankrollResult: bankrollResult);
+          }
         }
 
         if (!mounted) return;
@@ -5388,6 +5393,61 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         if (mounted) _guidedOverlayKey.currentState?.promptSecondHand();
       });
     }
+
+    // End-session tour: returning from stack chart view — spotlight the
+    // 3-dot menu so the user knows how to stop the session.
+    if (OnboardingState.isOnboardingActive &&
+        OnboardingState.endSessionTourPending &&
+        mounted) {
+      OnboardingState.endSessionTourPending = false;
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        await Future.delayed(const Duration(milliseconds: 500));
+        if (!mounted) return;
+        _showEndSessionMenuTour();
+      });
+    }
+  }
+
+  /// Spotlights the 3-dot menu button during the onboarding tour so the user
+  /// knows how to end the session after viewing the stack chart.
+  void _showEndSessionMenuTour() {
+    if (_menuButtonKey.currentContext == null) return;
+
+    final l10n = AppLocalizations.of(context);
+    final targets = <TargetFocus>[
+      TargetFocus(
+        identify: 'end_session_menu',
+        keyTarget: _menuButtonKey,
+        shape: ShapeLightFocus.Circle,
+        paddingFocus: 12,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (context, controller) {
+              return buildTooltip(
+                title: l10n.guidedEndSessionTitle,
+                body: l10n.guidedEndSessionBody,
+                onNext: () => controller.next(),
+                context: context,
+                isLast: true,
+              );
+            },
+          ),
+        ],
+      ),
+    ];
+
+    final coach = TutorialCoachMark(
+      targets: targets,
+      colorShadow: Colors.black,
+      opacityShadow: 0.85,
+      paddingFocus: 12,
+      hideSkip: true,
+      onFinish: () {
+        // User should now tap the menu and select "End Session"
+      },
+    );
+    coach.show(context: context);
   }
 
   // Confirmation dialog for rebuy when user has existing stack

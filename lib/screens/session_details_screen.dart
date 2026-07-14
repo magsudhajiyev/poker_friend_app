@@ -130,6 +130,7 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
   final GlobalKey _logHandBtnKey = GlobalKey(debugLabel: 'logHandBtn');
   final GlobalKey _stackChartKey = GlobalKey(debugLabel: 'stackChart');
   final GlobalKey _endSessionRowKey = GlobalKey(debugLabel: 'endSessionRow');
+  final GlobalKey _backButtonKey = GlobalKey(debugLabel: 'backButton');
 
   @override
   void initState() {
@@ -167,6 +168,19 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
       _scheduleSessionDetailsHubTour();
     } else {
       _scheduleSessionDetailsTour();
+    }
+
+    // Stack chart return tour: triggered after hand 2 when user taps ⓘ.
+    // This can land on a freshly-pushed (non-hub) SessionDetailsScreen,
+    // so check here in initState — not only in the hub pop-back handler.
+    if (OnboardingState.isOnboardingActive &&
+        OnboardingState.stackChartReturnTourPending) {
+      OnboardingState.stackChartReturnTourPending = false;
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        await Future.delayed(const Duration(milliseconds: 600));
+        if (!mounted) return;
+        _showStackChartReturnTour();
+      });
     }
   }
 
@@ -387,7 +401,7 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
       alignSkip: Alignment.topLeft,
       skipWidget: _buildTourSkipWidget(),
       onFinish: () {
-        _showEndSessionTour();
+        _showGoBackToHandTour();
       },
       onSkip: () {
         final wasReplay = OnboardingState.isReplay;
@@ -397,6 +411,54 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
           OnboardingPrefs.setPostTourPaywallPending();
         }
         return true;
+      },
+    );
+    coach.show(context: context);
+  }
+
+  /// Spotlights the back button and instructs the user to return to the hand
+  /// logging screen, where the 3-dot menu will be spotlighted next.
+  void _showGoBackToHandTour() {
+    if (!mounted) return;
+
+    if (_backButtonKey.currentContext == null) {
+      // Fallback: set flag and let the user navigate manually
+      OnboardingState.endSessionTourPending = true;
+      return;
+    }
+
+    final l10n = AppLocalizations.of(context);
+    final targets = <TargetFocus>[
+      TargetFocus(
+        identify: 'go_back_to_hand',
+        keyTarget: _backButtonKey,
+        shape: ShapeLightFocus.Circle,
+        paddingFocus: 12,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (context, controller) {
+              return buildTooltip(
+                title: l10n.guidedGoBackToHandTitle,
+                body: l10n.guidedGoBackToHandBody,
+                onNext: () => controller.next(),
+                context: context,
+                isLast: true,
+              );
+            },
+          ),
+        ],
+      ),
+    ];
+
+    final coach = TutorialCoachMark(
+      targets: targets,
+      colorShadow: Colors.black,
+      opacityShadow: 0.85,
+      paddingFocus: 12,
+      hideSkip: true,
+      onFinish: () {
+        OnboardingState.endSessionTourPending = true;
       },
     );
     coach.show(context: context);
@@ -1184,16 +1246,19 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
       return;
     }
 
-    // After returning from hand logging during onboarding: show stack chart tour
+    // After returning from hand logging during onboarding: show stack chart tour.
+    // Use two post-frame callbacks to ensure the widget tree has fully rebuilt
+    // with the updated _stackHistory before checking _stackChartKey.
     if (OnboardingState.isOnboardingActive &&
         OnboardingState.stackChartReturnTourPending &&
-        _stackHistory.length > 1 &&
         mounted) {
       OnboardingState.stackChartReturnTourPending = false;
-      WidgetsBinding.instance.addPostFrameCallback((_) async {
-        await Future.delayed(const Duration(milliseconds: 500));
-        if (!mounted) return;
-        _showStackChartReturnTour();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        WidgetsBinding.instance.addPostFrameCallback((_) async {
+          await Future.delayed(const Duration(milliseconds: 600));
+          if (!mounted) return;
+          _showStackChartReturnTour();
+        });
       });
     }
   }
@@ -1659,6 +1724,7 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
                         // the hand screen. Uses the canonical top-nav circle
                         // style (bgElevated, 24px white icon).
                         GestureDetector(
+                          key: _backButtonKey,
                           onTap: _isHubMode ? _handleHubBackButton : _goBackToHand,
                           child: Container(
                             width: 44,

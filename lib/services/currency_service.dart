@@ -24,6 +24,14 @@ class CurrencyService {
     currencyNotifier.value = Currency.fromCode(code);
   }
 
+  /// Reset to default currency (USD). Called on logout so the next user
+  /// starts with the default instead of inheriting the previous user's choice.
+  static Future<void> reset() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_key);
+    currencyNotifier.value = Currency.all.first; // USD
+  }
+
   // --- Convenience getters ---
 
   static Currency get current => currencyNotifier.value;

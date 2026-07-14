@@ -437,6 +437,14 @@ class SubscriptionService {
   /// Log out current user
   /// Call this when user signs out of your app
   static Future<void> logoutUser() async {
+    // Clear debug/purchase overrides so the next user starts fresh
+    _debugTierOverride = null;
+    _purchasedTierOverride = null;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_debugTierOverrideKey);
+    } catch (_) {}
+
     if (!_isInitialized) return;
 
     try {

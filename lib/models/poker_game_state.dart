@@ -413,9 +413,10 @@ class PokerGameState {
       }
     }
 
-    // BB is 2 positions clockwise from button in active player order
-    // Button -> SB (+1) -> BB (+2)
-    int bbIndex = (buttonIndex + 2) % sortedActivePlayers.length;
+    // Heads-up: BB is 1 position from button (the other player).
+    // Multi-way: BB is 2 positions from button (Button → SB → BB).
+    final int offset = sortedActivePlayers.length == 2 ? 1 : 2;
+    int bbIndex = (buttonIndex + offset) % sortedActivePlayers.length;
     return sortedActivePlayers[bbIndex];
   }
 
@@ -833,9 +834,9 @@ class PokerGameState {
     // For preflop checking, this should only return true when it's the BB's turn 
     // and everyone else has called (no raises)
     
-    if (numberOfPlayers == 2) {
+    if (getActivePlayers().length == 2) {
       // Heads up: BB can check if SB has called (not raised)
-      int bbPosition = (buttonPosition % numberOfPlayers) + 1;
+      int bbPosition = _effectiveBBPosition;
       if (currentPlayer == bbPosition) {
         int sbPosition = buttonPosition;
         PlayerState sbPlayer = _getPlayer(sbPosition);
@@ -1036,7 +1037,7 @@ class PokerGameState {
       if (playersWhoCanAct.isEmpty) {
         // No one can act - everyone is all-in or folded
         // Keep current player as is (doesn't matter since no one acts)
-      } else if (numberOfPlayers == 2) {
+      } else if (getActivePlayers().length == 2) {
         // Heads up: non-button (BB) acts first post-flop
         int nextPlayer = _getNextActivePlayer(buttonPosition);
         // Verify this player can actually act
@@ -1391,8 +1392,10 @@ class PokerGameState {
     _lastRaiseSize = bigBlind; // BB is the initial raise size
     _effectiveBBPosition = _determineEffectiveBBPosition(); // Set before posting
 
-    // Post blinds
-    if (numberOfPlayers > 2) {
+    // Post blinds — use active player count (not total seats) so heads-up
+    // rules apply even on a 6-max or 9-max table with only 2 players seated.
+    final activePlayerCount = getActivePlayers().length;
+    if (activePlayerCount > 2) {
       // Multi-way: Use active players for SB/BB positions
       List<int> activePlayers = getActivePlayers();
       int sbPosition = _findSBSeatFromActivePlayers(activePlayers);
@@ -1523,9 +1526,11 @@ class PokerGameState {
       }
 
     } else {
-      // Heads-up: button posts SB, other player posts BB
+      // Heads-up: button posts SB, other player posts BB.
+      // Use _effectiveBBPosition (already computed from active players)
+      // instead of raw modular arithmetic on total seat count.
       int sbPosition = buttonPosition;
-      int bbPosition = (buttonPosition % numberOfPlayers) + 1;
+      int bbPosition = _effectiveBBPosition;
 
       PlayerState sbPlayer = _getPlayer(sbPosition);
       PlayerState bbPlayer = _getPlayer(bbPosition);

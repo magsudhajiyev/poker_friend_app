@@ -10,6 +10,7 @@ import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/account_type.dart';
 import 'app_data_cache.dart';
+import 'currency_service.dart';
 import 'fcm_service.dart';
 import 'logger_service.dart';
 import 'partner_grant_service.dart';
@@ -450,6 +451,11 @@ class AuthService {
         await prefs.remove('bankroll_synced_from_firestore');
         await prefs.remove('bankroll_hidden');
         await prefs.remove('beta_ai_analysis_count');
+      } catch (_) {}
+
+      // Reset currency to default so the next user doesn't inherit it
+      try {
+        await CurrencyService.reset();
       } catch (_) {}
 
       unawaited(LoggerService.logEvent('logout'));

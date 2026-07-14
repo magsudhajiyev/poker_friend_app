@@ -71,6 +71,17 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
   static const _kLastHasBBante = 'unified_last_bb_ante';
 
   // ─── Validation ──────────────────────────────────────────────────
+  /// Total seated players (hero + opponents).
+  int get _seatedPlayerCount {
+    int count = 0;
+    for (int seat = 1; seat <= 9; seat++) {
+      if (_seatActive[seat] == true) count++;
+    }
+    // Hero counts even if not in _seatActive yet
+    if (_heroSeat != null && _seatActive[_heroSeat!] != true) count++;
+    return count;
+  }
+
   bool get _isFormValid {
     final sb = double.tryParse(_sbController.text);
     final bb = double.tryParse(_bbController.text);
@@ -78,13 +89,14 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
     final hasBuyIn = _buyInController.text.isNotEmpty &&
         double.tryParse(_buyInController.text) != null;
     final hasHero = _heroSeat != null;
+    final hasEnoughPlayers = _seatedPlayerCount >= 2;
 
     if (_gameType == GameType.tournament) {
       final stack = double.tryParse(_startingStackController.text);
-      return hasBlinds && hasBuyIn && hasHero && stack != null && stack >= _bigBlind;
+      return hasBlinds && hasBuyIn && hasHero && hasEnoughPlayers && stack != null && stack >= _bigBlind;
     }
 
-    return hasBlinds && hasBuyIn && hasHero;
+    return hasBlinds && hasBuyIn && hasHero && hasEnoughPlayers;
   }
 
   @override
