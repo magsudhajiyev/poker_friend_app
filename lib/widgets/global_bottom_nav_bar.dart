@@ -8,6 +8,7 @@ import '../screens/statistics_screen.dart';
 import '../screens/logging_mode_selection_screen.dart';
 import '../screens/player/qr_scan_screen.dart' show QRScanScreen;
 import '../design_system/constants/colors.dart';
+import 'main_shell.dart';
 
 /// Nav bar — Figma node 139:1182
 /// Layout: [Home | Opponents | Statistics | Sessions | Scan] ··· [+ FAB]
@@ -70,6 +71,7 @@ class _GlobalBottomNavBarState extends State<GlobalBottomNavBar> {
               const SizedBox(width: 28),
               _NavIcon(
                 path: 'assets/icons/ChartBar.svg',
+                activePath: 'assets/icons/ChartBar-1.svg',
                 isSvg: true,
                 isActive: _isActive('statistics'),
                 onTap: () => _navigateTo(context, 'statistics'),
@@ -77,6 +79,7 @@ class _GlobalBottomNavBarState extends State<GlobalBottomNavBar> {
               const SizedBox(width: 28),
               _NavIcon(
                 path: 'icons/figma_icons/clock.svg',
+                activePath: 'assets/icons/card icons/Clock filled.svg',
                 isSvg: true,
                 isActive: _isActive('sessions'),
                 itemKey: widget.sessionsKey,
@@ -85,6 +88,7 @@ class _GlobalBottomNavBarState extends State<GlobalBottomNavBar> {
               const SizedBox(width: 28),
               _NavIcon(
                 path: 'icons/flat_icons/scanner.png',
+                activePath: 'assets/icons/card icons/Frame.svg',
                 isSvg: false,
                 isActive: _isActive('scan'),
                 onTap: () => _navigateTo(context, 'scan'),
@@ -103,40 +107,7 @@ class _GlobalBottomNavBarState extends State<GlobalBottomNavBar> {
               if (context.mounted) {
                 Navigator.push(
                   context,
-                  PageRouteBuilder(
-                    opaque: false,
-                    barrierColor: Colors.transparent,
-                    transitionDuration: const Duration(milliseconds: 400),
-                    reverseTransitionDuration: const Duration(milliseconds: 300),
-                    pageBuilder: (_, __, ___) => LoggingModeSelectionScreen(),
-                    transitionsBuilder: (_, animation, __, child) {
-                      final slide = Tween<Offset>(
-                        begin: const Offset(0, 1),
-                        end: Offset.zero,
-                      ).animate(CurvedAnimation(
-                        parent: animation,
-                        curve: Curves.easeOutCubic,
-                        reverseCurve: Curves.easeInCubic,
-                      ));
-                      return Stack(
-                        children: [
-                          // Blur fades in/out — does not slide
-                          FadeTransition(
-                            opacity: animation,
-                            child: BackdropFilter(
-                              filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-                              child: Container(color: Colors.black.withValues(alpha: 0.15)),
-                            ),
-                          ),
-                          // White panel slides up/down
-                          SlideTransition(
-                            position: slide,
-                            child: child,
-                          ),
-                        ],
-                      );
-                    },
-                  ),
+                  LoggingModeSelectionScreen.route(),
                 );
               }
             },
@@ -154,8 +125,30 @@ class _GlobalBottomNavBarState extends State<GlobalBottomNavBar> {
     }
     if (!context.mounted) return;
 
-    setState(() => _pendingScreen = screen);
+    // Scan is a one-shot pushed screen, not a persistent tab.
+    if (screen == 'scan') {
+      await Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const QRScanScreen()),
+      );
+      return;
+    }
 
+    // Shell-aware routing: if we're inside (or beneath) a MainShell, switch
+    // its tab instead of pushing a new route so the nav bar doesn't animate
+    // away. If we're on a pushed detail screen, first pop back to the shell.
+    final shell = MainShell.globalKey.currentState;
+    if (shell != null) {
+      final navigator = Navigator.of(context);
+      if (navigator.canPop()) {
+        navigator.popUntil((route) => route.isFirst);
+      }
+      shell.setTabByScreen(screen);
+      return;
+    }
+
+    // Legacy fallback (used only if there's no MainShell in the tree).
+    setState(() => _pendingScreen = screen);
     switch (screen) {
       case 'home':
         Navigator.pushReplacement(
@@ -179,12 +172,6 @@ class _GlobalBottomNavBarState extends State<GlobalBottomNavBar> {
         await Navigator.push(
           context,
           MaterialPageRoute(builder: (_) => SessionHistoryScreen()),
-        );
-        break;
-      case 'scan':
-        await Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const QRScanScreen()),
         );
         break;
     }
@@ -225,6 +212,10 @@ class _NavIcon extends StatelessWidget {
         ? GlobalBottomNavBar._activeColor
         : GlobalBottomNavBar._inactiveColor;
 
+    // Renderer is chosen per resolved path so the active/inactive pair
+    // may mix formats (e.g. scan tab: PNG inactive, SVG active).
+    final resolvedIsSvg = resolvedPath.toLowerCase().endsWith('.svg');
+
     return GestureDetector(
       key: itemKey,
       onTap: onTap,
@@ -233,7 +224,7 @@ class _NavIcon extends StatelessWidget {
         width: 28,
         height: 28,
         child: Center(
-          child: isSvg
+          child: resolvedIsSvg
               ? SvgPicture.asset(
                   resolvedPath,
                   width: 28,

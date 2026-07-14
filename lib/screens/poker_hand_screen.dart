@@ -4188,7 +4188,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     decoration: BoxDecoration(
-                      color: AppColors.bgInverse,
+                      color: AppColors.accentSecondary,
                       borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
                     ),
                     alignment: Alignment.center,

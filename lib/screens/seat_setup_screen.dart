@@ -21,6 +21,7 @@ import 'my_opponents_screen.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/typography.dart';
 import '../design_system/constants/decorations.dart';
+import '../design_system/components/buttons/secondary_pill_button.dart';
 
 class SeatSetupScreen extends StatefulWidget {
   final int? playerCount;
@@ -735,27 +736,9 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                         ),
                         const SizedBox(width: 16),
                         Expanded(
-                          child: GestureDetector(
+                          child: SecondaryPillButton(
+                            label: 'Save',
                             onTap: saveChanges,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 20, vertical: 12),
-                              decoration: BoxDecoration(
-                                color: AppColors.bgPrimary,
-                                borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
-                              ),
-                              child: Center(
-                                child: Text(
-                                  'Save',
-                                  style: AppTypography.ibm(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.white,
-                                    height: 20 / 15,
-                                  ),
-                                ),
-                              ),
-                            ),
                           ),
                         ),
                       ],

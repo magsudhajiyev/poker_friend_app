@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
 import '../onboarding/onboarding_state.dart';
@@ -13,6 +15,44 @@ import '../design_system/constants/decorations.dart';
 
 class LoggingModeSelectionScreen extends StatefulWidget {
   const LoggingModeSelectionScreen({super.key});
+
+  /// Canonical route for opening the Choose Mode sheet — slides up from
+  /// bottom over a blurred backdrop. Used by the bottom-nav FAB and any
+  /// other "start a new session" call site (e.g. the Recent Sessions
+  /// empty-state "Add New" pill).
+  static Route<T> route<T>() {
+    return PageRouteBuilder<T>(
+      opaque: false,
+      barrierColor: Colors.transparent,
+      transitionDuration: const Duration(milliseconds: 400),
+      reverseTransitionDuration: const Duration(milliseconds: 300),
+      pageBuilder: (_, __, ___) => const LoggingModeSelectionScreen(),
+      transitionsBuilder: (_, animation, __, child) {
+        final slide = Tween<Offset>(
+          begin: const Offset(0, 1),
+          end: Offset.zero,
+        ).animate(CurvedAnimation(
+          parent: animation,
+          curve: Curves.easeOutCubic,
+          reverseCurve: Curves.easeInCubic,
+        ));
+        return Stack(
+          children: [
+            FadeTransition(
+              opacity: animation,
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                child: Container(
+                  color: Colors.black.withValues(alpha: 0.15),
+                ),
+              ),
+            ),
+            SlideTransition(position: slide, child: child),
+          ],
+        );
+      },
+    );
+  }
 
   @override
   State<LoggingModeSelectionScreen> createState() =>

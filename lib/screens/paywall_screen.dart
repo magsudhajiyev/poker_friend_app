@@ -599,7 +599,9 @@ class _PaywallScreenState extends State<PaywallScreen> {
             width: 323,
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
             decoration: BoxDecoration(
-              color: isLoading ? Colors.white.withValues(alpha: 0.6) : Colors.white,
+              color: isLoading
+                  ? AppColors.accentPrimary.withValues(alpha: 0.6)
+                  : AppColors.accentPrimary,
               borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
             ),
             child: Center(
@@ -609,7 +611,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                       height: 20,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: AppColors.bgPrimary,
+                        color: AppColors.textInverse,
                       ),
                     )
                   : Text(

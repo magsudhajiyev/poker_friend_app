@@ -11,11 +11,11 @@ import '../services/subscription_service.dart';
 import '../widgets/global_loading_spinner.dart';
 import 'opponent_detail_screen.dart';
 import 'opponent_hands_screen.dart';
-import '../design_system/components/buttons/back_button_circle.dart';
 import '../design_system/components/buttons/close_circle_button.dart';
 import '../design_system/components/sheets/sheet_header.dart';
 import '../design_system/components/cards/error_state_card.dart';
 import '../design_system/components/headers/top_nav_bar.dart';
+import '../widgets/main_shell.dart';
 import '../services/app_data_cache.dart';
 import '../services/logger_service.dart';
 import '../l10n/app_localizations.dart';
@@ -224,12 +224,12 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> with SingleTicker
             child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              TopNavBar(
+              TopNavBar.landing(
                 title: l10n.opponentsTitle,
                 subtitle: !SubscriptionService.isPremium
                     ? l10n.opponentsCountFree(opponents.length, FreeTierLimits.maxOpponentProfiles)
                     : l10n.opponentsCountPremium(opponents.length),
-                onBack: () => Navigator.pop(context),
+                rightAction: _AddOpponentButton(onTap: _openAddForm),
               ),
               const SizedBox(height: 18),
               Padding(
@@ -247,7 +247,31 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> with SingleTicker
           ),
           ),
 
-          // Blur overlay when form is open
+          // Toast — floats just above the shell nav bar.
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 120,
+            child: IgnorePointer(
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 350),
+                switchInCurve: Curves.easeOutCubic,
+                switchOutCurve: Curves.easeInCubic,
+                transitionBuilder: (child, animation) => SlideTransition(
+                  position: Tween<Offset>(
+                    begin: const Offset(0, 1.5),
+                    end: Offset.zero,
+                  ).animate(animation),
+                  child: child,
+                ),
+                child: _showSuccessToast
+                    ? _buildSuccessToast()
+                    : const SizedBox.shrink(key: ValueKey('no_toast')),
+              ),
+            ),
+          ),
+
+          // Blur overlay when form is open — covers everything including nav.
           if (_showAddForm)
             Positioned.fill(
               child: GestureDetector(
@@ -259,40 +283,19 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> with SingleTicker
               ),
             ),
 
-          // Bottom: sliding form OR toast OR floating bar
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: ClipRect(
-              child: _showAddForm
-                  ? SlideTransition(
-                      position: _formSlideAnimation,
-                      child: _buildInlineForm(l10n, bottomInset),
-                    )
-                  : SafeArea(
-                      top: false,
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                        child: AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 350),
-                          switchInCurve: Curves.easeOutCubic,
-                          switchOutCurve: Curves.easeInCubic,
-                          transitionBuilder: (child, animation) => SlideTransition(
-                            position: Tween<Offset>(
-                              begin: const Offset(0, 1.5),
-                              end: Offset.zero,
-                            ).animate(animation),
-                            child: child,
-                          ),
-                          child: _showSuccessToast
-                              ? _buildSuccessToast()
-                              : _buildFloatingBottomBar(),
-                        ),
-                      ),
-                    ),
+          // Sliding form — on top of nav + backdrop when open.
+          if (_showAddForm)
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: ClipRect(
+                child: SlideTransition(
+                  position: _formSlideAnimation,
+                  child: _buildInlineForm(l10n, bottomInset),
+                ),
+              ),
             ),
-          ),
         ],
       ),
     );
@@ -390,51 +393,6 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> with SingleTicker
     );
   }
 
-  Widget _buildFloatingBottomBar() {
-    return Row(
-      key: const ValueKey('floating_bar'),
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        const BackButtonCircle(),
-        GestureDetector(
-          onTap: _openAddForm,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: AppColors.bgSurface,
-              borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
-              border: Border.all(color: AppColors.borderStrong),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 24,
-                  height: 24,
-                  decoration: const BoxDecoration(
-                    color: AppColors.accentSecondary,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.add, color: Colors.black, size: 16),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'Add New Opponent',
-                  style: AppTypography.ibm(
-                    fontSize: 15,
-                    color: Colors.white,
-                    fontWeight: FontWeight.w400,
-                    height: 22 / 15,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
   void _openAddForm({Opponent? opponent}) {
     // Free-tier cap enforcement (restored from main; design_v2 dropped it).
     // Only gate NEW opponents, never edits.
@@ -451,6 +409,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> with SingleTicker
       _formNameError = null;
       _showAddForm = true;
     });
+    MainShell.of(context)?.setNavVisible(false);
     _formAnimController.forward(from: 0);
   }
 
@@ -459,6 +418,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> with SingleTicker
     _formAnimController.reverse().then((_) {
       if (!mounted) return;
       setState(() => _showAddForm = false);
+      MainShell.of(context)?.setNavVisible(true);
       if (showToast) _triggerSuccessToast(message: toastMessage);
     });
   }
@@ -1254,4 +1214,52 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> with SingleTicker
     );
   }
 
+}
+
+/// "Add New Opponent" pill for the opponents top nav — Figma node 582:1602.
+/// bgSurface fill, borderStrong border, 24px green plus dot on the left.
+class _AddOpponentButton extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _AddOpponentButton({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: AppColors.bgSurface,
+          border: Border.all(color: AppColors.borderStrong),
+          borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 24,
+              height: 24,
+              decoration: const BoxDecoration(
+                color: AppColors.accentSecondary,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.add, color: Colors.black, size: 16),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              'Add New Opponent',
+              style: AppTypography.ibm(
+                fontSize: 15,
+                fontWeight: FontWeight.w400,
+                color: AppColors.textPrimary,
+                height: 22 / 15,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

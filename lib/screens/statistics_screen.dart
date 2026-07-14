@@ -13,7 +13,6 @@ import '../services/firebase_service.dart';
 import '../utils/stack_analytics.dart';
 import 'paywall_screen.dart';
 import '../widgets/global_loading_spinner.dart';
-import '../widgets/global_bottom_nav_bar.dart';
 import '../design_system/design_system.dart';
 import '../design_system/components/cards/error_state_card.dart';
 import '../design_system/components/dividers/list_separator.dart';
@@ -427,7 +426,6 @@ class _StatisticsScreenState extends State<StatisticsScreen>
                 child: _buildContent(),
               ),
       ),
-      bottomNavigationBar: GlobalBottomNavBar(currentScreen: 'statistics'),
     );
   }
 

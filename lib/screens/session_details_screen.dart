@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/game_types.dart';
 import '../models/poker_game_state.dart' show formatBlindValue;
@@ -727,7 +728,7 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 16),
         child: Container(
           decoration: BoxDecoration(
-            color: AppColors.infoCardBg,
+            color: AppColors.bgSurface,
             borderRadius: BorderRadius.circular(AppDecorations.radius18),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -1653,7 +1654,9 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
                     padding: const EdgeInsets.only(top: 16, bottom: 24),
                     child: Row(
                       children: [
-                        // Back arrow
+                        // Stop / end-session button — hub mode prompts to end
+                        // the session, legacy hand-in-progress goes back to
+                        // the hand screen.
                         GestureDetector(
                           onTap: _isHubMode ? _handleHubBackButton : _goBackToHand,
                           child: Container(
@@ -1663,10 +1666,16 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
                               color: Colors.white.withValues(alpha: 0.08),
                               shape: BoxShape.circle,
                             ),
-                            child: const Icon(
-                              Icons.arrow_back,
-                              color: Colors.white,
-                              size: 24,
+                            child: Center(
+                              child: SvgPicture.asset(
+                                'assets/icons/card icons/stop.svg',
+                                width: 24,
+                                height: 24,
+                                colorFilter: const ColorFilter.mode(
+                                  Colors.white,
+                                  BlendMode.srcIn,
+                                ),
+                              ),
                             ),
                           ),
                         ),
@@ -1728,7 +1737,7 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
                     margin: const EdgeInsets.only(bottom: 16),
                     decoration: BoxDecoration(
-                      color: AppColors.infoCardBg,
+                      color: AppColors.bgSurface,
                       borderRadius: BorderRadius.circular(AppDecorations.radius18),
                     ),
                     child: Row(
@@ -1758,7 +1767,7 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
                     key: _currentStackCardKey,
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: AppColors.infoCardBg,
+                      color: AppColors.bgSurface,
                       borderRadius: BorderRadius.circular(AppDecorations.radius18),
                     ),
                     child: Column(
@@ -1866,7 +1875,7 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: AppColors.infoCardBg,
+                      color: AppColors.bgSurface,
                       borderRadius: BorderRadius.circular(AppDecorations.radius18),
                     ),
                     child: Column(
@@ -1938,7 +1947,7 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
                       decoration: BoxDecoration(
                         color: (_isHubMode && _handsLogged == 0)
                             ? AppColors.accentPrimary
-                            : AppColors.infoCardBg,
+                            : AppColors.bgSurface,
                         borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
                         border: (_isHubMode && _handsLogged == 0)
                             ? null
@@ -2009,7 +2018,7 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
       key: _stackChartKey,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.infoCardBg,
+        color: AppColors.bgSurface,
         borderRadius: BorderRadius.circular(AppDecorations.radius18),
       ),
       child: Column(

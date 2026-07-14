@@ -64,15 +64,27 @@ class TopNavBar extends StatelessWidget {
     );
   }
 
-  Widget _buildDetail() => _threeSlotRow(centerTitle: true);
-  Widget _buildLanding() => _threeSlotRow(centerTitle: false);
+  Widget _buildDetail() => _threeSlotRow();
 
-  /// Unified 3-slot layout: [44px left] [flexible center] [44px right].
-  /// Left/right slots are always 44px wide (or empty spacer) so the back
-  /// button and right action stay at identical X positions across every
-  /// screen using this nav bar. The back button itself renders at 38px,
-  /// centered within its 44px slot.
-  Widget _threeSlotRow({required bool centerTitle}) {
+  /// Landing variant flushes the title to the left edge and lets the
+  /// right action size intrinsically (44px circle button, pill button, etc.).
+  Widget _buildLanding() {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Expanded(
+          child: _LeadingTitle(title: title, subtitle: subtitle),
+        ),
+        _rightSlot(),
+      ],
+    );
+  }
+
+  /// Detail 3-slot layout: [44px left] [flexible center] [44px right].
+  /// Left/right slots are always 44px so the back button and right action
+  /// stay at identical X positions across every detail screen. The back
+  /// button itself renders at 38px, centered within its 44px slot.
+  Widget _threeSlotRow() {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
@@ -86,9 +98,7 @@ class TopNavBar extends StatelessWidget {
         Expanded(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: centerTitle
-                ? _CenterTitle(title: title, subtitle: subtitle)
-                : _LeadingTitle(title: title, subtitle: subtitle),
+            child: _CenterTitle(title: title, subtitle: subtitle),
           ),
         ),
         SizedBox(

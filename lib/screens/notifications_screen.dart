@@ -189,13 +189,14 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     );
   }
 
-  /// Header — canonical [TopNavBar] with a bell right action.
+  /// Header — canonical [TopNavBar]. No right action; the bell tile that
+  /// used to live here duplicated the icon in the empty state and had no
+  /// tap target of its own.
   Widget _buildHeader(bool hasUnread) {
     return TopNavBar(
       title: AppLocalizations.of(context).notificationsScreenTitle,
       onBack: () => Navigator.pop(context),
       includeStatusBarPadding: false,
-      rightAction: _NotificationsBellAction(hasUnread: hasUnread),
     );
   }
 
@@ -1166,55 +1167,3 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   }
 }
 
-/// Right-slot bell for the notifications top nav — matches the home top-nav
-/// bell exactly: 38×38 bgElevated circle with the 24×24
-/// `notification.svg` icon, centered inside the parent's 44×44 slot.
-class _NotificationsBellAction extends StatelessWidget {
-  final bool hasUnread;
-
-  const _NotificationsBellAction({required this.hasUnread});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Container(
-            width: 38,
-            height: 38,
-            decoration: const BoxDecoration(
-              color: AppColors.bgElevated,
-              shape: BoxShape.circle,
-            ),
-            child: Center(
-              child: SvgPicture.asset(
-                'icons/figma_icons/notification.svg',
-                width: 24,
-                height: 24,
-                colorFilter: const ColorFilter.mode(
-                  Colors.white,
-                  BlendMode.srcIn,
-                ),
-              ),
-            ),
-          ),
-          if (hasUnread)
-            Positioned(
-              right: -1,
-              top: -1,
-              child: Container(
-                width: 10,
-                height: 10,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFEF5350),
-                  shape: BoxShape.circle,
-                  border: Border.all(color: AppColors.bgPrimary, width: 1.5),
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-}

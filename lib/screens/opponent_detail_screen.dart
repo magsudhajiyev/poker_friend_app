@@ -669,8 +669,9 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
         },
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.bgElevated,
             borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
+            border: Border.all(color: AppColors.borderStrong),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
           child: Text(
@@ -678,7 +679,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
             style: AppTypography.ibm(
               fontSize: 15,
               fontWeight: FontWeight.w600,
-              color: AppColors.textInverse,
+              color: AppColors.textPrimary,
             ),
           ),
         ),
@@ -1268,15 +1269,16 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                 ),
               ),
               const SizedBox(height: 24),
-              // Close button
+              // Close button — matches View Hand History pill style.
               GestureDetector(
                 onTap: () => Navigator.pop(context),
                 child: Container(
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                   decoration: BoxDecoration(
-                    color: AppColors.bgInverse,
+                    color: AppColors.bgElevated,
                     borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
+                    border: Border.all(color: AppColors.borderStrong),
                   ),
                   child: Text(
                     l10n.commonClose,
@@ -1284,7 +1286,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                     style: AppTypography.ibm(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.textInverse,
+                      color: AppColors.textPrimary,
                     ),
                   ),
                 ),

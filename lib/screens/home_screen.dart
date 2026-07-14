@@ -31,7 +31,7 @@ import '../services/currency_service.dart';
 import '../screens/auth_screen.dart';
 import '../widgets/looping_splash_logo.dart';
 import '../services/calendar_event_service.dart';
-import '../widgets/global_bottom_nav_bar.dart';
+import '../widgets/main_shell.dart';
 import '../onboarding/onboarding_tour.dart';
 import '../onboarding/onboarding_prefs.dart';
 import 'paywall_screen.dart';
@@ -158,14 +158,16 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     // Phase 5 — session result tour (user returned from a completed session)
     if (OnboardingState.isOnboardingActive && OnboardingState.currentPhase == 5) {
       // Wait for the Sessions nav key to attach
+      final sessionsKey =
+          MainShell.globalKey.currentState?.sessionsNavKey ?? _sessionsNavKey;
       for (int i = 0; i < 20; i++) {
         await Future.delayed(const Duration(milliseconds: 100));
         if (!mounted) return;
-        if (_sessionsNavKey.currentContext != null) break;
+        if (sessionsKey.currentContext != null) break;
       }
-      if (!mounted || _sessionsNavKey.currentContext == null) return;
+      if (!mounted || sessionsKey.currentContext == null) return;
       SessionResultTour(
-        sessionsNavKey: _sessionsNavKey,
+        sessionsNavKey: sessionsKey,
         onComplete: () { if (mounted) setState(() {}); },
       ).show(context);
       return;
@@ -210,16 +212,17 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     }
 
     // Wait for the FAB key to be attached (nav bar may take a few frames)
+    final fabKey = MainShell.globalKey.currentState?.fabKey ?? _fabKey;
     for (int i = 0; i < 20; i++) {
       await Future.delayed(const Duration(milliseconds: 100));
       if (!mounted) return;
-      if (_fabKey.currentContext != null) break;
+      if (fabKey.currentContext != null) break;
     }
 
-    if (!mounted || _fabKey.currentContext == null) return;
+    if (!mounted || fabKey.currentContext == null) return;
     OnboardingState.start();
     setState(() {}); // refresh to show progress bar
-    HomeTour(fabKey: _fabKey).show(context);
+    HomeTour(fabKey: fabKey).show(context);
   }
 
   void _loadBankrollVisibility() async {
@@ -1606,7 +1609,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         );
         },
       ),
-      bottomNavigationBar: GlobalBottomNavBar(currentScreen: 'home', fabKey: _fabKey, sessionsKey: _sessionsNavKey),
     );
   }
 
@@ -1693,7 +1695,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => LoggingModeSelectionScreen()),
+                  LoggingModeSelectionScreen.route(),
                 );
               },
             ),
@@ -2753,8 +2755,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       MaterialPageRoute(builder: (context) => SessionHistoryScreen()),
                     );
                   },
+                  behavior: HitTestBehavior.opaque,
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
                     child: Text(
                       AppLocalizations.of(context).homeViewAll,
                       style: AppTypography.ibm(
@@ -2776,7 +2779,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               onAddTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => LoggingModeSelectionScreen()),
+                  LoggingModeSelectionScreen.route(),
                 );
               },
             )
@@ -3007,7 +3010,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               width: 38,
               height: 38,
               decoration: BoxDecoration(
-                color: AppColors.accentSecondary,
+                color: AppColors.bgElevated,
                 borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
               ),
               child: Center(
@@ -3015,7 +3018,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   isTournament ? 'assets/icons/Trophy.svg' : 'assets/icons/Coin.svg',
                   width: 20,
                   height: 20,
-                  colorFilter: const ColorFilter.mode(Colors.black, BlendMode.srcIn),
+                  colorFilter: const ColorFilter.mode(AppColors.textSecondary, BlendMode.srcIn),
                 ),
               ),
             ),

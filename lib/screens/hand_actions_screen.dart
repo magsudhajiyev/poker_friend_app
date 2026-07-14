@@ -683,9 +683,10 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                             Text(
                               AppLocalizations.of(context).handActionsHandNumber('${widget.hand['handNumber'] ?? 'N/A'}'),
                               style: AppTypography.ibm(
-                                fontSize: 20,
-                                color: Colors.white,
+                                fontSize: 17,
+                                color: AppColors.textPrimary,
                                 fontWeight: FontWeight.w600,
+                                height: 22 / 17,
                               ),
                             ),
                             const SizedBox(height: 2),
@@ -693,8 +694,9 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                               AppLocalizations.of(context).handActionsPosition(heroPositionName ?? PokerPositions.getPositionName(heroPosition, buttonPosition, playerCount)),
                               style: AppTypography.ibm(
                                 fontSize: 13,
-                                color: Colors.white.withOpacity(0.5),
+                                color: AppColors.textSecondary,
                                 fontWeight: FontWeight.w400,
+                                height: 20 / 13,
                               ),
                             ),
                           ],

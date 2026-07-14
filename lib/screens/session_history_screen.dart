@@ -8,8 +8,8 @@ import '../services/subscription_service.dart';
 import '../services/free_tier_limits.dart';
 import '../utils/poker_positions.dart';
 import '../widgets/loading_screen.dart';
-import '../widgets/global_bottom_nav_bar.dart';
 import '../design_system/components/cards/error_state_card.dart';
+import '../design_system/components/cards/swipe_to_delete_cell.dart';
 import '../design_system/components/headers/top_nav_bar.dart';
 import '../design_system/components/modals/confirm_dialog.dart';
 import '../design_system/constants/colors.dart';
@@ -263,8 +263,9 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
   }
 
   Widget _buildFreeTierStatusIndicator() {
+    // Muted inline hint chip. Reads as info (not error), and the "Upgrade"
+    // link on the right is the tap target for the paywall.
     final l10n = AppLocalizations.of(context);
-    const redColor = AppColors.accentDanger;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: GestureDetector(
@@ -278,56 +279,131 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
         behavior: HitTestBehavior.opaque,
         child: Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           decoration: BoxDecoration(
-            color: AppColors.accentDanger.withValues(alpha: 0.06),
+            color: AppColors.bgElevated,
             borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
-            border: Border.all(color: redColor, width: 1),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Left group: icon + label
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SvgPicture.asset(
-                    'assets/icons/Info.svg',
-                    width: 16,
-                    height: 16,
-                    colorFilter: const ColorFilter.mode(redColor, BlendMode.srcIn),
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    l10n.sessionLast30Days,
-                    style: AppTypography.ibm(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w400,
-                      color: redColor,
-                    ),
-                  ),
-                ],
+              SvgPicture.asset(
+                'assets/icons/Info.svg',
+                width: 14,
+                height: 14,
+                colorFilter: const ColorFilter.mode(
+                  AppColors.textSecondary,
+                  BlendMode.srcIn,
+                ),
               ),
-              const SizedBox(width: 10),
-              // Dot separator
+              const SizedBox(width: 6),
+              Text(
+                l10n.sessionLast30Days,
+                style: AppTypography.ibm(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              const SizedBox(width: 8),
               Container(
-                width: 5,
-                height: 5,
+                width: 3,
+                height: 3,
                 decoration: const BoxDecoration(
-                  color: Colors.white,
+                  color: AppColors.textSecondary,
                   shape: BoxShape.circle,
                 ),
               ),
-              const SizedBox(width: 10),
-              // Upgrade link
+              const SizedBox(width: 8),
               Text(
                 l10n.sessionUpgradeForFullHistory,
                 style: AppTypography.ibm(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
-                  decoration: TextDecoration.underline,
-                  decorationColor: Colors.white,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Locked-history teaser rendered after the last visible session on a
+  /// free tier. Shows a padlock + "Older sessions" + CTA to upgrade,
+  /// leveraging visible FOMO instead of the top-of-screen warning.
+  Widget _buildLockedHistoryTeaser() {
+    final l10n = AppLocalizations.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+      child: GestureDetector(
+        onTap: () async {
+          await PaywallScreen.show(
+            context,
+            featureName: l10n.sessionHistoryFullHistory,
+          );
+          if (mounted) setState(() {});
+        },
+        behavior: HitTestBehavior.opaque,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          decoration: BoxDecoration(
+            border: Border(
+              top: BorderSide(
+                color: AppColors.borderStrong.withValues(alpha: 0.6),
+                width: 1,
+              ),
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: AppColors.bgElevated,
+                  borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
+                ),
+                child: const Icon(
+                  Icons.lock_outline,
+                  color: AppColors.textSecondary,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Older sessions',
+                      style: AppTypography.ibm(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Upgrade to Pro to see your full history',
+                      style: AppTypography.ibm(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w400,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              SvgPicture.asset(
+                'assets/icons/CaretRight.svg',
+                width: 16,
+                height: 16,
+                colorFilter: const ColorFilter.mode(
+                  AppColors.textSecondary,
+                  BlendMode.srcIn,
                 ),
               ),
             ],
@@ -347,9 +423,8 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          TopNavBar(
+          TopNavBar.landing(
             title: l10n.sessionHistoryTitle,
-            onBack: () => Navigator.pop(context),
           ),
           const SizedBox(height: 16),
           if (!SubscriptionService.isPremium) ...[
@@ -443,7 +518,6 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
           ),
         ],
       ),
-      bottomNavigationBar: GlobalBottomNavBar(currentScreen: 'sessions'),
     );
   }
 
@@ -525,30 +599,73 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
         }
         return false;
       },
-      child: ListView.builder(
-        // Own controller per tab — the two tab lists can't share one.
-        controller: _controllerFor(gameType),
-        padding: EdgeInsets.symmetric(horizontal: 16),
-        itemCount: LazyPagination.itemCount(total, visible),
-        itemBuilder: (context, index) {
-          if (LazyPagination.isLoaderIndex(index, total, visible)) {
-            return const Padding(
-              padding: EdgeInsets.symmetric(vertical: 24),
-              child: Center(
-                child: SizedBox(
-                  width: 22,
-                  height: 22,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: AppColors.accentSecondary,
+      child: Builder(
+        builder: (context) {
+          final baseCount = LazyPagination.itemCount(total, visible);
+          // Render a locked-history teaser after the very last session on
+          // the free tier (only when there are no more pages to load).
+          final showTeaser = !SubscriptionService.isPremium &&
+              !LazyPagination.hasMore(total, visible) &&
+              sessionList.isNotEmpty;
+          final itemCount = baseCount + (showTeaser ? 1 : 0);
+          return ListView.builder(
+            controller: _controllerFor(gameType),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            itemCount: itemCount,
+            itemBuilder: (context, index) {
+              if (showTeaser && index == itemCount - 1) {
+                return _buildLockedHistoryTeaser();
+              }
+              if (LazyPagination.isLoaderIndex(index, total, visible)) {
+                return const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 24),
+                  child: Center(
+                    child: SizedBox(
+                      width: 22,
+                      height: 22,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppColors.accentSecondary,
+                      ),
+                    ),
                   ),
-                ),
-              ),
-            );
-          }
-          return _buildSessionCard(sessionList[index]);
+                );
+              }
+              final session = sessionList[index];
+              return SwipeToDeleteCell(
+                key: ValueKey('history-${session['id']}'),
+                onDelete: () => _confirmDeleteSession(session),
+                child: _buildSessionCard(session),
+              );
+            },
+          );
         },
       ),
+    );
+  }
+
+  /// Confirms + deletes a session (invoked from a swipe-to-delete cell).
+  /// Removes both Firebase and local mirrors, then refreshes the list.
+  Future<void> _confirmDeleteSession(Map<String, dynamic> session) async {
+    final l10n = AppLocalizations.of(context);
+    final sessionId = session['id'] as String?;
+    if (sessionId == null) return;
+
+    ConfirmDialog.show(
+      context,
+      title: l10n.sessionAnalyticsDeleteTitle,
+      message: l10n.sessionAnalyticsDeleteMessage,
+      confirmLabel: l10n.commonDelete,
+      onConfirm: () async {
+        try {
+          await FirebaseService.deleteSession(sessionId);
+          await LocalStorageService.deleteSession(sessionId);
+        } catch (_) {}
+        if (!mounted) return;
+        AppDataCache.markSessionsDirty();
+        AppDataCache.markHomeDirty();
+        await _loadSessions();
+      },
     );
   }
 
@@ -642,7 +759,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
               width: 38,
               height: 38,
               decoration: BoxDecoration(
-                color: AppColors.accentSecondary,
+                color: AppColors.bgElevated,
                 borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
               ),
               child: Center(
@@ -650,7 +767,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
                   isTournament ? 'assets/icons/Trophy.svg' : 'assets/icons/Coin.svg',
                   width: 20,
                   height: 20,
-                  colorFilter: const ColorFilter.mode(Colors.black, BlendMode.srcIn),
+                  colorFilter: const ColorFilter.mode(AppColors.textSecondary, BlendMode.srcIn),
                 ),
               ),
             ),
