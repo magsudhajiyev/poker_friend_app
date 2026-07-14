@@ -45,10 +45,13 @@ class _GlobalBottomNavBarState extends State<GlobalBottomNavBar> {
   Widget build(BuildContext context) {
     final double systemBottomPad = MediaQuery.of(context).viewPadding.bottom;
 
-    return Container(
-      color: AppColors.bgPrimary, // #0c0c0c
-      padding: EdgeInsets.fromLTRB(24, 12, 24, 12 + systemBottomPad),
-      child: Row(
+    return ClipRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
+        child: Container(
+          color: AppColors.bgPrimary.withValues(alpha: 0.5),
+          padding: EdgeInsets.fromLTRB(24, 12, 24, 12 + systemBottomPad),
+          child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           // Left: 5 icon buttons, gap 28px
@@ -113,6 +116,8 @@ class _GlobalBottomNavBarState extends State<GlobalBottomNavBar> {
             },
           ),
         ],
+      ),
+        ),
       ),
     );
   }
@@ -185,7 +190,7 @@ class _GlobalBottomNavBarState extends State<GlobalBottomNavBar> {
 /// When [activePath] is provided, that SVG is shown as-is (native colors)
 /// when the icon is active, and [path] is shown with the inactive color filter
 /// when inactive.
-class _NavIcon extends StatelessWidget {
+class _NavIcon extends StatefulWidget {
   final String path;
   final String? activePath;
   final bool isSvg;
@@ -203,42 +208,79 @@ class _NavIcon extends StatelessWidget {
   });
 
   @override
+  State<_NavIcon> createState() => _NavIconState();
+}
+
+class _NavIconState extends State<_NavIcon>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _bounce;
+  late final Animation<double> _scale;
+
+  @override
+  void initState() {
+    super.initState();
+    _bounce = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 320),
+    );
+    // Up to 1.18, then settle back to 1.0. Elastic release feels tactile.
+    _scale = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.18), weight: 35),
+      TweenSequenceItem(tween: Tween(begin: 1.18, end: 1.0), weight: 65),
+    ]).animate(CurvedAnimation(parent: _bounce, curve: Curves.easeOut));
+  }
+
+  @override
+  void didUpdateWidget(_NavIcon oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Bounce when the icon transitions to active (not on initial mount).
+    if (!oldWidget.isActive && widget.isActive) {
+      _bounce.forward(from: 0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _bounce.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    // When an activePath is provided and the icon is active, render it
-    // without any color filter so the SVG's own fill colors show through.
-    final useActivePath = isActive && activePath != null;
-    final resolvedPath = useActivePath ? activePath! : path;
-    final color = isActive
+    final useActivePath = widget.isActive && widget.activePath != null;
+    final resolvedPath = useActivePath ? widget.activePath! : widget.path;
+    final color = widget.isActive
         ? GlobalBottomNavBar._activeColor
         : GlobalBottomNavBar._inactiveColor;
 
-    // Renderer is chosen per resolved path so the active/inactive pair
-    // may mix formats (e.g. scan tab: PNG inactive, SVG active).
     final resolvedIsSvg = resolvedPath.toLowerCase().endsWith('.svg');
 
     return GestureDetector(
-      key: itemKey,
-      onTap: onTap,
+      key: widget.itemKey,
+      onTap: widget.onTap,
       behavior: HitTestBehavior.opaque,
       child: SizedBox(
         width: 28,
         height: 28,
         child: Center(
-          child: resolvedIsSvg
-              ? SvgPicture.asset(
-                  resolvedPath,
-                  width: 28,
-                  height: 28,
-                  colorFilter: useActivePath
-                      ? null
-                      : ColorFilter.mode(color, BlendMode.srcIn),
-                )
-              : Image.asset(
-                  resolvedPath,
-                  width: 28,
-                  height: 28,
-                  color: useActivePath ? null : color,
-                ),
+          child: ScaleTransition(
+            scale: _scale,
+            child: resolvedIsSvg
+                ? SvgPicture.asset(
+                    resolvedPath,
+                    width: 28,
+                    height: 28,
+                    colorFilter: useActivePath
+                        ? null
+                        : ColorFilter.mode(color, BlendMode.srcIn),
+                  )
+                : Image.asset(
+                    resolvedPath,
+                    width: 28,
+                    height: 28,
+                    color: useActivePath ? null : color,
+                  ),
+          ),
         ),
       ),
     );

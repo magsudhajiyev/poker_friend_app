@@ -8,6 +8,8 @@ import '../services/subscription_service.dart';
 import '../services/free_tier_limits.dart';
 import '../utils/poker_positions.dart';
 import '../widgets/loading_screen.dart';
+import '../design_system/components/scale_tap_feedback.dart';
+import '../design_system/components/skeleton.dart';
 import '../design_system/components/cards/error_state_card.dart';
 import '../design_system/components/cards/swipe_to_delete_cell.dart';
 import '../design_system/components/headers/top_nav_bar.dart';
@@ -524,7 +526,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
   Widget _buildSessionsList(List<Map<String, dynamic>> sessionList, String gameType) {
     final l10n = AppLocalizations.of(context);
     if (isLoading) {
-      return LoadingScreen(message: l10n.sessionLoadingMessage);
+      return _buildSkeletonList();
     }
 
     if (error != null) {
@@ -669,6 +671,41 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
     );
   }
 
+  /// Placeholder rendered while sessions load. Sketches 6 session card
+  /// rows with shimmering [Skeleton] bars so the layout doesn't shift when
+  /// data arrives.
+  Widget _buildSkeletonList() {
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      itemCount: 6,
+      itemBuilder: (_, __) => Padding(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Skeleton(width: 160, height: 18),
+                  const SizedBox(height: 8),
+                  Row(children: [
+                    Skeleton(width: 46, height: 14, borderRadius: BorderRadius.circular(999)),
+                    const SizedBox(width: 6),
+                    Skeleton(width: 78, height: 14, borderRadius: BorderRadius.circular(999)),
+                  ]),
+                ],
+              ),
+            ),
+            Skeleton(width: 60, height: 20),
+            const SizedBox(width: 12),
+            Skeleton(width: 12, height: 12),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildSessionCard(Map<String, dynamic> session) {
     final l10n = AppLocalizations.of(context);
     final startTime = DateTime.parse(session['startTime']);
@@ -726,7 +763,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
             ? '+${CurrencyService.formatCash(profitLoss)}'
             : CurrencyService.formatCash(profitLoss);
 
-    return GestureDetector(
+    return ScaleTapFeedback(
       key: session['id'] == _tourHighlightSessionId
           ? _tourSessionCardKey
           : null,
@@ -744,7 +781,6 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
           _loadSessions();
         }
       },
-      behavior: HitTestBehavior.opaque,
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: const BoxDecoration(

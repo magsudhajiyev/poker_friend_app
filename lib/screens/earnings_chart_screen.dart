@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fl_chart/fl_chart.dart';
+import '../design_system/components/chart_reveal_clip.dart';
 import '../l10n/app_localizations.dart';
 import '../services/session_result_service.dart';
 import '../design_system/constants/colors.dart';
@@ -381,7 +382,8 @@ class _EarningsChartScreenState extends State<EarningsChartScreen> {
               });
             }
           : null,
-      child: LineChart(
+      child: ChartRevealClip(
+        child: LineChart(
         LineChartData(
           clipData: const FlClipData.all(),
           gridData: FlGridData(
@@ -571,6 +573,7 @@ class _EarningsChartScreenState extends State<EarningsChartScreen> {
             ),
           ],
         ),
+      ),
       ),
     );
   }

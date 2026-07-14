@@ -26,6 +26,7 @@ import '../design_system/components/app_text_field.dart';
 import '../design_system/components/dialogs/app_dialog.dart';
 import '../design_system/components/dialogs/dialog_action_bar.dart';
 import '../design_system/components/modals/confirm_dialog.dart';
+import '../design_system/components/tween_number.dart';
 import 'poker_hand_screen.dart';
 import 'home_screen.dart';
 import '../utils/user_facing_error.dart';
@@ -1883,14 +1884,14 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
                         FittedBox(
                           fit: BoxFit.scaleDown,
                           alignment: Alignment.centerLeft,
-                          child: Text(
-                            _formatStackValue(_currentStack),
+                          child: TweenNumber(
+                            value: _currentStack,
+                            format: _formatStackValue,
                             style: AppTypography.grotesk(
                               fontSize: 42,
                               color: stackColor,
                               fontWeight: FontWeight.w600,
                             ),
-                            maxLines: 1,
                           ),
                         ),
                         const SizedBox(height: 16),

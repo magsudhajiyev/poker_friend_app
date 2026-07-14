@@ -11,6 +11,7 @@ import '../l10n/app_localizations.dart';
 import '../design_system/poker_friend_theme.dart';
 import '../design_system/design_system.dart';
 import '../design_system/components/buttons/back_button_circle.dart';
+import '../design_system/components/chip_fly.dart';
 import '../design_system/components/buttons/primary_pill_button.dart';
 import '../design_system/components/buttons/outlined_pill_button.dart';
 import '../design_system/components/dialogs/app_dialog.dart';
@@ -1721,6 +1722,24 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                         ],
                       ),
                     ),
+                    // Flying chips overlay — chips slide from the bottom
+                    // (hero's seat) to the center (pot) on bet/call/raise.
+                    // IgnorePointer so it doesn't block the gesture area.
+                    ..._chipFlies.entries.map(
+                      (entry) => Positioned.fill(
+                        key: ValueKey('chip-fly-${entry.key}'),
+                        child: IgnorePointer(
+                          child: ChipFly(
+                            color: entry.value,
+                            onComplete: () {
+                              if (mounted) {
+                                setState(() => _chipFlies.remove(entry.key));
+                              }
+                            },
+                          ),
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -3184,6 +3203,18 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
 
   bool _showGestureTooltip = false;
 
+  // Chip-fly animation state — one entry per in-flight chip animation.
+  // Each entry is (unique id, chip color). Entries are removed via
+  // [ChipFly.onComplete] callback.
+  final Map<int, Color> _chipFlies = {};
+  int _nextChipFlyId = 0;
+
+  void _launchChipFly(String action) {
+    final color = chipFlyColorFor(action);
+    final id = _nextChipFlyId++;
+    setState(() => _chipFlies[id] = color);
+  }
+
   Widget _buildGestureIcon(BuildContext context) {
     return GestureDetector(
       key: _gestureInfoKey,
@@ -3946,6 +3977,13 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       return;
     }
 
+    // Chip-fly animation for chip-moving actions.
+    if (action == PlayerAction.call ||
+        action == PlayerAction.bet ||
+        action == PlayerAction.raise) {
+      _launchChipFly(action.name);
+    }
+
     // Get current player stack before action
     final currentPlayerStack = gameState.getPlayerStack(gameState.currentPlayer);
 
@@ -4500,6 +4538,13 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       _triggerInvalidActionVibration();
       // addAction removed
       return;
+    }
+
+    // Chip-fly animation for chip-moving actions.
+    if (action == PlayerAction.call ||
+        action == PlayerAction.bet ||
+        action == PlayerAction.raise) {
+      _launchChipFly(action.name);
     }
 
     // Get current player stack before action

@@ -16,6 +16,7 @@ import '../design_system/components/buttons/primary_pill_button.dart';
 import '../design_system/components/buttons/outlined_pill_button.dart';
 import '../design_system/components/buttons/destructive_pill_button.dart';
 import '../design_system/components/cards/swipe_to_delete_cell.dart';
+import '../design_system/components/success_check_overlay.dart';
 import '../design_system/components/sheets/sheet_header.dart';
 import '../design_system/components/cards/error_state_card.dart';
 import '../design_system/components/headers/top_nav_bar.dart';
@@ -423,7 +424,10 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> with SingleTicker
       if (!mounted) return;
       setState(() => _showAddForm = false);
       MainShell.of(context)?.setNavVisible(true);
-      if (showToast) _triggerSuccessToast(message: toastMessage);
+      if (showToast) {
+        SuccessCheckOverlay.show(context);
+        _triggerSuccessToast(message: toastMessage);
+      }
     });
   }
 

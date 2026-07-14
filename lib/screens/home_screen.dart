@@ -32,6 +32,10 @@ import '../screens/auth_screen.dart';
 import '../widgets/looping_splash_logo.dart';
 import '../services/calendar_event_service.dart';
 import '../widgets/main_shell.dart';
+import '../design_system/components/tween_number.dart';
+import '../design_system/components/scale_tap_feedback.dart';
+import '../design_system/components/chart_reveal_clip.dart';
+import '../design_system/components/buttons/secondary_pill_button.dart';
 import '../onboarding/onboarding_tour.dart';
 import '../onboarding/onboarding_prefs.dart';
 import 'paywall_screen.dart';
@@ -2186,25 +2190,27 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     child: FittedBox(
                       fit: BoxFit.scaleDown,
                       alignment: Alignment.centerLeft,
-                      child: RichText(
-                        text: TextSpan(
-                          children: [
-                            TextSpan(
-                              text: CurrencyService.formatBankroll(currentBankroll),
-                              style: AppTypography.grotesk(
-                                fontSize: 64, fontWeight: FontWeight.w600,
-                                color: Colors.white, height: 1.0,
-                              ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.baseline,
+                        textBaseline: TextBaseline.alphabetic,
+                        children: [
+                          TweenNumber(
+                            value: currentBankroll,
+                            format: (v) => CurrencyService.formatBankroll(v),
+                            style: AppTypography.grotesk(
+                              fontSize: 64, fontWeight: FontWeight.w600,
+                              color: Colors.white, height: 1.0,
                             ),
-                            TextSpan(
-                              text: '  of ${CurrencyService.formatBankroll(bankrollGoal)}',
-                              style: AppTypography.grotesk(
-                                fontSize: 24, fontWeight: FontWeight.w400,
-                                color: AppColors.textSecondary, height: 1.0,
-                              ),
+                          ),
+                          Text(
+                            '  of ${CurrencyService.formatBankroll(bankrollGoal)}',
+                            style: AppTypography.grotesk(
+                              fontSize: 24, fontWeight: FontWeight.w400,
+                              color: AppColors.textSecondary, height: 1.0,
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -2498,29 +2504,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Icon container — Flutter color, no SVG asset caching
-                  Center(
-                    child: Container(
-                      width: 38,
-                      height: 38,
-                      decoration: BoxDecoration(
-                        color: AppColors.bgSurface,
-                        borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
-                      ),
-                      child: Center(
-                        child: SvgPicture.string(
-                          '''<svg width="24" height="24" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M28 26.5H10V11.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M25.75 13.75L19 20.5L16 17.5L10 23.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M25.75 17.5V13.75H22" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-</svg>''',
-                          width: 24,
-                          height: 24,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
                   Text(
                     'No earning data yet',
                     textAlign: TextAlign.center,
@@ -2543,25 +2526,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     ),
                   ),
                   const SizedBox(height: 32),
-                  GestureDetector(
+                  SecondaryPillButton(
+                    label: 'Ok',
                     onTap: () => Navigator.of(ctx).pop(),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                      decoration: BoxDecoration(
-                        color: AppColors.bgInverse,
-                        borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
-                      ),
-                      child: Text(
-                        'Ok',
-                        textAlign: TextAlign.center,
-                        style: AppTypography.ibm(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textInverse,
-                          height: 20 / 15,
-                        ),
-                      ),
-                    ),
                   ),
                 ],
               ),
@@ -2615,7 +2582,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       }
     }
 
-    return LineChart(
+    return ChartRevealClip(
+      child: LineChart(
       LineChartData(
         clipData: const FlClipData.all(),
         gridData: FlGridData(
@@ -2722,6 +2690,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           ),
         ],
       ),
+    ),
     );
   }
 
@@ -2984,7 +2953,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       }
     } catch (_) {}
 
-    return GestureDetector(
+    return ScaleTapFeedback(
       onTap: () => Navigator.push(
         context,
         MaterialPageRoute(
