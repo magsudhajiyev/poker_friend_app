@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'dart:async';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -865,99 +866,46 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Rebuy row
-                    GestureDetector(
+                    _MenuActionRow(
+                      icon: Icons.add_circle_outline,
+                      iconColor: AppColors.accentPrimary,
+                      label: l10n.individualRebuy,
+                      labelColor: Colors.white,
                       onTap: () {
                         Navigator.pop(context);
                         _showRebuyDialog();
                       },
-                      behavior: HitTestBehavior.opaque,
-                      child: Row(
-                        children: [
-                          const Icon(Icons.add_circle_outline, color: AppColors.accentPrimary, size: 16),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              child: Text(
-                                l10n.individualRebuy,
-                                style: AppTypography.ibm(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w500,
-                                  color: Colors.white,
-                                  height: 1.44,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
                     ),
                     Container(
                       height: 1,
                       color: Colors.white.withValues(alpha: 0.06),
                     ),
-                    // Add-on row
-                    GestureDetector(
+                    _MenuActionRow(
+                      icon: Icons.attach_money,
+                      iconColor: AppColors.accentPrimary,
+                      label: l10n.individualAddOn,
+                      labelColor: Colors.white,
                       onTap: () {
                         Navigator.pop(context);
                         _showAddOnDialog();
                       },
-                      behavior: HitTestBehavior.opaque,
-                      child: Row(
-                        children: [
-                          const Icon(Icons.attach_money, color: AppColors.accentPrimary, size: 16),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              child: Text(
-                                l10n.individualAddOn,
-                                style: AppTypography.ibm(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w500,
-                                  color: Colors.white,
-                                  height: 1.44,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
                     ),
                     if (_isHubMode) ...[
                       Container(
                         height: 1,
                         color: Colors.white.withValues(alpha: 0.06),
                       ),
-                      // End Session row
-                      GestureDetector(
-                        key: _endSessionRowKey,
+                      _MenuActionRow(
+                        rowKey: _endSessionRowKey,
+                        icon: Icons.stop_circle_outlined,
+                        iconColor: AppColors.accentDanger,
+                        label: l10n.sessionDetailsEndSession,
+                        labelColor: AppColors.accentDanger,
+                        destructive: true,
                         onTap: () {
                           Navigator.pop(context);
                           _endSessionFromHub();
                         },
-                        behavior: HitTestBehavior.opaque,
-                        child: Row(
-                          children: [
-                            const Icon(Icons.stop_circle_outlined, color: AppColors.accentDanger, size: 16),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 12),
-                                child: Text(
-                                  l10n.sessionDetailsEndSession,
-                                  style: AppTypography.ibm(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w500,
-                                    color: AppColors.accentDanger,
-                                    height: 1.44,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
                       ),
                     ],
                   ],
@@ -2096,4 +2044,104 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
     );
   }
 
+}
+
+/// One tappable row inside the session-details options dropdown
+/// (`_showOptionsMenu`). Adds three layers of selection feedback that
+/// the drawer previously lacked:
+///
+/// 1. **Press-in tint** — the row background lights while the finger is
+///    down: `bgSurface` (or `accentDanger` @ 12%) fades in over 80ms.
+/// 2. **Confirmation flash** — after tap-up, the tint stays visible for
+///    ~140ms before the row's action runs (which typically closes the
+///    menu). This is the beat that lets the user *see* which row they
+///    picked, iOS-context-menu style.
+/// 3. **Haptic tick** — `selectionClick` for normal actions,
+///    `mediumImpact` for destructive ones (End Session).
+class _MenuActionRow extends StatefulWidget {
+  final IconData icon;
+  final Color iconColor;
+  final String label;
+  final Color labelColor;
+  final VoidCallback onTap;
+  final Key? rowKey;
+  final bool destructive;
+
+  const _MenuActionRow({
+    required this.icon,
+    required this.iconColor,
+    required this.label,
+    required this.labelColor,
+    required this.onTap,
+    this.rowKey,
+    this.destructive = false,
+  });
+
+  @override
+  State<_MenuActionRow> createState() => _MenuActionRowState();
+}
+
+class _MenuActionRowState extends State<_MenuActionRow> {
+  bool _pressed = false;
+
+  void _setPressed(bool value) {
+    if (!mounted || _pressed == value) return;
+    setState(() => _pressed = value);
+  }
+
+  Future<void> _handleTap() async {
+    if (widget.destructive) {
+      HapticFeedback.mediumImpact();
+    } else {
+      HapticFeedback.selectionClick();
+    }
+    _setPressed(true);
+    await Future<void>.delayed(const Duration(milliseconds: 140));
+    if (!mounted) return;
+    widget.onTap();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final activeFill = widget.destructive
+        ? AppColors.accentDanger.withValues(alpha: 0.12)
+        : Colors.white.withValues(alpha: 0.08);
+    return GestureDetector(
+      key: widget.rowKey,
+      onTap: _handleTap,
+      onTapDown: (_) => _setPressed(true),
+      onTapCancel: () => _setPressed(false),
+      behavior: HitTestBehavior.opaque,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 80),
+        curve: Curves.easeOut,
+        decoration: BoxDecoration(
+          color: _pressed ? activeFill : Colors.transparent,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        padding:
+            const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+        child: Row(
+          children: [
+            Icon(widget.icon, color: widget.iconColor, size: 20),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                child: Text(
+                  widget.label,
+                  style: AppTypography.ibm(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                    color: widget.labelColor,
+                    height: 1.44,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
