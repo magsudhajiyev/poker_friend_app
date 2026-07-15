@@ -1,6 +1,8 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../l10n/app_localizations.dart';
 import '../onboarding/onboarding_state.dart';
 import '../onboarding/onboarding_tour.dart';
@@ -99,12 +101,13 @@ class _LoggingModeSelectionScreenState
           // Modal panel (dark surface)
           Container(
             width: double.infinity,
-            decoration: const BoxDecoration(
-              color: AppColors.bgSurface,
-              borderRadius: BorderRadius.only(
+            decoration: BoxDecoration(
+              color: AppColors.bgPrimary,
+              borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(AppDecorations.radiusXl),
                 topRight: Radius.circular(AppDecorations.radiusXl),
               ),
+              border: Border.all(color: AppColors.borderStrong),
             ),
             child: SafeArea(
               top: false,
@@ -188,98 +191,15 @@ class _LoggingModeSelectionScreenState
     Key? key,
     String? badge,
   }) {
-    final l10n = AppLocalizations.of(context);
-    return Container(
+    return _ModeCard(
       key: key,
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.bgElevated,
-        border: Border.all(color: AppColors.borderStrong),
-        borderRadius: BorderRadius.circular(AppDecorations.radiusXl),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Title + optional badge
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  title,
-                  style: AppTypography.ibm(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
-                    height: 22 / 17,
-                  ),
-                ),
-              ),
-              if (badge != null)
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: AppColors.bgPrimary,
-                    borderRadius:
-                        BorderRadius.circular(AppDecorations.pillRadius),
-                  ),
-                  child: Text(
-                    badge,
-                    style: AppTypography.ibm(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 1.0,
-                      color: AppColors.accentPrimary,
-                    ),
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(height: 2),
-          Text(
-            subtitle,
-            style: AppTypography.ibm(
-              fontSize: 15,
-              fontWeight: FontWeight.w400,
-              color: AppColors.textPrimary,
-              height: 22 / 15,
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // Feature chips
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: features.map(_buildChip).toList(),
-          ),
-          const SizedBox(height: 24),
-
-          // Choose button
-          GestureDetector(
-            onTap: onChoose,
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              decoration: BoxDecoration(
-                color: AppColors.bgPrimary,
-                borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
-              ),
-              child: Text(
-                l10n.loggingChoose,
-                textAlign: TextAlign.center,
-                style: AppTypography.ibm(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                  height: 20 / 15,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
+      title: title,
+      subtitle: subtitle,
+      features: features,
+      badge: badge,
+      chooseLabel: AppLocalizations.of(context).loggingChoose,
+      onChoose: onChoose,
+      chipBuilder: _buildChip,
     );
   }
 
@@ -297,6 +217,178 @@ class _LoggingModeSelectionScreenState
           fontWeight: FontWeight.w400,
           color: AppColors.textPrimary,
           height: 20 / 13,
+        ),
+      ),
+    );
+  }
+}
+
+/// Mode selection card — the whole surface is one tap target.
+///
+/// Micro-interactions on press:
+/// - Card scales to 0.98 (spring settle on release).
+/// - Chevron slides 4px right and fades label to full opacity.
+/// - Haptic selection tick on release.
+///
+/// Together they make the card unmistakably tappable without needing a
+/// dedicated button inside.
+class _ModeCard extends StatefulWidget {
+  final String title;
+  final String subtitle;
+  final List<String> features;
+  final String? badge;
+  final String chooseLabel;
+  final VoidCallback onChoose;
+  final Widget Function(String) chipBuilder;
+
+  const _ModeCard({
+    super.key,
+    required this.title,
+    required this.subtitle,
+    required this.features,
+    required this.chooseLabel,
+    required this.onChoose,
+    required this.chipBuilder,
+    this.badge,
+  });
+
+  @override
+  State<_ModeCard> createState() => _ModeCardState();
+}
+
+class _ModeCardState extends State<_ModeCard> {
+  bool _pressed = false;
+
+  void _setPressed(bool value) {
+    if (!mounted || _pressed == value) return;
+    setState(() => _pressed = value);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    const pressCurve = Curves.easeOut;
+    const releaseCurve = Curves.elasticOut;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTapDown: (_) => _setPressed(true),
+      onTapUp: (_) => _setPressed(false),
+      onTapCancel: () => _setPressed(false),
+      onTap: () {
+        HapticFeedback.selectionClick();
+        widget.onChoose();
+      },
+      child: AnimatedScale(
+        scale: _pressed ? 0.98 : 1.0,
+        duration: Duration(milliseconds: _pressed ? 120 : 260),
+        curve: _pressed ? pressCurve : releaseCurve,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeOut,
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.bgSurface,
+            border: Border.all(
+              color: _pressed
+                  ? AppColors.accentPrimary.withOpacity(0.5)
+                  : AppColors.borderStrong,
+            ),
+            borderRadius: BorderRadius.circular(AppDecorations.radiusXl),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Title + optional badge
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      widget.title,
+                      style: AppTypography.ibm(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                        height: 22 / 17,
+                      ),
+                    ),
+                  ),
+                  if (widget.badge != null)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: AppColors.bgPrimary,
+                        borderRadius: BorderRadius.circular(
+                            AppDecorations.pillRadius),
+                      ),
+                      child: Text(
+                        widget.badge!,
+                        style: AppTypography.ibm(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 1.0,
+                          color: AppColors.accentPrimary,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 2),
+              Text(
+                widget.subtitle,
+                style: AppTypography.ibm(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w400,
+                  color: AppColors.textPrimary,
+                  height: 22 / 15,
+                ),
+              ),
+              const SizedBox(height: 16),
+              // Feature chips
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: widget.features.map(widget.chipBuilder).toList(),
+              ),
+              const SizedBox(height: 16),
+              // Trailing "Choose ›" affordance — chevron nudges + label
+              // brightens on press.
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  AnimatedDefaultTextStyle(
+                    duration: const Duration(milliseconds: 180),
+                    curve: Curves.easeOut,
+                    style: AppTypography.ibm(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: _pressed
+                          ? AppColors.accentPrimary
+                          : AppColors.accentPrimary.withOpacity(0.85),
+                      height: 20 / 15,
+                    ),
+                    child: Text(widget.chooseLabel),
+                  ),
+                  const SizedBox(width: 6),
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 220),
+                    curve: Curves.easeOut,
+                    transform: Matrix4.translationValues(
+                        _pressed ? 4.0 : 0.0, 0.0, 0.0),
+                    child: SvgPicture.asset(
+                      'assets/icons/CaretRight.svg',
+                      width: 14,
+                      height: 14,
+                      colorFilter: const ColorFilter.mode(
+                        AppColors.accentPrimary,
+                        BlendMode.srcIn,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

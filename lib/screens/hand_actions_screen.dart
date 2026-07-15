@@ -715,12 +715,12 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                             GestureDetector(
                               onTap: () => setState(() => _showBB = !_showBB),
                               child: Container(
-                                width: 40,
-                                height: 40,
+                                width: 44,
+                                height: 44,
                                 decoration: BoxDecoration(
                                   color: _showBB
                                       ? AppColors.accentPrimary.withOpacity(0.2)
-                                      : AppColors.bgElevated,
+                                      : AppColors.bgSurface,
                                   shape: BoxShape.circle,
                                 ),
                                 child: Center(
@@ -742,10 +742,10 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                             GestureDetector(
                               onTap: _handleExportButtonTap,
                               child: Container(
-                                width: 40,
-                                height: 40,
-                                decoration: BoxDecoration(
-                                  color: AppColors.bgElevated,
+                                width: 44,
+                                height: 44,
+                                decoration: const BoxDecoration(
+                                  color: AppColors.bgSurface,
                                   shape: BoxShape.circle,
                                 ),
                                 child: const Icon(
@@ -760,15 +760,15 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                             GestureDetector(
                               onTap: _handleShareButtonTap,
                               child: Container(
-                                width: 40,
-                                height: 40,
-                                decoration: BoxDecoration(
-                                  color: AppColors.bgElevated,
+                                width: 44,
+                                height: 44,
+                                decoration: const BoxDecoration(
+                                  color: AppColors.bgSurface,
                                   shape: BoxShape.circle,
                                 ),
                                 child: _isSharing
                                     ? const Padding(
-                                        padding: EdgeInsets.all(10),
+                                        padding: EdgeInsets.all(12),
                                         child: CircularProgressIndicator(
                                           strokeWidth: 2,
                                           color: Colors.white,
@@ -786,12 +786,12 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                             GestureDetector(
                               onTap: _toggleStar,
                               child: Container(
-                                width: 40,
-                                height: 40,
+                                width: 44,
+                                height: 44,
                                 decoration: BoxDecoration(
                                   color: _isStarred
                                       ? Colors.amber.withOpacity(0.2)
-                                      : AppColors.bgElevated,
+                                      : AppColors.bgSurface,
                                   shape: BoxShape.circle,
                                 ),
                                 child: Icon(

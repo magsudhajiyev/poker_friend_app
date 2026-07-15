@@ -418,15 +418,13 @@ class _StatisticsScreenState extends State<StatisticsScreen>
     return Scaffold(
       backgroundColor: AppColors.bgPrimary,
       extendBody: true,
-      body: SafeArea(
-        child: error != null
-            ? ErrorStateCard(onRetry: () => _loadStatistics(forceRefresh: true))
-            : LoadingWrapper(
-                isLoading: isLoading,
-                loadingMessage: _getLoadingMessage(l10n),
-                child: _buildContent(),
-              ),
-      ),
+      body: error != null
+          ? ErrorStateCard(onRetry: () => _loadStatistics(forceRefresh: true))
+          : LoadingWrapper(
+              isLoading: isLoading,
+              loadingMessage: _getLoadingMessage(l10n),
+              child: _buildContent(),
+            ),
     );
   }
 

@@ -42,6 +42,7 @@ class AnimatedSegmentedTabs extends StatelessWidget {
           decoration: BoxDecoration(
             color: AppColors.bgSurface,
             borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
+            border: Border.all(color: AppColors.borderStrong),
           ),
           child: LayoutBuilder(
             builder: (context, cons) {

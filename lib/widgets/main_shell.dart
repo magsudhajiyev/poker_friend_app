@@ -69,14 +69,45 @@ class MainShellState extends State<MainShell> {
     return Scaffold(
       backgroundColor: AppColors.bgPrimary,
       extendBody: true,
-      body: IndexedStack(
-        index: _currentIndex,
+      body: Stack(
         children: [
-          HomeScreen(),
-          MyOpponentsScreen(),
-          StatisticsScreen(),
-          SessionHistoryScreen(),
-          const NotificationsScreen(),
+          IndexedStack(
+            index: _currentIndex,
+            children: [
+              HomeScreen(),
+              MyOpponentsScreen(),
+              StatisticsScreen(),
+              SessionHistoryScreen(),
+              const NotificationsScreen(),
+            ],
+          ),
+          // Bottom fade: content scrolling behind the nav dims into
+          // bgPrimary instead of clipping at the nav edge. The bottom
+          // half of the gradient sits behind the nav (invisible); the top
+          // ~80px is the visible fade above the nav.
+          if (_navVisible)
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              height: 180,
+              child: IgnorePointer(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        AppColors.bgPrimary.withOpacity(0),
+                        AppColors.bgPrimary.withOpacity(0.6),
+                        AppColors.bgPrimary,
+                      ],
+                      stops: const [0.0, 0.55, 1.0],
+                    ),
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
       bottomNavigationBar: _navVisible

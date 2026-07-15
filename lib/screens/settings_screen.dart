@@ -1045,17 +1045,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
         decoration: BoxDecoration(color: _surface, borderRadius: BorderRadius.circular(AppDecorations.radiusLg)),
         child: Row(
           children: [
-            // Logo placeholder
-            Container(
-              width: 40, height: 40,
-              decoration: BoxDecoration(
-                color: AppColors.separatorDark,
-                borderRadius: BorderRadius.circular(AppDecorations.radius10),
-                border: Border.all(color: AppColors.borderStrong, width: 1),
-              ),
-              child: Center(
-                child: Text('FT',
-                    style: AppTypography.ibm(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.accentPrimary)),
+            // Final Table logo
+            ClipRRect(
+              borderRadius: BorderRadius.circular(AppDecorations.radius10),
+              child: Image.asset(
+                'assets/logo.png',
+                width: 40,
+                height: 40,
+                fit: BoxFit.cover,
               ),
             ),
             const SizedBox(width: 12),

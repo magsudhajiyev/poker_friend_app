@@ -505,7 +505,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                         ),
                         const SizedBox(width: 16),
-                        _buildToggle(_useNicknameInGame, (v) => setState(() => _useNicknameInGame = v)),
+                        AppToggle(value: _useNicknameInGame, onChanged: (v) => setState(() => _useNicknameInGame = v)),
                       ],
                     ),
                   ),
@@ -555,7 +555,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   _buildRow(
                     icon: const Icon(Icons.email_outlined, color: AppColors.contentInactive, size: 24),
                     title: l10n.profileEmailUpdates,
-                    trailing: _buildToggle(_emailUpdates, (v) => setState(() => _emailUpdates = v)),
+                    trailing: AppToggle(value: _emailUpdates, onChanged: (v) => setState(() => _emailUpdates = v)),
                   ),
                   _buildRow(
                     icon: const Icon(Icons.logout_rounded, color: AppColors.contentInactive, size: 24),
@@ -748,35 +748,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 style: AppTypography.ibm(fontSize: 11, color: _danger)),
           ),
       ],
-    );
-  }
-
-  Widget _buildToggle(bool value, ValueChanged<bool> onChanged) {
-    return GestureDetector(
-      onTap: () => onChanged(!value),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        width: 38, height: 24,
-        decoration: BoxDecoration(
-          color: value ? Colors.white : Colors.white,
-          borderRadius: BorderRadius.circular(74),
-        ),
-        child: Stack(
-          children: [
-            AnimatedPositioned(
-              duration: const Duration(milliseconds: 200),
-              left: value ? 18 : 2, top: 3,
-              child: Container(
-                width: 18, height: 18,
-                decoration: BoxDecoration(
-                  color: AppColors.bgPrimary,
-                  borderRadius: BorderRadius.circular(42),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 

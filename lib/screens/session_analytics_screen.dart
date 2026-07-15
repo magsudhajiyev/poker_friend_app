@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'dart:ui' as ui;
 import 'package:fl_chart/fl_chart.dart';
 import '../models/game_types.dart';
@@ -527,25 +528,27 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
                         child: Container(
                           width: 44,
                           height: 44,
-                          decoration: BoxDecoration(
-                            color: AppColors.surfaceDark,
+                          decoration: const BoxDecoration(
+                            color: AppColors.bgSurface,
                             shape: BoxShape.circle,
                           ),
-                          child: _isExporting
-                              ? const SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                        AppColors.accentPrimary),
-                                  ),
-                                )
-                              : Icon(Icons.ios_share,
-                                  color: _hands.isEmpty
-                                      ? Colors.white.withValues(alpha: 0.25)
-                                      : Colors.white,
-                                  size: 20),
+                          child: Center(
+                            child: _isExporting
+                                ? const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                          AppColors.accentPrimary),
+                                    ),
+                                  )
+                                : Icon(Icons.ios_share,
+                                    color: _hands.isEmpty
+                                        ? Colors.white.withValues(alpha: 0.25)
+                                        : Colors.white,
+                                    size: 20),
+                          ),
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -555,23 +558,28 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
                           width: 44,
                           height: 44,
                           decoration: const BoxDecoration(
-                            color: AppColors.surfaceDark,
+                            color: AppColors.bgSurface,
                             shape: BoxShape.circle,
                           ),
-                          child: _isDeleting
-                              ? const Center(
-                                  child: SizedBox(
+                          child: Center(
+                            child: _isDeleting
+                                ? const SizedBox(
                                     width: 18,
                                     height: 18,
                                     child: CircularProgressIndicator(
                                       strokeWidth: 1.5,
                                       valueColor: AlwaysStoppedAnimation<Color>(
-                                          Color(0xFFFF6B6B)),
+                                          AppColors.accentDanger),
                                     ),
+                                  )
+                                : SvgPicture.asset(
+                                    'icons/figma_icons/delete.svg',
+                                    width: 20,
+                                    height: 20,
+                                    colorFilter: const ColorFilter.mode(
+                                        AppColors.accentDanger, BlendMode.srcIn),
                                   ),
-                                )
-                              : const Icon(Icons.delete_outline,
-                                  color: Color(0xFFFF6B6B), size: 20),
+                          ),
                         ),
                       ),
                     ],
@@ -610,6 +618,19 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
 
   Widget _buildSessionOverview() {
     final l10n = AppLocalizations.of(context);
+    final tournamentCashout = _isCashGame() ? null : _getTournamentCashout();
+    final pl = _isCashGame()
+        ? _profitLoss
+        : tournamentCashout != null
+            ? tournamentCashout - _totalInvested
+            : null;
+    final plColor = pl != null
+        ? (pl >= 0 ? AppColors.accentPrimary : const Color(0xFFFF6B6B))
+        : Colors.white;
+    final plText = pl != null
+        ? '${pl >= 0 ? '+' : ''}${CurrencyService.formatCash(pl)}'
+        : l10n.sessionAnalyticsNotAvailableFull;
+
     return Container(
       decoration: BoxDecoration(
         color: AppColors.bgSurface,
@@ -629,90 +650,67 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
               height: 1.2,
             ),
           ),
-          const SizedBox(height: 20),
-          // Metrics grid
+          const SizedBox(height: 16),
+          // Hero Profit/Loss
           Row(
-            children: [
-              Expanded(child: _buildMetricTile(l10n.sessionAnalyticsTotalInvested, _formatTotalInvested(_totalInvested))),
-              const SizedBox(width: 10),
-              Expanded(child: Builder(builder: (_) {
-                final cashout = _getTournamentCashout();
-                return _buildMetricTile(
-                  l10n.sessionAnalyticsCashout,
-                  _isCashGame()
-                    ? _formatCurrency(_finalStack)
-                    : cashout != null
-                        ? CurrencyService.formatCash(cashout)
-                        : l10n.sessionAnalyticsNotAvailableFull,
-                );
-              })),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Expanded(
-                child: _isCashGame()
-                  ? _buildMetricTile(
-                      l10n.sessionAnalyticsHourlyRate,
-                      _formatHourlyRate(),
-                    )
-                  : _buildMetricTile(
-                      l10n.sessionAnalyticsFinished,
-                      _formatFinished(),
-                    ),
+                child: Text(
+                  plText,
+                  style: AppTypography.grotesk(
+                    color: plColor,
+                    fontSize: 34,
+                    fontWeight: FontWeight.w600,
+                    height: 1.0,
+                  ),
+                ),
               ),
-              const SizedBox(width: 10),
-              Expanded(child: Builder(builder: (_) {
-                final tournamentCashout = _isCashGame() ? null : _getTournamentCashout();
-                final pl = _isCashGame()
-                    ? _profitLoss
-                    : tournamentCashout != null
-                        ? tournamentCashout - _totalInvested
-                        : null;
-                return _buildMetricTile(
+              Padding(
+                padding: const EdgeInsets.only(bottom: 4, left: 8),
+                child: Text(
                   l10n.sessionAnalyticsProfitLoss,
-                  pl != null
-                      ? '${pl >= 0 ? '+' : ''}${CurrencyService.formatCash(pl)}'
-                      : l10n.sessionAnalyticsNotAvailableFull,
-                  valueColor: pl != null
-                      ? (pl >= 0 ? AppColors.accentPrimary : const Color(0xFFFF6B6B))
-                      : null,
-                );
-              })),
+                  style: AppTypography.ibm(
+                    color: Colors.white.withOpacity(0.5),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          // 2x2 label rows — bare, no inner cards
+          Row(
+            children: [
+              Expanded(child: _buildMetricTile(
+                l10n.sessionAnalyticsTotalInvested,
+                _formatTotalInvested(_totalInvested),
+              )),
+              const SizedBox(width: 16),
+              Expanded(child: _buildMetricTile(
+                l10n.sessionAnalyticsCashout,
+                _isCashGame()
+                    ? _formatCurrency(_finalStack)
+                    : tournamentCashout != null
+                        ? CurrencyService.formatCash(tournamentCashout)
+                        : l10n.sessionAnalyticsNotAvailableFull,
+              )),
             ],
           ),
           const SizedBox(height: 16),
-          Container(
-            height: 1,
-            color: AppColors.borderStrong,
-          ),
-          // Rebuys (tournament) / Add-ons (cash)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  _isCashGame() ? l10n.sessionAnalyticsAddons : l10n.sessionAnalyticsRebuys,
-                  style: AppTypography.ibm(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w400,
-                    color: Colors.white.withOpacity(0.8),
-                    height: 1.0,
-                  ),
-                ),
-                Text(
-                  '${_rebuys.length}',
-                  style: AppTypography.ibm(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.accentPrimary,
-                    height: 1.0,
-                  ),
-                ),
-              ],
-            ),
+          Row(
+            children: [
+              Expanded(child: _isCashGame()
+                  ? _buildMetricTile(l10n.sessionAnalyticsHourlyRate, _formatHourlyRate())
+                  : _buildMetricTile(l10n.sessionAnalyticsFinished, _formatFinished())),
+              const SizedBox(width: 16),
+              Expanded(child: _buildMetricTile(
+                _isCashGame() ? l10n.sessionAnalyticsAddons : l10n.sessionAnalyticsRebuys,
+                '${_rebuys.length}',
+                valueColor: _rebuys.isNotEmpty ? AppColors.accentPrimary : null,
+              )),
+            ],
           ),
         ],
       ),
@@ -720,34 +718,27 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
   }
 
   Widget _buildMetricTile(String title, String value, {Color? valueColor}) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppColors.bgElevated,
-        borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: AppTypography.ibm(
-              color: Colors.white.withOpacity(0.4),
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-            ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: AppTypography.ibm(
+            color: Colors.white.withOpacity(0.5),
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
           ),
-          const SizedBox(height: 6),
-          Text(
-            value,
-            style: AppTypography.ibm(
-              color: valueColor ?? Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-            ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: AppTypography.ibm(
+            color: valueColor ?? Colors.white,
+            fontSize: 17,
+            fontWeight: FontWeight.w600,
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 

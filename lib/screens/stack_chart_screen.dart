@@ -8,6 +8,7 @@ import 'hand_actions_page_view.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/typography.dart';
 import '../design_system/constants/decorations.dart';
+import '../design_system/components/buttons/back_button_circle.dart';
 
 /// Full-screen landscape stack chart with tap-to-view hand details
 class StackChartScreen extends StatefulWidget {
@@ -171,31 +172,18 @@ class _StackChartScreenState extends State<StackChartScreen> {
         : const Color(0xFFFF6B6B);
 
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topRight,
-            end: Alignment.bottomLeft,
-            colors: [
-              const Color(0xFF1A4A4A),
-              AppColors.surfaceVariant1,
-              AppColors.surfaceVariant1,
-            ],
-            stops: const [0.0, 0.3, 1.0],
-          ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              _buildHeader(lineColor),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                  child: _buildChart(lineColor),
-                ),
+      backgroundColor: AppColors.bgPrimary,
+      body: SafeArea(
+        child: Column(
+          children: [
+            _buildHeader(lineColor),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                child: _buildChart(lineColor),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -210,24 +198,8 @@ class _StackChartScreenState extends State<StackChartScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       child: Row(
         children: [
-          // Back button
-          GestureDetector(
-            onTap: () => Navigator.pop(context),
-            child: Container(
-              width: 40,
-              height: 40,
-              decoration: const BoxDecoration(
-                color: AppColors.surfaceDark,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.arrow_back,
-                color: Colors.white,
-                size: 20,
-              ),
-            ),
-          ),
-          const SizedBox(width: 14),
+          BackButtonCircle(onPressed: () => Navigator.pop(context)),
+          const SizedBox(width: 12),
           // Title
           Expanded(
             child: Column(
