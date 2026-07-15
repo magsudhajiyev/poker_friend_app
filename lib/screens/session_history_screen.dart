@@ -574,6 +574,9 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
               return SwipeToDeleteCell(
                 key: ValueKey('history-${session['id']}'),
                 onDelete: () => _confirmDeleteSession(session),
+                // Cell lives inside TabBarView — restrict swipe reveal to
+                // the trailing chevron area so tab-swipe works on the body.
+                swipeHandleWidth: 56,
                 child: _buildSessionCard(session),
               );
             },

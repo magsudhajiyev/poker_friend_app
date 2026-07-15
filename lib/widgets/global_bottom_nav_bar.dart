@@ -49,13 +49,15 @@ class _GlobalBottomNavBarState extends State<GlobalBottomNavBar> {
 
   @override
   Widget build(BuildContext context) {
-    final double systemBottomPad = MediaQuery.of(context).viewPadding.bottom;
-
     // Figma node 1884:15154 — segmented glass pill (5 tabs) on the left,
     // separate glass FAB on the right. No solid outer container fill;
     // the pill and FAB each host their own BackdropFilter.
+    //
+    // Small fixed breather (12px) so the pill clears the iOS home
+    // indicator without floating high above it. On devices without an
+    // indicator this just reads as extra bottom margin.
     return Padding(
-      padding: EdgeInsets.fromLTRB(16, 8, 16, systemBottomPad),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -187,11 +189,11 @@ class _NavPill extends StatelessWidget {
 
   static const double _itemWidth = 44;
   static const double _itemHeight = 44;
-  static const double _itemGap = 6;
+  static const double _itemGap = 8;
   static const double _hPad = 10;
   static const double _vPad = 6;
-  static const double _highlightW = 44;
-  static const double _highlightH = 44;
+  static const double _highlightW = 48;
+  static const double _highlightH = 48;
 
   const _NavPill({required this.activeIndex, required this.items});
 

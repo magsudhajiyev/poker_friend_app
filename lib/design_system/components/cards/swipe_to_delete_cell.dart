@@ -31,6 +31,15 @@ class SwipeToDeleteCell extends StatefulWidget {
   /// Edit-button label. Defaults to "Edit".
   final String editLabel;
 
+  /// Width of the right-edge region where a horizontal drag will trigger
+  /// the swipe reveal. When `null` (default) the whole cell is swipeable.
+  ///
+  /// Set this when the cell lives inside another horizontal gesture (e.g.
+  /// a `TabBarView`) so that drags starting anywhere but the right edge
+  /// pass through to the parent — the user swipes the trailing chevron to
+  /// reveal actions, and swipes the body to switch tabs.
+  final double? swipeHandleWidth;
+
   const SwipeToDeleteCell({
     super.key,
     required this.child,
@@ -39,6 +48,7 @@ class SwipeToDeleteCell extends StatefulWidget {
     this.actionWidth,
     this.deleteLabel = 'Delete',
     this.editLabel = 'Edit',
+    this.swipeHandleWidth,
   });
 
   @override
@@ -101,54 +111,85 @@ class _SwipeToDeleteCellState extends State<SwipeToDeleteCell>
   @override
   Widget build(BuildContext context) {
     final actionWidth = _resolvedActionWidth;
+    final handleWidth = widget.swipeHandleWidth;
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, _) {
         final offset = -actionWidth * _controller.value;
-        return GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onHorizontalDragUpdate: _onDragUpdate,
-          onHorizontalDragEnd: _onDragEnd,
-          child: Stack(
-            children: [
-              Positioned.fill(
-                child: Align(
-                  alignment: Alignment.centerRight,
-                  child: Opacity(
-                    opacity: _controller.value.clamp(0.0, 1.0),
-                    child: SizedBox(
-                      width: actionWidth,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          if (widget.onEdit != null) ...[
-                            _CircleAction(
-                              icon: 'icons/figma_icons/edit.svg',
-                              color: AppColors.accentTertiary,
-                              label: widget.editLabel,
-                              onTap: _handleEdit,
-                            ),
-                            const SizedBox(width: 14),
-                          ],
+        final revealAndChild = Stack(
+          children: [
+            Positioned.fill(
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: Opacity(
+                  opacity: _controller.value.clamp(0.0, 1.0),
+                  child: SizedBox(
+                    width: actionWidth,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        if (widget.onEdit != null) ...[
                           _CircleAction(
-                            icon: 'icons/figma_icons/delete.svg',
-                            color: AppColors.accentDanger,
-                            label: widget.deleteLabel,
-                            onTap: _handleDelete,
+                            icon: 'icons/figma_icons/edit.svg',
+                            color: AppColors.accentTertiary,
+                            label: widget.editLabel,
+                            onTap: _handleEdit,
                           ),
-                          const SizedBox(width: 10),
+                          const SizedBox(width: 14),
                         ],
-                      ),
+                        _CircleAction(
+                          icon: 'icons/figma_icons/delete.svg',
+                          color: AppColors.accentDanger,
+                          label: widget.deleteLabel,
+                          onTap: _handleDelete,
+                        ),
+                        const SizedBox(width: 10),
+                      ],
                     ),
                   ),
                 ),
               ),
-              Transform.translate(
+            ),
+            Transform.translate(
+              offset: Offset(offset, 0),
+              child: widget.child,
+            ),
+          ],
+        );
+
+        // When [swipeHandleWidth] is null the whole cell is a drag surface
+        // (legacy behavior). When set, only the right-edge strip is a drag
+        // surface — the rest of the cell passes gestures through to the
+        // parent (e.g. TabBarView swipe).
+        if (handleWidth == null) {
+          return GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onHorizontalDragUpdate: _onDragUpdate,
+            onHorizontalDragEnd: _onDragEnd,
+            child: revealAndChild,
+          );
+        }
+
+        // Handle overlay must translate with the child so that once the
+        // reveal is open you can still drag from the chevron to close it.
+        return Stack(
+          children: [
+            revealAndChild,
+            Positioned(
+              right: 0,
+              top: 0,
+              bottom: 0,
+              width: handleWidth,
+              child: Transform.translate(
                 offset: Offset(offset, 0),
-                child: widget.child,
+                child: GestureDetector(
+                  behavior: HitTestBehavior.translucent,
+                  onHorizontalDragUpdate: _onDragUpdate,
+                  onHorizontalDragEnd: _onDragEnd,
+                ),
               ),
-            ],
-          ),
+            ),
+          ],
         );
       },
     );

@@ -193,71 +193,92 @@ class _BackPillButton extends StatelessWidget {
   }
 }
 
-/// Progress bar with a **slide highlight** — renders 6 gray track segments
-/// and a single overlaid green bar positioned over the current step. When
-/// [currentStep] changes the green bar animates its `left` position, so the
-/// highlight appears to glide between steps rather than snapping.
+/// Morphing pill + dots progress indicator.
+///
+/// Each step is an animated pill whose width shifts between 8px (dot) and
+/// 26px (active pill) on step change. Color + width transitions run in
+/// parallel (380ms `easeOutCubic`), so a step advance reads as the pill
+/// smoothly sliding between positions rather than snapping.
+///
+/// Visual states:
+/// - Active   → 26px pill, `accentPrimary`, with a soft green glow.
+/// - Complete → 8px dot, `accentPrimary` at 65% (muted trail behind you).
+/// - Upcoming → 8px dot, white at 18% (whisper of what's ahead).
 class _AnimatedProgressBar extends StatelessWidget {
   final int currentStep;
   final int totalSteps;
   final double gap;
-  final double height;
+  final double dotSize;
+  final double activeWidth;
 
   const _AnimatedProgressBar({
     required this.currentStep,
     required this.totalSteps,
     this.gap = 8,
-    this.height = 4,
+    this.dotSize = 8,
+    this.activeWidth = 26,
   });
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final segmentWidth =
-            (constraints.maxWidth - gap * (totalSteps - 1)) / totalSteps;
-        final highlightLeft = (currentStep - 1) * (segmentWidth + gap);
-        return SizedBox(
-          height: height,
-          width: constraints.maxWidth,
-          child: Stack(
-            children: [
-              // Gray track — all segments always visible.
-              Row(
-                children: [
-                  for (int i = 0; i < totalSteps; i++) ...[
-                    if (i > 0) SizedBox(width: gap),
-                    Container(
-                      width: segmentWidth,
-                      height: height,
-                      decoration: BoxDecoration(
-                        color: AppColors.borderStrong,
-                        borderRadius:
-                            BorderRadius.circular(height / 2),
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-              // Green highlight — slides to the current step position.
-              AnimatedPositioned(
-                duration: const Duration(milliseconds: 320),
-                curve: Curves.easeOutCubic,
-                left: highlightLeft.clamp(0.0, double.infinity),
-                top: 0,
-                bottom: 0,
-                width: segmentWidth,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: AppColors.accentPrimary,
-                    borderRadius: BorderRadius.circular(height / 2),
-                  ),
+    return SizedBox(
+      height: dotSize,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.max,
+        children: [
+          for (int i = 0; i < totalSteps; i++) ...[
+            if (i > 0) SizedBox(width: gap),
+            _StepPill(
+              isActive: i + 1 == currentStep,
+              isDone: i + 1 < currentStep,
+              dotSize: dotSize,
+              activeWidth: activeWidth,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _StepPill extends StatelessWidget {
+  final bool isActive;
+  final bool isDone;
+  final double dotSize;
+  final double activeWidth;
+
+  const _StepPill({
+    required this.isActive,
+    required this.isDone,
+    required this.dotSize,
+    required this.activeWidth,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 380),
+      curve: Curves.easeOutCubic,
+      width: isActive ? activeWidth : dotSize,
+      height: dotSize,
+      decoration: BoxDecoration(
+        color: isActive
+            ? AppColors.accentPrimary
+            : isDone
+                ? AppColors.accentPrimary.withOpacity(0.65)
+                : Colors.white.withOpacity(0.18),
+        borderRadius: BorderRadius.circular(dotSize / 2),
+        boxShadow: isActive
+            ? [
+                BoxShadow(
+                  color: AppColors.accentPrimary.withOpacity(0.35),
+                  blurRadius: 8,
+                  spreadRadius: 0.5,
                 ),
-              ),
-            ],
-          ),
-        );
-      },
+              ]
+            : null,
+      ),
     );
   }
 }
