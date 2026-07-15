@@ -12,12 +12,13 @@ import '../services/logger_service.dart';
 import '../services/firebase_service.dart';
 import '../utils/stack_analytics.dart';
 import 'paywall_screen.dart';
-import '../widgets/global_loading_spinner.dart';
 import '../design_system/design_system.dart';
 import '../design_system/components/cards/error_state_card.dart';
 import '../design_system/components/dividers/list_separator.dart';
 import '../design_system/components/headers/top_nav_bar.dart';
 import '../design_system/components/tabs/animated_segmented_tabs.dart';
+import '../design_system/components/tween_number.dart';
+import '../design_system/components/skeleton.dart';
 import '../widgets/range_grid/range_grid_view.dart';
 import '../utils/user_facing_error.dart';
 
@@ -413,18 +414,65 @@ class _StatisticsScreenState extends State<StatisticsScreen>
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-
     return Scaffold(
       backgroundColor: AppColors.bgPrimary,
       extendBody: true,
       body: error != null
           ? ErrorStateCard(onRetry: () => _loadStatistics(forceRefresh: true))
-          : LoadingWrapper(
-              isLoading: isLoading,
-              loadingMessage: _getLoadingMessage(l10n),
-              child: _buildContent(),
+          : isLoading
+              ? _buildSkeletonContent()
+              : _buildContent(),
+    );
+  }
+
+  /// Shimmering placeholder for the stats content. Mirrors the top-nav +
+  /// tabs + 9 metric rows shape so the layout doesn't shift when the
+  /// real data snaps in. Replaces the previous full-screen loading
+  /// overlay for better perceived performance.
+  Widget _buildSkeletonContent() {
+    final l10n = AppLocalizations.of(context);
+    Widget metricRow() => Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 14),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Skeleton(
+                width: 100,
+                height: 24,
+                borderRadius:
+                    BorderRadius.circular(AppDecorations.radiusFull),
+              ),
+              const Skeleton(width: 56, height: 18),
+            ],
+          ),
+        );
+
+    return Column(
+      children: [
+        Navigator.canPop(context)
+            ? TopNavBar(
+                title: l10n.statsStats,
+                onBack: () => Navigator.pop(context),
+              )
+            : TopNavBar.landing(title: l10n.statsStats),
+        const SizedBox(height: 4),
+        _buildTabSwitcher(),
+        const SizedBox(height: 16),
+        Expanded(
+          child: SingleChildScrollView(
+            physics: const NeverScrollableScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+            child: Column(
+              children: [
+                for (int i = 0; i < 9; i++) ...[
+                  metricRow(),
+                  if (i < 8) const ListSeparator(),
+                ],
+              ],
             ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -483,46 +531,65 @@ class _StatisticsScreenState extends State<StatisticsScreen>
                   chipLabel: l10n.statsHandsLogged,
                   value: totalHands.toString(),
                   forceActive: true,
+                  numericValue: totalHands.toDouble(),
+                  numericFormat: (v) => v.toStringAsFixed(0),
                 ),
                 const ListSeparator(),
                 _buildMetricCard(
                   chipLabel: l10n.statsVpip,
                   value: totalHands > 0 ? '${vpip.toStringAsFixed(1)}%' : na,
+                  numericValue: totalHands > 0 ? vpip : null,
+                  numericFormat: (v) => '${v.toStringAsFixed(1)}%',
                 ),
                 const ListSeparator(),
                 _buildMetricCard(
                   chipLabel: l10n.statsPfr,
                   value: totalHands > 0 ? '${pfr.toStringAsFixed(1)}%' : na,
+                  numericValue: totalHands > 0 ? pfr : null,
+                  numericFormat: (v) => '${v.toStringAsFixed(1)}%',
                 ),
                 const ListSeparator(),
                 _buildMetricCard(
                   chipLabel: l10n.stats3Bet,
                   value: fmt(threeBet, threeBetOpportunity),
+                  numericValue: threeBetOpportunity > 0 ? threeBet : null,
+                  numericFormat: (v) => '${v.toStringAsFixed(1)}%',
                 ),
                 const ListSeparator(),
                 _buildMetricCard(
                   chipLabel: l10n.statsFoldTo3Bet,
                   value: fmt(fold3Bet, facing3BetCount),
+                  numericValue: facing3BetCount > 0 ? fold3Bet : null,
+                  numericFormat: (v) => '${v.toStringAsFixed(1)}%',
                 ),
                 const ListSeparator(),
                 _buildMetricCard(
                   chipLabel: l10n.statsCBet,
                   value: fmt(cbet, cbetOpportunity),
+                  numericValue: cbetOpportunity > 0 ? cbet : null,
+                  numericFormat: (v) => '${v.toStringAsFixed(1)}%',
                 ),
                 const ListSeparator(),
                 _buildMetricCard(
                   chipLabel: l10n.statsSteal,
                   value: fmt(steal, stealOpportunity),
+                  numericValue: stealOpportunity > 0 ? steal : null,
+                  numericFormat: (v) => '${v.toStringAsFixed(1)}%',
                 ),
                 const ListSeparator(),
                 _buildMetricCard(
                   chipLabel: l10n.statsCheckRaise,
                   value: fmt(checkRaise, checkRaiseFlopOpportunity),
+                  numericValue:
+                      checkRaiseFlopOpportunity > 0 ? checkRaise : null,
+                  numericFormat: (v) => '${v.toStringAsFixed(1)}%',
                 ),
                 const ListSeparator(),
                 _buildMetricCard(
                   chipLabel: l10n.statsWinRate,
                   value: handsPlayed > 0 ? '${winRate.toStringAsFixed(1)}%' : na,
+                  numericValue: handsPlayed > 0 ? winRate : null,
+                  numericFormat: (v) => '${v.toStringAsFixed(1)}%',
                 ),
 
                 const SizedBox(height: 32),
@@ -574,8 +641,28 @@ class _StatisticsScreenState extends State<StatisticsScreen>
     required String chipLabel,
     required String value,
     bool forceActive = false,
+    // When both provided (and the row isn't in the "N/A" state), the
+    // value tween-counts up on first mount instead of appearing static.
+    double? numericValue,
+    String Function(double)? numericFormat,
   }) {
     final isNA = !forceActive && !value.contains('%');
+    final valueStyle = AppTypography.ibm(
+      fontSize: 15,
+      fontWeight: FontWeight.w600,
+      color: isNA ? AppColors.textSecondary : AppColors.accentPrimary,
+    );
+    final valueWidget = (!isNA &&
+            numericValue != null &&
+            numericFormat != null)
+        ? TweenNumber(
+            value: numericValue,
+            format: numericFormat,
+            style: valueStyle,
+            duration: const Duration(milliseconds: 900),
+            animateOnMount: true,
+          )
+        : Text(value, style: valueStyle);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 14),
       child: Row(
@@ -599,20 +686,33 @@ class _StatisticsScreenState extends State<StatisticsScreen>
             ),
           ),
           // Value
-          Text(
-            value,
-            style: AppTypography.ibm(
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-              color: isNA ? AppColors.textSecondary : AppColors.accentPrimary,
-            ),
-          ),
+          valueWidget,
         ],
       ),
     );
   }
 
-  Widget _buildStatListItem(String label, String value) {
+  Widget _buildStatListItem(
+    String label,
+    String value, {
+    double? numericValue,
+    String Function(double)? numericFormat,
+  }) {
+    final valueStyle = AppTypography.ibm(
+      fontSize: 15,
+      fontWeight: FontWeight.w600,
+      color: AppColors.accentPrimary,
+      height: 1.0,
+    );
+    final valueWidget = (numericValue != null && numericFormat != null)
+        ? TweenNumber(
+            value: numericValue,
+            format: numericFormat,
+            style: valueStyle,
+            duration: const Duration(milliseconds: 900),
+            animateOnMount: true,
+          )
+        : Text(value, style: valueStyle);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 12),
       child: Row(
@@ -627,15 +727,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
               height: 1.0,
             ),
           ),
-          Text(
-            value,
-            style: AppTypography.ibm(
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-              color: AppColors.accentPrimary,
-              height: 1.0,
-            ),
-          ),
+          valueWidget,
         ],
       ),
     );
@@ -775,9 +867,19 @@ class _StatisticsScreenState extends State<StatisticsScreen>
           ),
         if (_generalSessions > 0) ...[
           _buildDivider(),
-          _buildStatListItem(l10n.statsTotalBuyIn, _formatAmount(_generalTotalBuyIn)),
+          _buildStatListItem(
+            l10n.statsTotalBuyIn,
+            _formatAmount(_generalTotalBuyIn),
+            numericValue: _generalTotalBuyIn,
+            numericFormat: (v) => CurrencyService.formatCashRounded(v),
+          ),
           _buildDivider(),
-          _buildStatListItem(l10n.statsTotalCashOut, _formatAmount(_generalTotalCashOut)),
+          _buildStatListItem(
+            l10n.statsTotalCashOut,
+            _formatAmount(_generalTotalCashOut),
+            numericValue: _generalTotalCashOut,
+            numericFormat: (v) => CurrencyService.formatCashRounded(v),
+          ),
           _buildDivider(),
           _buildProfitRow(l10n.statsNetProfit, _generalNetProfit),
           _buildDivider(),
@@ -794,11 +896,26 @@ class _StatisticsScreenState extends State<StatisticsScreen>
     }
     return _buildStatsCard(
       children: [
-        _buildStatListItem(l10n.statsSessions, _cashSessions.toString()),
+        _buildStatListItem(
+          l10n.statsSessions,
+          _cashSessions.toString(),
+          numericValue: _cashSessions.toDouble(),
+          numericFormat: (v) => v.toStringAsFixed(0),
+        ),
         _buildDivider(),
-        _buildStatListItem(l10n.statsTotalBuyIn, _formatAmount(_cashTotalBuyIn)),
+        _buildStatListItem(
+          l10n.statsTotalBuyIn,
+          _formatAmount(_cashTotalBuyIn),
+          numericValue: _cashTotalBuyIn,
+          numericFormat: (v) => CurrencyService.formatCashRounded(v),
+        ),
         _buildDivider(),
-        _buildStatListItem(l10n.statsTotalCashOut, _formatAmount(_cashTotalCashOut)),
+        _buildStatListItem(
+          l10n.statsTotalCashOut,
+          _formatAmount(_cashTotalCashOut),
+          numericValue: _cashTotalCashOut,
+          numericFormat: (v) => CurrencyService.formatCashRounded(v),
+        ),
         _buildDivider(),
         _buildProfitRow(l10n.statsNetProfit, _cashNetProfit),
         _buildDivider(),
@@ -877,11 +994,26 @@ class _StatisticsScreenState extends State<StatisticsScreen>
     }
     return _buildStatsCard(
       children: [
-        _buildStatListItem(l10n.statsSessions, _tournamentSessions.toString()),
+        _buildStatListItem(
+          l10n.statsSessions,
+          _tournamentSessions.toString(),
+          numericValue: _tournamentSessions.toDouble(),
+          numericFormat: (v) => v.toStringAsFixed(0),
+        ),
         _buildDivider(),
-        _buildStatListItem(l10n.statsTotalBuyIn, _formatAmount(_tournamentTotalBuyIn)),
+        _buildStatListItem(
+          l10n.statsTotalBuyIn,
+          _formatAmount(_tournamentTotalBuyIn),
+          numericValue: _tournamentTotalBuyIn,
+          numericFormat: (v) => CurrencyService.formatCashRounded(v),
+        ),
         _buildDivider(),
-        _buildStatListItem(l10n.statsTotalCashOut, _formatAmount(_tournamentTotalCashOut)),
+        _buildStatListItem(
+          l10n.statsTotalCashOut,
+          _formatAmount(_tournamentTotalCashOut),
+          numericValue: _tournamentTotalCashOut,
+          numericFormat: (v) => CurrencyService.formatCashRounded(v),
+        ),
         _buildDivider(),
         _buildProfitRow(l10n.statsNetProfit, _tournamentNetProfit),
         _buildDivider(),
@@ -889,19 +1021,54 @@ class _StatisticsScreenState extends State<StatisticsScreen>
         const SizedBox(height: 8),
         _buildDivider(),
         const SizedBox(height: 8),
-        _buildStatListItem(l10n.statsItm, '${_itmPercent.toStringAsFixed(1)}%'),
+        _buildStatListItem(
+          l10n.statsItm,
+          '${_itmPercent.toStringAsFixed(1)}%',
+          numericValue: _itmPercent,
+          numericFormat: (v) => '${v.toStringAsFixed(1)}%',
+        ),
         _buildDivider(),
-        _buildStatListItem(l10n.statsAvgFinish, _avgFinish > 0 ? _avgFinish.ceil().toString() : na),
+        _buildStatListItem(
+          l10n.statsAvgFinish,
+          _avgFinish > 0 ? _avgFinish.ceil().toString() : na,
+          numericValue: _avgFinish > 0 ? _avgFinish.ceilToDouble() : null,
+          numericFormat: (v) => v.toStringAsFixed(0),
+        ),
         _buildDivider(),
-        _buildStatListItem(l10n.statsBestFinish, _bestFinish > 0 ? _bestFinish.toString() : na),
+        _buildStatListItem(
+          l10n.statsBestFinish,
+          _bestFinish > 0 ? _bestFinish.toString() : na,
+          numericValue: _bestFinish > 0 ? _bestFinish.toDouble() : null,
+          numericFormat: (v) => v.toStringAsFixed(0),
+        ),
         _buildDivider(),
-        _buildStatListItem(l10n.statsRoi, '${_roiPercent.toStringAsFixed(1)}%'),
+        _buildStatListItem(
+          l10n.statsRoi,
+          '${_roiPercent.toStringAsFixed(1)}%',
+          numericValue: _roiPercent,
+          numericFormat: (v) => '${v.toStringAsFixed(1)}%',
+        ),
         _buildDivider(),
-        _buildStatListItem(l10n.statsFinalTables, _finalTables.toString()),
+        _buildStatListItem(
+          l10n.statsFinalTables,
+          _finalTables.toString(),
+          numericValue: _finalTables.toDouble(),
+          numericFormat: (v) => v.toStringAsFixed(0),
+        ),
         _buildDivider(),
-        _buildStatListItem(l10n.statsAvgBuyIn, _formatAmount(_avgBuyIn)),
+        _buildStatListItem(
+          l10n.statsAvgBuyIn,
+          _formatAmount(_avgBuyIn),
+          numericValue: _avgBuyIn,
+          numericFormat: (v) => CurrencyService.formatCashRounded(v),
+        ),
         _buildDivider(),
-        _buildStatListItem(l10n.statsAvgFieldSize, _avgFieldSize > 0 ? _avgFieldSize.toStringAsFixed(0) : na),
+        _buildStatListItem(
+          l10n.statsAvgFieldSize,
+          _avgFieldSize > 0 ? _avgFieldSize.toStringAsFixed(0) : na,
+          numericValue: _avgFieldSize > 0 ? _avgFieldSize : null,
+          numericFormat: (v) => v.toStringAsFixed(0),
+        ),
       ],
     );
   }
@@ -920,7 +1087,6 @@ class _StatisticsScreenState extends State<StatisticsScreen>
 
   Widget _buildProfitRow(String label, double value) {
     final isPositive = value >= 0;
-    final prefix = isPositive ? '+' : '';
     final color = isPositive ? AppColors.accentPrimary : _kNegativeRed;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 12),
@@ -934,12 +1100,18 @@ class _StatisticsScreenState extends State<StatisticsScreen>
               color: Colors.white.withOpacity(0.8), height: 1.0,
             ),
           ),
-          Text(
-            '$prefix${CurrencyService.formatCashRounded(value)}',
+          TweenNumber(
+            value: value,
+            format: (v) {
+              final p = v >= 0 ? '+' : '';
+              return '$p${CurrencyService.formatCashRounded(v)}';
+            },
             style: AppTypography.ibm(
               fontSize: 15, fontWeight: FontWeight.w600,
               color: color, height: 1.0,
             ),
+            duration: const Duration(milliseconds: 900),
+            animateOnMount: true,
           ),
         ],
       ),
@@ -978,13 +1150,18 @@ class _StatisticsScreenState extends State<StatisticsScreen>
       );
     }
     final isPositive = rate >= 0;
-    final prefix = isPositive ? '+' : '';
     final color = isPositive ? AppColors.accentPrimary : _kNegativeRed;
     final currency = CurrencyService.current;
-    final formatted = rate.toStringAsFixed(0);
-    final rateText = currency.position == SymbolPosition.prefix
-        ? '$prefix${currency.symbol}$formatted/h'
-        : '$prefix$formatted${currency.symbol}/h';
+    String formatRate(double v) {
+      final p = v >= 0 ? '+' : '';
+      final abs = v.abs().toStringAsFixed(0);
+      final signed = v < 0 ? '-$abs' : abs;
+      // Rebuild the ± prefix so the sign flips smoothly if the count-up
+      // crosses zero.
+      return currency.position == SymbolPosition.prefix
+          ? '$p${currency.symbol}$signed/h'.replaceFirst('+-', '-')
+          : '$p$signed${currency.symbol}/h'.replaceFirst('+-', '-');
+    }
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 12),
       child: Row(
@@ -997,12 +1174,15 @@ class _StatisticsScreenState extends State<StatisticsScreen>
               color: Colors.white.withOpacity(0.8), height: 1.0,
             ),
           ),
-          Text(
-            rateText,
+          TweenNumber(
+            value: rate,
+            format: formatRate,
             style: AppTypography.ibm(
               fontSize: 15, fontWeight: FontWeight.w600,
               color: color, height: 1.0,
             ),
+            duration: const Duration(milliseconds: 900),
+            animateOnMount: true,
           ),
         ],
       ),

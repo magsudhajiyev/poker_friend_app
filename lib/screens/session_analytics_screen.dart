@@ -473,8 +473,18 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
         children: [
           Column(
               children: [
-                // Header — matches TopNavBar geometry (statusBar + 56 + 12)
-                Container(
+                // Header — matches TopNavBar geometry (statusBar + 56 + 12).
+                // Wrapped in a Hero paired with the source card in
+                // SessionHistoryScreen so tapping a session grows the
+                // card into this header instead of a plain push.
+                Hero(
+                  tag: 'sessionCard_${widget.sessionId}',
+                  flightShuttleBuilder:
+                      (context, animation, direction, from, to) => Material(
+                    color: Colors.transparent,
+                    child: to.widget,
+                  ),
+                  child: Container(
                   padding: EdgeInsets.only(
                     top: MediaQuery.of(context).padding.top,
                     bottom: 12,
@@ -586,6 +596,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
                   ),
                     ),
                   ),
+                ),
                 ),
                 // Content
                 Expanded(

@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../screens/home_screen.dart';
 import '../screens/my_opponents_screen.dart';
@@ -183,7 +184,7 @@ class _NavItemData {
 /// - Each item: 28px icon (top) + 10px label (below)
 /// - Active state: a rounded-rect background (62×48, radius 80, white @ 16%)
 ///   slides between items with `Curves.easeOutBack`
-class _NavPill extends StatelessWidget {
+class _NavPill extends StatefulWidget {
   final int activeIndex;
   final List<_NavItemData> items;
 
@@ -198,59 +199,90 @@ class _NavPill extends StatelessWidget {
   const _NavPill({required this.activeIndex, required this.items});
 
   @override
+  State<_NavPill> createState() => _NavPillState();
+}
+
+class _NavPillState extends State<_NavPill> {
+  // Whole-pill press state — driven by a `Listener` above the pill so
+  // any tap anywhere on it triggers the scale-down. The individual
+  // items still handle their own icon press animation independently,
+  // giving a nice layered "pill acknowledges + icon punches" effect.
+  bool _pillPressed = false;
+
+  void _setPillPressed(bool value) {
+    if (!mounted || _pillPressed == value) return;
+    setState(() => _pillPressed = value);
+  }
+
+  @override
   Widget build(BuildContext context) {
     // The highlight is 62px wide (12px wider than an item slot); center it
     // over the active item — that means the highlight's left = item.center - 31.
-    final activeCenter =
-        activeIndex * (_itemWidth + _itemGap) + _itemWidth / 2;
-    final highlightLeft = activeCenter - _highlightW / 2;
+    final activeCenter = widget.activeIndex *
+            (_NavPill._itemWidth + _NavPill._itemGap) +
+        _NavPill._itemWidth / 2;
+    final highlightLeft = activeCenter - _NavPill._highlightW / 2;
 
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(999),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 22, sigmaY: 22),
-        child: Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: _hPad,
-            vertical: _vPad,
-          ),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.06),
-            borderRadius: BorderRadius.circular(999),
-          ),
-          child: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              // Sliding highlight rectangle behind the active item —
-              // centered vertically within the item row.
-              AnimatedPositioned(
-                left: highlightLeft,
-                top: (_itemHeight - _highlightH) / 2,
-                width: _highlightW,
-                height: _highlightH,
-                duration: const Duration(milliseconds: 450),
-                curve: Curves.easeOutBack,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.16),
-                    borderRadius: BorderRadius.circular(80),
-                  ),
-                ),
+    return Listener(
+      behavior: HitTestBehavior.deferToChild,
+      onPointerDown: (_) => _setPillPressed(true),
+      onPointerUp: (_) => _setPillPressed(false),
+      onPointerCancel: (_) => _setPillPressed(false),
+      child: AnimatedScale(
+        scale: _pillPressed ? 0.97 : 1.0,
+        duration: _pillPressed
+            ? const Duration(milliseconds: 90)
+            : const Duration(milliseconds: 380),
+        curve: _pillPressed ? Curves.easeOut : Curves.easeOutBack,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(999),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 22, sigmaY: 22),
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: _NavPill._hPad,
+                vertical: _NavPill._vPad,
               ),
-              // Items row.
-              Row(
-                mainAxisSize: MainAxisSize.min,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.06),
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Stack(
+                clipBehavior: Clip.none,
                 children: [
-                  for (int i = 0; i < items.length; i++) ...[
-                    if (i > 0) SizedBox(width: _itemGap),
-                    _NavPillItem(
-                      data: items[i],
-                      isActive: i == activeIndex,
+                  // Sliding highlight rectangle behind the active item —
+                  // centered vertically within the item row.
+                  AnimatedPositioned(
+                    left: highlightLeft,
+                    top: (_NavPill._itemHeight - _NavPill._highlightH) /
+                        2,
+                    width: _NavPill._highlightW,
+                    height: _NavPill._highlightH,
+                    duration: const Duration(milliseconds: 450),
+                    curve: Curves.easeOutBack,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.16),
+                        borderRadius: BorderRadius.circular(80),
+                      ),
                     ),
-                  ],
+                  ),
+                  // Items row.
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      for (int i = 0; i < widget.items.length; i++) ...[
+                        if (i > 0) SizedBox(width: _NavPill._itemGap),
+                        _NavPillItem(
+                          data: widget.items[i],
+                          isActive: i == widget.activeIndex,
+                        ),
+                      ],
+                    ],
+                  ),
                 ],
               ),
-            ],
+            ),
           ),
         ),
       ),
@@ -258,22 +290,71 @@ class _NavPill extends StatelessWidget {
   }
 }
 
-class _NavPillItem extends StatelessWidget {
+/// Single nav-pill tab. Stateful so we can layer two icon animations:
+///
+/// 1. **Press-in / spring-back** — tap-down snaps to 0.82 (fast easeOut,
+///    90ms); tap-up springs back to 1.0 with a subtle `easeOutBack`
+///    overshoot (420ms). Reads as a physical button push.
+/// 2. **Active pop** — when [isActive] flips true, the resting scale
+///    lifts to 1.08 with an elastic settle so the newly-selected tab
+///    briefly bounces above its neighbors.
+///
+/// The whole pill also reacts to any tap on it (see `_NavPill`), and a
+/// selection-click haptic fires on every tap so the finger always gets
+/// a tactile confirmation regardless of whether the tab actually
+/// changed. Icons stay white — selection is communicated by the sliding
+/// highlight underneath and the active pop, not by colour.
+class _NavPillItem extends StatefulWidget {
   final _NavItemData data;
   final bool isActive;
 
   const _NavPillItem({required this.data, required this.isActive});
 
   @override
+  State<_NavPillItem> createState() => _NavPillItemState();
+}
+
+class _NavPillItemState extends State<_NavPillItem> {
+  bool _pressed = false;
+
+  void _setPressed(bool value) {
+    if (!mounted || _pressed == value) return;
+    setState(() => _pressed = value);
+  }
+
+  double get _targetScale {
+    if (_pressed) return 0.82;
+    return widget.isActive ? 1.08 : 1.0;
+  }
+
+  Duration get _scaleDuration => _pressed
+      ? const Duration(milliseconds: 90)
+      : const Duration(milliseconds: 420);
+
+  Curve get _scaleCurve =>
+      _pressed ? Curves.easeOut : Curves.easeOutBack;
+
+  @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      key: data.itemKey,
-      onTap: data.onTap,
+      key: widget.data.itemKey,
+      onTap: () {
+        HapticFeedback.selectionClick();
+        widget.data.onTap();
+      },
+      onTapDown: (_) => _setPressed(true),
+      onTapUp: (_) => _setPressed(false),
+      onTapCancel: () => _setPressed(false),
       behavior: HitTestBehavior.opaque,
-      child: SizedBox(
-        width: 44,
-        height: 44,
-        child: Center(child: _iconGlyph(data.icon)),
+      child: AnimatedScale(
+        scale: _targetScale,
+        duration: _scaleDuration,
+        curve: _scaleCurve,
+        child: SizedBox(
+          width: 44,
+          height: 44,
+          child: Center(child: _iconGlyph(widget.data.icon)),
+        ),
       ),
     );
   }
@@ -327,14 +408,19 @@ class _GlassFabState extends State<_GlassFab> {
   Widget build(BuildContext context) {
     return GestureDetector(
       key: widget.fabKey,
-      onTap: widget.onTap,
+      onTap: () {
+        HapticFeedback.mediumImpact();
+        widget.onTap();
+      },
       onTapDown: (_) => _setPressed(true),
       onTapUp: (_) => _setPressed(false),
       onTapCancel: () => _setPressed(false),
       behavior: HitTestBehavior.opaque,
       child: AnimatedScale(
-        scale: _pressed ? 1.12 : 1.0,
-        duration: const Duration(milliseconds: 180),
+        // Grow-then-settle: 1.14 on press for a punchier reaction than
+        // a static button, with easeOutBack for the spring-in feel.
+        scale: _pressed ? 1.14 : 1.0,
+        duration: const Duration(milliseconds: 220),
         curve: Curves.easeOutBack,
         child: ClipOval(
           child: BackdropFilter(

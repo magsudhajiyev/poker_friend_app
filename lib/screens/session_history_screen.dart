@@ -755,7 +755,14 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
           _loadSessions();
         }
       },
-      child: Container(
+      child: Hero(
+        tag: 'sessionCard_${session['id']}',
+        // Material shim keeps hero content painted correctly during
+        // the transition (Container alone can lose its ancestor
+        // Material context mid-flight and render a black rect).
+        flightShuttleBuilder: (context, animation, direction, from, to) =>
+            Material(color: Colors.transparent, child: to.widget),
+        child: Container(
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: const BoxDecoration(
           border: Border(
@@ -838,6 +845,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
             ),
           ],
         ),
+      ),
       ),
     );
   }

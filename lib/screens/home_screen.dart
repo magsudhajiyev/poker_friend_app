@@ -1944,6 +1944,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         height: 18,
                         colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
                       ),
+                      numericValue:
+                          (playerStats['totalSessions'] ?? 0).toDouble(),
+                      numericFormat: (v) => v.toStringAsFixed(0),
                     ),
                   ),
                 ],
@@ -1962,6 +1965,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         height: 18,
                         colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
                       ),
+                      numericValue:
+                          (playerStats['winRate'] ?? 0.0).toDouble(),
+                      numericFormat: (v) => '${v.toStringAsFixed(0)}%',
                     ),
                   ),
                   const SizedBox(width: 14),
@@ -1976,6 +1982,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         height: 18,
                         colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
                       ),
+                      numericValue:
+                          (playerStats['totalHours'] ?? 0.0).toDouble(),
+                      numericFormat: (v) => v.toStringAsFixed(0),
                     ),
                   ),
                 ],
@@ -1994,6 +2003,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     required Widget icon,
     VoidCallback? onInfoTap,
     GlobalKey? infoKey,
+    // Opt into count-up-on-mount when the value is numeric (win rate,
+    // sessions, hours). Non-numeric cells (play style label) pass null.
+    double? numericValue,
+    String Function(double)? numericFormat,
   }) {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -2029,14 +2042,27 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     ),
                   ),
                   const SizedBox(height: 6),
-                  Text(
-                    value,
-                    style: AppTypography.ibm(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.white,
+                  if (numericValue != null && numericFormat != null)
+                    TweenNumber(
+                      value: numericValue,
+                      format: numericFormat,
+                      style: AppTypography.ibm(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.white,
+                      ),
+                      duration: const Duration(milliseconds: 900),
+                      animateOnMount: true,
+                    )
+                  else
+                    Text(
+                      value,
+                      style: AppTypography.ibm(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.white,
+                      ),
                     ),
-                  ),
                 ],
               ),
             ],
@@ -2247,6 +2273,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               fontSize: 64, fontWeight: FontWeight.w600,
                               color: Colors.white, height: 1.0,
                             ),
+                            duration: const Duration(milliseconds: 1100),
+                            animateOnMount: true,
                           ),
                           Text(
                             '  of ${CurrencyService.formatBankroll(bankrollGoal)}',

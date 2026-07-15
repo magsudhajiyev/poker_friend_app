@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 
-/// Text widget that animates its numeric value when it changes.
+/// Text widget that animates its numeric value.
 ///
-/// On first mount it renders the value immediately (no intro animation).
-/// On subsequent rebuilds with a different [value], it tweens from the
-/// previous value to the new one over [duration]. Use for bankroll,
-/// current stack, pot amount, session P/L — anywhere a number shifts as
-/// a result of user action.
+/// Two modes:
+/// - By default, first mount renders [value] immediately. Subsequent
+///   [value] changes tween from the previous value → new value over
+///   [duration]. Use for numbers that shift as a result of user action
+///   (bankroll after a bet, current stack, session P/L).
+/// - Set [animateOnMount] to `true` to make the widget count up from
+///   [mountFrom] (default 0) → [value] on its first appearance. Use for
+///   hero numbers on load — bankroll on Home, stats percentages, session
+///   counts — where the animation is the first thing the user sees.
 ///
 /// The [format] callback converts the animated `double` back to display
 /// text (e.g. `CurrencyService.formatCash`, `(v) => v.toStringAsFixed(0)`).
@@ -18,6 +22,14 @@ class TweenNumber extends StatefulWidget {
   final Curve curve;
   final TextAlign? textAlign;
 
+  /// When true, the initial mount animates from [mountFrom] → [value]
+  /// instead of rendering [value] instantly. Ideal for hero stats.
+  final bool animateOnMount;
+
+  /// Starting value for the mount animation. Only used when
+  /// [animateOnMount] is true. Defaults to 0.
+  final double mountFrom;
+
   const TweenNumber({
     super.key,
     required this.value,
@@ -26,6 +38,8 @@ class TweenNumber extends StatefulWidget {
     this.duration = const Duration(milliseconds: 400),
     this.curve = Curves.easeOutCubic,
     this.textAlign,
+    this.animateOnMount = false,
+    this.mountFrom = 0,
   });
 
   @override
@@ -38,7 +52,7 @@ class _TweenNumberState extends State<TweenNumber> {
   @override
   void initState() {
     super.initState();
-    _previousValue = widget.value;
+    _previousValue = widget.animateOnMount ? widget.mountFrom : widget.value;
   }
 
   @override

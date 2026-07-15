@@ -463,7 +463,18 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
       backgroundColor: AppColors.bgPrimary,
       body: Column(
         children: [
-          _buildHeader(),
+          // Header wrapped in Hero paired with the source card in
+          // MyOpponentsScreen — tapping an opponent grows the card into
+          // this header instead of a plain push.
+          Hero(
+            tag: 'opponentCard_${widget.opponent.id}',
+            flightShuttleBuilder:
+                (context, animation, direction, from, to) => Material(
+              color: Colors.transparent,
+              child: to.widget,
+            ),
+            child: _buildHeader(),
+          ),
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(16, 24, 16, 24),

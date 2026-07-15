@@ -8,7 +8,6 @@ import '../services/free_tier_limits.dart';
 import '../services/opponent_service.dart';
 import '../services/opponent_stats_service.dart';
 import '../services/subscription_service.dart';
-import '../widgets/global_loading_spinner.dart';
 import 'opponent_detail_screen.dart';
 import 'opponent_hands_screen.dart';
 import '../design_system/components/buttons/close_circle_button.dart';
@@ -17,6 +16,7 @@ import '../design_system/components/buttons/outlined_pill_button.dart';
 import '../design_system/components/buttons/destructive_pill_button.dart';
 import '../design_system/components/cards/swipe_to_delete_cell.dart';
 import '../design_system/components/success_check_overlay.dart';
+import '../design_system/components/skeleton.dart';
 import '../design_system/components/sheets/sheet_header.dart';
 import '../design_system/components/cards/error_state_card.dart';
 import '../design_system/components/headers/top_nav_bar.dart';
@@ -699,12 +699,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> with SingleTicker
   Widget _buildBody() {
     final l10n = AppLocalizations.of(context);
     if (isLoading) {
-      return Center(
-        child: GlobalLoadingSpinner(
-          message: l10n.opponentsLoadingMessage,
-          showLogo: false,
-        ),
-      );
+      return _buildOpponentsSkeleton();
     }
 
     if (error != null) {
@@ -781,6 +776,54 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> with SingleTicker
         : trimmed[0].toUpperCase();
   }
 
+  /// Shimmering placeholder that mirrors the opponent-row shape while
+  /// data loads. Better perceived performance than a centered spinner —
+  /// the layout doesn't shift when the real list snaps in.
+  Widget _buildOpponentsSkeleton() {
+    Widget row() => Container(
+          decoration: const BoxDecoration(
+            border: Border(
+              bottom: BorderSide(color: AppColors.borderDefault, width: 1),
+            ),
+          ),
+          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+          child: Row(
+            children: [
+              Skeleton(
+                width: 48,
+                height: 48,
+                borderRadius:
+                    BorderRadius.circular(AppDecorations.radiusMd),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Skeleton(width: 140, height: 17),
+                    SizedBox(height: 8),
+                    Skeleton(width: 96, height: 13),
+                  ],
+                ),
+              ),
+              Skeleton(
+                width: 56,
+                height: 22,
+                borderRadius: BorderRadius.circular(999),
+              ),
+            ],
+          ),
+        );
+
+    return ListView(
+      padding: const EdgeInsets.only(top: 8),
+      physics: const NeverScrollableScrollPhysics(),
+      children: [
+        for (int i = 0; i < 6; i++) row(),
+      ],
+    );
+  }
+
   Widget _buildOpponentCard(Opponent opponent) {
     final l10n = AppLocalizations.of(context);
     final avatarColor = _getColorForOpponent(opponent.color);
@@ -804,7 +847,14 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> with SingleTicker
           if (result == true) _loadOpponents(useCache: false);
         },
         behavior: HitTestBehavior.opaque,
-        child: Container(
+        child: Hero(
+          tag: 'opponentCard_${opponent.id}',
+          flightShuttleBuilder:
+              (context, animation, direction, from, to) => Material(
+            color: Colors.transparent,
+            child: to.widget,
+          ),
+          child: Container(
         decoration: const BoxDecoration(
           border: Border(
             bottom: BorderSide(color: AppColors.borderDefault, width: 1),
@@ -901,6 +951,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> with SingleTicker
               colorFilter: const ColorFilter.mode(AppColors.contentInactive, BlendMode.srcIn),
             ),
           ],
+        ),
         ),
         ),
       ),

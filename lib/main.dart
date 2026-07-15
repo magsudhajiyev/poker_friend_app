@@ -9,6 +9,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'firebase_options.dart';
 import 'theme/app_theme.dart';
+import 'design_system/app_scroll_behavior.dart';
 import 'screens/auth_wrapper.dart';
 import 'screens/splash_screen.dart';
 import 'screens/player/player_session_screen.dart';
@@ -399,6 +400,7 @@ class _PokerTrackerAppState extends State<PokerTrackerApp>
           navigatorKey: navigatorKey,
           title: 'Poker Hand Tracker',
           theme: AppTheme.lightTheme,
+          scrollBehavior: const AppScrollBehavior(),
           locale: locale,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,

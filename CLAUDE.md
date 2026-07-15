@@ -45,7 +45,7 @@ flutter clean && flutter pub get
 ## Project Rules
 - **DO NOT push to git unless explicitly asked by user**
 - **DO NOT commit unless explicitly asked by user**
-- Always check `/diary` folder for previously solved bugs before implementing fixes
+- Always check `/diary` folder for previously solved bugs before implementing fixes. Treat every entry there as authoritative documentation of the current behaviour — respect it and do not break it. **In particular, `/diary/2026-07-15-in-app-tour-complete-reference.md` is the canonical reference for the in-app tour flow: any change touching onboarding, guided overlays, tour phases, `OnboardingState`, `guided_hand_overlay`, `onboarding_tour`, or the screens the tour highlights (home, session details, poker hand, session end) must preserve the behaviour documented there.**
 - Create diary entry after user confirms a fix
 - Never commit debug logging, unnecessary files, or unstabilized code
 - Wait for user confirmation before any git operations
