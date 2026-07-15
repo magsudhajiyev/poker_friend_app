@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../../design_system/constants/colors.dart';
 import '../../l10n/app_localizations.dart';
 import '../../design_system/constants/typography.dart';
 import '../../design_system/constants/decorations.dart';
 import 'onboarding_scaffold.dart';
+import 'step_reveal.dart';
 
 class GameTypeStep extends StatefulWidget {
   final ValueChanged<String> onContinue;
@@ -34,43 +36,62 @@ class _GameTypeStepState extends State<GameTypeStep>
           _selected != null ? () => widget.onContinue(_selected!) : null,
       continueLabel: l10n.onboardingContinue,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const SizedBox(height: 48),
-          Text(
-            l10n.onboardingGameTypeTitle,
-            textAlign: TextAlign.left,
-            style: AppTypography.ibm(
-              fontSize: 32,
-              fontWeight: FontWeight.w700,
-              color: Colors.white,
-              height: 1.15,
-              letterSpacing: -1.4,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            l10n.onboardingGameTypeSubtitle,
-            textAlign: TextAlign.left,
-            style: AppTypography.ibm(
-              fontSize: 17,
-              fontWeight: FontWeight.w400,
-              color: AppColors.textSecondary,
-              height: 1.5,
-              letterSpacing: -0.5,
-            ),
-          ),
-          const SizedBox(height: 40),
-          _OptionCard(
-            label: l10n.onboardingGameTypeCash,
-            isSelected: _selected == 'cash',
-            onTap: () => setState(() => _selected = 'cash'),
-          ),
-          const SizedBox(height: 12),
-          _OptionCard(
-            label: l10n.onboardingGameTypeTournament,
-            isSelected: _selected == 'tournament',
-            onTap: () => setState(() => _selected = 'tournament'),
+          // Figma anchors the title at ~50%-153.5px on an 852-tall frame,
+          // i.e. slightly above the vertical center. A larger top spacer
+          // than bottom pushes the block down from just under the
+          // progress bar into that upper-mid position.
+          const SizedBox(height: 96),
+          StepReveal(
+            children: [
+              Text(
+                l10n.onboardingGameTypeTitle,
+                textAlign: TextAlign.center,
+                style: AppTypography.ibm(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                  letterSpacing: -1.4,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                l10n.onboardingGameTypeSubtitle,
+                textAlign: TextAlign.center,
+                style: AppTypography.ibm(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w400,
+                  color: AppColors.textSecondary,
+                  height: 1.5,
+                  letterSpacing: -0.45,
+                ),
+              ),
+              const SizedBox(height: 32),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: _GameTypePill(
+                      label: l10n.onboardingGameTypeCash,
+                      iconAsset: 'icons/figma_icons/cash.svg',
+                      isSelected: _selected == 'cash',
+                      onTap: () => setState(() => _selected = 'cash'),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _GameTypePill(
+                      label: l10n.onboardingGameTypeTournament,
+                      iconAsset: 'assets/icons/Trophy.svg',
+                      isSelected: _selected == 'tournament',
+                      onTap: () =>
+                          setState(() => _selected = 'tournament'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
         ],
       ),
@@ -78,13 +99,20 @@ class _GameTypeStepState extends State<GameTypeStep>
   }
 }
 
-class _OptionCard extends StatelessWidget {
+/// Pill option — Figma node 1919:15983 (unselected) / 1919:15984 (selected).
+///
+/// Unselected: transparent fill, 1px `borderStrong`.
+/// Selected:   `bgSurface` fill, 2px `accentSecondary`.
+/// 18h / 12v padding, 6px gap, 24px icon, 15px Medium label.
+class _GameTypePill extends StatelessWidget {
   final String label;
+  final String iconAsset;
   final bool isSelected;
   final VoidCallback onTap;
 
-  const _OptionCard({
+  const _GameTypePill({
     required this.label,
+    required this.iconAsset,
     required this.isSelected,
     required this.onTap,
   });
@@ -93,57 +121,47 @@ class _OptionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
+      behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        height: 56,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
         decoration: BoxDecoration(
-          color: AppColors.bgElevated,
-          borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
+          color: isSelected ? AppColors.bgSurface : Colors.transparent,
+          borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
           border: Border.all(
             color: isSelected
-                ? AppColors.accentPrimary
+                ? AppColors.accentSecondary
                 : AppColors.borderStrong,
-            width: isSelected ? 1.5 : 1,
+            width: isSelected ? 2 : 1,
           ),
         ),
         child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Expanded(
-              child: Text(
-                label,
-                style: AppTypography.ibm(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.white,
-                ),
+            SvgPicture.asset(
+              iconAsset,
+              width: 24,
+              height: 24,
+              colorFilter: const ColorFilter.mode(
+                AppColors.accentSecondary,
+                BlendMode.srcIn,
               ),
             ),
-            // Radio indicator
-            Container(
-              width: 22,
-              height: 22,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: isSelected
-                      ? AppColors.accentPrimary
-                      : AppColors.borderStrong,
-                  width: 2,
+            const SizedBox(width: 6),
+            Flexible(
+              child: Text(
+                label,
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
+                style: AppTypography.ibm(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.white,
+                  height: 1.6,
+                  letterSpacing: -0.45,
                 ),
               ),
-              child: isSelected
-                  ? Center(
-                      child: Container(
-                        width: 12,
-                        height: 12,
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: AppColors.accentPrimary,
-                        ),
-                      ),
-                    )
-                  : null,
             ),
           ],
         ),

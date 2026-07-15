@@ -4,6 +4,7 @@ import '../../design_system/constants/colors.dart';
 import '../../design_system/constants/typography.dart';
 import '../../l10n/app_localizations.dart';
 import 'onboarding_scaffold.dart';
+import 'step_reveal.dart';
 
 class WelcomeStep extends StatelessWidget {
   final VoidCallback onContinue;
@@ -23,43 +24,46 @@ class WelcomeStep extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Figma places the logo at ~47% down the screen. Smaller top flex
-          // pushes content up so the layout matches.
+          // Figma anchors the block at ~50% minus 97px, i.e. slightly
+          // above the vertical center. The 4:5 spacer ratio matches.
           const Spacer(flex: 4),
-          // Logo — Figma node 1822:14020. The SVG already ships the
-          // 56×56 bgPrimary rounded rectangle, the 1.27px white border,
-          // and the "final table" wordmark, so we render it directly at
-          // its intrinsic size without any wrapper.
-          Center(
-            child: SvgPicture.asset(
-              'assets/icons/card icons/Group 8.svg',
-              width: 56,
-              height: 56,
-            ),
-          ),
-          const SizedBox(height: 36),
-          Text(
-            l10n.onboardingWelcomeTitle,
-            textAlign: TextAlign.center,
-            style: AppTypography.ibm(
-              fontSize: 44,
-              fontWeight: FontWeight.w600,
-              color: Colors.white,
-              height: 1.1,
-              letterSpacing: -2.2,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            l10n.onboardingWelcomeSubtitle,
-            textAlign: TextAlign.center,
-            style: AppTypography.ibm(
-              fontSize: 17,
-              fontWeight: FontWeight.w400,
-              color: AppColors.textSecondary,
-              height: 1.5,
-              letterSpacing: -0.85,
-            ),
+          StepReveal(
+            stagger: const Duration(milliseconds: 120),
+            children: [
+              // Logo — Figma node 1919:15903, 84×84 rounded card, 19.09px
+              // radius, 0.627px white border already baked into the SVG.
+              Center(
+                child: SvgPicture.asset(
+                  'assets/icons/card icons/Group 8.svg',
+                  width: 84,
+                  height: 84,
+                ),
+              ),
+              const SizedBox(height: 32),
+              Text(
+                l10n.onboardingWelcomeTitle,
+                textAlign: TextAlign.center,
+                style: AppTypography.ibm(
+                  fontSize: 44,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                  height: 1.14,
+                  letterSpacing: -0.88,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                l10n.onboardingWelcomeSubtitle,
+                textAlign: TextAlign.center,
+                style: AppTypography.ibm(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w400,
+                  color: AppColors.textSecondary,
+                  height: 1.6,
+                  letterSpacing: -0.34,
+                ),
+              ),
+            ],
           ),
           const Spacer(flex: 5),
         ],

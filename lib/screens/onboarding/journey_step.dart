@@ -4,7 +4,15 @@ import '../../l10n/app_localizations.dart';
 import '../../design_system/constants/typography.dart';
 import '../../design_system/constants/decorations.dart';
 import 'onboarding_scaffold.dart';
+import 'step_reveal.dart';
 
+/// Onboarding step: pick self-described skill level.
+///
+/// Figma node 1919:17117 — centered title/subtitle followed by a 2×2
+/// grid of borderless label pills. Selection styling mirrors
+/// [game_type_step]: transparent + 1px `borderStrong` at rest,
+/// `bgSurface` + 2px `accentSecondary` when active. Icons are omitted
+/// per spec (labels only).
 class JourneyStep extends StatefulWidget {
   final ValueChanged<String> onContinue;
   final VoidCallback? onBack;
@@ -27,13 +35,6 @@ class _JourneyStepState extends State<JourneyStep>
     super.build(context);
     final l10n = AppLocalizations.of(context);
 
-    final options = [
-      ('beginner', l10n.onboardingJourneyBeginner),
-      ('fun', l10n.onboardingJourneyFun),
-      ('regular', l10n.onboardingJourneyRegular),
-      ('pro', l10n.onboardingJourneyPro),
-    ];
-
     return OnboardingScaffold(
       currentStep: 4,
       onBack: widget.onBack,
@@ -41,53 +42,89 @@ class _JourneyStepState extends State<JourneyStep>
           _selected != null ? () => widget.onContinue(_selected!) : null,
       continueLabel: l10n.onboardingContinue,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const SizedBox(height: 48),
-          Text(
-            l10n.onboardingJourneyTitle,
-            textAlign: TextAlign.left,
-            style: AppTypography.ibm(
-              fontSize: 32,
-              fontWeight: FontWeight.w700,
-              color: Colors.white,
-              height: 1.15,
-              letterSpacing: -1.4,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            l10n.onboardingJourneySubtitle,
-            textAlign: TextAlign.left,
-            style: AppTypography.ibm(
-              fontSize: 17,
-              fontWeight: FontWeight.w400,
-              color: AppColors.textSecondary,
-              height: 1.5,
-              letterSpacing: -0.5,
-            ),
-          ),
-          const SizedBox(height: 40),
-          ...options.map((option) => Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: _OptionCard(
-                  label: option.$2,
-                  isSelected: _selected == option.$1,
-                  onTap: () => setState(() => _selected = option.$1),
+          const SizedBox(height: 96),
+          StepReveal(
+            children: [
+              Text(
+                l10n.onboardingJourneyTitle,
+                textAlign: TextAlign.center,
+                style: AppTypography.ibm(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                  letterSpacing: -1.4,
                 ),
-              )),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                l10n.onboardingJourneySubtitle,
+                textAlign: TextAlign.center,
+                style: AppTypography.ibm(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w400,
+                  color: AppColors.textSecondary,
+                  height: 1.5,
+                  letterSpacing: -0.45,
+                ),
+              ),
+              const SizedBox(height: 48),
+              Row(
+                children: [
+                  Expanded(
+                    child: _JourneyPill(
+                      label: l10n.onboardingJourneyBeginner,
+                      isSelected: _selected == 'beginner',
+                      onTap: () => setState(() => _selected = 'beginner'),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _JourneyPill(
+                      label: l10n.onboardingJourneyFun,
+                      isSelected: _selected == 'fun',
+                      onTap: () => setState(() => _selected = 'fun'),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: _JourneyPill(
+                      label: l10n.onboardingJourneyRegular,
+                      isSelected: _selected == 'regular',
+                      onTap: () => setState(() => _selected = 'regular'),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _JourneyPill(
+                      label: l10n.onboardingJourneyPro,
+                      isSelected: _selected == 'pro',
+                      onTap: () => setState(() => _selected = 'pro'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ],
       ),
     );
   }
 }
 
-class _OptionCard extends StatelessWidget {
+/// Label-only pill. Same visual system as `_GameTypePill` in
+/// `game_type_step.dart`; kept local to avoid a premature abstraction.
+class _JourneyPill extends StatelessWidget {
   final String label;
   final bool isSelected;
   final VoidCallback onTap;
 
-  const _OptionCard({
+  const _JourneyPill({
     required this.label,
     required this.isSelected,
     required this.onTap,
@@ -97,58 +134,31 @@ class _OptionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
+      behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        height: 56,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
         decoration: BoxDecoration(
-          color: AppColors.bgElevated,
-          borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
+          color: isSelected ? AppColors.bgSurface : Colors.transparent,
+          borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
           border: Border.all(
             color: isSelected
-                ? AppColors.accentPrimary
+                ? AppColors.accentSecondary
                 : AppColors.borderStrong,
-            width: isSelected ? 1.5 : 1,
+            width: isSelected ? 2 : 1,
           ),
         ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                label,
-                style: AppTypography.ibm(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-            Container(
-              width: 22,
-              height: 22,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: isSelected
-                      ? AppColors.accentPrimary
-                      : AppColors.borderStrong,
-                  width: 2,
-                ),
-              ),
-              child: isSelected
-                  ? Center(
-                      child: Container(
-                        width: 12,
-                        height: 12,
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: AppColors.accentPrimary,
-                        ),
-                      ),
-                    )
-                  : null,
-            ),
-          ],
+        child: Text(
+          label,
+          textAlign: TextAlign.center,
+          overflow: TextOverflow.ellipsis,
+          style: AppTypography.ibm(
+            fontSize: 15,
+            fontWeight: FontWeight.w500,
+            color: Colors.white,
+            height: 1.6,
+            letterSpacing: -0.45,
+          ),
         ),
       ),
     );

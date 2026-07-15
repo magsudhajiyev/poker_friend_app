@@ -7,15 +7,17 @@ import '../../design_system/constants/typography.dart';
 ///
 /// Layout matches the Figma spec:
 /// - Solid `bgPrimary` background
-/// - 6-segment progress bar at top — **only the current segment** is
-///   highlighted `accentPrimary`, all others render `borderStrong`
+/// - Space reserved at the top for the progress bar (the bar itself is
+///   rendered once by [OnboardingFlow] as a persistent overlay so its
+///   morphing pill animates smoothly across step changes instead of being
+///   rebuilt with each PageView child).
 /// - No top-of-screen back button (removed per Figma). Back navigation is
 ///   an outlined pill BELOW the Continue button.
 /// - Continue button uses the canonical dark filled pill (see
 ///   [_ContinueButton]).
 ///
-/// Each step supplies its own [child] for the middle content plus its
-/// step number so the progress bar reflects position in the flow.
+/// [currentStep] / [totalSteps] are accepted for API back-compat but are
+/// unused — the persistent overlay reads its state from the flow.
 class OnboardingScaffold extends StatelessWidget {
   final int currentStep;
   final int totalSteps;
@@ -67,16 +69,11 @@ class OnboardingScaffold extends StatelessWidget {
         bottom: false,
         child: Column(
           children: [
-            // Progress bar — the current-step highlight slides between
-            // positions when [currentStep] changes.
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
-              child: _AnimatedProgressBar(
-                currentStep: currentStep,
-                totalSteps: totalSteps,
-              ),
-            ),
-            const SizedBox(height: 24),
+            // Reserved space matching the progress bar's footprint (8px
+            // dot height inside a 24-top-padded row + 24px bottom gap).
+            // The actual bar is drawn by [OnboardingFlow] as a persistent
+            // overlay so its morph animation isn't reset each page swipe.
+            const SizedBox(height: 8 + 8 + 24),
 
             // Middle content
             Expanded(
@@ -204,14 +201,15 @@ class _BackPillButton extends StatelessWidget {
 /// - Active   → 26px pill, `accentPrimary`, with a soft green glow.
 /// - Complete → 8px dot, `accentPrimary` at 65% (muted trail behind you).
 /// - Upcoming → 8px dot, white at 18% (whisper of what's ahead).
-class _AnimatedProgressBar extends StatelessWidget {
+class OnboardingProgressBar extends StatelessWidget {
   final int currentStep;
   final int totalSteps;
   final double gap;
   final double dotSize;
   final double activeWidth;
 
-  const _AnimatedProgressBar({
+  const OnboardingProgressBar({
+    super.key,
     required this.currentStep,
     required this.totalSteps,
     this.gap = 8,

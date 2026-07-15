@@ -4,6 +4,7 @@ import '../../design_system/constants/colors.dart';
 import '../../l10n/app_localizations.dart';
 import '../../design_system/constants/typography.dart';
 import 'onboarding_scaffold.dart';
+import 'step_reveal.dart';
 
 class WeeklyHoursStep extends StatefulWidget {
   final ValueChanged<int> onContinue;
@@ -36,31 +37,34 @@ class _WeeklyHoursStepState extends State<WeeklyHoursStep>
       continueLabel: l10n.onboardingContinue,
       scrollable: false,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const SizedBox(height: 48),
-          Text(
-            l10n.onboardingMonthlySessionsTitle,
-            textAlign: TextAlign.left,
-            style: AppTypography.ibm(
-              fontSize: 32,
-              fontWeight: FontWeight.w700,
-              color: Colors.white,
-              height: 1.15,
-              letterSpacing: -1.4,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            l10n.onboardingMonthlySessionsSubtitle,
-            textAlign: TextAlign.left,
-            style: AppTypography.ibm(
-              fontSize: 17,
-              fontWeight: FontWeight.w400,
-              color: AppColors.textSecondary,
-              height: 1.5,
-              letterSpacing: -0.5,
-            ),
+          const SizedBox(height: 96),
+          StepReveal(
+            children: [
+              Text(
+                l10n.onboardingMonthlySessionsTitle,
+                textAlign: TextAlign.center,
+                style: AppTypography.ibm(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                  letterSpacing: -1.4,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                l10n.onboardingMonthlySessionsSubtitle,
+                textAlign: TextAlign.center,
+                style: AppTypography.ibm(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w400,
+                  color: AppColors.textSecondary,
+                  height: 1.5,
+                  letterSpacing: -0.45,
+                ),
+              ),
+            ],
           ),
           const Spacer(),
           SizedBox(
