@@ -17,11 +17,13 @@ import '../design_system/constants/decorations.dart';
 // Shared helpers
 // ---------------------------------------------------------------------------
 
-TutorialCoachMark _createCoachMark({
+TutorialCoachMark createOnboardingCoachMark({
   required List<TargetFocus> targets,
   required VoidCallback onFinish,
   VoidCallback? onSkip,
   required BuildContext context,
+  bool hideSkip = false,
+  bool showSkipInLastTarget = true,
 }) {
   final l10n = AppLocalizations.of(context);
   return TutorialCoachMark(
@@ -29,7 +31,8 @@ TutorialCoachMark _createCoachMark({
     colorShadow: Colors.black,
     opacityShadow: 0.85,
     paddingFocus: 12,
-    hideSkip: false,
+    hideSkip: hideSkip,
+    showSkipInLastTarget: showSkipInLastTarget,
     // Bottom-center so it never overlaps tooltips (which now render centered).
     alignSkip: Alignment.bottomCenter,
     skipWidget: Padding(
@@ -302,7 +305,7 @@ class HomeTour {
 
     if (targets.isEmpty) return;
 
-    final coach = _createCoachMark(
+    final coach = createOnboardingCoachMark(
       targets: targets,
       context: context,
       onFinish: () {
@@ -366,7 +369,7 @@ class LoggingModeTour {
 
     if (targets.isEmpty) return;
 
-    final coach = _createCoachMark(
+    final coach = createOnboardingCoachMark(
       targets: targets,
       context: context,
       onFinish: () {
@@ -425,7 +428,7 @@ class SessionSetupTour {
       ),
     );
 
-    final coach = _createCoachMark(
+    final coach = createOnboardingCoachMark(
       targets: targets,
       context: context,
       onFinish: () {
@@ -483,7 +486,7 @@ class SeatSetupTour {
 
     if (targets.isEmpty) return;
 
-    final coach = _createCoachMark(
+    final coach = createOnboardingCoachMark(
       targets: targets,
       context: context,
       onFinish: () {
@@ -621,7 +624,7 @@ class SeatDialogTour {
       return;
     }
 
-    final coach = _createCoachMark(
+    final coach = createOnboardingCoachMark(
       targets: targets,
       context: context,
       onFinish: () {
@@ -677,7 +680,7 @@ class ButtonTokenTour {
       return;
     }
 
-    final coach = _createCoachMark(
+    final coach = createOnboardingCoachMark(
       targets: targets,
       context: context,
       onFinish: () {
@@ -885,14 +888,16 @@ class SessionResultTour {
       return;
     }
 
-    final coach = _createCoachMark(
+    final coach = createOnboardingCoachMark(
       targets: targets,
       context: context,
       onFinish: () {
         // Hand off to phase 6: the user now taps the real Sessions icon,
-        // and SessionHistoryScreen picks the tour up in initState.
-        OnboardingState.advanceTo(6);
+        // and SessionHistoryScreen picks the tour up via notifier listener.
+        // Set the pending flag BEFORE advanceTo — advanceTo fires the
+        // notifier synchronously, so the listener must see the flag.
         OnboardingState.sessionHistoryTourPending = true;
+        OnboardingState.advanceTo(6);
         onComplete?.call();
       },
     );
@@ -945,7 +950,7 @@ class SessionHistoryTour {
       return;
     }
 
-    final coach = _createCoachMark(
+    final coach = createOnboardingCoachMark(
       targets: targets,
       context: context,
       onFinish: () {
@@ -1040,7 +1045,7 @@ class HandListTour {
       return;
     }
 
-    final coach = _createCoachMark(
+    final coach = createOnboardingCoachMark(
       targets: targets,
       context: context,
       onFinish: () {
@@ -1098,7 +1103,7 @@ class HandCardTour {
       return;
     }
 
-    final coach = _createCoachMark(
+    final coach = createOnboardingCoachMark(
       targets: targets,
       context: context,
       onFinish: () {
@@ -1138,8 +1143,8 @@ class HandToolsTour {
         identify: 'hand_tools_row',
         keyTarget: toolsRowKey,
         shape: ShapeLightFocus.RRect,
-        radius: 24,
-        paddingFocus: 8,
+        radius: 40,
+        paddingFocus: 6,
         contents: [
           centeredTooltipContent((context, controller) {
               final l10n = AppLocalizations.of(context);
@@ -1155,7 +1160,7 @@ class HandToolsTour {
       ),
     ];
 
-    final coach = _createCoachMark(
+    final coach = createOnboardingCoachMark(
       targets: targets,
       context: context,
       onFinish: onNext,
@@ -1213,7 +1218,7 @@ class AiAnalysisTour {
       return;
     }
 
-    final coach = _createCoachMark(
+    final coach = createOnboardingCoachMark(
       targets: targets,
       context: context,
       onFinish: onAnalyze,
@@ -1328,7 +1333,7 @@ class BankrollCardTour {
 
 /// Bottom-of-tour progress bar — thin `accentPrimary` fill + "Step X of Y"
 /// caption. Reads from [OnboardingState.notifier] so it self-rebuilds as
-/// steps advance. Rendered inside [_createCoachMark]'s skipWidget so it
+/// steps advance. Rendered inside [createOnboardingCoachMark]'s skipWidget so it
 /// lives with the Skip pill at the bottom of the overlay.
 class _TourProgressIndicator extends StatelessWidget {
   const _TourProgressIndicator();

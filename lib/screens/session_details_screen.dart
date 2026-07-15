@@ -8,7 +8,7 @@ import '../services/firebase_service.dart';
 import '../design_system/components/form_drawer.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import '../onboarding/onboarding_state.dart';
-import '../onboarding/onboarding_tour.dart' show buildTooltip;
+import '../onboarding/onboarding_tour.dart' show buildTooltip, createOnboardingCoachMark;
 import '../onboarding/onboarding_prefs.dart';
 import '../onboarding/onboarding_progress_bar.dart';
 import '../design_system/components/app_toggle.dart';
@@ -29,6 +29,7 @@ import '../design_system/components/modals/confirm_dialog.dart';
 import '../design_system/components/tween_number.dart';
 import 'poker_hand_screen.dart';
 import 'home_screen.dart';
+import '../widgets/main_shell.dart';
 import '../utils/user_facing_error.dart';
 
 class SessionDetailsScreen extends StatefulWidget {
@@ -197,30 +198,6 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
     await prefs.setBool(_bbModeKey, value);
   }
 
-  Widget _buildTourSkipWidget() {
-    final l10n = AppLocalizations.of(context);
-    final sw = MediaQuery.of(context).size.width;
-    final s = (sw / 393).clamp(0.8, 1.1);
-    return Padding(
-      padding: EdgeInsets.only(
-          left: 14 * s, top: MediaQuery.of(context).padding.top + 6 * s),
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 16 * s, vertical: 8 * s),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
-        ),
-        child: Text(
-          l10n.onboardingSkipTour,
-          style: AppTypography.ibm(
-            color: Colors.white70,
-            fontSize: (14 * s).clamp(12.0, 16.0),
-          ),
-        ),
-      ),
-    );
-  }
-
   void _scheduleSessionDetailsTour() {
     if (!OnboardingState.isOnboardingActive ||
         !OnboardingState.sessionDetailsTourPending) return;
@@ -326,26 +303,12 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
       ),
     );
 
-    final coach = TutorialCoachMark(
+    final coach = createOnboardingCoachMark(
       targets: targets,
-      colorShadow: Colors.black,
-      opacityShadow: 0.85,
-      paddingFocus: 12,
-      hideSkip: false,
-      alignSkip: Alignment.topLeft,
-      skipWidget: _buildTourSkipWidget(),
       onFinish: () {
         // Tour finished — advance to phase 4 when user taps "Log a Hand"
       },
-      onSkip: () {
-        final wasReplay = OnboardingState.isReplay;
-        OnboardingState.cancel();
-        OnboardingPrefs.markOnboardingSeen();
-        if (!wasReplay) {
-          OnboardingPrefs.setPostTourPaywallPending();
-        }
-        return true;
-      },
+      context: context,
     );
     coach.show(context: context);
   }
@@ -388,50 +351,32 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
     }
 
     if (targets.isEmpty) {
-      // No chart to spotlight — advance to phase 5
-      OnboardingState.advanceTo(5);
+      // No chart to spotlight — skip to stop session tour
+      _showStopSessionTour();
       return;
     }
 
-    final coach = TutorialCoachMark(
+    final coach = createOnboardingCoachMark(
       targets: targets,
-      colorShadow: Colors.black,
-      opacityShadow: 0.85,
-      paddingFocus: 12,
-      hideSkip: false,
-      alignSkip: Alignment.topLeft,
-      skipWidget: _buildTourSkipWidget(),
       onFinish: () {
-        _showGoBackToHandTour();
+        _showStopSessionTour();
       },
-      onSkip: () {
-        final wasReplay = OnboardingState.isReplay;
-        OnboardingState.cancel();
-        OnboardingPrefs.markOnboardingSeen();
-        if (!wasReplay) {
-          OnboardingPrefs.setPostTourPaywallPending();
-        }
-        return true;
-      },
+      context: context,
     );
     coach.show(context: context);
   }
 
-  /// Spotlights the back button and instructs the user to return to the hand
-  /// logging screen, where the 3-dot menu will be spotlighted next.
-  void _showGoBackToHandTour() {
+  /// Spotlights the stop button and instructs the user to end the session
+  /// directly from SessionDetailsScreen.
+  void _showStopSessionTour() {
     if (!mounted) return;
 
-    if (_backButtonKey.currentContext == null) {
-      // Fallback: set flag and let the user navigate manually
-      OnboardingState.endSessionTourPending = true;
-      return;
-    }
+    if (_backButtonKey.currentContext == null) return;
 
     final l10n = AppLocalizations.of(context);
     final targets = <TargetFocus>[
       TargetFocus(
-        identify: 'go_back_to_hand',
+        identify: 'stop_session',
         keyTarget: _backButtonKey,
         shape: ShapeLightFocus.Circle,
         paddingFocus: 12,
@@ -440,8 +385,8 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
             align: ContentAlign.bottom,
             builder: (context, controller) {
               return buildTooltip(
-                title: l10n.guidedGoBackToHandTitle,
-                body: l10n.guidedGoBackToHandBody,
+                title: l10n.guidedStopSessionTitle,
+                body: l10n.guidedStopSessionBody,
                 onNext: () => controller.next(),
                 context: context,
                 isLast: true,
@@ -452,15 +397,13 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
       ),
     ];
 
-    final coach = TutorialCoachMark(
+    final coach = createOnboardingCoachMark(
       targets: targets,
-      colorShadow: Colors.black,
-      opacityShadow: 0.85,
-      paddingFocus: 12,
-      hideSkip: true,
       onFinish: () {
-        OnboardingState.endSessionTourPending = true;
+        // User should now tap the stop button to end the session
       },
+      context: context,
+      hideSkip: true,
     );
     coach.show(context: context);
   }
@@ -498,28 +441,14 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
       ),
     ];
 
-    final coach = TutorialCoachMark(
+    final coach = createOnboardingCoachMark(
       targets: targets,
-      colorShadow: Colors.black,
-      opacityShadow: 0.85,
-      paddingFocus: 12,
-      hideSkip: false,
-      alignSkip: Alignment.topLeft,
-      skipWidget: _buildTourSkipWidget(),
       onFinish: () {
         // User dismissed the spotlight — they should now tap the dots menu
         // and select "End Session" themselves. The advanceTo(5) call happens
         // inside _endSessionFromHub() when they actually end the session.
       },
-      onSkip: () {
-        final wasReplay = OnboardingState.isReplay;
-        OnboardingState.cancel();
-        OnboardingPrefs.markOnboardingSeen();
-        if (!wasReplay) {
-          OnboardingPrefs.setPostTourPaywallPending();
-        }
-        return true;
-      },
+      context: context,
     );
     coach.show(context: context);
   }
@@ -629,43 +558,12 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
       ),
     );
 
-    final coach = TutorialCoachMark(
+    final coach = createOnboardingCoachMark(
       targets: targets,
-      colorShadow: Colors.black,
-      opacityShadow: 0.85,
-      paddingFocus: 12,
-      hideSkip: false,
-      alignSkip: Alignment.topLeft,
-      skipWidget: Padding(
-        padding: EdgeInsets.only(
-            left: 16, top: MediaQuery.of(context).padding.top + 8),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
-          ),
-          child: Text(
-            l10n.onboardingSkipTour,
-            style: AppTypography.ibm(
-              color: Colors.white70,
-              fontSize: 15,
-            ),
-          ),
-        ),
-      ),
       onFinish: () {
         // Tour overlay dismissed
       },
-      onSkip: () {
-        final wasReplay = OnboardingState.isReplay;
-        OnboardingState.cancel();
-        OnboardingPrefs.markOnboardingSeen();
-        if (!wasReplay) {
-          OnboardingPrefs.setPostTourPaywallPending();
-        }
-        return true;
-      },
+      context: context,
     );
     coach.show(context: context);
   }
@@ -1138,6 +1036,19 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
   }
 
   void _goBackToHand() {
+    if (OnboardingState.isOnboardingActive && !_isHubMode) {
+      // During tour, stop button ends session — pop with endSession flag
+      // so PokerHandScreen handles the actual session end.
+      final Map<String, dynamic> result = {
+        'updatedStack': _currentStack,
+        'totalBuyIn': _totalBuyIn,
+        'stackHistory': _stackHistory,
+        'endSession': true,
+      };
+      Navigator.pop(context, result);
+      return;
+    }
+
     if (_isHubMode) {
       _navigateToHandLogging();
     } else {
@@ -1318,8 +1229,8 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
 
       if (!mounted) return;
 
-      // Show session summary
-      if (stackHistory.isNotEmpty) {
+      // Show session summary (skip for tutorial — no meaningful data)
+      if (stackHistory.isNotEmpty && !isTourSession) {
         final double profitLoss;
         final int? finishedPlace;
         final int? fieldSize;
@@ -1370,11 +1281,10 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
 
       // Navigate home
       if (OnboardingState.isOnboardingActive) {
+        // Pop to existing MainShell — advanceTo(5) notifies HomeScreen's
+        // listener which triggers the SessionResultTour immediately.
         OnboardingState.advanceTo(5);
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (_) => HomeScreen()),
-          (route) => false,
-        );
+        Navigator.of(context).popUntil((route) => route.isFirst);
       } else {
         Navigator.of(context).popUntil((route) => route.isFirst);
       }

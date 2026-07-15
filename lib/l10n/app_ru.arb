@@ -5420,8 +5420,6 @@
   "guidedReturnToDetailsBody": "Нажмите здесь, чтобы вернуться и посмотреть график стека.",
   "guidedStackChartReturnTitle": "Ваш график стека",
   "guidedStackChartReturnBody": "Вот ваш прогресс стека. Каждая точка — это записанная рука. Нажмите на любую точку для деталей.",
-  "guidedGoBackToHandTitle": "Назад",
-  "guidedGoBackToHandBody": "Нажмите здесь, чтобы вернуться на экран записи рук. Вы можете завершить сессию через меню там.",
   "guidedStackAdjustTitle": "Настроить стек",
   "guidedStackAdjustBody": "Нажмите и удерживайте место игрока, чтобы активировать кольцо стека. Поверните палец, чтобы выбрать размер стека, затем отпустите.",
   "sessionDetailsEndSession": "Завершить сессию",

@@ -50,10 +50,8 @@ import '../services/free_tier_limits.dart';
 import '../services/subscription_service.dart';
 import '../services/skip_hand_scouting_service.dart';
 import '../widgets/skip_hand_scouting_sheet.dart';
-import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import '../onboarding/onboarding_state.dart';
-import 'home_screen.dart';
-import '../onboarding/onboarding_tour.dart';
+import '../widgets/main_shell.dart';
 import '../onboarding/onboarding_progress_bar.dart';
 import '../onboarding/guided_hand_overlay.dart';
 import 'session_history_screen.dart';
@@ -680,14 +678,12 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
 
         // Navigate back to main screen
         if (OnboardingState.isOnboardingActive) {
-          // Tutorial finish (via the 3-dot menu → Stop Session): advance to the
-          // post-session phase and push a fresh Home so its initState detects
-          // phase 5 and continues the tour (Sessions → card → chart → hands → AI).
+          // Tutorial finish: advance to phase 5 and pop back to the existing
+          // MainShell. The advanceTo(5) call notifies HomeScreen's listener,
+          // which triggers the SessionResultTour with an already-attached
+          // sessionsNavKey — no GlobalKey conflict, no polling needed.
           OnboardingState.advanceTo(5);
-          Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(builder: (_) => HomeScreen()),
-            (route) => false,
-          );
+          Navigator.of(context).popUntil((route) => route.isFirst);
         } else {
           // Pop all the way to home (works for both hub mode and legacy)
           Navigator.of(context).popUntil((route) => route.isFirst);
@@ -1681,7 +1677,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                             child: AnimatedOpacity(
                               opacity: _isRaiseSnapping
                                   ? 0.05
-                                  : _canUndoLastAction()
+                                  : (_canUndoLastAction() || OnboardingState.isGuidedHandActive)
                                       ? 1.0
                                       : 0.35,
                               duration: const Duration(milliseconds: 150),
@@ -1802,6 +1798,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
             });
           },
           activePlayerCount: () => sessionManager.activeSeats.length,
+          isBettingRoundComplete: () => gameState.bettingRoundComplete,
         ),
         // Gesture tooltip backdrop (closes tooltip when tapping outside drawing area)
         if (_showGestureTooltip)
@@ -4013,38 +4010,30 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     // Notify guided hand overlay
     _guidedOverlayKey.currentState?.onActionPerformed(action);
 
-    // Check if hand ended automatically (only one player remaining)
+    // Auto-advance: the game state is the single source of truth. The guided
+    // overlay only decides what to *suggest* next — it never blocks or defers
+    // the core hand logging flow.
     if (result.contains("Hand ends: Only one player remaining")) {
-      // Use a post frame callback to avoid calling setState during build
       _schedulePostFrameAction(() {
-        // addAction removed
         _completeHandAutomatically();
       });
     } else {
-      // Check if everyone has folded to BB preflop (special case)
       _checkForAutomaticHandEnd();
 
-      // Check for auto-advance scenarios: all-in OR regular betting round completion
       if (gameState.bettingRoundComplete && gameState.currentRound != BettingRound.river) {
-        // Use a post frame callback to avoid calling setState during build
         _schedulePostFrameAction(() {
           if (gameState.shouldAutoAdvanceToShowdown()) {
-            // This is an all-in situation - show all-in board dialog
-            // addAction removed
             _showAllInBoardCardsDialog();
           } else {
             _autoAdvanceWithIndicator();
           }
         });
       } else if (gameState.bettingRoundComplete && gameState.currentRound == BettingRound.river) {
-        // River betting complete - trigger showdown/winner selection
         _schedulePostFrameAction(() {
           _handleHandComplete();
         });
       } else if (gameState.areAllPlayersAllIn() && gameState.currentRound != BettingRound.river && !gameState.bettingRoundComplete) {
-        // Handle edge case: all-in detected but betting round not marked complete yet
         _schedulePostFrameAction(() {
-          // addAction removed
           gameState.bettingRoundComplete = true;
           setState(() {});
         });
@@ -4583,38 +4572,28 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     // Notify guided hand overlay
     _guidedOverlayKey.currentState?.onActionPerformed(action);
 
-    // Check if hand ended automatically (only one player remaining)
+    // Auto-advance: game state is the single source of truth.
     if (result.contains("Hand ends: Only one player remaining")) {
-      // Use a post frame callback to avoid calling setState during build
       _schedulePostFrameAction(() {
-        // addAction removed
         _completeHandAutomatically();
       });
     } else {
-      // Check if everyone has folded to BB preflop (special case)
       _checkForAutomaticHandEnd();
 
-      // Check for auto-advance scenarios: all-in OR regular betting round completion
       if (gameState.bettingRoundComplete && gameState.currentRound != BettingRound.river) {
-        // Use a post frame callback to avoid calling setState during build
         _schedulePostFrameAction(() {
           if (gameState.shouldAutoAdvanceToShowdown()) {
-            // This is an all-in situation - show all-in board dialog
-            // addAction removed
             _showAllInBoardCardsDialog();
           } else {
             _autoAdvanceWithIndicator();
           }
         });
       } else if (gameState.bettingRoundComplete && gameState.currentRound == BettingRound.river) {
-        // River betting complete - trigger showdown/winner selection
         _schedulePostFrameAction(() {
           _handleHandComplete();
         });
       } else if (gameState.areAllPlayersAllIn() && gameState.currentRound != BettingRound.river && !gameState.bettingRoundComplete) {
-        // Handle edge case: all-in detected but betting round not marked complete yet
         _schedulePostFrameAction(() {
-          // addAction removed
           gameState.bettingRoundComplete = true;
           setState(() {});
         });
@@ -4690,6 +4669,9 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       nextStreet();
     });
   }
+
+
+
 
   void nextStreet() {
     // Check if we're transitioning from River - might need showdown
@@ -5335,60 +5317,13 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       });
     }
 
-    // End-session tour: returning from stack chart view — spotlight the
-    // 3-dot menu so the user knows how to stop the session.
+    // Tour session end: user tapped stop button on SessionDetailsScreen
     if (OnboardingState.isOnboardingActive &&
-        OnboardingState.endSessionTourPending &&
+        result != null &&
+        result['endSession'] == true &&
         mounted) {
-      OnboardingState.endSessionTourPending = false;
-      WidgetsBinding.instance.addPostFrameCallback((_) async {
-        await Future.delayed(const Duration(milliseconds: 500));
-        if (!mounted) return;
-        _showEndSessionMenuTour();
-      });
+      _stopSession();
     }
-  }
-
-  /// Spotlights the 3-dot menu button during the onboarding tour so the user
-  /// knows how to end the session after viewing the stack chart.
-  void _showEndSessionMenuTour() {
-    if (_menuButtonKey.currentContext == null) return;
-
-    final l10n = AppLocalizations.of(context);
-    final targets = <TargetFocus>[
-      TargetFocus(
-        identify: 'end_session_menu',
-        keyTarget: _menuButtonKey,
-        shape: ShapeLightFocus.Circle,
-        paddingFocus: 12,
-        contents: [
-          TargetContent(
-            align: ContentAlign.bottom,
-            builder: (context, controller) {
-              return buildTooltip(
-                title: l10n.guidedEndSessionTitle,
-                body: l10n.guidedEndSessionBody,
-                onNext: () => controller.next(),
-                context: context,
-                isLast: true,
-              );
-            },
-          ),
-        ],
-      ),
-    ];
-
-    final coach = TutorialCoachMark(
-      targets: targets,
-      colorShadow: Colors.black,
-      opacityShadow: 0.85,
-      paddingFocus: 12,
-      hideSkip: true,
-      onFinish: () {
-        // User should now tap the menu and select "End Session"
-      },
-    );
-    coach.show(context: context);
   }
 
   // Confirmation dialog for rebuy when user has existing stack

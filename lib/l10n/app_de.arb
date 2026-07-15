@@ -5420,8 +5420,6 @@
   "guidedReturnToDetailsBody": "Tippe hier, um zurückzugehen und deinen Stack-Verlauf anzusehen.",
   "guidedStackChartReturnTitle": "Dein Stack-Verlauf",
   "guidedStackChartReturnBody": "Hier ist dein Stack-Verlauf. Jeder Punkt ist eine geloggte Hand — tippe auf einen Punkt für Details.",
-  "guidedGoBackToHandTitle": "Zurück",
-  "guidedGoBackToHandBody": "Tippe hier, um zum Hand-Logging-Bildschirm zurückzukehren. Du kannst deine Session über das Menü dort beenden.",
   "guidedStackAdjustTitle": "Stack anpassen",
   "guidedStackAdjustBody": "Halte einen Spielersitz gedrückt, um den Stack-Ring zu aktivieren. Drehe deinen Finger, um eine Stack-Größe auszuwählen, und lasse dann los.",
   "sessionDetailsEndSession": "Session beenden",

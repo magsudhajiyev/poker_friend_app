@@ -5420,8 +5420,6 @@
   "guidedReturnToDetailsBody": "Toque aqui para voltar e conferir seu gráfico de stack.",
   "guidedStackChartReturnTitle": "Seu Gráfico de Stack",
   "guidedStackChartReturnBody": "Aqui está o progresso do seu stack. Cada ponto é uma mão registrada — toque em qualquer ponto para ver detalhes.",
-  "guidedGoBackToHandTitle": "Voltar",
-  "guidedGoBackToHandBody": "Toque aqui para voltar à tela de registro de mãos. Você pode encerrar sua sessão pelo menu de lá.",
   "guidedStackAdjustTitle": "Ajustar o Stack",
   "guidedStackAdjustBody": "Pressione e segure o assento de um jogador para ativar o anel de stack. Gire o dedo para selecionar um tamanho de stack e solte.",
   "sessionDetailsEndSession": "Encerrar Sessão",

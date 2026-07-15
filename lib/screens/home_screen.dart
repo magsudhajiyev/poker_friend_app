@@ -85,7 +85,6 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final GlobalKey _fabKey = GlobalKey(debugLabel: 'fab');
-  final GlobalKey _sessionsNavKey = GlobalKey(debugLabel: 'sessionsNav');
   final GlobalKey _bankrollCardKey = GlobalKey(debugLabel: 'bankrollCard');
   int _currentIndex = 2;
   List<Map<String, dynamic>> upcomingEvents = [];
@@ -156,20 +155,23 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     _loadData();
     _setupSeatListener();
     _scheduleOnboardingTour();
+    OnboardingState.notifier.addListener(_onOnboardingChanged);
   }
 
   void _scheduleOnboardingTour() async {
     // Phase 5 — session result tour (user returned from a completed session)
     if (OnboardingState.isOnboardingActive && OnboardingState.currentPhase == 5) {
-      // Wait for the Sessions nav key to attach
-      final sessionsKey =
-          MainShell.globalKey.currentState?.sessionsNavKey ?? _sessionsNavKey;
-      for (int i = 0; i < 20; i++) {
+      // Wait for the Sessions nav key to attach. Retry resolving the key
+      // from MainShell each iteration — the shell may not be ready on the
+      // first attempt after pushAndRemoveUntil.
+      GlobalKey? sessionsKey;
+      for (int i = 0; i < 30; i++) {
         await Future.delayed(const Duration(milliseconds: 100));
         if (!mounted) return;
-        if (sessionsKey.currentContext != null) break;
+        sessionsKey = MainShell.globalKey.currentState?.sessionsNavKey;
+        if (sessionsKey?.currentContext != null) break;
       }
-      if (!mounted || sessionsKey.currentContext == null) return;
+      if (!mounted || sessionsKey == null || sessionsKey.currentContext == null) return;
       SessionResultTour(
         sessionsNavKey: sessionsKey,
         onComplete: () { if (mounted) setState(() {}); },
@@ -1158,6 +1160,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   @override
   void dispose() {
+    OnboardingState.notifier.removeListener(_onOnboardingChanged);
     _seatSubscription?.cancel();
     _clubNotificationSubscription?.cancel();
     _playStyleTooltipEntry?.remove();
@@ -1165,6 +1168,28 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     _editGoalController.dispose();
     _editBankrollController.dispose();
     super.dispose();
+  }
+
+  /// Reacts to onboarding phase changes (e.g. phase 4 → 5 after session ends).
+  /// The existing MainShell stays alive after popUntil, so the sessionsNavKey
+  /// is already attached and immediately valid — no polling needed.
+  void _onOnboardingChanged() {
+    if (!mounted) return;
+    if (OnboardingState.isOnboardingActive && OnboardingState.currentPhase == 5) {
+      _triggerPhase5Tour();
+    }
+  }
+
+  void _triggerPhase5Tour() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final sessionsKey = MainShell.globalKey.currentState?.sessionsNavKey;
+      if (sessionsKey?.currentContext == null) return;
+      SessionResultTour(
+        sessionsNavKey: sessionsKey!,
+        onComplete: () { if (mounted) setState(() {}); },
+      ).show(context);
+    });
   }
 
   Future<void> _loadData() async {

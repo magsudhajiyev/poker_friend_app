@@ -40,6 +40,9 @@ class MainShellState extends State<MainShell> {
   bool _navVisible = true;
   final GlobalKey fabKey = GlobalKey(debugLabel: 'shell-fab');
   final GlobalKey sessionsNavKey = GlobalKey(debugLabel: 'shell-sessions-nav');
+  /// Fires when the Sessions tab becomes visible — used by
+  /// SessionHistoryScreen to trigger the phase-6 onboarding tour.
+  final ValueNotifier<int> sessionsTabNotifier = ValueNotifier<int>(0);
 
   @override
   void initState() {
@@ -54,6 +57,9 @@ class MainShellState extends State<MainShell> {
     final idx = _screens.indexOf(screen);
     if (idx < 0 || idx == _currentIndex) return false;
     setState(() => _currentIndex = idx);
+    if (screen == 'sessions') {
+      sessionsTabNotifier.value++;
+    }
     return true;
   }
 

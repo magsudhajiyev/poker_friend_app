@@ -6,7 +6,7 @@ import '../design_system/constants/typography.dart';
 import '../models/poker_game_state.dart'; // PlayerAction, BettingRound
 import 'onboarding_state.dart';
 import 'onboarding_prefs.dart';
-import 'onboarding_tour.dart'; // buildTooltip
+import 'onboarding_tour.dart'; // buildTooltip, createOnboardingCoachMark
 import '../design_system/constants/decorations.dart';
 
 
@@ -90,6 +90,11 @@ class GuidedHandOverlay extends StatefulWidget {
   /// the "Add Opponents" step is needed after the drawing board intro.
   final int Function()? activePlayerCount;
 
+  /// Returns true when the game state's betting round is complete.
+  /// Used to decide whether to script the next opponent action or let
+  /// the core auto-advance logic handle street transitions.
+  final bool Function()? isBettingRoundComplete;
+
   const GuidedHandOverlay({
     super.key,
     required this.gestureInfoKey,
@@ -112,6 +117,7 @@ class GuidedHandOverlay extends StatefulWidget {
     this.firstEmptySeatKey,
     this.onReinitializeHand,
     this.activePlayerCount,
+    this.isBettingRoundComplete,
   });
 
   @override
@@ -216,10 +222,14 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
       _setPhase(GuidedPhase.handComplete);
       Future.delayed(const Duration(seconds: 2), () {
         if (mounted && OnboardingState.guidedHandPhase == GuidedPhase.handComplete) {
-          // Hand 1 complete — show BB pill + Next Hand spotlights, then prompt hand 2
+          // Hand 1 complete — show BB pill + Next Hand spotlights, then prompt hand 2.
+          // Use post-frame callback so the widget tree has settled after setState
+          // and the blinds pill / next hand button GlobalKeys have valid contexts.
           OnboardingState.guidedHandPhase = GuidedPhase.done;
           widget.onSkipOrFinish?.call();
-          _showPostHandCoachMarks();
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) _showPostHandCoachMarks();
+          });
         }
       });
     }
@@ -620,19 +630,21 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
     // Track the opener
     if ((action == PlayerAction.raise || action == PlayerAction.bet) &&
         OnboardingState.openerSeat == null) {
-      // The player who just acted is the opener (but currentPlayer has already
-      // advanced, so the opener was the *previous* player).
-      // We'll rely on _preflopOpenerDone flag instead.
       _preflopOpenerDone = true;
     }
 
-    // Check if it's now the hero's turn
+    // Check if the betting round is now complete after this scripted action.
+    // If so, let auto-advance in poker_hand_screen handle the street transition.
+    final roundComplete = widget.isBettingRoundComplete?.call() ?? false;
+    if (roundComplete) return;
+
+    // Round not complete — check who acts next
     if (_isHeroTurn) {
       _setPhase(GuidedPhase.heroTurn);
       return;
     }
 
-    // Otherwise determine what the next scripted action should be
+    // Another NPC needs to act
     _determineNextScriptedAction();
   }
 
@@ -641,13 +653,6 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
   // ---------------------------------------------------------------------------
 
   void _advanceAfterHeroAction(PlayerAction action) {
-    // The first time the hero acts, spotlight the Undo button so they know
-    // actions can be reverted — then continue the normal advance.
-    if (!_undoTourShown && !OnboardingState.isReplay) {
-      _undoTourShown = true;
-      _showUndoCoachMark(() => _doAdvanceAfterHeroAction(action));
-      return;
-    }
     _doAdvanceAfterHeroAction(action);
   }
 
@@ -659,117 +664,59 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
     } else {
       _handlePostHeroPostflop(action);
     }
-  }
-
-  // ---------------------------------------------------------------------------
-  // Undo coach mark (after the hero's first action)
-  // ---------------------------------------------------------------------------
-
-  void _showUndoCoachMark(VoidCallback onDone) {
-    final undoKey = widget.undoButtonKey;
-    if (undoKey == null || undoKey.currentContext == null) {
-      onDone();
-      return;
-    }
-
-    // Hide the floating overlay while the coach mark is visible.
-    _animController.reverse();
-
-    Future.delayed(const Duration(milliseconds: 350), () {
-      if (!mounted) {
-        onDone();
-        return;
-      }
-      if (undoKey.currentContext == null) {
-        _animController.forward();
-        onDone();
-        return;
-      }
-
-      final targets = <TargetFocus>[
-        TargetFocus(
-          identify: 'undo_button',
-          keyTarget: undoKey,
-          shape: ShapeLightFocus.RRect,
-          radius: 24,
-          paddingFocus: 8,
-          contents: [
-            TargetContent(
-              align: ContentAlign.top,
-              builder: (context, controller) {
-                final l10n = AppLocalizations.of(context);
-                return buildTooltip(
-                  title: l10n.guidedUndoTitle,
-                  body: l10n.guidedUndoBody,
-                  onNext: () => controller.next(),
-                  context: context,
-                  isLast: true,
-                );
-              },
-            ),
-          ],
-        ),
-      ];
-
-      final coach = TutorialCoachMark(
-        targets: targets,
-        colorShadow: Colors.black,
-        opacityShadow: 0.85,
-        paddingFocus: 12,
-        hideSkip: true,
-        onFinish: () {
-          _animController.forward();
-          onDone();
-        },
-        onSkip: () {
-          _animController.forward();
-          onDone();
-          return true;
-        },
-      );
-      coach.show(context: context);
-    });
+    // If the handler returned without scripting a new phase, the betting round
+    // is complete and auto-advance in poker_hand_screen handles the transition.
   }
 
   void _handlePostHeroPreflop(PlayerAction action) {
     if (action == PlayerAction.fold) {
       OnboardingState.heroFolded = true;
-      // Next player calls the open, then remaining fold
+      // If fold leaves only one player, game state handles via "Hand ends" check.
+      // If opponents remain (3+ players), script the next one to call.
+      final roundComplete = widget.isBettingRoundComplete?.call() ?? false;
+      if (roundComplete) return;
       OnboardingState.nextScriptedAction = PlayerAction.call;
       _setPhase(GuidedPhase.scriptedAction);
-    } else if (action == PlayerAction.call) {
-      // Remaining players fold
-      OnboardingState.nextScriptedAction = PlayerAction.fold;
-      _setPhase(GuidedPhase.scriptedAction);
-    } else if (action == PlayerAction.raise || action == PlayerAction.bet) {
-      // Hero opened/raised — mark opener done so opponents don't get "Open the Pot"
-      _preflopOpenerDone = true;
-      // Next opponent calls, remaining fold
-      OnboardingState.nextScriptedAction = PlayerAction.call;
-      _setPhase(GuidedPhase.scriptedAction);
+      return;
     }
+
+    if (action == PlayerAction.raise || action == PlayerAction.bet) {
+      _preflopOpenerDone = true;
+    }
+
+    // Check if the game state says the round is done (e.g. BB checks option)
+    final roundComplete = widget.isBettingRoundComplete?.call() ?? false;
+    if (roundComplete) return;
+
+    // Round not complete — next opponent needs to act.
+    // After a call: BB still has option (script check).
+    // After a raise: opponent calls.
+    if (action == PlayerAction.call) {
+      OnboardingState.nextScriptedAction = PlayerAction.check;
+    } else {
+      OnboardingState.nextScriptedAction = PlayerAction.call;
+    }
+    _setPhase(GuidedPhase.scriptedAction);
   }
 
   void _handlePostHeroPostflop(PlayerAction action) {
     if (action == PlayerAction.fold) {
-      // Hand ends — will be caught by onHandComplete
+      // Hand ends — game state handles via "Hand ends: Only one player remaining"
       return;
-    } else if (action == PlayerAction.check) {
-      // Opponent checks → street ends (auto-advance handles it)
-      OnboardingState.nextScriptedAction = PlayerAction.check;
-      _setPhase(GuidedPhase.scriptedAction);
-    } else if (action == PlayerAction.bet) {
-      // Opponent calls
-      OnboardingState.nextScriptedAction = PlayerAction.call;
-      _setPhase(GuidedPhase.scriptedAction);
-    } else if (action == PlayerAction.raise) {
-      // Opponent calls the raise
-      OnboardingState.nextScriptedAction = PlayerAction.call;
-      _setPhase(GuidedPhase.scriptedAction);
-    } else if (action == PlayerAction.call) {
-      // Hero called opponent's bet → street ends (auto-advance)
-      // Nothing to script — auto-advance will trigger onStreetAdvance
     }
+
+    // Check if the round is already complete (e.g. hero called → round done)
+    final roundComplete = widget.isBettingRoundComplete?.call() ?? false;
+    if (roundComplete) return;
+
+    // Round not complete — script opponent's reaction
+    if (action == PlayerAction.check) {
+      OnboardingState.nextScriptedAction = PlayerAction.check;
+    } else {
+      // Hero bet or raised — opponent calls
+      OnboardingState.nextScriptedAction = PlayerAction.call;
+    }
+    _setPhase(GuidedPhase.scriptedAction);
   }
 
   // ---------------------------------------------------------------------------
@@ -780,16 +727,15 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
     final round = widget.currentRound;
 
     if (round == BettingRound.preflop) {
-      // If opener hasn't acted yet (first action), script a raise
       if (!_preflopOpenerDone) {
+        // No one opened yet — script a raise to open the pot
         OnboardingState.nextScriptedAction = PlayerAction.raise;
       } else {
-        // After hero has acted or for remaining players — fold
-        OnboardingState.nextScriptedAction = PlayerAction.fold;
+        // After opening — opponent calls (keeps hand alive for teaching)
+        OnboardingState.nextScriptedAction = PlayerAction.call;
       }
     } else {
-      // Postflop: script based on what's needed
-      // If no scripted action set, default to check
+      // Postflop: default to check
       OnboardingState.nextScriptedAction ??= PlayerAction.check;
     }
 
@@ -871,6 +817,36 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
                   body: l10n.guidedNextHandBody,
                   onNext: () => controller.next(),
                   context: context,
+                );
+              },
+            ),
+          ],
+        ),
+      );
+    }
+
+    // 3. Undo button (shown after hand completes, not mid-hand)
+    final undoKey = widget.undoButtonKey;
+    if (!_undoTourShown && !OnboardingState.isReplay &&
+        undoKey != null && undoKey.currentContext != null) {
+      _undoTourShown = true;
+      targets.add(
+        TargetFocus(
+          identify: 'undo_button',
+          keyTarget: undoKey,
+          shape: ShapeLightFocus.RRect,
+          radius: 24,
+          paddingFocus: 8,
+          contents: [
+            TargetContent(
+              align: ContentAlign.top,
+              builder: (context, controller) {
+                final l10n = AppLocalizations.of(context);
+                return buildTooltip(
+                  title: l10n.guidedUndoTitle,
+                  body: l10n.guidedUndoBody,
+                  onNext: () => controller.next(),
+                  context: context,
                   isLast: true,
                 );
               },
@@ -886,19 +862,13 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
       return;
     }
 
-    final coach = TutorialCoachMark(
+    final coach = createOnboardingCoachMark(
       targets: targets,
-      colorShadow: Colors.black,
-      opacityShadow: 0.85,
-      paddingFocus: 12,
-      hideSkip: false,
-      alignSkip: Alignment.topLeft,
-      skipWidget: _buildSkipWidget(),
       onFinish: () => promptSecondHand(),
-      onSkip: () {
-        _finishOnboarding();
-        return true;
-      },
+      onSkip: () => _finishOnboarding(),
+      context: context,
+      // Hide skip on the last target (undo button) to avoid overlap.
+      showSkipInLastTarget: false,
     );
     coach.show(context: context);
   }
@@ -944,18 +914,9 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
       ),
     ];
 
-    final coach = TutorialCoachMark(
+    final coach = createOnboardingCoachMark(
       targets: targets,
-      colorShadow: Colors.black,
-      opacityShadow: 0.85,
-      paddingFocus: 12,
-      hideSkip: false,
-      alignSkip: Alignment.topLeft,
-      skipWidget: _buildSkipWidget(),
-      onSkip: () {
-        _finishOnboarding();
-        return true;
-      },
+      onSkip: () => _finishOnboarding(),
       onFinish: () {
         // Deal a fresh hand with scripted guidance for hand 2.
         OnboardingState.secondTourHandPending = true;
@@ -969,6 +930,7 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
           });
         });
       },
+      context: context,
     );
     coach.show(context: context);
   }
@@ -1012,24 +974,16 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
         ),
       ];
 
-      final coach = TutorialCoachMark(
+      final coach = createOnboardingCoachMark(
         targets: targets,
-        colorShadow: Colors.black,
-        opacityShadow: 0.85,
-        paddingFocus: 12,
-        hideSkip: false,
-        alignSkip: Alignment.topLeft,
-        skipWidget: _buildSkipWidget(),
-        onSkip: () {
-          _finishOnboarding();
-          return true;
-        },
+        onSkip: () => _finishOnboarding(),
         onFinish: () {
           // User will now tap ⓘ to return to session details
           OnboardingState.stackChartReturnTourPending = true;
           OnboardingState.guidedHandPhase = GuidedPhase.done;
           widget.onSkipOrFinish?.call();
         },
+        context: context,
       );
       coach.show(context: context);
     });
@@ -1038,23 +992,6 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
   // ---------------------------------------------------------------------------
   // Helpers
   // ---------------------------------------------------------------------------
-
-  Widget _buildSkipWidget() {
-    final sw = MediaQuery.of(context).size.width;
-    final s = (sw / 393).clamp(0.8, 1.1);
-    return Padding(
-      padding: EdgeInsets.only(
-          left: 14 * s, top: MediaQuery.of(context).padding.top + 6 * s),
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 16 * s, vertical: 8 * s),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
-        ),
-        child: Text(AppLocalizations.of(context).guidedSkip, style: AppTypography.bodySmall(color: Colors.white70).copyWith(fontSize: (14 * s).clamp(12.0, 16.0))),
-      ),
-    );
-  }
 
   void _setPhase(GuidedPhase phase) {
     if (!mounted) return;

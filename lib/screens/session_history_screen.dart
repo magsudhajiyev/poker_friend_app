@@ -27,6 +27,7 @@ import '../utils/lazy_pagination.dart';
 import '../utils/user_facing_error.dart';
 import '../onboarding/onboarding_state.dart';
 import '../onboarding/onboarding_tour.dart';
+import '../widgets/main_shell.dart';
 
 class SessionHistoryScreen extends StatefulWidget {
   final String? targetSessionId;
@@ -83,6 +84,13 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
     _tabController = TabController(length: 2, vsync: this);
     _loadSessions();
     _scheduleOnboardingTour();
+    // Listen for phase changes — IndexedStack runs initState() once at app
+    // startup (phase 0), so we need a listener to trigger phase 6 tour when
+    // the user switches to the Sessions tab mid-tour.
+    OnboardingState.notifier.addListener(_onOnboardingChanged);
+    // Also listen for when the Sessions tab becomes visible (user taps nav).
+    MainShell.globalKey.currentState?.sessionsTabNotifier
+        .addListener(_onSessionsTabVisible);
   }
 
   /// Phase 6 — spotlight the tutorial session card after the tour's
@@ -147,8 +155,34 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
     SessionHistoryTour(sessionCardKey: _tourSessionCardKey).show(context);
   }
 
+  void _onOnboardingChanged() {
+    if (!mounted) return;
+    if (OnboardingState.isOnboardingActive &&
+        OnboardingState.currentPhase == 6 &&
+        OnboardingState.sessionHistoryTourPending) {
+      // Flags are set but the user may not have switched to this tab yet.
+      // Pre-load sessions so they're ready when the tab becomes visible.
+      _loadSessions();
+    }
+  }
+
+  /// Fires when the user taps the Sessions nav icon (MainShell tab switch).
+  void _onSessionsTabVisible() {
+    if (!mounted) return;
+    if (OnboardingState.isOnboardingActive &&
+        OnboardingState.currentPhase == 6 &&
+        OnboardingState.sessionHistoryTourPending) {
+      _loadSessions().then((_) {
+        if (mounted) _scheduleOnboardingTour();
+      });
+    }
+  }
+
   @override
   void dispose() {
+    OnboardingState.notifier.removeListener(_onOnboardingChanged);
+    MainShell.globalKey.currentState?.sessionsTabNotifier
+        .removeListener(_onSessionsTabVisible);
     for (final c in _scrollControllers.values) {
       c.dispose();
     }

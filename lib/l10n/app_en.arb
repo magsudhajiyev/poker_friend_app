@@ -5427,8 +5427,6 @@
   "guidedReturnToDetailsBody": "Tap here to go back and check out your stack chart.",
   "guidedStackChartReturnTitle": "Your Stack Chart",
   "guidedStackChartReturnBody": "Here's your stack progress. Each dot is a logged hand — tap any point for details.",
-  "guidedGoBackToHandTitle": "Go Back",
-  "guidedGoBackToHandBody": "Tap here to return to the hand logging screen. You can end your session from the menu there.",
   "guidedStackAdjustTitle": "Adjust Their Stack",
   "guidedStackAdjustBody": "Press and hold on a player seat to activate the stack ring. Rotate your finger to select a stack size, then release.",
   "sessionDetailsEndSession": "End Session",

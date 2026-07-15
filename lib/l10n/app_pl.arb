@@ -5420,8 +5420,6 @@
   "guidedReturnToDetailsBody": "Dotknij tutaj, aby wrócić i sprawdzić wykres stacka.",
   "guidedStackChartReturnTitle": "Twój Wykres Stacka",
   "guidedStackChartReturnBody": "Oto twój przebieg stacka. Każdy punkt to zalogowana ręka — dotknij dowolnego punktu, aby zobaczyć szczegóły.",
-  "guidedGoBackToHandTitle": "Wróć",
-  "guidedGoBackToHandBody": "Dotknij tutaj, aby wrócić do ekranu rejestrowania rąk. Możesz zakończyć sesję z menu tam.",
   "guidedStackAdjustTitle": "Dostosuj Stack",
   "guidedStackAdjustBody": "Przytrzymaj miejsce gracza, aby aktywować pierścień stacka. Obróć palec, aby wybrać wielkość stacka, a następnie puść.",
   "sessionDetailsEndSession": "Zakończ Sesję",

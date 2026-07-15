@@ -63,10 +63,6 @@ class OnboardingState {
   /// SessionDetailsScreen after both tour hands are complete.
   static bool stackChartReturnTourPending = false;
 
-  /// Whether the end-session tour needs to run on PokerHandScreen after
-  /// the user returns from viewing the stack chart on SessionDetailsScreen.
-  static bool endSessionTourPending = false;
-
   /// Set after the phase-6 AI-analysis step so the tour completion (and guest
   /// sign-up) fires only once the user LEAVES the hand-details screen — not
   /// while they're still reading the analysis. Consumed on return to the
@@ -119,7 +115,6 @@ class OnboardingState {
     secondTourHandPending = false;
 
     stackChartReturnTourPending = false;
-    endSessionTourPending = false;
     tourCompletionPending = false;
     sessionHistoryTourPending = false;
     handListTourPending = false;
@@ -144,7 +139,6 @@ class OnboardingState {
     secondTourHandPending = false;
 
     stackChartReturnTourPending = false;
-    endSessionTourPending = false;
     tourCompletionPending = false;
     sessionHistoryTourPending = false;
     handListTourPending = false;
@@ -166,7 +160,6 @@ class OnboardingState {
     secondTourHandPending = false;
 
     stackChartReturnTourPending = false;
-    endSessionTourPending = false;
     tourCompletionPending = false;
     sessionHistoryTourPending = false;
     handListTourPending = false;
@@ -194,7 +187,6 @@ class OnboardingState {
     secondTourHandPending = false;
 
     stackChartReturnTourPending = false;
-    endSessionTourPending = false;
     tourCompletionPending = false;
     sessionHistoryTourPending = false;
     handListTourPending = false;
@@ -215,7 +207,6 @@ class OnboardingState {
     secondTourHandPending = false;
 
     stackChartReturnTourPending = false;
-    endSessionTourPending = false;
     tourCompletionPending = false;
     sessionHistoryTourPending = false;
     handListTourPending = false;
