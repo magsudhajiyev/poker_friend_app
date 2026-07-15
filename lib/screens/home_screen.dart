@@ -133,6 +133,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   Offset? _popupPosition;
 
 
+  bool _splashNavHidden = false;
+
   @override
   void initState() {
     super.initState();
@@ -150,6 +152,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       parent: _progressAnimationController,
       curve: Curves.easeOutCubic,
     ));
+
+    // Hide nav bar during loading splash so it doesn't appear before content.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (isLoadingData && currentBankroll == 0.0 && recentSessions.isEmpty) {
+        _splashNavHidden = true;
+        MainShell.of(context)?.setNavVisible(false);
+      }
+    });
 
     _loadBankrollVisibility();
     _loadData();
@@ -1527,6 +1537,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           ],
         ),
       );
+    }
+
+    // Restore nav bar once loading splash is done.
+    if (_splashNavHidden) {
+      _splashNavHidden = false;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        MainShell.of(context)?.setNavVisible(true);
+      });
     }
 
     if (_loadError != null && currentBankroll == 0.0 && recentSessions.isEmpty) {

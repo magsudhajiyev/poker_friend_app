@@ -449,7 +449,7 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
 
         // Game Type
         _buildFormRow(
-          label: 'Choose\nGame Type',
+          label: 'Game Type',
           crossAxisAlignment: CrossAxisAlignment.center,
           content: Row(
             children: [
