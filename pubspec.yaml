@@ -72,6 +72,7 @@ flutter:
     - assets/
     - assets/icons/
     - "assets/icons/card icons/"
+    - assets/icons/flags/
     - assets/play_style/
     - "assets/loading screen.aep_AME/"
     - icons/

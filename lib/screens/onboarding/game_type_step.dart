@@ -91,6 +91,13 @@ class _GameTypeStepState extends State<GameTypeStep>
                   ),
                 ],
               ),
+              const SizedBox(height: 8),
+              _GameTypePill(
+                label: l10n.onboardingGameTypeBoth,
+                iconAsset: 'assets/icons/arrows-in-line-horizontal.svg',
+                isSelected: _selected == 'both',
+                onTap: () => setState(() => _selected = 'both'),
+              ),
             ],
           ),
         ],
