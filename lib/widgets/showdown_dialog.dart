@@ -224,7 +224,7 @@ class _ShowdownDialogState extends State<ShowdownDialog> {
           color: AppColors.textSecondary,
         ),
         filled: true,
-        fillColor: AppColors.bgElevated,
+        fillColor: AppColors.bgSurface,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
           borderSide: const BorderSide(color: AppColors.borderStrong),

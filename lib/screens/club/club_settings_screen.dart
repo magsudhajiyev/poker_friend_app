@@ -16,7 +16,6 @@ import '../../services/club_service.dart';
 import '../../services/table_service.dart';
 import '../../services/app_data_cache.dart';
 import '../../widgets/invite_member_dialog.dart';
-import '../../widgets/global_bottom_nav_bar.dart';
 import '../../design_system/constants/typography.dart';
 import '../../design_system/constants/decorations.dart';
 import '../../utils/user_facing_error.dart';
@@ -184,7 +183,6 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
           ),
         ],
       ),
-      bottomNavigationBar: GlobalBottomNavBar(currentScreen: 'club'),
     );
   }
 

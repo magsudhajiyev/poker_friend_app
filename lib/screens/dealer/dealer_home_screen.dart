@@ -10,6 +10,7 @@ import '../../services/dealer_service.dart';
 import '../../services/auth_service.dart';
 import 'dealer_table_screen.dart';
 import '../../design_system/constants/colors.dart';
+import '../../design_system/components/app_toggle.dart';
 import '../../design_system/constants/decorations.dart';
 import '../../design_system/constants/typography.dart';
 import '../../design_system/components/dialogs/app_dialog.dart';
@@ -823,14 +824,20 @@ class _SessionSettingsDialogState extends State<_SessionSettingsDialog> {
               ],
             ),
             const SizedBox(height: 16),
-            SwitchListTile(
-              value: _hasBBante,
-              onChanged: (v) => setState(() => _hasBBante = v),
-              title: Text(
-                l10n.dealerHomeBBAnte,
-                style: AppTypography.ibm(color: AppColors.textPrimary),
-              ),
-              contentPadding: EdgeInsets.zero,
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    l10n.dealerHomeBBAnte,
+                    style: AppTypography.ibm(color: AppColors.textPrimary),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                AppToggle(
+                  value: _hasBBante,
+                  onChanged: (v) => setState(() => _hasBBante = v),
+                ),
+              ],
             ),
             const SizedBox(height: 16),
             Text(
@@ -914,7 +921,7 @@ class _SessionSettingsDialogState extends State<_SessionSettingsDialog> {
           style: AppTypography.ibm(color: AppColors.textPrimary),
           decoration: InputDecoration(
             filled: true,
-            fillColor: AppColors.bgElevated,
+            fillColor: AppColors.bgSurface,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
               borderSide: BorderSide.none,

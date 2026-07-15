@@ -608,7 +608,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 ),
                               ),
                             ),
-                            const Icon(Icons.chevron_right, color: AppColors.contentInactive, size: 20),
+                            SvgPicture.asset('assets/icons/CaretRight.svg', width: 16, height: 16, colorFilter: const ColorFilter.mode(AppColors.contentInactive, BlendMode.srcIn)),
                           ],
                         ),
                       ),

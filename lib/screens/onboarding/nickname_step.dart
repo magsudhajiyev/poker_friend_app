@@ -214,7 +214,7 @@ class _NicknameStepState extends State<NicknameStep>
                   const BoxConstraints(minWidth: 0, minHeight: 0),
               suffixIcon: _buildSuffixIcon(),
               filled: true,
-              fillColor: AppColors.bgElevated,
+              fillColor: AppColors.bgSurface,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                 borderSide: BorderSide.none,

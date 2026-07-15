@@ -788,128 +788,109 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
         }
       },
       body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Container(
-          decoration: BoxDecoration(
-            color: AppColors.bgSurface,
-            borderRadius: BorderRadius.circular(AppDecorations.radius18),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          child: Column(
-            children: [
-              // Current Stack display
-              Padding(
-                padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      l10n.individualCurrentStack,
-                      style: AppTypography.ibm(
-                        fontSize: 17,
-                        color: Colors.white.withValues(alpha: 0.5),
-                        fontWeight: FontWeight.w400,
-                        height: 1.44,
-                      ),
-                    ),
-                    Text(
-                      widget.gameType == GameType.cash
-                          ? CurrencyService.formatCash(_currentStack)
-                          : _currentStack.toStringAsFixed(0),
-                      style: AppTypography.ibm(
-                        color: AppColors.accentPrimary,
-                        fontSize: 17,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              // Separator
-              Container(
-                height: 21,
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                alignment: Alignment.center,
-                child: Container(height: 1, color: AppColors.bgOverlay),
-              ),
-              // New Total field
-              Padding(
-                padding: const EdgeInsets.fromLTRB(10, 10, 8, 10),
-                child: TextField(
-                  controller: newStackController,
-                  autofocus: true,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  style: AppTypography.ibm(
-                    fontSize: 17,
-                    color: Colors.white,
-                    fontWeight: FontWeight.w400,
-                    height: 1.44,
-                  ),
-                  decoration: InputDecoration(
-                    hintText: l10n.individualEnterNewTotalStack,
-                    hintStyle: AppTypography.ibm(
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        child: Column(
+          children: [
+            // Current Stack display
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    l10n.individualCurrentStack,
+                    style: AppTypography.ibm(
                       fontSize: 17,
                       color: Colors.white.withValues(alpha: 0.5),
                       fontWeight: FontWeight.w400,
                       height: 1.44,
                     ),
-                    prefixText: widget.gameType == GameType.cash ? CurrencyService.prefixText : '',
-                    suffixText: widget.gameType == GameType.cash ? CurrencyService.suffixText : null,
-                    prefixStyle: AppTypography.ibm(
-                      fontSize: 17,
-                      color: Colors.white,
-                      fontWeight: FontWeight.w400,
-                    ),
-                    border: InputBorder.none,
-                    enabledBorder: InputBorder.none,
-                    focusedBorder: InputBorder.none,
-                    filled: false,
-                    contentPadding: EdgeInsets.zero,
-                    isDense: true,
                   ),
+                  Text(
+                    widget.gameType == GameType.cash
+                        ? CurrencyService.formatCash(_currentStack)
+                        : _currentStack.toStringAsFixed(0),
+                    style: AppTypography.ibm(
+                      color: AppColors.accentPrimary,
+                      fontSize: 17,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Container(height: 1, color: AppColors.bgOverlay),
+            // New Total field
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              child: TextField(
+                controller: newStackController,
+                autofocus: true,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                style: AppTypography.ibm(
+                  fontSize: 17,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w400,
+                  height: 1.44,
                 ),
-              ),
-              // Separator
-              Container(
-                height: 21,
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                alignment: Alignment.center,
-                child: Container(height: 1, color: AppColors.bgOverlay),
-              ),
-              // Note field
-              Padding(
-                padding: const EdgeInsets.all(10),
-                child: TextField(
-                  controller: noteController,
-                  style: AppTypography.ibm(
+                decoration: InputDecoration(
+                  hintText: l10n.individualEnterNewTotalStack,
+                  hintStyle: AppTypography.ibm(
                     fontSize: 17,
-                    color: Colors.white,
+                    color: Colors.white.withValues(alpha: 0.5),
                     fontWeight: FontWeight.w400,
                     height: 1.44,
                   ),
-                  decoration: InputDecoration(
-                    hintText: l10n.individualNoteHint,
-                    hintStyle: AppTypography.ibm(
-                      fontSize: 17,
-                      color: Colors.white.withValues(alpha: 0.5),
-                      fontWeight: FontWeight.w400,
-                      height: 1.44,
-                    ),
-                    border: InputBorder.none,
-                    enabledBorder: InputBorder.none,
-                    focusedBorder: InputBorder.none,
-                    filled: false,
-                    contentPadding: EdgeInsets.zero,
-                    isDense: true,
+                  prefixText: widget.gameType == GameType.cash ? CurrencyService.prefixText : '',
+                  suffixText: widget.gameType == GameType.cash ? CurrencyService.suffixText : null,
+                  prefixStyle: AppTypography.ibm(
+                    fontSize: 17,
+                    color: Colors.white,
+                    fontWeight: FontWeight.w400,
                   ),
-                  maxLines: 3,
-                  minLines: 2,
-                  maxLength: 100,
-                  buildCounter: (context, {required currentLength, required isFocused, maxLength}) => null,
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  filled: false,
+                  contentPadding: EdgeInsets.zero,
+                  isDense: true,
                 ),
               ),
-            ],
-          ),
+            ),
+            Container(height: 1, color: AppColors.bgOverlay),
+            // Note field
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              child: TextField(
+                controller: noteController,
+                style: AppTypography.ibm(
+                  fontSize: 17,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w400,
+                  height: 1.44,
+                ),
+                decoration: InputDecoration(
+                  hintText: l10n.individualNoteHint,
+                  hintStyle: AppTypography.ibm(
+                    fontSize: 17,
+                    color: Colors.white.withValues(alpha: 0.5),
+                    fontWeight: FontWeight.w400,
+                    height: 1.44,
+                  ),
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  filled: false,
+                  contentPadding: EdgeInsets.zero,
+                  isDense: true,
+                ),
+                maxLines: 3,
+                minLines: 2,
+                maxLength: 100,
+                buildCounter: (context, {required currentLength, required isFocused, maxLength}) => null,
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -1719,31 +1700,16 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
                     padding: const EdgeInsets.only(top: 16, bottom: 24),
                     child: Row(
                       children: [
-                        // Stop / end-session button — hub mode prompts to end
-                        // the session, legacy hand-in-progress goes back to
-                        // the hand screen. Uses the canonical top-nav circle
-                        // style (bgElevated, 24px white icon).
+                        // Stop / end-session button — self-contained 44px red
+                        // stop badge (svg has its own red bg + white icon).
                         GestureDetector(
                           key: _backButtonKey,
                           onTap: _isHubMode ? _handleHubBackButton : _goBackToHand,
-                          child: Container(
+                          behavior: HitTestBehavior.opaque,
+                          child: SvgPicture.asset(
+                            'assets/icons/card icons/stop.svg',
                             width: 44,
                             height: 44,
-                            decoration: const BoxDecoration(
-                              color: AppColors.bgElevated,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Center(
-                              child: SvgPicture.asset(
-                                'assets/icons/card icons/stop.svg',
-                                width: 24,
-                                height: 24,
-                                colorFilter: const ColorFilter.mode(
-                                  AppColors.textPrimary,
-                                  BlendMode.srcIn,
-                                ),
-                              ),
-                            ),
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -1773,7 +1739,8 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
                             ],
                           ),
                         ),
-                        // Menu button — 3-dot menu in hub mode / cash game shows add-on directly in legacy
+                        // Menu button — 3-dot menu in hub mode / cash game shows add-on directly in legacy.
+                        // Matches canonical top-nav circle style (44px, bgSurface).
                         GestureDetector(
                           key: _dotsKey,
                           onTap: _isHubMode
@@ -1781,17 +1748,18 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
                               : (widget.gameType == GameType.cash
                                   ? _showAddOnDialog
                                   : _showOptionsMenu),
+                          behavior: HitTestBehavior.opaque,
                           child: Container(
-                            width: 32,
-                            height: 32,
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.08),
+                            width: 44,
+                            height: 44,
+                            decoration: const BoxDecoration(
+                              color: AppColors.bgSurface,
                               shape: BoxShape.circle,
                             ),
                             child: Icon(
                               _isHubMode ? Icons.more_vert : Icons.add,
-                              color: Colors.white,
-                              size: 18,
+                              color: AppColors.textPrimary,
+                              size: 22,
                             ),
                           ),
                         ),
@@ -1799,14 +1767,9 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
                     ),
                   ),
 
-                  // BB Mode Toggle
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
-                    margin: const EdgeInsets.only(bottom: 16),
-                    decoration: BoxDecoration(
-                      color: AppColors.bgSurface,
-                      borderRadius: BorderRadius.circular(AppDecorations.radius18),
-                    ),
+                  // BB Mode Toggle — flat inline row
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(4, 0, 4, 20),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -1894,36 +1857,29 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
                             ),
                           ),
                         ),
-                        const SizedBox(height: 16),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.05),
-                            borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
-                          ),
-                          child: Row(
-                            children: [
-                              Text(
-                                widget.gameType == GameType.cash
-                                    ? '${profitLoss >= 0 ? '+' : '-'}${CurrencyService.formatCash(profitLoss.abs())}'
-                                    : '${profitLoss >= 0 ? '+' : ''}${profitLoss.toStringAsFixed(0)}',
-                                style: AppTypography.ibm(
-                                  fontSize: 18,
-                                  color: isProfit ? AppColors.accentPrimary : (profitLoss < 0 ? Colors.red : Colors.white),
-                                  fontWeight: FontWeight.w600,
-                                ),
+                        const SizedBox(height: 8),
+                        // Flat inline P/L — no nested container
+                        Row(
+                          children: [
+                            Text(
+                              widget.gameType == GameType.cash
+                                  ? '${profitLoss >= 0 ? '+' : '-'}${CurrencyService.formatCash(profitLoss.abs())}'
+                                  : '${profitLoss >= 0 ? '+' : ''}${profitLoss.toStringAsFixed(0)}',
+                              style: AppTypography.ibm(
+                                fontSize: 17,
+                                color: isProfit ? AppColors.accentPrimary : (profitLoss < 0 ? Colors.red : Colors.white),
+                                fontWeight: FontWeight.w600,
                               ),
-                              const SizedBox(width: 8),
-                              Text(
-                                '(${stackGrowthPercentage >= 0 ? '+' : ''}${stackGrowthPercentage.toStringAsFixed(1)}%)',
-                                style: AppTypography.ibm(
-                                  fontSize: 14,
-                                  color: Colors.white.withOpacity(0.4),
-                                ),
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              '(${stackGrowthPercentage >= 0 ? '+' : ''}${stackGrowthPercentage.toStringAsFixed(1)}%)',
+                              style: AppTypography.ibm(
+                                fontSize: 14,
+                                color: Colors.white.withOpacity(0.4),
                               ),
-                            ],
-                          ),
-
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -1938,40 +1894,39 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
                   if (_stackHistory.length > 1)
                     const SizedBox(height: 16),
 
-                  // Session Info (collapsible)
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: AppColors.bgSurface,
-                      borderRadius: BorderRadius.circular(AppDecorations.radius18),
-                    ),
+                  // Session Info (collapsible) — flat, no card wrapper
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         GestureDetector(
                           onTap: () => setState(() => _statsExpanded = !_statsExpanded),
                           behavior: HitTestBehavior.opaque,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                l10n.individualSessionInfo,
-                                style: AppTypography.ibm(
-                                  fontSize: 17,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w600,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 6),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  l10n.individualSessionInfo,
+                                  style: AppTypography.ibm(
+                                    fontSize: 17,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
-                              ),
-                              AnimatedRotation(
-                                turns: _statsExpanded ? 0.5 : 0.0,
-                                duration: const Duration(milliseconds: 200),
-                                child: Icon(
-                                  Icons.keyboard_arrow_down,
-                                  color: Colors.white.withValues(alpha: 0.5),
-                                  size: 24,
+                                AnimatedRotation(
+                                  turns: _statsExpanded ? 0.5 : 0.0,
+                                  duration: const Duration(milliseconds: 200),
+                                  child: Icon(
+                                    Icons.keyboard_arrow_down,
+                                    color: Colors.white.withValues(alpha: 0.5),
+                                    size: 24,
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
                         AnimatedSize(
@@ -1980,7 +1935,7 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
                           child: _statsExpanded
                               ? Column(
                                   children: [
-                                    const SizedBox(height: 16),
+                                    const SizedBox(height: 8),
                                     _buildStatRow(l10n.individualStartingStack, widget.gameType == GameType.cash
                                         ? CurrencyService.formatCash(widget.startingStack)
                                         : widget.startingStack.toStringAsFixed(0)),

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../design_system/components/app_toggle.dart';
+import '../../design_system/constants/colors.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/club.dart';
 import '../../models/club_event.dart';
@@ -524,14 +526,31 @@ class _CreateEventDialogState extends State<_CreateEventDialog> {
                   dense: true,
                 )),
             const SizedBox(height: 16),
-            SwitchListTile(
-              title: Text(AppLocalizations.of(context).eventManagementPublicEvent),
-              subtitle: Text(AppLocalizations.of(context).eventManagementPublicSubtitle),
-              value: _isPublic,
-              onChanged: (value) {
-                setState(() => _isPublic = value);
-              },
-              contentPadding: EdgeInsets.zero,
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(AppLocalizations.of(context).eventManagementPublicEvent),
+                      Text(
+                        AppLocalizations.of(context).eventManagementPublicSubtitle,
+                        style: TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                AppToggle(
+                  value: _isPublic,
+                  onChanged: (value) {
+                    setState(() => _isPublic = value);
+                  },
+                ),
+              ],
             ),
             if (!_isPublic) ...[
               const SizedBox(height: 8),

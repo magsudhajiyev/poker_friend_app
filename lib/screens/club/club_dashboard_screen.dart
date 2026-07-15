@@ -21,7 +21,6 @@ import '../../design_system/components/cards/error_state_card.dart';
 import '../../services/app_data_cache.dart';
 import '../../l10n/app_localizations.dart';
 import '../../services/currency_service.dart';
-import '../../widgets/global_bottom_nav_bar.dart';
 import 'event_detail_screen.dart';
 import 'create_event_screen.dart';
 import 'club_settings_screen.dart';
@@ -415,7 +414,6 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
             ),
         ],
       ),
-      bottomNavigationBar: GlobalBottomNavBar(currentScreen: 'club'),
     );
   }
 

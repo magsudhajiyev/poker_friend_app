@@ -4,6 +4,7 @@ import '../screens/home_screen.dart';
 import '../screens/my_opponents_screen.dart';
 import '../screens/statistics_screen.dart';
 import '../screens/session_history_screen.dart';
+import '../screens/notifications_screen.dart';
 import 'global_bottom_nav_bar.dart';
 
 /// Persistent tab shell — the four content tabs live inside an
@@ -27,7 +28,13 @@ class MainShell extends StatefulWidget {
 }
 
 class MainShellState extends State<MainShell> {
-  static const _screens = ['home', 'opponents', 'statistics', 'sessions'];
+  static const _screens = [
+    'home',
+    'opponents',
+    'statistics',
+    'sessions',
+    'notifications',
+  ];
 
   int _currentIndex = 0;
   bool _navVisible = true;
@@ -69,6 +76,7 @@ class MainShellState extends State<MainShell> {
           MyOpponentsScreen(),
           StatisticsScreen(),
           SessionHistoryScreen(),
+          const NotificationsScreen(),
         ],
       ),
       bottomNavigationBar: _navVisible

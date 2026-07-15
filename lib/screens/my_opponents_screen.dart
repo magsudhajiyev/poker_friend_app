@@ -1046,8 +1046,8 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> with SingleTicker
 
 }
 
-/// "Add New Opponent" pill for the opponents top nav — Figma node 582:1602.
-/// bgSurface fill, borderStrong border, 24px green plus dot on the left.
+/// "Add New" outlined pill for the opponents top nav — text-only,
+/// transparent fill with a `borderStrong` outline, medium-weight label.
 class _AddOpponentButton extends StatelessWidget {
   final VoidCallback onTap;
 
@@ -1059,35 +1059,20 @@ class _AddOpponentButton extends StatelessWidget {
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-          color: AppColors.bgSurface,
+          color: Colors.transparent,
           border: Border.all(color: AppColors.borderStrong),
           borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 24,
-              height: 24,
-              decoration: const BoxDecoration(
-                color: AppColors.accentSecondary,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.add, color: Colors.black, size: 16),
-            ),
-            const SizedBox(width: 8),
-            Text(
-              'Add New',
-              style: AppTypography.ibm(
-                fontSize: 15,
-                fontWeight: FontWeight.w400,
-                color: AppColors.textPrimary,
-                height: 22 / 15,
-              ),
-            ),
-          ],
+        child: Text(
+          'Add New',
+          style: AppTypography.ibm(
+            fontSize: 15,
+            fontWeight: FontWeight.w500,
+            color: AppColors.textPrimary,
+            height: 22 / 15,
+          ),
         ),
       ),
     );

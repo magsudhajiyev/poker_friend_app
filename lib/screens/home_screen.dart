@@ -1630,14 +1630,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           // Logo
           Image.asset('assets/icons/Logo horizontal-text.png', height: 38, fit: BoxFit.contain),
 
-          // Right: bell + menu (Figma spec — 38×38 bgElevated circles, 8px gap)
+          // Right: QR scan + menu — 38×38 bgSurface circles, 8px gap
           Row(
             children: [
               _TopNavCircleButton(
-                onTap: () => _showNotificationsDropdown(context),
-                svgAsset: 'icons/figma_icons/notification.svg',
-                showBadge: _unreadNotificationCount > 0,
-                shakeOnTap: true,
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const QRScanScreen()),
+                ),
+                svgAsset: 'assets/icons/card icons/Frame.svg',
               ),
               const SizedBox(width: 8),
               _TopNavCircleButton(
@@ -4841,10 +4842,10 @@ class _TopNavCircleButtonState extends State<_TopNavCircleButton>
           clipBehavior: Clip.none,
           children: [
             Container(
-              width: 38,
-              height: 38,
+              width: 44,
+              height: 44,
               decoration: const BoxDecoration(
-                color: AppColors.bgElevated,
+                color: AppColors.bgSurface,
                 shape: BoxShape.circle,
               ),
               child: Center(

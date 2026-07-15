@@ -8,7 +8,6 @@ import '../services/auth_service.dart';
 import '../utils/poker_positions.dart';
 import '../widgets/loading_screen.dart';
 import 'hand_actions_page_view.dart';
-import '../widgets/global_bottom_nav_bar.dart';
 import '../design_system/components/buttons/back_button_circle.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/typography.dart';
@@ -181,8 +180,6 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.bgPrimary,
-      extendBody: true,
-      bottomNavigationBar: GlobalBottomNavBar(currentScreen: 'sessions'),
       body: Stack(
         children: [
           Column(

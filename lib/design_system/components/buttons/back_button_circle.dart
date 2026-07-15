@@ -22,7 +22,7 @@ class BackButtonCircle extends StatefulWidget {
   const BackButtonCircle({
     Key? key,
     this.onPressed,
-    this.size = 38,
+    this.size = 44,
   }) : super(key: key);
 
   @override
@@ -91,7 +91,7 @@ class _BackButtonCircleState extends State<BackButtonCircle>
           width: widget.size,
           height: widget.size,
           decoration: const BoxDecoration(
-            color: AppColors.bgElevated,
+            color: AppColors.bgSurface,
             shape: BoxShape.circle,
           ),
           child: Center(

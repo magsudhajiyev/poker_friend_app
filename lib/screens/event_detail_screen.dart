@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'dart:ui' as ui;
-import '../widgets/global_bottom_nav_bar.dart';
 import '../l10n/app_localizations.dart';
 import '../services/currency_service.dart';
 import '../design_system/constants/colors.dart';
@@ -292,7 +291,6 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           ),
         ],
       ),
-      bottomNavigationBar: GlobalBottomNavBar(currentScreen: 'calendar'),
     );
   }
 

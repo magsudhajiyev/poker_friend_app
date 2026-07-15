@@ -404,7 +404,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
                 width: 16,
                 height: 16,
                 colorFilter: const ColorFilter.mode(
-                  AppColors.textSecondary,
+                  AppColors.contentInactive,
                   BlendMode.srcIn,
                 ),
               ),

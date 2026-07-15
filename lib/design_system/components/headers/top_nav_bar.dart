@@ -227,7 +227,7 @@ class _CircleIconButton extends StatelessWidget {
         width: 44,
         height: 44,
         decoration: const BoxDecoration(
-          color: AppColors.bgElevated,
+          color: AppColors.bgSurface,
           shape: BoxShape.circle,
         ),
         child: Center(

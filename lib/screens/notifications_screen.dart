@@ -9,7 +9,6 @@ import '../services/club_notification_service.dart';
 import '../services/club_service.dart';
 import '../services/event_service.dart';
 import '../services/auth_service.dart';
-import '../widgets/global_bottom_nav_bar.dart';
 import 'club/event_detail_screen.dart';
 import 'club/club_dashboard_screen.dart';
 import 'admin/club_requests_screen.dart';
@@ -176,26 +175,16 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               ],
             ),
           ),
-
-          // Bottom navigation bar
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: const GlobalBottomNavBar(currentScreen: 'notifications'),
-          ),
         ],
       ),
     );
   }
 
-  /// Header — canonical [TopNavBar]. No right action; the bell tile that
-  /// used to live here duplicated the icon in the empty state and had no
-  /// tap target of its own.
+  /// Header — landing variant (no back button) since Notifications is now
+  /// a shell tab, not a pushed detail screen.
   Widget _buildHeader(bool hasUnread) {
-    return TopNavBar(
+    return TopNavBar.landing(
       title: AppLocalizations.of(context).notificationsScreenTitle,
-      onBack: () => Navigator.pop(context),
       includeStatusBarPadding: false,
     );
   }

@@ -7,6 +7,7 @@ import '../l10n/app_localizations.dart';
 import '../design_system/components/buttons/back_button_circle.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/spacing.dart';
+import '../design_system/constants/typography.dart';
 import '../services/subscription_service.dart';
 import '../services/auth_service.dart';
 import '../design_system/constants/decorations.dart';
@@ -261,8 +262,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                 Center(
                   child: Text(
                     l10n.paywallAvailablePlans,
-                    style: const TextStyle(
-                      fontFamily: 'IBM Plex Sans',
+                    style: AppTypography.ibm(
                       fontSize: 17,
                       fontWeight: FontWeight.w600,
                       height: 22 / 17,
@@ -281,8 +281,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                         padding: EdgeInsets.only(right: AppSpacing.md),
                         child: Text(
                           l10n.onboardingSkip,
-                          style: const TextStyle(
-                            fontFamily: 'IBM Plex Sans',
+                          style: AppTypography.ibm(
                             fontSize: 15,
                             fontWeight: FontWeight.w600,
                             color: Colors.white,
@@ -306,8 +305,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
       children: [
         Text(
           l10n.paywallStepLabel,
-          style: const TextStyle(
-            fontFamily: 'IBM Plex Sans',
+          style: AppTypography.ibm(
             fontSize: 15,
             fontWeight: FontWeight.w400,
             height: 22 / 15,
@@ -317,8 +315,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
         const SizedBox(height: 8),
         Text(
           l10n.paywallChooseYourPlan,
-          style: const TextStyle(
-            fontFamily: 'IBM Plex Sans',
+          style: AppTypography.ibm(
             fontSize: 28,
             fontWeight: FontWeight.w600,
             height: 36 / 28,
@@ -328,8 +325,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
         const SizedBox(height: 4),
         Text(
           l10n.paywallUpgradeOrCancel,
-          style: const TextStyle(
-            fontFamily: 'IBM Plex Sans',
+          style: AppTypography.ibm(
             fontSize: 15,
             fontWeight: FontWeight.w400,
             height: 22 / 15,
@@ -362,8 +358,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                 child: Center(
                   child: Text(
                     l10n.paywallMonthly,
-                    style: TextStyle(
-                      fontFamily: 'IBM Plex Sans',
+                    style: AppTypography.ibm(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                       color: !_isAnnual
@@ -388,8 +383,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                 child: Center(
                   child: Text(
                     l10n.paywallAnnualSave,
-                    style: TextStyle(
-                      fontFamily: 'IBM Plex Sans',
+                    style: AppTypography.ibm(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                       color: _isAnnual
@@ -499,8 +493,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
         Text(
           l10n.paywallDisclaimer,
           textAlign: TextAlign.center,
-          style: const TextStyle(
-            fontFamily: 'IBM Plex Sans',
+          style: AppTypography.ibm(
             fontSize: 15,
             fontWeight: FontWeight.w400,
             height: 22 / 15,
@@ -522,8 +515,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                 )
               : Text(
                   l10n.paywallRestore,
-                  style: const TextStyle(
-                    fontFamily: 'IBM Plex Sans',
+                  style: AppTypography.ibm(
                     fontSize: 15,
                     fontWeight: FontWeight.w500,
                     height: 22 / 15,
@@ -541,8 +533,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
               onTap: () => launchUrl(Uri.parse('https://www.finaltable.io/terms')),
               child: Text(
                 l10n.paywallTerms,
-                style: const TextStyle(
-                  fontFamily: 'IBM Plex Sans',
+                style: AppTypography.ibm(
                   fontSize: 15,
                   fontWeight: FontWeight.w400,
                   height: 22 / 15,
@@ -566,8 +557,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
               onTap: () => launchUrl(Uri.parse('https://www.finaltable.io/privacy')),
               child: Text(
                 l10n.paywallPrivacy,
-                style: const TextStyle(
-                  fontFamily: 'IBM Plex Sans',
+                style: AppTypography.ibm(
                   fontSize: 15,
                   fontWeight: FontWeight.w400,
                   height: 22 / 15,
@@ -616,8 +606,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                     )
                   : Text(
                       l10n.paywallContinue,
-                      style: const TextStyle(
-                        fontFamily: 'IBM Plex Sans',
+                      style: AppTypography.ibm(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
                         height: 20 / 15,
@@ -681,8 +670,7 @@ class _PlanCard extends StatelessWidget {
                 Expanded(
                   child: Text(
                     tierLabel,
-                    style: const TextStyle(
-                      fontFamily: 'IBM Plex Sans',
+                    style: AppTypography.ibm(
                       fontSize: 28,
                       fontWeight: FontWeight.w600,
                       height: 36 / 28,
@@ -711,8 +699,7 @@ class _PlanCard extends StatelessWidget {
                         const SizedBox(width: 4),
                         Text(
                           trialBadgeText!,
-                          style: const TextStyle(
-                            fontFamily: 'IBM Plex Sans',
+                          style: AppTypography.ibm(
                             fontSize: 11,
                             fontWeight: FontWeight.w500,
                             height: 16 / 11,
@@ -729,8 +716,7 @@ class _PlanCard extends StatelessWidget {
             // Tagline
             Text(
               tagline,
-              style: const TextStyle(
-                fontFamily: 'IBM Plex Sans',
+              style: AppTypography.ibm(
                 fontSize: 17,
                 fontWeight: FontWeight.w600,
                 height: 22 / 17,
@@ -742,8 +728,7 @@ class _PlanCard extends StatelessWidget {
             // Primary price
             Text(
               primaryPrice,
-              style: const TextStyle(
-                fontFamily: 'IBM Plex Sans',
+              style: AppTypography.ibm(
                 fontSize: 28,
                 fontWeight: FontWeight.w600,
                 height: 36 / 28,
@@ -755,8 +740,7 @@ class _PlanCard extends StatelessWidget {
             // Secondary price
             Text(
               secondaryPrice,
-              style: const TextStyle(
-                fontFamily: 'IBM Plex Sans',
+              style: AppTypography.ibm(
                 fontSize: 13,
                 fontWeight: FontWeight.w400,
                 height: 20 / 13,
@@ -794,8 +778,7 @@ class _PlanCard extends StatelessWidget {
           Expanded(
             child: Text(
               feature,
-              style: const TextStyle(
-                fontFamily: 'IBM Plex Sans',
+              style: AppTypography.ibm(
                 fontSize: 15,
                 fontWeight: FontWeight.w400,
                 height: 22 / 15,

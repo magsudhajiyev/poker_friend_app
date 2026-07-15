@@ -8,7 +8,6 @@ import '../services/local_storage_service.dart';
 import '../services/firebase_service.dart';
 import '../services/opponent_stats_service.dart';
 import 'opponent_hands_screen.dart';
-import '../widgets/global_bottom_nav_bar.dart';
 import '../design_system/components/buttons/back_button_circle.dart';
 import '../design_system/components/buttons/close_circle_button.dart';
 import '../design_system/components/buttons/primary_pill_button.dart';
@@ -39,7 +38,6 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
   Map<String, dynamic>? _statistics;
   OpponentStats? _opponentStats;
   bool _isLoadingStats = true;
-  final GlobalKey _dotsMenuKey = GlobalKey(debugLabel: 'opponent-dots-menu');
 
   @override
   void initState() {
@@ -481,7 +479,6 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
           ),
         ],
       ),
-      bottomNavigationBar: const GlobalBottomNavBar(currentScreen: 'opponents'),
     );
   }
 
@@ -500,7 +497,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
         : l10n.opponentDetailNoDataYet;
 
     return Container(
-      color: AppColors.bgSurface,
+      color: AppColors.bgPrimary,
       padding: EdgeInsets.fromLTRB(16, topPad + 16, 16, 16),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -551,26 +548,6 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                   ),
                 ),
               ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          // 3-dot overflow — hosts Edit + Delete.
-          GestureDetector(
-            key: _dotsMenuKey,
-            onTap: () => _showOpponentOptionsMenu(_dotsMenuKey),
-            behavior: HitTestBehavior.opaque,
-            child: Container(
-              width: 44,
-              height: 44,
-              decoration: const BoxDecoration(
-                color: AppColors.bgElevated,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.more_vert,
-                color: AppColors.textPrimary,
-                size: 22,
-              ),
             ),
           ),
         ],
@@ -689,7 +666,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                     l10n.opponentDetailHands,
                     style: AppTypography.ibm(
                       fontSize: 17,
-                      color: Color(0xFFB3B4B6),
+                      color: AppColors.textSecondary,
                       fontWeight: FontWeight.w500,
                       height: 1.44,
                     ),

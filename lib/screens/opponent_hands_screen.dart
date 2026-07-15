@@ -6,7 +6,6 @@ import '../services/firebase_service.dart';
 import '../utils/poker_positions.dart';
 import 'hand_actions_page_view.dart';
 import '../services/app_data_cache.dart';
-import '../widgets/global_bottom_nav_bar.dart';
 import '../services/currency_service.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/typography.dart';
@@ -302,7 +301,6 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
     return Scaffold(
       backgroundColor: AppColors.bgPrimary,
       extendBody: true,
-      bottomNavigationBar: GlobalBottomNavBar(currentScreen: 'opponents'),
       body: Stack(
         children: [
           SafeArea(

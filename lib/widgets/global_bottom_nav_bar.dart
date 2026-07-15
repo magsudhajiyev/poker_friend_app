@@ -6,8 +6,6 @@ import '../screens/my_opponents_screen.dart';
 import '../screens/session_history_screen.dart';
 import '../screens/statistics_screen.dart';
 import '../screens/logging_mode_selection_screen.dart';
-import '../screens/player/qr_scan_screen.dart' show QRScanScreen;
-import '../design_system/constants/colors.dart';
 import 'main_shell.dart';
 
 /// Nav bar — Figma node 139:1182
@@ -35,7 +33,13 @@ class GlobalBottomNavBar extends StatefulWidget {
 class _GlobalBottomNavBarState extends State<GlobalBottomNavBar> {
   String? _pendingScreen;
 
-  static const _tabOrder = ['home', 'opponents', 'statistics', 'sessions', 'scan'];
+  static const _tabOrder = [
+    'home',
+    'opponents',
+    'statistics',
+    'sessions',
+    'notifications',
+  ];
 
   int _activeIndex() {
     final key = _pendingScreen ?? widget.currentScreen;
@@ -47,46 +51,42 @@ class _GlobalBottomNavBarState extends State<GlobalBottomNavBar> {
   Widget build(BuildContext context) {
     final double systemBottomPad = MediaQuery.of(context).viewPadding.bottom;
 
-    return ClipRect(
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
-        child: Container(
-          color: AppColors.bgPrimary.withValues(alpha: 0.7),
-          padding: EdgeInsets.fromLTRB(24, 12, 24, 12 + systemBottomPad),
-          child: Row(
+    // Figma node 1884:15154 — segmented glass pill (5 tabs) on the left,
+    // separate glass FAB on the right. No solid outer container fill;
+    // the pill and FAB each host their own BackdropFilter.
+    return Padding(
+      padding: EdgeInsets.fromLTRB(16, 8, 16, systemBottomPad),
+      child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // Left: 5 icon buttons behind a sliding ellipse pill that fluidly
-          // transitions to the active tab.
-          _SlidingIconRow(
+          _NavPill(
             activeIndex: _activeIndex(),
-            children: [
-              _NavIcon(
-                path: 'assets/icons/HouseSimple.svg',
+            items: [
+              _NavItemData(
+                icon: 'assets/icons/HouseSimple.svg',
                 onTap: () => _navigateTo(context, 'home'),
               ),
-              _NavIcon(
-                path: 'assets/icons/UsersThree.svg',
+              _NavItemData(
+                icon: 'assets/icons/UsersThree.svg',
                 onTap: () => _navigateTo(context, 'opponents'),
               ),
-              _NavIcon(
-                path: 'assets/icons/ChartBar.svg',
+              _NavItemData(
+                icon: 'assets/icons/ChartBar.svg',
                 onTap: () => _navigateTo(context, 'statistics'),
               ),
-              _NavIcon(
-                path: 'icons/figma_icons/clock.svg',
+              _NavItemData(
+                icon: 'icons/figma_icons/clock.svg',
                 itemKey: widget.sessionsKey,
                 onTap: () => _navigateTo(context, 'sessions'),
               ),
-              _NavIcon(
-                path: 'icons/flat_icons/scanner.png',
-                onTap: () => _navigateTo(context, 'scan'),
+              _NavItemData(
+                icon: 'assets/icons/bell.svg',
+                onTap: () => _navigateTo(context, 'notifications'),
               ),
             ],
           ),
-
-          // Right: circle FAB (44px) with tactile press animation
-          _FabButton(
+          _GlassFab(
             fabKey: widget.fabKey,
             onTap: () async {
               if (widget.onNavigationAttempt != null) {
@@ -103,8 +103,6 @@ class _GlobalBottomNavBarState extends State<GlobalBottomNavBar> {
           ),
         ],
       ),
-        ),
-      ),
     );
   }
 
@@ -115,15 +113,6 @@ class _GlobalBottomNavBarState extends State<GlobalBottomNavBar> {
       if (!ok) return;
     }
     if (!context.mounted) return;
-
-    // Scan is a one-shot pushed screen, not a persistent tab.
-    if (screen == 'scan') {
-      await Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => const QRScanScreen()),
-      );
-      return;
-    }
 
     // Shell-aware routing: if we're inside (or beneath) a MainShell, switch
     // its tab instead of pushing a new route so the nav bar doesn't animate
@@ -172,148 +161,159 @@ class _GlobalBottomNavBarState extends State<GlobalBottomNavBar> {
 
 }
 
-/// Row of 5 [_NavIcon]s with a sliding ellipse pill that fluidly moves
-/// behind the active tab. The pill uses `Curves.easeOutBack` for a bouncy
-/// arrival at the new tab position.
-class _SlidingIconRow extends StatelessWidget {
-  final int activeIndex;
-  final List<Widget> children;
-
-  static const double _slotWidth = 40;
-  static const double _slotHeight = 40;
-  static const double _gap = 18;
-  static const double _pillWidth = 52;
-  static const double _pillHeight = 36;
-
-  const _SlidingIconRow({required this.activeIndex, required this.children});
-
-  @override
-  Widget build(BuildContext context) {
-    final totalW = children.length * _slotWidth + (children.length - 1) * _gap;
-    final activeCenter =
-        activeIndex * (_slotWidth + _gap) + _slotWidth / 2;
-
-    return SizedBox(
-      width: totalW,
-      height: _slotHeight,
-      child: Stack(
-        alignment: Alignment.center,
-        // Never clip children — the pill (52×36) intentionally overhangs
-        // slot 0 and slot 4 by 6px on each side.
-        clipBehavior: Clip.none,
-        children: [
-          // Sliding ellipse pill — glides between slots.
-          AnimatedPositioned(
-            left: activeCenter - _pillWidth / 2,
-            top: (_slotHeight - _pillHeight) / 2,
-            width: _pillWidth,
-            height: _pillHeight,
-            duration: const Duration(milliseconds: 450),
-            curve: Curves.easeOutBack,
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(999),
-              ),
-            ),
-          ),
-          // Icons row — inject the active flag into each _NavIcon so the
-          // selected glyph tints green.
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              for (int i = 0; i < children.length; i++) ...[
-                if (i > 0) SizedBox(width: _gap),
-                SizedBox(
-                  width: _slotWidth,
-                  height: _slotHeight,
-                  child: Center(
-                    child: (children[i] is _NavIcon)
-                        ? (children[i] as _NavIcon)
-                            .copyWithActive(i == activeIndex)
-                        : children[i],
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Single nav icon button — 28×28 glyph.
-///
-/// Inactive tabs render in white; the active tab renders in
-/// `accentSecondary` (green). The sliding pill behind lives in
-/// [_SlidingIconRow] and is orthogonal to this widget.
-class _NavIcon extends StatelessWidget {
-  final String path;
+/// Data for one entry in [_NavPill].
+class _NavItemData {
+  final String icon;
   final VoidCallback onTap;
   final GlobalKey? itemKey;
-  final bool isActive;
 
-  const _NavIcon({
-    required this.path,
+  const _NavItemData({
+    required this.icon,
     required this.onTap,
     this.itemKey,
-    this.isActive = false,
   });
+}
 
-  _NavIcon copyWithActive(bool active) => _NavIcon(
-        path: path,
-        onTap: onTap,
-        itemKey: itemKey,
-        isActive: active,
-      );
+/// Segmented glass pill hosting the 5 tab items. Figma node 1884:15154.
+///
+/// - Backdrop-blur (22) + white @ 6% fill + 999px radius
+/// - 12h / 7v inner padding, 8px gap between items
+/// - Each item: 28px icon (top) + 10px label (below)
+/// - Active state: a rounded-rect background (62×48, radius 80, white @ 16%)
+///   slides between items with `Curves.easeOutBack`
+class _NavPill extends StatelessWidget {
+  final int activeIndex;
+  final List<_NavItemData> items;
+
+  static const double _itemWidth = 44;
+  static const double _itemHeight = 44;
+  static const double _itemGap = 6;
+  static const double _hPad = 10;
+  static const double _vPad = 6;
+  static const double _highlightW = 44;
+  static const double _highlightH = 44;
+
+  const _NavPill({required this.activeIndex, required this.items});
 
   @override
   Widget build(BuildContext context) {
-    final isSvg = path.toLowerCase().endsWith('.svg');
-    final color = isActive ? AppColors.accentSecondary : Colors.white;
-    return GestureDetector(
-      key: itemKey,
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: SizedBox(
-        width: 28,
-        height: 28,
-        child: Center(
-          child: isSvg
-              ? SvgPicture.asset(
-                  path,
-                  width: 28,
-                  height: 28,
-                  colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
-                )
-              : Image.asset(
-                  path,
-                  width: 28,
-                  height: 28,
-                  color: color,
+    // The highlight is 62px wide (12px wider than an item slot); center it
+    // over the active item — that means the highlight's left = item.center - 31.
+    final activeCenter =
+        activeIndex * (_itemWidth + _itemGap) + _itemWidth / 2;
+    final highlightLeft = activeCenter - _highlightW / 2;
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(999),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 22, sigmaY: 22),
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: _hPad,
+            vertical: _vPad,
+          ),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.06),
+            borderRadius: BorderRadius.circular(999),
+          ),
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              // Sliding highlight rectangle behind the active item —
+              // centered vertically within the item row.
+              AnimatedPositioned(
+                left: highlightLeft,
+                top: (_itemHeight - _highlightH) / 2,
+                width: _highlightW,
+                height: _highlightH,
+                duration: const Duration(milliseconds: 450),
+                curve: Curves.easeOutBack,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.16),
+                    borderRadius: BorderRadius.circular(80),
+                  ),
                 ),
+              ),
+              // Items row.
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  for (int i = 0; i < items.length; i++) ...[
+                    if (i > 0) SizedBox(width: _itemGap),
+                    _NavPillItem(
+                      data: items[i],
+                      isActive: i == activeIndex,
+                    ),
+                  ],
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
+class _NavPillItem extends StatelessWidget {
+  final _NavItemData data;
+  final bool isActive;
 
-/// 44×44 bgElevated FAB circle with an obvious tactile press animation:
-/// scales to 1.28× with a spring-back curve so the tap is unmistakably
-/// registered by the user.
-class _FabButton extends StatefulWidget {
+  const _NavPillItem({required this.data, required this.isActive});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      key: data.itemKey,
+      onTap: data.onTap,
+      behavior: HitTestBehavior.opaque,
+      child: SizedBox(
+        width: 44,
+        height: 44,
+        child: Center(child: _iconGlyph(data.icon)),
+      ),
+    );
+  }
+
+  Widget _iconGlyph(String path) {
+    final isSvg = path.toLowerCase().endsWith('.svg');
+    return SizedBox(
+      width: 28,
+      height: 28,
+      child: isSvg
+          ? SvgPicture.asset(
+              path,
+              width: 28,
+              height: 28,
+              colorFilter: const ColorFilter.mode(
+                Colors.white,
+                BlendMode.srcIn,
+              ),
+            )
+          : Image.asset(
+              path,
+              width: 28,
+              height: 28,
+              color: Colors.white,
+            ),
+    );
+  }
+}
+
+/// 56×56 glass FAB — backdrop-blur (27) + white @ 6% fill. Figma node
+/// 1884:15164. Retains the tap scale animation.
+class _GlassFab extends StatefulWidget {
   final GlobalKey? fabKey;
   final Future<void> Function() onTap;
 
-  const _FabButton({required this.fabKey, required this.onTap});
+  const _GlassFab({required this.fabKey, required this.onTap});
 
   @override
-  State<_FabButton> createState() => _FabButtonState();
+  State<_GlassFab> createState() => _GlassFabState();
 }
 
-class _FabButtonState extends State<_FabButton> {
+class _GlassFabState extends State<_GlassFab> {
   bool _pressed = false;
 
   void _setPressed(bool value) {
@@ -331,24 +331,31 @@ class _FabButtonState extends State<_FabButton> {
       onTapCancel: () => _setPressed(false),
       behavior: HitTestBehavior.opaque,
       child: AnimatedScale(
-        scale: _pressed ? 1.28 : 1.0,
+        scale: _pressed ? 1.12 : 1.0,
         duration: const Duration(milliseconds: 180),
         curve: Curves.easeOutBack,
-        child: Container(
-          width: 44,
-          height: 44,
-          decoration: BoxDecoration(
-            color: _pressed ? AppColors.accentPrimary : AppColors.bgElevated,
-            shape: BoxShape.circle,
-          ),
-          child: Center(
-            child: SvgPicture.asset(
-              'icons/figma_icons/plus.svg',
-              width: 25,
-              height: 25,
-              colorFilter: ColorFilter.mode(
-                _pressed ? AppColors.textInverse : AppColors.textPrimary,
-                BlendMode.srcIn,
+        child: ClipOval(
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 27, sigmaY: 27),
+            child: Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(
+                  alpha: _pressed ? 0.16 : 0.06,
+                ),
+                shape: BoxShape.circle,
+              ),
+              child: Center(
+                child: SvgPicture.asset(
+                  'icons/figma_icons/plus.svg',
+                  width: 24,
+                  height: 24,
+                  colorFilter: const ColorFilter.mode(
+                    Colors.white,
+                    BlendMode.srcIn,
+                  ),
+                ),
               ),
             ),
           ),

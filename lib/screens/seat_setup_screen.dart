@@ -11,7 +11,6 @@ import '../models/opponent.dart';
 import '../models/opponent_stats.dart';
 import '../models/poker_game_state.dart';
 import '../models/game_types.dart';
-import '../widgets/global_bottom_nav_bar.dart';
 import '../widgets/poker_table_widget.dart';
 import '../onboarding/onboarding_state.dart';
 import '../onboarding/onboarding_tour.dart';
@@ -964,7 +963,6 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
           ),
         ],
       ),
-      bottomNavigationBar: GlobalBottomNavBar(currentScreen: ''),
     );
   }
 

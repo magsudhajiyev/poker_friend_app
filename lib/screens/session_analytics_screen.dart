@@ -8,7 +8,6 @@ import '../services/dealer_service.dart';
 import 'session_hands_screen.dart';
 import 'hand_actions_page_view.dart';
 import 'stack_chart_screen.dart';
-import '../widgets/global_bottom_nav_bar.dart';
 import '../services/session_export_service.dart';
 import '../services/subscription_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -21,6 +20,7 @@ import '../design_system/constants/colors.dart';
 import '../design_system/constants/typography.dart';
 import '../design_system/constants/decorations.dart';
 import '../design_system/components/buttons/back_button_circle.dart';
+import '../design_system/components/buttons/secondary_pill_button.dart';
 import '../design_system/components/dialogs/app_dialog.dart';
 import '../design_system/components/dialogs/dialog_action_bar.dart';
 import '../design_system/components/modals/confirm_dialog.dart';
@@ -468,7 +468,6 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
     return Scaffold(
       backgroundColor: AppColors.bgPrimary,
       extendBody: true,
-      bottomNavigationBar: GlobalBottomNavBar(currentScreen: 'sessions'),
       body: Stack(
         children: [
           Column(
@@ -1132,27 +1131,11 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
   }
 
   Widget _buildLoggedHandsButton() {
-    return GestureDetector(
+    return KeyedSubtree(
       key: _loggedHandsButtonKey,
-      onTap: _navigateToLoggedHands,
-      child: Container(
-        width: double.infinity,
-        height: 52,
-        decoration: BoxDecoration(
-          color: AppColors.accentPrimary,
-          borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
-        ),
-        child: Center(
-          child: Text(
-            AppLocalizations.of(context).sessionAnalyticsViewLoggedHands,
-            style: AppTypography.ibm(
-              fontSize: 17,
-              fontWeight: FontWeight.w600,
-              color: Colors.black,
-              letterSpacing: -0.43,
-            ),
-          ),
-        ),
+      child: SecondaryPillButton(
+        label: AppLocalizations.of(context).sessionAnalyticsViewLoggedHands,
+        onTap: _navigateToLoggedHands,
       ),
     );
   }

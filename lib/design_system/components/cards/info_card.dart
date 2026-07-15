@@ -157,10 +157,14 @@ class InfoCard extends StatelessWidget {
                 if (buttonText == null)
                   Padding(
                     padding: const EdgeInsets.only(top: 4),
-                    child: Icon(
-                      Icons.chevron_right,
-                      color: Colors.white,
-                      size: 24,
+                    child: SvgPicture.asset(
+                      'assets/icons/CaretRight.svg',
+                      width: 16,
+                      height: 16,
+                      colorFilter: const ColorFilter.mode(
+                        AppColors.contentInactive,
+                        BlendMode.srcIn,
+                      ),
                     ),
                   ),
               ],

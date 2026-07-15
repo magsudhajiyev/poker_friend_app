@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import '../../design_system/constants/colors.dart';
 import '../../design_system/poker_friend_theme.dart';
 import '../../models/club.dart';
 import '../../models/club_event.dart';
@@ -540,7 +542,7 @@ class _AdminTableManagementScreenState
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right, color: PokerFriendColors.purple),
+            SvgPicture.asset('assets/icons/CaretRight.svg', width: 16, height: 16, colorFilter: const ColorFilter.mode(AppColors.contentInactive, BlendMode.srcIn)),
           ],
         ),
       ),
@@ -1121,7 +1123,7 @@ class _SeatPlayerSheet extends StatelessWidget {
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right, color: Color(0xFF4A4A4E)),
+            SvgPicture.asset('assets/icons/CaretRight.svg', width: 16, height: 16, colorFilter: const ColorFilter.mode(AppColors.contentInactive, BlendMode.srcIn)),
           ],
         ),
       ),
@@ -1279,7 +1281,7 @@ class _MemberSearchSheetState extends State<_MemberSearchSheet> {
                         : null,
                     trailing: isSeated
                         ? const Icon(Icons.event_seat, color: AppColors.accentPrimary, size: 18)
-                        : const Icon(Icons.chevron_right, color: Color(0xFF4A4A4E)),
+                        : SvgPicture.asset('assets/icons/CaretRight.svg', width: 16, height: 16, colorFilter: const ColorFilter.mode(AppColors.contentInactive, BlendMode.srcIn)),
                   ),
                 );
               },
