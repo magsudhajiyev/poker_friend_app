@@ -416,8 +416,9 @@ class _DrillTableScreenState extends State<DrillTableScreen>
   // ── Table ───────────────────────────────────────────────────────────
 
   // Seat fractions — sized so seats + action pills fit inside the dotted grid.
-  static const _seatW = 0.82;
-  static const _seatH = 0.70;
+  // Keep conservative to prevent side-seat pills from overflowing the container.
+  static const _seatW = 0.72;
+  static const _seatH = 0.64;
 
   Widget _buildTable(double s, AppLocalizations l10n) {
     // Build active seat map using visual positions
