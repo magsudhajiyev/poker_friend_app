@@ -13,6 +13,7 @@ import '../design_system/components/skeleton.dart';
 import '../design_system/components/cards/error_state_card.dart';
 import '../design_system/components/cards/swipe_to_delete_cell.dart';
 import '../design_system/components/headers/top_nav_bar.dart';
+import '../design_system/components/tabs/animated_segmented_tabs.dart';
 import '../design_system/components/modals/confirm_dialog.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/typography.dart';
@@ -428,87 +429,23 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
           TopNavBar.landing(
             title: l10n.sessionHistoryTitle,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 4),
           if (!SubscriptionService.isPremium) ...[
             _buildFreeTierStatusIndicator(),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
           ],
-          // Tab switcher — white pill outer, dark active indicator
+          // Tab switcher — sliding-pill segmented control (shared component).
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: AnimatedBuilder(
-              animation: _tabController.animation!,
-              builder: (context, _) {
-                final t = _tabController.animation!.value;
-                return Container(
-                  padding: const EdgeInsets.all(2),
-                  decoration: BoxDecoration(
-                    color: AppColors.bgSurface,
-                    borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
-                  ),
-                  child: Row(
-                    children: [
-                      // Cash tab
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: () => _tabController.animateTo(0),
-                          behavior: HitTestBehavior.opaque,
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 200),
-                            padding: const EdgeInsets.symmetric(vertical: 10),
-                            decoration: BoxDecoration(
-                              color: Color.lerp(AppColors.bgElevated, Colors.transparent, t),
-                              borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
-                            ),
-                            child: Center(
-                              child: Text(
-                                l10n.sessionHistoryCash,
-                                style: AppTypography.ibm(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w600,
-                                  letterSpacing: -0.5,
-                                  color: Color.lerp(AppColors.textPrimary, AppColors.textSecondary, t),
-                                  height: 24 / 15,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      // Tournament tab
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: () => _tabController.animateTo(1),
-                          behavior: HitTestBehavior.opaque,
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 200),
-                            padding: const EdgeInsets.symmetric(vertical: 10),
-                            decoration: BoxDecoration(
-                              color: Color.lerp(Colors.transparent, AppColors.bgElevated, t),
-                              borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
-                            ),
-                            child: Center(
-                              child: Text(
-                                l10n.sessionHistoryTournament,
-                                style: AppTypography.ibm(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w600,
-                                  letterSpacing: -0.5,
-                                  color: Color.lerp(AppColors.textSecondary, AppColors.textPrimary, t),
-                                  height: 24 / 15,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
+            child: AnimatedSegmentedTabs(
+              controller: _tabController,
+              labels: [
+                l10n.sessionHistoryCash,
+                l10n.sessionHistoryTournament,
+              ],
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
           Expanded(
             child: TabBarView(
               controller: _tabController,
@@ -1456,3 +1393,4 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
     }
   }
 }
+

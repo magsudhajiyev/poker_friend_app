@@ -17,6 +17,7 @@ import '../design_system/design_system.dart';
 import '../design_system/components/cards/error_state_card.dart';
 import '../design_system/components/dividers/list_separator.dart';
 import '../design_system/components/headers/top_nav_bar.dart';
+import '../design_system/components/tabs/animated_segmented_tabs.dart';
 import '../widgets/range_grid/range_grid_view.dart';
 import '../utils/user_facing_error.dart';
 
@@ -465,8 +466,9 @@ class _StatisticsScreenState extends State<StatisticsScreen>
                 title: l10n.statsStats,
                 rightAction: refreshButton,
               ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 4),
         _buildTabSwitcher(),
+        const SizedBox(height: 20),
 
         // Tab views: classic stats | range grid
         Expanded(
@@ -474,7 +476,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
             controller: _tabController,
             children: [
               SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(16, 24, 16, 0),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -558,82 +560,14 @@ class _StatisticsScreenState extends State<StatisticsScreen>
     );
   }
 
-  /// Stats | Ranges segmented toggle — dark surface pill with elevated
-  /// active segment.
+  /// Stats | Ranges segmented toggle — sliding-pill segmented control.
   Widget _buildTabSwitcher() {
     final l10n = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: AnimatedBuilder(
-        animation: _tabController.animation!,
-        builder: (context, _) {
-          final t = _tabController.animation!.value;
-          return Container(
-            padding: const EdgeInsets.all(2),
-            decoration: BoxDecoration(
-              color: AppColors.bgSurface,
-              borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
-            ),
-            child: Row(
-              children: [
-                // Stats tab
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () => _tabController.animateTo(0),
-                    behavior: HitTestBehavior.opaque,
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      decoration: BoxDecoration(
-                        color: Color.lerp(AppColors.bgElevated, Colors.transparent, t),
-                        borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
-                      ),
-                      child: Center(
-                        child: Text(
-                          l10n.statsStats,
-                          style: AppTypography.ibm(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: -0.5,
-                            color: Color.lerp(AppColors.textPrimary, AppColors.textSecondary, t),
-                            height: 24 / 15,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                // Ranges tab
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () => _tabController.animateTo(1),
-                    behavior: HitTestBehavior.opaque,
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      decoration: BoxDecoration(
-                        color: Color.lerp(Colors.transparent, AppColors.bgElevated, t),
-                        borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
-                      ),
-                      child: Center(
-                        child: Text(
-                          l10n.statsRanges,
-                          style: AppTypography.ibm(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: -0.5,
-                            color: Color.lerp(AppColors.textSecondary, AppColors.textPrimary, t),
-                            height: 24 / 15,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
+      child: AnimatedSegmentedTabs(
+        controller: _tabController,
+        labels: [l10n.statsStats, l10n.statsRanges],
       ),
     );
   }

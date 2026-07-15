@@ -246,27 +246,34 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   }
 
   Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Image.asset(
-            'icons/flat_icons/bell.png',
-            width: 64,
-            height: 64,
-            color: AppColors.textDisabled,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            AppLocalizations.of(context).notificationsScreenNoNotifications,
-            style: AppTypography.ibm(
-              fontSize: 17,
-              fontWeight: FontWeight.w500,
+    // Offset by the nav-bar footprint so the empty state sits visually
+    // centered in the area between "Today" and the bottom nav (rather than
+    // in the full body, half of which is hidden behind the persistent nav).
+    final navFootprint = MediaQuery.of(context).padding.bottom + 56;
+    return Padding(
+      padding: EdgeInsets.only(bottom: navFootprint),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.asset(
+              'icons/flat_icons/bell.png',
+              width: 64,
+              height: 64,
               color: AppColors.textDisabled,
-              height: 1.44,
             ),
-          ),
-        ],
+            const SizedBox(height: 16),
+            Text(
+              AppLocalizations.of(context).notificationsScreenNoNotifications,
+              style: AppTypography.ibm(
+                fontSize: 17,
+                fontWeight: FontWeight.w500,
+                color: AppColors.textDisabled,
+                height: 1.44,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

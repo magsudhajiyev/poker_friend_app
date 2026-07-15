@@ -693,7 +693,7 @@ class _RangeGridViewState extends State<RangeGridView>
       backgroundColor: AppColors.bgSurface,
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.only(top: 16, bottom: 120),
+        padding: const EdgeInsets.only(top: 12, bottom: 120),
         child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
