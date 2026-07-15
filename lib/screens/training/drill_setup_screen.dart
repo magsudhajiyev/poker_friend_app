@@ -8,7 +8,10 @@ import '../../design_system/constants/decorations.dart';
 import '../../design_system/constants/spacing.dart';
 import '../../design_system/constants/typography.dart';
 import '../../design_system/components/buttons/app_button.dart';
-import '../../design_system/components/buttons/back_button_circle.dart';
+import '../../design_system/components/cards/info_card.dart';
+import '../../design_system/components/dialogs/app_dialog.dart';
+import '../../design_system/components/dialogs/dialog_action_bar.dart';
+import '../../design_system/components/headers/top_nav_bar.dart';
 import '../../design_system/components/modals/confirm_dialog.dart';
 import '../../design_system/components/sheets/app_sheet.dart';
 import '../../models/drill_models.dart';
@@ -91,40 +94,32 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
   Future<void> _saveLineup() async {
     final l10n = AppLocalizations.of(context);
     final controller = TextEditingController();
-    final name = await showDialog<String>(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppColors.bgSurface,
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppDecorations.radiusLg)),
-        title: Text(l10n.drillSaveLineup,
-            style: AppTypography.titleBase()),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          style: AppTypography.ibm(color: AppColors.textPrimary),
-          decoration: InputDecoration(
-            hintText: l10n.drillSaveLineupHint,
-            hintStyle: AppTypography.ibm(
-                color: AppColors.textSecondary),
+    final name = await AppDialog.show<String>(
+      context,
+      title: l10n.drillSaveLineup,
+      showCloseButton: false,
+      body: TextField(
+        controller: controller,
+        autofocus: true,
+        style: AppTypography.ibm(color: AppColors.textPrimary),
+        decoration: InputDecoration(
+          hintText: l10n.drillSaveLineupHint,
+          hintStyle: AppTypography.ibm(color: AppColors.textSecondary),
+          filled: true,
+          fillColor: AppColors.whiteOverlay(opacity: 0.06),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
+            borderSide: BorderSide.none,
           ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(l10n.commonCancel,
-                style: AppTypography.ibm(
-                    color: AppColors.textSecondary)),
-          ),
-          TextButton(
-            onPressed: () =>
-                Navigator.pop(context, controller.text.trim()),
-            child: Text(l10n.commonSave,
-                style: AppTypography.ibm(
-                    color: AppColors.accentPrimary,
-                    fontWeight: FontWeight.w600)),
-          ),
-        ],
+      ),
+      actions: DialogActionBar(
+        cancelLabel: l10n.commonCancel,
+        confirmLabel: l10n.commonSave,
+        confirmColor: AppColors.accentPrimary,
+        autoDismiss: false,
+        onCancel: () => Navigator.pop(context),
+        onConfirm: () => Navigator.pop(context, controller.text.trim()),
       ),
     );
     if (name == null || name.isEmpty) return;
@@ -239,7 +234,10 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
         top: false,
         child: Column(
           children: [
-            _buildHeader(),
+            TopNavBar(
+              title: l10n.drillTitle,
+              onBack: () => Navigator.pop(context),
+            ),
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.symmetric(
@@ -253,7 +251,12 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
                   ],
                   _sectionLabel(l10n.drillTable),
                   const SizedBox(height: AppSpacing.xxs),
-                  _buildCard(child: _buildTableConfig()),
+                  InfoCard(
+                    child: Padding(
+                      padding: const EdgeInsets.all(AppSpacing.md),
+                      child: _buildTableConfig(),
+                    ),
+                  ),
                   const SizedBox(height: AppSpacing.space5),
                   _sectionLabel(l10n.drillSeats),
                   const SizedBox(height: AppSpacing.xxxs),
@@ -299,65 +302,8 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
     );
   }
 
-  Widget _buildHeader() {
-    final l10n = AppLocalizations.of(context);
-    // Matches TopNavBar geometry (statusBar + 56 + 12) so the back button
-    // sits at the same X/Y as every other detail screen.
-    return Container(
-      padding: EdgeInsets.only(
-        top: MediaQuery.of(context).padding.top,
-        bottom: 12,
-      ),
-      child: SizedBox(
-        height: 56,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              SizedBox(
-                width: 44,
-                height: 44,
-                child: Center(
-                  child: BackButtonCircle(
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  l10n.drillTitle,
-                  style: AppTypography.ibm(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
-                    height: 22 / 17,
-                    letterSpacing: -0.43,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _sectionLabel(String text) {
     return Text(text, style: AppTypography.sectionHeader());
-  }
-
-  Widget _buildCard({required Widget child}) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: AppColors.infoCardBg,
-        borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
-      ),
-      child: child,
-    );
   }
 
   Widget _buildLineupRow() {
@@ -719,7 +665,10 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
         top: false,
         child: Column(
           children: [
-            _buildHeader(),
+            TopNavBar(
+              title: l10n.drillTitle,
+              onBack: () => Navigator.pop(context),
+            ),
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.all(AppSpacing.xxxl),

@@ -6,6 +6,7 @@ import '../../design_system/constants/decorations.dart';
 import '../../design_system/constants/spacing.dart';
 import '../../design_system/constants/typography.dart';
 import '../../design_system/components/buttons/app_button.dart';
+import '../../design_system/components/buttons/glassy_icon_button.dart';
 import '../../design_system/components/sheets/app_sheet.dart';
 import '../../models/drill_models.dart';
 import '../../services/drill_engine.dart';
@@ -361,18 +362,11 @@ class _DrillTableScreenState extends State<DrillTableScreen>
           AppSpacing.md * s, 10 * s, AppSpacing.md * s, AppSpacing.xxxs * s),
       child: Row(
         children: [
-          GestureDetector(
-            onTap: _confirmExit,
-            child: Container(
-              width: 36 * s,
-              height: 36 * s,
-              decoration: BoxDecoration(
-                color: AppColors.whiteOverlay(opacity: 0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(Icons.close,
-                  color: AppColors.textPrimary, size: 20 * s),
-            ),
+          GlassyIconButton(
+            icon: Icons.close,
+            size: 36 * s,
+            iconSize: 20 * s,
+            onPressed: _confirmExit,
           ),
           SizedBox(width: AppSpacing.xs * s),
           Expanded(
