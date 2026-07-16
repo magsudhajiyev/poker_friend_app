@@ -778,41 +778,46 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
                 children: [
                   Row(
                     children: [
-                      Flexible(
-                        child: Text(
-                          sessionName,
-                          style: AppTypography.ibm(
-                            fontSize: 17,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                            height: 22 / 17,
-                          ),
-                          overflow: TextOverflow.ellipsis,
+                      Expanded(
+                        child: Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                sessionName,
+                                style: AppTypography.ibm(
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white,
+                                  height: 22 / 17,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            if (session['isTutorial'] == true) ...[
+                              const SizedBox(width: 6),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: AppColors.accentSecondary
+                                      .withValues(alpha: 0.15),
+                                  borderRadius:
+                                      BorderRadius.circular(AppDecorations.radiusFull),
+                                ),
+                                child: Text(
+                                  l10n.sessionTutorialBadge,
+                                  style: AppTypography.ibm(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.accentSecondary,
+                                    height: 14 / 11,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
                       ),
-                      if (session['isTutorial'] == true) ...[
-                        const SizedBox(width: 6),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: AppColors.accentSecondary
-                                .withValues(alpha: 0.15),
-                            borderRadius:
-                                BorderRadius.circular(AppDecorations.radiusFull),
-                          ),
-                          child: Text(
-                            l10n.sessionTutorialBadge,
-                            style: AppTypography.ibm(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.accentSecondary,
-                              height: 14 / 11,
-                            ),
-                          ),
-                        ),
-                      ],
-                      const Spacer(),
                       const SizedBox(width: 8),
                       Text(
                         plText,
