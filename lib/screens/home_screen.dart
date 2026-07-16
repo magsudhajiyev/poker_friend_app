@@ -153,13 +153,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       curve: Curves.easeOutCubic,
     ));
 
-    // Hide nav bar during loading splash so it doesn't appear before content.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (isLoadingData && currentBankroll == 0.0 && recentSessions.isEmpty) {
-        _splashNavHidden = true;
-        MainShell.of(context)?.setNavVisible(false);
-      }
-    });
+    // MainShell starts with nav hidden. Mark that we need to restore it
+    // once data is loaded (the restore happens in build() below).
+    _splashNavHidden = true;
 
     _loadBankrollVisibility();
     _loadData();
@@ -1517,20 +1513,20 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     if (isLoadingData && currentBankroll == 0.0 && recentSessions.isEmpty) {
-      // Keep the logo animation looping through the whole loading course
+        // Keep the logo animation looping through the whole loading course
       // instead of cutting to a static loader after the splash.
       return Scaffold(
         backgroundColor: AppColors.paper,
-        body: Column(
+        body: Stack(
           children: [
-            const Expanded(child: LoopingSplashLogo()),
-            Padding(
-              padding: const EdgeInsets.only(bottom: 64),
-              child: Text(
-                AppLocalizations.of(context).homeLoadingPokerData,
-                style: AppTypography.ibm(
-                  fontSize: 13,
-                  color: Colors.white.withValues(alpha: 0.45),
+            const LoopingSplashLogo(),
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 64,
+              child: Center(
+                child: _LoadingLabel(
+                  text: AppLocalizations.of(context).homeLoadingPokerData,
                 ),
               ),
             ),
@@ -1539,10 +1535,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       );
     }
 
-    // Restore nav bar once loading splash is done.
+    // Restore nav bar once loading splash is done and free startup caches.
+    // Deferred to post-frame so the video controller isn't disposed during build
+    // (which would crash the VideoPlayer widget still in the previous frame).
     if (_splashNavHidden) {
       _splashNavHidden = false;
       WidgetsBinding.instance.addPostFrameCallback((_) {
+        LoopingSplashLogo.releaseShared();
+        AuthService.clearPrefetchedUserDoc();
         MainShell.of(context)?.setNavVisible(true);
       });
     }
@@ -4953,6 +4953,55 @@ class _TopNavCircleButtonState extends State<_TopNavCircleButton>
                 ),
               ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Pure-fade label for the loading splash. Uses its own controller with a
+/// 500ms delay so the text appears only after any page transition has settled,
+/// preventing a visible slide-in or layout pop.
+class _LoadingLabel extends StatefulWidget {
+  final String text;
+  const _LoadingLabel({required this.text});
+
+  @override
+  State<_LoadingLabel> createState() => _LoadingLabelState();
+}
+
+class _LoadingLabelState extends State<_LoadingLabel>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
+    // Short delay so the text fades in after the page crossfade finishes.
+    Future.delayed(const Duration(milliseconds: 150), () {
+      if (mounted) _ctrl.forward();
+    });
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: CurvedAnimation(parent: _ctrl, curve: Curves.easeOut),
+      child: Text(
+        widget.text,
+        style: AppTypography.ibm(
+          fontSize: 13,
+          color: Colors.white.withValues(alpha: 0.45),
         ),
       ),
     );

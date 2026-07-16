@@ -198,8 +198,9 @@ class UsernameService {
     }
 
     try {
-      final doc = await _firestore.collection('users').doc(userId).get();
-      final data = doc.data();
+      // Reuse prefetched doc from SplashScreen to avoid a separate read.
+      final prefetched = AuthService.consumePrefetchedUserDoc();
+      final data = prefetched ?? (await _firestore.collection('users').doc(userId).get()).data();
       if (data == null) return true; // No user doc = skip
 
       // If field doesn't exist, user is grandfathered in

@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../widgets/looping_splash_logo.dart';
+import '../services/auth_service.dart';
 import 'auth_wrapper.dart';
 import '../design_system/constants/colors.dart';
 
@@ -10,6 +12,10 @@ import '../design_system/constants/colors.dart';
 /// AuthWrapper can route immediately) AND at least one full loop of the
 /// animation has played. If auth takes longer, the logo keeps looping
 /// instead of cutting to a blank screen.
+///
+/// While the logo plays, we pre-fetch the user document so that
+/// AuthWrapper and HomeScreen can read cached data instead of making
+/// 3-4 sequential Firestore reads of the same document.
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -25,10 +31,15 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-
     // Wait for the first auth state event — after this, AuthWrapper can
     // render the correct screen without showing its own loading state.
-    FirebaseAuth.instance.authStateChanges().first.then((_) {
+    // As soon as auth resolves, pre-fetch the user document so later
+    // screens don't need to read it again.
+    FirebaseAuth.instance.authStateChanges().first.then((user) {
+      if (user != null) {
+        // Fire-and-forget: prefetch runs in parallel with the video loop.
+        unawaited(AuthService.prefetchUserDocument());
+      }
       _authResolved = true;
       _maybeNavigate();
     }).catchError((_) {

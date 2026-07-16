@@ -37,7 +37,9 @@ class MainShellState extends State<MainShell> {
   ];
 
   int _currentIndex = 0;
-  bool _navVisible = true;
+  // Start hidden — HomeScreen shows nav once its data is loaded, preventing
+  // a single-frame nav flash during the loading splash.
+  bool _navVisible = false;
   final GlobalKey fabKey = GlobalKey(debugLabel: 'shell-fab');
   final GlobalKey sessionsNavKey = GlobalKey(debugLabel: 'shell-sessions-nav');
   /// Fires when the Sessions tab becomes visible — used by

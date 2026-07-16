@@ -35,6 +35,7 @@ import 'screens/club/event_detail_screen.dart';
 import 'screens/club/club_dashboard_screen.dart';
 import 'screens/admin/club_requests_screen.dart';
 import 'design_system/constants/decorations.dart';
+import 'widgets/looping_splash_logo.dart';
 
 /// Global navigator key for deep linking
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -72,34 +73,22 @@ void main() async {
     debugPrint('Firebase initialization failed: $e');
   }
 
-  // Load saved locale preference
-  try {
-    await LocaleService.init();
-  } catch (e) {
-    debugPrint('Locale service init failed: $e');
-  }
+  // Start loading the splash video in parallel with everything else so
+  // it's ready by the time SplashScreen mounts (avoids blank frames).
+  unawaited(LoopingSplashLogo.warmUp());
 
-  // Load saved currency preference
-  try {
-    await CurrencyService.init();
-  } catch (e) {
-    debugPrint('Currency service init failed: $e');
-  }
-
-  // Load skip-hand scouting preference
-  try {
-    await SkipHandScoutingService.init();
-  } catch (e) {
-    debugPrint('Skip hand scouting service init failed: $e');
-  }
-
-  // Feature flags: cached values load here; the Firestore listener keeps
-  // them fresh. Gating falls back to per-flag defaults when offline.
-  try {
-    await FeatureFlagService.init();
-  } catch (e) {
-    debugPrint('Feature flag service init failed: $e');
-  }
+  // Lightweight SharedPreferences reads + feature flags — independent of each
+  // other, so run them all in parallel instead of sequentially.
+  await Future.wait([
+    LocaleService.init().catchError(
+        (e) => debugPrint('Locale service init failed: $e')),
+    CurrencyService.init().catchError(
+        (e) => debugPrint('Currency service init failed: $e')),
+    SkipHandScoutingService.init().catchError(
+        (e) => debugPrint('Skip hand scouting service init failed: $e')),
+    FeatureFlagService.init().catchError(
+        (e) => debugPrint('Feature flag service init failed: $e')),
+  ]);
 
   // Install global error handlers for Crashlytics
   FlutterError.onError = (details) {

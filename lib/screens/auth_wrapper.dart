@@ -30,8 +30,10 @@ class _AuthWrapperState extends State<AuthWrapper> {
   bool _wasSignedIn = false;  // Track if user was ever signed in during this session
   bool _waitingForRecovery = false;  // Track if we're waiting for auth to recover
   bool _authTimedOut = false;  // Track if auth stream took too long to resolve
-  Future<bool>? _usernameSetupFuture;  // Stored future to prevent re-creation on stream rebuilds
-  Future<bool>? _onboardingFuture;    // Stored future for onboarding check
+  /// Combined startup gate: checks username + onboarding in a single future
+  /// to avoid sequential FutureBuilder nesting.
+  /// Returns: 'home' | 'onboarding_skip_nickname' | 'onboarding_with_nickname'
+  Future<String>? _startupGateFuture;
   Future<bool>? _anonSignupFuture;    // Whether an anonymous guest must sign up (finished tour)
   Timer? _authTimeoutTimer;
   @override
@@ -58,12 +60,31 @@ class _AuthWrapperState extends State<AuthWrapper> {
     });
   }
 
-  /// Returns true if username setup is done (or was auto-claimed from web reservation).
-  Future<bool> _checkUsernameSetup() async {
+  /// Combined startup gate — runs username + onboarding checks together.
+  /// Returns a route key: 'home', 'onboarding_skip', or 'onboarding_full'.
+  Future<String> _checkStartupGate() async {
     // Ensure user document exists BEFORE checking username setup
     // (avoids race where doc doesn't exist yet → grandfathering returns true)
     await AuthService.ensureUserDocument();
 
+    // Run username and onboarding checks in parallel — both read from
+    // the prefetched user doc cache, so this is near-instant.
+    final results = await Future.wait([
+      _checkUsernameSetup(),
+      OnboardingService.hasCompletedOnboarding(),
+    ]);
+    final usernameReady = results[0] as bool;
+    final onboardingDone = results[1] as bool;
+
+    debugPrint('📍 AUTH: usernameReady=$usernameReady, onboardingDone=$onboardingDone');
+
+    if (!usernameReady) return 'onboarding_full';
+    if (!onboardingDone) return 'onboarding_skip';
+    return 'home';
+  }
+
+  /// Returns true if username setup is done (or was auto-claimed from web reservation).
+  Future<bool> _checkUsernameSetup() async {
     final completed = await UsernameService.hasCompletedUsernameSetup();
     debugPrint('📍 AUTH: hasCompletedUsernameSetup=$completed');
     if (completed) return true;
@@ -93,7 +114,12 @@ class _AuthWrapperState extends State<AuthWrapper> {
   @override
   Widget build(BuildContext context) {
     debugPrint('📍 AUTH_WRAPPER: build() called');
-    return StreamBuilder<User?>(
+    // Prevent the Android system back button from popping this root route,
+    // which would restart the app (splash replay). Screens pushed on top
+    // of MainShell handle their own back navigation independently.
+    return PopScope(
+      canPop: false,
+      child: StreamBuilder<User?>(
       stream: AuthService.authStateChanges,
       builder: (context, snapshot) {
         debugPrint('📍 AUTH: Stream state=${snapshot.connectionState}, hasData=${snapshot.hasData}, user=${snapshot.data?.uid?.substring(0, 8) ?? 'null'}');
@@ -150,33 +176,25 @@ class _AuthWrapperState extends State<AuthWrapper> {
             );
           }
 
-          // Reuse the same future across stream rebuilds to avoid re-running the check
-          _usernameSetupFuture ??= _checkUsernameSetup();
+          // Single combined gate: username + onboarding checked together
+          _startupGateFuture ??= _checkStartupGate();
 
-          return FutureBuilder<bool>(
-            future: _usernameSetupFuture,
-            builder: (context, usernameSnapshot) {
-              if (usernameSnapshot.connectionState == ConnectionState.waiting) {
+          return FutureBuilder<String>(
+            future: _startupGateFuture,
+            builder: (context, gateSnapshot) {
+              if (gateSnapshot.connectionState == ConnectionState.waiting) {
                 return _buildLoadingScreen(context);
               }
-              if (usernameSnapshot.data == true) {
-                // Username done — check onboarding
-                _onboardingFuture ??= OnboardingService.hasCompletedOnboarding();
-                return FutureBuilder<bool>(
-                  future: _onboardingFuture,
-                  builder: (context, onboardingSnapshot) {
-                    if (onboardingSnapshot.connectionState == ConnectionState.waiting) {
-                      return _buildLoadingScreen(context);
-                    }
-                    if (onboardingSnapshot.data == true) {
-                      return MainShell();
-                    }
-                    return const OnboardingFlow(skipNickname: true);
-                  },
-                );
+              switch (gateSnapshot.data) {
+                case 'home':
+                  return MainShell();
+                case 'onboarding_skip':
+                  return const OnboardingFlow(skipNickname: true);
+                case 'onboarding_full':
+                  return const OnboardingFlow(skipNickname: false);
+                default:
+                  return MainShell();
               }
-              // Username not set — onboarding flow handles nickname claim
-              return const OnboardingFlow(skipNickname: false);
             },
           );
         }
@@ -221,13 +239,13 @@ class _AuthWrapperState extends State<AuthWrapper> {
         debugPrint('📍 AUTH: User not signed in, showing IntroScreen, isExplicitLogout=${AuthService.isExplicitLogout}');
         // Reset state when showing intro screen
         _wasSignedIn = false;
-        _usernameSetupFuture = null;
-        _onboardingFuture = null;
+        _startupGateFuture = null;
         _anonSignupFuture = null;
 
         // User is not signed in
         return IntroScreen();
       },
+    ),
     );
   }
 

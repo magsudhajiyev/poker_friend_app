@@ -3,55 +3,85 @@ import 'package:video_player/video_player.dart';
 
 /// The splash logo animation, played muted on a continuous loop.
 ///
-/// Used by SplashScreen at launch and by AuthWrapper's loading states so
-/// the logo keeps animating until the app's data is actually ready,
-/// instead of cutting to a blank screen after one play-through.
+/// A **shared** [VideoPlayerController] is initialized once and reused across
+/// every instance (SplashScreen → AuthWrapper → HomeScreen) so the video never
+/// stutters or re-initializes during screen transitions. Call
+/// [LoopingSplashLogo.releaseShared] after the loading phase is over to free
+/// the video memory.
 class LoopingSplashLogo extends StatefulWidget {
   /// Called every time the animation completes a full loop.
   final VoidCallback? onLoopCompleted;
 
   const LoopingSplashLogo({super.key, this.onLoopCompleted});
 
+  // ── Shared controller ──────────────────────────────────────────────
+
+  static VideoPlayerController? _shared;
+  static Future<void>? _initFuture;
+  static bool _ready = false;
+
+  /// Kick off initialization as early as possible (can be called from main).
+  static Future<void> warmUp() => _ensureInit();
+
+  /// Release the shared controller once the loading phase is done.
+  static void releaseShared() {
+    _shared?.dispose();
+    _shared = null;
+    _initFuture = null;
+    _ready = false;
+  }
+
+  static Future<void> _ensureInit() {
+    _initFuture ??= _doInit();
+    return _initFuture!;
+  }
+
+  static Future<void> _doInit() async {
+    final c = VideoPlayerController.asset('assets/splash.mp4');
+    _shared = c;
+    try {
+      await c.initialize();
+      await c.setVolume(0);
+      await c.setLooping(true);
+      await c.play();
+      _ready = true;
+    } catch (e) {
+      debugPrint('LoopingSplashLogo video error: $e');
+    }
+  }
+
   @override
   State<LoopingSplashLogo> createState() => LoopingSplashLogoState();
 }
 
 class LoopingSplashLogoState extends State<LoopingSplashLogo> {
-  VideoPlayerController? _controller;
-  bool _initialized = false;
   Duration _lastPosition = Duration.zero;
 
   @override
   void initState() {
     super.initState();
-    _start();
+    _attach();
   }
 
-  Future<void> _start() async {
-    final controller = VideoPlayerController.asset('assets/splash.mp4');
-    _controller = controller;
-
-    try {
-      await controller.initialize();
-      await controller.setVolume(0);
-      await controller.setLooping(true);
-      controller.addListener(_onProgress);
-      await controller.play();
-      if (mounted) setState(() => _initialized = true);
-    } catch (e) {
-      debugPrint('LoopingSplashLogo video error: $e');
-      // Fall back to reporting loop completions on a timer so callers
+  Future<void> _attach() async {
+    await LoopingSplashLogo._ensureInit();
+    final c = LoopingSplashLogo._shared;
+    if (c == null) {
+      // Video failed — fire the loop callback on a timer so callers
       // waiting for a loop never hang.
       if (widget.onLoopCompleted != null) {
         Future.delayed(const Duration(seconds: 2), () {
           if (mounted) widget.onLoopCompleted?.call();
         });
       }
+      return;
     }
+    c.addListener(_onProgress);
+    if (mounted) setState(() {});
   }
 
   void _onProgress() {
-    final c = _controller;
+    final c = LoopingSplashLogo._shared;
     if (c == null) return;
     final position = c.value.position;
     final duration = c.value.duration;
@@ -70,16 +100,15 @@ class LoopingSplashLogoState extends State<LoopingSplashLogo> {
 
   @override
   void dispose() {
-    _controller?.removeListener(_onProgress);
-    _controller?.dispose();
+    LoopingSplashLogo._shared?.removeListener(_onProgress);
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final c = _controller;
+    final c = LoopingSplashLogo._shared;
     final screenWidth = MediaQuery.of(context).size.width;
-    if (!_initialized || c == null) return const SizedBox.shrink();
+    if (!LoopingSplashLogo._ready || c == null) return const SizedBox.shrink();
     return Center(
       child: SizedBox(
         width: screenWidth * 0.5,

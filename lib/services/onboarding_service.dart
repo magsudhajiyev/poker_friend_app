@@ -39,9 +39,11 @@ class OnboardingService {
     if (user == null) return false;
 
     try {
-      final doc = await _firestore.collection('users').doc(user.uid).get();
-      if (!doc.exists) return false;
-      return doc.data()?['hasCompletedOnboarding'] == true;
+      // Reuse prefetched doc from SplashScreen to avoid a separate read.
+      final prefetched = AuthService.consumePrefetchedUserDoc();
+      final data = prefetched ?? (await _firestore.collection('users').doc(user.uid).get()).data();
+      if (data == null) return false;
+      return data['hasCompletedOnboarding'] == true;
     } catch (e) {
       debugPrint('OnboardingService.hasCompletedOnboarding error: $e');
       return false;

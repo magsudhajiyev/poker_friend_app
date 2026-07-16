@@ -59,6 +59,44 @@ class AuthService {
   static AccountType? _cachedAccountType;
   static String? _cachedAccountTypeUserId;  // Track which user the cache is for
 
+  // ── Pre-fetched user document ──────────────────────────────────────
+  // Avoids 3-4 sequential reads of the same doc during startup.
+  static Map<String, dynamic>? _prefetchedUserDoc;
+  static String? _prefetchedUserId;
+
+  /// Pre-fetch the user document so AuthWrapper and HomeScreen can read
+  /// cached data instead of hitting Firestore sequentially. Call this from
+  /// SplashScreen while the logo loop is playing.
+  static Future<void> prefetchUserDocument() async {
+    final uid = currentUser?.uid;
+    if (uid == null) return;
+    try {
+      final doc = await _firestore.collection('users').doc(uid).get();
+      if (doc.exists) {
+        _prefetchedUserDoc = doc.data();
+        _prefetchedUserId = uid;
+      }
+    } catch (e) {
+      debugPrint('prefetchUserDocument error: $e');
+    }
+  }
+
+  /// Consume the prefetched user document (returns it once, then clears).
+  /// Returns null if no prefetch is available or the uid doesn't match.
+  static Map<String, dynamic>? consumePrefetchedUserDoc() {
+    final uid = currentUser?.uid;
+    if (uid == null || uid != _prefetchedUserId) return null;
+    final doc = _prefetchedUserDoc;
+    // Keep it available — multiple consumers read it during the same startup.
+    return doc;
+  }
+
+  /// Clear the prefetch cache (call after startup is done).
+  static void clearPrefetchedUserDoc() {
+    _prefetchedUserDoc = null;
+    _prefetchedUserId = null;
+  }
+
   // Track if user explicitly logged out (vs unexpected session loss)
   static bool _isExplicitLogout = false;
 
@@ -377,6 +415,14 @@ class AuthService {
     }
 
     try {
+      // Reuse prefetched doc if available (avoids a redundant Firestore read
+      // during startup — the same doc was already fetched in SplashScreen).
+      final prefetched = consumePrefetchedUserDoc();
+      if (prefetched != null) {
+        debugPrint('ensureUserDocument: Using prefetched doc, skipping read');
+        return; // Doc exists (prefetch only stores non-null data)
+      }
+
       final doc = await _firestore.collection('users').doc(user.uid).get();
       debugPrint('ensureUserDocument: Document exists=${doc.exists}');
       if (!doc.exists) {

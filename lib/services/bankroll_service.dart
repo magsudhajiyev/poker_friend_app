@@ -20,13 +20,12 @@ class BankrollService {
       final userId = AuthService.userId;
       if (userId == null) return;
 
-      final doc = await FirebaseFirestore.instance
+      // Reuse prefetched doc from SplashScreen to avoid a separate read.
+      final prefetched = AuthService.consumePrefetchedUserDoc();
+      final data = prefetched ?? (await FirebaseFirestore.instance
           .collection('users')
           .doc(userId)
-          .get();
-
-      if (!doc.exists) return;
-      final data = doc.data();
+          .get()).data();
       if (data == null) return;
 
       final prefs = await SharedPreferences.getInstance();
