@@ -511,21 +511,17 @@ class _RangeGridViewState extends State<RangeGridView>
   Widget _buildGrid() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Center(
-        child: AspectRatio(
-          aspectRatio: 1.0,
-          child: GridView.count(
-            crossAxisCount: 13,
-            mainAxisSpacing: 2,
-            crossAxisSpacing: 2,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            children: [
-              for (int row = 0; row < 13; row++)
-                for (int col = 0; col < 13; col++) _buildCell(row, col),
-            ],
-          ),
-        ),
+      child: GridView.count(
+        crossAxisCount: 13,
+        mainAxisSpacing: 2,
+        crossAxisSpacing: 2,
+        shrinkWrap: true,
+        padding: EdgeInsets.zero,
+        physics: const NeverScrollableScrollPhysics(),
+        children: [
+          for (int row = 0; row < 13; row++)
+            for (int col = 0; col < 13; col++) _buildCell(row, col),
+        ],
       ),
     );
   }
