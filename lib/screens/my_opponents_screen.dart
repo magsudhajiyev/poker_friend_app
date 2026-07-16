@@ -616,8 +616,8 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> with SingleTicker
                         isDense: true,
                         contentPadding: EdgeInsets.zero,
                       ),
-                      maxLines: 2,
-                      minLines: 1,
+                      maxLines: 4,
+                      minLines: 3,
                     ),
                   ),
                   if (_notesController.text.isNotEmpty)
@@ -690,6 +690,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> with SingleTicker
                 ),
               ],
             ),
+            const SizedBox(height: 12),
           ],
         ),
       ),

@@ -38,6 +38,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
   Map<String, dynamic>? _statistics;
   OpponentStats? _opponentStats;
   bool _isLoadingStats = true;
+  bool _wasEdited = false;
 
   @override
   void initState() {
@@ -482,6 +483,10 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildStatisticsSection(),
+                  if (_opponent.notes != null && _opponent.notes!.isNotEmpty) ...[
+                    const SizedBox(height: 24),
+                    _buildNotesSection(),
+                  ],
                   const SizedBox(height: 64),
                   _buildViewHandHistoryButton(),
                 ],
@@ -513,7 +518,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          BackButtonCircle(onPressed: () => Navigator.pop(context)),
+          BackButtonCircle(onPressed: () => Navigator.pop(context, _wasEdited ? true : null)),
           const SizedBox(width: 12),
           // Avatar
           Container(
@@ -755,31 +760,44 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
         borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
         border: Border.all(color: Colors.black),
       ),
-      padding: EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header row with icon and label
+          // Header row with icon, label, and edit button
           Row(
             children: [
               _buildIcon(
                 'icons/figma_icons/notes.svg',
                 18,
-                Color(0xFF808285),
+                const Color(0xFF808285),
               ),
-              SizedBox(width: 8),
+              const SizedBox(width: 8),
               Text(
                 l10n.opponentDetailNotes,
                 style: AppTypography.ibm(
                   fontSize: 13,
-                  color: Color(0xFF808285),
+                  color: const Color(0xFF808285),
                   fontWeight: FontWeight.w500,
                   height: 1.44,
                 ),
               ),
+              const Spacer(),
+              GestureDetector(
+                onTap: _showEditNotesDialog,
+                behavior: HitTestBehavior.opaque,
+                child: Padding(
+                  padding: const EdgeInsets.all(4),
+                  child: _buildIcon(
+                    'icons/figma_icons/edit.svg',
+                    16,
+                    AppColors.textSecondary,
+                  ),
+                ),
+              ),
             ],
           ),
-          SizedBox(height: 12),
+          const SizedBox(height: 12),
           // Notes content
           Text(
             _opponent.notes!,
@@ -793,6 +811,120 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
         ],
       ),
     );
+  }
+
+  void _showEditNotesDialog() {
+    final l10n = AppLocalizations.of(context);
+    final notesController = TextEditingController(text: _opponent.notes ?? '');
+    final notesFocusNode = FocusNode();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            notesFocusNode.addListener(() => setSheetState(() {}));
+            final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+            return Container(
+              decoration: BoxDecoration(
+                color: AppColors.bgPrimary,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(AppDecorations.radiusXl),
+                  topRight: Radius.circular(AppDecorations.radiusXl),
+                ),
+                border: Border.all(color: AppColors.borderStrong),
+              ),
+              padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + bottomInset),
+              child: SafeArea(
+                top: false,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SheetHeader(
+                      title: l10n.opponentDetailNotes,
+                      onClose: () => Navigator.pop(context),
+                    ),
+                    const SizedBox(height: 16),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: AppColors.bgSurface,
+                        borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
+                        border: Border.all(
+                          color: notesFocusNode.hasFocus
+                              ? AppColors.accentPrimary
+                              : AppColors.borderStrong,
+                          width: notesFocusNode.hasFocus ? 1.5 : 1.0,
+                        ),
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      child: TextField(
+                        controller: notesController,
+                        focusNode: notesFocusNode,
+                        autofocus: true,
+                        style: AppTypography.ibm(
+                          fontSize: 15,
+                          color: AppColors.textPrimary,
+                        ),
+                        decoration: InputDecoration(
+                          hintText: l10n.opponentsAddNotes,
+                          hintStyle: AppTypography.ibm(
+                            fontSize: 15,
+                            color: AppColors.textSecondary,
+                          ),
+                          filled: true,
+                          fillColor: Colors.transparent,
+                          border: InputBorder.none,
+                          enabledBorder: InputBorder.none,
+                          focusedBorder: InputBorder.none,
+                          isDense: true,
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                        maxLines: 5,
+                        minLines: 3,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    SizedBox(
+                      width: double.infinity,
+                      child: PrimaryPillButton(
+                        label: l10n.commonSave,
+                        onTap: () async {
+                          final notes = notesController.text.trim();
+                          try {
+                            final updated = _opponent.copyWith(
+                              notes: notes.isEmpty ? null : notes,
+                              clearNotes: notes.isEmpty,
+                            );
+                            await OpponentService.saveOpponent(updated);
+                            if (context.mounted) Navigator.pop(context);
+                            _wasEdited = true;
+                            setState(() => _opponent = updated);
+                          } catch (e) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                content: Text(l10n.commonErrorGeneric(UserFacingError.message(e))),
+                                backgroundColor: Colors.red,
+                              ));
+                            }
+                          }
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    ).then((_) {
+      notesController.dispose();
+      notesFocusNode.dispose();
+    });
   }
 
   void _showOpponentOptionsMenu(GlobalKey dotsKey) {
@@ -1273,6 +1405,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
         );
         await OpponentService.saveOpponent(updatedOpponent);
         if (context.mounted) Navigator.pop(context);
+        _wasEdited = true;
         setState(() { _opponent = updatedOpponent; });
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
