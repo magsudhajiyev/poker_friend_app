@@ -402,4 +402,91 @@ class StatsCalculator {
     }
     return null;
   }
+
+  /// Check if player is in Small Blind position.
+  static bool isSmallBlind(List<Map<String, dynamic>> actions, int playerSeatNumber) {
+    for (final action in actions) {
+      final playerId = action['player'] as int?;
+      final actionType = action['action']?.toString().toLowerCase() ?? '';
+
+      if (playerId == playerSeatNumber && actionType == 'small blind') {
+        return true;
+      }
+
+      final position = action['playerPosition']?.toString().toUpperCase() ?? '';
+      if (playerId == playerSeatNumber && position == 'SB') {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /// Find the SB seat number from action list.
+  static int? findSmallBlindSeat(List<Map<String, dynamic>> actions) {
+    for (final action in actions) {
+      final actionType = action['action']?.toString().toLowerCase() ?? '';
+      if (actionType == 'small blind') {
+        return action['player'] as int?;
+      }
+      final position = action['playerPosition']?.toString().toUpperCase() ?? '';
+      if (position == 'SB') {
+        return action['player'] as int?;
+      }
+    }
+    return null;
+  }
+
+  /// Check if player was in BB or SB and faced at least one open-raise preflop.
+  /// The player must be in a blind position, at least one raise must have
+  /// happened preflop, and it must not be a walk hand.
+  static bool hadBlindDefendOpportunity(List<Map<String, dynamic>> actions, int playerSeatNumber) {
+    // Must be in a blind position
+    if (!isBigBlind(actions, playerSeatNumber) && !isSmallBlind(actions, playerSeatNumber)) {
+      return false;
+    }
+
+    // Must not be a walk hand
+    if (isWalkHand(actions)) return false;
+
+    // At least one raise must have happened preflop before/at their action
+    for (final action in actions) {
+      final street = action['street']?.toString().toLowerCase() ?? '';
+      if (street != 'preflop') continue;
+
+      final actionType = action['action']?.toString().toLowerCase() ?? '';
+      if (isRaiseAction(actionType)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  /// Check if player defended from the blinds (called, raised, or went all-in
+  /// preflop rather than folding when facing a raise).
+  static bool didBlindDefend(List<Map<String, dynamic>> actions, int playerSeatNumber) {
+    if (!hadBlindDefendOpportunity(actions, playerSeatNumber)) return false;
+
+    for (final action in actions) {
+      final street = action['street']?.toString().toLowerCase() ?? '';
+      if (street != 'preflop') continue;
+
+      final playerId = action['player'] as int?;
+      final actionType = action['action']?.toString().toLowerCase() ?? '';
+
+      if (playerId != playerSeatNumber) continue;
+      if (isBlindAction(action)) continue;
+
+      // Player called, raised, or went all-in = defended
+      if (actionType == 'call' || isRaiseAction(actionType)) {
+        return true;
+      }
+      // Player folded = did not defend
+      if (actionType == 'fold') {
+        return false;
+      }
+    }
+
+    return false;
+  }
 }

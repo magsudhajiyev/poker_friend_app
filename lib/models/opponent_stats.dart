@@ -36,6 +36,10 @@ class OpponentStats {
   final int checkRaiseFlopCount;      // Times player check-raised on flop
   final int checkRaiseFlopOpportunity; // Times player checked OOP and faced bet on flop
 
+  // Blind Defend tracking
+  final int blindDefendCount;          // Times player defended from blinds (called/raised vs raise)
+  final int blindDefendOpportunity;    // Times player was in BB/SB and faced a raise
+
   // Showdown tracking
   final int showdownCount;       // Times opponent reached showdown
 
@@ -66,6 +70,9 @@ class OpponentStats {
     this.stealOpportunity = 0,
     this.checkRaiseFlopCount = 0,
     this.checkRaiseFlopOpportunity = 0,
+    // Blind Defend tracking
+    this.blindDefendCount = 0,
+    this.blindDefendOpportunity = 0,
     // Showdown tracking
     this.showdownCount = 0,
     // Action counters
@@ -99,6 +106,8 @@ class OpponentStats {
       stealOpportunity: data['stealOpportunity'] ?? 0,
       checkRaiseFlopCount: data['checkRaiseFlopCount'] ?? 0,
       checkRaiseFlopOpportunity: data['checkRaiseFlopOpportunity'] ?? 0,
+      blindDefendCount: data['blindDefendCount'] ?? 0,
+      blindDefendOpportunity: data['blindDefendOpportunity'] ?? 0,
       showdownCount: data['showdownCount'] ?? 0,
       aggressionActions: data['aggressionActions'] ?? 0,
       passiveActions: data['passiveActions'] ?? 0,
@@ -130,6 +139,8 @@ class OpponentStats {
       stealOpportunity: map['stealOpportunity'] ?? 0,
       checkRaiseFlopCount: map['checkRaiseFlopCount'] ?? 0,
       checkRaiseFlopOpportunity: map['checkRaiseFlopOpportunity'] ?? 0,
+      blindDefendCount: map['blindDefendCount'] ?? 0,
+      blindDefendOpportunity: map['blindDefendOpportunity'] ?? 0,
       showdownCount: map['showdownCount'] ?? 0,
       aggressionActions: map['aggressionActions'] ?? 0,
       passiveActions: map['passiveActions'] ?? 0,
@@ -160,6 +171,8 @@ class OpponentStats {
       'stealOpportunity': stealOpportunity,
       'checkRaiseFlopCount': checkRaiseFlopCount,
       'checkRaiseFlopOpportunity': checkRaiseFlopOpportunity,
+      'blindDefendCount': blindDefendCount,
+      'blindDefendOpportunity': blindDefendOpportunity,
       'showdownCount': showdownCount,
       'aggressionActions': aggressionActions,
       'passiveActions': passiveActions,
@@ -191,6 +204,8 @@ class OpponentStats {
       'stealOpportunity': stealOpportunity,
       'checkRaiseFlopCount': checkRaiseFlopCount,
       'checkRaiseFlopOpportunity': checkRaiseFlopOpportunity,
+      'blindDefendCount': blindDefendCount,
+      'blindDefendOpportunity': blindDefendOpportunity,
       'showdownCount': showdownCount,
       'aggressionActions': aggressionActions,
       'passiveActions': passiveActions,
@@ -219,6 +234,8 @@ class OpponentStats {
     int? stealOpportunity,
     int? checkRaiseFlopCount,
     int? checkRaiseFlopOpportunity,
+    int? blindDefendCount,
+    int? blindDefendOpportunity,
     int? showdownCount,
     int? aggressionActions,
     int? passiveActions,
@@ -246,6 +263,8 @@ class OpponentStats {
       stealOpportunity: stealOpportunity ?? this.stealOpportunity,
       checkRaiseFlopCount: checkRaiseFlopCount ?? this.checkRaiseFlopCount,
       checkRaiseFlopOpportunity: checkRaiseFlopOpportunity ?? this.checkRaiseFlopOpportunity,
+      blindDefendCount: blindDefendCount ?? this.blindDefendCount,
+      blindDefendOpportunity: blindDefendOpportunity ?? this.blindDefendOpportunity,
       showdownCount: showdownCount ?? this.showdownCount,
       aggressionActions: aggressionActions ?? this.aggressionActions,
       passiveActions: passiveActions ?? this.passiveActions,
@@ -275,6 +294,8 @@ class OpponentStats {
     int stealOpportunityDelta = 0,
     int checkRaiseFlopDelta = 0,
     int checkRaiseFlopOpportunityDelta = 0,
+    int blindDefendCountDelta = 0,
+    int blindDefendOpportunityDelta = 0,
     int showdownDelta = 0,
     // Action counter deltas
     int aggressionDelta = 0,
@@ -302,6 +323,8 @@ class OpponentStats {
       stealOpportunity: stealOpportunity + stealOpportunityDelta,
       checkRaiseFlopCount: checkRaiseFlopCount + checkRaiseFlopDelta,
       checkRaiseFlopOpportunity: checkRaiseFlopOpportunity + checkRaiseFlopOpportunityDelta,
+      blindDefendCount: blindDefendCount + blindDefendCountDelta,
+      blindDefendOpportunity: blindDefendOpportunity + blindDefendOpportunityDelta,
       showdownCount: showdownCount + showdownDelta,
       aggressionActions: aggressionActions + aggressionDelta,
       passiveActions: passiveActions + passiveDelta,
@@ -355,6 +378,11 @@ class OpponentStats {
   double get checkRaiseFlopPercentage => checkRaiseFlopOpportunity > 0
       ? (checkRaiseFlopCount / checkRaiseFlopOpportunity * 100).clamp(0.0, 100.0) : 0.0;
 
+  /// Blind Defend percentage (called/raised from BB/SB when facing a raise)
+  /// Denominator: Times in BB/SB and faced a raise preflop
+  double get blindDefendPercentage => blindDefendOpportunity > 0
+      ? (blindDefendCount / blindDefendOpportunity * 100).clamp(0.0, 100.0) : 0.0;
+
   /// Aggression Frequency: (bets + raises) / (bets + raises + calls + checks)
   double get aggressionFrequency {
     final totalActions = aggressionActions + passiveActions;
@@ -383,6 +411,8 @@ class OpponentStats {
         return stealOpportunity > 0;
       case 'checkRaise':
         return checkRaiseFlopOpportunity > 0;
+      case 'blindDefend':
+        return blindDefendOpportunity > 0;
       default:
         return false;
     }

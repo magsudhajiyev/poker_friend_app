@@ -30,6 +30,10 @@ class UserStats {
   final int checkRaiseFlopCount;
   final int checkRaiseFlopOpportunity; // Times checked OOP and faced bet on flop
 
+  // Blind Defend tracking
+  final int blindDefendCount;          // Times player defended from blinds (called/raised vs raise)
+  final int blindDefendOpportunity;    // Times player was in BB/SB and faced a raise
+
   final int wonHands;
   final int totalSessions;
   final int totalPlayTimeMinutes;
@@ -60,6 +64,8 @@ class UserStats {
     this.stealOpportunity = 0,
     this.checkRaiseFlopCount = 0,
     this.checkRaiseFlopOpportunity = 0,
+    this.blindDefendCount = 0,
+    this.blindDefendOpportunity = 0,
     this.wonHands = 0,
     this.totalSessions = 0,
     this.totalPlayTimeMinutes = 0,
@@ -115,6 +121,11 @@ class UserStats {
   double get checkRaiseFlopPercentage => checkRaiseFlopOpportunity > 0
       ? (checkRaiseFlopCount / checkRaiseFlopOpportunity * 100).clamp(0.0, 100.0) : 0.0;
 
+  /// Blind Defend percentage (called/raised from BB/SB when facing a raise)
+  /// Denominator: Times in BB/SB and faced a raise preflop
+  double get blindDefendPercentage => blindDefendOpportunity > 0
+      ? (blindDefendCount / blindDefendOpportunity * 100).clamp(0.0, 100.0) : 0.0;
+
   double get winRate => handsPlayed > 0 ? (wonHands / handsPlayed * 100).clamp(0.0, 100.0) : 0.0;
 
   /// Check if a stat has enough data to display (opportunity > 0)
@@ -133,6 +144,8 @@ class UserStats {
         return stealOpportunity > 0;
       case 'checkRaise':
         return checkRaiseFlopOpportunity > 0;
+      case 'blindDefend':
+        return blindDefendOpportunity > 0;
       default:
         return false;
     }
@@ -167,6 +180,8 @@ class UserStats {
       stealOpportunity: data['stealOpportunity'] ?? 0,
       checkRaiseFlopCount: data['checkRaiseFlopCount'] ?? 0,
       checkRaiseFlopOpportunity: data['checkRaiseFlopOpportunity'] ?? 0,
+      blindDefendCount: data['blindDefendCount'] ?? 0,
+      blindDefendOpportunity: data['blindDefendOpportunity'] ?? 0,
       wonHands: data['wonHands'] ?? 0,
       totalSessions: data['totalSessions'] ?? 0,
       positionHandsPlayed: _parsePositionMap(data['positionHandsPlayed']),
@@ -197,6 +212,8 @@ class UserStats {
       'stealOpportunity': stealOpportunity,
       'checkRaiseFlopCount': checkRaiseFlopCount,
       'checkRaiseFlopOpportunity': checkRaiseFlopOpportunity,
+      'blindDefendCount': blindDefendCount,
+      'blindDefendOpportunity': blindDefendOpportunity,
       'wonHands': wonHands,
       'totalSessions': totalSessions,
       'positionHandsPlayed': positionHandsPlayed,

@@ -13,37 +13,44 @@ class DrillVillainProfile {
   final String? opponentId; // null for a generic filler bot
   final String name;
   final int handsObserved;
-  final double vpip;
-  final double pfr;
   final double threeBet;
   final double fold3bet;
   final double aggression; // aggression frequency %
+  final double steal;
+  final double cbet;
+  final double blindDefend;
+  final double showdown;
+  final double checkRaiseFlop;
   final String archetype; // PlayStyleDetector style, or 'Regular' for bots
 
   const DrillVillainProfile({
     required this.opponentId,
     required this.name,
     required this.handsObserved,
-    required this.vpip,
-    required this.pfr,
     required this.threeBet,
     required this.fold3bet,
     required this.aggression,
+    required this.steal,
+    required this.cbet,
+    required this.blindDefend,
+    required this.showdown,
+    required this.checkRaiseFlop,
     required this.archetype,
   });
 
-  /// Limp/passive-entry rate, approximated from the VPIP–PFR gap.
-  /// (Limp frequency isn't tracked directly yet; most of the gap in live
-  /// home games is open-limping.)
+  /// Limp/passive-entry rate, approximated from aggression and showdown %.
   double get limpRate {
-    final gap = vpip - pfr;
-    return gap > 0 ? gap * 0.7 : 0.0;
+    final passivity = (100 - aggression).clamp(0.0, 100.0);
+    final showdownExcess = (showdown - 28).clamp(0.0, 50.0);
+    return (passivity * 0.10 + showdownExcess * 0.5).clamp(0.0, 30.0);
   }
 
-  /// Passive continue rate facing a single raise (cold-call/defend).
+  /// Passive continue rate facing a single raise (cold-call/defend for
+  /// non-blind positions).
   double get defendRate {
-    final gap = vpip - pfr;
-    return gap > 0 ? gap * 0.5 : 0.0;
+    final passivity = (100 - aggression).clamp(0.0, 100.0);
+    final showdownExcess = (showdown - 28).clamp(0.0, 50.0);
+    return (passivity * 0.08 + showdownExcess * 0.4).clamp(0.0, 25.0);
   }
 
   bool get isGenericBot => opponentId == null;
@@ -55,19 +62,45 @@ class DrillVillainProfile {
     return 'based on $handsObserved hands';
   }
 
-  /// Generic balanced-regular profile used for unassigned seats and as the
-  /// shrinkage prior for low-sample opponents.
-  static const prior = DrillVillainProfile(
+  /// Cash game prior (8-9 max, 100BB deep)
+  static const cashPrior = DrillVillainProfile(
     opponentId: null,
     name: 'Bot',
     handsObserved: 0,
-    vpip: 24,
-    pfr: 17,
-    threeBet: 7,
-    fold3bet: 55,
-    aggression: 50,
+    threeBet: 6,
+    fold3bet: 58,
+    aggression: 45,
+    steal: 28,
+    cbet: 65,
+    blindDefend: 35,
+    showdown: 28,
+    checkRaiseFlop: 8,
     archetype: 'Regular',
   );
+
+  /// Tournament prior (8-9 max, antes in play)
+  static const mttPrior = DrillVillainProfile(
+    opponentId: null,
+    name: 'Bot',
+    handsObserved: 0,
+    threeBet: 8,
+    fold3bet: 52,
+    aggression: 52,
+    steal: 38,
+    cbet: 62,
+    blindDefend: 45,
+    showdown: 26,
+    checkRaiseFlop: 9,
+    archetype: 'Regular',
+  );
+
+  /// Convenience accessor — kept for backward compat / tests.
+  static DrillVillainProfile prior({bool anteMode = false}) =>
+      anteMode ? mttPrior : cashPrior;
+
+  /// Legacy alias for the cash prior (backward compat with engine startHand).
+  @Deprecated('Use prior() or cashPrior/mttPrior instead')
+  static const prior_legacy = cashPrior;
 }
 
 /// One seat at the drill table.

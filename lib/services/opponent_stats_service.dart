@@ -88,6 +88,8 @@ class OpponentStatsService {
     int stealOpportunityDelta = 0,
     int checkRaiseFlopCountDelta = 0,
     int checkRaiseFlopOpportunityDelta = 0,
+    int blindDefendCountDelta = 0,
+    int blindDefendOpportunityDelta = 0,
     int showdownDelta = 0,
   }) async {
     // Get current stats (or create new if doesn't exist)
@@ -119,6 +121,8 @@ class OpponentStatsService {
       stealOpportunityDelta: stealOpportunityDelta,
       checkRaiseFlopDelta: checkRaiseFlopCountDelta,
       checkRaiseFlopOpportunityDelta: checkRaiseFlopOpportunityDelta,
+      blindDefendCountDelta: blindDefendCountDelta,
+      blindDefendOpportunityDelta: blindDefendOpportunityDelta,
       showdownDelta: showdownDelta,
     );
 
@@ -152,6 +156,8 @@ class OpponentStatsService {
     int stealOpportunityDelta = 0,
     int checkRaiseFlopCountDelta = 0,
     int checkRaiseFlopOpportunityDelta = 0,
+    int blindDefendCountDelta = 0,
+    int blindDefendOpportunityDelta = 0,
     int showdownDelta = 0,
   }) async {
     try {
@@ -186,6 +192,8 @@ class OpponentStatsService {
             'stealOpportunity': FieldValue.increment(stealOpportunityDelta),
             'checkRaiseFlopCount': FieldValue.increment(checkRaiseFlopCountDelta),
             'checkRaiseFlopOpportunity': FieldValue.increment(checkRaiseFlopOpportunityDelta),
+            'blindDefendCount': FieldValue.increment(blindDefendCountDelta),
+            'blindDefendOpportunity': FieldValue.increment(blindDefendOpportunityDelta),
             'showdownCount': FieldValue.increment(showdownDelta),
             'lastUpdated': FieldValue.serverTimestamp(),
           });
@@ -216,6 +224,8 @@ class OpponentStatsService {
             stealOpportunity: stealOpportunityDelta,
             checkRaiseFlopCount: checkRaiseFlopCountDelta,
             checkRaiseFlopOpportunity: checkRaiseFlopOpportunityDelta,
+            blindDefendCount: blindDefendCountDelta,
+            blindDefendOpportunity: blindDefendOpportunityDelta,
             showdownCount: showdownDelta,
           );
           transaction.set(docRef, newStats.toFirestore());
@@ -252,6 +262,8 @@ class OpponentStatsService {
         stealOpportunityDelta: stealOpportunityDelta,
         checkRaiseFlopCountDelta: checkRaiseFlopCountDelta,
         checkRaiseFlopOpportunityDelta: checkRaiseFlopOpportunityDelta,
+        blindDefendCountDelta: blindDefendCountDelta,
+        blindDefendOpportunityDelta: blindDefendOpportunityDelta,
         showdownDelta: showdownDelta,
       );
     }

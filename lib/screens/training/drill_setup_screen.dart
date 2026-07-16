@@ -201,10 +201,10 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
         final pick = _picks[s];
         DrillVillainProfile profile;
         if (pick != null && pick.opponentId.isNotEmpty) {
-          profile =
-              await DrillOpponentProfiler.profileFor(pick.opponentId, pick.name);
+          profile = await DrillOpponentProfiler.profileFor(
+              pick.opponentId, pick.name, anteMode: _ante);
         } else {
-          profile = DrillVillainProfile.prior;
+          profile = DrillVillainProfile.prior(anteMode: _ante);
         }
         seats.add(DrillSeat(seatNumber: s, isHero: false, profile: profile));
       }

@@ -1158,6 +1158,8 @@ class FirebaseService {
           'stealOpportunityDelta': 0,
           'checkRaiseFlopCountDelta': 0,
           'checkRaiseFlopOpportunityDelta': 0,
+          'blindDefendCountDelta': 0,
+          'blindDefendOpportunityDelta': 0,
           'showdownDelta': 0,
         };
 
@@ -1293,6 +1295,14 @@ class FirebaseService {
             }
           }
 
+          // Blind Defend: Player in BB/SB faced a raise and called/raised
+          if (StatsCalculator.hadBlindDefendOpportunity(actions, opponentSeat)) {
+            opponentDeltas[opponentId]!['blindDefendOpportunityDelta'] = 1;
+            if (StatsCalculator.didBlindDefend(actions, opponentSeat)) {
+              opponentDeltas[opponentId]!['blindDefendCountDelta'] = 1;
+            }
+          }
+
           // Showdown: opponent didn't fold and hand reached showdown
           if (reachedShowdown == true) {
             final didFold = actions.any((a) =>
@@ -1332,6 +1342,7 @@ class FirebaseService {
                 'facing3BetCountDelta': 0, 'cbetOpportunityDelta': 0,
                 'stealCountDelta': 0, 'stealOpportunityDelta': 0,
                 'checkRaiseFlopCountDelta': 0, 'checkRaiseFlopOpportunityDelta': 0,
+                'blindDefendCountDelta': 0, 'blindDefendOpportunityDelta': 0,
                 'showdownDelta': 0,
               };
               opponentDeltas[bbId]!['handsDelta'] = 1;
@@ -1370,6 +1381,8 @@ class FirebaseService {
           stealOpportunityDelta: deltas['stealOpportunityDelta'] ?? 0,
           checkRaiseFlopCountDelta: deltas['checkRaiseFlopCountDelta'] ?? 0,
           checkRaiseFlopOpportunityDelta: deltas['checkRaiseFlopOpportunityDelta'] ?? 0,
+          blindDefendCountDelta: deltas['blindDefendCountDelta'] ?? 0,
+          blindDefendOpportunityDelta: deltas['blindDefendOpportunityDelta'] ?? 0,
           showdownDelta: deltas['showdownDelta'] ?? 0,
         );
 
@@ -1470,6 +1483,10 @@ class FirebaseService {
       final hadCRFlopOpp = StatsCalculator.hadCheckRaiseFlopOpportunity(actions, heroSeatNumber);
       final didCRFlop = hadCRFlopOpp && StatsCalculator.didCheckRaiseFlop(actions, heroSeatNumber);
 
+      // Blind Defend: Hero in BB/SB faced a raise and called/raised
+      final hadBlindDefendOpp = StatsCalculator.hadBlindDefendOpportunity(actions, heroSeatNumber);
+      final didBlindDefend = hadBlindDefendOpp && StatsCalculator.didBlindDefend(actions, heroSeatNumber);
+
       // Update user stats atomically with all 7 metrics
       await UserStatsService.updateStatsAtomic(
         userId: userId,
@@ -1488,6 +1505,8 @@ class FirebaseService {
         stealOpportunityDelta: hadStealOpp ? 1 : 0,
         checkRaiseFlopDelta: didCRFlop ? 1 : 0,
         checkRaiseFlopOpportunityDelta: hadCRFlopOpp ? 1 : 0,
+        blindDefendCountDelta: didBlindDefend ? 1 : 0,
+        blindDefendOpportunityDelta: hadBlindDefendOpp ? 1 : 0,
         wonHandsDelta: (didWin && didPlay) ? 1 : 0,
         position: heroPositionName,
       );

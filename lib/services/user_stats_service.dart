@@ -60,6 +60,8 @@ class UserStatsService {
     int stealOpportunityDelta = 0,
     int checkRaiseFlopDelta = 0,
     int checkRaiseFlopOpportunityDelta = 0,
+    int blindDefendCountDelta = 0,
+    int blindDefendOpportunityDelta = 0,
     int wonHandsDelta = 0,
     int sessionsDelta = 0,
     int playTimeMinutesDelta = 0,
@@ -95,6 +97,8 @@ class UserStatsService {
         if (stealOpportunityDelta != 0) updates['stealOpportunity'] = FieldValue.increment(stealOpportunityDelta);
         if (checkRaiseFlopDelta != 0) updates['checkRaiseFlopCount'] = FieldValue.increment(checkRaiseFlopDelta);
         if (checkRaiseFlopOpportunityDelta != 0) updates['checkRaiseFlopOpportunity'] = FieldValue.increment(checkRaiseFlopOpportunityDelta);
+        if (blindDefendCountDelta != 0) updates['blindDefendCount'] = FieldValue.increment(blindDefendCountDelta);
+        if (blindDefendOpportunityDelta != 0) updates['blindDefendOpportunity'] = FieldValue.increment(blindDefendOpportunityDelta);
         if (wonHandsDelta != 0) updates['wonHands'] = FieldValue.increment(wonHandsDelta);
         if (sessionsDelta != 0) updates['totalSessions'] = FieldValue.increment(sessionsDelta);
         if (playTimeMinutesDelta != 0) updates['totalPlayTimeMinutes'] = FieldValue.increment(playTimeMinutesDelta);

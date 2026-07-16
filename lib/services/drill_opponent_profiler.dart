@@ -27,7 +27,7 @@ class DrillOpponentProfiler {
   /// Profile for a saved opponent. Falls back to the generic prior (with the
   /// opponent's name) when stats can't be loaded.
   static Future<DrillVillainProfile> profileFor(
-      String opponentId, String name) async {
+      String opponentId, String name, {bool anteMode = false}) async {
     OpponentStats? stats;
     try {
       stats = await OpponentStatsService.getOpponentStats(opponentId);
@@ -35,19 +35,24 @@ class DrillOpponentProfiler {
       stats = null;
     }
     if (stats == null) {
+      final p = DrillVillainProfile.prior(anteMode: anteMode);
       return DrillVillainProfile(
         opponentId: opponentId,
         name: name,
         handsObserved: 0,
-        vpip: DrillVillainProfile.prior.vpip,
-        pfr: DrillVillainProfile.prior.pfr,
-        threeBet: DrillVillainProfile.prior.threeBet,
-        fold3bet: DrillVillainProfile.prior.fold3bet,
-        aggression: DrillVillainProfile.prior.aggression,
+        threeBet: p.threeBet,
+        fold3bet: p.fold3bet,
+        aggression: p.aggression,
+        steal: p.steal,
+        cbet: p.cbet,
+        blindDefend: p.blindDefend,
+        showdown: p.showdown,
+        checkRaiseFlop: p.checkRaiseFlop,
         archetype: 'Unknown',
       );
     }
-    return fromStats(opponentId: opponentId, name: name, stats: stats);
+    return fromStats(
+        opponentId: opponentId, name: name, stats: stats, anteMode: anteMode);
   }
 
   /// Pure profile construction from stats (testable without Firestore).
@@ -55,21 +60,32 @@ class DrillOpponentProfiler {
     required String opponentId,
     required String name,
     required OpponentStats stats,
+    bool anteMode = false,
   }) {
-    const prior = DrillVillainProfile.prior;
+    final p = DrillVillainProfile.prior(anteMode: anteMode);
 
-    final vpip =
-        _blend(stats.vpipPercentage, prior.vpip, stats.eligibleHands);
-    final pfr = _blend(stats.pfrPercentage, prior.pfr, stats.eligibleHands);
     final threeBet = _blend(
-        stats.threeBetPercentage, prior.threeBet, stats.threeBetOpportunity);
+        stats.threeBetPercentage, p.threeBet, stats.threeBetOpportunity);
     final fold3bet = _blend(
-        stats.fold3betPercentage, prior.fold3bet, stats.facing3BetCount);
-    final aggression = _blend(stats.aggressionFrequency, prior.aggression,
+        stats.fold3betPercentage, p.fold3bet, stats.facing3BetCount);
+    final aggression = _blend(stats.aggressionFrequency, p.aggression,
         stats.aggressionActions + stats.passiveActions);
+    final steal = _blend(
+        stats.stealPercentage, p.steal, stats.stealOpportunity);
+    final cbet = _blend(
+        stats.cbetPercentage, p.cbet, stats.cbetOpportunity);
+    final blindDefend = _blend(
+        stats.blindDefendPercentage, p.blindDefend, stats.blindDefendOpportunity);
+    final showdown = _blend(
+        stats.showdownPercentage, p.showdown, stats.handsPlayed);
+    final checkRaiseFlop = _blend(
+        stats.checkRaiseFlopPercentage, p.checkRaiseFlop,
+        stats.checkRaiseFlopOpportunity);
 
-    // PlayStyleDetector wants an aggression FACTOR (bets+raises)/calls,
-    // not the stored frequency — approximate it from action counters.
+    // PlayStyleDetector still uses vpip/pfr for archetype classification
+    // (these are still stored in OpponentStats for hero profiling).
+    final vpip = stats.vpipPercentage;
+    final pfr = stats.pfrPercentage;
     final af = stats.callCount > 0
         ? stats.aggressionActions / stats.callCount
         : (stats.aggressionActions > 0 ? 4.0 : 2.0);
@@ -86,11 +102,14 @@ class DrillOpponentProfiler {
       opponentId: opponentId,
       name: name,
       handsObserved: stats.handsPlayed,
-      vpip: vpip.clamp(0, 100).toDouble(),
-      pfr: pfr.clamp(0, 100).toDouble(),
       threeBet: threeBet.clamp(0, 100).toDouble(),
       fold3bet: fold3bet.clamp(0, 100).toDouble(),
       aggression: aggression.clamp(0, 100).toDouble(),
+      steal: steal.clamp(0, 100).toDouble(),
+      cbet: cbet.clamp(0, 100).toDouble(),
+      blindDefend: blindDefend.clamp(0, 100).toDouble(),
+      showdown: showdown.clamp(0, 100).toDouble(),
+      checkRaiseFlop: checkRaiseFlop.clamp(0, 100).toDouble(),
       archetype: style ?? 'Unknown',
     );
   }

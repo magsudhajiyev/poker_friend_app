@@ -19,10 +19,14 @@ void check(bool c, String m) {
 
 DrillVillainProfile prof({
   String name = 'V',
-  double vpip = 24,
-  double pfr = 17,
   double threeBet = 7,
   double fold3bet = 55,
+  double aggression = 50,
+  double steal = 28,
+  double cbet = 65,
+  double blindDefend = 35,
+  double showdown = 28,
+  double checkRaiseFlop = 8,
   int hands = 250,
   String archetype = 'Regular',
 }) =>
@@ -30,11 +34,14 @@ DrillVillainProfile prof({
         opponentId: 'o_$name',
         name: name,
         handsObserved: hands,
-        vpip: vpip,
-        pfr: pfr,
         threeBet: threeBet,
         fold3bet: fold3bet,
-        aggression: 50,
+        aggression: aggression,
+        steal: steal,
+        cbet: cbet,
+        blindDefend: blindDefend,
+        showdown: showdown,
+        checkRaiseFlop: checkRaiseFlop,
         archetype: archetype);
 
 DrillDecisionContext ctx({

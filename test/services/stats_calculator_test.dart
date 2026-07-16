@@ -921,6 +921,211 @@ void main() {
       });
     });
 
+    group('Blind Defend', () {
+      // ---- isSmallBlind / findSmallBlindSeat (mirror isBigBlind / findBigBlindSeat) ----
+
+      group('isSmallBlind', () {
+        test('returns true when player posts small blind', () {
+          final actions = [
+            MockHandActions.smallBlind(1, 1),
+            MockHandActions.bigBlind(2, 2),
+          ];
+
+          expect(StatsCalculator.isSmallBlind(actions, 1), isTrue);
+        });
+
+        test('returns true when player has SB position', () {
+          final actions = [
+            {'player': 1, 'action': 'fold', 'playerPosition': 'SB'},
+          ];
+
+          expect(StatsCalculator.isSmallBlind(actions, 1), isTrue);
+        });
+
+        test('returns false when player is BB', () {
+          final actions = [
+            MockHandActions.smallBlind(1, 1),
+            MockHandActions.bigBlind(2, 2),
+          ];
+
+          expect(StatsCalculator.isSmallBlind(actions, 2), isFalse);
+        });
+
+        test('returns false when different player is SB', () {
+          final actions = [
+            MockHandActions.smallBlind(1, 1),
+            MockHandActions.bigBlind(2, 2),
+          ];
+
+          expect(StatsCalculator.isSmallBlind(actions, 3), isFalse);
+        });
+      });
+
+      group('findSmallBlindSeat', () {
+        test('returns SB seat from blind posting action', () {
+          final actions = [
+            MockHandActions.smallBlind(1, 1),
+            MockHandActions.bigBlind(2, 2),
+            MockHandActions.fold(3),
+          ];
+
+          expect(StatsCalculator.findSmallBlindSeat(actions), 1);
+        });
+
+        test('returns SB seat from position field', () {
+          final actions = [
+            {'player': 5, 'action': 'fold', 'playerPosition': 'SB'},
+          ];
+
+          expect(StatsCalculator.findSmallBlindSeat(actions), 5);
+        });
+
+        test('returns null when no SB found', () {
+          final actions = [
+            MockHandActions.fold(3),
+          ];
+
+          expect(StatsCalculator.findSmallBlindSeat(actions), isNull);
+        });
+      });
+
+      // ---- hadBlindDefendOpportunity / didBlindDefend ----
+
+      test('BB facing open-raise, calls — opportunity=true, defend=true', () {
+        // 6-max: SB=1, BB=2, UTG=3 opens, folds around, BB calls
+        final actions = [
+          MockHandActions.smallBlind(1, 1),
+          MockHandActions.bigBlind(2, 2),
+          MockHandActions.raise(3, 6.0, position: 'UTG'),
+          MockHandActions.fold(4, position: 'MP'),
+          MockHandActions.fold(5, position: 'CO'),
+          MockHandActions.fold(6, position: 'BTN'),
+          MockHandActions.fold(1, position: 'SB'),
+          MockHandActions.call(2, 4.0, position: 'BB'),
+        ];
+
+        expect(StatsCalculator.hadBlindDefendOpportunity(actions, 2), isTrue);
+        expect(StatsCalculator.didBlindDefend(actions, 2), isTrue);
+      });
+
+      test('BB facing open-raise, folds — opportunity=true, defend=false', () {
+        final actions = [
+          MockHandActions.smallBlind(1, 1),
+          MockHandActions.bigBlind(2, 2),
+          MockHandActions.raise(3, 6.0, position: 'UTG'),
+          MockHandActions.fold(4, position: 'MP'),
+          MockHandActions.fold(5, position: 'CO'),
+          MockHandActions.fold(6, position: 'BTN'),
+          MockHandActions.fold(1, position: 'SB'),
+          MockHandActions.fold(2, position: 'BB'),
+        ];
+
+        expect(StatsCalculator.hadBlindDefendOpportunity(actions, 2), isTrue);
+        expect(StatsCalculator.didBlindDefend(actions, 2), isFalse);
+      });
+
+      test('BB facing open-raise, 3-bets — opportunity=true, defend=true', () {
+        final actions = [
+          MockHandActions.smallBlind(1, 1),
+          MockHandActions.bigBlind(2, 2),
+          MockHandActions.raise(3, 6.0, position: 'UTG'),
+          MockHandActions.fold(4, position: 'MP'),
+          MockHandActions.fold(5, position: 'CO'),
+          MockHandActions.fold(6, position: 'BTN'),
+          MockHandActions.fold(1, position: 'SB'),
+          MockHandActions.raise(2, 18.0, position: 'BB'), // 3-bet = defend
+        ];
+
+        expect(StatsCalculator.hadBlindDefendOpportunity(actions, 2), isTrue);
+        expect(StatsCalculator.didBlindDefend(actions, 2), isTrue);
+      });
+
+      test('SB facing open-raise, calls — opportunity=true, defend=true', () {
+        final actions = [
+          MockHandActions.smallBlind(1, 1),
+          MockHandActions.bigBlind(2, 2),
+          MockHandActions.raise(3, 6.0, position: 'UTG'),
+          MockHandActions.fold(4, position: 'MP'),
+          MockHandActions.fold(5, position: 'CO'),
+          MockHandActions.fold(6, position: 'BTN'),
+          MockHandActions.call(1, 5.0, position: 'SB'),
+        ];
+
+        expect(StatsCalculator.hadBlindDefendOpportunity(actions, 1), isTrue);
+        expect(StatsCalculator.didBlindDefend(actions, 1), isTrue);
+      });
+
+      test('SB facing open-raise, folds — opportunity=true, defend=false', () {
+        final actions = [
+          MockHandActions.smallBlind(1, 1),
+          MockHandActions.bigBlind(2, 2),
+          MockHandActions.raise(3, 6.0, position: 'UTG'),
+          MockHandActions.fold(4, position: 'MP'),
+          MockHandActions.fold(5, position: 'CO'),
+          MockHandActions.fold(6, position: 'BTN'),
+          MockHandActions.fold(1, position: 'SB'),
+        ];
+
+        expect(StatsCalculator.hadBlindDefendOpportunity(actions, 1), isTrue);
+        expect(StatsCalculator.didBlindDefend(actions, 1), isFalse);
+      });
+
+      test('BB in walk hand (no raise) — opportunity=false', () {
+        final actions = MockHandActions.walkHand(playerCount: 6);
+
+        expect(StatsCalculator.hadBlindDefendOpportunity(actions, 2), isFalse);
+        expect(StatsCalculator.didBlindDefend(actions, 2), isFalse);
+      });
+
+      test('BB facing limp only (no raise) — opportunity=false', () {
+        // UTG limps, everyone else folds, BB checks
+        final actions = [
+          MockHandActions.smallBlind(1, 1),
+          MockHandActions.bigBlind(2, 2),
+          MockHandActions.call(3, 2.0, position: 'UTG'), // limp (call, not raise)
+          MockHandActions.fold(4, position: 'MP'),
+          MockHandActions.fold(5, position: 'CO'),
+          MockHandActions.fold(6, position: 'BTN'),
+          MockHandActions.fold(1, position: 'SB'),
+          MockHandActions.check(2, position: 'BB'),
+        ];
+
+        expect(StatsCalculator.hadBlindDefendOpportunity(actions, 2), isFalse);
+        expect(StatsCalculator.didBlindDefend(actions, 2), isFalse);
+      });
+
+      test('CO facing raise (not blind) — opportunity=false', () {
+        final actions = [
+          MockHandActions.smallBlind(1, 1),
+          MockHandActions.bigBlind(2, 2),
+          MockHandActions.raise(3, 6.0, position: 'UTG'),
+          MockHandActions.fold(4, position: 'MP'),
+          MockHandActions.fold(5, position: 'CO'),
+        ];
+
+        // Seat 5 (CO) is NOT in a blind position
+        expect(StatsCalculator.hadBlindDefendOpportunity(actions, 5), isFalse);
+        expect(StatsCalculator.didBlindDefend(actions, 5), isFalse);
+      });
+
+      test('BB facing open-raise + 3-bet from SB — BB opportunity=true', () {
+        // UTG opens, SB 3-bets, BB still has opportunity (faced a raise)
+        final actions = [
+          MockHandActions.smallBlind(1, 1),
+          MockHandActions.bigBlind(2, 2),
+          MockHandActions.raise(3, 6.0, position: 'UTG'),   // open
+          MockHandActions.fold(4, position: 'MP'),
+          MockHandActions.fold(5, position: 'CO'),
+          MockHandActions.fold(6, position: 'BTN'),
+          MockHandActions.raise(1, 18.0, position: 'SB'),   // SB 3-bets
+          MockHandActions.call(2, 16.0, position: 'BB'),     // BB calls
+        ];
+
+        expect(StatsCalculator.hadBlindDefendOpportunity(actions, 2), isTrue);
+        expect(StatsCalculator.didBlindDefend(actions, 2), isTrue);
+      });
+    });
+
     group('Edge Cases', () {
       test('handles empty action list gracefully', () {
         final emptyActions = <Map<String, dynamic>>[];

@@ -13,6 +13,49 @@ class _Line {
       {this.fromReads = false});
 }
 
+/// Exploit thresholds keyed by format.
+/// Cash = 8-9 max, no antes. MTT = 8-9 max, BB ante.
+class _ExploitThresholds {
+  final double tightBlindDefend; // Below → "steal relentlessly"
+  final double wideBlindDefend; // Above → "drop weakest steals"
+  final double tightSteal; // Below → "respect raises"
+  final double looseSteal; // Above → "opens loose"
+  final double maniacSteal; // Above (+ high aggression) → "maniac"
+  final double nitThreeBet; // Below → "only jams premiums"
+
+  const _ExploitThresholds({
+    required this.tightBlindDefend,
+    required this.wideBlindDefend,
+    required this.tightSteal,
+    required this.looseSteal,
+    required this.maniacSteal,
+    required this.nitThreeBet,
+  });
+
+  // Passive/station thresholds are the same across formats (postflop behavior)
+  static const double passiveAggression = 30;
+  static const double stationShowdown = 40;
+  static const double limperShowdown = 35;
+}
+
+const _cash = _ExploitThresholds(
+  tightBlindDefend: 28,
+  wideBlindDefend: 50,
+  tightSteal: 18,
+  looseSteal: 42,
+  maniacSteal: 55,
+  nitThreeBet: 3.5,
+);
+
+const _mtt = _ExploitThresholds(
+  tightBlindDefend: 35,
+  wideBlindDefend: 60,
+  tightSteal: 25,
+  looseSteal: 52,
+  maniacSteal: 65,
+  nitThreeBet: 5,
+);
+
 /// Grades hero decisions two ways and shows both:
 ///
 /// 1. **GTO** — chart/table membership, no formulas:
@@ -142,28 +185,31 @@ class DrillGrader {
 
     final blinds =
         ctx.blindsBehind.where((b) => !b.profile.isGenericBot).toList();
+    final t = ctx.anteMode ? _mtt : _cash;
     if (isStealSeat && blinds.isNotEmpty) {
-      final avgVpip =
-          blinds.map((b) => b.profile.vpip).reduce((a, b) => a + b) /
+      final avgBlindDefend =
+          blinds.map((b) => b.profile.blindDefend).reduce((a, b) => a + b) /
               blinds.length;
       final maxThreeBet =
           blinds.map((b) => b.profile.threeBet).reduce((a, b) => a > b ? a : b);
       final names = _nameList(blinds.map((b) => b.profile.name).toList());
       final plural = blinds.length > 1;
 
-      if (avgVpip <= 24) {
-        final d = ((24 - avgVpip) * 1.1).clamp(0.0, 22.0).toDouble();
+      if (avgBlindDefend <= t.tightBlindDefend) {
+        final d = ((t.tightBlindDefend - avgBlindDefend) * 1.1)
+            .clamp(0.0, 22.0)
+            .toDouble();
         widenPct += d;
-        trace.add('exploit: tight blinds (avg VPIP '
-            '${avgVpip.toStringAsFixed(0)}) → widen +${d.toStringAsFixed(1)}%');
-        notes.add('$names ${plural ? 'fold' : 'folds'} the blinds a lot '
-            '(VPIP ${_pct(avgVpip)}) — steal relentlessly from ${_posName(pos)}.');
-      } else if (avgVpip >= 34) {
+        trace.add('exploit: tight blinds (avg blind defend '
+            '${avgBlindDefend.toStringAsFixed(0)}%) → widen +${d.toStringAsFixed(1)}%');
+        notes.add('$names ${plural ? 'defend' : 'defends'} the blinds only '
+            '${_pct(avgBlindDefend)} — steal relentlessly from ${_posName(pos)}.');
+      } else if (avgBlindDefend >= t.wideBlindDefend) {
         widenPct -= 4;
-        trace.add('exploit: wide-defending blinds (avg VPIP '
-            '${avgVpip.toStringAsFixed(0)}) → tighten -4%');
+        trace.add('exploit: wide-defending blinds (avg blind defend '
+            '${avgBlindDefend.toStringAsFixed(0)}%) → tighten -4%');
         notes.add('$names ${plural ? 'defend' : 'defends'} wide '
-            '(VPIP ${_pct(avgVpip)}) — drop the weakest steals.');
+            '(${_pct(avgBlindDefend)}) — drop the weakest steals.');
       }
       if (maxThreeBet >= 11) {
         widenPct -= 6;
@@ -204,13 +250,18 @@ class DrillGrader {
 
     final station = _strongest(
         ctx.playersBehind,
-        (p) => p.vpip >= 42 && p.pfr < 15 && !p.isGenericBot,
-        (p) => p.vpip);
+        (p) =>
+            p.aggression <= _ExploitThresholds.passiveAggression &&
+            p.showdown >= _ExploitThresholds.stationShowdown &&
+            !p.isGenericBot,
+        (p) => p.showdown);
     if (station != null && aggro == null) {
       widenPct -= 3;
-      trace.add('exploit: station behind (VPIP ${_pct(station.vpip)}) → tighten -3%');
-      notes.add('${station.name} calls far too much '
-          '(VPIP ${_pct(station.vpip)}) — favour hands that flop well.');
+      trace.add('exploit: station behind (aggression ${_pct(station.aggression)}, '
+          'showdown ${_pct(station.showdown)}) → tighten -3%');
+      notes.add('${station.name} calls down passively '
+          '(aggression ${_pct(station.aggression)}, showdown ${_pct(station.showdown)}) '
+          '— favour hands that flop well.');
     }
 
     final exploitSet = widenPct >= 0
@@ -287,15 +338,20 @@ class DrillGrader {
     // Exploit
     final notes = <String>[];
     var isoSet = isoBase;
-    final loosePassive = _strongest(ctx.limpers,
-        (p) => p.vpip >= 38 && p.pfr <= 15 && !p.isGenericBot, (p) => p.vpip);
+    final loosePassive = _strongest(
+        ctx.limpers,
+        (p) =>
+            p.aggression <= _ExploitThresholds.passiveAggression &&
+            p.showdown >= _ExploitThresholds.limperShowdown &&
+            !p.isGenericBot,
+        (p) => p.showdown);
     if (loosePassive != null) {
       isoSet = DrillGtoCharts.widen(isoSet, 4);
       trace.add('exploit: loose-passive limper '
-          '(VPIP ${_pct(loosePassive.vpip)}) → widen iso +4%');
-      notes.add('${loosePassive.name} limps into most pots '
-          '(VPIP ${_pct(loosePassive.vpip)}, ${loosePassive.confidenceLabel}) — '
-          'isolate wide and take the lead.');
+          '(aggression ${_pct(loosePassive.aggression)}) → widen iso +4%');
+      notes.add('${loosePassive.name} limps and calls passively '
+          '(aggression ${_pct(loosePassive.aggression)}, '
+          '${loosePassive.confidenceLabel}) — isolate wide and take the lead.');
     }
     final exploitAction = _limpLine(ctx, isoSet, canCheck, trace, 'exploit');
     final exploitLine = _Line(
@@ -357,14 +413,18 @@ class DrillGrader {
       var callSetX = callSet;
       final notes = <String>[];
       final o = ctx.opener;
+      final tj = ctx.anteMode ? _mtt : _cash;
       if (o != null && !o.isGenericBot) {
-        if (o.pfr >= 28 || o.archetype == 'Maniac') {
+        if ((o.steal >= tj.maniacSteal && o.aggression >= 60) ||
+            o.archetype == 'Maniac') {
           callSetX = DrillGtoCharts.widen(callSet, 5);
-          trace.add('exploit: maniac jammer (PFR ${_pct(o.pfr)}) → call +5%');
+          trace.add('exploit: maniac jammer (steal ${_pct(o.steal)}, '
+              'aggression ${_pct(o.aggression)}) → call +5%');
           notes.add('${o.name} shoves wide (${o.confidenceLabel}) — call lighter.');
-        } else if (o.vpip <= 17) {
+        } else if (o.steal <= tj.tightSteal && o.threeBet <= tj.nitThreeBet) {
           callSetX = DrillGtoCharts.tighten(callSet, 4);
-          trace.add('exploit: nit jammer (VPIP ${_pct(o.vpip)}) → call -4%');
+          trace.add('exploit: nit jammer (steal ${_pct(o.steal)}, '
+              '3-bet ${_pct(o.threeBet)}) → call -4%');
           notes.add('${o.name} only jams premiums — fold the marginal calls.');
         }
       }
@@ -440,6 +500,7 @@ class DrillGrader {
     var threeBetSet = chart.threeBet;
     var callSet = chart.call;
     final o = ctx.opener;
+    final tv = ctx.anteMode ? _mtt : _cash;
     if (o != null && !o.isGenericBot) {
       if (o.fold3bet >= 60) {
         threeBetSet = DrillGtoCharts.widen(threeBetSet, 6);
@@ -447,22 +508,26 @@ class DrillGrader {
         notes.add('${o.name} folds to 3-bets ${_pct(o.fold3bet)} '
             '(${o.confidenceLabel}) — 3-bet him relentlessly.');
       }
-      if (o.vpip >= 33) {
+      if (o.steal >= tv.looseSteal) {
         threeBetSet = DrillGtoCharts.widen(threeBetSet, 4);
         callSet = DrillGtoCharts.widen(callSet, 4);
-        trace.add('exploit: loose opener (VPIP ${_pct(o.vpip)}) → 3bet +4%, call +4%');
-        notes.add('${o.name} opens loose (VPIP ${_pct(o.vpip)}) — widen value.');
-      } else if (o.vpip <= 17) {
+        trace.add('exploit: loose opener (steal ${_pct(o.steal)}) → 3bet +4%, call +4%');
+        notes.add('${o.name} opens loose (steal ${_pct(o.steal)}) — widen value.');
+      } else if (o.steal <= tv.tightSteal + 4 && o.threeBet <= tv.nitThreeBet) {
         threeBetSet = DrillGtoCharts.tighten(threeBetSet, 2);
         callSet = DrillGtoCharts.tighten(callSet, 5);
-        trace.add('exploit: nitty opener (VPIP ${_pct(o.vpip)}) → 3bet -2%, call -5%');
-        notes.add('${o.name} plays ${_pct(o.vpip)} of hands — respect his raises.');
+        trace.add('exploit: nitty opener (steal ${_pct(o.steal)}) → 3bet -2%, call -5%');
+        notes.add('${o.name} raises very tight (steal ${_pct(o.steal)}) — '
+            'respect his raises.');
       }
-      if (o.archetype == 'Maniac' || o.pfr >= 28) {
+      if (o.archetype == 'Maniac' ||
+          (o.steal >= tv.maniacSteal && o.aggression >= 60)) {
         threeBetSet = DrillGtoCharts.widen(threeBetSet, 5);
         callSet = DrillGtoCharts.widen(callSet, 5);
-        trace.add('exploit: maniac opener (PFR ${_pct(o.pfr)}) → 3bet +5%, call +5%');
-        notes.add('${o.name} raises ${_pct(o.pfr)} of hands — play back wider.');
+        trace.add('exploit: maniac opener (steal ${_pct(o.steal)}, '
+            'aggression ${_pct(o.aggression)}) → 3bet +5%, call +5%');
+        notes.add('${o.name} raises aggressively (steal ${_pct(o.steal)}, '
+            'aggression ${_pct(o.aggression)}) — play back wider.');
       }
     }
     final chartX = DefendChart(threeBet: threeBetSet, call: callSet);
@@ -595,11 +660,12 @@ class DrillGrader {
             : '${ctx.handClass} is strong enough to enter a 3-bet pot cold.');
 
     final notes = <String>[];
+    final tc = ctx.anteMode ? _mtt : _cash;
     if (ctx.opener != null &&
         !ctx.opener!.isGenericBot &&
-        ctx.opener!.vpip >= 33) {
+        ctx.opener!.steal >= tc.looseSteal) {
       cont = DrillGtoCharts.widen(cont, 2);
-      trace.add('exploit: loose aggressors → continue +2%');
+      trace.add('exploit: loose aggressors (steal ${_pct(ctx.opener!.steal)}) → continue +2%');
       notes.add('Both raises came from loose players — continue slightly '
           'wider, but this stays premium-only.');
     }

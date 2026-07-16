@@ -127,7 +127,7 @@ class DrillEngine {
     _players = [
       for (final s in seats)
         _HandPlayer(
-            s.seatNumber, s.isHero, s.profile ?? DrillVillainProfile.prior)
+            s.seatNumber, s.isHero, s.profile ?? DrillVillainProfile.cashPrior)
     ];
     _bySeat = {for (final p in _players) p.seat: p};
     _positions = _calculatePositions();
@@ -302,9 +302,9 @@ class DrillEngine {
           .length;
       if (isBB) {
         // BB option: occasionally raise the limped pot, otherwise check
-        final raiseFreq =
-            limpersInPot > 0 ? profile.pfr * 0.5 : profile.pfr * 0.3;
-        if (roll < raiseFreq) {
+        final bbRaiseFreq =
+            limpersInPot > 0 ? profile.aggression * 0.3 : profile.aggression * 0.15;
+        if (roll < bbRaiseFreq) {
           _applyRaise(p, 2.5 + limpersInPot + 1, events);
         } else {
           p.hasActed = true;
@@ -312,7 +312,16 @@ class DrillEngine {
         }
         return;
       }
-      final openFreq = (profile.pfr *
+      final posGroup = positionGroup(_positions[p.seat] ?? '');
+      final bool isStealPos =
+          posGroup == 'CO' || posGroup == 'BTN' || posGroup == 'SB';
+      // Steal positions use steal% directly; non-steal approximate from aggression
+      final baseOpenFreq = isStealPos
+          ? profile.steal
+          : posGroup == 'EP'
+              ? profile.aggression * 0.28
+              : profile.aggression * 0.35; // MP
+      final openFreq = (baseOpenFreq *
               _positionOpenMultiplier(p.seat) *
               (anteMode ? 1.12 : 1.0))
           .clamp(0.0, 92.0);
@@ -332,11 +341,17 @@ class DrillEngine {
     }
 
     if (_raises == 1) {
-      final defend =
-          isBB ? profile.defendRate * 1.2 : profile.defendRate;
-      if (roll < profile.threeBet) {
+      final isSB = p.seat == _smallBlindSeat();
+      // Blinds use blindDefend for total continue (3-bet + cold-call);
+      // non-blind seats use the aggression/showdown-derived defendRate
+      final totalContinue =
+          (isBB || isSB) ? profile.blindDefend : profile.defendRate;
+      // Carve out the 3-bet portion from total continue
+      final threeBetPortion = profile.threeBet.clamp(0.0, totalContinue);
+      final callPortion = totalContinue - threeBetPortion;
+      if (roll < threeBetPortion) {
         _applyRaise(p, _currentBetBB * 3, events);
-      } else if (roll < profile.threeBet + defend) {
+      } else if (roll < threeBetPortion + callPortion) {
         _callCurrent(p, events);
       } else {
         p.folded = true;
