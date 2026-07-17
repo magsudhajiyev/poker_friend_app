@@ -52,6 +52,9 @@ class SessionDetailsScreen extends StatefulWidget {
   final List<Map<String, dynamic>>? liveStackHistory;
   final List<HandRecord>? completedHands;
 
+  // Session start time for live timer display
+  final DateTime? startTime;
+
   // Hub mode params (non-null = hub mode, null = legacy push-on-top mode)
   final PokerSessionManager? sessionManager;
   final int? heroSeat;
@@ -69,6 +72,7 @@ class SessionDetailsScreen extends StatefulWidget {
     required this.hasBBante,
     this.currentStack,
     this.sessionId,
+    this.startTime,
     this.liveStackHistory,
     this.completedHands,
     this.sessionManager,
@@ -163,6 +167,13 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
     // Initialize completed hands from passed-in data (active session)
     if (widget.completedHands != null && widget.completedHands!.isNotEmpty) {
       _completedHands = List<HandRecord>.from(widget.completedHands!);
+    }
+
+    // Use the passed-in start time so the timer shows correct elapsed
+    // time immediately, without waiting for the Firebase fetch.
+    _sessionStartTime = widget.startTime ?? widget.sessionManager?.sessionStartTime;
+    if (_sessionStartTime != null) {
+      _sessionDuration = DateTime.now().difference(_sessionStartTime!);
     }
 
     _resumeSession();
@@ -613,6 +624,14 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
 
     if (_sessionStartTime == null) {
       _sessionStartTime = DateTime.now();
+    }
+
+    // Compute elapsed time immediately so the display doesn't flash 0:00
+    // when navigating back to this screen mid-session.
+    if (mounted) {
+      setState(() {
+        _sessionDuration = DateTime.now().difference(_sessionStartTime!);
+      });
     }
   }
 

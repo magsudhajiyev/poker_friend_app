@@ -277,6 +277,7 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
           smallBlind: _smallBlind,
           bigBlind: _bigBlind,
           hasBBante: _hasBBante,
+          startTime: sessionManager.sessionStartTime,
           sessionManager: sessionManager,
           heroSeat: _heroSeat,
           initialButtonPosition: buttonPos,

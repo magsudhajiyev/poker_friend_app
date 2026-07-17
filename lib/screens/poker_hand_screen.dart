@@ -5220,6 +5220,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
           hasBBante: gameState.hasBBante,
           currentStack: currentStack,
           sessionId: sessionManager.sessionId,
+          startTime: sessionManager.sessionStartTime,
           liveStackHistory: List<Map<String, dynamic>>.from(sessionManager.stackHistory),
           completedHands: List<HandRecord>.from(sessionManager.completedHands),
         ),
