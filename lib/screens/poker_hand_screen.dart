@@ -4850,8 +4850,13 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         );
       }
 
-      // User cancelled
-      if (winnerResult == null) return;
+      // User dismissed the dialog — reset bettingRoundComplete so undo
+      // and other actions work again (prevents the hand from freezing).
+      if (winnerResult == null) {
+        gameState.bettingRoundComplete = false;
+        setState(() {});
+        return;
+      }
 
       // Inner loop: hero hole cards ↔ opponent cards
       bool goBackToWinner = false;
@@ -6259,9 +6264,11 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         );
       }
 
-      // User can cancel the dialog if they want to continue the hand
+      // User dismissed the dialog — reset bettingRoundComplete so undo
+      // and other actions work again (prevents the hand from freezing).
       if (winnerResult == null) {
-        // addAction removed
+        gameState.bettingRoundComplete = false;
+        setState(() {});
         return;
       }
 
