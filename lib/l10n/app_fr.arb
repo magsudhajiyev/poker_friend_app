@@ -5408,7 +5408,7 @@
   "onboardingBankrollCardTitle": "Votre Bankroll",
   "onboardingBankrollCardBody": "Appuyez longuement sur la carte bankroll pour saisir votre bankroll actuel et définir un objectif. Suivez votre progression !",
   "sessionDetailsLogAHand": "Logger une Main",
-  "setupTableOptionalHint": "Les sièges adverses sont facultatifs — vous pouvez les ajouter plus tard pendant la session",
+  "setupTableOptionalHint": "Placez au moins 2 joueurs pour démarrer la session",
   "onboardingSessionDetailsHubTitle": "Votre Centre de Session",
   "onboardingSessionDetailsHubBody": "Suivez votre stack, gérez les rebuys et add-ons, et consultez votre progression de session ici.",
   "onboardingHubMenuTitle": "Menu de Session",

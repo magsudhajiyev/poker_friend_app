@@ -5408,7 +5408,7 @@
   "onboardingBankrollCardTitle": "Dein Bankroll",
   "onboardingBankrollCardBody": "Halte die Bankroll-Karte gedrückt, um dein aktuelles Bankroll und dein Bankroll-Ziel einzugeben. Verfolge deinen Fortschritt!",
   "sessionDetailsLogAHand": "Hand loggen",
-  "setupTableOptionalHint": "Gegnersitze sind optional — du kannst sie später während der Session hinzufügen",
+  "setupTableOptionalHint": "Setze mindestens 2 Spieler, um die Session zu starten",
   "onboardingSessionDetailsHubTitle": "Dein Session-Hub",
   "onboardingSessionDetailsHubBody": "Verfolge deinen Stack, verwalte Rebuys und Add-ons, und überprüfe deinen Session-Fortschritt hier.",
   "onboardingHubMenuTitle": "Session-Menü",

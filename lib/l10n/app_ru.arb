@@ -5408,7 +5408,7 @@
   "onboardingBankrollCardTitle": "Ваш Банкролл",
   "onboardingBankrollCardBody": "Нажмите и удерживайте карточку банкролла, чтобы ввести текущий банкролл и установить цель. Отслеживайте свой прогресс!",
   "sessionDetailsLogAHand": "Записать руку",
-  "setupTableOptionalHint": "Места оппонентов необязательны — вы можете добавить их позже во время сессии",
+  "setupTableOptionalHint": "Посадите минимум 2 игроков, чтобы начать сессию",
   "onboardingSessionDetailsHubTitle": "Ваш центр сессии",
   "onboardingSessionDetailsHubBody": "Отслеживайте свой стек, управляйте ребаями и аддонами, и просматривайте прогресс сессии здесь.",
   "onboardingHubMenuTitle": "Меню сессии",

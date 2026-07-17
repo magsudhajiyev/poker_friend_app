@@ -5415,7 +5415,7 @@
     }
   },
   "sessionDetailsLogAHand": "Log a Hand",
-  "setupTableOptionalHint": "Opponent seats are optional — you can add them later during the session",
+  "setupTableOptionalHint": "Seat at least 2 players to start the session",
   "onboardingSessionDetailsHubTitle": "Your Session Hub",
   "onboardingSessionDetailsHubBody": "Track your stack, manage rebuys and add-ons, and review your session progress here.",
   "onboardingHubMenuTitle": "Session Menu",

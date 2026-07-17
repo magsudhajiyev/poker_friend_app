@@ -5408,7 +5408,7 @@
   "onboardingBankrollCardTitle": "Tu Bankroll",
   "onboardingBankrollCardBody": "Mantén presionada la tarjeta de bankroll para ingresar tu bankroll actual y establecer un objetivo. ¡Sigue tu progreso!",
   "sessionDetailsLogAHand": "Registrar una Mano",
-  "setupTableOptionalHint": "Los asientos de oponentes son opcionales — puedes agregarlos después durante la sesión",
+  "setupTableOptionalHint": "Sienta al menos 2 jugadores para iniciar la sesión",
   "onboardingSessionDetailsHubTitle": "Tu Centro de Sesión",
   "onboardingSessionDetailsHubBody": "Rastrea tu stack, gestiona rebuys y add-ons, y revisa tu progreso de sesión aquí.",
   "onboardingHubMenuTitle": "Menú de Sesión",
