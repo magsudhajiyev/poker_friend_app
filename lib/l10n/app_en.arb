@@ -842,7 +842,7 @@
   "paywallSubscriptionUnavailable": "Subscription options unavailable. Please try again.",
   "paywallMonthly": "Monthly",
   "paywallAnnual": "Annual",
-  "paywallAnnualSave": "Annual (Save ~40%)",
+  "paywallAnnualSave": "Annual (Save ~35%)",
   "paywallComingSoon": "{tier} subscriptions coming soon",
   "@paywallComingSoon": {
     "placeholders": {

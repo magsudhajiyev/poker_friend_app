@@ -825,7 +825,7 @@
   "paywallSubscriptionUnavailable": "Abo-Optionen nicht verfügbar. Bitte versuche es erneut.",
   "paywallMonthly": "Monatlich",
   "paywallAnnual": "Jährlich",
-  "paywallAnnualSave": "Jährlich (Spare ~40%)",
+  "paywallAnnualSave": "Jährlich (Spare ~35%)",
   "paywallComingSoon": "{tier}-Abonnements kommen bald",
   "@paywallComingSoon": {
     "placeholders": {

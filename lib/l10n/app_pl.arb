@@ -641,7 +641,7 @@
   "paywallSubscriptionUnavailable": "Opcje subskrypcji niedostepne. Sprobuj ponownie.",
   "paywallMonthly": "Miesiecznie",
   "paywallAnnual": "Rocznie",
-  "paywallAnnualSave": "Rocznie (Oszczedz ~40%)",
+  "paywallAnnualSave": "Rocznie (Oszczedz ~35%)",
   "paywallComingSoon": "Subskrypcje {tier} juz wkrotce",
   "@paywallComingSoon": {
     "placeholders": {

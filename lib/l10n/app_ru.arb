@@ -641,7 +641,7 @@
   "paywallSubscriptionUnavailable": "Варианты подписки недоступны. Попробуйте снова.",
   "paywallMonthly": "Ежемесячно",
   "paywallAnnual": "Ежегодно",
-  "paywallAnnualSave": "Ежегодно (Скидка ~40%)",
+  "paywallAnnualSave": "Ежегодно (Скидка ~35%)",
   "paywallComingSoon": "Подписка {tier} скоро появится",
   "@paywallComingSoon": {
     "placeholders": {

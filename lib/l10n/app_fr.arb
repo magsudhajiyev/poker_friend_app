@@ -816,7 +816,7 @@
   "paywallSubscriptionUnavailable": "Options d'abonnement indisponibles. Veuillez réessayer.",
   "paywallMonthly": "Mensuel",
   "paywallAnnual": "Annuel",
-  "paywallAnnualSave": "Annuel (Économisez ~40%)",
+  "paywallAnnualSave": "Annuel (Économisez ~35%)",
   "paywallComingSoon": "Abonnements {tier} bientôt disponibles",
   "@paywallComingSoon": {
     "placeholders": {
