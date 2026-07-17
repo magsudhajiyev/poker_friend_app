@@ -1257,9 +1257,10 @@ class PokerSessionManager {
     return rebuys.fold(0.0, (sum, rebuy) => sum + rebuy.amount);
   }
 
-  // Get rebuy count
+  // Get rebuy count — derived from stackHistory so it stays correct even
+  // when the rebuys list hasn't been synced back from SessionDetailsScreen.
   int getRebuyCount() {
-    return rebuys.length;
+    return stackHistory.where((e) => e['changeType'] == 'rebuy').length;
   }
 
   // Retry failed saves

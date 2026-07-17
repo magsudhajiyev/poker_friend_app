@@ -26,6 +26,8 @@ import '../design_system/components/bodies/form_fields.dart';
 import '../design_system/components/app_text_field.dart';
 import '../design_system/components/dialogs/app_dialog.dart';
 import '../design_system/components/dialogs/dialog_action_bar.dart';
+import '../design_system/components/buttons/primary_pill_button.dart';
+import '../design_system/components/buttons/outlined_pill_button.dart';
 import '../design_system/components/modals/confirm_dialog.dart';
 import '../design_system/components/tween_number.dart';
 import 'poker_hand_screen.dart';
@@ -923,52 +925,106 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
     final smallBlindController = TextEditingController(text: formatBlindValue(_currentSmallBlind));
     final bigBlindController = TextEditingController(text: formatBlindValue(_currentBigBlind));
 
-    final result = await AppDialog.show<Map<String, dynamic>>(
+    Widget buildBlindField(
+      String label,
+      TextEditingController ctrl, {
+      bool autofocus = false,
+    }) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: AppTypography.ibm(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 4),
+          TextField(
+            controller: ctrl,
+            autofocus: autofocus,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[\d.]'))],
+            style: AppTypography.ibm(
+              fontSize: 15,
+              color: AppColors.textPrimary,
+            ),
+            decoration: InputDecoration(
+              filled: true,
+              fillColor: AppColors.bgSurface,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
+                borderSide: const BorderSide(color: AppColors.borderStrong),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
+                borderSide: const BorderSide(color: AppColors.borderStrong),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
+                borderSide: const BorderSide(
+                    color: AppColors.accentPrimary, width: 1.5),
+              ),
+              contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16, vertical: 12),
+            ),
+          ),
+        ],
+      );
+    }
+
+    final result = await AppDialog.show<Map<String, double>>(
       context,
       title: l10n.individualUpdateBlinds,
-      body: Column(
-        mainAxisSize: MainAxisSize.min,
+      subtitle: l10n.handTakesEffectNextHand,
+      body: Row(
         children: [
-          AppTextField(
-            controller: smallBlindController,
-            label: l10n.individualSmallBlind,
-            hint: '',
-            keyboardType: TextInputType.number,
+          Expanded(
+            child: buildBlindField(
+              l10n.setupSmallBlind,
+              smallBlindController,
+              autofocus: true,
+            ),
           ),
-          const SizedBox(height: 16),
-          AppTextField(
-            controller: bigBlindController,
-            label: l10n.individualBigBlind,
-            hint: '',
-            keyboardType: TextInputType.number,
+          const SizedBox(width: 16),
+          Expanded(
+            child: buildBlindField(l10n.setupBigBlind, bigBlindController),
           ),
         ],
       ),
-      actions: DialogActionBar(
-        confirmLabel: l10n.commonUpdate,
-        confirmColor: AppColors.accentPrimary,
-        confirmTextColor: AppColors.textInverse,
-        autoDismiss: false,
-        onConfirm: () {
-          final smallBlind = double.tryParse(smallBlindController.text);
-          final bigBlind = double.tryParse(bigBlindController.text);
-          if (smallBlind != null &&
-              bigBlind != null &&
-              smallBlind > 0 &&
-              bigBlind > smallBlind) {
-            Navigator.pop(context, {
-              'smallBlind': smallBlind,
-              'bigBlind': bigBlind,
-            });
-          }
-        },
+      actions: Builder(
+        builder: (ctx) => Row(
+          children: [
+            Expanded(
+              child: OutlinedPillButton(
+                label: l10n.commonCancel,
+                onTap: () => Navigator.pop(ctx),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: PrimaryPillButton(
+                label: l10n.commonApply,
+                onTap: () {
+                  final sb = double.tryParse(smallBlindController.text);
+                  final bb = double.tryParse(bigBlindController.text);
+                  if (sb != null && bb != null && sb > 0 && bb >= sb) {
+                    Navigator.pop(ctx, {'smallBlind': sb, 'bigBlind': bb});
+                  }
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
 
     if (result != null) {
       setState(() {
-        _currentSmallBlind = (result['smallBlind'] as num).toDouble();
-        _currentBigBlind = (result['bigBlind'] as num).toDouble();
+        _currentSmallBlind = result['smallBlind']!;
+        _currentBigBlind = result['bigBlind']!;
         _blindsWereChanged = true;
       });
 

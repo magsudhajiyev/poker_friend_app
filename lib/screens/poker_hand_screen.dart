@@ -2820,18 +2820,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       },
     ));
 
-    if (widget.gameType == GameType.tournament) {
-      items.add(_buildMenuSeparator());
-      items.add(_buildMenuItem(
-        icon: 'assets/icons/Info.svg',
-        label: l10n.handRebuy,
-        onTap: () {
-          setState(() => _showMenuOverlay = false);
-          _showRebuyDialog();
-        },
-      ));
-    }
-
     items.add(_buildMenuSeparator());
 
     items.add(_buildMenuItem(
