@@ -483,6 +483,20 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            Container(
+              width: 72,
+              height: 72,
+              decoration: BoxDecoration(
+                color: _cardColor,
+                borderRadius: BorderRadius.circular(AppDecorations.radius18),
+              ),
+              child: Icon(
+                Icons.style_outlined,
+                size: 32,
+                color: Colors.white.withValues(alpha: 0.3),
+              ),
+            ),
+            const SizedBox(height: 20),
             Text(
               AppLocalizations.of(context).opponentHandsNoHandsTitle,
               style: AppTypography.ibm(

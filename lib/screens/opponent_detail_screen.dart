@@ -1273,27 +1273,6 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                 ],
               ),
               const SizedBox(height: 24),
-              // Icon holder
-              Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  color: AppColors.bgElevated,
-                  borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
-                ),
-                child: Center(
-                  child: SvgPicture.asset(
-                    'icons/figma_icons/search.svg',
-                    width: 24,
-                    height: 24,
-                    colorFilter: const ColorFilter.mode(
-                      AppColors.textPrimary,
-                      BlendMode.srcIn,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
               // Title
               Text(
                 l10n.opponentDetailNoHandsFound,
