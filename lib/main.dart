@@ -387,7 +387,7 @@ class _PokerTrackerAppState extends State<PokerTrackerApp>
       builder: (context, locale, _) {
         return MaterialApp(
           navigatorKey: navigatorKey,
-          title: 'Poker Hand Tracker',
+          title: 'Final Table',
           theme: AppTheme.lightTheme,
           scrollBehavior: const AppScrollBehavior(),
           locale: locale,

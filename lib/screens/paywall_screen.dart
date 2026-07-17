@@ -361,14 +361,20 @@ class _PaywallScreenState extends State<PaywallScreen> {
                   borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
                 ),
                 child: Center(
-                  child: Text(
-                    l10n.paywallMonthly,
-                    style: AppTypography.ibm(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: !_isAnnual
-                          ? AppColors.textPrimary
-                          : AppColors.textSecondary,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        l10n.paywallMonthly,
+                        style: AppTypography.ibm(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: !_isAnnual
+                              ? AppColors.textPrimary
+                              : AppColors.textSecondary,
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -393,10 +399,11 @@ class _PaywallScreenState extends State<PaywallScreen> {
                   ),
                 ),
                 child: Center(
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
                         l10n.paywallAnnualSave,
                         style: AppTypography.ibm(
                           fontSize: 14,
@@ -406,25 +413,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                               : AppColors.textSecondary,
                         ),
                       ),
-                      const SizedBox(width: 6),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: AppColors.accentPrimary.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(
-                              AppDecorations.radiusFull),
-                        ),
-                        child: Text(
-                          '-40%',
-                          style: AppTypography.ibm(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.accentPrimary,
-                          ),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ),
               ),

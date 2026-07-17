@@ -64,17 +64,13 @@ class _SplashScreenState extends State<SplashScreen> {
     if (_navigated || !mounted) return;
     if (!_authResolved || !_loopCompleted) return;
     _navigated = true;
-    // Use a no-animation route so the splash logo doesn't slide left
-    // during the transition. PageRouteBuilder is safe here because
-    // pushReplacement discards SplashScreen — the pop-related
-    // StreamBuilder bug (see diary 2026-07-16) only affects routes
-    // that remain in the stack.
+    // Extend MaterialPageRoute to disable the slide animation so the
+    // splash logo doesn't shift left during the transition. We must use
+    // MaterialPageRoute (not PageRouteBuilder) because PageRouteBuilder
+    // doesn't maintain child StreamBuilder state when routes above are
+    // popped — see diary/2026-07-16-system-back-button-and-pageroute-reload-bug.md.
     Navigator.of(context).pushReplacement(
-      PageRouteBuilder(
-        pageBuilder: (_, __, ___) => const AuthWrapper(),
-        transitionDuration: Duration.zero,
-        reverseTransitionDuration: Duration.zero,
-      ),
+      _NoAnimationRoute(builder: (_) => const AuthWrapper()),
     );
   }
 
@@ -85,4 +81,17 @@ class _SplashScreenState extends State<SplashScreen> {
       body: LoopingSplashLogo(onLoopCompleted: _onLoopCompleted),
     );
   }
+}
+
+/// MaterialPageRoute subclass with zero-duration transitions.
+/// Preserves all MaterialPageRoute state-management behaviour (unlike
+/// PageRouteBuilder) while eliminating the default slide animation.
+class _NoAnimationRoute extends MaterialPageRoute<void> {
+  _NoAnimationRoute({required super.builder});
+
+  @override
+  Duration get transitionDuration => Duration.zero;
+
+  @override
+  Duration get reverseTransitionDuration => Duration.zero;
 }
