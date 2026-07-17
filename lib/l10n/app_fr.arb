@@ -5406,7 +5406,7 @@
     }
   },
   "onboardingBankrollCardTitle": "Votre Bankroll",
-  "onboardingBankrollCardBody": "Appuyez longuement sur la carte bankroll pour saisir votre bankroll actuel et définir un objectif. Suivez votre progression !",
+  "onboardingBankrollCardBody": "Appuyez sur « Total Bankroll » pour saisir votre bankroll actuel et définir un objectif. Suivez votre progression !",
   "sessionDetailsLogAHand": "Logger une Main",
   "setupTableOptionalHint": "Placez au moins 2 joueurs pour démarrer la session",
   "onboardingSessionDetailsHubTitle": "Votre Centre de Session",

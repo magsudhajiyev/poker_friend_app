@@ -5406,7 +5406,7 @@
     }
   },
   "onboardingBankrollCardTitle": "Ваш Банкролл",
-  "onboardingBankrollCardBody": "Нажмите и удерживайте карточку банкролла, чтобы ввести текущий банкролл и установить цель. Отслеживайте свой прогресс!",
+  "onboardingBankrollCardBody": "Нажмите на «Total Bankroll», чтобы ввести текущий банкролл и установить цель. Отслеживайте свой прогресс!",
   "sessionDetailsLogAHand": "Записать руку",
   "setupTableOptionalHint": "Посадите минимум 2 игроков, чтобы начать сессию",
   "onboardingSessionDetailsHubTitle": "Ваш центр сессии",

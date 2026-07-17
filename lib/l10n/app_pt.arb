@@ -5406,7 +5406,7 @@
     }
   },
   "onboardingBankrollCardTitle": "Seu Bankroll",
-  "onboardingBankrollCardBody": "Pressione e segure o cartão de bankroll para inserir seu bankroll atual e definir uma meta. Acompanhe seu progresso!",
+  "onboardingBankrollCardBody": "Toque em \"Total Bankroll\" para inserir seu bankroll atual e definir uma meta. Acompanhe seu progresso!",
   "sessionDetailsLogAHand": "Registrar uma Mão",
   "setupTableOptionalHint": "Sente pelo menos 2 jogadores para iniciar a sessão",
   "onboardingSessionDetailsHubTitle": "Seu Centro de Sessão",
