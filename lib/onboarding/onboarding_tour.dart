@@ -1048,6 +1048,7 @@ class HandListTour {
     final coach = createOnboardingCoachMark(
       targets: targets,
       context: context,
+      showSkipInLastTarget: false,
       onFinish: () {
         // User now taps the real button; SessionHandsScreen continues the
         // tour on the first hand card.
@@ -1138,13 +1139,17 @@ class HandToolsTour {
       return;
     }
 
+    _showCoachMark(context, onFinish: onNext);
+  }
+
+  void _showCoachMark(BuildContext context, {required VoidCallback onFinish}) {
     final targets = <TargetFocus>[
       TargetFocus(
         identify: 'hand_tools_row',
         keyTarget: toolsRowKey,
         shape: ShapeLightFocus.RRect,
-        radius: 40,
-        paddingFocus: 6,
+        radius: 24,
+        paddingFocus: 4,
         contents: [
           centeredTooltipContent((context, controller) {
               final l10n = AppLocalizations.of(context);
@@ -1163,7 +1168,7 @@ class HandToolsTour {
     final coach = createOnboardingCoachMark(
       targets: targets,
       context: context,
-      onFinish: onNext,
+      onFinish: onFinish,
     );
     coach.show(context: context);
   }

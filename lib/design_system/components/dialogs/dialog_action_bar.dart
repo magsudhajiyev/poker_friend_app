@@ -61,9 +61,12 @@ class DialogActionBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (_isSingle) {
-      return _OutlinedPill(
-        label: cancelLabel,
-        onTap: _wrap(context, onCancel),
+      return SizedBox(
+        width: double.infinity,
+        child: _OutlinedPill(
+          label: cancelLabel,
+          onTap: _wrap(context, onCancel),
+        ),
       );
     }
     // Stacked layout — solid Confirm on top, outlined Cancel below.

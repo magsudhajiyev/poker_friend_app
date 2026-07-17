@@ -209,7 +209,6 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
     // Second (free-play) tour hand just finished — spotlight the ⓘ button
     // so the user can return to Session Details and see their stack chart.
     if (OnboardingState.isOnboardingActive &&
-        !OnboardingState.isReplay &&
         OnboardingState.currentPhase == 4 &&
         OnboardingState.secondTourHandPending) {
       OnboardingState.secondTourHandPending = false;
