@@ -851,231 +851,314 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
 
     final double pointWidth = 60.0;
     final double screenWidth = MediaQuery.of(context).size.width;
-    final double chartAreaWidth = spots.length > 7
+    const double yAxisWidth = 55.0;
+    final bool needsScroll = spots.length > 7;
+    final double chartAreaWidth = needsScroll
         ? spots.length * pointWidth
-        : screenWidth - 92;
+        : screenWidth - 92 - yAxisWidth;
 
     final lineColor = _profitLoss >= 0 ? AppColors.accentPrimary : const Color(0xFFFF6B6B);
 
-    final minY = spots.isNotEmpty ? spots.map((e) => e.y).reduce((a, b) => a < b ? a : b) * 0.9 : 0.0;
-    final maxY = spots.isNotEmpty ? spots.map((e) => e.y).reduce((a, b) => a > b ? a : b) * 1.1 : 100.0;
+    final rawMinY = spots.isNotEmpty ? spots.map((e) => e.y).reduce((a, b) => a < b ? a : b) : 0.0;
+    final rawMaxY = spots.isNotEmpty ? spots.map((e) => e.y).reduce((a, b) => a > b ? a : b) : 100.0;
+    final range = rawMaxY - rawMinY;
+    final minY = rawMinY - range * 0.1;
+    final maxY = rawMaxY + range * 0.25;
     final yInterval = maxY > minY ? (maxY - minY) / 4 : 100.0;
 
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: SizedBox(
-        width: chartAreaWidth,
-        child: LineChart(
-          LineChartData(
-            gridData: FlGridData(
-              show: true,
-              drawVerticalLine: false,
-              horizontalInterval: yInterval,
-              getDrawingHorizontalLine: (value) {
-                return FlLine(
-                  color: Colors.white.withOpacity(0.05),
-                  strokeWidth: 1,
-                );
-              },
-            ),
-            titlesData: FlTitlesData(
-              show: true,
-              rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-              topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-              leftTitles: AxisTitles(
-                sideTitles: SideTitles(
-                  showTitles: true,
-                  interval: yInterval,
-                  reservedSize: 55,
-                  getTitlesWidget: (double value, TitleMeta meta) {
-                    return Text(
-                      _formatCurrency(value),
-                      style: AppTypography.mono(
+    // Build the scrollable chart (no left Y-axis)
+    Widget scrollableChart = SizedBox(
+      width: chartAreaWidth,
+      child: LineChart(
+        LineChartData(
+          gridData: FlGridData(
+            show: true,
+            drawVerticalLine: false,
+            horizontalInterval: yInterval,
+            getDrawingHorizontalLine: (value) {
+              return FlLine(
+                color: Colors.white.withOpacity(0.05),
+                strokeWidth: 1,
+              );
+            },
+          ),
+          titlesData: FlTitlesData(
+            show: true,
+            rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            bottomTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                reservedSize: 30,
+                interval: 1,
+                getTitlesWidget: (double value, TitleMeta meta) {
+                  if (value != value.roundToDouble()) return const SizedBox.shrink();
+                  final idx = value.toInt();
+                  if (idx < 0 || idx >= _stackHistory.length) return const SizedBox.shrink();
+                  final entry = _stackHistory[idx];
+                  final changeType = entry['changeType'] ?? 'unknown';
+                  String label;
+                  switch (changeType) {
+                    case 'initial':
+                      label = l10n.sessionAnalyticsStart;
+                      break;
+                    case 'rebuy':
+                      label = l10n.sessionAnalyticsRebuy;
+                      break;
+                    case 'final':
+                      label = l10n.sessionAnalyticsEnd;
+                      break;
+                    case 'manual_increase':
+                    case 'manual_decrease':
+                      label = '📝';
+                      break;
+                    default:
+                      label = '#${entry['handNumber'] ?? idx}';
+                  }
+                  return SideTitleWidget(
+                    axisSide: meta.axisSide,
+                    space: 8.0,
+                    child: Text(
+                      label,
+                      style: AppTypography.ibm(
                         color: Colors.white.withOpacity(0.3),
                         fontSize: 10,
                       ),
-                    );
-                  },
-                ),
-              ),
-              bottomTitles: AxisTitles(
-                sideTitles: SideTitles(
-                  showTitles: true,
-                  reservedSize: 30,
-                  interval: 1,
-                  getTitlesWidget: (double value, TitleMeta meta) {
-                    if (value != value.roundToDouble()) return const SizedBox.shrink();
-                    final idx = value.toInt();
-                    if (idx < 0 || idx >= _stackHistory.length) return const SizedBox.shrink();
-                    final entry = _stackHistory[idx];
-                    final changeType = entry['changeType'] ?? 'unknown';
-                    String label;
-                    switch (changeType) {
-                      case 'initial':
-                        label = l10n.sessionAnalyticsStart;
-                        break;
-                      case 'rebuy':
-                        label = l10n.sessionAnalyticsRebuy;
-                        break;
-                      case 'final':
-                        label = l10n.sessionAnalyticsEnd;
-                        break;
-                      case 'manual_increase':
-                      case 'manual_decrease':
-                        label = '📝';
-                        break;
-                      default:
-                        label = '#${entry['handNumber'] ?? idx}';
-                    }
-                    return SideTitleWidget(
-                      axisSide: meta.axisSide,
-                      space: 8.0,
-                      child: Text(
-                        label,
-                        style: AppTypography.ibm(
-                          color: Colors.white.withOpacity(0.3),
-                          fontSize: 10,
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ),
-            borderData: FlBorderData(show: false),
-            minX: -0.3,
-            maxX: (spots.length - 1).toDouble() + 0.3,
-            minY: minY,
-            maxY: maxY,
-            lineTouchData: LineTouchData(
-              enabled: true,
-              handleBuiltInTouches: false,
-              touchSpotThreshold: 40,
-              touchCallback: (FlTouchEvent event, LineTouchResponse? response) {
-                if (event is FlTapUpEvent) {
-                  final tappedOnSpot = response != null && response.lineBarSpots != null && response.lineBarSpots!.isNotEmpty;
-                  final tappedIndex = tappedOnSpot ? response!.lineBarSpots!.first.x.toInt() : null;
-
-                  if (_touchedSpotIndex != null) {
-                    if (tappedIndex != null && tappedIndex != _touchedSpotIndex) {
-                      // Tapped a different dot — switch tooltip
-                      setState(() => _touchedSpotIndex = tappedIndex);
-                    } else {
-                      // Tapped same dot, tooltip, or empty area — navigate to hand
-                      final idx = _touchedSpotIndex!;
-                      setState(() => _touchedSpotIndex = null);
-                      _navigateToHandFromChart(idx);
-                    }
-                    return;
-                  }
-                  if (tappedOnSpot) {
-                    setState(() => _touchedSpotIndex = tappedIndex);
-                  }
-                }
-              },
-              touchTooltipData: LineTouchTooltipData(
-                getTooltipColor: (_) => const Color(0xFF1C2926),
-                tooltipRoundedRadius: 12,
-                tooltipPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                getTooltipItems: (touchedSpots) {
-                  return touchedSpots.map((spot) {
-                    final index = spot.x.toInt();
-                    final stackValue = _formatCurrency(spot.y);
-
-                    if (index >= 0 && index < _stackHistory.length) {
-                      final entry = _stackHistory[index];
-                      final handNumber = entry['handNumber'] as int?;
-                      final changeType = entry['changeType'] ?? '';
-                      final note = entry['note'] as String?;
-
-                      String detail = stackValue;
-
-                      if (changeType != 'initial' && changeType != 'rebuy' && changeType != 'final' && handNumber != null && handNumber > 0) {
-                        final hand = _findHandByNumber(handNumber);
-                        final position = hand?['heroPositionName'] as String?;
-                        final holeCards = hand?['ourHoleCards'] as Map<String, dynamic>?;
-                        final card1 = holeCards?['card1'] as String?;
-                        final card2 = holeCards?['card2'] as String?;
-                        final hasCards = card1 != null && card1.isNotEmpty && card2 != null && card2.isNotEmpty;
-
-                        if (position != null && position.isNotEmpty) {
-                          detail += '  ·  $position';
-                        }
-                        if (hasCards) {
-                          detail += '\n$card1 $card2';
-                        }
-                      }
-
-                      if (note != null && note.isNotEmpty) {
-                        detail += '\n📝 $note';
-                      }
-
-                      if (detail != stackValue) {
-                        return LineTooltipItem(
-                          detail,
-                          AppTypography.ibm(
-                            color: Colors.white,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        );
-                      }
-                    }
-
-                    return LineTooltipItem(
-                      stackValue,
-                      AppTypography.ibm(
-                        color: Colors.white,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    );
-                  }).toList();
+                    ),
+                  );
                 },
               ),
             ),
-            showingTooltipIndicators: _touchedSpotIndex != null
-                ? [ShowingTooltipIndicators([
-                    LineBarSpot(
-                      LineChartBarData(spots: spots),
-                      0,
-                      spots[_touchedSpotIndex!],
+          ),
+          borderData: FlBorderData(show: false),
+          minX: -0.3,
+          maxX: (spots.length - 1).toDouble() + 0.3,
+          minY: minY,
+          maxY: maxY,
+          lineTouchData: LineTouchData(
+            enabled: true,
+            handleBuiltInTouches: false,
+            touchSpotThreshold: 40,
+            touchCallback: (FlTouchEvent event, LineTouchResponse? response) {
+              if (event is FlTapUpEvent) {
+                final tappedOnSpot = response != null && response.lineBarSpots != null && response.lineBarSpots!.isNotEmpty;
+                final tappedIndex = tappedOnSpot ? response!.lineBarSpots!.first.x.toInt() : null;
+
+                if (_touchedSpotIndex != null) {
+                  if (tappedIndex != null && tappedIndex != _touchedSpotIndex) {
+                    setState(() => _touchedSpotIndex = tappedIndex);
+                  } else {
+                    final idx = _touchedSpotIndex!;
+                    setState(() => _touchedSpotIndex = null);
+                    _navigateToHandFromChart(idx);
+                  }
+                  return;
+                }
+                if (tappedOnSpot) {
+                  setState(() => _touchedSpotIndex = tappedIndex);
+                }
+              }
+            },
+            touchTooltipData: LineTouchTooltipData(
+              fitInsideVertically: true,
+              fitInsideHorizontally: true,
+              getTooltipColor: (_) => const Color(0xFF1C2926),
+              tooltipRoundedRadius: 12,
+              tooltipPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              getTooltipItems: (touchedSpots) {
+                return touchedSpots.map((spot) {
+                  final index = spot.x.toInt();
+                  final stackValue = _formatCurrency(spot.y);
+
+                  if (index >= 0 && index < _stackHistory.length) {
+                    final entry = _stackHistory[index];
+                    final handNumber = entry['handNumber'] as int?;
+                    final changeType = entry['changeType'] ?? '';
+                    final note = entry['note'] as String?;
+
+                    String detail = stackValue;
+
+                    if (changeType != 'initial' && changeType != 'rebuy' && changeType != 'final' && handNumber != null && handNumber > 0) {
+                      final hand = _findHandByNumber(handNumber);
+                      final position = hand?['heroPositionName'] as String?;
+                      final holeCards = hand?['ourHoleCards'] as Map<String, dynamic>?;
+                      final card1 = holeCards?['card1'] as String?;
+                      final card2 = holeCards?['card2'] as String?;
+                      final hasCards = card1 != null && card1.isNotEmpty && card2 != null && card2.isNotEmpty;
+
+                      if (position != null && position.isNotEmpty) {
+                        detail += '  ·  $position';
+                      }
+                      if (hasCards) {
+                        detail += '\n$card1 $card2';
+                      }
+                    }
+
+                    if (note != null && note.isNotEmpty) {
+                      detail += '\n📝 $note';
+                    }
+
+                    if (detail != stackValue) {
+                      return LineTooltipItem(
+                        detail,
+                        AppTypography.ibm(
+                          color: Colors.white,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      );
+                    }
+                  }
+
+                  return LineTooltipItem(
+                    stackValue,
+                    AppTypography.ibm(
+                      color: Colors.white,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
                     ),
-                  ])]
-                : [],
-            lineBarsData: [
-              LineChartBarData(
-                spots: spots,
-                isCurved: true,
-                curveSmoothness: 0.3,
-                preventCurveOverShooting: true,
-                gradient: LinearGradient(
-                  colors: [lineColor.withOpacity(0.3), lineColor],
+                  );
+                }).toList();
+              },
+            ),
+          ),
+          showingTooltipIndicators: _touchedSpotIndex != null
+              ? [ShowingTooltipIndicators([
+                  LineBarSpot(
+                    LineChartBarData(spots: spots),
+                    0,
+                    spots[_touchedSpotIndex!],
+                  ),
+                ])]
+              : [],
+          lineBarsData: [
+            LineChartBarData(
+              spots: spots,
+              isCurved: true,
+              curveSmoothness: 0.3,
+              preventCurveOverShooting: true,
+              gradient: LinearGradient(
+                colors: [lineColor.withOpacity(0.3), lineColor],
+              ),
+              barWidth: 3,
+              isStrokeCapRound: true,
+              dotData: FlDotData(
+                show: true,
+                getDotPainter: (spot, percent, barData, index) => FlDotCirclePainter(
+                  radius: 4,
+                  color: Colors.white,
+                  strokeWidth: 2,
+                  strokeColor: lineColor,
                 ),
-                barWidth: 3,
-                isStrokeCapRound: true,
-                dotData: FlDotData(
+              ),
+              belowBarData: BarAreaData(
+                show: true,
+                gradient: LinearGradient(
+                  colors: [lineColor.withOpacity(0.1), Colors.transparent],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (!needsScroll) {
+      // No scrolling needed — show Y axis inline as before
+      return Row(
+        children: [
+          SizedBox(
+            width: yAxisWidth,
+            child: LineChart(
+              LineChartData(
+                gridData: const FlGridData(show: false),
+                titlesData: FlTitlesData(
                   show: true,
-                  getDotPainter: (spot, percent, barData, index) => FlDotCirclePainter(
-                    radius: 4,
-                    color: Colors.white,
-                    strokeWidth: 2,
-                    strokeColor: lineColor,
+                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(showTitles: true, reservedSize: 30,
+                      getTitlesWidget: (_, __) => const SizedBox.shrink()),
+                  ),
+                  leftTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      interval: yInterval,
+                      reservedSize: yAxisWidth,
+                      getTitlesWidget: (double value, TitleMeta meta) {
+                        return Text(
+                          _formatCurrency(value),
+                          style: AppTypography.mono(
+                            color: Colors.white.withOpacity(0.3),
+                            fontSize: 10,
+                          ),
+                        );
+                      },
+                    ),
                   ),
                 ),
-                belowBarData: BarAreaData(
-                  show: true,
-                  gradient: LinearGradient(
-                    colors: [lineColor.withOpacity(0.1), Colors.transparent],
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
+                borderData: FlBorderData(show: false),
+                minY: minY,
+                maxY: maxY,
+                lineBarsData: [LineChartBarData(spots: const [], show: false)],
+              ),
+            ),
+          ),
+          Expanded(child: scrollableChart),
+        ],
+      );
+    }
+
+    // Scrollable: fixed Y-axis on the left, scrollable chart on the right
+    return Row(
+      children: [
+        SizedBox(
+          width: yAxisWidth,
+          child: LineChart(
+            LineChartData(
+              gridData: const FlGridData(show: false),
+              titlesData: FlTitlesData(
+                show: true,
+                rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                bottomTitles: AxisTitles(
+                  sideTitles: SideTitles(showTitles: true, reservedSize: 30,
+                    getTitlesWidget: (_, __) => const SizedBox.shrink()),
+                ),
+                leftTitles: AxisTitles(
+                  sideTitles: SideTitles(
+                    showTitles: true,
+                    interval: yInterval,
+                    reservedSize: yAxisWidth,
+                    getTitlesWidget: (double value, TitleMeta meta) {
+                      return Text(
+                        _formatCurrency(value),
+                        style: AppTypography.mono(
+                          color: Colors.white.withOpacity(0.3),
+                          fontSize: 10,
+                        ),
+                      );
+                    },
                   ),
                 ),
               ),
-            ],
+              borderData: FlBorderData(show: false),
+              minY: minY,
+              maxY: maxY,
+              lineBarsData: [LineChartBarData(spots: const [], show: false)],
+            ),
           ),
         ),
-      ),
+        Expanded(
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: scrollableChart,
+          ),
+        ),
+      ],
     );
   }
 

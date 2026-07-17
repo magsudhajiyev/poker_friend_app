@@ -117,6 +117,12 @@ class UserStatsService {
 
         updates['lastUpdated'] = FieldValue.serverTimestamp();
 
+        // Safety: strip any key whose dot-separated segments include empties
+        // (e.g. leading/trailing dot, consecutive dots). This prevents a native
+        // Firestore crash in FieldPath::FromDotSeparatedStringView.
+        updates.removeWhere((key, _) =>
+            key.isEmpty || key.startsWith('.') || key.endsWith('.') || key.contains('..'));
+
         transaction.update(docRef, updates);
       });
     } catch (e) {
@@ -130,6 +136,13 @@ class UserStatsService {
   /// position — the denominator for per-position VPIP/PFR — while the other
   /// maps mirror their global counters. Returns {} when [position] is null/
   /// empty or when every delta is zero.
+  /// Known safe position names that can be used as Firestore map keys.
+  static const _safePositionNames = {
+    'BTN', 'SB', 'BB', 'UTG', 'UTG+1', 'UTG+2',
+    'LJ', 'HJ', 'CO', 'BTN/SB', 'Empty',
+    'P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8', 'P9',
+  };
+
   static Map<String, int> positionUpdatePaths({
     required String? position,
     int handsDealtDelta = 0,
@@ -139,9 +152,9 @@ class UserStatsService {
   }) {
     final pos = position?.trim();
     if (pos == null || pos.isEmpty) return const {};
-    // Firestore dot-paths address nested map keys; position names must not
-    // contain dots (they never do: BTN/CO/HJ/MP/EP/UTG/SB/BB).
-    if (pos.contains('.')) return const {};
+    // Only allow whitelisted position names as Firestore map keys.
+    // Rejects any unexpected value (dots, special chars, user input).
+    if (!_safePositionNames.contains(pos)) return const {};
     return {
       if (handsDealtDelta != 0) 'positionHandsPlayed.$pos': handsDealtDelta,
       if (vpipDelta != 0) 'positionVpipCount.$pos': vpipDelta,

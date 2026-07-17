@@ -534,21 +534,25 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
           Container(
             width: 38,
             height: 28,
+            padding: const EdgeInsets.symmetric(horizontal: 2),
             decoration: BoxDecoration(
               color: AppColors.bgPrimary,
               borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
             ),
             alignment: Alignment.center,
-            child: Text(
-              position,
-              textAlign: TextAlign.center,
-              style: AppTypography.ibm(
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-                color: isHero
-                    ? AppColors.accentSecondary
-                    : AppColors.textSecondary,
-                height: 20 / 13,
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                position,
+                textAlign: TextAlign.center,
+                style: AppTypography.ibm(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: isHero
+                      ? AppColors.accentSecondary
+                      : AppColors.textSecondary,
+                  height: 20 / 13,
+                ),
               ),
             ),
           ),
