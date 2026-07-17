@@ -5406,7 +5406,7 @@
     }
   },
   "onboardingBankrollCardTitle": "Dein Bankroll",
-  "onboardingBankrollCardBody": "Tippe auf „Total Bankroll", um dein aktuelles Bankroll einzugeben und ein Ziel zu setzen. Verfolge deinen Fortschritt!",
+  "onboardingBankrollCardBody": "Tippe auf «Total Bankroll», um dein aktuelles Bankroll einzugeben und ein Ziel zu setzen. Verfolge deinen Fortschritt!",
   "sessionDetailsLogAHand": "Hand loggen",
   "setupTableOptionalHint": "Setze mindestens 2 Spieler, um die Session zu starten",
   "onboardingSessionDetailsHubTitle": "Dein Session-Hub",
