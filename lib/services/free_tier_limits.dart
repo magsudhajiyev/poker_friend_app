@@ -44,8 +44,8 @@ class FreeTierLimits {
   /// Free tier: 5 opponent profiles.
   static const int maxOpponentProfilesFree = 5;
 
-  /// Pro tier: 15 opponent profiles.
-  static const int maxOpponentProfilesPro = 15;
+  /// Pro tier: 20 opponent profiles.
+  static const int maxOpponentProfilesPro = 20;
 
   /// Computed cap for the current tier.
   static int get maxOpponentProfiles {

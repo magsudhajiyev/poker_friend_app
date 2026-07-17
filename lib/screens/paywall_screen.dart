@@ -461,10 +461,11 @@ class _PaywallScreenState extends State<PaywallScreen> {
           secondaryPrice: _tierSecondaryPrice(
               'pro_monthly', 'pro_annual', l10n, '\$19.99', '\$159.99'),
           features: [
-            l10n.paywallUnlimitedHandLogging,
-            l10n.paywallFullSessionHistory,
-            l10n.paywallAiHandAnalysis,
-            l10n.paywallExportHandsCsv,
+            l10n.paywallProFeature1,
+            l10n.paywallProFeature2,
+            l10n.paywallProFeature3,
+            l10n.paywallProFeature4,
+            l10n.paywallProFeature5,
           ],
           showTrialBadge: true,
           trialBadgeText: l10n.paywallFreeTrialBadge,
@@ -480,10 +481,11 @@ class _PaywallScreenState extends State<PaywallScreen> {
           secondaryPrice: _tierSecondaryPrice(
               'elite_monthly', 'elite_annual', l10n, '\$24.99', '\$189.99'),
           features: [
-            l10n.paywallEverythingInProElite,
-            l10n.paywallEliteFeature1,
-            l10n.paywallEliteFeature2,
-            l10n.paywallEliteFeature3,
+            l10n.paywallEliteFeature4,
+            l10n.paywallEliteFeature5,
+            l10n.paywallEliteFeature6,
+            l10n.paywallEliteFeature7,
+            l10n.paywallEliteFeature8,
           ],
           showTrialBadge: false,
           isSelected: _selectedPlanIndex == 1,
@@ -498,7 +500,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
           secondaryPrice: _tierSecondaryPrice(
               'club_monthly', 'club_annual', l10n, '\$59.99', '\$449.99'),
           features: [
-            l10n.paywallEverythingInPro,
+            l10n.paywallClubFeature1,
             l10n.paywallClubManagement,
             l10n.paywallLiveDealerVoice,
             l10n.paywallMultiTableEvents,

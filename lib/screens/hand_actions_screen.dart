@@ -1914,8 +1914,8 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
     );
   }
 
-  static const int _maxMonthlyAnalysesPro = 10;
-  static const int _maxMonthlyAnalysesElite = 30;
+  static const int _maxMonthlyAnalysesPro = 20;
+  static const int _maxMonthlyAnalysesElite = 50;
   static const String _analysisCountKeyPro = 'monthly_ai_analysis_count_pro';
   static const String _analysisCountKeyElite = 'monthly_ai_analysis_count_elite';
   static const String _analysisMonthKey = 'monthly_ai_analysis_month';
