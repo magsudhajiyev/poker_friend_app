@@ -4974,9 +4974,14 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         // Reset the pot after distributing all pots
         gameState.currentPot = 0.0;
 
-        // Complete hand in session manager
+        // Complete hand in session manager.
+        // The pot hasn't been credited yet, so if the hero won, add their
+        // share now — otherwise the stack chart records the pre-award value.
         final ourSeat = sessionManager.ourSeatNumber;
-        final currentStack = ourSeat != null ? gameState.players[ourSeat - 1].currentStack : null;
+        double? currentStack = ourSeat != null ? gameState.players[ourSeat - 1].currentStack : null;
+        if (currentStack != null && ourSeat != null && combinedShares.containsKey(ourSeat)) {
+          currentStack += combinedShares[ourSeat]!;
+        }
 
         // B11: persist EVERY pot's winner. Sort winners by winnings desc so
         // winnerId (kept for stats back-compat) is the largest-pot winner.
@@ -5026,8 +5031,13 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         final individualShares = winnerResult['individualShares'] as Map<int, double>?;
         final sharePerWinner = winnerResult['sharePerWinner'] as double?;
 
+        // The pot hasn't been credited yet, so if the hero won, add their
+        // share now — otherwise the stack chart records the pre-award value.
         final ourSeat = sessionManager.ourSeatNumber;
-        final currentStack = ourSeat != null ? gameState.players[ourSeat - 1].currentStack : null;
+        double? currentStack = ourSeat != null ? gameState.players[ourSeat - 1].currentStack : null;
+        if (currentStack != null && ourSeat != null && winnerIds.contains(ourSeat)) {
+          currentStack += individualShares?[ourSeat] ?? (sharePerWinner ?? (potAmount / winnerIds.length));
+        }
 
         sessionManager.completeCurrentHandWithChop(
           potAmount: potAmount,
@@ -5049,8 +5059,13 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         final potAmount = winnerResult['potAmount'] as double? ?? gameState.currentPot;
 
         if (winnerId != null) {
+          // The pot hasn't been credited yet, so if the hero won, add the
+          // pot now — otherwise the stack chart records the pre-award value.
           final ourSeat = sessionManager.ourSeatNumber;
-          final currentStack = ourSeat != null ? gameState.players[ourSeat - 1].currentStack : null;
+          double? currentStack = ourSeat != null ? gameState.players[ourSeat - 1].currentStack : null;
+          if (currentStack != null && ourSeat != null && winnerId == ourSeat) {
+            currentStack += potAmount;
+          }
 
           sessionManager.completeCurrentHand(
             potAmount: potAmount,
