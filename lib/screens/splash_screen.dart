@@ -64,8 +64,17 @@ class _SplashScreenState extends State<SplashScreen> {
     if (_navigated || !mounted) return;
     if (!_authResolved || !_loopCompleted) return;
     _navigated = true;
+    // Use a no-animation route so the splash logo doesn't slide left
+    // during the transition. PageRouteBuilder is safe here because
+    // pushReplacement discards SplashScreen — the pop-related
+    // StreamBuilder bug (see diary 2026-07-16) only affects routes
+    // that remain in the stack.
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const AuthWrapper()),
+      PageRouteBuilder(
+        pageBuilder: (_, __, ___) => const AuthWrapper(),
+        transitionDuration: Duration.zero,
+        reverseTransitionDuration: Duration.zero,
+      ),
     );
   }
 

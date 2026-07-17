@@ -341,6 +341,11 @@ class _PaywallScreenState extends State<PaywallScreen> {
       decoration: BoxDecoration(
         color: AppColors.bgSurface,
         borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
+        border: Border.all(
+          color: _isAnnual
+              ? AppColors.accentPrimary.withValues(alpha: 0.35)
+              : Colors.transparent,
+        ),
       ),
       padding: const EdgeInsets.all(4),
       child: Row(
@@ -377,19 +382,49 @@ class _PaywallScreenState extends State<PaywallScreen> {
                 duration: const Duration(milliseconds: 200),
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 decoration: BoxDecoration(
-                  color: _isAnnual ? AppColors.bgElevated : Colors.transparent,
+                  color: _isAnnual
+                      ? AppColors.accentPrimary.withValues(alpha: 0.15)
+                      : Colors.transparent,
                   borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
+                  border: Border.all(
+                    color: _isAnnual
+                        ? AppColors.accentPrimary.withValues(alpha: 0.5)
+                        : Colors.transparent,
+                  ),
                 ),
                 child: Center(
-                  child: Text(
-                    l10n.paywallAnnualSave,
-                    style: AppTypography.ibm(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: _isAnnual
-                          ? AppColors.textPrimary
-                          : AppColors.textSecondary,
-                    ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        l10n.paywallAnnualSave,
+                        style: AppTypography.ibm(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: _isAnnual
+                              ? AppColors.accentPrimary
+                              : AppColors.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: AppColors.accentPrimary.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(
+                              AppDecorations.radiusFull),
+                        ),
+                        child: Text(
+                          '-40%',
+                          style: AppTypography.ibm(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.accentPrimary,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
