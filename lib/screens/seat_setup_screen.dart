@@ -439,7 +439,10 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
 
                     const SizedBox(height: 8),
 
-                    // ─── PLAYER NAME ───────────────────────────────
+                    // ─── PLAYER NAME + SAVE-AS-OPPONENT (grouped) ──
+                    // Both live inside a single card so the toggle
+                    // visually reads as a modifier of the Name field
+                    // rather than as another input row.
                     Column(
                       key: playerNameKey,
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -460,30 +463,69 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                                 color: AppColors.borderStrong, width: 1.5),
                             borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
                           ),
-                          child: TextField(
-                            controller: tempNameController,
-                            enabled: !_areSeatChangesLocked(),
-                            style: AppTypography.ibm(
-                              fontSize: 15,
-                              color: AppColors.textPrimary,
-                            ),
-                            textCapitalization: TextCapitalization.words,
-                            decoration: InputDecoration(
-                              border: InputBorder.none,
-                              contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 16, vertical: 12),
-                              hintText: AppLocalizations.of(context).seatSetupPlayerName,
-                              hintStyle: AppTypography.ibm(
-                                fontSize: 15,
-                                color: AppColors.textSecondary,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              TextField(
+                                controller: tempNameController,
+                                enabled: !_areSeatChangesLocked(),
+                                style: AppTypography.ibm(
+                                  fontSize: 15,
+                                  color: AppColors.textPrimary,
+                                ),
+                                textCapitalization:
+                                    TextCapitalization.words,
+                                decoration: InputDecoration(
+                                  border: InputBorder.none,
+                                  contentPadding:
+                                      const EdgeInsets.symmetric(
+                                          horizontal: 16, vertical: 12),
+                                  hintText: AppLocalizations.of(context)
+                                      .seatSetupPlayerName,
+                                  hintStyle: AppTypography.ibm(
+                                    fontSize: 15,
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ),
+                                onChanged: (value) {
+                                  setDialogState(() {
+                                    tempName = value;
+                                    suggestions = _getSuggestions(value);
+                                  });
+                                },
                               ),
-                            ),
-                            onChanged: (value) {
-                              setDialogState(() {
-                                tempName = value;
-                                suggestions = _getSuggestions(value);
-                              });
-                            },
+                              // Hairline between the input and the
+                              // toggle so the two rows read as siblings
+                              // inside the same card.
+                              Container(
+                                height: 1,
+                                color: Colors.white.withValues(alpha: 0.08),
+                              ),
+                              Padding(
+                                key: saveOpponentKey,
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 8),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      'Save as opponent',
+                                      style: AppTypography.ibm(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w500,
+                                        color: const Color(0xFFB2B2B2),
+                                      ),
+                                    ),
+                                    AppToggle(
+                                      value: tempSaveAsOpponent,
+                                      onChanged: (val) => setDialogState(
+                                          () => tempSaveAsOpponent = val),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                         // Inline autocomplete suggestions
@@ -585,40 +627,7 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                       ],
                     ),
 
-                    const SizedBox(height: 8),
-
-                    // ─── SAVE AS OPPONENT ──────────────────────────
-                    Container(
-                      key: saveOpponentKey,
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 18, vertical: 14),
-                      decoration: BoxDecoration(
-                        color: AppColors.bgInputOnInverse,
-                        border: Border.all(color: AppColors.borderOnInverseSubtle),
-                        borderRadius: BorderRadius.circular(AppDecorations.radius14),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Save as opponent',
-                            style: AppTypography.ibm(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                              color: const Color(0xFFB2B2B2),
-                            ),
-                          ),
-                          AppToggle(
-                            value: tempSaveAsOpponent,
-                            onChanged: (val) =>
-                                setDialogState(() => tempSaveAsOpponent = val),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 12),
 
                     // ─── STACK ─────────────────────────────────────
                     Column(

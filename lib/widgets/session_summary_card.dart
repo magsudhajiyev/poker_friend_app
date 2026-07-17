@@ -160,14 +160,20 @@ class _SessionSummaryCardState extends State<SessionSummaryCard> {
               width: cardWidth,
               child: Row(
                 children: [
-                  // Close button
+                  // Close button — solid secondary treatment so it
+                  // reads as a real button next to the primary Share
+                  // pill (was 8% white which blended into the dark bg).
                   Expanded(
                     child: GestureDetector(
                       onTap: () => Navigator.pop(context),
                       child: Container(
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.08),
+                          color: AppColors.bgElevated,
+                          border: Border.all(
+                            color: AppColors.borderStrong,
+                            width: 1,
+                          ),
                           borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
                         ),
                         child: Center(
@@ -176,7 +182,7 @@ class _SessionSummaryCardState extends State<SessionSummaryCard> {
                             style: AppTypography.ibm(
                               fontSize: 17,
                               fontWeight: FontWeight.w600,
-                              color: Colors.white70,
+                              color: Colors.white,
                             ),
                           ),
                         ),

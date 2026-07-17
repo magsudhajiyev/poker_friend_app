@@ -611,9 +611,16 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
                           child: Column(
                             children: [
                               _buildSessionOverview(),
-                              const SizedBox(height: 16),
+                              // Section divider — replaces the card
+                              // boundary the two blocks used to have.
+                              const SizedBox(height: 28),
+                              Container(
+                                height: 1,
+                                color: Colors.white.withValues(alpha: 0.06),
+                              ),
+                              const SizedBox(height: 24),
                               _buildStackChart(),
-                              const SizedBox(height: 16),
+                              const SizedBox(height: 32),
                               _buildLoggedHandsButton(),
                               const SizedBox(height: 100),
                             ],
@@ -642,12 +649,12 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
         ? '${pl >= 0 ? '+' : ''}${CurrencyService.formatCash(pl)}'
         : l10n.sessionAnalyticsNotAvailableFull;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.bgSurface,
-        borderRadius: BorderRadius.circular(AppDecorations.radiusXl),
-      ),
-      padding: const EdgeInsets.all(20),
+    // Flat layout — no card fill/border. Session name doubles as the
+    // section header; the horizontal padding comes from the outer
+    // SingleChildScrollView so content sits flush with the trash/share
+    // buttons in the top nav.
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -662,33 +669,42 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
             ),
           ),
           const SizedBox(height: 16),
-          // Hero Profit/Loss
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Expanded(
-                child: Text(
-                  plText,
-                  style: AppTypography.grotesk(
-                    color: plColor,
-                    fontSize: 34,
-                    fontWeight: FontWeight.w600,
-                    height: 1.0,
-                  ),
-                ),
+          // Hero Profit / Loss — eyebrow label above the number, both
+          // tinted the same accent colour (green for profit, red for
+          // loss) so the state reads at a glance. The label uses the
+          // actual word ("Profit" or "Loss") rather than the generic
+          // "Profit/Loss" split.
+          if (pl != null)
+            Text(
+              pl >= 0
+                  ? l10n.sessionAnalyticsProfit
+                  : l10n.sessionAnalyticsLoss,
+              style: AppTypography.ibm(
+                color: plColor,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.4,
               ),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 4, left: 8),
-                child: Text(
-                  l10n.sessionAnalyticsProfitLoss,
-                  style: AppTypography.ibm(
-                    color: Colors.white.withOpacity(0.5),
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
+            )
+          else
+            Text(
+              l10n.sessionAnalyticsProfitLoss,
+              style: AppTypography.ibm(
+                color: Colors.white.withOpacity(0.5),
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.4,
               ),
-            ],
+            ),
+          const SizedBox(height: 6),
+          Text(
+            plText,
+            style: AppTypography.grotesk(
+              color: plColor,
+              fontSize: 34,
+              fontWeight: FontWeight.w600,
+              height: 1.0,
+            ),
           ),
           const SizedBox(height: 24),
           // 2x2 label rows — bare, no inner cards
@@ -755,13 +771,9 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
 
   Widget _buildStackChart() {
     final l10n = AppLocalizations.of(context);
-    return Container(
+    return Padding(
       key: _stackChartKey,
-      decoration: BoxDecoration(
-        color: AppColors.bgSurface,
-        borderRadius: BorderRadius.circular(AppDecorations.radiusXl),
-      ),
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.symmetric(vertical: 4),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

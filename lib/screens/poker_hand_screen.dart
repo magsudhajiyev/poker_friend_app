@@ -2887,29 +2887,13 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     Color textColor = Colors.white,
     Color? iconColor,
   }) {
-    final color = iconColor ?? Colors.white;
-    return GestureDetector(
+    return _MenuRow(
       key: key,
+      label: label,
+      textColor: textColor,
+      trailing: _buildIcon(icon, 20, iconColor ?? Colors.white),
+      destructive: textColor == AppColors.accentDanger,
       onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              label,
-              style: AppTypography.ibm(
-                fontSize: 15,
-                fontWeight: FontWeight.w400,
-                color: textColor,
-                height: 22 / 15,
-              ),
-            ),
-            _buildIcon(icon, 16, color),
-          ],
-        ),
-      ),
     );
   }
 
@@ -2920,10 +2904,13 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     required VoidCallback onTap,
   }) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: () {
+        HapticFeedback.selectionClick();
+        onTap();
+      },
       behavior: HitTestBehavior.opaque,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -7688,4 +7675,89 @@ class _StackRingPainter extends CustomPainter {
   @override
   bool shouldRepaint(_StackRingPainter old) =>
       old.currentRange != currentRange || old.hoveredRange != hoveredRange;
+}
+
+/// One tappable row inside the poker-hand options overlay
+/// (`_buildMenuOverlay`). Restores a comfortable touch target and
+/// adds press-in feedback:
+///
+/// - **Row height ~46px** — 12px vertical padding around a 22-lineheight
+///   label + 20px icon comfortably clears the 44px iOS touch minimum.
+///   Previous 5px padding made rows feel cramped and easy to mis-tap.
+/// - **Press-in tint** — background fades in on tap-down; `bgSurface`
+///   for normal rows, `accentDanger` @ 12% for the Stop Session row.
+/// - **Haptic tick** — selectionClick on normal rows, mediumImpact on
+///   destructive so the finger gets tactile confirmation before the
+///   menu closes and the action fires.
+class _MenuRow extends StatefulWidget {
+  final String label;
+  final Color textColor;
+  final Widget trailing;
+  final VoidCallback onTap;
+  final bool destructive;
+
+  const _MenuRow({
+    super.key,
+    required this.label,
+    required this.textColor,
+    required this.trailing,
+    required this.onTap,
+    this.destructive = false,
+  });
+
+  @override
+  State<_MenuRow> createState() => _MenuRowState();
+}
+
+class _MenuRowState extends State<_MenuRow> {
+  bool _pressed = false;
+
+  void _setPressed(bool value) {
+    if (!mounted || _pressed == value) return;
+    setState(() => _pressed = value);
+  }
+
+  void _handleTap() {
+    if (widget.destructive) {
+      HapticFeedback.mediumImpact();
+    } else {
+      HapticFeedback.selectionClick();
+    }
+    widget.onTap();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final activeFill = widget.destructive
+        ? AppColors.accentDanger.withValues(alpha: 0.12)
+        : Colors.white.withValues(alpha: 0.06);
+    return GestureDetector(
+      onTap: _handleTap,
+      onTapDown: (_) => _setPressed(true),
+      onTapUp: (_) => _setPressed(false),
+      onTapCancel: () => _setPressed(false),
+      behavior: HitTestBehavior.opaque,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 90),
+        curve: Curves.easeOut,
+        color: _pressed ? activeFill : Colors.transparent,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              widget.label,
+              style: AppTypography.ibm(
+                fontSize: 15,
+                fontWeight: FontWeight.w400,
+                color: widget.textColor,
+                height: 22 / 15,
+              ),
+            ),
+            widget.trailing,
+          ],
+        ),
+      ),
+    );
+  }
 }

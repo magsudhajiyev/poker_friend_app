@@ -34,6 +34,7 @@ import '../services/calendar_event_service.dart';
 import '../widgets/main_shell.dart';
 import '../design_system/components/tween_number.dart';
 import '../design_system/components/scale_tap_feedback.dart';
+import 'bankroll_edit_screen.dart';
 import '../design_system/components/chart_reveal_clip.dart';
 import '../design_system/components/buttons/secondary_pill_button.dart';
 import '../onboarding/onboarding_tour.dart';
@@ -122,11 +123,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   // Play style tooltip overlay
   OverlayEntry? _playStyleTooltipEntry;
   final GlobalKey _playStyleInfoKey = GlobalKey(debugLabel: 'playStyleInfo');
-
-  // Bankroll card inline edit (press-and-hold)
-  final _editGoalController = TextEditingController();
-  final _editBankrollController = TextEditingController();
-  bool _isBankrollEditing = false;
 
   // Context menu state
   String? _selectedEventId;
@@ -1171,8 +1167,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     _clubNotificationSubscription?.cancel();
     _playStyleTooltipEntry?.remove();
     _progressAnimationController.dispose();
-    _editGoalController.dispose();
-    _editBankrollController.dispose();
     super.dispose();
   }
 
@@ -2181,40 +2175,30 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   Widget _buildBankrollCard() => _buildBankrollFront();
 
-  void _startBankrollEdit() {
-    _editBankrollController.text = currentBankroll > 0 ? currentBankroll.toStringAsFixed(0) : '';
-    _editGoalController.text = bankrollGoal > 0 ? bankrollGoal.toStringAsFixed(0) : '';
-    setState(() => _isBankrollEditing = true);
-  }
-
-  void _cancelBankrollEdit() {
-    setState(() => _isBankrollEditing = false);
-  }
-
-  Future<void> _saveBankrollEdit() async {
-    final newBankroll = double.tryParse(_editBankrollController.text);
-    final newGoal = double.tryParse(_editGoalController.text);
-
-    if (newBankroll != null) {
-      await BankrollService.setCurrentBankroll(newBankroll);
-    }
-    if (newGoal != null) {
-      await BankrollService.setBankrollGoal(newGoal);
-    }
-
-    AppDataCache.markHomeDirty();
-    _loadData();
-    setState(() => _isBankrollEditing = false);
-
-    if (mounted) {
-      final l10n = AppLocalizations.of(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.bankrollSheetBankrollUpdated),
-          backgroundColor: AppColors.accentPrimary,
+  /// Opens the full-screen bankroll edit page (Figma node 1940:18321).
+  ///
+  /// Reachable from the pencil icon in the bankroll header and the
+  /// long-press on the bankroll number (kept as a power-user
+  /// shortcut). Returns a saved-flag from the pushed screen; on save
+  /// we reload the home data and show a confirmation snack.
+  Future<void> _startBankrollEdit() async {
+    final saved = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => BankrollEditScreen(
+          initialBankroll: currentBankroll,
+          initialGoal: bankrollGoal,
         ),
-      );
-    }
+      ),
+    );
+    if (saved != true || !mounted) return;
+    _loadData();
+    final l10n = AppLocalizations.of(context);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(l10n.bankrollSheetBankrollUpdated),
+        backgroundColor: AppColors.accentPrimary,
+      ),
+    );
   }
 
   Widget _buildBankrollFront() {
@@ -2231,22 +2215,49 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
     return GestureDetector(
       key: _bankrollCardKey,
+      // Tap or long-press anywhere on the card opens the edit page.
+      // Long-press is kept for legacy muscle memory; tap is the
+      // discoverable primary entry (replaces the pencil icon).
+      onTap: _isBankrollHidden ? null : _startBankrollEdit,
       onLongPress: _isBankrollHidden ? null : _startBankrollEdit,
-      // Opaque so press-and-hold works anywhere on the card, not only on
-      // the text glyphs (deferToChild made the gesture feel broken).
+      // Opaque so the whole card is a tap target, not only the text
+      // glyphs (deferToChild made the gesture feel broken).
       behavior: HitTestBehavior.opaque,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // "Total Bankroll" label
-            Text(
-              'Total Bankroll',
-              style: AppTypography.ibm(
-                fontSize: 10, fontWeight: FontWeight.w600,
-                color: AppColors.textSecondary,
-              ),
+            // "Total Bankroll" label — bumped size and paired with a
+            // trailing chevron so it reads as a tappable header. The
+            // whole card is the tap target (see the wrapping
+            // GestureDetector), but the chevron gives users a visible
+            // "this is interactive" cue.
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text(
+                  'Total Bankroll',
+                  style: AppTypography.ibm(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                if (!_isBankrollHidden) ...[
+                  const SizedBox(width: 4),
+                  SvgPicture.asset(
+                    'assets/icons/CaretRight.svg',
+                    width: 14,
+                    height: 14,
+                    colorFilter: const ColorFilter.mode(
+                      AppColors.contentInactive,
+                      BlendMode.srcIn,
+                    ),
+                  ),
+                ],
+              ],
             ),
 
             const SizedBox(height: 12),
@@ -2294,7 +2305,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     final prefs = await SharedPreferences.getInstance();
                     setState(() {
                       _isBankrollHidden = !_isBankrollHidden;
-                      if (_isBankrollHidden) _isBankrollEditing = false;
                     });
                     await prefs.setBool('bankroll_hidden', _isBankrollHidden);
                   },
@@ -2302,50 +2312,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 ),
               ],
             ),
-
-            // Inline edit fields (shown on long-press)
-            if (_isBankrollEditing) ...[
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildBankrollEditField(
-                      label: l10n.bankrollSheetCurrentLabel,
-                      controller: _editBankrollController,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _buildBankrollEditField(
-                      label: l10n.bankrollSheetGoalLabel,
-                      controller: _editGoalController,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: AppButton(
-                      label: l10n.commonCancel,
-                      variant: AppButtonVariant.secondarySmall,
-                      onTap: _cancelBankrollEdit,
-                      fullWidth: true,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: AppButton(
-                      label: l10n.commonSave,
-                      variant: AppButtonVariant.primarySmall,
-                      onTap: _saveBankrollEdit,
-                      fullWidth: true,
-                    ),
-                  ),
-                ],
-              ),
-            ],
 
             const SizedBox(height: 8),
 
@@ -2399,55 +2365,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildBankrollEditField({
-    required String label,
-    required TextEditingController controller,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: AppTypography.ibm(
-            fontSize: 11, fontWeight: FontWeight.w500,
-            color: AppColors.textSecondary,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
-            border: Border.all(color: AppColors.borderStrong),
-            color: AppColors.bgSurface,
-          ),
-          child: TextField(
-            controller: controller,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            textAlign: TextAlign.left,
-            style: AppTypography.mono(
-              fontSize: 15, fontWeight: FontWeight.w500, color: Colors.white,
-            ),
-            decoration: InputDecoration(
-              prefixText: CurrencyService.prefixText,
-              suffixText: CurrencyService.suffixText,
-              prefixStyle: AppTypography.mono(
-                fontSize: 15, color: Colors.white.withValues(alpha: 0.5),
-              ),
-              suffixStyle: AppTypography.mono(
-                fontSize: 15, color: Colors.white.withValues(alpha: 0.5),
-              ),
-              border: InputBorder.none,
-              enabledBorder: InputBorder.none,
-              focusedBorder: InputBorder.none,
-              isDense: true,
-              contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-            ),
-            onSubmitted: (_) => _saveBankrollEdit(),
-          ),
-        ),
-      ],
-    );
-  }
 
 
   Widget _buildEarningsCard() {

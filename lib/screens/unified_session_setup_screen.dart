@@ -966,37 +966,40 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
   // ─── TABLE CARD ──────────────────────────────────────────────────
 
   Widget _buildTableCard(AppLocalizations l10n) {
+    // Dotted bg is hoisted to be the wallpaper of the whole card so it
+    // extends past the instruction text at the top and the spacer at
+    // the bottom — previously it was clipped to just the table area
+    // in the middle, leaving the two flat bands visible.
     return ClipRRect(
       borderRadius: BorderRadius.circular(AppDecorations.radiusXl),
       child: Container(
         key: _tableSectionKey,
         width: double.infinity,
         color: AppColors.bgSurface,
-        child: Column(
+        child: Stack(
           children: [
-            const SizedBox(height: 18),
-            Text(
-              l10n.setupTableInstructions,
-              textAlign: TextAlign.center,
-              style: AppTypography.ibm(
-                fontSize: 15,
-                fontWeight: FontWeight.w400,
-                color: Colors.white,
-                height: 22 / 15,
+            Positioned.fill(
+              child: Image.asset(
+                'assets/icons/Table bg_small.png',
+                fit: BoxFit.cover,
               ),
             ),
-            SizedBox(
-              height: MediaQuery.of(context).size.height * 0.50,
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  // Dotted background — cover fills the full area
-                  Image.asset(
-                    'assets/icons/Table bg_small.png',
-                    fit: BoxFit.cover,
+            Column(
+              children: [
+                const SizedBox(height: 18),
+                Text(
+                  l10n.setupTableInstructions,
+                  textAlign: TextAlign.center,
+                  style: AppTypography.ibm(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w400,
+                    color: Colors.white,
+                    height: 22 / 15,
                   ),
-                  // Table + seats
-                  PokerTableWidget(
+                ),
+                SizedBox(
+                  height: MediaQuery.of(context).size.height * 0.50,
+                  child: PokerTableWidget(
                     activeSeatMap: _seatActive,
                     seatLabels: _buildSeatLabels(),
                     buttonPosition: _buttonPosition,
@@ -1016,10 +1019,10 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
                       return _buildSeatWidget(seatNumber);
                     },
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(height: 16),
+              ],
             ),
-            const SizedBox(height: 16),
           ],
         ),
       ),
