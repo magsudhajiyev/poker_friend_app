@@ -252,8 +252,10 @@ class _AuthWrapperState extends State<AuthWrapper> {
   Widget _buildLoadingScreen(BuildContext context) {
     // Keep the logo animation looping while auth/user data loads, instead
     // of cutting to a blank screen after the splash plays once.
+    // Pure black matches the splash video's background so the animation
+    // blends seamlessly without a visible rectangle.
     return const Scaffold(
-      backgroundColor: AppColors.paper,
+      backgroundColor: Colors.black,
       body: LoopingSplashLogo(),
     );
   }

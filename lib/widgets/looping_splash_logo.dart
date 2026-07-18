@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
-import '../design_system/constants/colors.dart';
+
 
 /// The splash logo animation, played muted on a continuous loop.
 ///
@@ -115,11 +115,8 @@ class LoopingSplashLogoState extends State<LoopingSplashLogo> {
         width: screenWidth * 0.5,
         child: AspectRatio(
           aspectRatio: c.value.aspectRatio,
-          // Paint AppColors.paper behind the video so the video's own
-          // background (slightly different black) blends seamlessly
-          // with the scaffold.
           child: ColoredBox(
-            color: AppColors.paper,
+            color: Colors.black,
             child: VideoPlayer(c),
           ),
         ),

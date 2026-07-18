@@ -1510,7 +1510,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         // Keep the logo animation looping through the whole loading course
       // instead of cutting to a static loader after the splash.
       return Scaffold(
-        backgroundColor: AppColors.paper,
+        backgroundColor: Colors.black,
         body: Stack(
           children: [
             const LoopingSplashLogo(),
