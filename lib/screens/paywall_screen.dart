@@ -1,11 +1,14 @@
 import 'dart:async';
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../l10n/app_localizations.dart';
 import '../design_system/components/buttons/back_button_circle.dart';
+import '../design_system/components/success_check_overlay.dart';
+import '../design_system/components/overlays/subscription_success_popup.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/spacing.dart';
 import '../design_system/constants/typography.dart';
@@ -25,17 +28,24 @@ class PaywallScreen extends StatefulWidget {
   final bool showSkip;
   final int? preselectedTier;
 
+  /// Debug-only: when true, tapping Continue simulates a successful purchase
+  /// (via a debug tier override) instead of hitting RevenueCat, so the full
+  /// post-purchase success flow can be exercised. No-op in release builds.
+  final bool mockPurchase;
+
   const PaywallScreen({
     super.key,
     this.featureName,
     this.showSkip = false,
     this.preselectedTier,
+    this.mockPurchase = false,
   });
 
   static Future<bool?> show(
     BuildContext context, {
     String? featureName,
     int? preselectedTier,
+    bool mockPurchase = false,
   }) {
     return Navigator.of(context).push<bool>(
       MaterialPageRoute(
@@ -43,6 +53,7 @@ class PaywallScreen extends StatefulWidget {
         builder: (context) => PaywallScreen(
           featureName: featureName,
           preselectedTier: preselectedTier,
+          mockPurchase: mockPurchase,
         ),
       ),
     );
@@ -99,6 +110,21 @@ class _PaywallScreenState extends State<PaywallScreen> {
       );
     }
 
+    // Debug-only mock purchase: skip RevenueCat, set a debug tier override so
+    // the effective tier flips, and run the same success flow.
+    if (widget.mockPurchase && !kReleaseMode) {
+      setState(() => _isPurchasing = true);
+      try {
+        final tier = ['pro', 'elite', 'club'][_selectedPlanIndex];
+        await SubscriptionService.setDebugTierOverride(tier);
+        if (!mounted) return;
+        await _showPurchaseSuccess(_tierLabel(_selectedPlanIndex, l10n));
+      } finally {
+        if (mounted) setState(() => _isPurchasing = false);
+      }
+      return;
+    }
+
     // Get the appropriate package via product ID lookup
     final tierIds = [
       ['pro_monthly', 'pro_annual'],
@@ -136,13 +162,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
       final success = await SubscriptionService.purchasePackage(package);
       if (!mounted) return;
       if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.paywallWelcomePro),
-            duration: const Duration(seconds: 2),
-          ),
-        );
-        Navigator.of(context).pop(true);
+        await _showPurchaseSuccess(_tierLabel(_selectedPlanIndex, l10n));
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -156,6 +176,42 @@ class _PaywallScreenState extends State<PaywallScreen> {
     }
   }
 
+  /// Localized tier name for the given plan index (0=Pro, 1=Elite, 2=Club).
+  String _tierLabel(int index, AppLocalizations l10n) {
+    switch (index) {
+      case 2:
+        return l10n.profileTierClub;
+      case 1:
+        return l10n.profileTierElite;
+      default:
+        return l10n.profileTierPro;
+    }
+  }
+
+  /// Localized label for the user's current effective tier (used on restore,
+  /// where the specific plan index isn't known).
+  String _effectiveTierLabel(AppLocalizations l10n) {
+    switch (SubscriptionService.effectiveTier) {
+      case 'club':
+        return l10n.profileTierClub;
+      case 'elite':
+        return l10n.profileTierElite;
+      default:
+        return l10n.profileTierPro;
+    }
+  }
+
+  /// Plays the post-purchase success flow: a green checkmark animation, then a
+  /// titled confirmation card, then pops the paywall (returning true). Must be
+  /// awaited before the pop — the paywall's Overlay is gone once the route pops.
+  Future<void> _showPurchaseSuccess(String tierLabel) async {
+    await SuccessCheckOverlay.show(context);
+    if (!mounted) return;
+    await SubscriptionSuccessPopup.show(context, tierLabel: tierLabel);
+    if (!mounted) return;
+    Navigator.of(context).pop(true);
+  }
+
   Future<void> _onRestore() async {
     final l10n = AppLocalizations.of(context);
     setState(() => _isRestoring = true);
@@ -163,13 +219,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
       final success = await SubscriptionService.restorePurchases();
       if (!mounted) return;
       if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.paywallPurchasesRestored),
-            duration: const Duration(seconds: 2),
-          ),
-        );
-        Navigator.of(context).pop(true);
+        await _showPurchaseSuccess(_effectiveTierLabel(l10n));
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

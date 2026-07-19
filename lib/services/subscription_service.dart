@@ -90,6 +90,11 @@ class SubscriptionService {
   /// True only for Club tier.
   static bool get isClub => _effectiveTier == 'club';
 
+  /// Public read-only view of the effective tier ('free'|'pro'|'elite'|'club').
+  /// Applies the debug override and partner grant, unlike [currentTier] which is
+  /// raw RevenueCat. Use this for UI that should reflect simulated/granted tiers.
+  static String get effectiveTier => _effectiveTier;
+
   // ---------------------------------------------------------------------------
   // Debug override (tier-based)
   // ---------------------------------------------------------------------------

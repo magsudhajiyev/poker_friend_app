@@ -1,0 +1,153 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import '../../../l10n/app_localizations.dart';
+import '../../constants/colors.dart';
+import '../../constants/typography.dart';
+import '../../constants/decorations.dart';
+
+/// Success popup shown after a subscription purchase (or restore) succeeds.
+/// Confirms the activated tier with a title, subtitle, and a single CTA.
+/// Modeled on [EventSuccessPopup] for visual consistency.
+class SubscriptionSuccessPopup extends StatelessWidget {
+  final String tierLabel;
+  final VoidCallback onDone;
+
+  const SubscriptionSuccessPopup({
+    Key? key,
+    required this.tierLabel,
+    required this.onDone,
+  }) : super(key: key);
+
+  /// Shows the success popup as a modal dialog. Completes when dismissed.
+  static Future<void> show(
+    BuildContext context, {
+    required String tierLabel,
+  }) {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: true,
+      barrierColor: Colors.black.withValues(alpha: 0.6),
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 16),
+        child: SubscriptionSuccessPopup(
+          tierLabel: tierLabel,
+          onDone: () => Navigator.pop(context),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.neutral800,
+        borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black,
+            blurRadius: 114,
+            offset: Offset(20, 4),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.only(top: 16, left: 16, right: 16, bottom: 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            // Close button
+            GestureDetector(
+              onTap: onDone,
+              child: SvgPicture.asset(
+                'icons/figma_icons/close.svg',
+                width: 15,
+                height: 15,
+                colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            // Content
+            SizedBox(
+              width: double.infinity,
+              child: Column(
+                children: [
+                  // Success icon — checkmark in mint circle
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: AppColors.accentPrimary,
+                      borderRadius: BorderRadius.circular(28),
+                    ),
+                    child: SvgPicture.asset(
+                      'icons/figma_icons/check.svg',
+                      width: 24,
+                      height: 24,
+                      colorFilter: const ColorFilter.mode(Colors.black, BlendMode.srcIn),
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+
+                  // Title — "You're now {Tier}!"
+                  Text(
+                    l10n.subscriptionSuccessTitle(tierLabel),
+                    textAlign: TextAlign.center,
+                    style: AppTypography.ibm(
+                      color: Colors.white,
+                      fontSize: 17,
+                      fontWeight: FontWeight.w500,
+                      height: 1.44,
+                    ),
+                  ),
+                  const SizedBox(height: 7),
+
+                  // Subtitle
+                  Text(
+                    l10n.subscriptionSuccessSubtitle(tierLabel),
+                    textAlign: TextAlign.center,
+                    style: AppTypography.ibm(
+                      color: const Color(0xFFB3B4B6),
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                      height: 1.64,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // CTA — "Start exploring" (white filled, pill shape)
+                  GestureDetector(
+                    onTap: onDone,
+                    child: Container(
+                      width: 218,
+                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(110),
+                      ),
+                      child: Text(
+                        l10n.subscriptionSuccessCta,
+                        textAlign: TextAlign.center,
+                        style: AppTypography.ibm(
+                          color: Colors.black,
+                          fontSize: 17,
+                          fontWeight: FontWeight.w600,
+                          height: 24 / 17,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

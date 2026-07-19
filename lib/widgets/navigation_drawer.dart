@@ -273,9 +273,10 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
     );
   }
 
-  /// Returns the subscription pill label based on the current tier.
+  /// Returns the subscription pill label based on the effective tier
+  /// (reflects debug/simulated overrides and partner grants, not just RevenueCat).
   String _subscriptionPillLabel(AppLocalizations l10n) {
-    switch (SubscriptionService.currentTier) {
+    switch (SubscriptionService.effectiveTier) {
       case 'club':  return l10n.profileTierClub;
       case 'elite': return l10n.profileTierElite;
       case 'pro':   return l10n.profileTierPro;
