@@ -843,38 +843,6 @@
   "paywallMonthly": "Monthly",
   "paywallAnnual": "Annual",
   "paywallAnnualSave": "Annual (Save ~35%)",
-  "paywallComingSoon": "{tier} subscriptions coming soon",
-  "@paywallComingSoon": {
-    "placeholders": {
-      "tier": {
-        "type": "String"
-      }
-    }
-  },
-  "trialConfirmTitle": "The first 7 days of {tier} are on us",
-  "@trialConfirmTitle": {
-    "placeholders": {
-      "tier": {
-        "type": "String"
-      }
-    }
-  },
-  "trialConfirmTodayTitle": "Today",
-  "trialConfirmTodayBody": "Get full access to all {tier} features",
-  "@trialConfirmTodayBody": {
-    "placeholders": {
-      "tier": {
-        "type": "String"
-      }
-    }
-  },
-  "trialConfirmReminderTitle": "In 5 days",
-  "trialConfirmReminderBody": "Get a reminder before your free trial ends",
-  "trialConfirmStartTitle": "In 7 days",
-  "trialConfirmStartBody": "Your subscription starts, unless you cancel anytime before",
-  "trialConfirmPriceSummary": "Try 7 days free, then",
-  "trialConfirmStartCta": "Start my 7-day free trial",
-  "trialConfirmDisclaimer": "No charges yet. Cancel anytime on the App Store.",
   "introGameSetup": "Game Setup",
   "introConfigureSession": "Configure your session",
   "introSmallBlind": "Small Blind",

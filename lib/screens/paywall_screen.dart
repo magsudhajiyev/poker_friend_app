@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
@@ -10,6 +11,7 @@ import '../design_system/constants/spacing.dart';
 import '../design_system/constants/typography.dart';
 import '../services/subscription_service.dart';
 import '../services/auth_service.dart';
+import '../services/logger_service.dart';
 import '../design_system/constants/decorations.dart';
 import 'auth_screen_experimental.dart';
 
@@ -106,14 +108,14 @@ class _PaywallScreenState extends State<PaywallScreen> {
     final ids = tierIds[_selectedPlanIndex];
     final package = SubscriptionService.packageById(
         _isAnnual ? ids[1] : ids[0]);
-    debugPrint('📦 Paywall: offering=$_offering, isAnnual=$_isAnnual, package=${package?.identifier}');
+    unawaited(LoggerService.debug('📦 Paywall: offering=$_offering, isAnnual=$_isAnnual, package=${package?.identifier}'));
     if (package == null) {
       // Try fetching offerings one more time before giving up
       await SubscriptionService.fetchOfferings();
       _offering = SubscriptionService.currentOffering;
       final retryPackage = SubscriptionService.packageById(
           _isAnnual ? ids[1] : ids[0]);
-      debugPrint('📦 Paywall retry: offering=$_offering, package=${retryPackage?.identifier}');
+      unawaited(LoggerService.debug('📦 Paywall retry: offering=$_offering, package=${retryPackage?.identifier}'));
       if (retryPackage != null) {
         if (mounted) setState(() {});
         // Re-run with the now-available package

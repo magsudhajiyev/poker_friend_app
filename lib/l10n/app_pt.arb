@@ -826,28 +826,6 @@
   "paywallMonthly": "Mensal",
   "paywallAnnual": "Anual",
   "paywallAnnualSave": "Anual (Economize ~35%)",
-  "paywallComingSoon": "Assinaturas {tier} em breve",
-  "@paywallComingSoon": {
-    "placeholders": {
-      "tier": {
-        "type": "String"
-      }
-    }
-  },
-  "@trialConfirmTitle": {
-    "placeholders": {
-      "tier": {
-        "type": "String"
-      }
-    }
-  },
-  "@trialConfirmTodayBody": {
-    "placeholders": {
-      "tier": {
-        "type": "String"
-      }
-    }
-  },
   "introGameSetup": "Configuracao do Jogo",
   "introConfigureSession": "Configure sua sessao",
   "introSmallBlind": "Small Blind",
@@ -2726,16 +2704,6 @@
   "debugHandViewerFetchData": "Buscar Dados",
   "debugHandViewerCopied": "Copiado para a area de transferencia",
   "debugHandViewerNoData": "Sem dados ainda. Insira o nome da sessao e clique em Buscar Dados.",
-  "trialConfirmTitle": "Os primeiros 7 dias de {tier} são por nossa conta",
-  "trialConfirmTodayTitle": "Hoje",
-  "trialConfirmTodayBody": "Acesso completo a todos os recursos {tier}",
-  "trialConfirmReminderTitle": "Em 5 dias",
-  "trialConfirmReminderBody": "Receba um lembrete antes do fim do período gratuito",
-  "trialConfirmStartTitle": "Em 7 dias",
-  "trialConfirmStartBody": "Sua assinatura começa, a menos que você cancele antes",
-  "trialConfirmPriceSummary": "Teste 7 dias grátis, depois",
-  "trialConfirmDisclaimer": "Sem cobranças ainda. Cancele a qualquer momento na App Store.",
-  "trialConfirmStartCta": "Iniciar meu teste gratuito de 7 dias",
   "actionGridSelectAction": "Selecionar ação",
   "allInBoardTitle": "Cartas do board All-in",
   "authExpLinkAccount": "Vincular conta",

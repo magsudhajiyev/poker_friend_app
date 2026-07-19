@@ -642,38 +642,6 @@
   "paywallMonthly": "Ежемесячно",
   "paywallAnnual": "Ежегодно",
   "paywallAnnualSave": "Ежегодно (Скидка ~35%)",
-  "paywallComingSoon": "Подписка {tier} скоро появится",
-  "@paywallComingSoon": {
-    "placeholders": {
-      "tier": {
-        "type": "String"
-      }
-    }
-  },
-  "trialConfirmTitle": "Первые 7 дней {tier} — бесплатно",
-  "@trialConfirmTitle": {
-    "placeholders": {
-      "tier": {
-        "type": "String"
-      }
-    }
-  },
-  "trialConfirmTodayTitle": "Сегодня",
-  "trialConfirmTodayBody": "Полный доступ ко всем функциям {tier}",
-  "@trialConfirmTodayBody": {
-    "placeholders": {
-      "tier": {
-        "type": "String"
-      }
-    }
-  },
-  "trialConfirmReminderTitle": "Через 5 дней",
-  "trialConfirmReminderBody": "Напоминание перед окончанием пробного периода",
-  "trialConfirmStartTitle": "Через 7 дней",
-  "trialConfirmStartBody": "Начнётся подписка, если вы не отмените раньше",
-  "trialConfirmPriceSummary": "Попробуйте 7 дней бесплатно, затем",
-  "trialConfirmStartCta": "Начать 7-дневный бесплатный период",
-  "trialConfirmDisclaimer": "Без оплаты. Отмените в любое время в App Store.",
   "introGameSetup": "Настройка игры",
   "introConfigureSession": "Настройте вашу сессию",
   "introSmallBlind": "Small Blind",

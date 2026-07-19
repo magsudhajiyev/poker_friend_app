@@ -817,14 +817,6 @@
   "paywallMonthly": "Mensuel",
   "paywallAnnual": "Annuel",
   "paywallAnnualSave": "Annuel (Économisez ~35%)",
-  "paywallComingSoon": "Abonnements {tier} bientôt disponibles",
-  "@paywallComingSoon": {
-    "placeholders": {
-      "tier": {
-        "type": "String"
-      }
-    }
-  },
   "introGameSetup": "Configuration du jeu",
   "introConfigureSession": "Configurez votre session",
   "introSmallBlind": "Small Blind",
@@ -2712,16 +2704,6 @@
   "paywallEliteMonthly": "29,99 $/mois",
   "paywallEliteYearly": "ou 199,99 $/an. Économisez environ 25 %**",
   "paywallGetElite": "Obtenir Elite",
-  "trialConfirmTitle": "Les 7 premiers jours de {tier} sont offerts",
-  "trialConfirmTodayTitle": "Aujourd'hui",
-  "trialConfirmTodayBody": "Accès complet à toutes les fonctionnalités {tier}",
-  "trialConfirmReminderTitle": "Dans 5 jours",
-  "trialConfirmReminderBody": "Recevez un rappel avant la fin de votre essai gratuit",
-  "trialConfirmStartTitle": "Dans 7 jours",
-  "trialConfirmStartBody": "Votre abonnement commence, sauf si vous annulez avant",
-  "trialConfirmPriceSummary": "Essayez 7 jours gratuitement, puis",
-  "trialConfirmDisclaimer": "Aucun frais pour l'instant. Annulez à tout moment sur l'App Store.",
-  "trialConfirmStartCta": "Commencer mon essai gratuit de 7 jours",
   "actionGridSelectAction": "Sélectionner l'action",
   "allInBoardTitle": "Cartes du board All-in",
   "authExpLinkAccount": "Lier le compte",
@@ -4586,13 +4568,6 @@
   "drillYou": "You",
   "handDiscardHand": "Discard Hand",
   "opponentsNoNotesAdded": "No notes added",
-  "@trialConfirmTitle": {
-    "placeholders": {
-      "tier": {
-        "type": "String"
-      }
-    }
-  },
   "@notifEventStartingTitle": {
     "placeholders": {
       "eventName": {
@@ -4693,13 +4668,6 @@
     }
   },
   "rangeRaised": "Raised",
-  "@trialConfirmTodayBody": {
-    "placeholders": {
-      "tier": {
-        "type": "String"
-      }
-    }
-  },
   "profileUsernameUnavailable": "Username no longer available",
   "statsStats": "Stats",
   "rangeAllSpots": "All spots",

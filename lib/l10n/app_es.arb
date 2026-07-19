@@ -817,14 +817,6 @@
   "paywallMonthly": "Mensual",
   "paywallAnnual": "Anual",
   "paywallAnnualSave": "Anual (Ahorra ~35%)",
-  "paywallComingSoon": "Suscripciones {tier} próximamente",
-  "@paywallComingSoon": {
-    "placeholders": {
-      "tier": {
-        "type": "String"
-      }
-    }
-  },
   "introGameSetup": "Configuración de juego",
   "introConfigureSession": "Configura tu sesión",
   "introSmallBlind": "Small Blind",
@@ -2712,16 +2704,6 @@
   "paywallEliteMonthly": "$29.99/mes",
   "paywallEliteYearly": "o $199.99/año. Ahorra un 25 %**",
   "paywallGetElite": "Obtener Elite",
-  "trialConfirmTitle": "Los primeros 7 días de {tier} van por nuestra cuenta",
-  "trialConfirmTodayTitle": "Hoy",
-  "trialConfirmTodayBody": "Acceso completo a todas las funciones de {tier}",
-  "trialConfirmReminderTitle": "En 5 días",
-  "trialConfirmReminderBody": "Recibe un recordatorio antes de que termine tu prueba gratuita",
-  "trialConfirmStartTitle": "En 7 días",
-  "trialConfirmStartBody": "Tu suscripción comienza, a menos que canceles antes",
-  "trialConfirmPriceSummary": "Prueba 7 días gratis, luego",
-  "trialConfirmDisclaimer": "Sin cargos aún. Cancela en cualquier momento desde la App Store.",
-  "trialConfirmStartCta": "Iniciar mi prueba gratuita de 7 días",
   "actionGridSelectAction": "Seleccionar acción",
   "allInBoardTitle": "Cartas del board en All-in",
   "authExpLinkAccount": "Vincular cuenta",
@@ -4586,13 +4568,6 @@
   "drillYou": "You",
   "handDiscardHand": "Discard Hand",
   "opponentsNoNotesAdded": "No notes added",
-  "@trialConfirmTitle": {
-    "placeholders": {
-      "tier": {
-        "type": "String"
-      }
-    }
-  },
   "@notifEventStartingTitle": {
     "placeholders": {
       "eventName": {
@@ -4693,13 +4668,6 @@
     }
   },
   "rangeRaised": "Raised",
-  "@trialConfirmTodayBody": {
-    "placeholders": {
-      "tier": {
-        "type": "String"
-      }
-    }
-  },
   "profileUsernameUnavailable": "Username no longer available",
   "statsStats": "Stats",
   "rangeAllSpots": "All spots",

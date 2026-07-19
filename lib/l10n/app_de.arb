@@ -826,28 +826,6 @@
   "paywallMonthly": "Monatlich",
   "paywallAnnual": "Jährlich",
   "paywallAnnualSave": "Jährlich (Spare ~35%)",
-  "paywallComingSoon": "{tier}-Abonnements kommen bald",
-  "@paywallComingSoon": {
-    "placeholders": {
-      "tier": {
-        "type": "String"
-      }
-    }
-  },
-  "@trialConfirmTitle": {
-    "placeholders": {
-      "tier": {
-        "type": "String"
-      }
-    }
-  },
-  "@trialConfirmTodayBody": {
-    "placeholders": {
-      "tier": {
-        "type": "String"
-      }
-    }
-  },
   "introGameSetup": "Spiel einrichten",
   "introConfigureSession": "Deine Session konfigurieren",
   "introSmallBlind": "Small Blind",
@@ -2726,16 +2704,6 @@
   "debugHandViewerFetchData": "Daten abrufen",
   "debugHandViewerCopied": "In die Zwischenablage kopiert",
   "debugHandViewerNoData": "Noch keine Daten. Session-Name eingeben und Daten abrufen klicken.",
-  "trialConfirmTitle": "Die ersten 7 Tage von {tier} gehen auf uns",
-  "trialConfirmTodayTitle": "Heute",
-  "trialConfirmTodayBody": "Voller Zugriff auf alle {tier}-Funktionen",
-  "trialConfirmReminderTitle": "In 5 Tagen",
-  "trialConfirmReminderBody": "Erinnerung bevor deine kostenlose Testphase endet",
-  "trialConfirmStartTitle": "In 7 Tagen",
-  "trialConfirmStartBody": "Dein Abo beginnt, es sei denn du kündigst vorher",
-  "trialConfirmPriceSummary": "7 Tage kostenlos testen, dann",
-  "trialConfirmDisclaimer": "Noch keine Kosten. Jederzeit im App Store kündbar.",
-  "trialConfirmStartCta": "Meine 7-tägige Testphase starten",
   "actionGridSelectAction": "Aktion auswählen",
   "allInBoardTitle": "All-in Board-Karten",
   "authExpLinkAccount": "Konto verknüpfen",

@@ -642,38 +642,6 @@
   "paywallMonthly": "Miesiecznie",
   "paywallAnnual": "Rocznie",
   "paywallAnnualSave": "Rocznie (Oszczedz ~35%)",
-  "paywallComingSoon": "Subskrypcje {tier} juz wkrotce",
-  "@paywallComingSoon": {
-    "placeholders": {
-      "tier": {
-        "type": "String"
-      }
-    }
-  },
-  "trialConfirmTitle": "Pierwsze 7 dni {tier} na nasz koszt",
-  "@trialConfirmTitle": {
-    "placeholders": {
-      "tier": {
-        "type": "String"
-      }
-    }
-  },
-  "trialConfirmTodayTitle": "Dzisiaj",
-  "trialConfirmTodayBody": "Pełny dostęp do wszystkich funkcji {tier}",
-  "@trialConfirmTodayBody": {
-    "placeholders": {
-      "tier": {
-        "type": "String"
-      }
-    }
-  },
-  "trialConfirmReminderTitle": "Za 5 dni",
-  "trialConfirmReminderBody": "Otrzymasz przypomnienie przed końcem okresu próbnego",
-  "trialConfirmStartTitle": "Za 7 dni",
-  "trialConfirmStartBody": "Twoja subskrypcja się rozpocznie, chyba że anulujesz wcześniej",
-  "trialConfirmPriceSummary": "Wypróbuj 7 dni za darmo, potem",
-  "trialConfirmStartCta": "Rozpocznij mój 7-dniowy bezpłatny okres próbny",
-  "trialConfirmDisclaimer": "Brak opłat. Anuluj w dowolnym momencie w App Store.",
   "introGameSetup": "Ustawienia gry",
   "introConfigureSession": "Skonfiguruj sesje",
   "introSmallBlind": "Small Blind",
