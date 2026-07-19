@@ -2805,6 +2805,23 @@
   "eventSuccessSubtitle": "You can edit or remove it anytime",
   "eventSuccessGoToCalendar": "Go to calendar",
   "eventSuccessAddAnother": "Add another event",
+  "subscriptionSuccessTitle": "You're now {tier}!",
+  "@subscriptionSuccessTitle": {
+    "placeholders": {
+      "tier": {
+        "type": "String"
+      }
+    }
+  },
+  "subscriptionSuccessSubtitle": "Your {tier} plan is active. Enjoy your new features!",
+  "@subscriptionSuccessSubtitle": {
+    "placeholders": {
+      "tier": {
+        "type": "String"
+      }
+    }
+  },
+  "subscriptionSuccessCta": "Start exploring",
   "stackChartNoData": "No data yet",
   "stackChartStart": "Start",
   "stackChartRebuy": "Rebuy",

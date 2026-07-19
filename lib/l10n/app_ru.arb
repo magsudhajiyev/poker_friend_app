@@ -187,7 +187,7 @@
   "setupStartSession": "Начать сессию",
   "setupMe": "Я",
   "setupPlayerSeat": "Игрок {seatNumber}",
-  "setupHero": "Hero",
+  "setupHero": "Герой",
   "homeLoadingPokerData": "Загрузка покерных данных...",
   "homeWelcomeBack": "С возвращением",
   "homeNoActiveSessions": "Нет активных сессий",
@@ -296,7 +296,7 @@
   "handMainPot": "Основной банк",
   "handSidePot": "Побочный банк {index}",
   "handPokerSession": "Покерная сессия",
-  "handActionsHandNumber": "Hand #{number}",
+  "handActionsHandNumber": "Раздача #{number}",
   "@handActionsHandNumber": {
     "placeholders": {
       "number": {
@@ -318,7 +318,7 @@
   "handActionsHideHoleCards": "Скрыть карты",
   "handActionsHideHoleCardsSubtitle": "Ваши карты будут скрыты в общей ссылке",
   "handActionsShareMessage": "Посмотри эту раздачу в Final Table!",
-  "handActionsShareSubject": "Poker Hand #{number}",
+  "handActionsShareSubject": "Покерная раздача #{number}",
   "@handActionsShareSubject": {
     "placeholders": {
       "number": {
@@ -356,8 +356,8 @@
       }
     }
   },
-  "handActionsPot": "POT",
-  "handActionsBlinds": "BLINDS",
+  "handActionsPot": "БАНК",
+  "handActionsBlinds": "БЛАЙНДЫ",
   "handActionsWinner": "ПОБЕДИТЕЛЬ",
   "handActionsPlayersCount": "{count} игроков",
   "@handActionsPlayersCount": {
@@ -371,7 +371,7 @@
   "handActionsPreflop": "PREFLOP",
   "handActionsBoard": "БОРД",
   "handActionsPlayer": "ИГРОК",
-  "handActionsStack": "STACK",
+  "handActionsStack": "СТЕК",
   "handActionsAction": "ДЕЙСТВИЕ",
   "handActionsAmount": "СУММА",
   "handActionsYou": "Вы",
@@ -394,7 +394,7 @@
     }
   },
   "handActionsFailedToUpdateStar": "Не удалось обновить избранное",
-  "handActionsPotAmount": "Pot: {amount}",
+  "handActionsPotAmount": "Банк: {amount}",
   "@handActionsPotAmount": {
     "placeholders": {
       "amount": {
@@ -419,7 +419,7 @@
   "opponentDetailStatistics": "Статистика",
   "opponentDetailNoStatisticsAvailable": "Статистика недоступна",
   "opponentDetailStatsDisclaimer": "Статистика основана только на совместно сыгранных раздачах. VPIP не отслеживается, так как незафиксированные фолды исказили бы его.",
-  "opponentDetailAggressionFreq": "Aggression %",
+  "opponentDetailAggressionFreq": "Агрессия %",
   "opponentDetailShowdownPercent": "Showdown %",
   "opponentDetailHandHistory": "История раздач",
   "opponentDetailViewAllHands": "Просмотреть все раздачи с этим оппонентом",
@@ -482,9 +482,9 @@
   "individualSessionInfo": "Информация о сессии",
   "individualStartingStack": "Начальный Stack",
   "individualInitialBuyIn": "Начальный Buy-in",
-  "individualRebuys": "Rebuys",
+  "individualRebuys": "Ребаи",
   "individualTotalInvested": "Всего вложено",
-  "individualBlindsLabel": "Blinds",
+  "individualBlindsLabel": "Блайнды",
   "individualHandsLogged": "Записано раздач",
   "individualLogAHand": "Записать раздачу",
   "individualGoBackToHand": "Вернуться к раздаче",
@@ -511,7 +511,7 @@
   "individualAddOnDescriptionTournament": "Введите цену доп. покупки и полученные фишки",
   "individualAddOnPrice": "Цена доп. покупки",
   "individualAddOnChips": "Полученные фишки",
-  "individualRebuy": "Rebuy",
+  "individualRebuy": "Ребай",
   "individualEnterRebuyAmount": "Введите сумму Rebuy (Stack будет равен сумме Rebuy)",
   "individualEnterRebuyAmountAndStack": "Введите сумму Rebuy и новый размер Stack",
   "individualRebuyAmount": "Сумма Rebuy",
@@ -533,7 +533,7 @@
       }
     }
   },
-  "individualRebuysCount": "Rebuys: {count}",
+  "individualRebuysCount": "Ребаи: {count}",
   "@individualRebuysCount": {
     "placeholders": {
       "count": {
@@ -662,8 +662,8 @@
   },
   "introEnterAmount": "Введите сумму",
   "introPleaseEnterValidNumber": "Пожалуйста, введите корректное положительное число",
-  "introRingGame": "Ring Game",
-  "introMultiTable": "Multi-Table",
+  "introRingGame": "Кэш-игра",
+  "introMultiTable": "Мультитурнир",
   "invitationTitle": "Приглашения в клуб",
   "invitationNoPending": "Нет ожидающих приглашений",
   "invitationYouWillSeeHere": "Приглашения от клубов будут отображаться здесь",
@@ -750,7 +750,7 @@
   "notificationMarkAsRead": "Отметить как прочитанное",
   "notificationNoNotifications": "Нет уведомлений",
   "notificationEvents": "Мероприятия",
-  "notificationRsvp": "RSVP",
+  "notificationRsvp": "Ответить",
   "notificationClubs": "Клубы",
   "notificationInvitations": "Приглашения",
   "notificationSeats": "Места",
@@ -835,8 +835,8 @@
   "calendarSelectYear": "Выберите год",
   "calendarEditEvent": "Редактировать мероприятие",
   "calendarDeleteEvent": "Удалить мероприятие",
-  "calendarTournament": "Tournament",
-  "calendarCashGame": "Cash Game",
+  "calendarTournament": "Турнир",
+  "calendarCashGame": "Кэш-игра",
   "calendarPrivateGame": "Приватная игра",
   "calendarOnline": "Онлайн",
   "calendarFailedToCreateEvent": "Не удалось создать мероприятие: {error}",
@@ -931,20 +931,20 @@
   "sessionAnalyticsCashout": "Выплата",
   "sessionAnalyticsHourlyRate": "Часовая ставка",
   "sessionAnalyticsFinished": "Место",
-  "sessionAnalyticsAddons": "Add-ons",
+  "sessionAnalyticsAddons": "Аддоны",
   "sessionAnalyticsProfitLoss": "Прибыль/Убыток",
   "sessionAnalyticsProfit": "Прибыль",
   "sessionAnalyticsLoss": "Убыток",
   "sessionAnalyticsNotAvailableFull": "Недоступно",
   "sessionAnalyticsAvgGrowth": "Средний рост",
   "sessionAnalyticsDuration": "Продолжительность",
-  "sessionAnalyticsRebuys": "Rebuys",
+  "sessionAnalyticsRebuys": "Ребаи",
   "sessionAnalyticsStackChart": "График Stack",
   "sessionAnalyticsNoStackHistory": "История Stack недоступна",
   "sessionAnalyticsStackTrackedFuture": "Изменения Stack будут отслеживаться в будущих сессиях",
   "sessionAnalyticsViewLoggedHands": "Просмотреть записанные раздачи",
   "sessionAnalyticsStart": "Начало",
-  "sessionAnalyticsRebuy": "Rebuy",
+  "sessionAnalyticsRebuy": "Ребай",
   "sessionAnalyticsEnd": "Конец",
   "seatSetupTitle": "Настройка мест",
   "seatSetupManagePlayers": "Управление игроками",
@@ -997,12 +997,12 @@
   "handReviewYourHoleCards": "Ваши карты",
   "handReviewOptional": "(необязательно)",
   "handReviewQuickTags": "Быстрые теги",
-  "handReviewTagBluff": "Bluff",
-  "handReviewTagValue": "Value",
+  "handReviewTagBluff": "Блеф",
+  "handReviewTagValue": "Валью",
   "handReviewTagMistake": "Ошибка",
-  "handReviewTagCooler": "Cooler",
+  "handReviewTagCooler": "Кулер",
   "handReviewTagHeroCall": "Hero Call",
-  "handReviewTagExploit": "Exploit",
+  "handReviewTagExploit": "Эксплойт",
   "handReviewNotes": "Заметки",
   "handReviewNotesHint": "Добавить заметку к этой раздаче...",
   "handReviewSaveHand": "Сохранить раздачу",
@@ -1010,7 +1010,7 @@
   "handReviewDuplicateCardError": "Нельзя выбрать одну и ту же карту дважды!",
   "handReviewSelectBothOrNone": "Выберите обе карты или оставьте обе пустыми",
   "holeCardsTitle": "Ваши карты",
-  "holeCardsSubtitle": "Hole Cards",
+  "holeCardsSubtitle": "Карманные карты",
   "holeCardsWinnerBadge": "ПОБЕДИТЕЛЬ",
   "holeCardsSave": "Сохранить",
   "holeCardsSkip": "Пропустить",
@@ -1057,11 +1057,11 @@
     }
   },
   "tableManagementAdjustStack": "Изменить Stack",
-  "tableManagementRebuy": "Rebuy",
+  "tableManagementRebuy": "Ребай",
   "tableManagementRemove": "Удалить",
   "tableManagementAdjustStackTitle": "Изменить Stack",
   "tableManagementEnterStackAmount": "Введите размер Stack",
-  "tableManagementRebuyTitle": "Rebuy",
+  "tableManagementRebuyTitle": "Ребай",
   "tableManagementRebuyAmountHint": "Сумма Rebuy для добавления",
   "tableManagementAdd": "Добавить",
   "tableManagementRemovePlayerTitle": "Удалить игрока?",
@@ -1140,7 +1140,7 @@
       }
     }
   },
-  "seatConfigStackLabel": "Stack",
+  "seatConfigStackLabel": "Стек",
   "seatConfigUpdateButton": "Обновить",
   "seatConfigAddPlayerButton": "Добавить игрока",
   "seatManagementSetupSeats": "Настройка мест",
@@ -1205,7 +1205,7 @@
   "inviteMemberEmailRequired": "Пожалуйста, введите email адрес",
   "inviteMemberEmailInvalid": "Пожалуйста, введите корректный email адрес",
   "inviteMemberRoleLabel": "РОЛЬ",
-  "inviteMemberRoleDealer": "Dealer",
+  "inviteMemberRoleDealer": "Дилер",
   "inviteMemberRoleAdmin": "Администратор",
   "inviteMemberSendInvite": "Отправить приглашение",
   "inviteMemberAlreadyMember": "{displayName} уже является участником {clubName}",
@@ -1323,8 +1323,8 @@
       }
     }
   },
-  "earningsChartTournament": "Tournament",
-  "earningsChartCash": "Cash",
+  "earningsChartTournament": "Турнир",
+  "earningsChartCash": "Кэш",
   "earningsChartNoData": "Данных о доходах пока нет",
   "earningsChartNoDataSubtitle": "Завершите несколько сессий, чтобы увидеть график доходов",
   "earningsChartMtt": "MTT",
@@ -1351,7 +1351,7 @@
   },
   "opponentHandsOppWon": "ОПП ВЫИГРАЛ",
   "opponentHandsYou": "Вы",
-  "opponentHandsPot": "Pot {amount}",
+  "opponentHandsPot": "Банк {amount}",
   "@opponentHandsPot": {
     "placeholders": {
       "amount": {
@@ -1371,7 +1371,7 @@
   "clubDashboardCheckBackLater": "Загляните позже для новых мероприятий",
   "clubDashboardEventsWillAppear": "Мероприятия появятся здесь, когда начнутся",
   "clubDashboardPastEventsWillAppear": "Завершённые мероприятия появятся здесь",
-  "clubDashboardCashGameStakes": "Cash Game {stakes}",
+  "clubDashboardCashGameStakes": "Кэш-игра {stakes}",
   "@clubDashboardCashGameStakes": {
     "placeholders": {
       "stakes": {
@@ -1379,7 +1379,7 @@
       }
     }
   },
-  "clubDashboardCash": "Cash",
+  "clubDashboardCash": "Кэш",
   "clubDashboardTables": "Столы",
   "clubDashboardStakes": "Ставки",
   "clubDashboardPlayingCount": "{count} играют",
@@ -1437,8 +1437,8 @@
   "eventMinBuyIn": "Мин. Buy-in ($)",
   "eventStartingStack": "Начальный Stack",
   "eventGameType": "Тип игры",
-  "eventTournament": "Tournament",
-  "eventCashGame": "Cash Game",
+  "eventTournament": "Турнир",
+  "eventCashGame": "Кэш-игра",
   "eventDateAndTime": "Дата и время мероприятия",
   "eventStarts": "Начало",
   "eventTables": "Столы",
@@ -1528,7 +1528,7 @@
   "eventDetailCompletedBadge": "ЗАВЕРШЕНО",
   "eventDetailUpcomingBadge": "ПРЕДСТОЯЩЕЕ",
   "eventDetailLocation": "Место",
-  "eventDetailBuyIn": "Buy-in",
+  "eventDetailBuyIn": "Бай-ин",
   "eventDetailStakes": "Ставки",
   "eventDetailStartingStack": "Начальный Stack",
   "eventDetailAbout": "О МЕРОПРИЯТИИ",
@@ -1833,7 +1833,7 @@
       }
     }
   },
-  "clubCashGameStakes": "Cash Game {stakes}",
+  "clubCashGameStakes": "Кэш-игра {stakes}",
   "@clubCashGameStakes": {
     "placeholders": {
       "stakes": {
@@ -2100,7 +2100,7 @@
   "dealerHomeNoClubsOwnerHint": "Создайте свой первый клуб, чтобы начать.",
   "dealerHomeNoClubsMemberHint": "Вы ещё не состоите ни в одном клубе.\nПопросите владельца клуба пригласить вас.",
   "dealerHomeCreateClub": "Создать клуб",
-  "dealerHomeDealer": "Dealer",
+  "dealerHomeDealer": "Дилер",
   "dealerHomeClubCount": "{count} клубов",
   "@dealerHomeClubCount": {
     "placeholders": {
@@ -2169,8 +2169,8 @@
   "dealerHomeBigBlind": "Big Blind",
   "dealerHomeBBAnte": "BB Ante",
   "dealerHomeGameType": "Тип игры",
-  "dealerHomeCash": "Cash",
-  "dealerHomeTournament": "Tournament",
+  "dealerHomeCash": "Кэш",
+  "dealerHomeTournament": "Турнир",
   "dealerHomeButtonPosition": "Позиция кнопки",
   "dealerHomeStartSession": "Начать сессию",
   "dealerHomeCouldNotFind": "Не удалось найти клуб или стол",
@@ -2264,7 +2264,7 @@
     }
   },
   "dealerTableRemovePlayer": "Удалить игрока",
-  "dealerTableRebuy": "Rebuy",
+  "dealerTableRebuy": "Ребай",
   "dealerTableRebuysFor": "{name} делает Rebuy на {amount}",
   "@dealerTableRebuysFor": {
     "placeholders": {
@@ -2370,8 +2370,8 @@
   },
   "dealerTableChipStack": "Stack фишек",
   "dealerTableSave": "Сохранить",
-  "liveSessionHand": "HAND",
-  "liveSessionPot": "POT",
+  "liveSessionHand": "РАЗДАЧА",
+  "liveSessionPot": "БАНК",
   "liveSessionStatus": "СТАТУС",
   "liveSessionLive": "LIVE",
   "liveSessionWaiting": "ОЖИДАНИЕ",
@@ -2409,7 +2409,7 @@
     }
   },
   "liveSessionYourSeat": "Ваше место",
-  "liveSessionStack": "Stack: {amount}",
+  "liveSessionStack": "Стек: {amount}",
   "@liveSessionStack": {
     "placeholders": {
       "amount": {
@@ -2576,7 +2576,7 @@
   },
   "commonLeave": "Покинуть",
   "commonLoadingHands": "Загрузка рук...",
-  "createEventDefaultCashGame": "Cash Game {stakes}",
+  "createEventDefaultCashGame": "Кэш-игра {stakes}",
   "@createEventDefaultCashGame": {
     "placeholders": {
       "stakes": {
@@ -2584,7 +2584,7 @@
       }
     }
   },
-  "createEventDefaultCashGameNoStakes": "Cash Game",
+  "createEventDefaultCashGameNoStakes": "Кэш-игра",
   "dealerQrScanBlinds": "Блайнды",
   "dealerQrScanError": "Ошибка обработки QR-кода: {error}",
   "@dealerQrScanError": {
@@ -2802,6 +2802,23 @@
     }
   },
   "eventSuccessAddAnother": "Добавить ещё событие",
+  "subscriptionSuccessTitle": "Теперь вы {tier}!",
+  "@subscriptionSuccessTitle": {
+    "placeholders": {
+      "tier": {
+        "type": "String"
+      }
+    }
+  },
+  "subscriptionSuccessSubtitle": "Ваш план {tier} активен. Наслаждайтесь новыми функциями!",
+  "@subscriptionSuccessSubtitle": {
+    "placeholders": {
+      "tier": {
+        "type": "String"
+      }
+    }
+  },
+  "subscriptionSuccessCta": "Начать",
   "eventSuccessGoToCalendar": "Перейти в календарь",
   "eventSuccessSubtitle": "Вы можете отредактировать или удалить его в любое время",
   "eventSuccessTitle": "Отлично! Ваше событие добавлено в календарь.",
@@ -2837,7 +2854,7 @@
   "forgotPasswordSetNewSubtitle": "Выберите надёжный пароль для вашего аккаунта",
   "forgotPasswordValidEmail": "Пожалуйста, введите действительный e-mail",
   "forgotPasswordVerifyCode": "Подтвердить код",
-  "homeCashGame": "Cash Game",
+  "homeCashGame": "Кэш-игра",
   "homeErrorDeletingEvent": "Ошибка удаления события: {error}",
   "@homeErrorDeletingEvent": {
     "placeholders": {
@@ -2892,7 +2909,7 @@
       }
     }
   },
-  "homeTournament": "Tournament",
+  "homeTournament": "Турнир",
   "invitationsDeclined": "Приглашение отклонено",
   "invitationsFailedAccept": "Не удалось принять приглашение: {error}",
   "@invitationsFailedAccept": {
@@ -2942,9 +2959,9 @@
       }
     }
   },
-  "multiPotChoppedPot": "Chopped Pot",
+  "multiPotChoppedPot": "Разделённый банк",
   "multiPotEligibleFromPrevious": "имеет право из предыдущего Pot",
-  "multiPotMainPot": "Main Pot",
+  "multiPotMainPot": "Основной банк",
   "multiPotMainPotWinner": "победитель Main Pot",
   "multiPotMultiplePots": "Несколько Pot — выберите победителя для каждого",
   "multiPotPlayerFallback": "Игрок {id}",
@@ -2958,7 +2975,7 @@
   "multiPotSelectAllWinners": "Выберите всех победителей:",
   "multiPotSelectTheWinner": "Выберите победителя:",
   "multiPotSelectWinnersTitle": "Выбор победителей",
-  "multiPotSidePot": "Side Pot {index}",
+  "multiPotSidePot": "Сайд-пот {index}",
   "@multiPotSidePot": {
     "placeholders": {
       "index": {
@@ -2967,7 +2984,7 @@
     }
   },
   "multiPotSingleWinner": "Один победитель",
-  "navDrawerBankroll": "Bankroll",
+  "navDrawerBankroll": "Банкролл",
   "navDrawerClubs": "Клубы",
   "navDrawerEvents": "События",
   "navDrawerHelpSupport": "Помощь и поддержка",
@@ -2986,7 +3003,7 @@
   "navDrawerNoEarningsTitle": "Нет данных о заработке",
   "navDrawerRegisterClub": "Зарегистрировать клуб",
   "navDrawerRoleAdmin": "Админ",
-  "navDrawerRoleDealer": "Dealer",
+  "navDrawerRoleDealer": "Дилер",
   "navDrawerRoleMember": "Участник",
   "navDrawerSettings": "Настройки",
   "navDrawerSignOut": "Выйти",
@@ -3049,9 +3066,9 @@
     }
   },
   "playerSessionNotesHint": "Добавить заметки об этой руке...",
-  "playerSessionPot": "POT",
+  "playerSessionPot": "БАНК",
   "playerSessionSeat": "МЕСТО",
-  "playerSessionStack": "STACK",
+  "playerSessionStack": "СТЕК",
   "playerSessionYourHoleCards": "Ваши Hole Cards",
   "pokerHandEndSession": "Завершить сессию",
   "pokerHandFailedEndSession": "Не удалось завершить сессию: {error}",
@@ -3084,7 +3101,7 @@
   "pokerHandRebuyAmountDollar": "Сумма Rebuy ($)",
   "pokerHandRebuyChips": "Фишки Rebuy",
   "pokerTablePlayerFallback": "Игрок",
-  "profileCash": "Cash",
+  "profileCash": "Кэш",
   "profileDevTools": "Инструменты разработчика",
   "profileLastLogin": "Последний вход {date}",
   "@profileLastLogin": {
@@ -3104,7 +3121,7 @@
   },
   "profilePremiumOverride": "Переопределение Premium",
   "profileResetToReal": "Сбросить на реальный статус",
-  "profileTournament": "Tournament",
+  "profileTournament": "Турнир",
   "profileUsingRealStatus": "Реальный статус: {status}",
   "@profileUsingRealStatus": {
     "placeholders": {
@@ -3175,11 +3192,11 @@
   "stackChartEnd": "Конец",
   "stackChartNoData": "Нет данных",
   "stackChartProfitLoss": "П/У",
-  "stackChartRebuy": "Rebuy",
+  "stackChartRebuy": "Ребай",
   "stackChartScreenAvgGrowth": "Ср. рост",
   "stackChartScreenDuration": "Длительность",
   "stackChartScreenProfitLoss": "П/У",
-  "stackChartScreenStack": "Stack",
+  "stackChartScreenStack": "Стек",
   "stackChartStart": "Старт",
   "stackChartTitle": "График Stack",
   "tableSelectionAdminSubtitle": "Выберите стол для управления",
@@ -3211,7 +3228,7 @@
   "weekdayTue": "Вт",
   "weekdayWed": "Ср",
   "winnerSelectionBackToSingle": "Вернуться к одному победителю",
-  "winnerSelectionChoppedPot": "Chopped Pot",
+  "winnerSelectionChoppedPot": "Разделённый банк",
   "winnerSelectionConfirmChop": "Подтвердить Chop",
   "winnerSelectionConfirmWinner": "Подтвердить победителя",
   "winnerSelectionIndividualShares": "Индивидуальные доли:",
@@ -3301,7 +3318,7 @@
       }
     }
   },
-  "sessionHandsPot": "Pot",
+  "sessionHandsPot": "Банк",
   "stackChartScreenTitle": "График Stack",
   "stackChartScreenPokerSession": "Покерная сессия",
   "notificationsScreenTitle": "Уведомления",
@@ -3317,7 +3334,7 @@
   "notificationsScreenRequestClosed": "Запрос закрыт",
   "notificationsScreenResponse": "Ответ",
   "notificationsScreenEvents": "События",
-  "notificationsScreenRsvp": "RSVP",
+  "notificationsScreenRsvp": "Ответить",
   "notificationsScreenClubs": "Клубы",
   "notificationsScreenInvitations": "Приглашения",
   "notificationsScreenSeats": "Места",
@@ -3334,7 +3351,7 @@
   "notifEventStartedBody": "Событие {clubName} началось — присоединяйтесь",
   "notifSeatAvailableTitle": "Свободное место: {eventName}",
   "notifSeatAvailableBody": "Место доступно в {clubName}! Откройте приложение, чтобы занять его.",
-  "notifMemberRsvpTitle": "RSVP: {memberName}",
+  "notifMemberRsvpTitle": "Ответ: {memberName}",
   "notifMemberRsvpBody": "{memberName} ответил \"{rsvpStatus}\" на {eventName}",
   "notifNewClubRequestTitle": "Новый запрос на клуб",
   "notifNewClubRequestBody": "Подана новая заявка на регистрацию клуба",
@@ -3497,7 +3514,7 @@
   "dealerTableSeatAnotherPlayer": "Посадить другого игрока сюда",
   "dealerTableSitHereLabel": "Сесть здесь",
   "dealerTableJoinAsDealerPlayer": "Присоединиться к игре как Dealer-игрок",
-  "dealerTableDealerFallback": "Dealer",
+  "dealerTableDealerFallback": "Дилер",
   "dealerTableUpdatedStackMsg": "Stack {name} обновлён до {amount}",
   "@dealerTableUpdatedStackMsg": {
     "placeholders": {
@@ -3638,7 +3655,7 @@
   "clubSettingsNoMembersFound": "Участники не найдены",
   "clubSettingsRoleOwner": "Владелец",
   "clubSettingsRoleAdmin": "Админ",
-  "clubSettingsRoleDealer": "Dealer",
+  "clubSettingsRoleDealer": "Дилер",
   "clubSettingsRolePlayer": "Игрок",
   "clubSettingsTableAddedMsg": "Стол добавлен",
   "clubSettingsEditTableTitle": "Редактировать стол",
@@ -3808,12 +3825,12 @@
   "opponentDetailFoldTo3Bet": "Fold to 3-Bet",
   "opponentDetailStealLabel": "Steal",
   "opponentDetailCheckRaiseLabel": "Check/Raise",
-  "playerSessionBluff": "Bluff",
-  "playerSessionValue": "Value",
+  "playerSessionBluff": "Блеф",
+  "playerSessionValue": "Валью",
   "playerSessionMistake": "Ошибка",
-  "playerSessionCooler": "Cooler",
+  "playerSessionCooler": "Кулер",
   "playerSessionHeroCall": "Hero Call",
-  "playerSessionExploit": "Exploit",
+  "playerSessionExploit": "Эксплойт",
   "playerSessionToughSpot": "Сложная ситуация",
   "playerSessionEasyFold": "Лёгкий Fold",
   "playerSessionEndedTitle": "Сессия завершена",
@@ -3842,10 +3859,10 @@
   "playerSessionYourHoleCardsTitle": "Ваши Hole Cards",
   "playerSessionConnecting": "Подключение...",
   "playerSessionGoBackBtn": "Назад",
-  "playerSessionHoleCardsLabel": "Hole Cards",
+  "playerSessionHoleCardsLabel": "Карманные карты",
   "playerSessionEditBtn": "Редактировать",
   "playerSessionAddBtn": "Добавить",
-  "playerSessionBoardLabel": "Board",
+  "playerSessionBoardLabel": "Борд",
   "playerSessionNoCardsDealt": "Карты не розданы",
   "playerSessionWaitingForAction": "Ожидание действия...",
   "playerSessionActionsLabel": "Действия",
@@ -3969,7 +3986,7 @@
   "eventDashboardTablesLabel": "Столы",
   "eventDashboardTotalChipsLabel": "Всего фишек",
   "eventDashboardAvgStackLabel": "Средний Stack",
-  "eventDashboardChipLeaderLabel": "Chip Leader",
+  "eventDashboardChipLeaderLabel": "Чиплидер",
   "eventDashboardNoRankingsYet": "Нет рейтингов",
   "eventDashboardRankingsWillAppear": "Рейтинги появятся, когда игроки присоединятся к столам",
   "eventDashboardTableSeatLabel": "{table} - Место {seat}",
@@ -4000,8 +4017,8 @@
       }
     }
   },
-  "sessionHistoryCash": "Cash",
-  "sessionHistoryTournament": "Tournament",
+  "sessionHistoryCash": "Кэш",
+  "sessionHistoryTournament": "Турнир",
   "sessionHistorySessionId": "Сессия {id}...",
   "@sessionHistorySessionId": {
     "placeholders": {
@@ -4033,7 +4050,7 @@
   "sessionHistoryFullHistory": "Полная история сессий",
   "sessionHandsRetry": "Повторить",
   "stackChartScreenStart": "Старт",
-  "stackChartScreenRebuy": "Rebuy",
+  "stackChartScreenRebuy": "Ребай",
   "stackChartScreenEnd": "Конец",
   "seatSetupDone": "Готово",
   "seatSetupCancel": "Отмена",
@@ -4121,7 +4138,7 @@
   "guidedSkipButtonBody": "Если вы пропускаете раздачу, эта кнопка перемещает кнопку дилера к следующему игроку. Имейте в виду, что стеки могут рассинхронизироваться — вы можете обновить их в разделе «Управление игроками».",
   "guidedSkipButtonTitle": "Кнопка пропуска",
   "guidedYourTurn": "Ваш ход!",
-  "homeEventTypeCashGame": "Cash Game",
+  "homeEventTypeCashGame": "Кэш-игра",
   "homeEventTypeHomeGame": "Домашняя игра",
   "homeEventTypeOnline": "Онлайн",
   "homeEventTypeTournament": "Турнир",
@@ -4130,14 +4147,14 @@
   "kbCBetFullName": "Continuation Bet",
   "kbCBetName": "C-Bet",
   "kbCheckRaiseDescription": "Как часто вы делаете check, а затем raise на Flop. Обманный ход, который может поймать агрессивных соперников.",
-  "kbCheckRaiseFullName": "Flop Check-Raise",
+  "kbCheckRaiseFullName": "Check-Raise на Flop",
   "kbCheckRaiseName": "Check-Raise",
   "kbClubsIntro": "Клубы позволяют вам подключиться к местному покерному залу и отслеживать живые игры.",
   "kbClubsTitle": "Клубы и события",
   "kbDealerLoggingDescription": "Дилеры используют голосовые команды для записи действий всего стола. Игрокам не нужно вводить данные вручную.",
   "kbDealerLoggingTitle": "Запись с помощью дилера",
   "kbFoldTo3BetDescription": "Как часто вы сбрасываете карты после рейза, столкнувшись с 3-Bet. Если слишком часто, соперники могут эксплуатировать вас лёгкими 3-Bet.",
-  "kbFoldTo3BetFullName": "Fold to Three-Bet",
+  "kbFoldTo3BetFullName": "Fold to 3-Bet",
   "kbFoldTo3BetName": "Fold to 3-Bet",
   "kbLiveEventsDescription": "Менеджеры клубов создают события с несколькими столами. Присоединитесь к событию, чтобы участвовать в рейтингах в реальном времени.",
   "kbLiveEventsTitle": "Живые события",
@@ -4155,15 +4172,15 @@
   "kbStatsIntro": "Final Table отслеживает 7 ключевых покерных метрик, чтобы помочь вам понять и улучшить свою игру.",
   "kbStatsTitle": "Ваша статистика",
   "kbStealDescription": "Как часто вы открываете рейзом с поздней позиции (CO, BTN, SB), когда банк не вскрыт, стремясь забрать блайнды.",
-  "kbStealFullName": "Blind Steal Attempt",
+  "kbStealFullName": "Попытка Steal блайндов",
   "kbStealName": "Steal",
   "kbThreeBetDescription": "Как часто вы делаете ре-рейз на открытый рейз соперника до флопа. Более высокий процент 3-Bet указывает на агрессивный стиль до флопа.",
-  "kbThreeBetFullName": "Three-Bet Percentage",
+  "kbThreeBetFullName": "Процент 3-Bet",
   "kbThreeBetName": "3-Bet",
   "kbVpipDescription": "Как часто вы добровольно входите в банк (исключая постинг блайндов). Высокий VPIP означает игру многими руками; низкий VPIP означает избирательность.",
-  "kbVpipFullName": "Voluntarily Put $ In Pot",
+  "kbVpipFullName": "Добровольно вложено $ в банк",
   "kbVpipName": "VPIP",
-  "leaderboardChipLeader": "Chip Leader: {name}",
+  "leaderboardChipLeader": "Чиплидер: {name}",
   "leaderboardPlayers": "Игроки",
   "leaderboardTotalChips": "Всего фишек",
   "leaderboardWaiting": "Ожидание игроков...",
@@ -4332,8 +4349,8 @@
   "onboardingCurrencySubtitle": "Бай-ины, выплаты и статистика будут в ней. Изменить можно в настройках в любой момент.",
   "onboardingGameTypeTitle": "Выберите тип игры",
   "onboardingGameTypeSubtitle": "Мы настроим ваш опыт в зависимости от того, во что вы играете. Вы играете в cash, MTT или сочетаете оба?",
-  "onboardingGameTypeCash": "Cash Game",
-  "onboardingGameTypeTournament": "Tournament (MTT)",
+  "onboardingGameTypeCash": "Кэш-игра",
+  "onboardingGameTypeTournament": "Турнир (MTT)",
   "onboardingGameTypeBoth": "Сочетание",
   "onboardingJourneyTitle": "На каком этапе вашего покерного пути вы находитесь?",
   "onboardingJourneySubtitle": "Это поможет нам персонализировать ваш опыт.",
@@ -4358,7 +4375,7 @@
   "onboardingContinue": "Продолжить",
   "onboardingGetStarted": "Начать",
   "onboardingSkipNickname": "Пропустить пока",
-  "rangeCalledLimped": "Called / limped",
+  "rangeCalledLimped": "Call / Limp",
   "@dealerTablePlayerAdded": {
     "placeholders": {
       "playerName": {
@@ -4369,10 +4386,10 @@
       }
     }
   },
-  "drillHandOverNote": "Hand over.",
-  "rangeStrong": "Strong",
-  "settingsRegisterAClub": "Register a Club",
-  "drillSaveLineupHint": "e.g. Tuesday home game",
+  "drillHandOverNote": "Раздача окончена.",
+  "rangeStrong": "Сильные",
+  "settingsRegisterAClub": "Зарегистрировать клуб",
+  "drillSaveLineupHint": "напр., домашняя игра по вторникам",
   "@notifEventUpdatedTitle": {
     "placeholders": {
       "eventName": {
@@ -4381,9 +4398,9 @@
     }
   },
   "handFoldLabel": "FOLD",
-  "drillYou": "You",
-  "handDiscardHand": "Discard Hand",
-  "opponentsNoNotesAdded": "No notes added",
+  "drillYou": "Вы",
+  "handDiscardHand": "Отменить раздачу",
+  "opponentsNoNotesAdded": "Заметок нет",
   "@homeAvgAmount": {
     "placeholders": {
       "amount": {
@@ -4398,7 +4415,7 @@
       }
     }
   },
-  "rangeChecked": "Checked",
+  "rangeChecked": "Check",
   "@drillDeleteLineupMessage": {
     "placeholders": {
       "name": {
@@ -4406,10 +4423,10 @@
       }
     }
   },
-  "settingsAbout": "About",
-  "drillTable": "TABLE",
+  "settingsAbout": "О приложении",
+  "drillTable": "СТОЛ",
   "rangeVsRaiseSuffix": " · vs raise",
-  "profileFixUsernameError": "Fix username error before saving",
+  "profileFixUsernameError": "Исправьте ошибку в имени пользователя перед сохранением",
   "drillCheck": "CHECK",
   "drillActionLimp": "LIMP",
   "@notifSeatAvailableTitle": {
@@ -4419,8 +4436,8 @@
       }
     }
   },
-  "statsHandsLogged": "Hands Logged",
-  "profileEditUsername": "Edit username",
+  "statsHandsLogged": "Раздач залогировано",
+  "profileEditUsername": "Изменить имя пользователя",
   "@qrJoinSeat": {
     "placeholders": {
       "number": {
@@ -4428,12 +4445,12 @@
       }
     }
   },
-  "drillCloseLabel": "Close",
-  "rangeHandsLogged": "{count} / 169 hands logged",
+  "drillCloseLabel": "Близко",
+  "rangeHandsLogged": "{count} / 169 раздач записано",
   "drillActionFold": "FOLD",
-  "rangeYearsAgo": "{years}y ago",
-  "drillMistake": "MISTAKE",
-  "handOnlyOneRemaining": "Hand ends: Only one player remaining",
+  "rangeYearsAgo": "{years} г. назад",
+  "drillMistake": "ОШИБКА",
+  "handOnlyOneRemaining": "Раздача завершена: остался только один игрок",
   "@notifEventUpdatedBody": {
     "placeholders": {
       "clubName": {
@@ -4441,8 +4458,8 @@
       }
     }
   },
-  "drillPotLabel": "Pot {pot}BB",
-  "profileChangePassword": "Change Password",
+  "drillPotLabel": "Банк {pot}BB",
+  "profileChangePassword": "Сменить пароль",
   "@notifEventCancelledTitle": {
     "placeholders": {
       "eventName": {
@@ -4450,7 +4467,7 @@
       }
     }
   },
-  "settingsBankroll": "Bankroll",
+  "settingsBankroll": "Банкролл",
   "@drillYouChose": {
     "placeholders": {
       "action": {
@@ -4458,12 +4475,12 @@
       }
     }
   },
-  "drillTitle": "Training Drills",
-  "profileResetEmailSent": "Password reset email sent to {email}",
-  "settingsChooseCurrency": "Choose Currency",
-  "drillMoveYourSeatHere": "Move your seat here",
+  "drillTitle": "Тренировки",
+  "profileResetEmailSent": "Письмо для сброса пароля отправлено на {email}",
+  "settingsChooseCurrency": "Выбрать валюту",
+  "drillMoveYourSeatHere": "Пересесть сюда",
   "drillActionCall": "CALL {amount}",
-  "settingsNoClubsYet": "No Clubs Yet",
+  "settingsNoClubsYet": "Пока нет клубов",
   "statsVpip": "VPIP",
   "@dealerTableAnteLabel": {
     "placeholders": {
@@ -4472,7 +4489,7 @@
       }
     }
   },
-  "drillThisIsMe": "This is me",
+  "drillThisIsMe": "Это я",
   "@drillToCall": {
     "placeholders": {
       "amount": {
@@ -4490,14 +4507,14 @@
       }
     }
   },
-  "rangeRaised": "Raised",
-  "profileUsernameUnavailable": "Username no longer available",
-  "statsStats": "Stats",
-  "rangeAllSpots": "All spots",
-  "drillCorrect": "CORRECT",
+  "rangeRaised": "Raise",
+  "profileUsernameUnavailable": "Имя пользователя больше недоступно",
+  "statsStats": "Статистика",
+  "rangeAllSpots": "Все споты",
+  "drillCorrect": "ВЕРНО",
   "drillFold": "FOLD",
   "handRaiseAction": "Raise",
-  "drillKeepDrilling": "Keep Drilling",
+  "drillKeepDrilling": "Продолжить тренировку",
   "@handTotalInvested": {
     "placeholders": {
       "amount": {
@@ -4519,8 +4536,8 @@
       }
     }
   },
-  "drillSeatNumber": "Seat {seat}",
-  "rangeAllStacks": "All stacks",
+  "drillSeatNumber": "Место {seat}",
+  "rangeAllStacks": "Все стеки",
   "@homeBankrollOfGoal": {
     "placeholders": {
       "current": {
@@ -4531,7 +4548,7 @@
       }
     }
   },
-  "seatUpdatePlayerInfo": "Update player information",
+  "seatUpdatePlayerInfo": "Обновить информацию об игроке",
   "@notifEventCancelledBody": {
     "placeholders": {
       "clubName": {
@@ -4549,12 +4566,12 @@
       }
     }
   },
-  "settingsNoClubs": "No clubs",
+  "settingsNoClubs": "Нет клубов",
   "drillAction4bet": "4-BET {amount}",
-  "profileShareFeedback": "Share your feedback",
-  "rangeWeeksAgo": "{weeks}w ago",
+  "profileShareFeedback": "Оставить отзыв",
+  "rangeWeeksAgo": "{weeks} нед. назад",
   "rangeRfi": "RFI",
-  "profileChangePasswordMessage": "We'll send a password reset link to your email address.",
+  "profileChangePasswordMessage": "Мы отправим ссылку для сброса пароля на ваш email.",
   "@supportFailedSubmit": {
     "placeholders": {
       "error": {
@@ -4562,7 +4579,7 @@
       }
     }
   },
-  "drillWhereYouLeaked": "WHERE YOU LEAKED",
+  "drillWhereYouLeaked": "ГДЕ ВЫ ТЕРЯЛИ",
   "@homeDeleteEventConfirm": {
     "placeholders": {
       "eventName": {
@@ -4570,8 +4587,8 @@
       }
     }
   },
-  "drillTopPercent": "top {percent}%",
-  "drillCorrectLabel": "Correct",
+  "drillTopPercent": "топ {percent}%",
+  "drillCorrectLabel": "Верно",
   "@drillLineupChanges": {
     "placeholders": {
       "gto": {
@@ -4582,7 +4599,7 @@
       }
     }
   },
-  "opponentsDeleteOpponent": "Delete opponent",
+  "opponentsDeleteOpponent": "Удалить соперника",
   "stats3Bet": "3-Bet",
   "@sessionChoppedPot": {
     "placeholders": {
@@ -4591,7 +4608,7 @@
       }
     }
   },
-  "handPlayerLabel": "Player ",
+  "handPlayerLabel": "Игрок ",
   "@handFreeCounter": {
     "placeholders": {
       "used": {
@@ -4602,15 +4619,15 @@
       }
     }
   },
-  "profileResetEmailFailed": "Failed to send reset email",
-  "profileUsernameTaken": "Username already taken",
+  "profileResetEmailFailed": "Не удалось отправить письмо для сброса",
+  "profileUsernameTaken": "Имя пользователя уже занято",
   "rangeLostBB": "– {bb} BB",
-  "drillDecisions": "Decisions",
-  "drillMistakes": "Mistakes",
+  "drillDecisions": "Решения",
+  "drillMistakes": "Ошибки",
   "drillActionBb": "BB 1",
-  "drillPremiumDescription": "Seat the players you actually face, drill preflop spots against bots that play with their measured tendencies, and get exploit-based feedback on every decision.",
-  "drillExploit": "EXPLOIT",
-  "settingsMoreCurrenciesLater": "More currencies will be announced later",
+  "drillPremiumDescription": "Рассадите игроков, с которыми реально играете, отрабатывайте preflop-споты против ботов, повторяющих их измеренные тенденции, и получайте эксплойт-фидбек по каждому решению.",
+  "drillExploit": "ЭКСПЛОЙТ",
+  "settingsMoreCurrenciesLater": "Другие валюты будут добавлены позже",
   "@opponentAlreadyExists": {
     "placeholders": {
       "name": {
@@ -4618,12 +4635,12 @@
       }
     }
   },
-  "drillHandedLabel": "{stack}BB · {players}-handed",
-  "rangeCash": "Cash",
-  "rangeSyncingHistory": "Syncing your hand history…",
-  "settingsMoreLanguagesLater": "More languages will be announced later",
-  "drillGotIt": "Got it",
-  "drillSeatsInstruction": "Tap a seat to assign an opponent or move yourself.",
+  "drillHandedLabel": "{stack}BB · {players} игроков",
+  "rangeCash": "Кэш",
+  "rangeSyncingHistory": "Синхронизация истории раздач…",
+  "settingsMoreLanguagesLater": "Другие языки будут добавлены позже",
+  "drillGotIt": "Понятно",
+  "drillSeatsInstruction": "Нажмите на место, чтобы назначить оппонента или пересесть.",
   "@notifEventStartingBody": {
     "placeholders": {
       "clubName": {
@@ -4649,9 +4666,9 @@
       }
     }
   },
-  "settingsRegisterClub": "Register Club",
-  "drillPlayers": "Players",
-  "drillGenericBot": "Generic bot",
+  "settingsRegisterClub": "Зарегистрировать клуб",
+  "drillPlayers": "Игроки",
+  "drillGenericBot": "Обычный бот",
   "@notifSeatAvailableBody": {
     "placeholders": {
       "clubName": {
@@ -4659,9 +4676,9 @@
       }
     }
   },
-  "profileSendResetEmail": "Send Reset Email",
+  "profileSendResetEmail": "Отправить письмо для сброса",
   "drillActionSb": "SB 0.5",
-  "drillDeleteLineup": "Delete lineup",
+  "drillDeleteLineup": "Удалить состав",
   "@setupPlayerSeat": {
     "placeholders": {
       "seatNumber": {
@@ -4697,7 +4714,7 @@
       }
     }
   },
-  "seatMove": "Move",
+  "seatMove": "Переместить",
   "@sessionHandDetails": {
     "placeholders": {
       "handNumber": {
@@ -4705,9 +4722,9 @@
       }
     }
   },
-  "profileSettings": "Profile Settings",
-  "rangeMedium": "Medium",
-  "loggingChoose": "Choose",
+  "profileSettings": "Настройки профиля",
+  "rangeMedium": "Средние",
+  "loggingChoose": "Выбрать",
   "@qrJoinFailed": {
     "placeholders": {
       "error": {
@@ -4715,7 +4732,7 @@
       }
     }
   },
-  "rangeFolded": "Folded",
+  "rangeFolded": "Fold",
   "@drillHandNumber": {
     "placeholders": {
       "number": {
@@ -4737,9 +4754,9 @@
       }
     }
   },
-  "rangeMonthsAgo": "{months}mo ago",
-  "seatYou": "You",
-  "drillPremiumTitle": "Train against your real opponents",
+  "rangeMonthsAgo": "{months} мес. назад",
+  "seatYou": "Вы",
+  "drillPremiumTitle": "Тренируйтесь против реальных оппонентов",
   "@opponentsCountPremium": {
     "placeholders": {
       "count": {
@@ -4747,7 +4764,7 @@
       }
     }
   },
-  "handInProgress": "Hand in Progress",
+  "handInProgress": "Раздача в процессе",
   "@rangeScoutingTitle": {
     "placeholders": {
       "name": {
@@ -4755,8 +4772,8 @@
       }
     }
   },
-  "drillReachedFlopNote": "Hand goes to the flop — preflop drill complete.",
-  "profileEditEmailHint": "Email changes require account re-authentication. Contact support to change your email.",
+  "drillReachedFlopNote": "Раздача идёт на Flop — preflop-тренировка завершена.",
+  "profileEditEmailHint": "Изменение email требует повторной аутентификации аккаунта. Обратитесь в поддержку, чтобы изменить email.",
   "@calendarEventDeleteConfirm": {
     "placeholders": {
       "title": {
@@ -4778,11 +4795,11 @@
       }
     }
   },
-  "drillSeats": "SEATS",
-  "drillSaveLineup": "Save lineup",
+  "drillSeats": "МЕСТА",
+  "drillSaveLineup": "Сохранить состав",
   "rangeRfiSuffix": " · RFI",
-  "profileFollowUs": "Follow @finaltable",
-  "drillToCall": "{amount}BB to call",
+  "profileFollowUs": "Подписаться на @finaltable",
+  "drillToCall": "{amount}BB для Call",
   "@notifEventStartedTitle": {
     "placeholders": {
       "eventName": {
@@ -4797,7 +4814,7 @@
       }
     }
   },
-  "drillBalancedRegular": "Balanced regular",
+  "drillBalancedRegular": "Сбалансированный регуляр",
   "@handSidePot": {
     "placeholders": {
       "index": {
@@ -4805,7 +4822,7 @@
       }
     }
   },
-  "drillAccuracy": "Accuracy",
+  "drillAccuracy": "Точность",
   "@pokerHandAmountBetween": {
     "placeholders": {
       "min": {
@@ -4826,7 +4843,7 @@
       }
     }
   },
-  "rangeTourney": "Tourney",
+  "rangeTourney": "Турнир",
   "@leaderboardChipLeader": {
     "placeholders": {
       "name": {
@@ -4841,8 +4858,8 @@
       }
     }
   },
-  "rangeScoutingTitle": "{name} · Scouting report",
-  "rangeWeak": "Weak",
+  "rangeScoutingTitle": "{name} · Отчёт разведки",
+  "rangeWeak": "Слабые",
   "handBetLabel": "BET",
   "rangePremium": "Premium",
   "@dealerQrTableNotAssigned": {
@@ -4880,8 +4897,8 @@
     }
   },
   "drillCall": "CALL",
-  "settingsChoose": "Choose",
-  "settingsChooseTour": "Choose which tour to replay",
+  "settingsChoose": "Выбрать",
+  "settingsChooseTour": "Выберите, какой тур повторить",
   "@drillAction3bet": {
     "placeholders": {
       "amount": {
@@ -4889,16 +4906,16 @@
       }
     }
   },
-  "profileEdit": "Edit",
+  "profileEdit": "Изменить",
   "drillActionCheck": "CHECK",
-  "drillYouChose": "· you chose {action}",
+  "drillYouChose": "· вы выбрали {action}",
   "statsPfr": "PFR",
-  "settingsGetPlusSubtitle": "Log more hands and AI analysis",
-  "seatStartSession": "Start Session",
-  "rangeAllPositions": "All",
-  "loggingTrainingDrills": "Training Drills",
-  "seatKeep": "Keep",
-  "seatSaveChanges": "Save Changes",
+  "settingsGetPlusSubtitle": "Логируйте больше раздач и AI-анализ",
+  "seatStartSession": "Начать сессию",
+  "rangeAllPositions": "Все",
+  "loggingTrainingDrills": "Тренировки",
+  "seatKeep": "Оставить",
+  "seatSaveChanges": "Сохранить изменения",
   "@rangeMonthsAgo": {
     "placeholders": {
       "months": {
@@ -4906,8 +4923,8 @@
       }
     }
   },
-  "drillClose": "CLOSE",
-  "drillEndDrill": "End Drill",
+  "drillClose": "БЛИЗКО",
+  "drillEndDrill": "Завершить тренировку",
   "@rangeYearsAgo": {
     "placeholders": {
       "years": {
@@ -4915,7 +4932,7 @@
       }
     }
   },
-  "settingsGetPlus": "Get Final Table Plus",
+  "settingsGetPlus": "Получить Final Table Plus",
   "@mainDealerOnClub": {
     "placeholders": {
       "clubName": {
@@ -4923,12 +4940,12 @@
       }
     }
   },
-  "profileDeleteAccount": "Delete Account",
-  "statsRanges": "Ranges",
+  "profileDeleteAccount": "Удалить аккаунт",
+  "statsRanges": "Диапазоны",
   "profilePasswordMask": "***********",
-  "drillNextHand": "Next Hand",
-  "profileUsernameHint": "username",
-  "drillRaiseTo": "Raise to:",
+  "drillNextHand": "Следующая раздача",
+  "profileUsernameHint": "имя пользователя",
+  "drillRaiseTo": "Raise до:",
   "@setupMustBeAtLeastBigBlind": {
     "placeholders": {
       "bigBlind": {
@@ -4943,7 +4960,7 @@
       }
     }
   },
-  "profileInsteadOfName": "instead of your name in events and hand logging",
+  "profileInsteadOfName": "вместо вашего имени в событиях и записи раздач",
   "statsSteal": "Steal",
   "handRaiseLabel": "RAISE",
   "@handRebuysCount": {
@@ -4953,7 +4970,7 @@
       }
     }
   },
-  "settingsPending": "{count} pending",
+  "settingsPending": "{count} в ожидании",
   "@sessionNoSessions": {
     "placeholders": {
       "gameType": {
@@ -4971,7 +4988,7 @@
       }
     }
   },
-  "drillSearchOpponents": "Search opponents",
+  "drillSearchOpponents": "Поиск оппонентов",
   "@notifMemberRsvpBody": {
     "placeholders": {
       "memberName": {
@@ -4985,7 +5002,7 @@
       }
     }
   },
-  "settingsClubs": "Clubs",
+  "settingsClubs": "Клубы",
   "drillAction3bet": "3-BET {amount}",
   "@rangeSpotsCount": {
     "placeholders": {
@@ -4994,9 +5011,9 @@
       }
     }
   },
-  "rangeCalled": "Called",
-  "drillPot": "POT",
-  "settingsChooseLanguage": "Choose Language",
+  "rangeCalled": "Call",
+  "drillPot": "БАНК",
+  "settingsChooseLanguage": "Выбрать язык",
   "@sessionHistoryPlayerWins": {
     "placeholders": {
       "playerId": {
@@ -5020,8 +5037,8 @@
     }
   },
   "rangeWonBB": "W {bb} BB",
-  "handDiscardCurrentHand": "You have an active hand being logged. Discard it and go back?",
-  "tableManageTitle": "Table",
+  "handDiscardCurrentHand": "У вас есть активная раздача, которая записывается. Отменить её и вернуться назад?",
+  "tableManageTitle": "Стол",
   "handBetAction": "Bet",
   "@redeemJoinedAs": {
     "placeholders": {
@@ -5040,8 +5057,8 @@
       }
     }
   },
-  "opponentsAddNotes": "Add notes",
-  "profileEditName": "Edit Name",
+  "opponentsAddNotes": "Добавить заметки",
+  "profileEditName": "Изменить имя",
   "@opponentsDeleteConfirmMessage": {
     "placeholders": {
       "name": {
@@ -5056,12 +5073,12 @@
       }
     }
   },
-  "settingsYourClubs": "Your Clubs",
-  "profileContactSupport": "Contact support",
-  "profileEmailUpdates": "Email updates",
-  "drillStackDepth": "Stack depth",
-  "drillFormat": "Format",
-  "drillFormatCash": "Cash",
+  "settingsYourClubs": "Ваши клубы",
+  "profileContactSupport": "Связаться с поддержкой",
+  "profileEmailUpdates": "Email-рассылка",
+  "drillStackDepth": "Глубина стека",
+  "drillFormat": "Формат",
+  "drillFormatCash": "Кэш",
   "drillFormatAnte": "MTT · Ante",
   "@drillPotLabel": {
     "placeholders": {
@@ -5085,9 +5102,9 @@
     }
   },
   "statsCheckRaise": "Check-Raise",
-  "drillDeleteLineupMessage": "Remove \"{name}\" from your saved lineups?",
+  "drillDeleteLineupMessage": "Убрать «{name}» из сохранённых составов?",
   "drillActionJam": "JAM {amount}",
-  "loggingTrainingDrillsSubtitle": "Practice preflop spots against your real opponents",
+  "loggingTrainingDrillsSubtitle": "Отрабатывайте preflop-споты против реальных соперников",
   "loggingTrainingDrillsFeature1": "Префлоп-тренировки",
   "loggingTrainingDrillsFeature2": "Диапазоны GTO",
   "loggingTrainingDrillsFeature3": "На основе оппонентов",
@@ -5105,9 +5122,9 @@
       }
     }
   },
-  "drillContinue": "Continue",
+  "drillContinue": "Продолжить",
   "drillGto": "GTO",
-  "rangeDaysAgo": "{days}d ago",
+  "rangeDaysAgo": "{days} дн. назад",
   "@drillWonUncontestedNote": {
     "placeholders": {
       "pot": {
@@ -5115,7 +5132,7 @@
       }
     }
   },
-  "rangeEmptyHint": "Your preflop chart builds itself: log hands and enter your hole cards, and each starting hand fills in with how you actually played it before the flop.",
+  "rangeEmptyHint": "Ваш preflop-чарт строится сам: записывайте раздачи и вводите свои карманные карты — каждая стартовая рука заполняется тем, как вы реально её сыграли до Flop.",
   "@homeAmountLeft": {
     "placeholders": {
       "amount": {
@@ -5123,7 +5140,7 @@
       }
     }
   },
-  "drillSavedLineups": "SAVED LINEUPS",
+  "drillSavedLineups": "СОХРАНЁННЫЕ СОСТАВЫ",
   "@sessionPlayToSee": {
     "placeholders": {
       "gameType": {
@@ -5146,11 +5163,11 @@
       }
     }
   },
-  "settingsGeneral": "General",
-  "drillSummaryTitle": "Drill Summary",
-  "profileYourName": "Your name",
+  "settingsGeneral": "Общие",
+  "drillSummaryTitle": "Итоги тренировки",
+  "profileYourName": "Ваше имя",
   "statsCBet": "C-Bet",
-  "drillStartDrill": "Start Drill",
+  "drillStartDrill": "Начать тренировку",
   "handBbLabel": "BB",
   "@notifEventStartedBody": {
     "placeholders": {
@@ -5159,10 +5176,10 @@
       }
     }
   },
-  "drillWonUncontestedNote": "Everyone folded — you take it down ({pot}BB).",
-  "rangeNoShowdowns": "Log a few hands to showdown with this opponent's cards entered, and their range will start filling in here.",
-  "rangeToday": "Today",
-  "settingsNoClubsHint": "Register or join a club to see them here.",
+  "drillWonUncontestedNote": "Все сделали Fold — вы забираете банк ({pot}BB).",
+  "rangeNoShowdowns": "Запишите несколько раздач до Showdown с введёнными картами этого оппонента — и его диапазон начнёт заполняться здесь.",
+  "rangeToday": "Сегодня",
+  "settingsNoClubsHint": "Зарегистрируйте или вступите в клуб, чтобы увидеть их здесь.",
   "@opponentsLastSeen": {
     "placeholders": {
       "date": {
@@ -5170,14 +5187,14 @@
       }
     }
   },
-  "drillScouting": "SCOUTING",
-  "handSessionTitle": "Session",
+  "drillScouting": "РАЗВЕДКА",
+  "handSessionTitle": "Сессия",
   "drillJam": "JAM",
-  "profileEditEmail": "Edit email",
-  "drillHandNumber": "Hand #{number}",
-  "drillMistakeDetail": "{handClass} · {position} · you chose {heroAction}, {recommendedAction} was right",
-  "rangePreflopHeader": "PREFLOP RANGE — BUILT FROM YOUR LOGGED HANDS",
-  "drillWalkedNote": "Everyone folded — you win the blinds.",
+  "profileEditEmail": "Изменить email",
+  "drillHandNumber": "Раздача #{number}",
+  "drillMistakeDetail": "{handClass} · {position} · вы выбрали {heroAction}, верным был {recommendedAction}",
+  "rangePreflopHeader": "PREFLOP-ДИАПАЗОН — ПОСТРОЕН ИЗ ВАШИХ ЗАПИСАННЫХ РАЗДАЧ",
+  "drillWalkedNote": "Все сделали Fold — вы забираете блайнды.",
   "@drillActionRaise": {
     "placeholders": {
       "amount": {
@@ -5185,8 +5202,8 @@
       }
     }
   },
-  "seatManagePlayers": "Manage Players",
-  "drillUpgradeToPremium": "Upgrade to Premium",
+  "seatManagePlayers": "Управление игроками",
+  "drillUpgradeToPremium": "Перейти на Premium",
   "@drillSeatNumber": {
     "placeholders": {
       "seat": {
@@ -5194,8 +5211,8 @@
       }
     }
   },
-  "rangeShowdownBias": "Shown hands skew toward value and called-down hands — they tell you what is in the range and its shape, not the full range.",
-  "profileChangePasswordTitle": "Change Password",
+  "rangeShowdownBias": "Показанные руки смещены в сторону value и коллирующих рук — они говорят о том, что есть в диапазоне и какова его форма, но не о полном диапазоне.",
+  "profileChangePasswordTitle": "Сменить пароль",
   "@dealerTablePlayerToAct": {
     "placeholders": {
       "playerName": {
@@ -5206,7 +5223,7 @@
       }
     }
   },
-  "profileSavedSuccessfully": "Saved successfully",
+  "profileSavedSuccessfully": "Успешно сохранено",
   "@rangeWeeksAgo": {
     "placeholders": {
       "weeks": {
@@ -5214,7 +5231,7 @@
       }
     }
   },
-  "drillSaveThisLineup": "Save this lineup",
+  "drillSaveThisLineup": "Сохранить этот состав",
   "@homeDeleteEventDescription": {
     "placeholders": {
       "eventName": {
@@ -5222,19 +5239,19 @@
       }
     }
   },
-  "rangeSpotsCount": "{count} preflop {count, plural, =1{spot} other{spots}}",
-  "tableButtonOnEmpty": "Button on Empty Seat",
-  "rangeRaisedLabel": "Raised",
-  "rangeYesterday": "Yesterday",
-  "drillLineupChanges": "This lineup changes the play: GTO {gto}s, exploit {exploit}s",
-  "profileDeleteAccountMessage": "This will permanently delete your account and all associated data. This action cannot be undone.\n\nIf you have an active subscription, please cancel it first in your device settings.",
-  "opponentsEnterName": "Enter name",
-  "rangeStackDepth": "Stack depth",
-  "settingsSkipHandScouting": "Skip Hand Scouting",
-  "settingsSkipHandScoutingDesc": "Track opponent actions when you fold preflop",
-  "skipScoutTitle": "What happened?",
-  "skipScoutNoRaise": "No one raised",
-  "skipScoutSkip": "Skip",
+  "rangeSpotsCount": "{count} preflop-{count, plural, =1{спот} other{спотов}}",
+  "tableButtonOnEmpty": "Button на пустом месте",
+  "rangeRaisedLabel": "Raise",
+  "rangeYesterday": "Вчера",
+  "drillLineupChanges": "Этот состав меняет игру: GTO {gto}s, эксплойт {exploit}s",
+  "profileDeleteAccountMessage": "Это навсегда удалит ваш аккаунт и все связанные данные. Это действие нельзя отменить.\\n\\nЕсли у вас есть активная подписка, сначала отмените её в настройках устройства.",
+  "opponentsEnterName": "Введите имя",
+  "rangeStackDepth": "Глубина стека",
+  "settingsSkipHandScouting": "Пропустить разведку раздачи",
+  "settingsSkipHandScoutingDesc": "Отслеживайте действия соперников, когда вы делаете Fold на preflop",
+  "skipScoutTitle": "Что произошло?",
+  "skipScoutNoRaise": "Никто не поднял",
+  "skipScoutSkip": "Пропустить",
   "paywallNotNow": "Не сейчас",
   "paywallFreeTrialBadge14": "14 дней бесплатно",
   "freeTierHandLimitTitle": "Достигнут лимит рук",

@@ -107,6 +107,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       case 'pl': return 'Polski';
       case 'pt': return 'Português';
       case 'ru': return 'Русский';
+      case 'uk': return 'Українська';
       default: return code;
     }
   }
@@ -172,6 +173,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     (code: 'pl',  label: 'Polski',         flagAsset: 'assets/icons/Property 1=Poland (PL).svg'),
     (code: 'pt',  label: 'Português',      flagAsset: 'assets/icons/Property 1=Portugal (PT).svg'),
     (code: 'ru',  label: 'Русский',        flagAsset: 'assets/icons/Property 1=Russia (RU).svg'),
+    (code: 'uk',  label: 'Українська',     flagAsset: 'assets/icons/Property 1=ukraine.svg'),
   ];
 
   void _showLanguagePicker() {

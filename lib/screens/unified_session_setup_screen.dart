@@ -439,7 +439,7 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
       children: [
         // Session Name
         _buildFormRow(
-          label: 'Session\nName',
+          label: l10n.setupSessionName,
           crossAxisAlignment: CrossAxisAlignment.center,
           content: _buildTextField(
             controller: _sessionNameController,
@@ -450,7 +450,7 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
 
         // Game Type
         _buildFormRow(
-          label: 'Game Type',
+          label: l10n.setupGameType,
           crossAxisAlignment: CrossAxisAlignment.center,
           content: Row(
             children: [
@@ -478,7 +478,7 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
 
         // Buy-in Amount
         _buildFormRow(
-          label: 'Buy-in\nAmount',
+          label: l10n.setupBuyInAmount,
           crossAxisAlignment: CrossAxisAlignment.start,
           content: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -567,7 +567,7 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
 
         // Blinds
         _buildFormRow(
-          label: 'Blinds',
+          label: l10n.handBlinds,
           crossAxisAlignment: CrossAxisAlignment.center,
           content: Row(
             children: [
@@ -605,7 +605,7 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
             final stack = double.tryParse(_startingStackController.text);
             final hasError = stack != null && stack < _bigBlind;
             return _buildFormRow(
-              label: 'Starting\nStack',
+              label: l10n.setupStartingStack,
               crossAxisAlignment: CrossAxisAlignment.start,
               content: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

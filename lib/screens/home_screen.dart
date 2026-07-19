@@ -2517,7 +2517,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   ),
                   const SizedBox(height: 32),
                   SecondaryPillButton(
-                    label: 'Ok',
+                    label: AppLocalizations.of(ctx).commonOk,
                     onTap: () => Navigator.of(ctx).pop(),
                   ),
                 ],

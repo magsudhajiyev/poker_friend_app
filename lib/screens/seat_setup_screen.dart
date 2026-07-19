@@ -712,14 +712,14 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                       children: [
                         Expanded(
                           child: OutlinedPillButton(
-                            label: 'Back',
+                            label: AppLocalizations.of(context).commonBack,
                             onTap: cancelChanges,
                           ),
                         ),
                         const SizedBox(width: 16),
                         Expanded(
                           child: PrimaryPillButton(
-                            label: 'Save',
+                            label: AppLocalizations.of(context).commonSave,
                             onTap: saveChanges,
                           ),
                         ),

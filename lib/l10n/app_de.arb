@@ -28,7 +28,7 @@
   "statsSubtitle": "Erweiterte Analysen",
   "statsHandsPlayed": "Gespielte Hände",
   "statsFoldTo3Bet": "Fold to 3-Bet",
-  "statsWinRate": "Win Rate",
+  "statsWinRate": "Gewinnrate",
   "statsSessionStatistics": "Session-Statistiken",
   "statsSessions": "Sessions",
   "statsTotalTime": "Gesamtzeit",
@@ -91,7 +91,7 @@
   "settingsSupportRequestsSubtitle": "Support-Tickets verwalten",
   "settingsNotificationTester": "Benachrichtigungstest",
   "settingsNotificationTesterSubtitle": "Alle Benachrichtigungsdesigns ansehen",
-  "profileUpgrade": "Upgrade",
+  "profileUpgrade": "Upgraden",
   "profileUsername": "Benutzername",
   "profileNotSet": "Nicht festgelegt",
   "profileChange": "Ändern",
@@ -157,7 +157,7 @@
   "sessionClearAllWarning": "Diese Aktion kann nicht rückgängig gemacht werden!",
   "sessionClearAll": "Alle löschen",
   "sessionClearedSuccessfully": "Alle Sessions wurden erfolgreich gelöscht",
-  "sessionHandDetails": "Hand #{handNumber} Details",
+  "sessionHandDetails": "Details zu Hand #{handNumber}",
   "@sessionHandDetails": {
     "placeholders": {
       "handNumber": {
@@ -166,12 +166,12 @@
     }
   },
   "sessionYourCards": "Deine Karten:",
-  "sessionBoardCards": "Board Cards:",
+  "sessionBoardCards": "Board-Karten:",
   "sessionPotByStreet": "Pot nach Street:",
   "sessionActions": "Aktionen:",
   "sessionNoActionsRecorded": "Keine Aktionen aufgezeichnet",
   "sessionNoCardsRecorded": "Keine Karten aufgezeichnet",
-  "sessionFinalPot": "Final Pot:",
+  "sessionFinalPot": "Finaler Pot:",
   "sessionChoppedPot": "Geteilter Pot ({count} Gewinner):",
   "@sessionChoppedPot": {
     "placeholders": {
@@ -258,7 +258,7 @@
   "setupBuyInAmount": "Buy-in-Betrag",
   "setupEnterAmount": "Betrag eingeben",
   "setupStartingStackEqualsBuyIn": "Der Starting Stack entspricht deinem Buy-in.",
-  "setupStartingStack": "Starting Stack",
+  "setupStartingStack": "Start-Stack",
   "setupEnterChipStack": "Chipanzahl eingeben",
   "setupMustBeAtLeastBigBlind": "Muss mindestens den Big Blind ({bigBlind}) betragen",
   "@setupMustBeAtLeastBigBlind": {
@@ -289,7 +289,7 @@
   "homeClubNotFound": "Club nicht gefunden",
   "homeEventNotFound": "Event nicht gefunden",
   "homeRecentActivity": "Letzte Aktivität",
-  "homeWinRate": "Win Rate",
+  "homeWinRate": "Gewinnrate",
   "homeHours": "Stunden",
   "homePlayStyle": "Spielstil",
   "homePlayStyleTooltip": "Dein Spielstil wird nach 50 geloggten Preflop-Händen erkannt.",
@@ -664,7 +664,7 @@
   "individualBbMode": "BB-Modus",
   "individualCurrentStackLabel": "Aktueller Stack",
   "individualSessionInfo": "Session-Info",
-  "individualStartingStack": "Starting Stack",
+  "individualStartingStack": "Start-Stack",
   "individualInitialBuyIn": "Erstes Buy-in",
   "individualRebuys": "Rebuys",
   "individualTotalInvested": "Gesamtinvestition",
@@ -934,7 +934,7 @@
   "notificationMarkAsRead": "Als gelesen markieren",
   "notificationNoNotifications": "Keine Benachrichtigungen",
   "notificationEvents": "Events",
-  "notificationRsvp": "RSVP",
+  "notificationRsvp": "Zusagen",
   "notificationClubs": "Clubs",
   "notificationInvitations": "Einladungen",
   "notificationSeats": "Plätze",
@@ -1180,7 +1180,7 @@
   "handReviewTitle": "Hand-Rückblick",
   "handReviewYourHoleCards": "Deine Hole Cards",
   "handReviewOptional": "(optional)",
-  "handReviewQuickTags": "Quick Tags",
+  "handReviewQuickTags": "Schnell-Tags",
   "handReviewTagBluff": "Bluff",
   "handReviewTagValue": "Value",
   "handReviewTagMistake": "Fehler",
@@ -1284,7 +1284,7 @@
       }
     }
   },
-  "tableManagementStartingStack": "Starting Stack",
+  "tableManagementStartingStack": "Start-Stack",
   "tableManagementStackAmountHint": "Stack-Betrag",
   "tableManagementMoveMeHere": "Mich hierher setzen",
   "tableManagementSeatLabel": "Platz {seatNumber}",
@@ -1714,7 +1714,7 @@
   "eventDetailLocation": "Ort",
   "eventDetailBuyIn": "Buy-in",
   "eventDetailStakes": "Stakes",
-  "eventDetailStartingStack": "Starting Stack",
+  "eventDetailStartingStack": "Start-Stack",
   "eventDetailAbout": "ÜBER",
   "eventDetailAddedToCalendar": "Event zu deinem Kalender hinzugefügt!",
   "eventDetailCalendarFailed": "Zum Kalender hinzufügen fehlgeschlagen: {error}",
@@ -2986,6 +2986,23 @@
     }
   },
   "eventSuccessAddAnother": "Weiteres Event hinzufügen",
+  "subscriptionSuccessTitle": "Du bist jetzt {tier}!",
+  "@subscriptionSuccessTitle": {
+    "placeholders": {
+      "tier": {
+        "type": "String"
+      }
+    }
+  },
+  "subscriptionSuccessSubtitle": "Dein {tier}-Plan ist aktiv. Viel Spaß mit deinen neuen Funktionen!",
+  "@subscriptionSuccessSubtitle": {
+    "placeholders": {
+      "tier": {
+        "type": "String"
+      }
+    }
+  },
+  "subscriptionSuccessCta": "Los geht's",
   "eventSuccessGoToCalendar": "Zum Kalender",
   "eventSuccessSubtitle": "Sie können es jederzeit bearbeiten oder entfernen",
   "eventSuccessTitle": "Super! Ihr Event ist jetzt im Kalender.",
@@ -3126,7 +3143,7 @@
       }
     }
   },
-  "multiPotChoppedPot": "Chopped Pot",
+  "multiPotChoppedPot": "Geteilter Pot",
   "multiPotEligibleFromPrevious": "berechtigt aus vorherigem Pot",
   "multiPotMainPot": "Main Pot",
   "multiPotMainPotWinner": "Main Pot Gewinner",
@@ -3395,7 +3412,7 @@
   "weekdayTue": "Di",
   "weekdayWed": "Mi",
   "winnerSelectionBackToSingle": "Zurück zum einzelnen Gewinner",
-  "winnerSelectionChoppedPot": "Chopped Pot",
+  "winnerSelectionChoppedPot": "Geteilter Pot",
   "winnerSelectionConfirmChop": "Chop bestätigen",
   "winnerSelectionConfirmWinner": "Gewinner bestätigen",
   "winnerSelectionIndividualShares": "Individuelle Anteile:",
@@ -4185,7 +4202,7 @@
     }
   },
   "sessionHistoryCash": "Cash",
-  "sessionHistoryTournament": "Tournament",
+  "sessionHistoryTournament": "Turnier",
   "sessionHistorySessionId": "Session {id}...",
   "@sessionHistorySessionId": {
     "placeholders": {
@@ -4324,9 +4341,9 @@
   "kbFoldTo3BetFullName": "Fold to Three-Bet",
   "kbFoldTo3BetName": "Fold to 3-Bet",
   "kbLiveEventsDescription": "Club-Manager erstellen Events mit mehreren Tischen. Tritt einem Event bei, um Teil der Live-Rangliste zu sein.",
-  "kbLiveEventsTitle": "Live Events",
+  "kbLiveEventsTitle": "Live-Events",
   "kbLiveRankingsDescription": "Sieh, wo du während Events in Echtzeit stehst. Ranglisten aktualisieren sich nach jeder Hand.",
-  "kbLiveRankingsTitle": "Live Rankings",
+  "kbLiveRankingsTitle": "Live-Rangliste",
   "kbOpponentTrackingDescription": "Spieler, denen du im Club begegnest, werden automatisch verfolgt. Speichere Gegner, um detaillierte Profile zu erstellen.",
   "kbOpponentTrackingTitle": "Gegnerverfolgung",
   "kbPfrDescription": "Wie oft du vor dem Flop raisest. Der Unterschied zwischen VPIP und PFR zeigt, wie oft du limpst oder cold-callst.",
@@ -4339,10 +4356,10 @@
   "kbStatsIntro": "Final Table verfolgt 7 Kern-Pokermetriken, um dir zu helfen, dein Spiel zu verstehen und zu verbessern.",
   "kbStatsTitle": "Deine Statistiken",
   "kbStealDescription": "Wie oft du aus später Position (CO, BTN, SB) mit einem open-raise versuchst, die Blinds zu stehlen, wenn der Pot noch offen ist.",
-  "kbStealFullName": "Blind Steal Attempt",
+  "kbStealFullName": "Blind-Steal-Versuch",
   "kbStealName": "Steal",
   "kbThreeBetDescription": "Wie oft du den Open-Raise eines Gegners vor dem Flop re-raisest. Ein höherer 3-Bet-% deutet auf einen aggressiven Preflop-Stil hin.",
-  "kbThreeBetFullName": "Three-Bet Percentage",
+  "kbThreeBetFullName": "Three-Bet-Prozentsatz",
   "kbThreeBetName": "3-Bet",
   "kbVpipDescription": "Wie oft du freiwillig in einen Pot einsteigst (ohne Blind-Posts). Ein hoher VPIP bedeutet, dass du viele Hände spielst; ein niedriger VPIP bedeutet, dass du selektiv bist.",
   "kbVpipFullName": "Voluntarily Put $ In Pot",
@@ -4353,7 +4370,7 @@
   "leaderboardWaiting": "Warte auf Spieler...",
   "liveRankingsEliminated": "Ausgeschiedene Spieler",
   "liveRankingsError": "Fehler beim Laden der Rangliste",
-  "liveRankingsTitle": "Live Rankings",
+  "liveRankingsTitle": "Live-Rangliste",
   "liveRankingsTryAgain": "Erneut versuchen",
   "liveRankingsWaiting": "Warte auf Spieler",
   "liveRankingsWaitingHint": "Die Rangliste erscheint, sobald Spieler Platz genommen haben",
@@ -4517,7 +4534,7 @@
   "onboardingGameTypeTitle": "Wähle deinen Spieltyp",
   "onboardingGameTypeSubtitle": "Wir passen dein Erlebnis an das an, was du spielst. Spielst du Cash, Turniere oder eine Mischung?",
   "onboardingGameTypeCash": "Cash Game",
-  "onboardingGameTypeTournament": "Tournament (MTT)",
+  "onboardingGameTypeTournament": "Turnier (MTT)",
   "onboardingGameTypeBoth": "Beides gemischt",
   "onboardingJourneyTitle": "Wo stehst du auf deiner Poker-Reise?",
   "onboardingJourneySubtitle": "Das hilft uns, dein Erlebnis zu personalisieren.",
@@ -4542,7 +4559,7 @@
   "onboardingContinue": "Weiter",
   "onboardingGetStarted": "Loslegen",
   "onboardingSkipNickname": "Erstmal überspringen",
-  "rangeCalledLimped": "Called / limped",
+  "rangeCalledLimped": "Gecallt / gelimpt",
   "@dealerTablePlayerAdded": {
     "placeholders": {
       "playerName": {
@@ -4553,10 +4570,10 @@
       }
     }
   },
-  "drillHandOverNote": "Hand over.",
-  "rangeStrong": "Strong",
-  "settingsRegisterAClub": "Register a Club",
-  "drillSaveLineupHint": "e.g. Tuesday home game",
+  "drillHandOverNote": "Hand vorbei.",
+  "rangeStrong": "Stark",
+  "settingsRegisterAClub": "Club registrieren",
+  "drillSaveLineupHint": "z. B. Home Game am Dienstag",
   "@notifEventUpdatedTitle": {
     "placeholders": {
       "eventName": {
@@ -4565,9 +4582,9 @@
     }
   },
   "handFoldLabel": "FOLD",
-  "drillYou": "You",
-  "handDiscardHand": "Discard Hand",
-  "opponentsNoNotesAdded": "No notes added",
+  "drillYou": "Du",
+  "handDiscardHand": "Hand verwerfen",
+  "opponentsNoNotesAdded": "Keine Notizen hinzugefügt",
   "@notifEventStartingTitle": {
     "placeholders": {
       "eventName": {
@@ -4575,7 +4592,7 @@
       }
     }
   },
-  "rangeChecked": "Checked",
+  "rangeChecked": "Gecheckt",
   "@drillDeleteLineupMessage": {
     "placeholders": {
       "name": {
@@ -4583,10 +4600,10 @@
       }
     }
   },
-  "settingsAbout": "About",
-  "drillTable": "TABLE",
-  "rangeVsRaiseSuffix": " · vs raise",
-  "profileFixUsernameError": "Fix username error before saving",
+  "settingsAbout": "Über",
+  "drillTable": "TISCH",
+  "rangeVsRaiseSuffix": " · vs Raise",
+  "profileFixUsernameError": "Behebe den Fehler beim Benutzernamen vor dem Speichern",
   "drillCheck": "CHECK",
   "drillActionLimp": "LIMP",
   "@notifSeatAvailableTitle": {
@@ -4596,8 +4613,8 @@
       }
     }
   },
-  "statsHandsLogged": "Hands Logged",
-  "profileEditUsername": "Edit username",
+  "statsHandsLogged": "Erfasste Hände",
+  "profileEditUsername": "Benutzernamen bearbeiten",
   "@qrJoinSeat": {
     "placeholders": {
       "number": {
@@ -4605,12 +4622,12 @@
       }
     }
   },
-  "drillCloseLabel": "Close",
-  "rangeHandsLogged": "{count} / 169 hands logged",
+  "drillCloseLabel": "Knapp",
+  "rangeHandsLogged": "{count} / 169 Hände erfasst",
   "drillActionFold": "FOLD",
-  "rangeYearsAgo": "{years}y ago",
-  "drillMistake": "MISTAKE",
-  "handOnlyOneRemaining": "Hand ends: Only one player remaining",
+  "rangeYearsAgo": "vor {years} J",
+  "drillMistake": "FEHLER",
+  "handOnlyOneRemaining": "Hand endet: Nur noch ein Spieler übrig",
   "@notifEventUpdatedBody": {
     "placeholders": {
       "clubName": {
@@ -4619,7 +4636,7 @@
     }
   },
   "drillPotLabel": "Pot {pot}BB",
-  "profileChangePassword": "Change Password",
+  "profileChangePassword": "Passwort ändern",
   "@notifEventCancelledTitle": {
     "placeholders": {
       "eventName": {
@@ -4635,12 +4652,12 @@
       }
     }
   },
-  "drillTitle": "Training Drills",
-  "profileResetEmailSent": "Password reset email sent to {email}",
-  "settingsChooseCurrency": "Choose Currency",
-  "drillMoveYourSeatHere": "Move your seat here",
+  "drillTitle": "Trainings-Drills",
+  "profileResetEmailSent": "E-Mail zum Zurücksetzen des Passworts an {email} gesendet",
+  "settingsChooseCurrency": "Währung wählen",
+  "drillMoveYourSeatHere": "Deinen Platz hierher verschieben",
   "drillActionCall": "CALL {amount}",
-  "settingsNoClubsYet": "No Clubs Yet",
+  "settingsNoClubsYet": "Noch keine Clubs",
   "statsVpip": "VPIP",
   "@dealerTableAnteLabel": {
     "placeholders": {
@@ -4649,7 +4666,7 @@
       }
     }
   },
-  "drillThisIsMe": "This is me",
+  "drillThisIsMe": "Das bin ich",
   "@drillToCall": {
     "placeholders": {
       "amount": {
@@ -4667,14 +4684,14 @@
       }
     }
   },
-  "rangeRaised": "Raised",
-  "profileUsernameUnavailable": "Username no longer available",
+  "rangeRaised": "Erhöht",
+  "profileUsernameUnavailable": "Benutzername nicht mehr verfügbar",
   "statsStats": "Stats",
-  "rangeAllSpots": "All spots",
-  "drillCorrect": "CORRECT",
+  "rangeAllSpots": "Alle Spots",
+  "drillCorrect": "RICHTIG",
   "drillFold": "FOLD",
   "handRaiseAction": "Raise",
-  "drillKeepDrilling": "Keep Drilling",
+  "drillKeepDrilling": "Weiter üben",
   "@rangeLostBB": {
     "placeholders": {
       "bb": {
@@ -4682,9 +4699,9 @@
       }
     }
   },
-  "drillSeatNumber": "Seat {seat}",
-  "rangeAllStacks": "All stacks",
-  "seatUpdatePlayerInfo": "Update player information",
+  "drillSeatNumber": "Platz {seat}",
+  "rangeAllStacks": "Alle Stacks",
+  "seatUpdatePlayerInfo": "Spielerinformationen aktualisieren",
   "@notifEventCancelledBody": {
     "placeholders": {
       "clubName": {
@@ -4696,11 +4713,11 @@
     }
   },
   "drillAction4bet": "4-BET {amount}",
-  "settingsNoClubs": "No clubs",
-  "profileShareFeedback": "Share your feedback",
-  "rangeWeeksAgo": "{weeks}w ago",
+  "settingsNoClubs": "Keine Clubs",
+  "profileShareFeedback": "Feedback geben",
+  "rangeWeeksAgo": "vor {weeks} Wo",
   "rangeRfi": "RFI",
-  "profileChangePasswordMessage": "We'll send a password reset link to your email address.",
+  "profileChangePasswordMessage": "Wir senden einen Link zum Zurücksetzen des Passworts an deine E-Mail-Adresse.",
   "@supportFailedSubmit": {
     "placeholders": {
       "error": {
@@ -4708,9 +4725,9 @@
       }
     }
   },
-  "drillWhereYouLeaked": "WHERE YOU LEAKED",
-  "drillTopPercent": "top {percent}%",
-  "drillCorrectLabel": "Correct",
+  "drillWhereYouLeaked": "WO DU CHIPS VERLOREN HAST",
+  "drillTopPercent": "Top {percent}%",
+  "drillCorrectLabel": "Richtig",
   "@drillLineupChanges": {
     "placeholders": {
       "gto": {
@@ -4721,18 +4738,18 @@
       }
     }
   },
-  "opponentsDeleteOpponent": "Delete opponent",
+  "opponentsDeleteOpponent": "Gegner löschen",
   "stats3Bet": "3-Bet",
-  "handPlayerLabel": "Player ",
-  "profileResetEmailFailed": "Failed to send reset email",
-  "profileUsernameTaken": "Username already taken",
+  "handPlayerLabel": "Spieler ",
+  "profileResetEmailFailed": "E-Mail zum Zurücksetzen konnte nicht gesendet werden",
+  "profileUsernameTaken": "Benutzername bereits vergeben",
   "rangeLostBB": "– {bb} BB",
-  "drillDecisions": "Decisions",
-  "drillMistakes": "Mistakes",
+  "drillDecisions": "Entscheidungen",
+  "drillMistakes": "Fehler",
   "drillActionBb": "BB 1",
-  "drillPremiumDescription": "Seat the players you actually face, drill preflop spots against bots that play with their measured tendencies, and get exploit-based feedback on every decision.",
+  "drillPremiumDescription": "Setze die Spieler an den Tisch, gegen die du wirklich spielst, übe Preflop-Spots gegen Bots, die mit ihren gemessenen Tendenzen spielen, und erhalte exploit-basiertes Feedback zu jeder Entscheidung.",
   "drillExploit": "EXPLOIT",
-  "settingsMoreCurrenciesLater": "More currencies will be announced later",
+  "settingsMoreCurrenciesLater": "Weitere Währungen werden später bekannt gegeben",
   "@opponentAlreadyExists": {
     "placeholders": {
       "name": {
@@ -4742,10 +4759,10 @@
   },
   "drillHandedLabel": "{stack}BB · {players}-handed",
   "rangeCash": "Cash",
-  "rangeSyncingHistory": "Syncing your hand history…",
-  "settingsMoreLanguagesLater": "More languages will be announced later",
-  "drillGotIt": "Got it",
-  "drillSeatsInstruction": "Tap a seat to assign an opponent or move yourself.",
+  "rangeSyncingHistory": "Deine Handhistorie wird synchronisiert…",
+  "settingsMoreLanguagesLater": "Weitere Sprachen werden später bekannt gegeben",
+  "drillGotIt": "Verstanden",
+  "drillSeatsInstruction": "Tippe auf einen Platz, um einen Gegner zuzuweisen oder dich selbst zu verschieben.",
   "@notifEventStartingBody": {
     "placeholders": {
       "clubName": {
@@ -4771,9 +4788,9 @@
       }
     }
   },
-  "settingsRegisterClub": "Register Club",
-  "drillPlayers": "Players",
-  "drillGenericBot": "Generic bot",
+  "settingsRegisterClub": "Club registrieren",
+  "drillPlayers": "Spieler",
+  "drillGenericBot": "Standard-Bot",
   "@notifSeatAvailableBody": {
     "placeholders": {
       "clubName": {
@@ -4781,9 +4798,9 @@
       }
     }
   },
-  "profileSendResetEmail": "Send Reset Email",
+  "profileSendResetEmail": "Reset-E-Mail senden",
   "drillActionSb": "SB 0.5",
-  "drillDeleteLineup": "Delete lineup",
+  "drillDeleteLineup": "Lineup löschen",
   "@notifEventCreatedTitle": {
     "placeholders": {
       "eventName": {
@@ -4805,10 +4822,10 @@
       }
     }
   },
-  "seatMove": "Move",
-  "rangeMedium": "Medium",
-  "profileSettings": "Profile Settings",
-  "loggingChoose": "Choose",
+  "seatMove": "Verschieben",
+  "rangeMedium": "Mittel",
+  "profileSettings": "Profileinstellungen",
+  "loggingChoose": "Wählen",
   "@qrJoinFailed": {
     "placeholders": {
       "error": {
@@ -4816,7 +4833,7 @@
       }
     }
   },
-  "rangeFolded": "Folded",
+  "rangeFolded": "Gefoldet",
   "@drillHandNumber": {
     "placeholders": {
       "number": {
@@ -4838,10 +4855,10 @@
       }
     }
   },
-  "rangeMonthsAgo": "{months}mo ago",
-  "seatYou": "You",
-  "drillPremiumTitle": "Train against your real opponents",
-  "handInProgress": "Hand in Progress",
+  "rangeMonthsAgo": "vor {months} Mon",
+  "seatYou": "Du",
+  "drillPremiumTitle": "Trainiere gegen deine echten Gegner",
+  "handInProgress": "Hand läuft",
   "@rangeScoutingTitle": {
     "placeholders": {
       "name": {
@@ -4849,8 +4866,8 @@
       }
     }
   },
-  "drillReachedFlopNote": "Hand goes to the flop — preflop drill complete.",
-  "profileEditEmailHint": "Email changes require account re-authentication. Contact support to change your email.",
+  "drillReachedFlopNote": "Die Hand geht zum Flop — Preflop-Drill abgeschlossen.",
+  "profileEditEmailHint": "Änderungen der E-Mail-Adresse erfordern eine erneute Anmeldung. Wende dich an den Support, um deine E-Mail-Adresse zu ändern.",
   "@calendarEventDeleteConfirm": {
     "placeholders": {
       "title": {
@@ -4872,11 +4889,11 @@
       }
     }
   },
-  "drillSeats": "SEATS",
-  "drillSaveLineup": "Save lineup",
+  "drillSeats": "PLÄTZE",
+  "drillSaveLineup": "Lineup speichern",
   "rangeRfiSuffix": " · RFI",
-  "profileFollowUs": "Follow @finaltable",
-  "drillToCall": "{amount}BB to call",
+  "profileFollowUs": "@finaltable folgen",
+  "drillToCall": "{amount}BB zum Callen",
   "@notifEventStartedTitle": {
     "placeholders": {
       "eventName": {
@@ -4891,8 +4908,8 @@
       }
     }
   },
-  "drillBalancedRegular": "Balanced regular",
-  "drillAccuracy": "Accuracy",
+  "drillBalancedRegular": "Ausgeglichener Regular",
+  "drillAccuracy": "Genauigkeit",
   "@pokerHandAmountBetween": {
     "placeholders": {
       "min": {
@@ -4913,7 +4930,7 @@
       }
     }
   },
-  "rangeTourney": "Tourney",
+  "rangeTourney": "Turnier",
   "@leaderboardChipLeader": {
     "placeholders": {
       "name": {
@@ -4921,8 +4938,8 @@
       }
     }
   },
-  "rangeScoutingTitle": "{name} · Scouting report",
-  "rangeWeak": "Weak",
+  "rangeScoutingTitle": "{name} · Scouting-Report",
+  "rangeWeak": "Schwach",
   "handBetLabel": "BET",
   "rangePremium": "Premium",
   "@dealerQrTableNotAssigned": {
@@ -4950,8 +4967,8 @@
   },
   "loggingPro": "PRO",
   "drillCall": "CALL",
-  "settingsChoose": "Choose",
-  "settingsChooseTour": "Choose which tour to replay",
+  "settingsChoose": "Wählen",
+  "settingsChooseTour": "Wähle, welche Tour du wiederholen möchtest",
   "@drillAction3bet": {
     "placeholders": {
       "amount": {
@@ -4959,16 +4976,16 @@
       }
     }
   },
-  "profileEdit": "Edit",
+  "profileEdit": "Bearbeiten",
   "drillActionCheck": "CHECK",
-  "drillYouChose": "· you chose {action}",
+  "drillYouChose": "· du hast {action} gewählt",
   "statsPfr": "PFR",
-  "settingsGetPlusSubtitle": "Log more hands and AI analysis",
-  "seatStartSession": "Start Session",
-  "rangeAllPositions": "All",
-  "loggingTrainingDrills": "Training Drills",
-  "seatKeep": "Keep",
-  "seatSaveChanges": "Save Changes",
+  "settingsGetPlusSubtitle": "Mehr Hände erfassen und KI-Analyse",
+  "seatStartSession": "Session starten",
+  "rangeAllPositions": "Alle",
+  "loggingTrainingDrills": "Trainings-Drills",
+  "seatKeep": "Behalten",
+  "seatSaveChanges": "Änderungen speichern",
   "@rangeMonthsAgo": {
     "placeholders": {
       "months": {
@@ -4976,8 +4993,8 @@
       }
     }
   },
-  "drillClose": "CLOSE",
-  "drillEndDrill": "End Drill",
+  "drillClose": "KNAPP",
+  "drillEndDrill": "Drill beenden",
   "@rangeYearsAgo": {
     "placeholders": {
       "years": {
@@ -4985,7 +5002,7 @@
       }
     }
   },
-  "settingsGetPlus": "Get Final Table Plus",
+  "settingsGetPlus": "Final Table Plus holen",
   "@mainDealerOnClub": {
     "placeholders": {
       "clubName": {
@@ -4993,12 +5010,12 @@
       }
     }
   },
-  "profileDeleteAccount": "Delete Account",
+  "profileDeleteAccount": "Konto löschen",
   "statsRanges": "Ranges",
   "profilePasswordMask": "***********",
-  "drillNextHand": "Next Hand",
-  "profileUsernameHint": "username",
-  "drillRaiseTo": "Raise to:",
+  "drillNextHand": "Nächste Hand",
+  "profileUsernameHint": "Benutzername",
+  "drillRaiseTo": "Raise auf:",
   "@drillAction4bet": {
     "placeholders": {
       "amount": {
@@ -5006,10 +5023,10 @@
       }
     }
   },
-  "profileInsteadOfName": "instead of your name in events and hand logging",
+  "profileInsteadOfName": "statt deines Namens in Events und beim Hand-Logging",
   "statsSteal": "Steal",
   "handRaiseLabel": "RAISE",
-  "settingsPending": "{count} pending",
+  "settingsPending": "{count} ausstehend",
   "@drillHandedLabel": {
     "placeholders": {
       "stack": {
@@ -5020,7 +5037,7 @@
       }
     }
   },
-  "drillSearchOpponents": "Search opponents",
+  "drillSearchOpponents": "Gegner suchen",
   "@notifMemberRsvpBody": {
     "placeholders": {
       "memberName": {
@@ -5043,9 +5060,9 @@
       }
     }
   },
-  "rangeCalled": "Called",
+  "rangeCalled": "Gecallt",
   "drillPot": "POT",
-  "settingsChooseLanguage": "Choose Language",
+  "settingsChooseLanguage": "Sprache wählen",
   "@sessionHistoryPlayerWins": {
     "placeholders": {
       "playerId": {
@@ -5068,9 +5085,9 @@
       }
     }
   },
-  "rangeWonBB": "W {bb} BB",
-  "handDiscardCurrentHand": "You have an active hand being logged. Discard it and go back?",
-  "tableManageTitle": "Table",
+  "rangeWonBB": "+{bb} BB",
+  "handDiscardCurrentHand": "Du hast eine aktive Hand, die gerade erfasst wird. Verwerfen und zurückgehen?",
+  "tableManageTitle": "Tisch",
   "handBetAction": "Bet",
   "@redeemJoinedAs": {
     "placeholders": {
@@ -5089,8 +5106,8 @@
       }
     }
   },
-  "opponentsAddNotes": "Add notes",
-  "profileEditName": "Edit Name",
+  "opponentsAddNotes": "Notizen hinzufügen",
+  "profileEditName": "Name bearbeiten",
   "@clubInfoMembersCount": {
     "placeholders": {
       "count": {
@@ -5098,10 +5115,10 @@
       }
     }
   },
-  "settingsYourClubs": "Your Clubs",
-  "profileContactSupport": "Contact support",
-  "profileEmailUpdates": "Email updates",
-  "drillStackDepth": "Stack depth",
+  "settingsYourClubs": "Deine Clubs",
+  "profileContactSupport": "Support kontaktieren",
+  "profileEmailUpdates": "E-Mail-Updates",
+  "drillStackDepth": "Stack-Tiefe",
   "drillFormat": "Format",
   "drillFormatCash": "Cash",
   "drillFormatAnte": "MTT · Ante",
@@ -5127,15 +5144,15 @@
     }
   },
   "statsCheckRaise": "Check-Raise",
-  "drillDeleteLineupMessage": "Remove \"{name}\" from your saved lineups?",
+  "drillDeleteLineupMessage": "„{name}\" aus deinen gespeicherten Lineups entfernen?",
   "drillActionJam": "JAM {amount}",
-  "loggingTrainingDrillsSubtitle": "Practice preflop spots against your real opponents",
+  "loggingTrainingDrillsSubtitle": "Übe Preflop-Spots gegen deine echten Gegner",
   "loggingTrainingDrillsFeature1": "Preflop-Übungen",
   "loggingTrainingDrillsFeature2": "GTO-Bereiche",
   "loggingTrainingDrillsFeature3": "Gegnerbasiert",
-  "drillContinue": "Continue",
+  "drillContinue": "Weiter",
   "drillGto": "GTO",
-  "rangeDaysAgo": "{days}d ago",
+  "rangeDaysAgo": "vor {days} T",
   "@drillWonUncontestedNote": {
     "placeholders": {
       "pot": {
@@ -5143,8 +5160,8 @@
       }
     }
   },
-  "rangeEmptyHint": "Your preflop chart builds itself: log hands and enter your hole cards, and each starting hand fills in with how you actually played it before the flop.",
-  "drillSavedLineups": "SAVED LINEUPS",
+  "rangeEmptyHint": "Dein Preflop-Chart baut sich von selbst auf: Erfasse Hände und gib deine Hole Cards ein, und jede Starthand füllt sich damit, wie du sie vor dem Flop tatsächlich gespielt hast.",
+  "drillSavedLineups": "GESPEICHERTE LINEUPS",
   "drillRaise": "RAISE",
   "@rangeDaysAgo": {
     "placeholders": {
@@ -5160,11 +5177,11 @@
       }
     }
   },
-  "settingsGeneral": "General",
-  "drillSummaryTitle": "Drill Summary",
-  "profileYourName": "Your name",
+  "settingsGeneral": "Allgemein",
+  "drillSummaryTitle": "Drill-Zusammenfassung",
+  "profileYourName": "Dein Name",
   "statsCBet": "C-Bet",
-  "drillStartDrill": "Start Drill",
+  "drillStartDrill": "Drill starten",
   "handBbLabel": "BB",
   "@notifEventStartedBody": {
     "placeholders": {
@@ -5173,18 +5190,18 @@
       }
     }
   },
-  "drillWonUncontestedNote": "Everyone folded — you take it down ({pot}BB).",
-  "rangeNoShowdowns": "Log a few hands to showdown with this opponent's cards entered, and their range will start filling in here.",
-  "rangeToday": "Today",
-  "settingsNoClubsHint": "Register or join a club to see them here.",
+  "drillWonUncontestedNote": "Alle haben gefoldet — du holst ihn dir ({pot}BB).",
+  "rangeNoShowdowns": "Erfasse ein paar Hände bis zum Showdown mit den Karten dieses Gegners, dann füllt sich seine Range hier nach und nach.",
+  "rangeToday": "Heute",
+  "settingsNoClubsHint": "Registriere einen Club oder tritt einem bei, um ihn hier zu sehen.",
   "drillScouting": "SCOUTING",
   "handSessionTitle": "Session",
   "drillJam": "JAM",
-  "profileEditEmail": "Edit email",
+  "profileEditEmail": "E-Mail bearbeiten",
   "drillHandNumber": "Hand #{number}",
-  "drillMistakeDetail": "{handClass} · {position} · you chose {heroAction}, {recommendedAction} was right",
-  "rangePreflopHeader": "PREFLOP RANGE — BUILT FROM YOUR LOGGED HANDS",
-  "drillWalkedNote": "Everyone folded — you win the blinds.",
+  "drillMistakeDetail": "{handClass} · {position} · du hast {heroAction} gewählt, {recommendedAction} war richtig",
+  "rangePreflopHeader": "PREFLOP-RANGE — AUS DEINEN ERFASSTEN HÄNDEN",
+  "drillWalkedNote": "Alle haben gefoldet — du gewinnst die Blinds.",
   "@drillActionRaise": {
     "placeholders": {
       "amount": {
@@ -5192,8 +5209,8 @@
       }
     }
   },
-  "seatManagePlayers": "Manage Players",
-  "drillUpgradeToPremium": "Upgrade to Premium",
+  "seatManagePlayers": "Spieler verwalten",
+  "drillUpgradeToPremium": "Upgrade auf Premium",
   "@drillSeatNumber": {
     "placeholders": {
       "seat": {
@@ -5201,8 +5218,8 @@
       }
     }
   },
-  "rangeShowdownBias": "Shown hands skew toward value and called-down hands — they tell you what is in the range and its shape, not the full range.",
-  "profileChangePasswordTitle": "Change Password",
+  "rangeShowdownBias": "Gezeigte Hände tendieren zu Value- und Called-Down-Händen — sie verraten dir, was in der Range steckt und wie sie geformt ist, aber nicht die vollständige Range.",
+  "profileChangePasswordTitle": "Passwort ändern",
   "@dealerTablePlayerToAct": {
     "placeholders": {
       "playerName": {
@@ -5213,7 +5230,7 @@
       }
     }
   },
-  "profileSavedSuccessfully": "Saved successfully",
+  "profileSavedSuccessfully": "Erfolgreich gespeichert",
   "@rangeWeeksAgo": {
     "placeholders": {
       "weeks": {
@@ -5221,20 +5238,20 @@
       }
     }
   },
-  "drillSaveThisLineup": "Save this lineup",
-  "rangeSpotsCount": "{count} preflop {count, plural, =1{spot} other{spots}}",
-  "tableButtonOnEmpty": "Button on Empty Seat",
-  "rangeRaisedLabel": "Raised",
-  "rangeYesterday": "Yesterday",
-  "drillLineupChanges": "This lineup changes the play: GTO {gto}s, exploit {exploit}s",
-  "profileDeleteAccountMessage": "This will permanently delete your account and all associated data. This action cannot be undone.\n\nIf you have an active subscription, please cancel it first in your device settings.",
-  "opponentsEnterName": "Enter name",
-  "rangeStackDepth": "Stack depth",
-  "settingsSkipHandScouting": "Skip Hand Scouting",
-  "settingsSkipHandScoutingDesc": "Track opponent actions when you fold preflop",
-  "skipScoutTitle": "What happened?",
-  "skipScoutNoRaise": "No one raised",
-  "skipScoutSkip": "Skip",
+  "drillSaveThisLineup": "Dieses Lineup speichern",
+  "rangeSpotsCount": "{count} Preflop-{count, plural, =1{Spot} other{Spots}}",
+  "tableButtonOnEmpty": "Button auf leerem Sitz",
+  "rangeRaisedLabel": "Erhöht",
+  "rangeYesterday": "Gestern",
+  "drillLineupChanges": "Dieses Lineup verändert das Spiel: GTO {gto}s, Exploit {exploit}s",
+  "profileDeleteAccountMessage": "Dadurch werden dein Konto und alle zugehörigen Daten dauerhaft gelöscht. Diese Aktion kann nicht rückgängig gemacht werden.\\n\\nWenn du ein aktives Abo hast, kündige es bitte zuerst in deinen Geräteeinstellungen.",
+  "opponentsEnterName": "Namen eingeben",
+  "rangeStackDepth": "Stack-Tiefe",
+  "settingsSkipHandScouting": "Hand-Scouting überspringen",
+  "settingsSkipHandScoutingDesc": "Verfolge Gegneraktionen, wenn du Preflop foldest",
+  "skipScoutTitle": "Was ist passiert?",
+  "skipScoutNoRaise": "Niemand hat erhöht",
+  "skipScoutSkip": "Überspringen",
   "paywallNotNow": "Nicht jetzt",
   "paywallFreeTrialBadge14": "14-Tage-Testversion",
   "freeTierHandLimitTitle": "Handlimit erreicht",
@@ -5277,7 +5294,7 @@
       }
     }
   },
-  "freeTierUpgrade": "Upgrade",
+  "freeTierUpgrade": "Upgraden",
   "freeTierNotNow": "Nicht jetzt",
   "quotaMonthlyLimitTitle": "Monatliches Limit erreicht",
   "quotaAiLimitElite": "Du hast alle {max} KI-Analysen diesen Monat verwendet. Dein Kontingent wird nächsten Monat zurückgesetzt.",
@@ -5320,7 +5337,7 @@
   "quotaOk": "OK",
   "statsLockedTitle": "Upgrade zum Entsperren",
   "statsLockedSubtitle": "Dieser Bereich ist ab Pro verfügbar.",
-  "statsLockedUpgrade": "Upgrade",
+  "statsLockedUpgrade": "Upgraden",
   "paywallBestValue": "BESTES ANGEBOT",
   "paywallWelcomeElite": "Willkommen bei Elite!",
   "paywallWelcomeClub": "Willkommen beim Club!",

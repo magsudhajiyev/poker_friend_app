@@ -677,14 +677,14 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> with SingleTicker
               children: [
                 Expanded(
                   child: OutlinedPillButton(
-                    label: 'Back',
+                    label: l10n.commonBack,
                     onTap: _closeAddForm,
                   ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
                   child: PrimaryPillButton(
-                    label: 'Save',
+                    label: l10n.commonSave,
                     onTap: _saveOpponent,
                   ),
                 ),
@@ -1062,7 +1062,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> with SingleTicker
                   const SizedBox(width: 16),
                   Expanded(
                     child: DestructivePillButton(
-                      label: 'Confirm',
+                      label: l10n.commonConfirm,
                       onTap: () async {
                         try {
                           await OpponentService.deleteOpponent(opponent.id);

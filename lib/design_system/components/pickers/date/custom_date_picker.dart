@@ -7,6 +7,7 @@ import '../../../constants/colors.dart';
 import '../../../constants/spacing.dart';
 import '../../../constants/typography.dart';
 import 'calendar_day_cell.dart';
+import '../../../../l10n/app_localizations.dart';
 
 /// Shows the app's custom full-screen date picker dialog and returns the
 /// selected date, or `null` if cancelled.
@@ -129,7 +130,7 @@ Future<DateTime?> showCustomDatePicker(
                               const Spacer(),
                               _pickerPillButton(
                                 icon: Icons.close,
-                                label: 'Reset',
+                                label: AppLocalizations.of(context).calendarReset,
                                 color: AppColors.errorRed,
                                 bordered: false,
                                 onTap: () {
@@ -145,7 +146,7 @@ Future<DateTime?> showCustomDatePicker(
                               const SizedBox(width: AppSpacing.xs),
                               _pickerPillButton(
                                 icon: Icons.today,
-                                label: 'Today',
+                                label: AppLocalizations.of(context).commonToday,
                                 color: Colors.white,
                                 bordered: true,
                                 onTap: () {
@@ -254,7 +255,7 @@ Future<DateTime?> showCustomDatePicker(
                             children: [
                               Expanded(
                                 child: _pickerFooterButton(
-                                  label: 'Cancel',
+                                  label: AppLocalizations.of(context).commonCancel,
                                   filled: false,
                                   onTap: () => Navigator.pop(dialogContext),
                                 ),
@@ -262,7 +263,7 @@ Future<DateTime?> showCustomDatePicker(
                               const SizedBox(width: AppSpacing.md),
                               Expanded(
                                 child: _pickerFooterButton(
-                                  label: 'Done',
+                                  label: AppLocalizations.of(context).commonDone,
                                   filled: true,
                                   onTap: () => Navigator.pop(
                                     dialogContext,

@@ -639,14 +639,14 @@ class _SeatConfigSheetState extends State<SeatConfigSheet> {
                 children: [
                   Expanded(
                     child: OutlinedPillButton(
-                      label: 'Back',
+                      label: l10n.commonBack,
                       onTap: () => Navigator.pop(context),
                     ),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
                     child: PrimaryPillButton(
-                      label: 'Save',
+                      label: l10n.commonSave,
                       onTap: _save,
                     ),
                   ),
