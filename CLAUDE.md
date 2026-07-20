@@ -241,8 +241,8 @@ All stats use **incremental atomic updates** (O(1)) with opportunity-based denom
 |--------|---------|-------------|-------|
 | VPIP | vpipCount | totalHands - walksCount | Excludes blind posts & walks |
 | PFR | pfrCount | totalHands - walksCount | Preflop raises only |
-| 3-Bet | threeBetCount | threeBetOpportunity | The 3rd raise preflop (open=1st, re-raise=2nd, 3-bet=3rd) |
-| Fold-3Bet | fold3betCount | facing3BetCount | Raised earlier, 3rd raise happened, player folded |
+| 3-Bet | threeBetCount | threeBetOpportunity | The 2nd **voluntary** raise preflop (open=1st voluntary raise, 3-bet=2nd). Blinds are NOT an open. |
+| Fold-3Bet | fold3betCount | facing3BetCount | Opened (1st voluntary raise), the 2nd voluntary raise (a 3-bet) happened, player folded |
 | C-Bet | cbetCount | cbetOpportunity | Flop bet as last pre-aggressor |
 | Steal | stealCount | stealOpportunity | CO/BTN/SB with unopened pot |
 | Check-Raise | checkRaiseFlopCount | checkRaiseFlopOpportunity | Flop only |
@@ -409,22 +409,23 @@ pfr% = (pfrCount / eligibleHands) * 100
 - Walk hands excluded because BB had no opportunity to act
 
 ### 3-Bet Detection (`StatsCalculator.didPlayerThreeBet`)
-A 3-bet is the **3rd raise** preflop. Blinds do NOT count as raises.
-- 1st raise = open raise
-- 2nd raise = re-raise
-- 3rd raise = **3-bet**
+A 3-bet is the **2nd voluntary raise** preflop. Blinds are forced bets, NOT an
+open — they do NOT count as raises. Counting voluntary raises only:
+- 1st voluntary raise = the open ("2-bet"; a limp/call before it is not an open)
+- 2nd voluntary raise = **3-bet**
+- 3rd voluntary raise = 4-bet, etc.
 ```dart
 int raiseCount = 0;
 for action in preflop_actions:
-  if isRaiseAction(action):
+  if isRaiseAction(action):   // excludes blinds; includes all-in
     raiseCount++;
-    if raiseCount == 3 && action.player == hero:
-      return true;  // THIS is a 3-bet
+    if raiseCount == 2 && action.player == hero:
+      return true;  // THIS is a 3-bet (the re-raise over the open)
 ```
-- All-in counts as raise for detection purposes
-- `hadThreeBetOpportunity`: exactly 2 total raises already happened when player acts (covers opener facing re-raise AND cold 3-bet spots). Does NOT count 4-bet opportunities (3+ raises).
-- `facedThreeBet`: player raised earlier, then the 3rd raise happened by someone else
-- `didFoldTo3Bet`: facing 3-bet and folded
+- All-in counts as a raise for detection purposes
+- `hadThreeBetOpportunity`: exactly 1 voluntary raise (the open) already happened when the player acts. Does NOT count 4-bet opportunities (2+ prior raises).
+- `facedThreeBet`: player opened (1st voluntary raise), then the 2nd voluntary raise (a 3-bet) happened by someone else
+- `didFoldTo3Bet`: facing a 3-bet and folded
 
 ### Stats Update Flow
 ```
@@ -626,7 +627,7 @@ user_notifications/{notificationId}/
 ### Stats Bugs (Most Common)
 1. **Double-counting**: Stats must be updated in ONE place only (FirebaseService)
 2. **Wrong denominator**: Use `totalHands - walksCount` for VPIP/PFR, NOT `handsPlayed`
-3. **3-bet = 3rd raise**: Count total raises preflop: open=1st, re-raise=2nd, 3-bet=3rd. Blinds don't count.
+3. **3-bet = 2nd voluntary raise**: Count voluntary raises preflop: open=1st, 3-bet=2nd, 4-bet=3rd. Blinds are forced (not an open) and don't count.
 4. **All-in ignored**: Always use `isRaiseAction()`/`isBetAction()` helpers that include 'all-in'. Also include 'all-in' in per-action switch statements.
 5. **Dealer mode zero stats**: Must pass `playerIds` map and update ALL players' stats
 6. **Opponent VPIP per-action**: VPIP must be per-hand (0 or 1), preflop only. Use boolean flags, not per-action increment.
