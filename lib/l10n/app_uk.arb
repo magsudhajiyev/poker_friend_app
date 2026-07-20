@@ -321,6 +321,14 @@
     }
   },
   "homeEarnings": "Прибуток",
+  "homeNetProfitWeek": "Чистий прибуток / тижд. · {week}",
+  "@homeNetProfitWeek": {
+    "placeholders": {
+      "week": {
+        "type": "String"
+      }
+    }
+  },
   "homeAvgAmount": "Сер. {amount}",
   "@homeAvgAmount": {
     "placeholders": {

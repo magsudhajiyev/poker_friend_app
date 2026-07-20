@@ -203,6 +203,14 @@
   "homeBankrollOfGoal": "{current} z {goal}",
   "homeAmountLeft": "Zostało {amount}",
   "homeEarnings": "Zarobki",
+  "homeNetProfitWeek": "Zysk netto / tydz. · {week}",
+  "@homeNetProfitWeek": {
+    "placeholders": {
+      "week": {
+        "type": "String"
+      }
+    }
+  },
   "homeAvgAmount": "Śr. {amount}",
   "homeNoEarningsDataYet": "Brak danych o zarobkach",
   "homeRecentSessions": "Ostatnie sesje",

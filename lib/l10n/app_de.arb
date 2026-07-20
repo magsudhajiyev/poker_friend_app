@@ -314,6 +314,14 @@
     }
   },
   "homeEarnings": "Gewinne",
+  "homeNetProfitWeek": "Reingewinn / Wo. · {week}",
+  "@homeNetProfitWeek": {
+    "placeholders": {
+      "week": {
+        "type": "String"
+      }
+    }
+  },
   "homeAvgAmount": "Ø {amount}",
   "@homeAvgAmount": {
     "placeholders": {

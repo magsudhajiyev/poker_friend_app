@@ -2377,6 +2377,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           ((p['cash'] as num?)?.toDouble() ?? 0.0),
     );
 
+    // The earnings card aggregates the CURRENT week (Mon–Sun), so label the
+    // net profit with that week's range.
+    final now = DateTime.now();
+    final monday = now.subtract(Duration(days: now.weekday - 1));
+    final sunday = monday.add(const Duration(days: 6));
+    final weekLabel =
+        '${DateFormat('MMM d').format(monday)} – ${DateFormat('MMM d').format(sunday)}';
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 16),
       child: Column(
@@ -2415,7 +2423,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Net Profit',
+                      l10n.homeNetProfitWeek(weekLabel),
                       style: AppTypography.ibm(
                         fontSize: 11,
                         fontWeight: FontWeight.w400,
@@ -2444,7 +2452,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 ),
                 const SizedBox(height: 24),
                 GestureDetector(
-                  onTap: () => _showNoEarningsDataModal(),
+                  onTap: () => _navigateToEarningsChart(),
                   child: SizedBox(
                     height: 167,
                     child: earningsChartData.isEmpty

@@ -314,6 +314,14 @@
     }
   },
   "homeEarnings": "Ganhos",
+  "homeNetProfitWeek": "Lucro líquido / sem. · {week}",
+  "@homeNetProfitWeek": {
+    "placeholders": {
+      "week": {
+        "type": "String"
+      }
+    }
+  },
   "homeAvgAmount": "Media {amount}",
   "@homeAvgAmount": {
     "placeholders": {

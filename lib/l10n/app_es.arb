@@ -314,6 +314,14 @@
     }
   },
   "homeEarnings": "Ganancias",
+  "homeNetProfitWeek": "Beneficio neto / sem. · {week}",
+  "@homeNetProfitWeek": {
+    "placeholders": {
+      "week": {
+        "type": "String"
+      }
+    }
+  },
   "homeAvgAmount": "Prom {amount}",
   "@homeAvgAmount": {
     "placeholders": {

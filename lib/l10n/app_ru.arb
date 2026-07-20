@@ -203,6 +203,14 @@
   "homeBankrollOfGoal": "{current} из {goal}",
   "homeAmountLeft": "Осталось {amount}",
   "homeEarnings": "Заработок",
+  "homeNetProfitWeek": "Чистая прибыль / нед. · {week}",
+  "@homeNetProfitWeek": {
+    "placeholders": {
+      "week": {
+        "type": "String"
+      }
+    }
+  },
   "homeAvgAmount": "Ср. {amount}",
   "homeNoEarningsDataYet": "Нет данных о заработке",
   "homeRecentSessions": "Последние сессии",
