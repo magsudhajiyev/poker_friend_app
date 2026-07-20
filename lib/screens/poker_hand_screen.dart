@@ -141,6 +141,9 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
   // early as a preflop-only scouting record.
   bool _scoutingMode = false;
   bool _finishingScout = false;
+  // True while the simplified scouting snap bar (Raise / All-in) is showing,
+  // so pan-end commits a type-only raise instead of an amount.
+  bool _scoutSnapActive = false;
   double _raiseSnapProgress = 0.0;
   // Unclamped progress — goes negative when the finger drops back below the
   // entry threshold. Distinguishes "cancel intent" from "released on the
@@ -3342,11 +3345,10 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       }
       if (action != null) {
         if (_scoutingMode) {
-          // Scouting: record a type-only raise (no bet-size overlay). The
-          // amount is auto-filled to keep the engine valid; it is never shown
-          // and the pot is not awarded on finish.
-          _swipePanStart = null;
-          _performScoutRaise(action);
+          // Scouting: show a simplified snap bar with just Raise (bottom) and
+          // All-in (top) — no bet-size values. Commit records a type-only
+          // raise; the label reflects the chosen snap.
+          _enterScoutRaiseSnapMode(action);
         } else {
           _enterRaiseSnapMode(action);
         }
@@ -3426,6 +3428,27 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     HapticFeedback.mediumImpact();
   }
 
+  /// Scouting variant of the raise snap bar: two fixed, value-less snap points
+  /// — Raise (index 0, bottom) and All-in (index 1, top). Reuses the same
+  /// overlay/drag machinery; commit records a type-only raise (see
+  /// [_handleQuickSwipePanEnd]).
+  void _enterScoutRaiseSnapMode(PlayerAction action) {
+    setState(() {
+      _isRaiseSnapping = true;
+      _scoutSnapActive = true;
+      _raiseSnapPoints = const [
+        SnapPoint(label: 'Raise', amount: 0),
+        SnapPoint(label: 'All-In', amount: 0),
+      ];
+      _raiseSnapAction = action;
+      _activeSnapIndex = 0;
+      _raiseSnapProgress = 0.0;
+      _raiseSnapRawProgress = 0.0;
+      _raiseSnapAmount = 0;
+    });
+    HapticFeedback.mediumImpact();
+  }
+
   /// Update raise snap position based on drag delta Y.
   void _updateRaiseSnap(double deltaY) {
     if (_raiseSnapPoints.isEmpty) return;
@@ -3456,6 +3479,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
   void _cancelRaiseSnap() {
     setState(() {
       _isRaiseSnapping = false;
+      _scoutSnapActive = false;
       _raiseSnapPoints = [];
       _raiseSnapAction = null;
       _activeSnapIndex = 0;
@@ -3482,6 +3506,20 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
 
   /// Pan end in Quick Swipe mode: confirm raise snap or detect fold.
   void _handleQuickSwipePanEnd(DragEndDetails details) {
+    // Scouting snap bar: commit a type-only raise. Snap 0 = Raise, 1 = All-in.
+    if (_scoutSnapActive) {
+      final action = _raiseSnapAction;
+      final snapIndex = _activeSnapIndex;
+      final rawProgress = _raiseSnapRawProgress;
+      _cancelRaiseSnap();
+      _scoutSnapActive = false;
+      _swipePanStart = null;
+      // Dropped back below the entry threshold → cancel (no action recorded).
+      if (rawProgress < -0.1 || action == null) return;
+      _performScoutRaise(action, allIn: snapIndex >= 1);
+      return;
+    }
+
     // If in raise snap mode, confirm the bet or open numpad
     if (_isRaiseSnapping) {
       final action = _raiseSnapAction;
@@ -4123,7 +4161,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
   /// minimum raise so turn order / betting-complete / the board gate all keep
   /// working. The pot is not awarded on finish. Shows a Raise/3-Bet/4-Bet
   /// label derived from the preflop raise count.
-  void _performScoutRaise(PlayerAction action) {
+  void _performScoutRaise(PlayerAction action, {bool allIn = false}) {
     if (gameState.bettingRoundComplete) {
       _triggerInvalidActionVibration();
       return;
@@ -4136,8 +4174,9 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     final actingSeat = gameState.currentPlayer;
     final currentPlayerStack = gameState.getPlayerStack(actingSeat);
 
-    // Label BEFORE recording (count of voluntary raises already in this hand).
-    final label = _scoutRaiseLabel();
+    // Label BEFORE recording. All-in shows "All-in"; otherwise the raise's
+    // sequence label (Raise / 3-Bet / 4-Bet…).
+    final label = allIn ? 'All-in' : _scoutRaiseLabel();
 
     // Record type-only: amount is null so history shows no bet size.
     sessionManager.recordAction(
