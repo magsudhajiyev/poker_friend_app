@@ -4061,25 +4061,51 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       // Pot value at the moment of the fold — recorded on the hand but NOT
       // awarded to anyone (stacks are frozen).
       final potAtFold = gameState.currentPot;
+      final stillIn = _getActivePlayers();
 
-      // Optional: capture opponent hole cards for the scouting report. The
-      // dialog self-skips when there aren't 2+ players and supports skip-all.
-      if (mounted) {
-        final stillIn = _getActivePlayers();
-        if (stillIn.length >= 2) {
-          await _showOpponentCardsDialog(stillIn, const []);
+      // Optional: capture who won the hand (a scouting stat factor — it feeds
+      // the opponent Showdown %). Only meaningful when 2+ players are still in.
+      // Skippable: a null result just leaves the winner unknown.
+      List<int> winners = const [];
+      if (mounted && stillIn.length >= 2) {
+        final winnerResult = await WinnerSelectionDialog.show(
+          context: context,
+          activePlayers: stillIn,
+          playerNames: stillIn
+              .map((s) => sessionManager.playerNames[s] ?? 'Seat $s')
+              .toList(),
+          potAmount: potAtFold,
+          gameType: widget.gameType,
+          buttonPosition: gameState.buttonPosition,
+          playerCount: gameState.numberOfPlayers,
+          heroSeat: sessionManager.ourSeatNumber,
+        );
+        if (winnerResult != null) {
+          winners = _extractWinnersFromResult(winnerResult);
         }
+      }
+
+      // Optional: capture opponent hole cards for the scouting report. Winners
+      // are collected first (they must show). Self-skips when < 2 players.
+      if (mounted && stillIn.length >= 2) {
+        await _showOpponentCardsDialog(stillIn, winners);
+      }
+
+      // If a winner was chosen among multiple live players, the hand reached
+      // showdown — mark it so opponents who didn't fold get the Showdown stat.
+      if (winners.isNotEmpty && stillIn.length >= 2) {
+        sessionManager.currentHand?.reachedShowdown = true;
       }
 
       // Complete as a scouting hand: feeds opponent stats via saveHand; the
       // hero is only counted if they voluntarily entered the pot (decided in
-      // completeCurrentHand). winnerId left null — outcome not tracked.
+      // completeCurrentHand). The pot is NOT awarded to any stack.
       final heroSeat = sessionManager.ourSeatNumber;
       final heroStack =
           heroSeat != null ? gameState.getPlayerStack(heroSeat) : null;
       sessionManager.completeCurrentHand(
         potAmount: potAtFold,
-        winnerId: null,
+        winnerId: winners.isNotEmpty ? winners.first : null,
         currentStack: heroStack,
         gameState: gameState,
         isScouted: true,
