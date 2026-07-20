@@ -5218,6 +5218,22 @@
   },
   "settingsGetPlus": "Get Final Table Plus",
   "settingsGetPlusSubtitle": "Log more hands and AI analysis",
+  "settingsPlusActiveTitle": "Final Table {tier}",
+  "@settingsPlusActiveTitle": {
+    "placeholders": {
+      "tier": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsPlusActiveSubtitle": "You're on the {tier} plan",
+  "@settingsPlusActiveSubtitle": {
+    "placeholders": {
+      "tier": {
+        "type": "String"
+      }
+    }
+  },
   "statsHandsLogged": "Hands Logged",
   "statsVpip": "VPIP",
   "statsPfr": "PFR",

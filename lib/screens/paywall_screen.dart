@@ -70,12 +70,46 @@ class _PaywallScreenState extends State<PaywallScreen> {
   bool _isRestoring = false;
   Offering? _offering;
 
+  final ScrollController _scrollController = ScrollController();
+  // Keys on each plan card so we can scroll the preselected one into view.
+  final List<GlobalKey> _planCardKeys =
+      List.generate(3, (_) => GlobalKey());
+
   @override
   void initState() {
     super.initState();
     _offering = SubscriptionService.currentOffering;
     if (_offering == null) {
       _fetchOfferings();
+    }
+    // Preselect a tier (e.g. the user's current plan) and scroll it into
+    // view after first layout, instead of defaulting to Pro at the top.
+    final pre = widget.preselectedTier;
+    if (pre != null && pre >= 0 && pre <= 2) {
+      _selectedPlanIndex = pre;
+      if (pre != 0) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _scrollSelectedIntoView();
+        });
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _scrollSelectedIntoView() {
+    final ctx = _planCardKeys[_selectedPlanIndex].currentContext;
+    if (ctx != null) {
+      Scrollable.ensureVisible(
+        ctx,
+        duration: const Duration(milliseconds: 450),
+        curve: Curves.easeOutCubic,
+        alignment: 0.1, // near the top of the viewport
+      );
     }
   }
 
@@ -249,6 +283,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
               children: [
                 // Scroll region — pads top so content clears the blurred bar.
                 SingleChildScrollView(
+                  controller: _scrollController,
                   padding: EdgeInsets.only(
                     top: topBarHeight + AppSpacing.xl,
                     left: AppSpacing.md,
@@ -505,7 +540,9 @@ class _PaywallScreenState extends State<PaywallScreen> {
   Widget _buildPlanCards(AppLocalizations l10n) {
     return Column(
       children: [
-        _PlanCard(
+        KeyedSubtree(
+          key: _planCardKeys[0],
+          child: _PlanCard(
           tierLabel: l10n.paywallProTier,
           tagline: l10n.paywallProDescription,
           primaryPrice: _tierPrimaryPrice(
@@ -524,8 +561,11 @@ class _PaywallScreenState extends State<PaywallScreen> {
           isSelected: _selectedPlanIndex == 0,
           onTap: () => setState(() => _selectedPlanIndex = 0),
         ),
+        ),
         const SizedBox(height: 16),
-        _PlanCard(
+        KeyedSubtree(
+          key: _planCardKeys[1],
+          child: _PlanCard(
           tierLabel: l10n.paywallEliteTier,
           tagline: l10n.paywallEliteDescription,
           primaryPrice: _tierPrimaryPrice(
@@ -543,8 +583,11 @@ class _PaywallScreenState extends State<PaywallScreen> {
           isSelected: _selectedPlanIndex == 1,
           onTap: () => setState(() => _selectedPlanIndex = 1),
         ),
+        ),
         const SizedBox(height: 16),
-        _PlanCard(
+        KeyedSubtree(
+          key: _planCardKeys[2],
+          child: _PlanCard(
           tierLabel: l10n.paywallClubTier,
           tagline: l10n.paywallClubDescription,
           primaryPrice: _tierPrimaryPrice(
@@ -560,6 +603,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
           showTrialBadge: false,
           isSelected: _selectedPlanIndex == 2,
           onTap: () => setState(() => _selectedPlanIndex = 2),
+        ),
         ),
       ],
     );

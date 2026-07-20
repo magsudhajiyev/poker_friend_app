@@ -4981,6 +4981,22 @@
   "drillYouChose": "· elegiste {action}",
   "statsPfr": "PFR",
   "settingsGetPlusSubtitle": "Registra más manos y análisis con IA",
+  "settingsPlusActiveTitle": "Final Table {tier}",
+  "@settingsPlusActiveTitle": {
+    "placeholders": {
+      "tier": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsPlusActiveSubtitle": "Tienes el plan {tier}",
+  "@settingsPlusActiveSubtitle": {
+    "placeholders": {
+      "tier": {
+        "type": "String"
+      }
+    }
+  },
   "seatStartSession": "Iniciar sesión",
   "rangeAllPositions": "Todas",
   "loggingTrainingDrills": "Ejercicios de entrenamiento",

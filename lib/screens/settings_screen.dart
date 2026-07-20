@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -53,6 +54,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   int _pendingSupportCount = 0;
   List<Club> _clubs = [];
   bool _scoutingEnabled = false;
+  StreamSubscription<bool>? _premiumSub;
 
   static const _bg = AppColors.bgPrimary;
   static const _surface = AppColors.bgSurface;
@@ -64,6 +66,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void initState() {
     super.initState();
     _loadData();
+    // Refresh the subscription banner when the tier changes (purchase,
+    // restore, or a simulated override).
+    _premiumSub = SubscriptionService.premiumStatusStream.listen((_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _premiumSub?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadData() async {
@@ -1039,9 +1052,39 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   // ── Sub-widgets ─────────────────────────────────────────────────────────────
 
+  /// Localized tier name for the user's effective plan, or null if free.
+  String? _activePlanLabel(AppLocalizations l10n) {
+    switch (SubscriptionService.effectiveTier) {
+      case 'club':
+        return l10n.profileTierClub;
+      case 'elite':
+        return l10n.profileTierElite;
+      case 'pro':
+        return l10n.profileTierPro;
+      default:
+        return null;
+    }
+  }
+
   Widget _buildSubscriptionBanner() {
+    final l10n = AppLocalizations.of(context);
+    final plan = _activePlanLabel(l10n);
+    final isSubscribed = plan != null;
+
+    // Subscribed: show the active plan name. Free: show the upgrade prompt.
+    final title = isSubscribed ? l10n.settingsPlusActiveTitle(plan) : l10n.settingsGetPlus;
+    final subtitle = isSubscribed ? l10n.settingsPlusActiveSubtitle(plan) : l10n.settingsGetPlusSubtitle;
+
+    // When subscribed, open the paywall pre-selected + scrolled to the current
+    // plan (0=Pro, 1=Elite, 2=Club) instead of defaulting to Pro.
+    const tierIndex = {'pro': 0, 'elite': 1, 'club': 2};
+    final preselected = tierIndex[SubscriptionService.effectiveTier];
+
     return GestureDetector(
-      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PaywallScreen())),
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => PaywallScreen(preselectedTier: preselected)),
+      ),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(color: _surface, borderRadius: BorderRadius.circular(AppDecorations.radiusLg)),
@@ -1062,9 +1105,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(AppLocalizations.of(context).settingsGetPlus,
+                  Text(title,
                       style: AppTypography.ibm(fontSize: 17, fontWeight: FontWeight.w600, color: Colors.white, letterSpacing: 0)),
-                  Text(AppLocalizations.of(context).settingsGetPlusSubtitle,
+                  Text(subtitle,
                       style: AppTypography.ibm(fontSize: 15, fontWeight: FontWeight.w500, color: _secondary)),
                 ],
               ),

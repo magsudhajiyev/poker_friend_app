@@ -4911,6 +4911,22 @@
   "drillYouChose": "· вы выбрали {action}",
   "statsPfr": "PFR",
   "settingsGetPlusSubtitle": "Логируйте больше раздач и AI-анализ",
+  "settingsPlusActiveTitle": "Final Table {tier}",
+  "@settingsPlusActiveTitle": {
+    "placeholders": {
+      "tier": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsPlusActiveSubtitle": "У вас план {tier}",
+  "@settingsPlusActiveSubtitle": {
+    "placeholders": {
+      "tier": {
+        "type": "String"
+      }
+    }
+  },
   "seatStartSession": "Начать сессию",
   "rangeAllPositions": "Все",
   "loggingTrainingDrills": "Тренировки",

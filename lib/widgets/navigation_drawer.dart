@@ -311,9 +311,12 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
           GestureDetector(
             onTap: () {
               Navigator.pop(context);
+              // When subscribed, preselect + scroll to the current plan.
+              const tierIndex = {'pro': 0, 'elite': 1, 'club': 2};
+              final preselected = tierIndex[SubscriptionService.effectiveTier];
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const PaywallScreen()),
+                MaterialPageRoute(builder: (context) => PaywallScreen(preselectedTier: preselected)),
               );
             },
             child: Container(

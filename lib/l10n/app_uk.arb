@@ -5218,6 +5218,22 @@
   },
   "settingsGetPlus": "Отримати Final Table Plus",
   "settingsGetPlusSubtitle": "Більше записаних роздач та AI-аналіз",
+  "settingsPlusActiveTitle": "Final Table {tier}",
+  "@settingsPlusActiveTitle": {
+    "placeholders": {
+      "tier": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsPlusActiveSubtitle": "У вас план {tier}",
+  "@settingsPlusActiveSubtitle": {
+    "placeholders": {
+      "tier": {
+        "type": "String"
+      }
+    }
+  },
   "statsHandsLogged": "Записано роздач",
   "statsVpip": "VPIP",
   "statsPfr": "PFR",
