@@ -15,6 +15,7 @@ import '../l10n/app_localizations.dart';
 import '../services/auth_service.dart';
 import '../services/subscription_service.dart';
 import '../services/locale_service.dart';
+import '../services/feature_flag_service.dart';
 import '../services/currency_service.dart';
 import '../services/skip_hand_scouting_service.dart';
 import '../services/username_service.dart';
@@ -943,18 +944,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         title: l10n.settingsCurrency,
                         subtitle: '${CurrencyService.current.name} (${CurrencyService.symbol})',
                         onTap: _showCurrencyPicker,
+                        // Currency is the last row when hand scouting is hidden
+                        // (scouting is gated behind the Training Drills flag).
+                        isLast: !FeatureFlagService.isEnabled(FeatureFlagService.trainingDrills),
                       ),
-                      _buildToggleRow(
-                        icon: const Icon(Icons.visibility_outlined, color: AppColors.contentInactive, size: 24),
-                        title: l10n.settingsSkipHandScouting,
-                        subtitle: l10n.settingsSkipHandScoutingDesc,
-                        value: _scoutingEnabled,
-                        onChanged: (v) async {
-                          await SkipHandScoutingService.setEnabled(v);
-                          setState(() => _scoutingEnabled = v);
-                        },
-                        isLast: true,
-                      ),
+                      // Hand scouting shares the Training Drills feature flag.
+                      if (FeatureFlagService.isEnabled(FeatureFlagService.trainingDrills))
+                        _buildToggleRow(
+                          icon: const Icon(Icons.visibility_outlined, color: AppColors.contentInactive, size: 24),
+                          title: l10n.settingsSkipHandScouting,
+                          subtitle: l10n.settingsSkipHandScoutingDesc,
+                          value: _scoutingEnabled,
+                          onChanged: (v) async {
+                            await SkipHandScoutingService.setEnabled(v);
+                            setState(() => _scoutingEnabled = v);
+                          },
+                          isLast: true,
+                        ),
                     ],
                   ),
                   const SizedBox(height: 16),
