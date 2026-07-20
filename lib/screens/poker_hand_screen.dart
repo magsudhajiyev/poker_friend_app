@@ -134,6 +134,14 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
   bool _isRaiseSnapping = false;
   List<SnapPoint> _raiseSnapPoints = [];
   int _activeSnapIndex = 0;
+
+  // Scouting mode: turns on when the hero folds preflop. In this mode the
+  // remaining opponents' actions are still logged (feeding opponent stats),
+  // but raises are recorded TYPE-ONLY (no bet-size overlay; amount auto-filled
+  // to keep the engine valid) and the pot is never awarded — the hand finishes
+  // early as a preflop-only scouting record.
+  bool _scoutingMode = false;
+  bool _finishingScout = false;
   double _raiseSnapProgress = 0.0;
   // Unclamped progress — goes negative when the finger drops back below the
   // entry threshold. Distinguishes "cancel intent" from "released on the
@@ -3334,7 +3342,15 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         action = PlayerAction.raise;
       }
       if (action != null) {
-        _enterRaiseSnapMode(action);
+        if (_scoutingMode) {
+          // Scouting: record a type-only raise (no bet-size overlay). The
+          // amount is auto-filled to keep the engine valid; it is never shown
+          // and the pot is not awarded on finish.
+          _swipePanStart = null;
+          _performScoutRaise(action);
+        } else {
+          _enterRaiseSnapMode(action);
+        }
       }
     }
 
@@ -3985,41 +4001,168 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     // Notify guided hand overlay
     _guidedOverlayKey.currentState?.onActionPerformed(action);
 
-    // Auto-advance: the game state is the single source of truth. The guided
-    // overlay only decides what to *suggest* next — it never blocks or defers
-    // the core hand logging flow.
-    if (result.contains("Hand ends: Only one player remaining")) {
-      _schedulePostFrameAction(() {
-        _completeHandAutomatically();
-      });
-    } else {
-      _checkForAutomaticHandEnd();
-
-      if (gameState.bettingRoundComplete && gameState.currentRound != BettingRound.river) {
-        _schedulePostFrameAction(() {
-          if (gameState.shouldAutoAdvanceToShowdown()) {
-            _showAllInBoardCardsDialog();
-          } else {
-            _autoAdvanceWithIndicator();
-          }
-        });
-      } else if (gameState.bettingRoundComplete && gameState.currentRound == BettingRound.river) {
-        _schedulePostFrameAction(() {
-          _handleHandComplete();
-        });
-      } else if (gameState.areAllPlayersAllIn() && gameState.currentRound != BettingRound.river && !gameState.bettingRoundComplete) {
-        _schedulePostFrameAction(() {
-          gameState.bettingRoundComplete = true;
-          setState(() {});
-        });
-      }
-    }
+    // Auto-advance (shared): the game state is the single source of truth.
+    _handlePostActionAdvance(result);
 
     // Update UI
     setState(() {});
   }
 
+  /// Shared post-action flow: hand-ended → auto-complete; else advance the
+  /// street / prompt the board. In SCOUTING mode, when preflop betting
+  /// completes (the point that would normally deal a board), finish the hand
+  /// early as a scouting record instead of showing the board dialog.
+  void _handlePostActionAdvance(String result) {
+    if (result.contains("Hand ends: Only one player remaining")) {
+      _schedulePostFrameAction(() {
+        _completeHandAutomatically();
+      });
+      return;
+    }
+
+    _checkForAutomaticHandEnd();
+
+    // Scouting interception: preflop betting done → finish scouting (no board).
+    if (_scoutingMode &&
+        gameState.bettingRoundComplete &&
+        gameState.currentRound == BettingRound.preflop) {
+      _schedulePostFrameAction(() {
+        _finishScoutedHand();
+      });
+      return;
+    }
+
+    if (gameState.bettingRoundComplete && gameState.currentRound != BettingRound.river) {
+      _schedulePostFrameAction(() {
+        if (gameState.shouldAutoAdvanceToShowdown()) {
+          _showAllInBoardCardsDialog();
+        } else {
+          _autoAdvanceWithIndicator();
+        }
+      });
+    } else if (gameState.bettingRoundComplete && gameState.currentRound == BettingRound.river) {
+      _schedulePostFrameAction(() {
+        _handleHandComplete();
+      });
+    } else if (gameState.areAllPlayersAllIn() && gameState.currentRound != BettingRound.river && !gameState.bettingRoundComplete) {
+      _schedulePostFrameAction(() {
+        gameState.bettingRoundComplete = true;
+        setState(() {});
+      });
+    }
+  }
+
+  /// Finish a scouting hand: the hero folded preflop and we've logged the
+  /// opponents' preflop action. Optionally capture opponent hole cards, then
+  /// save a preflop-only `isScouted` record (no pot awarded) and move on.
+  Future<void> _finishScoutedHand() async {
+    if (_finishingScout) return;
+    _finishingScout = true;
+    try {
+      // Pot value at the moment of the fold — recorded on the hand but NOT
+      // awarded to anyone (stacks are frozen).
+      final potAtFold = gameState.currentPot;
+
+      // Optional: capture opponent hole cards for the scouting report. The
+      // dialog self-skips when there aren't 2+ players and supports skip-all.
+      if (mounted) {
+        final stillIn = _getActivePlayers();
+        if (stillIn.length >= 2) {
+          await _showOpponentCardsDialog(stillIn, const []);
+        }
+      }
+
+      // Complete as a scouting hand: feeds opponent stats via saveHand; the
+      // hero is only counted if they voluntarily entered the pot (decided in
+      // completeCurrentHand). winnerId left null — outcome not tracked.
+      final heroSeat = sessionManager.ourSeatNumber;
+      final heroStack =
+          heroSeat != null ? gameState.getPlayerStack(heroSeat) : null;
+      sessionManager.completeCurrentHand(
+        potAmount: potAtFold,
+        winnerId: null,
+        currentStack: heroStack,
+        gameState: gameState,
+        isScouted: true,
+      );
+
+      _scoutingMode = false;
+      if (mounted) _advanceToNextHand();
+    } finally {
+      _finishingScout = false;
+    }
+  }
+
+  /// Scouting-mode raise: record the raise TYPE-ONLY (amount: null, so no
+  /// number is stored or shown) while driving the engine with an auto-filled
+  /// minimum raise so turn order / betting-complete / the board gate all keep
+  /// working. The pot is not awarded on finish. Shows a Raise/3-Bet/4-Bet
+  /// label derived from the preflop raise count.
+  void _performScoutRaise(PlayerAction action) {
+    if (gameState.bettingRoundComplete) {
+      _triggerInvalidActionVibration();
+      return;
+    }
+    if (!gameState.isValidAction(action)) {
+      _triggerInvalidActionVibration();
+      return;
+    }
+
+    final actingSeat = gameState.currentPlayer;
+    final currentPlayerStack = gameState.getPlayerStack(actingSeat);
+
+    // Label BEFORE recording (count of voluntary raises already in this hand).
+    final label = _scoutRaiseLabel();
+
+    // Record type-only: amount is null so history shows no bet size.
+    sessionManager.recordAction(
+      actingSeat,
+      action,
+      gameState.currentRound,
+      gameState.buttonPosition,
+      playerStack: currentPlayerStack,
+      amount: null,
+    );
+
+    _launchChipFly(action.name);
+    _showActionFlash(label, action: action);
+
+    // Drive the engine with an auto min-raise so state stays valid. The
+    // engine clamps to a legal amount internally.
+    final autoAmount = gameState.getMinimumRaise();
+    final result = gameState.performActionWithAmount(action, autoAmount);
+
+    _guidedOverlayKey.currentState?.onActionPerformed(action);
+
+    _handlePostActionAdvance(result);
+    setState(() {});
+  }
+
+  /// The poker label for the NEXT raise in the current preflop sequence:
+  /// 1st voluntary raise → "Raise", 2nd → "3-Bet", 3rd → "4-Bet", …
+  String _scoutRaiseLabel() {
+    final actions = sessionManager.currentHand?.actions ?? [];
+    int raiseCount = 0;
+    for (final a in actions) {
+      if (a.street == BettingRound.preflop &&
+          (a.action == PlayerAction.raise || a.action == PlayerAction.bet)) {
+        raiseCount++;
+      }
+    }
+    // This raise will be number (raiseCount + 1).
+    final n = raiseCount + 1;
+    return n <= 1 ? 'Raise' : '${n + 1}-Bet';
+  }
+
   Future<void> _skipCurrentAction() async {
+    // Scouting mode (hero folded preflop): finish the hand as a scouting
+    // record — this replaces the old skip-scouting sheet path so a hand never
+    // uses both. Opponent stats come from the saved preflop-only record.
+    if (_scoutingMode) {
+      await _finishScoutedHand();
+      return;
+    }
+
     final l10n = AppLocalizations.of(context);
     // If actions have been taken in this hand, confirm before discarding
     final hasActions = sessionManager.currentHand?.actions.isNotEmpty == true;
@@ -4522,9 +4665,12 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       actionAmount = callAmount.clamp(0.0, player.currentStack);
     }
 
+    // Capture the actor before the engine advances the turn.
+    final actingSeat = gameState.currentPlayer;
+
     // Record action in session manager BEFORE performing it
     sessionManager.recordAction(
-      gameState.currentPlayer,
+      actingSeat,
       action,
       gameState.currentRound,
       gameState.buttonPosition,
@@ -4534,6 +4680,15 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
 
     // Flash the action on screen
     _showActionFlash(_actionFlashLabel(action, actionAmount), action: action);
+
+    // Enter scouting mode the moment the hero folds preflop: keep logging the
+    // opponents' action but suppress bet sizes and finish early with no pot.
+    if (action == PlayerAction.fold &&
+        gameState.currentRound == BettingRound.preflop &&
+        actingSeat == sessionManager.ourSeatNumber &&
+        !_scoutingMode) {
+      _scoutingMode = true;
+    }
 
     String result = gameState.performAction(action);
 
@@ -4547,33 +4702,8 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     // Notify guided hand overlay
     _guidedOverlayKey.currentState?.onActionPerformed(action);
 
-    // Auto-advance: game state is the single source of truth.
-    if (result.contains("Hand ends: Only one player remaining")) {
-      _schedulePostFrameAction(() {
-        _completeHandAutomatically();
-      });
-    } else {
-      _checkForAutomaticHandEnd();
-
-      if (gameState.bettingRoundComplete && gameState.currentRound != BettingRound.river) {
-        _schedulePostFrameAction(() {
-          if (gameState.shouldAutoAdvanceToShowdown()) {
-            _showAllInBoardCardsDialog();
-          } else {
-            _autoAdvanceWithIndicator();
-          }
-        });
-      } else if (gameState.bettingRoundComplete && gameState.currentRound == BettingRound.river) {
-        _schedulePostFrameAction(() {
-          _handleHandComplete();
-        });
-      } else if (gameState.areAllPlayersAllIn() && gameState.currentRound != BettingRound.river && !gameState.bettingRoundComplete) {
-        _schedulePostFrameAction(() {
-          gameState.bettingRoundComplete = true;
-          setState(() {});
-        });
-      }
-    }
+    // Auto-advance (shared): game state is the single source of truth.
+    _handlePostActionAdvance(result);
 
     // Update UI
     setState(() {});
@@ -5995,6 +6125,8 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
   ///
   /// Returns true if a new hand was started, false if blocked by the gate.
   bool _advanceToNextHand() {
+    // Scouting mode never carries into the next hand.
+    _scoutingMode = false;
     if (_freeTierLocked ||
         !FreeTierLimits.canLogAnotherHand(
           sessionManager.completedHands.length,
