@@ -5277,6 +5277,23 @@
   "skipScoutTitle": "What happened?",
   "skipScoutNoRaise": "No one raised",
   "skipScoutSkip": "Skip",
+  "skipScoutInstruction": "Tap each opponent to log what they did preflop.",
+  "skipScoutActionFold": "Fold",
+  "skipScoutActionCall": "Call",
+  "skipScoutActionRaise": "Raise",
+  "skipScoutOpenerFaced3Bet": "The opener got 3-bet — what did they do?",
+  "skipScoutOpenerFolded": "Folded",
+  "skipScoutOpenerCalled": "Called",
+  "skipScoutOpener4Bet": "4-Bet",
+  "skipScoutDone": "Done",
+  "drillOpponentHandsReliable": "{count} hands logged",
+  "@drillOpponentHandsReliable": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "drillOpponentHandsThin": "Needs 50+ hands for exploit reads · {count} so far",
+  "@drillOpponentHandsThin": {
+    "placeholders": { "count": { "type": "int" } }
+  },
   "paywallNotNow": "Not now",
   "paywallFreeTrialBadge14": "14-Day Free Trial",
   "freeTierHandLimitTitle": "Hand limit reached",

@@ -5268,6 +5268,31 @@
   "skipScoutTitle": "O que aconteceu?",
   "skipScoutNoRaise": "Ninguém deu Raise",
   "skipScoutSkip": "Pular",
+  "skipScoutInstruction": "Toque em cada oponente para registrar o que ele fez no pré-flop.",
+  "skipScoutActionFold": "Fold",
+  "skipScoutActionCall": "Call",
+  "skipScoutActionRaise": "Raise",
+  "skipScoutOpenerFaced3Bet": "O opener levou 3-bet — o que ele fez?",
+  "skipScoutOpenerFolded": "Deu fold",
+  "skipScoutOpenerCalled": "Pagou",
+  "skipScoutOpener4Bet": "4-Bet",
+  "skipScoutDone": "Concluir",
+  "drillOpponentHandsReliable": "{count} mãos registradas",
+  "@drillOpponentHandsReliable": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "drillOpponentHandsThin": "Precisa de 50+ mãos para leituras de exploit · {count} até agora",
+  "@drillOpponentHandsThin": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "paywallNotNow": "Agora não",
   "paywallFreeTrialBadge14": "Teste grátis de 14 dias",
   "freeTierHandLimitTitle": "Limite de mãos atingido",

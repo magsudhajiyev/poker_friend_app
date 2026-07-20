@@ -326,7 +326,7 @@ class FirebaseService {
         }
 
         // Update opponent statistics incrementally (both modes)
-        await _updateOpponentStatsFromHand(
+        await updateOpponentStatsFromHand(
           actions: actions,
           playerNames: playerNames,
           reachedShowdown: reachedShowdown,
@@ -1094,7 +1094,18 @@ class FirebaseService {
 
   /// Process hand actions and update opponent stats incrementally
   /// This is the key optimization - O(1) updates instead of O(n) recalculation
-  static Future<void> _updateOpponentStatsFromHand({
+  /// Update saved-opponent stats from a hand's action list.
+  ///
+  /// Hero-INDEPENDENT: it updates every saved opponent found in [playerNames]
+  /// purely from [actions] (matched by exact name). This is the single shared
+  /// entry point used by both full-hand saves ([saveHand]) and preflop
+  /// scouting (which passes a synthesized preflop-only action list). Reusing
+  /// this guarantees scouting-derived stats are computed identically to
+  /// fully-logged hands via the same [StatsCalculator] detectors.
+  ///
+  /// Postflop stats (C-Bet, Check-Raise, Showdown) simply don't fire when the
+  /// action list is preflop-only — their opportunities require a flop action.
+  static Future<void> updateOpponentStatsFromHand({
     required List<Map<String, dynamic>> actions,
     required Map<int, String>? playerNames,
     bool? reachedShowdown,

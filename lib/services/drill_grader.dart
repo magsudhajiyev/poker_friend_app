@@ -184,7 +184,7 @@ class DrillGrader {
     final isStealSeat = pos == 'CO' || pos == 'BTN' || pos == 'SB';
 
     final blinds =
-        ctx.blindsBehind.where((b) => !b.profile.isGenericBot).toList();
+        ctx.blindsBehind.where((b) => b.profile.isReliable).toList();
     final t = ctx.anteMode ? _mtt : _cash;
     if (isStealSeat && blinds.isNotEmpty) {
       final avgBlindDefend =
@@ -230,7 +230,7 @@ class DrillGrader {
             .toList();
     DrillSeatRef? aggro;
     for (final r in behind) {
-      if (r.profile.isGenericBot || r.profile.threeBet < 10 || r.isBlind) {
+      if (!r.profile.isReliable || r.profile.threeBet < 10 || r.isBlind) {
         continue;
       }
       if (aggro == null || r.profile.threeBet > aggro.profile.threeBet) {
@@ -253,7 +253,7 @@ class DrillGrader {
         (p) =>
             p.aggression <= _ExploitThresholds.passiveAggression &&
             p.showdown >= _ExploitThresholds.stationShowdown &&
-            !p.isGenericBot,
+            p.isReliable,
         (p) => p.showdown);
     if (station != null && aggro == null) {
       widenPct -= 3;
@@ -343,7 +343,7 @@ class DrillGrader {
         (p) =>
             p.aggression <= _ExploitThresholds.passiveAggression &&
             p.showdown >= _ExploitThresholds.limperShowdown &&
-            !p.isGenericBot,
+            p.isReliable,
         (p) => p.showdown);
     if (loosePassive != null) {
       isoSet = DrillGtoCharts.widen(isoSet, 4);
@@ -414,7 +414,7 @@ class DrillGrader {
       final notes = <String>[];
       final o = ctx.opener;
       final tj = ctx.anteMode ? _mtt : _cash;
-      if (o != null && !o.isGenericBot) {
+      if (o != null && o.isReliable) {
         if ((o.steal >= tj.maniacSteal && o.aggression >= 60) ||
             o.archetype == 'Maniac') {
           callSetX = DrillGtoCharts.widen(callSet, 5);
@@ -501,7 +501,7 @@ class DrillGrader {
     var callSet = chart.call;
     final o = ctx.opener;
     final tv = ctx.anteMode ? _mtt : _cash;
-    if (o != null && !o.isGenericBot) {
+    if (o != null && o.isReliable) {
       if (o.fold3bet >= 60) {
         threeBetSet = DrillGtoCharts.widen(threeBetSet, 6);
         trace.add('exploit: opener folds to 3-bets ${_pct(o.fold3bet)} → 3bet +6%');
@@ -603,7 +603,7 @@ class DrillGrader {
     var fourBetSet = chart.fourBet;
     var callSet = chart.call;
     final tb = ctx.opener;
-    if (tb != null && !tb.isGenericBot) {
+    if (tb != null && tb.isReliable) {
       if (tb.threeBet >= 9) {
         fourBetSet = DrillGtoCharts.widen(fourBetSet, 2);
         callSet = DrillGtoCharts.widen(callSet, 5);
@@ -662,7 +662,7 @@ class DrillGrader {
     final notes = <String>[];
     final tc = ctx.anteMode ? _mtt : _cash;
     if (ctx.opener != null &&
-        !ctx.opener!.isGenericBot &&
+        ctx.opener!.isReliable &&
         ctx.opener!.steal >= tc.looseSteal) {
       cont = DrillGtoCharts.widen(cont, 2);
       trace.add('exploit: loose aggressors (steal ${_pct(ctx.opener!.steal)}) → continue +2%');

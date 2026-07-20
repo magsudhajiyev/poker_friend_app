@@ -5277,6 +5277,31 @@
   "skipScoutTitle": "Що сталося?",
   "skipScoutNoRaise": "Ніхто не робив Raise",
   "skipScoutSkip": "Пропустити",
+  "skipScoutInstruction": "Торкніться кожного суперника, щоб відмітити його дію на префлопі.",
+  "skipScoutActionFold": "Fold",
+  "skipScoutActionCall": "Call",
+  "skipScoutActionRaise": "Raise",
+  "skipScoutOpenerFaced3Bet": "Опенеру зробили 3-bet — що він зробив?",
+  "skipScoutOpenerFolded": "Сфолдив",
+  "skipScoutOpenerCalled": "Заколив",
+  "skipScoutOpener4Bet": "4-Bet",
+  "skipScoutDone": "Готово",
+  "drillOpponentHandsReliable": "Записано роздач: {count}",
+  "@drillOpponentHandsReliable": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "drillOpponentHandsThin": "Потрібно 50+ роздач для експлойт-рідів · поки {count}",
+  "@drillOpponentHandsThin": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "paywallNotNow": "Не зараз",
   "paywallFreeTrialBadge14": "14 днів безкоштовно",
   "freeTierHandLimitTitle": "Досягнуто ліміту роздач",

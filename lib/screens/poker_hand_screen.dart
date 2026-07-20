@@ -4294,7 +4294,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
 
       // Fire-and-forget opponent stats from scouting
       if (scoutResult != null) {
-        SkipHandScoutingService.applySkipDeltas(
+        SkipHandScoutingService.applyScoutResult(
           result: scoutResult,
           playerNames: scoutNames!,
           activeSeats: scoutSeats!,
