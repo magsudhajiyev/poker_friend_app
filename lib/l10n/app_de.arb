@@ -4726,6 +4726,7 @@
   "rangeWeeksAgo": "vor {weeks} Wo",
   "rangeRfi": "RFI",
   "profileChangePasswordMessage": "Wir senden einen Link zum Zurücksetzen des Passworts an deine E-Mail-Adresse.",
+  "profileChangeEmailTitle": "E-Mail ändern",
   "@supportFailedSubmit": {
     "placeholders": {
       "error": {

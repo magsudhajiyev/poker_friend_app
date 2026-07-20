@@ -5190,6 +5190,7 @@
   "profileDeleteAccountMessage": "Це назавжди видалить ваш акаунт і всі пов’язані дані. Цю дію неможливо скасувати.\\n\\nЯкщо у вас є активна підписка, спершу скасуйте її в налаштуваннях пристрою.",
   "profileChangePasswordTitle": "Змінити пароль",
   "profileChangePasswordMessage": "Ми надішлемо посилання для скидання пароля на вашу email-адресу.",
+  "profileChangeEmailTitle": "Змінити email",
   "profileResetEmailSent": "Лист для скидання пароля надіслано на {email}",
   "@profileResetEmailSent": {
     "placeholders": {

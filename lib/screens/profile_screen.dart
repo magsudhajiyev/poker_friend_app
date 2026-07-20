@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -47,7 +49,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   late FocusNode _nameFocus;
   late FocusNode _usernameFocus;
   bool _useNicknameInGame = false;
-  bool _emailUpdates = false;
 
   // Username availability
   String? _usernameError;
@@ -529,16 +530,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     placeholder: l10n.profileYourName,
                   ),
                   const SizedBox(height: 16),
+                  _buildUsernameField(),
+                  const SizedBox(height: 16),
                   _buildInputField(
                     label: l10n.profileEditEmail,
                     controller: _emailCtrl,
                     placeholder: 'your@email.com',
                     keyboardType: TextInputType.emailAddress,
                     readOnly: true,
-                    onTap: () => _showSnack(l10n.profileEditEmailHint),
+                    onTap: _showChangeEmailSheet,
                   ),
-                  const SizedBox(height: 16),
-                  _buildUsernameField(),
                   const SizedBox(height: 16),
                   _buildInputField(
                     label: l10n.profileChangePassword,
@@ -559,12 +560,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   _buildRow(
                     icon: const Icon(Icons.auto_awesome_outlined, color: AppColors.contentInactive, size: 24),
                     title: l10n.profileShareFeedback,
-                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const HelpSupportScreen())),
-                  ),
-                  _buildRow(
-                    icon: const Icon(Icons.email_outlined, color: AppColors.contentInactive, size: 24),
-                    title: l10n.profileEmailUpdates,
-                    trailing: AppToggle(value: _emailUpdates, onChanged: (v) => setState(() => _emailUpdates = v)),
+                    onTap: _openStoreReview,
                   ),
                   _buildRow(
                     icon: const Icon(Icons.logout_rounded, color: AppColors.contentInactive, size: 24),
@@ -655,37 +651,45 @@ class _ProfileScreenState extends State<ProfileScreen> {
         Text(label,
             style: AppTypography.ibm(fontSize: 13, fontWeight: FontWeight.w500, color: _secondary)),
         const SizedBox(height: 8),
-        Container(
-          decoration: BoxDecoration(
-            color: _surface,
-            borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
-            border: Border.all(color: borderColor, width: 1.5),
-          ),
-          child: TextField(
-            controller: controller,
-            focusNode: focusNode,
-            readOnly: readOnly,
-            onTap: onTap,
-            keyboardType: keyboardType,
-            style: AppTypography.ibm(
-              fontSize: 15,
-              color: readOnly ? _secondary : Colors.white,
+        Opacity(
+          // Read-only fields read as "locked / managed", not tappable inputs.
+          opacity: readOnly ? 0.6 : 1.0,
+          child: Container(
+            decoration: BoxDecoration(
+              color: _surface,
+              borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
+              border: Border.all(color: borderColor, width: 1.5),
             ),
-            decoration: InputDecoration(
-              hintText: placeholder,
-              hintStyle: AppTypography.ibm(fontSize: 15, color: _secondary),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              border: InputBorder.none,
-              enabledBorder: InputBorder.none,
-              focusedBorder: InputBorder.none,
-              suffixIcon: isFilled && !readOnly
-                  ? GestureDetector(
-                      onTap: () => setState(() => controller.clear()),
-                      child: const Icon(Icons.cancel_rounded, color: AppColors.contentInactive, size: 18),
-                    )
-                  : null,
+            child: TextField(
+              controller: controller,
+              focusNode: focusNode,
+              readOnly: readOnly,
+              onTap: onTap,
+              keyboardType: keyboardType,
+              style: AppTypography.ibm(
+                fontSize: 15,
+                color: readOnly ? _secondary : Colors.white,
+              ),
+              decoration: InputDecoration(
+                hintText: placeholder,
+                hintStyle: AppTypography.ibm(fontSize: 15, color: _secondary),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                suffixIcon: readOnly
+                    ? const Icon(Icons.lock_outline_rounded,
+                        color: AppColors.contentInactive, size: 18)
+                    : (isFilled
+                        ? GestureDetector(
+                            onTap: () => setState(() => controller.clear()),
+                            child: const Icon(Icons.cancel_rounded,
+                                color: AppColors.contentInactive, size: 18),
+                          )
+                        : null),
+              ),
+              onChanged: (_) => setState(() {}),
             ),
-            onChanged: (_) => setState(() {}),
           ),
         ),
       ],
@@ -845,6 +849,80 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ],
       ),
     );
+  }
+
+  /// Email is not editable in-app (it's tied to the auth provider and needs
+  /// re-authentication). Mirrors the Change Password sheet, but routes to
+  /// support instead of a self-serve action.
+  void _showChangeEmailSheet() {
+    final l10n = AppLocalizations.of(context);
+    AppSheet.show<void>(
+      context: context,
+      title: l10n.profileChangeEmailTitle,
+      heightFraction: null,
+      body: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n.profileEditEmailHint,
+            style: AppTypography.ibm(fontSize: 14, color: _secondary),
+          ),
+          const SizedBox(height: 24),
+          SizedBox(
+            width: double.infinity,
+            child: GestureDetector(
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const HelpSupportScreen()),
+                );
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                decoration: BoxDecoration(
+                    color: _elevated, borderRadius: BorderRadius.circular(AppDecorations.buttonRadius)),
+                child: Text(
+                  l10n.profileContactSupport,
+                  textAlign: TextAlign.center,
+                  style: AppTypography.ibm(
+                      fontSize: 17, fontWeight: FontWeight.w600, color: Colors.white),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Open the platform's app-store review page so the user can leave a rating.
+  /// iOS deep-links straight to the write-review sheet; Android opens the Play
+  /// listing (with a market:// fallback to the Play app).
+  Future<void> _openStoreReview() async {
+    final Uri primary;
+    final Uri? fallback;
+    if (Platform.isIOS) {
+      primary = Uri.parse(
+          'https://apps.apple.com/us/app/final-table/id6760188970?action=write-review');
+      fallback = null;
+    } else {
+      // Prefer the Play Store app, fall back to the web listing.
+      primary = Uri.parse('market://details?id=com.finaltable.app');
+      fallback = Uri.parse(
+          'https://play.google.com/store/apps/details?id=com.finaltable.app');
+    }
+    try {
+      final ok = await launchUrl(primary, mode: LaunchMode.externalApplication);
+      if (!ok && fallback != null) {
+        await launchUrl(fallback, mode: LaunchMode.externalApplication);
+      }
+    } catch (_) {
+      if (fallback != null) {
+        await launchUrl(fallback, mode: LaunchMode.externalApplication);
+      }
+    }
   }
 
   // ── Super-admin feature flags ──────────────────────────────────────────────

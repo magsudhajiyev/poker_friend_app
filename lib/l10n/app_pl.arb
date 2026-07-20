@@ -4580,6 +4580,7 @@
   "rangeWeeksAgo": "{weeks} tyg. temu",
   "rangeRfi": "RFI",
   "profileChangePasswordMessage": "Wyślemy link do zresetowania hasła na Twój adres e-mail.",
+  "profileChangeEmailTitle": "Zmień e-mail",
   "@supportFailedSubmit": {
     "placeholders": {
       "error": {

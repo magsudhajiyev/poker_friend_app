@@ -5188,6 +5188,7 @@
   "profileDeleteAccountMessage": "This will permanently delete your account and all associated data. This action cannot be undone.\n\nIf you have an active subscription, please cancel it first in your device settings.",
   "profileChangePasswordTitle": "Change Password",
   "profileChangePasswordMessage": "We'll send a password reset link to your email address.",
+  "profileChangeEmailTitle": "Change Email",
   "profileResetEmailSent": "Password reset email sent to {email}",
   "@profileResetEmailSent": {
     "placeholders": {

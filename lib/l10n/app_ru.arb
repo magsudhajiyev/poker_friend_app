@@ -4580,6 +4580,7 @@
   "rangeWeeksAgo": "{weeks} нед. назад",
   "rangeRfi": "RFI",
   "profileChangePasswordMessage": "Мы отправим ссылку для сброса пароля на ваш email.",
+  "profileChangeEmailTitle": "Изменить email",
   "@supportFailedSubmit": {
     "placeholders": {
       "error": {

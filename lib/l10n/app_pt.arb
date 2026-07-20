@@ -4726,6 +4726,7 @@
   "rangeWeeksAgo": "há {weeks}sem",
   "rangeRfi": "RFI",
   "profileChangePasswordMessage": "Enviaremos um link de redefinição de senha para o seu e-mail.",
+  "profileChangeEmailTitle": "Alterar e-mail",
   "@supportFailedSubmit": {
     "placeholders": {
       "error": {

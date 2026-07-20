@@ -4726,6 +4726,7 @@
   "rangeWeeksAgo": "hace {weeks} sem",
   "rangeRfi": "RFI",
   "profileChangePasswordMessage": "Enviaremos un enlace para restablecer la contraseña a tu correo.",
+  "profileChangeEmailTitle": "Cambiar correo electrónico",
   "@supportFailedSubmit": {
     "placeholders": {
       "error": {
