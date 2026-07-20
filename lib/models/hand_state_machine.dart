@@ -212,6 +212,12 @@ class HandRecord {
   List<String> tags = [];
   String? notes;
 
+  /// True when this hand was finished early via scouting mode (hero folded
+  /// preflop, board skipped). The record is preflop-only and exists to feed
+  /// opponent stats / the scouting report — it is excluded from the hero's own
+  /// session summary. See PokerSessionManager scouting flow.
+  bool isScouted = false;
+
   HandRecord({
     required this.handNumber,
     required this.buttonPosition,
@@ -293,6 +299,7 @@ class HandRecord {
       if (tableNumber != null) 'tableNumber': tableNumber,
       // Hand annotations
       'isStarred': isStarred,
+      'isScouted': isScouted,
       'tags': tags,
       'notes': notes,
     };
@@ -340,6 +347,7 @@ class HandRecord {
 
     // Set annotation fields
     hand.isStarred = map['isStarred'] ?? false;
+    hand.isScouted = map['isScouted'] ?? false;
     hand.tags = List<String>.from(map['tags'] ?? []);
     hand.notes = map['notes'];
 
@@ -740,15 +748,31 @@ class PokerSessionManager {
     }
   }
 
-  // Complete the current hand
-  void completeCurrentHand({double? potAmount, int? winnerId, double? currentStack, PokerGameState? gameState}) {
+  // Complete the current hand.
+  //
+  // [isScouted] finishes a preflop-only scouting hand (hero folded, board
+  // skipped): the pot is NOT awarded and the hero's stack is unchanged. Such a
+  // hand always feeds OPPONENT stats via saveHand; whether it also counts for
+  // the hero (session summary + user stats) is decided by whether the hero
+  // voluntarily entered the pot preflop (call/bet/raise) — a pure fold-around
+  // scout is kept out of the hero's session history, while a "called then
+  // folded" hand is a normal folded hand and stays in.
+  void completeCurrentHand({double? potAmount, int? winnerId, double? currentStack, PokerGameState? gameState, bool isScouted = false}) {
     if (currentHand == null) return;
 
-    // Set pot amount and winner if provided
+    currentHand!.isScouted = isScouted;
+
+    // Whether the hero voluntarily put chips in preflop before folding.
+    final heroVoluntarilyEntered = _heroVoluntarilyEnteredPot();
+    // A pure scout (folded without entering) is excluded from the hero's
+    // session summary + user stats. A voluntary-entry fold counts normally.
+    final countForHero = !isScouted || heroVoluntarilyEntered;
+
+    // Set pot amount and winner if provided. For scout hands the pot is not
+    // awarded and must not affect the biggest-pot display.
     if (potAmount != null) {
       currentHand!.potAmount = potAmount;
-      // Track biggest pot with BB level for display
-      if (potAmount > biggestPot) {
+      if (!isScouted && potAmount > biggestPot) {
         biggestPot = potAmount;
         biggestPotBB = bigBlind;
       }
@@ -757,42 +781,64 @@ class PokerSessionManager {
       currentHand!.winnerId = winnerId;
     }
 
-    // Track biggest pot won/lost with hole cards
-    _trackBiggestPotWonLost(potAmount, winnerId);
+    if (!isScouted) {
+      // Track biggest pot won/lost with hole cards
+      _trackBiggestPotWonLost(potAmount, winnerId);
 
-    // Apply street-by-street pot data from game state (unified for manual + dealer)
-    if (gameState != null) {
-      _applyStreetPots(gameState);
+      // Apply street-by-street pot data from game state
+      if (gameState != null) {
+        _applyStreetPots(gameState);
+      }
+
+      // Track stack history if current stack is provided
+      if (currentStack != null) {
+        if (stackHistory.isEmpty) {
+          _addStackHistoryEntry(currentStack, 'initial', 0.0, 0);
+        } else {
+          final previousStack = stackHistory.last['stackSize'] as double;
+          final stackChange = currentStack - previousStack;
+          final changeType = stackChange >= 0 ? 'win' : 'loss';
+          _addStackHistoryEntry(currentStack, changeType, stackChange.abs(), currentHand!.handNumber);
+        }
+      }
     }
 
     // Note: heroPositionName is already set at hand start, don't overwrite it
 
-    // Track stack history if current stack is provided
-    if (currentStack != null) {
-      if (stackHistory.isEmpty) {
-        _addStackHistoryEntry(currentStack, 'initial', 0.0, 0);
-      } else {
-        final previousStack = stackHistory.last['stackSize'] as double;
-        final stackChange = currentStack - previousStack;
-        final changeType = stackChange >= 0 ? 'win' : 'loss';
-        _addStackHistoryEntry(currentStack, changeType, stackChange.abs(), currentHand!.handNumber);
-      }
-    }
-
     currentHand!.markCompleted();
-    completedHands.add(currentHand!);
-
+    // Only hero-counted hands enter the in-memory session summary list.
+    if (countForHero) {
+      completedHands.add(currentHand!);
+    }
 
     // Update opponent statistics for this hand
     _updateOpponentStats();
 
-    // Save hand to Firebase and local storage
-    _saveHandToFirebase(currentHand!);
+    // Save hand to Firebase and local storage. Pure-scout hands skip hero
+    // user-stats (skipHeroStats) but still update opponent stats.
+    _saveHandToFirebase(currentHand!, skipHeroStats: !countForHero);
 
     // Update session with latest hand count
     _updateSessionProgress();
 
     currentHand = null;
+  }
+
+  /// True if the hero voluntarily put chips in the pot preflop (call/bet/raise)
+  /// in the current hand — i.e. it's a real played hand, not a pure fold-around.
+  bool _heroVoluntarilyEnteredPot() {
+    final hero = ourSeatNumber;
+    if (hero == null || currentHand == null) return false;
+    for (final a in currentHand!.actions) {
+      if (a.player == hero &&
+          a.street == BettingRound.preflop &&
+          (a.action == PlayerAction.call ||
+              a.action == PlayerAction.bet ||
+              a.action == PlayerAction.raise)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   void completeCurrentHandWithChop({
@@ -866,7 +912,7 @@ class PokerSessionManager {
   }
 
   // Save a completed hand to both Firebase and local storage
-  Future<void> _saveHandToFirebase(HandRecord hand) async {
+  Future<void> _saveHandToFirebase(HandRecord hand, {bool skipHeroStats = false}) async {
     if (sessionId == null) return;
     // Knowledge-Base replay hands are never persisted
     if (OnboardingState.isGuidedHandActive && OnboardingState.isReplay) return;
@@ -908,6 +954,7 @@ class PokerSessionManager {
       sharePerWinner: hand.sharePerWinner,
       // Hand annotations
       isStarred: hand.isStarred,
+      isScouted: hand.isScouted,
       tags: hand.tags,
       notes: hand.notes,
     );
@@ -957,11 +1004,13 @@ class PokerSessionManager {
         sharePerWinner: hand.sharePerWinner,
         // Hand annotations
         isStarred: hand.isStarred,
+        isScouted: hand.isScouted,
         tags: hand.tags,
         notes: hand.notes,
         // Dealer mode: pass playerIds for stats tracking
         playerIds: playerIds.isNotEmpty ? playerIds : null,
         skipStats: skipStats,
+        skipHeroStats: skipHeroStats,
       );
 
       hand.markSaved();
