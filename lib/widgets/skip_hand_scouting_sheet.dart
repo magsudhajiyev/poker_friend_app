@@ -62,11 +62,15 @@ class _SkipHandScoutingSheetState extends State<SkipHandScoutingSheet> {
   /// Opener's response to a 3-bet (only used when there are ≥2 raises).
   OpenerResponse _openerResponse = OpenerResponse.fold;
 
-  /// Named opponents (non-position-name, non-hero) in preflop action order.
+  /// Named opponents (non-position-name, non-hero) in preflop action order
+  /// (UTG first, blinds last) so the list reads consistently top-to-bottom.
   List<MapEntry<int, String>> _namedOpponents() {
-    final sorted = widget.activeSeats.toList()..sort();
+    final order = SkipHandScoutingService.preflopActionOrder(
+      widget.buttonPosition,
+      widget.activeSeats,
+    );
     final result = <MapEntry<int, String>>[];
-    for (final seat in sorted) {
+    for (final seat in order) {
       if (seat == widget.heroSeat) continue;
       final name = widget.playerNames[seat];
       if (name == null || name.isEmpty) continue;
@@ -312,10 +316,10 @@ class _OpponentRow extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
-            // Raise-order badge (e.g. "1st", "2nd") when raised
+            // Raise-order badge (e.g. "Raise", "3-Bet", "4-Bet") when raised
             if (raiseOrder != null) ...[
               Text(
-                _ordinal(raiseOrder!),
+                _raiseLabel(raiseOrder!),
                 style: AppTypography.ibm(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
@@ -347,17 +351,13 @@ class _OpponentRow extends StatelessWidget {
     );
   }
 
-  static String _ordinal(int n) {
-    switch (n) {
-      case 1:
-        return '1st';
-      case 2:
-        return '2nd';
-      case 3:
-        return '3rd';
-      default:
-        return '${n}th';
-    }
+  /// Poker label for the Nth raise in a preflop sequence (1-based):
+  /// 1 → "Raise" (the open), 2 → "3-Bet", 3 → "4-Bet", 4 → "5-Bet", …
+  /// (The blind is the implicit 1-bet, so the open is a 2-bet / "Raise" and
+  /// the first re-raise is the 3-bet.) Poker terms stay English by convention.
+  static String _raiseLabel(int n) {
+    if (n <= 1) return 'Raise';
+    return '${n + 1}-Bet';
   }
 }
 

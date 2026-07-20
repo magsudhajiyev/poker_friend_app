@@ -231,6 +231,14 @@ class SkipHandScoutingService {
     return actions;
   }
 
+  /// Public: preflop action order (UTG → … → SB → BB) for the given active
+  /// seats and button. Used by the scouting sheet to list opponents
+  /// consistently from UTG down.
+  static List<int> preflopActionOrder(int buttonPosition, Set<int> activeSeats) {
+    final sorted = activeSeats.toList()..sort();
+    return _preflopActionOrder(buttonPosition, sorted);
+  }
+
   /// The SB (or BB) seat given the preflop action [order] (UTG→…→SB→BB).
   /// Heads-up: order is [BTN/SB, BB], so SB=first, BB=last.
   static int? _blindSeat(List<int> order, {required bool isBigBlind}) {
