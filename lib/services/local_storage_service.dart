@@ -22,7 +22,7 @@ class LocalStorageService {
     
     return await openDatabase(
       dbPath,
-      version: 18,
+      version: 19,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE sessions(
@@ -81,6 +81,7 @@ class LocalStorageService {
             individualShares TEXT,
             sharePerWinner REAL,
             isStarred INTEGER DEFAULT 0,
+            isScouted INTEGER DEFAULT 0,
             tags TEXT,
             notes TEXT,
             FOREIGN KEY (sessionId) REFERENCES sessions (id)
@@ -178,6 +179,12 @@ class LocalStorageService {
           // First-run tour sessions — badged in history, excluded from stats
           await db.execute(
               'ALTER TABLE sessions ADD COLUMN isTutorial INTEGER DEFAULT 0');
+        }
+        if (oldVersion < 19) {
+          // Scouting hands — hero folded preflop, board skipped, preflop-only
+          // record that feeds opponent stats but is excluded from hero summary.
+          await db.execute(
+              'ALTER TABLE hands ADD COLUMN isScouted INTEGER DEFAULT 0');
         }
       },
       onOpen: (db) async {
@@ -492,6 +499,7 @@ class LocalStorageService {
     double? sharePerWinner,
     // Hand annotations
     bool? isStarred,
+    bool? isScouted,
     List<String>? tags,
     String? notes,
   }) async {
@@ -536,6 +544,7 @@ class LocalStorageService {
           'sharePerWinner': sharePerWinner,
           // Hand annotations
           'isStarred': (isStarred == true) ? 1 : 0,
+          'isScouted': (isScouted == true) ? 1 : 0,
           'tags': tags != null && tags.isNotEmpty ? _safeJsonEncode(tags) : null,
           'notes': notes,
         },
