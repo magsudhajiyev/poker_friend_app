@@ -5277,6 +5277,22 @@
   "skipScoutOpenerCalled": "Заколлил",
   "skipScoutOpener4Bet": "4-Bet",
   "skipScoutDone": "Готово",
+  "drillOpponentHandsReliable": "Записано рук: {count}",
+  "@drillOpponentHandsReliable": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "drillOpponentHandsThin": "Нужно 50+ рук для эксплойт-ридов · пока {count}",
+  "@drillOpponentHandsThin": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "paywallNotNow": "Не сейчас",
   "paywallFreeTrialBadge14": "14 дней бесплатно",
   "freeTierHandLimitTitle": "Достигнут лимит рук",

@@ -5277,6 +5277,22 @@
   "skipScoutOpenerCalled": "Sprawdził",
   "skipScoutOpener4Bet": "4-Bet",
   "skipScoutDone": "Gotowe",
+  "drillOpponentHandsReliable": "Zarejestrowano {count} rozdań",
+  "@drillOpponentHandsReliable": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "drillOpponentHandsThin": "Potrzeba 50+ rozdań do read'ów exploitowych · {count} jak dotąd",
+  "@drillOpponentHandsThin": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "paywallNotNow": "Nie teraz",
   "paywallFreeTrialBadge14": "14-dniowy bezpłatny okres próbny",
   "freeTierHandLimitTitle": "Osiągnięto limit rąk",

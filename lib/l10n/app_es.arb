@@ -5277,6 +5277,22 @@
   "skipScoutOpenerCalled": "Pagó",
   "skipScoutOpener4Bet": "4-Bet",
   "skipScoutDone": "Listo",
+  "drillOpponentHandsReliable": "{count} manos registradas",
+  "@drillOpponentHandsReliable": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "drillOpponentHandsThin": "Necesita 50+ manos para lecturas de exploit · {count} hasta ahora",
+  "@drillOpponentHandsThin": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "paywallNotNow": "Ahora no",
   "paywallFreeTrialBadge14": "Prueba gratis de 14 días",
   "freeTierHandLimitTitle": "Límite de manos alcanzado",

@@ -55,10 +55,21 @@ class DrillVillainProfile {
 
   bool get isGenericBot => opponentId == null;
 
+  /// Minimum hands observed before this opponent's reads are trusted for
+  /// exploit advice. Below this, drills fall back to the GTO baseline so a
+  /// thin, biased sample can't drive confident exploits.
+  static const int reliableSampleThreshold = 50;
+
+  /// Whether this is a real, sufficiently-sampled opponent (>= 50 hands).
+  /// Generic filler bots are never "reliable" (they have no real data).
+  bool get isReliable =>
+      !isGenericBot && handsObserved >= reliableSampleThreshold;
+
   String get confidenceLabel {
     if (isGenericBot) return 'generic bot';
-    if (handsObserved < 30) return 'early read — $handsObserved hands';
-    if (handsObserved < 100) return 'developing — $handsObserved hands';
+    if (handsObserved < reliableSampleThreshold) {
+      return 'needs $reliableSampleThreshold+ hands — $handsObserved so far';
+    }
     return 'based on $handsObserved hands';
   }
 

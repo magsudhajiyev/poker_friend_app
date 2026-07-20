@@ -21,6 +21,7 @@ import '../../services/drill_opponent_profiler.dart';
 import '../../models/observed_range.dart';
 import '../../services/opponent_range_service.dart';
 import '../../services/opponent_service.dart';
+import '../../services/opponent_stats_service.dart';
 import '../../services/subscription_service.dart';
 import '../../widgets/drill/observed_range_grid.dart';
 import '../../widgets/poker_table_widget.dart';
@@ -729,6 +730,25 @@ class _OpponentPickerSheet extends StatefulWidget {
 class _OpponentPickerSheetState extends State<_OpponentPickerSheet> {
   String _query = '';
 
+  /// opponentId → hands observed (for the reliability hint). Loaded once.
+  final Map<String, int> _hands = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _loadHandCounts();
+  }
+
+  Future<void> _loadHandCounts() async {
+    for (final o in widget.opponents) {
+      try {
+        final stats = await OpponentStatsService.getOpponentStats(o.id);
+        if (stats != null) _hands[o.id] = stats.handsPlayed;
+      } catch (_) {}
+    }
+    if (mounted) setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -808,6 +828,23 @@ class _OpponentPickerSheetState extends State<_OpponentPickerSheet> {
                       title: Text(o.name,
                           style: AppTypography.ibm(
                               color: AppColors.textPrimary)),
+                      subtitle: () {
+                        final hands = _hands[o.id];
+                        if (hands == null) return null;
+                        final reliable = hands >=
+                            DrillVillainProfile.reliableSampleThreshold;
+                        return Text(
+                          reliable
+                              ? l10n.drillOpponentHandsReliable(hands)
+                              : l10n.drillOpponentHandsThin(hands),
+                          style: AppTypography.ibm(
+                            color: reliable
+                                ? AppColors.textSecondary
+                                : AppColors.accentTertiary,
+                            fontSize: 12,
+                          ),
+                        );
+                      }(),
                       onTap: () =>
                           Navigator.pop(context, _SeatPick(o.id, o.name)),
                     ),

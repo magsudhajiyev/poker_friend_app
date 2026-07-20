@@ -166,6 +166,28 @@ void main() {
               '"steal relentlessly". Trace: ${r.trace}');
     });
 
+    // ── Sample-size reliability gate (>= 50 hands) ──────────────────────────
+    test('tight blind with only 49 hands does NOT trigger exploit (thin sample)', () {
+      final r = gradeSteal(
+        handClass: 'A2o',
+        blindProfile: prof(blindDefend: 25, hands: 49),
+      );
+      expect(traceContains(r, 'steal relentlessly'), isFalse,
+          reason: 'a 25% blind-defend read is exploitable, but with < 50 hands '
+              'it must fall back to the GTO baseline. Trace: ${r.trace}');
+    });
+
+    test('tight blind at exactly 50 hands DOES trigger exploit', () {
+      final r = gradeSteal(
+        handClass: 'A2o',
+        blindProfile: prof(blindDefend: 25, hands: 50),
+      );
+      expect(traceContains(r, 'steal relentlessly') ||
+          r.exploitReason.toLowerCase().contains('steal relentlessly'), isTrue,
+          reason: '50 hands meets the reliability threshold → exploit applies. '
+              'Trace: ${r.trace}');
+    });
+
     test('wide-defending blind (50%) triggers defends-wide exploit', () {
       final r = gradeSteal(
         handClass: 'A2o',
