@@ -49,7 +49,6 @@ import '../services/logger_service.dart';
 import '../services/free_tier_limits.dart';
 import '../services/subscription_service.dart';
 import '../services/skip_hand_scouting_service.dart';
-import '../widgets/skip_hand_scouting_sheet.dart';
 import '../onboarding/onboarding_state.dart';
 import '../widgets/main_shell.dart';
 import '../onboarding/onboarding_progress_bar.dart';
@@ -4248,33 +4247,9 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       if (confirmed != true) return;
     }
 
-    // --- Skip-hand scouting: ask "what happened?" before resetting state ---
-    SkipScoutResult? scoutResult;
-    Map<int, String>? scoutNames;
-    Set<int>? scoutSeats;
-    int? scoutButton;
-    int? scoutHero;
-
-    if (SkipHandScoutingService.isEnabled && !OnboardingState.isGuidedHandActive) {
-      scoutNames = Map<int, String>.from(sessionManager.playerNames);
-      scoutSeats = Set<int>.from(
-        gameState.players
-            .where((p) => p.isActive)
-            .map((p) => p.playerId),
-      );
-      scoutButton = gameState.buttonPosition;
-      scoutHero = sessionManager.ourSeatNumber;
-
-      if (scoutHero != null && scoutSeats.length > 1) {
-        scoutResult = await SkipHandScoutingSheet.show(
-          context: context,
-          playerNames: scoutNames,
-          activeSeats: scoutSeats,
-          heroSeat: scoutHero,
-          buttonPosition: scoutButton,
-        );
-      }
-    }
+    // Note: preflop-fold scouting now happens live (see _scoutingMode /
+    // _finishScoutedHand); reaching here means scouting was OFF, so this is a
+    // plain hand skip.
 
     // Play card scatter animation
     _scatterSeed = DateTime.now().millisecondsSinceEpoch;
@@ -4435,18 +4410,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         });
       }
 
-      // Fire-and-forget opponent stats from scouting
-      if (scoutResult != null) {
-        SkipHandScoutingService.applySkipDeltas(
-          result: scoutResult,
-          playerNames: scoutNames!,
-          activeSeats: scoutSeats!,
-          heroSeat: scoutHero!,
-          buttonPosition: scoutButton!,
-        ).catchError((e) {
-          debugPrint('⚠️ Skip scouting stats error: $e');
-        });
-      }
     }
   }
 
@@ -4681,9 +4644,12 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     // Flash the action on screen
     _showActionFlash(_actionFlashLabel(action, actionAmount), action: action);
 
-    // Enter scouting mode the moment the hero folds preflop: keep logging the
-    // opponents' action but suppress bet sizes and finish early with no pot.
-    if (action == PlayerAction.fold &&
+    // Enter scouting mode the moment the hero folds preflop (opt-in via the
+    // "Skip Hand Scouting" setting): keep logging the opponents' action but
+    // suppress bet sizes and finish early with no pot.
+    if (SkipHandScoutingService.isEnabled &&
+        !OnboardingState.isGuidedHandActive &&
+        action == PlayerAction.fold &&
         gameState.currentRound == BettingRound.preflop &&
         actingSeat == sessionManager.ourSeatNumber &&
         !_scoutingMode) {
