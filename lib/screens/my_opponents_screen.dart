@@ -481,9 +481,16 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> with SingleTicker
               color: _selectedFormColor,
             );
 
-      await OpponentService.saveOpponent(newOpponent);
+      // throwOnDuplicate surfaces same-name collisions the UI pre-check may
+      // miss (internal-whitespace differences, or a concurrent create race).
+      await OpponentService.saveOpponent(newOpponent, throwOnDuplicate: true);
       _closeAddForm(showToast: true, toastMessage: isEditing ? 'Opponent Updated Successfully' : 'Opponent Added');
       _loadOpponents(useCache: false);
+    } on DuplicateOpponentException catch (e) {
+      if (mounted) {
+        setState(() => _formNameError = l10n.opponentAlreadyExists(e.existing.name));
+      }
+      return;
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
