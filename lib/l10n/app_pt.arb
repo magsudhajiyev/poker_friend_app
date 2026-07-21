@@ -5437,5 +5437,7 @@
   "guidedStackAdjustBody": "Pressione e segure o assento de um jogador para ativar o anel de stack. Gire o dedo para selecionar um tamanho de stack e solte.",
   "sessionDetailsEndSession": "Encerrar Sessão",
   "sessionDetailsLeaveConfirmTitle": "Sair da Sessão?",
-  "sessionDetailsLeaveConfirmBody": "Sua sessão ainda está ativa. Deseja encerrá-la?"
+  "sessionDetailsLeaveConfirmBody": "Sua sessão ainda está ativa. Deseja encerrá-la?",
+  "pokerHandChangeTableDiscardMessage": "Você tem uma mão em andamento. Mudar de mesa irá descartá-la — nada desta mão será salvo.",
+  "pokerHandDiscardAndChangeTable": "Descartar e mudar de mesa"
 }

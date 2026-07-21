@@ -5444,5 +5444,7 @@
   "guidedStackAdjustBody": "Натисніть і утримуйте місце гравця, щоб активувати кільце стека. Обертайте палець, щоб обрати розмір стека, а потім відпустіть.",
   "sessionDetailsEndSession": "Завершити сесію",
   "sessionDetailsLeaveConfirmTitle": "Покинути сесію?",
-  "sessionDetailsLeaveConfirmBody": "Ваша сесія все ще активна. Бажаєте завершити її?"
+  "sessionDetailsLeaveConfirmBody": "Ваша сесія все ще активна. Бажаєте завершити її?",
+  "pokerHandChangeTableDiscardMessage": "У вас триває роздача. Зміна столу скасує її — нічого з цієї роздачі не буде збережено.",
+  "pokerHandDiscardAndChangeTable": "Скасувати та змінити стіл"
 }

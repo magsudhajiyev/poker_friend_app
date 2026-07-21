@@ -1487,6 +1487,92 @@ class PokerSessionManager {
   /// Deactivates the old seat (unless [keepOldSeatActive] is true, e.g. when
   /// another player is taking the old seat) and activates the new one.
   /// [gameState] is updated in sync if provided.
+  // ── Mid-hand seating (HL-1/HL-3) ──────────────────────────────────────
+  //
+  // Boundary rule: a seat change while currentHand.actions.isEmpty joins the
+  // CURRENT hand (caller re-posts blinds + recalculates action order). A seat
+  // change after any action is DEFERRED: it lives here (so the seat renders,
+  // dimmed) and the game engine is only told at the next hand start.
+
+  /// Seats added mid-hand, waiting to join at the next hand. The seat's
+  /// name/stack already live in [playerNames]/[playerStacks]/[activeSeats];
+  /// only the gameState activation is deferred.
+  final Set<int> pendingSeats = <int>{};
+
+  int? _pendingHeroSeat;
+  String? _pendingHeroName;
+  double? _pendingHeroStack;
+
+  /// Hero re-seat requested mid-hand — applied at the next hand start.
+  int? get pendingHeroSeat => _pendingHeroSeat;
+  double? get pendingHeroStack => _pendingHeroStack;
+
+  /// Defer a hero move to [newSeat] until the next hand (mid-hand re-seat
+  /// follows the same sit-out rule as any other mid-hand seating).
+  void deferHeroReseat({
+    required int newSeat,
+    String? heroName,
+    double? heroStack,
+  }) {
+    _pendingHeroSeat = newSeat;
+    _pendingHeroName = heroName;
+    _pendingHeroStack = heroStack;
+  }
+
+  /// HL-2: throw away an in-progress hand (mid-hand table change). The
+  /// discarded hand never happened: no record, no stats, and — critically —
+  /// nulling it BEFORE the next startHand() prevents the auto-complete path
+  /// (startHand → completeCurrentHand) from silently saving a corrupt
+  /// half-hand. Returns the discarded hand's number so the replacement hand
+  /// can reuse it (no numbering gap).
+  int? discardCurrentHand() {
+    final n = currentHand?.handNumber;
+    currentHand = null;
+    return n;
+  }
+
+  /// Activate all deferred seating in [gameState]. MUST be called before
+  /// gameState.startNewHand() so button rotation and blind posting include
+  /// the new players.
+  void flushPendingSeats(PokerGameState gameState) {
+    for (final seat in pendingSeats) {
+      // Seat may have been removed again while pending — skip those.
+      if (!activeSeats.contains(seat)) continue;
+      gameState.setPlayerActive(seat, true);
+      gameState.setPlayerStack(seat, playerStacks[seat] ?? 0.0);
+    }
+    pendingSeats.clear();
+
+    if (_pendingHeroSeat != null) {
+      reseatHero(
+        newSeat: _pendingHeroSeat!,
+        gameState: gameState,
+        heroName: _pendingHeroName,
+        heroStack: _pendingHeroStack,
+      );
+      _pendingHeroSeat = null;
+      _pendingHeroName = null;
+      _pendingHeroStack = null;
+    }
+  }
+
+  /// Re-sync blind seats and the frozen hero position after a PRE-ACTION
+  /// seat change (HL-1). Only valid while the current hand has no actions —
+  /// the hero position is otherwise frozen for the hand (invariant I11).
+  void refreshPreActionPositions(PokerGameState gameState) {
+    actualSBSeat = gameState.effectiveSBPosition;
+    actualBBSeat = gameState.effectiveBBPosition;
+    final hand = currentHand;
+    if (hand != null && hand.actions.isEmpty && ourSeatNumber != null) {
+      hand.heroPositionName = PokerPositions.getPositionNameForActivePlayers(
+        ourSeatNumber!,
+        buttonPosition,
+        activeSeats.toList(),
+      );
+      hand.heroSeatNumber = ourSeatNumber;
+    }
+  }
+
   void reseatHero({
     required int newSeat,
     required PokerGameState? gameState,

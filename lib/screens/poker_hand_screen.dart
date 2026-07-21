@@ -27,7 +27,7 @@ import 'session_details_screen.dart';
 import '../widgets/showdown_dialog.dart';
 import 'seat_setup_screen.dart';
 import '../widgets/action_button_grid.dart';
-import '../widgets/table_management_sheet.dart';
+import '../design_system/components/modals/confirm_dialog.dart';
 import '../widgets/seat_config_sheet.dart';
 import '../widgets/poker_table_widget.dart';
 import '../design_system/components/overlays/raise_snap_overlay.dart';
@@ -444,8 +444,25 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     // Get hero's current stack to carry over
     final heroSeat = sessionManager.ourSeatNumber;
     final heroStack = heroSeat != null ? gameState.getPlayerStack(heroSeat) : 0.0;
-    final heroName = heroSeat != null ? sessionManager.playerNames[heroSeat] : null;
 
+    final handInProgress =
+        sessionManager.currentHand?.actions.isNotEmpty ?? false;
+
+    if (handInProgress) {
+      // HL-2: a hand is running — standard destructive confirm.
+      // Confirm = discard the hand & change table; Cancel = resume the hand.
+      await ConfirmDialog.show(
+        context,
+        title: l10n.handChangeTable,
+        message: l10n.pokerHandChangeTableDiscardMessage,
+        confirmLabel: l10n.pokerHandDiscardAndChangeTable,
+        onConfirm: () => _performTableChange(
+            heroSeat: heroSeat, heroStack: heroStack, discardHand: true),
+      );
+      return;
+    }
+
+    // No hand in progress — keep the lighter informational confirm.
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -472,8 +489,24 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     );
 
     if (confirmed != true || !mounted) return;
+    _performTableChange(
+        heroSeat: heroSeat, heroStack: heroStack, discardHand: false);
+  }
 
+  void _performTableChange({
+    required int? heroSeat,
+    required double heroStack,
+    required bool discardHand,
+  }) {
+    if (!mounted) return;
     setState(() {
+      // HL-2: discard the in-progress hand BEFORE clearing seats so the
+      // auto-complete trap (startHand → completeCurrentHand on a non-empty
+      // hand, hand_state_machine.dart:548) can never save a corrupt
+      // half-hand.
+      final discardedHandNumber =
+          discardHand ? sessionManager.discardCurrentHand() : null;
+
       // Increment table number
       sessionManager.currentTableNumber++;
 
@@ -486,6 +519,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         sessionManager.playerNames.remove(seat);
         sessionManager.playerStacks.remove(seat);
         sessionManager.playerIds.remove(seat);
+        sessionManager.pendingSeats.remove(seat);
         gameState.setPlayerActive(seat, false);
       }
 
@@ -498,17 +532,21 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         // Reset hero confidence to high (known stack at table change)
         gameState.setPlayerStack(heroSeat, heroStack);
       }
-    });
 
-    // Open table management sheet so user can add new opponents
-    if (mounted) {
-      TableManagementSheet.show(
-        context: context,
-        gameState: gameState,
-        sessionManager: sessionManager,
-        onChanged: () => setState(() {}),
-      );
-    }
+      if (discardHand) {
+        // Wipe the discarded hand's engine state (pot, bets, street) and
+        // open a fresh hand reusing its number — the discarded hand never
+        // happened. Blinds re-post as players are seated at the new table
+        // via the pre-action join path (HL-1).
+        gameState.startNewHand();
+        sessionManager.startHand(
+          discardedHandNumber ?? sessionManager.completedHands.length + 1,
+          gameState.buttonPosition,
+        );
+      }
+    });
+    // HL-4: no auto-opened seat drawer — players are added by tapping
+    // empty seats.
   }
 
   Future<void> _stopSession() async {
@@ -1774,6 +1812,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
           onDealNextHand: () {
             if (!mounted) return;
             setState(() {
+              sessionManager.flushPendingSeats(gameState); // HL-3: seat deferred joins
               gameState.startNewHand();
               gameState.initializePot();
               sessionManager.startHand(
@@ -1850,8 +1889,20 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     final seatLabels = <int, String>{};
     for (int widgetSeat = 1; widgetSeat <= 9; widgetSeat++) {
       final logical = _widgetSeatToLogical(widgetSeat);
-      seatActive[widgetSeat] = gameState.players[logical - 1].isActive;
-      seatLabels[widgetSeat] = sessionManager.playerNames[logical] ?? '';
+      // Pending seats (added mid-hand, joining next hand) render occupied
+      // even though the engine doesn't know them yet (HL-3).
+      final isPendingSeat = sessionManager.pendingSeats.contains(logical) ||
+          sessionManager.pendingHeroSeat == logical;
+      seatActive[widgetSeat] =
+          gameState.players[logical - 1].isActive || isPendingSeat;
+      var label = sessionManager.playerNames[logical] ?? '';
+      if (label.isEmpty && sessionManager.pendingHeroSeat == logical) {
+        final heroSeatNow = sessionManager.ourSeatNumber;
+        label = heroSeatNow != null
+            ? (sessionManager.playerNames[heroSeatNow] ?? '')
+            : '';
+      }
+      seatLabels[widgetSeat] = label;
     }
 
     // Remap button position to widget seat
@@ -2006,18 +2057,31 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
   /// Builds a compact seat widget showing player state (name, stack, bet, fold/all-in).
   Widget _buildHandSeat(int seatNumber, bool isActive, String label) {
     final playerState = gameState.players[seatNumber - 1];
+    // HL-3: seat added mid-hand — occupied but sitting out until next hand.
+    final isPending = !playerState.isActive &&
+        (sessionManager.pendingSeats.contains(seatNumber) ||
+            sessionManager.pendingHeroSeat == seatNumber);
     final isFolded = playerState.hasFolded;
-    final isAllIn = playerState.isAllIn;
-    final isCurrentPlayer = isActive && gameState.currentPlayer == seatNumber;
+    final isAllIn = !isPending && playerState.isAllIn;
+    final isCurrentPlayer =
+        isActive && !isPending && gameState.currentPlayer == seatNumber;
     final isHero = seatNumber == (sessionManager.ourSeatNumber ?? -1);
-    final stack = playerState.currentStack;
-    var bet = playerState.betThisRound;
-    final hasChecked = playerState.lastAction == PlayerAction.check && bet == 0 && !isFolded;
+    final stack = isPending
+        ? (sessionManager.pendingHeroSeat == seatNumber
+            ? (sessionManager.pendingHeroStack ?? 0.0)
+            : (sessionManager.playerStacks[seatNumber] ?? 0.0))
+        : playerState.currentStack;
+    var bet = isPending ? 0.0 : playerState.betThisRound;
+    final hasChecked = !isPending &&
+        playerState.lastAction == PlayerAction.check && bet == 0 && !isFolded;
 
     // Determine circle border color based on state
     Color borderColor;
     if (!isActive) {
       borderColor = AppColors.bgElevated;
+    } else if (isPending) {
+      // Joins next hand — same muted look as a folded player
+      borderColor = AppColors.accentSecondary.withValues(alpha: 0.3);
     } else if (isFolded) {
       borderColor = AppColors.accentSecondary.withValues(alpha: 0.3);
     } else if (isCurrentPlayer) {
@@ -2168,7 +2232,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
 
     // Player info column (circle + name + stack) — dims smoothly on fold
     final playerInfo = AnimatedOpacity(
-      opacity: isFolded ? 0.55 : 1.0,
+      opacity: (isFolded || isPending) ? 0.55 : 1.0,
       duration: const Duration(milliseconds: 250),
       curve: Curves.easeOut,
       child: Column(
@@ -2371,6 +2435,12 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         required bool isHero,
         required bool isActive,
       }) {
+        // HL-1/HL-3 boundary: a seat change before anyone acted joins the
+        // CURRENT hand (blinds + action order recomputed below); after any
+        // action it is deferred to the next hand (dimmed pending seat).
+        final handInProgress =
+            sessionManager.currentHand?.actions.isNotEmpty ?? false;
+
         if (!isActive) {
           // Remove player. Removing the hero's own seat unseats the user —
           // clear ourSeatNumber so it never points at a dead/reused seat.
@@ -2381,6 +2451,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
           sessionManager.playerNames.remove(seatNumber);
           sessionManager.playerStacks.remove(seatNumber);
           sessionManager.playerIds.remove(seatNumber);
+          sessionManager.pendingSeats.remove(seatNumber);
           gameState.setPlayerActive(seatNumber, false);
           setState(() {});
           return;
@@ -2391,12 +2462,26 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
           final oldSeat = sessionManager.ourSeatNumber;
           final heroStack =
               oldSeat != null ? gameState.getPlayerStack(oldSeat) : 0.0;
-          sessionManager.reseatHero(
-            newSeat: seatNumber,
-            gameState: gameState,
-            heroName: heroName.isNotEmpty ? heroName : name,
-            heroStack: heroStack > 0 ? heroStack : stack,
-          );
+          if (handInProgress) {
+            // HL-3: mid-hand hero move waits for the next hand.
+            sessionManager.deferHeroReseat(
+              newSeat: seatNumber,
+              heroName: heroName.isNotEmpty ? heroName : name,
+              heroStack: heroStack > 0 ? heroStack : stack,
+            );
+          } else {
+            sessionManager.reseatHero(
+              newSeat: seatNumber,
+              gameState: gameState,
+              heroName: heroName.isNotEmpty ? heroName : name,
+              heroStack: heroStack > 0 ? heroStack : stack,
+            );
+            // Pre-action re-seat shifts positions the same way a new
+            // player does — recompute blinds/action order/labels.
+            gameState.initializePot();
+            gameState.recalculateActionOrder();
+            sessionManager.refreshPreActionPositions(gameState);
+          }
         } else {
           // Editing hero's own seat, or adding/editing a regular player.
           // If the user unticked "This is my seat" on their OWN seat, they
@@ -2425,9 +2510,23 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
           // state mid-hand (betThisRound/totalContribution) — only activate
           // seats that are currently inactive.
           if (!gameState.players[seatNumber - 1].isActive) {
-            gameState.setPlayerActive(seatNumber, true);
+            if (handInProgress) {
+              // HL-3: seated mid-hand — the engine is NOT told until the
+              // next hand starts (deferred activation). Seat renders dimmed.
+              sessionManager.pendingSeats.add(seatNumber);
+            } else {
+              gameState.setPlayerActive(seatNumber, true);
+              gameState.setPlayerStack(seatNumber, stack);
+              // HL-1: pre-action join — re-post blinds (idempotent) and
+              // recompute action order so the new player can be UTG, then
+              // re-sync blind seats + the frozen hero position.
+              gameState.initializePot();
+              gameState.recalculateActionOrder();
+              sessionManager.refreshPreActionPositions(gameState);
+            }
+          } else {
+            gameState.setPlayerStack(seatNumber, stack);
           }
-          gameState.setPlayerStack(seatNumber, stack);
         }
         setState(() {});
       },
@@ -3987,8 +4086,14 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       amount: amount,
     );
 
-    // Flash the action on screen
-    _showActionFlash(_actionFlashLabel(action, amount), action: action);
+    // Flash the action on screen. Bet/raise amount is the TOTAL to-amount;
+    // the additional chips are (amount - betThisRound) — all-in when that
+    // consumes the whole remaining stack (HL-8).
+    final flashAllIn = (amount -
+            gameState.players[gameState.currentPlayer - 1].betThisRound) >=
+        currentPlayerStack - 1e-9;
+    _showActionFlash(_actionFlashLabel(action, amount, flashAllIn),
+        action: action);
 
     // Perform action with specified amount
     String result = gameState.performActionWithAmount(action, amount);
@@ -4603,8 +4708,20 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     });
   }
 
-  String _actionFlashLabel(PlayerAction action, [double? amount]) {
+  String _actionFlashLabel(PlayerAction action,
+      [double? amount, bool isAllIn = false]) {
     final playerName = sessionManager.getPlayerName(gameState.currentPlayer) ?? 'Seat ${gameState.currentPlayer}';
+    // HL-8: any action committing the whole stack reads ALL-IN, not
+    // call/bet/raise — an all-in for less must never look like a limp.
+    if (isAllIn &&
+        (action == PlayerAction.call ||
+            action == PlayerAction.bet ||
+            action == PlayerAction.raise)) {
+      if (amount != null) {
+        return '$playerName ALL-IN ${gameState.formatCurrency(amount)}';
+      }
+      return '$playerName ALL-IN';
+    }
     switch (action) {
       case PlayerAction.fold: return '$playerName FOLDS';
       case PlayerAction.check: return '$playerName CHECKS';
@@ -4670,8 +4787,13 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       amount: actionAmount,
     );
 
-    // Flash the action on screen
-    _showActionFlash(_actionFlashLabel(action, actionAmount), action: action);
+    // Flash the action on screen. A call that consumes the whole stack is an
+    // all-in for less — flash ALL-IN, never "CALLS"/limp (HL-8).
+    final flashAllIn = actionAmount != null &&
+        actionAmount >= currentPlayerStack - 1e-9 &&
+        currentPlayerStack > 0;
+    _showActionFlash(_actionFlashLabel(action, actionAmount, flashAllIn),
+        action: action);
 
     // Enter scouting mode the moment the hero folds preflop. Requires both the
     // Training Drills feature flag (scouting is gated with drills) AND the
@@ -5426,7 +5548,8 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         mounted) {
       OnboardingState.sessionDetailsExplainReturnPending = false;
       setState(() {
-        gameState.startNewHand();
+        sessionManager.flushPendingSeats(gameState); // HL-3: seat deferred joins
+              gameState.startNewHand();
         gameState.initializePot();
         sessionManager.startHand(
           gameState.handNumber,
@@ -6177,7 +6300,8 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       _isSettlingBetweenHands = false;
       _settlingWinnerName = null;
       _settlingPotAmount = null;
-      gameState.startNewHand();
+      sessionManager.flushPendingSeats(gameState); // HL-3: seat deferred joins
+              gameState.startNewHand();
       gameState.initializePot();
       sessionManager.startHand(
         gameState.handNumber,

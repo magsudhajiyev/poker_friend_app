@@ -1443,7 +1443,10 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
     final amount = action['amount'];
     final playerStack = action['playerStack'] ?? action['stack'];
 
-    if (actionType == null || (actionType.toLowerCase() != 'raise' && actionType.toLowerCase() != 'bet')) {
+    // HL-8: a CALL that consumes the whole stack is an all-in for less and
+    // must read ALL-IN too — not just bets/raises.
+    final type = actionType?.toLowerCase();
+    if (type != 'raise' && type != 'bet' && type != 'call') {
       return false;
     }
 
@@ -1451,6 +1454,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
 
     final betAmount = (amount as num).toDouble();
     final stack = (playerStack as num).toDouble();
+    if (stack <= 0) return false; // no stack recorded — can't infer all-in
 
     return betAmount >= (stack - 0.01);
   }

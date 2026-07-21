@@ -5437,5 +5437,7 @@
   "guidedStackAdjustBody": "Przytrzymaj miejsce gracza, aby aktywować pierścień stacka. Obróć palec, aby wybrać wielkość stacka, a następnie puść.",
   "sessionDetailsEndSession": "Zakończ Sesję",
   "sessionDetailsLeaveConfirmTitle": "Opuścić Sesję?",
-  "sessionDetailsLeaveConfirmBody": "Twoja sesja jest nadal aktywna. Czy chcesz ją zakończyć?"
+  "sessionDetailsLeaveConfirmBody": "Twoja sesja jest nadal aktywna. Czy chcesz ją zakończyć?",
+  "pokerHandChangeTableDiscardMessage": "Masz rozdanie w toku. Zmiana stołu je odrzuci — nic z tego rozdania nie zostanie zapisane.",
+  "pokerHandDiscardAndChangeTable": "Odrzuć i zmień stół"
 }

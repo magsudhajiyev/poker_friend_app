@@ -250,6 +250,16 @@ class PokerGameState {
     }
   }
 
+  /// Recompute preflop action order + effective blind seats after a
+  /// PRE-ACTION seat change (HL-1: a player seated after the BB before
+  /// anyone acted must become the new UTG). No-op once betting is underway
+  /// or postflop — mid-hand seat changes are deferred to the next hand.
+  void recalculateActionOrder() {
+    if (currentRound == BettingRound.preflop && !bettingRoundComplete) {
+      _setInitialActionOrder();
+    }
+  }
+
   void _setInitialActionOrder() {
 
     List<int> activePlayers = getActivePlayers();
@@ -1906,9 +1916,16 @@ class SidePotCalculator {
       }
 
       if (potAmount > 0) {
-        // Players eligible for this pot: live players who covered the level
+        // Players eligible for this pot: live players who covered the level,
+        // PLUS live players still able to act (not all-in). Mid-betting-round
+        // a pending player hasn't matched the top yet but will either call
+        // (covering the level) or fold (dropping out on the next recalc) —
+        // excluding them produced pots their own chips were in but they
+        // "couldn't win" (HL-7). At showdown, after uncalled-bet returns,
+        // every live non-all-in player has matched the top, so this clause
+        // changes nothing there.
         final eligiblePlayers = livePlayers
-            .where((p) => contributionOf(p) >= level)
+            .where((p) => !p.isAllIn || contributionOf(p) >= level)
             .map((p) => p.playerId)
             .toList()
           ..sort();

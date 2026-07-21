@@ -229,7 +229,18 @@ class RangeGridService {
         };
       } else if (type == 'call') {
         primary = 'call';
-        firstLabel = raisesBeforeHero == 0 ? 'Limped' : 'Called raise';
+        // HL-8: a call that committed the whole stack is an all-in for less
+        // — never label it a limp. primaryAction stays 'call' (an all-in
+        // call is NOT a raise; stats/frequencies are unaffected).
+        final amt = (action['amount'] as num?)?.toDouble();
+        final stackAtAction = (action['playerStack'] as num?)?.toDouble();
+        final wasAllIn = amt != null &&
+            stackAtAction != null &&
+            stackAtAction > 0 &&
+            amt >= stackAtAction - 1e-9;
+        firstLabel = wasAllIn
+            ? 'All-in call'
+            : (raisesBeforeHero == 0 ? 'Limped' : 'Called raise');
       } else if (type == 'check') {
         primary = 'check';
         firstLabel = 'Checked';

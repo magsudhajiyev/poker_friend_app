@@ -5437,5 +5437,7 @@
   "guidedStackAdjustBody": "Halte einen Spielersitz gedrückt, um den Stack-Ring zu aktivieren. Drehe deinen Finger, um eine Stack-Größe auszuwählen, und lasse dann los.",
   "sessionDetailsEndSession": "Session beenden",
   "sessionDetailsLeaveConfirmTitle": "Session verlassen?",
-  "sessionDetailsLeaveConfirmBody": "Deine Session ist noch aktiv. Möchtest du sie beenden?"
+  "sessionDetailsLeaveConfirmBody": "Deine Session ist noch aktiv. Möchtest du sie beenden?",
+  "pokerHandChangeTableDiscardMessage": "Du hast eine laufende Hand. Beim Tischwechsel wird sie verworfen — nichts aus dieser Hand wird gespeichert.",
+  "pokerHandDiscardAndChangeTable": "Verwerfen & Tisch wechseln"
 }

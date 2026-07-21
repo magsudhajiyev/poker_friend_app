@@ -324,7 +324,9 @@
   "homeNetProfitWeek": "Net Profit / w · {week}",
   "@homeNetProfitWeek": {
     "placeholders": {
-      "week": { "type": "String" }
+      "week": {
+        "type": "String"
+      }
     }
   },
   "homeAvgAmount": "Avg {amount}",
@@ -5442,5 +5444,7 @@
   "guidedStackAdjustBody": "Press and hold on a player seat to activate the stack ring. Rotate your finger to select a stack size, then release.",
   "sessionDetailsEndSession": "End Session",
   "sessionDetailsLeaveConfirmTitle": "Leave Session?",
-  "sessionDetailsLeaveConfirmBody": "Your session is still active. Do you want to end it?"
+  "sessionDetailsLeaveConfirmBody": "Your session is still active. Do you want to end it?",
+  "pokerHandChangeTableDiscardMessage": "You have a hand in progress. Changing tables will discard it — nothing from this hand will be saved.",
+  "pokerHandDiscardAndChangeTable": "Discard & Change Table"
 }

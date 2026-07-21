@@ -305,13 +305,16 @@ void main() {
         'nobody can act — betting is closed');
   });
 
-  scenario('C7 pills hidden while a raise is pending (in-flight overage)', () {
+  scenario('C7 pills appear when a bet exceeds an all-in (HL-7 fix)', () {
     final g = build(seats: 3, button: 1, stacks: {1: 100, 2: 20, 3: 100});
     act(g, PlayerAction.raise, 60); // BTN 60
     act(g, PlayerAction.call); // SB all-in 20; BB still to act
-    // Trailing single-eligible layer (BTN's 40 over) must not create pills
-    check(g.activeSidePots.isEmpty,
-        'no pills while top layer has one eligible: ${g.activeSidePots}');
+    // HL-7: BTN's chips above the all-in start a side pot — show it now.
+    // Pending BB is eligible (will match or fold; recalc runs every action).
+    check(g.activeSidePots.length == 2,
+        'main + forming side pot: ${g.activeSidePots}');
+    checkNear(g.activeSidePots[0].amount, 42, 'main: 20+20+BB 2');
+    checkNear(g.activeSidePots[1].amount, 40, 'side: BTN 40 over');
     conserve(g, 'C7');
   });
 
