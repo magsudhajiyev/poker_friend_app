@@ -2601,13 +2601,18 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             sideTitles: SideTitles(
               showTitles: true,
               interval: yInterval,
-              reservedSize: 45,
+              reservedSize: 48,
               getTitlesWidget: (value, meta) {
                 if (meta.axisPosition == 0 || meta.axisPosition == meta.parentAxisSize) {
                   return const SizedBox.shrink();
                 }
+                // Compact form (e.g. "$ 1.7K") keeps large values on one line
+                // — full formatCash adds decimals and wraps in the reserved gap.
                 return Text(
-                  CurrencyService.formatCash(value),
+                  CurrencyService.formatCompact(value),
+                  maxLines: 1,
+                  softWrap: false,
+                  overflow: TextOverflow.visible,
                   style: AppTypography.mono(
                     color: Colors.white.withValues(alpha: 0.45),
                     fontSize: 11,
