@@ -150,6 +150,11 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
   double _raiseSnapRawProgress = 0.0;
   double _raiseSnapAmount = 0.0;
   PlayerAction? _raiseSnapAction;
+  // HL-8b: the snap ladder collapsed to a single All-In (stack below a
+  // min-raise), and the special "all-in CALL" gesture (stack ≤ call amount —
+  // no raise exists at all; confirming performs a call, not a raise).
+  bool _raiseSnapAllInOnly = false;
+  bool _raiseSnapIsAllInCall = false;
   // Action flash state
   String? _actionFlashText;
   Color _actionFlashColor = Colors.white;
@@ -3452,6 +3457,10 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         } else {
           _enterRaiseSnapMode(action);
         }
+      } else if (_canOnlyAllInCall()) {
+        // HL-8b: stack ≤ call amount — no raise exists. Drag-up becomes an
+        // explicit all-in CALL gesture (single All-In snap; confirm calls).
+        _enterAllInCallSnap();
       }
     }
 
@@ -3493,8 +3502,23 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     final isCash = gameState.isCashGame;
     final lastBet = gameState.getCurrentBet();
 
+    // HL-8b: with a stack below a min-raise the ladder collapses to a single
+    // All-In snap; with a stack that can't even cover the call, no raise
+    // exists at all (handled by _enterAllInCallSnap — defensive here).
+    final mode = RaiseSnapOverlay.gestureMode(
+      maxBet: maxBet,
+      currentBet: lastBet,
+      minRaiseTotal: minBet,
+    );
+    if (mode == RaiseGestureMode.none) {
+      if (_canOnlyAllInCall()) _enterAllInCallSnap();
+      return;
+    }
+
     List<SnapPoint> points;
-    if (isPreflop) {
+    if (mode == RaiseGestureMode.allInOnly) {
+      points = RaiseSnapOverlay.allInOnlySnapPoints(maxBet: maxBet);
+    } else if (isPreflop) {
       points = RaiseSnapOverlay.preflopSnapPoints(
         minRaise: minBet,
         bigBlind: bigBlind,
@@ -3518,6 +3542,8 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       _isRaiseSnapping = true;
       _raiseSnapPoints = points;
       _raiseSnapAction = action;
+      _raiseSnapAllInOnly = mode == RaiseGestureMode.allInOnly;
+      _raiseSnapIsAllInCall = false;
       _activeSnapIndex = 0;
       _raiseSnapProgress = 0.0;
       _raiseSnapRawProgress = 0.0;
@@ -3525,6 +3551,37 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     });
 
     // Haptic feedback on entering raise mode
+    HapticFeedback.mediumImpact();
+  }
+
+  /// HL-8b: hero's whole stack can't cover the call — the only chip action
+  /// is an all-in CALL (no raise exists).
+  bool _canOnlyAllInCall() {
+    final hero = gameState.getCurrentPlayer();
+    if (hero == null || hero.currentStack <= 0) return false;
+    if (!gameState.isValidAction(PlayerAction.call)) return false;
+    return hero.currentStack + hero.betThisRound <= gameState.getCurrentBet();
+  }
+
+  /// HL-8b: single All-In snap whose confirmation performs a CALL (all-in
+  /// for less) — never a raise.
+  void _enterAllInCallSnap() {
+    final hero = gameState.getCurrentPlayer();
+    if (hero == null) return;
+    final maxBet = hero.currentStack + hero.betThisRound;
+
+    setState(() {
+      _isRaiseSnapping = true;
+      _raiseSnapPoints = RaiseSnapOverlay.allInOnlySnapPoints(maxBet: maxBet);
+      _raiseSnapAction = PlayerAction.call;
+      _raiseSnapAllInOnly = true;
+      _raiseSnapIsAllInCall = true;
+      _activeSnapIndex = 0;
+      _raiseSnapProgress = 0.0;
+      _raiseSnapRawProgress = 0.0;
+      _raiseSnapAmount = maxBet;
+    });
+
     HapticFeedback.mediumImpact();
   }
 
@@ -3560,6 +3617,8 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       _isRaiseSnapping = false;
       _raiseSnapPoints = [];
       _raiseSnapAction = null;
+      _raiseSnapAllInOnly = false;
+      _raiseSnapIsAllInCall = false;
       _activeSnapIndex = 0;
       _raiseSnapProgress = 0.0;
       _raiseSnapRawProgress = 0.0;
@@ -3571,6 +3630,8 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
   void _openNumpadFromSnap() async {
     final action = _raiseSnapAction;
     if (action == null) return;
+    // HL-8b: all-in is the only legal amount — nothing to type.
+    if (_raiseSnapAllInOnly || _raiseSnapIsAllInCall) return;
 
     // Cancel snap overlay first
     _cancelRaiseSnap();
@@ -3589,16 +3650,29 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       final action = _raiseSnapAction;
       final amount = _raiseSnapAmount;
       final rawProgress = _raiseSnapRawProgress;
+      final isAllInCall = _raiseSnapIsAllInCall;
+      final allInOnly = _raiseSnapAllInOnly;
       _cancelRaiseSnap();
       _swipePanStart = null;
 
       if (action == null) return;
+
+      // HL-8b: confirming the all-in CALL snap performs a call (engine caps
+      // at stack → all-in); dropping back below the threshold just cancels.
+      if (isAllInCall) {
+        if (rawProgress >= -0.1 && amount > 0) {
+          _performPokerAction(PlayerAction.call);
+        }
+        return;
+      }
 
       // Numpad only when the finger clearly dropped BACK BELOW the entry
       // threshold (raw progress negative) — releasing ON the first snap
       // point must bet it. (Min = 2x when facing a bet, so the old
       // `progress < 0.05` check made 2x unselectable.)
       if (rawProgress < -0.1) {
+        // HL-8b: nothing to type when all-in is the only legal amount.
+        if (allInOnly) return;
         _showBetAmountDialog(action).then((customAmount) {
           if (customAmount != null) {
             _performPokerActionWithAmount(action, customAmount);
@@ -3654,7 +3728,14 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         : gameState.getMinimumBet();
     final maxBet = currentPlayer.currentStack + currentPlayer.betThisRound;
 
+    // HL-8b: a "raise" that can't exceed the current bet doesn't exist —
+    // never offer manual entry for it (only fold / all-in call remain).
+    if (action == PlayerAction.raise && maxBet <= gameState.getCurrentBet()) {
+      return null;
+    }
+
     // If player is short-stacked (can't meet min bet), allow all-in for whatever they have
+    // (validation below then locks the input to exactly the all-in amount)
     final effectiveMinBet = maxBet < minBet ? maxBet : minBet;
 
     // Determine which multiplier mode to use

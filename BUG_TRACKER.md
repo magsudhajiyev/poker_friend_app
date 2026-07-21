@@ -15,7 +15,7 @@ Details live in `test/HAND_LOGGING_SPEC.md`; seating rules in `POKER_SEATING_RUL
 | HL-6 | Hole cards sometimes missing in session details | Deferred — diagnosis in test/HAND_LOGGING_SPEC.md | 🔵 |
 | HL-7 | Side pots broken | Eligibility fix: pill now appears when a bet exceeds an all-in; math was correct | 🟢 |
 | HL-8 | All-in ≤ call amount shown as limp/call | ALL-IN labels approved & committed (flash, range-grid line, hand details, PS export; record stays `call`) | 🟢 |
-| HL-8b | Stack ≤ call: raise-snap drag bar still offers raises; drag-down numpad doesn't adapt | When no legal raise exists (stack ≤ toCall) or the only raise is a shove (stack < min-raise), the drag-up bar collapses to a single ALL-IN snap and the numpad locks to the all-in amount | 🟡 |
+| HL-8b | Stack ≤ call: raise-snap drag bar still offers raises; drag-down numpad doesn't adapt | 4 layers: engine `isValidAction(raise)` now false when stack can't exceed the bet; snap ladder drops unaffordable "Min" + collapses to single All-In when shove-only; drag-up with stack ≤ call becomes an all-in CALL gesture (confirm calls, never raises); numpad locks to the all-in amount (shove-only) / never opens (no raise exists). Tests: `raise_gesture_mode_test.dart` | 🟠 |
 
 Deferred: SB-entry / dead-button rules → POKER_SEATING_RULES.md
 

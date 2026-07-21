@@ -566,10 +566,16 @@ class PokerGameState {
         if (currentRound == BettingRound.preflop) {
           return false;
         }
-        // Post-flop: can bet if no one has bet this round
-        return !hasBetThisRound;
-      
+        // Post-flop: can bet if no one has bet this round (and has chips)
+        return !hasBetThisRound && player.currentStack > 0;
+
       case PlayerAction.raise:
+        // HL-8b: a raise must be able to EXCEED the current bet. A player
+        // whose whole stack can't cover the call has only fold / all-in
+        // call — offering "raise" produced illegal below-the-bet raises.
+        if (player.currentStack + player.betThisRound <= currentBet) {
+          return false;
+        }
         // Preflop: can always raise (since BB is always a "bet")
         if (currentRound == BettingRound.preflop) {
           return true;
