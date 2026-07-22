@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:ui' as ui;
 import 'package:http/http.dart' as http;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../config/env_config.dart';
 import 'auth_service.dart';
+import 'locale_service.dart';
 import 'logger_service.dart';
 
 class AIAnalyzerService {
@@ -12,6 +14,19 @@ class AIAnalyzerService {
 
   /// Analyze a poker hand using the backend AI service.
   /// Redirects to analyzeHandFull for full Claude analysis.
+  /// Locales the backend can generate analysis in (mirrors the app's 9).
+  static const _analysisLanguages = {
+    'en', 'de', 'es', 'fr', 'pl', 'pt', 'ro', 'ru', 'uk'
+  };
+
+  /// The language the analysis should be written in: the in-app selection,
+  /// else the device locale, else English.
+  static String get analysisLanguage {
+    final code = LocaleService.currentLocaleCode ??
+        ui.PlatformDispatcher.instance.locale.languageCode;
+    return _analysisLanguages.contains(code) ? code : 'en';
+  }
+
   static Future<Map<String, dynamic>> analyzeHand({
     required String handId,
     required Map<String, dynamic> handData,
@@ -31,6 +46,8 @@ class AIAnalyzerService {
       final requestBody = {
         'handId': handId,
         'handData': handData,
+        // Analysis prose is generated natively in the app's language.
+        'language': analysisLanguage,
         if (opponentContext != null && opponentContext.isNotEmpty)
           'opponentContext': opponentContext,
       };
@@ -233,6 +250,7 @@ class AIAnalyzerService {
           'streetBreakdown': analysis['streetBreakdown'],
           'exploitativeTip': analysis['exploitativeTip'],
           'processingTimeMs': analysis['processingTimeMs'],
+          'language': analysisLanguage,
           'analyzedAt': FieldValue.serverTimestamp(),
         },
       });
