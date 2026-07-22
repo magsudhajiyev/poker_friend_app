@@ -375,11 +375,10 @@ class _RangeGridViewState extends State<RangeGridView>
             ),
           ),
           const SizedBox(height: 8),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            alignment: Alignment.centerLeft,
-            child: _buildPositionBar(),
-          ),
+          // Full-width segmented bar: Expanded segments need bounded width —
+          // never wrap this in FittedBox/horizontal scroll (unbounded width
+          // crashes Expanded). Each segment already scales its own label.
+          _buildPositionBar(),
           const SizedBox(height: 8),
           SizedBox(
             width: double.infinity,
