@@ -7148,16 +7148,23 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     for (int playerId in bustedPlayers) {
       String playerName = sessionManager.getPlayerNameWithPosition(playerId) ?? "${l10n.handPlayerLabel}$playerId";
 
-      // Show rebuy/leave dialog
-      final result = await showDialog<Map<String, dynamic>>(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => _BustedPlayerDialog(
-          playerName: playerName,
-          playerId: playerId,
-          isCashGame: widget.gameType == GameType.cash,
-        ),
-      );
+      // Show rebuy/leave dialog. D5: a busted player MUST be resolved —
+      // barrierDismissible is false, but the system back button can still
+      // pop the dialog with null, which used to leave the player in limbo.
+      // Re-show until an explicit rebuy/leave choice is made.
+      Map<String, dynamic>? result;
+      while (result == null) {
+        if (!mounted) return;
+        result = await showDialog<Map<String, dynamic>>(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => _BustedPlayerDialog(
+            playerName: playerName,
+            playerId: playerId,
+            isCashGame: widget.gameType == GameType.cash,
+          ),
+        );
+      }
 
       if (result != null) {
         if (result['action'] == 'rebuy') {

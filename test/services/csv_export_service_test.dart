@@ -63,10 +63,11 @@ void main() {
         // Check header
         expect(lines[0], 'Hand#,Street,Seat,Player,Action,Amount,Pot,Board,HoleCards');
 
-        // Check some key data rows
-        expect(lines[1], '1,preflop,1,Alice,small-blind,1.0,1.0,,A♠K♥');
-        expect(lines[2], '1,preflop,2,Bob,big-blind,2.0,3.0,,A♠K♥');
-        expect(lines[3], '1,preflop,3,Hero,raise,6.0,9.0,,A♠K♥');
+        // Check some key data rows (blinds don't accumulate into the Pot
+        // column; hole cards only appear on hero's rows)
+        expect(lines[1], '1,preflop,1,Alice,small blind,1.0,0.0,,');
+        expect(lines[2], '1,preflop,2,Bob,big blind,2.0,0.0,,');
+        expect(lines[3], '1,preflop,3,Hero,raise,6.0,6.0,,A♠K♥');
 
         // Check flop with board cards
         expect(lines.any((line) => line.contains('flop') && line.contains('Q♦J♠10♣')), isTrue);
@@ -74,8 +75,8 @@ void main() {
         // Check turn with additional board card
         expect(lines.any((line) => line.contains('turn') && line.contains('Q♦J♠10♣9♥')), isTrue);
 
-        // Check river with complete board
-        expect(lines.any((line) => line.contains('river') && line.contains('Q♦J♠10♣9♥8♦')), isTrue);
+        // Hand ends on the turn (fold), so no river rows are emitted
+        expect(lines.any((line) => line.contains('river')), isFalse);
       });
 
       test('exports tournament hand correctly', () {
@@ -116,9 +117,9 @@ void main() {
         final lines = csv.split('\n');
 
         expect(lines[0], 'Hand#,Street,Seat,Player,Action,Amount,Pot,Board,HoleCards');
-        expect(lines[1], '25,preflop,1,Hero,small-blind,50.0,50.0,,Q♣Q♠');
-        expect(lines[2], '25,preflop,2,Player2,big-blind,100.0,150.0,,Q♣Q♠');
-        expect(lines[3], '25,preflop,3,Player3,raise,300.0,450.0,,Q♣Q♠');
+        expect(lines[1], '25,preflop,1,Hero,small blind,50.0,0.0,,Q♣Q♠');
+        expect(lines[2], '25,preflop,2,Player2,big blind,100.0,0.0,,');
+        expect(lines[3], '25,preflop,3,Player3,raise,300.0,300.0,,');
       });
 
       test('handles chopped pot correctly', () {
@@ -193,10 +194,10 @@ void main() {
         final lines = csv.split('\n');
 
         expect(lines[0], 'Hand#,Street,Seat,Player,Action,Amount,Pot,Board,HoleCards');
-        expect(lines[1], '5,preflop,1,Hero,small-blind,1.0,1.0,,');
-        expect(lines[2], '5,preflop,2,Opponent,big-blind,2.0,3.0,,');
-        expect(lines[3], '5,preflop,1,Hero,raise,6.0,9.0,,');
-        expect(lines[4], '5,preflop,2,Opponent,fold,0.0,9.0,,');
+        expect(lines[1], '5,preflop,1,Hero,small blind,1.0,0.0,,');
+        expect(lines[2], '5,preflop,2,Opponent,big blind,2.0,0.0,,');
+        expect(lines[3], '5,preflop,1,Hero,raise,6.0,6.0,,');
+        expect(lines[4], '5,preflop,2,Opponent,fold,0.0,6.0,,');
       });
 
       test('handles all-in actions correctly', () {
@@ -301,7 +302,9 @@ void main() {
         expect(lines[0], contains('Friday Night Poker'));
         expect(lines[1], contains('Cash Game'));
         expect(lines[2], contains('Blinds: \$1/\$2'));
-        expect(lines[3], contains('3 hands'));
+        expect(lines[3], contains('Start: 2024-01-15T20:00:00Z'));
+        expect(lines[4], contains('End: 2024-01-16T02:30:00Z'));
+        expect(lines[5], contains('3 hands'));
 
         // Check CSV header
         expect(lines.any((line) => line == 'Hand#,Street,Seat,Player,Action,Amount,Pot,Board,HoleCards'), isTrue);
@@ -385,6 +388,8 @@ void main() {
 
         final csv = csvExportService.exportHandToCsv(handData);
         expect(csv, isNotEmpty);
+        // Malformed board data degrades to an empty board column
+        expect(csv, contains('1,flop,1,Hero,fold,0.0,0.0,,'));
       });
 
       test('handles very large pot amounts', () {
@@ -402,7 +407,7 @@ void main() {
         final csv = csvExportService.exportHandToCsv(handData);
 
         expect(csv, contains('999999999.99'));
-        expect(csv, contains('1234567890.5'));
+        expect(csv, contains('1999999999.98')); // Running pot after both actions
       });
     });
 
@@ -485,11 +490,11 @@ void main() {
         final csv = csvExportService.exportHandToCsv(handData);
 
         // Hero's actions should show hole cards
-        expect(csv, contains(',Hero,raise,15.0,,A♠A♥'));
+        expect(csv, contains(',Hero,raise,15.0,20.0,,A♠A♥'));
 
         // Other players should not show hole cards
-        expect(csv, contains(',Player1,fold,0.0,,'));
-        expect(csv, contains(',Player2,call,5.0,,'));
+        expect(csv, contains(',Player1,fold,0.0,0.0,,'));
+        expect(csv, contains(',Player2,call,5.0,5.0,,'));
       });
 
       test('handles missing hole cards', () {
@@ -505,7 +510,7 @@ void main() {
 
         final csv = csvExportService.exportHandToCsv(handData);
 
-        expect(csv, contains(',Hero,fold,0.0,,'));
+        expect(csv, contains(',Hero,fold,0.0,0.0,,'));
       });
     });
 

@@ -954,8 +954,10 @@ class PokerSessionManager {
     // Covers every hand of the tutorial session, not just the scripted one.
     final skipStats = isTutorialSession || OnboardingState.isGuidedHandActive;
 
-    // Always save to local storage first
-    final localHandId = await LocalStorageService.saveHand(
+    // Save to local storage first — but never twice (D2): a retry re-insert
+    // would mint a NEW time-based row id and duplicate the hand locally.
+    final localHandId = hand.localHandId ??
+        await LocalStorageService.saveHand(
       sessionId: sessionId!,
       handNumber: hand.handNumber,
       buttonPosition: hand.buttonPosition,
@@ -1007,6 +1009,13 @@ class PokerSessionManager {
       ));
     }
 
+    // D2: already in Firestore → nothing to retry (a re-save would create a
+    // second hand doc under a new time-based id and re-increment totalHands).
+    if (hand.cloudHandId != null) {
+      hand.markSaved();
+      return;
+    }
+
     try {
       // Try to save to Firebase as well
       final cloudHandId = await FirebaseService.saveHand(
@@ -1050,150 +1059,21 @@ class PokerSessionManager {
 
       hand.cloudHandId = cloudHandId;
       hand.markSaved();
-
-      // Update optimized stats for all participants
-      if (!skipStats) await _updateOptimizedStats(hand);
     } catch (e) {
       await LoggerService.error('Firebase hand save failed, using local fallback', e, StackTrace.current);
       // Mark as saved since we have it locally
       hand.markSaved();
-
-      // Still update optimized stats even if Firebase failed
-      if (!skipStats) await _updateOptimizedStats(hand);
     }
-  }
 
-  /// Update optimized statistics for all participants in the hand
-  Future<void> _updateOptimizedStats(HandRecord hand) async {
-    try {
-      // Get all player names from this hand
-      Set<String> playersInHand = {};
-
-      // Collect all player names who took actions
-      for (final action in hand.actions) {
-        if (action.playerName != null &&
-            action.playerName!.isNotEmpty &&
-            !action.playerName!.toLowerCase().contains('player')) {
-          playersInHand.add(action.playerName!);
-        }
-      }
-
-      // Process each player's actions in this hand
-      for (final playerName in playersInHand) {
-
-        // Calculate stats for this specific hand
-        int vpipDelta = 0;
-        int pfrDelta = 0;
-        int aggressionDelta = 0;
-        int passiveDelta = 0;
-        int foldDelta = 0;
-        int checkDelta = 0;
-        int callDelta = 0;
-        int betDelta = 0;
-        int raiseDelta = 0;
-
-        bool vpipThisHand = false;
-        bool pfrThisHand = false;
-        bool playedPastPreflop = false; // Track if player saw flop/turn/river
-        String currentStreet = 'preflop';
-
-        // Process this player's actions in this hand
-        for (final action in hand.actions) {
-          if (action.playerName == playerName) {
-            // Track street changes
-            if (action.street != null) {
-              currentStreet = action.street!.name.toLowerCase();
-              // If player has action on flop/turn/river, they played past preflop
-              if (currentStreet != 'preflop') {
-                playedPastPreflop = true;
-              }
-            }
-
-            final actionType = action.action.name.toLowerCase();
-
-            // Count action types
-            switch (actionType) {
-              case 'fold':
-                foldDelta++;
-                break;
-              case 'call':
-                callDelta++;
-                passiveDelta++;
-                if (currentStreet == 'preflop' && !vpipThisHand) {
-                  vpipThisHand = true;
-                }
-                break;
-              case 'bet':
-                betDelta++;
-                aggressionDelta++;
-                if (currentStreet == 'preflop') {
-                  if (!vpipThisHand) vpipThisHand = true;
-                  if (!pfrThisHand) pfrThisHand = true;
-                }
-                break;
-              case 'raise':
-                raiseDelta++;
-                aggressionDelta++;
-                if (currentStreet == 'preflop') {
-                  if (!vpipThisHand) vpipThisHand = true;
-                  if (!pfrThisHand) pfrThisHand = true;
-                }
-                break;
-              case 'check':
-                checkDelta++;
-                passiveDelta++;
-                break;
-            }
-          }
-        }
-
-        if (vpipThisHand) {
-          vpipDelta = 1;
-        }
-        if (pfrThisHand) {
-          pfrDelta = 1;
-        }
-
-        // Update opponent stats (incremental)
-        if (playerName.toLowerCase() != 'hero' && playerName.toLowerCase() != 'you') {
-          // Check if this is first time seeing this opponent in this session
-          final isFirstTimeSeen = !opponentsSeenThisSession.contains(playerName);
-          if (isFirstTimeSeen) {
-            opponentsSeenThisSession.add(playerName);
-          }
-
-          await OpponentStatsService.updateStatsIncremental(
-            opponentId: playerName,
-            handsDelta: 1,
-            sessionsDelta: isFirstTimeSeen ? 1 : 0, // Increment session only first time
-            vpipDelta: vpipDelta,
-            pfrDelta: pfrDelta,
-            aggressionDelta: aggressionDelta,
-            passiveDelta: passiveDelta,
-            foldDelta: foldDelta,
-            checkDelta: checkDelta,
-            callDelta: callDelta,
-            betDelta: betDelta,
-            raiseDelta: raiseDelta,
-          );
-        } else {
-          // DO NOT update user stats here - already done in FirebaseService.saveHand()
-          // via _updateUserStatsFromHand(). This block was causing DOUBLE-COUNTING
-          // of stats (stats were being incremented twice per hand).
-          // See: https://github.com/anthropics/claude-code/issues/stats-double-counting
-          //
-          // The correct stats update flow is:
-          // 1. PokerSessionManager._saveHandToFirebase() calls FirebaseService.saveHand()
-          // 2. FirebaseService.saveHand() calls _updateUserStatsFromHand() - INCREMENT #1 (correct)
-          // 3. This _updateOptimizedStats() method should ONLY update opponent stats
-          //
-          // Previously this block also called UserStatsService.updateStatsAtomic() - INCREMENT #2 (DUPLICATE!)
-          // which caused all stats to be ~2x the actual values.
-        }
-      }
-    } catch (e) {
-      await LoggerService.error('Error updating optimized stats', e, StackTrace.current);
-    }
+    // D4 (audit): the old _updateOptimizedStats call here wrote opponent
+    // stats keyed by player NAME — documents nothing ever reads (every
+    // consumer loads opponent_stats/{opponent.id}) — with per-ACTION VPIP
+    // deltas (known-wrong pattern). Opponent stats are updated exactly once,
+    // correctly, inside FirebaseService.saveHand →
+    // updateOpponentStatsFromHand (per-hand booleans, real opponent ids).
+    // Hero stats likewise live ONLY in FirebaseService._updateUserStatsFromHand
+    // — re-adding a hero-stats call here recreates the historical ~2x
+    // double-counting bug.
   }
 
   // Add stack history entry

@@ -35,7 +35,11 @@ Next session: HL-5 (press-hold shown cards + tour step) → audit defects D1-D5,
 All device-approved 2026-07-22. Commits: 8739b82 (HL-1..4,7,8), 47c8007 (HL-8b). Local only — not pushed.
 
 ## Audit-found defects (details in test/HAND_LOGGING_SPEC.md §4)
-D1 UserStats DateTime crash · D2 duplicate hand on save retry · D3 undo call-then-raise ·
-D4 dual opponent-stats path? · D5 busted-dialog dismiss no-op · D9 CSV test drift — all 🔴
+- D1 UserStats DateTime crash 🟠 DONE — tolerant lastUpdated parse (Timestamp/DateTime/missing); BONUS: 'EP'/'MP' added to position whitelist (their position stats were silently dropped). user_stats suites 42/42 green
+- D2 duplicate hand on save retry 🟠 — save is now retry-idempotent: local skipped when localHandId set (re-insert minted a new row id), cloud skipped when cloudHandId set (re-save minted a new doc + re-incremented totalHands)
+- D3 undo call-then-raise 🔴 — deferred (fragile undo surgery, own session)
+- D4 dual opponent-stats path 🟠 — CONFIRMED orphan writes: _updateOptimizedStats wrote opponent_stats keyed by player NAME with per-ACTION vpip deltas; nothing reads name-keyed docs (all consumers load by opponent.id). Dead method removed; opponent stats update exactly once via saveHand path. Zero read-behavior change
+- D5 busted-dialog dismiss no-op 🟠 — dialog re-shows until an explicit rebuy/leave choice (system back could pop it to null)
+- D9 CSV test drift 🟠 DONE — all 3 CSV test files green (49 tests): stale expectations aligned to shipped format (hyphen blind names, blind-excluded pot column, boards only on rows of their street, metadata totalHands, size threshold, always-failing preflop-substring assert). Exporter hardened: never throws on corrupt actions/boards/hole cards, junk amounts degrade to 0, player names CSV-sanitized (RFC 4180 quoting — commas/quotes/newlines can no longer corrupt rows)
 
 ## Earlier fixes: duplicate opponents (2d39996) · Y-axis wrap (629b6b4) · iOS 1.0.3 train (config)

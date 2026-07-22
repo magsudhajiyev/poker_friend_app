@@ -16,8 +16,10 @@ class CSVExportService {
     // Add hand metadata as comment if needed
     if (handData['isChoppedPot'] == true) {
       csv.writeln('# CHOPPED POT - Hand ${handData['handNumber'] ?? 'N/A'}');
-      final winners = handData['choppedWinners'] as List<dynamic>?;
-      final playerNames = handData['playerNames'] as Map<String, dynamic>? ?? {};
+      final winnersRaw = handData['choppedWinners'];
+      final winners = winnersRaw is List ? winnersRaw : null;
+      final namesRaw = handData['playerNames'];
+      final Map playerNames = namesRaw is Map ? namesRaw : const {};
 
       if (winners != null && winners.isNotEmpty) {
         final winnerNames = winners
@@ -26,33 +28,44 @@ class CSVExportService {
         csv.writeln('# Winners: $winnerNames');
       }
 
-      final sharePerWinner = handData['sharePerWinner'] as double?;
+      final shareRaw = handData['sharePerWinner'];
+      final sharePerWinner = shareRaw is num ? shareRaw.toDouble() : null;
       if (sharePerWinner != null) {
         csv.writeln('# Share per winner: \$${sharePerWinner.toStringAsFixed(2)}');
       }
     }
 
-    // Process actions
-    final actions = handData['actions'] as List<dynamic>? ?? [];
-    final playerNames = handData['playerNames'] as Map<String, dynamic>? ?? {};
-    final heroSeat = handData['heroSeatNumber'] as int?;
-    final ourHoleCards = handData['ourHoleCards'] as Map<String, dynamic>?;
-    final boardCards = handData['boardCards'] as Map<String, dynamic>? ?? {};
+    // Process actions. All reads are type-guarded: an export must never
+    // throw on corrupt data (D9) — malformed values degrade gracefully.
+    final actionsRaw = handData['actions'];
+    final actions = actionsRaw is List ? actionsRaw : const [];
+    final playerNamesRaw = handData['playerNames'];
+    final Map playerNames = playerNamesRaw is Map ? playerNamesRaw : const {};
+    final heroSeat =
+        handData['heroSeatNumber'] is int ? handData['heroSeatNumber'] as int : null;
+    final holeRaw = handData['ourHoleCards'];
+    final Map? ourHoleCards = holeRaw is Map ? holeRaw : null;
+    final boardRaw = handData['boardCards'];
+    final Map boardCards = boardRaw is Map ? boardRaw : const {};
 
     double runningPot = 0.0;
 
     for (final actionData in actions) {
-      if (actionData == null) continue;
+      if (actionData is! Map) continue;
 
-      final action = actionData as Map<String, dynamic>;
+      final action = actionData;
       final handNumber = handData['handNumber'] ?? '';
       final street = action['street'] ?? '';
       final seat = action['player'] ?? '';
-      final playerName = action['playerName'] ??
-                        playerNames[seat.toString()] ??
-                        'Seat $seat';
+      final playerName = _sanitizeCsvField((action['playerName'] ??
+              playerNames[seat.toString()] ??
+              'Seat $seat')
+          .toString());
       final actionType = action['action'] ?? '';
-      final amount = (action['amount'] as num?)?.toDouble() ?? 0.0;
+      // Junk amounts (strings, negatives, NaN, Infinity) degrade to 0.
+      final rawAmount = action['amount'];
+      double amount = rawAmount is num ? rawAmount.toDouble() : 0.0;
+      if (!amount.isFinite || amount < 0) amount = 0.0;
 
       // Update running pot
       if (actionType == 'small-blind' || actionType == 'big-blind' ||
@@ -67,8 +80,10 @@ class CSVExportService {
       // Format hole cards (only show for hero)
       String holeCardsStr = '';
       if (heroSeat != null && seat == heroSeat && ourHoleCards != null) {
-        final card1 = ourHoleCards['card1']?.toString() ?? '';
-        final card2 = ourHoleCards['card2']?.toString() ?? '';
+        final c1Raw = ourHoleCards['card1'];
+        final c2Raw = ourHoleCards['card2'];
+        final card1 = c1Raw is String ? c1Raw : '';
+        final card2 = c2Raw is String ? c2Raw : '';
         if (card1.isNotEmpty && card2.isNotEmpty) {
           holeCardsStr = '$card1$card2';
         }
@@ -137,11 +152,26 @@ class CSVExportService {
     return csv.toString();
   }
 
+  /// CSV field sanitizer: newlines/tabs become spaces; fields containing
+  /// commas or quotes are quoted (RFC 4180) so player names can never
+  /// corrupt the row structure.
+  String _sanitizeCsvField(String value) {
+    var v = value.replaceAll(RegExp(r'[\n\r\t]+'), ' ');
+    if (v.contains(',') || v.contains('"')) {
+      v = '"' + v.replaceAll('"', '""') + '"';
+    }
+    return v;
+  }
+
   /// Format board cards for a specific street
-  String _formatBoardForStreet(Map<String, dynamic> boardCards, String street) {
-    final flop = boardCards['flop'] as List<dynamic>?;
-    final turn = boardCards['turn']?.toString();
-    final river = boardCards['river']?.toString();
+  String _formatBoardForStreet(Map boardCards, String street) {
+    // Malformed board data (wrong types) degrades to an empty board column
+    final flopRaw = boardCards['flop'];
+    final flop = flopRaw is List ? flopRaw : null;
+    final turnRaw = boardCards['turn'];
+    final turn = turnRaw is String ? turnRaw : null;
+    final riverRaw = boardCards['river'];
+    final river = riverRaw is String ? riverRaw : null;
 
     switch (street.toLowerCase()) {
       case 'preflop':

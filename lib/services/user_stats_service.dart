@@ -140,7 +140,7 @@ class UserStatsService {
   /// Known safe position names that can be used as Firestore map keys.
   static const _safePositionNames = {
     'BTN', 'SB', 'BB', 'UTG', 'UTG+1', 'UTG+2',
-    'LJ', 'HJ', 'CO', 'BTN/SB', 'Empty',
+    'EP', 'MP', 'LJ', 'HJ', 'CO', 'BTN/SB', 'Empty',
     'P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8', 'P9',
   };
 
