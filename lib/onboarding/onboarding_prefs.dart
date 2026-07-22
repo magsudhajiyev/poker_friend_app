@@ -9,6 +9,7 @@ class OnboardingPrefs {
   static const _paywallPendingField = 'postTourPaywallPending';
   static const _signupRequiredField = 'postTourSignupRequired';
   static const _bankrollTourField = 'bankrollTourPending';
+  static const _wrapUpPendingField = 'postTourWrapUpPending';
 
   static String? get _userId => FirebaseAuth.instance.currentUser?.uid;
 
@@ -135,4 +136,18 @@ class OnboardingPrefs {
 
   static Future<void> clearBankrollTourPending() =>
       _writeFlag(_bankrollTourField, false);
+
+  // ── Post-tour wrap-up (completion dialog + paywall) ────────────────
+  // The tour ends away from Home, but its final beats — bankroll step →
+  // "you're done" dialog → paywall — run ON Home. Persisted so an app
+  // kill between tour end and the wrap-up can't lose them.
+
+  static Future<bool> isPostTourWrapUpPending() =>
+      _readFlag(_wrapUpPendingField, onError: false);
+
+  static Future<void> setPostTourWrapUpPending() =>
+      _writeFlag(_wrapUpPendingField, true);
+
+  static Future<void> clearPostTourWrapUpPending() =>
+      _writeFlag(_wrapUpPendingField, false);
 }

@@ -4678,7 +4678,7 @@
   "guidedDealRiverTitle": "Роздайте River",
   "guidedDealRiverBody": "Виберіть 1 карту для риверу.",
   "guidedStackRingTitle": "Діапазон стеку",
-  "guidedStackRingBody": "Натисніть та утримуйте кільце, обертайте пальцем, щоб обрати діапазон стеку, а потім відпустіть. Це допомагає задати стеки суперників перед флопом.",
+  "guidedStackRingBody": "Утримуйте місце гравця, щоб відкрити кільце стека, поверніть палець, щоб вибрати розмір, і відпустіть, щоб застосувати.",
   "guidedTableButtonTitle": "Керування столом",
   "guidedTableButtonBody": "Торкніться цієї кнопки, щоб керувати гравцями, оновлювати стеки, змінювати розсадку або переміщувати кнопку дилера.",
   "guidedBlindsPillTitle": "Blinds",
@@ -5449,5 +5449,9 @@
   "pokerHandDiscardAndChangeTable": "Скасувати та змінити стіл",
   "handShownCardsDialogTitle": "Показані карти",
   "handRecordShownCards": "Записати показані карти",
-  "handShownCardsWhoShowed": "Хто показав карти?"
+  "handShownCardsWhoShowed": "Хто показав карти?",
+  "paywallPriceYearly": "{price}/рік",
+  "paywallPriceMonthly": "{price}/міс.",
+  "paywallOrPriceMonthly": "або {price}/міс.",
+  "paywallOrPriceYearly": "або {price}/рік"
 }

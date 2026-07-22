@@ -360,22 +360,38 @@ class _RangeGridViewState extends State<RangeGridView>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              _buildGameTypeToggle(),
-              const Spacer(),
-              _buildStackSelector(),
-            ],
+          // Full-width Wraps instead of Row+Spacer: long translations make
+          // the trailing group flow to a second line instead of overflowing.
+          SizedBox(
+            width: double.infinity,
+            child: Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              runSpacing: 8,
+              children: [
+                _buildGameTypeToggle(),
+                _buildStackSelector(),
+              ],
+            ),
           ),
           const SizedBox(height: 8),
-          _buildPositionBar(),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: _buildPositionBar(),
+          ),
           const SizedBox(height: 8),
-          Row(
-            children: [
-              _buildScenarioBar(),
-              const Spacer(),
-              _buildActionChips(),
-            ],
+          SizedBox(
+            width: double.infinity,
+            child: Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              runSpacing: 8,
+              children: [
+                _buildScenarioBar(),
+                _buildActionChips(),
+              ],
+            ),
           ),
         ],
       ),

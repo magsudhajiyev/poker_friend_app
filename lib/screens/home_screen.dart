@@ -203,7 +203,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         }
       }
 
-      // Post-tour bankroll card tip — shown once after completing the tour
+      // Post-tour bankroll card tip — the tour's LAST step, chained into
+      // the wrap-up ("you're done" dialog + paywall) when one is pending.
       if (await OnboardingPrefs.isBankrollTourPending()) {
         if (!mounted) return;
         // Wait for bankroll card to render
@@ -213,8 +214,18 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           if (_bankrollCardKey.currentContext != null) break;
         }
         if (mounted && _bankrollCardKey.currentContext != null) {
-          BankrollCardTour(bankrollCardKey: _bankrollCardKey).show(context);
+          BankrollCardTour(
+            bankrollCardKey: _bankrollCardKey,
+            onDone: _tourBankrollSetupThenWrapUp,
+          ).show(context);
+        } else {
+          // Card never rendered — don't strand the wrap-up.
+          await _maybeShowTourWrapUp();
         }
+      } else if (await OnboardingPrefs.isPostTourWrapUpPending()) {
+        // Bankroll tip already done (or app killed between the two) —
+        // resume the wrap-up on its own.
+        await _maybeShowTourWrapUp();
       }
       return;
     }
@@ -231,6 +242,36 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     OnboardingState.start();
     setState(() {}); // refresh to show progress bar
     HomeTour(fabKey: fabKey).show(context);
+  }
+
+  /// Tour's bankroll step, interactive: after the card tip, open the
+  /// bankroll editor and WAIT for the user to save; re-render the saved
+  /// values, then show the finishing step ("you're done" + paywall).
+  Future<void> _tourBankrollSetupThenWrapUp() async {
+    if (!mounted) return;
+    final saved = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => BankrollEditScreen(
+          initialBankroll: currentBankroll,
+          initialGoal: bankrollGoal,
+        ),
+      ),
+    );
+    if (!mounted) return;
+    if (saved == true) {
+      _loadData(); // render the freshly saved bankroll behind the dialog
+      await Future.delayed(const Duration(milliseconds: 600));
+      if (!mounted) return;
+    }
+    await _maybeShowTourWrapUp();
+  }
+
+  /// Post-tour wrap-up: "you're done" dialog + once-ever paywall, chained
+  /// after the bankroll-card step (the tour's final beat).
+  Future<void> _maybeShowTourWrapUp() async {
+    if (!await OnboardingPrefs.isPostTourWrapUpPending()) return;
+    if (!mounted) return;
+    await showPostTourWrapUp(context);
   }
 
   void _loadBankrollVisibility() async {

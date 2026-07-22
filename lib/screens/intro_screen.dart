@@ -3,8 +3,6 @@ import '../design_system/constants/colors.dart';
 import '../design_system/constants/decorations.dart';
 import '../design_system/constants/typography.dart';
 import '../l10n/app_localizations.dart';
-import '../services/auth_service.dart';
-import '../utils/user_facing_error.dart';
 import 'auth_screen_experimental.dart';
 
 class IntroScreen extends StatefulWidget {
@@ -15,41 +13,12 @@ class IntroScreen extends StatefulWidget {
 class _IntroScreenState extends State<IntroScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
-  bool _isStartingGuest = false;
   static const int _totalPages = 4;
 
   @override
   void dispose() {
     _pageController.dispose();
     super.dispose();
-  }
-
-  /// Guest entry — anonymous auth. Mirrors the email/Google/Apple sign-in
-  /// paths: after auth succeeds we reset the stack to '/', which rebuilds
-  /// AuthWrapper from scratch and routes into the onboarding flow. Relying on
-  /// the auth stream alone is not enough — this IntroScreen may itself be a
-  /// pushed route (e.g. after sign-out), which would hide the rebuild.
-  Future<void> _startAsGuest() async {
-    if (_isStartingGuest) return;
-    setState(() => _isStartingGuest = true);
-    try {
-      final credential = await AuthService.signInAnonymously();
-      if (credential?.user != null && mounted) {
-        Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
-        return;
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(UserFacingError.message(e)),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _isStartingGuest = false);
-    }
   }
 
   void _goToPage(int page) {
@@ -216,12 +185,22 @@ class _IntroScreenState extends State<IntroScreen> {
           ),
           const Spacer(flex: 2),
 
-          // Get Started Button (guest — no account needed)
+          // Get Started Button — sign-up first (hard gate): the guided tour
+          // and the whole app run on a real account. Plain push so the back
+          // arrow returns here.
           SizedBox(
             width: double.infinity,
             height: 56,
             child: ElevatedButton(
-              onPressed: _isStartingGuest ? null : _startAsGuest,
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        AuthScreenExperimental(initialIsSignUp: true),
+                  ),
+                );
+              },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white,
                 foregroundColor: AppColors.bgPrimary,
@@ -231,26 +210,17 @@ class _IntroScreenState extends State<IntroScreen> {
                 ),
                 elevation: 0,
               ),
-              child: _isStartingGuest
-                  ? const SizedBox(
-                      width: 22,
-                      height: 22,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2.5,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.black),
-                      ),
-                    )
-                  : Text(
-                      l10n.introGetStarted,
-                      style: AppTypography.buttonText().copyWith(fontSize: 16),
-                    ),
+              child: Text(
+                l10n.introGetStarted,
+                style: AppTypography.buttonText().copyWith(fontSize: 16),
+              ),
             ),
           ),
 
           const SizedBox(height: 16),
 
-          // Log In link — for returning users. New users who want a classic
-          // account (instead of guest) can toggle to sign-up from here.
+          // Log In link — for returning users (toggle to sign-up available
+          // on the auth screen).
           Center(
             child: GestureDetector(
               onTap: () {

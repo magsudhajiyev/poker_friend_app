@@ -1843,7 +1843,13 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
           key: _guidedOverlayKey,
           gestureInfoKey: _gestureInfoKey,
           skipButtonKey: _skipButtonKey,
-          stackRingKey: _stackRingKey,
+          opponentSeatKey: () {
+            final hero = sessionManager.ourSeatNumber;
+            for (final s in sessionManager.activeSeats) {
+              if (s != hero) return _seatAnchorKeys[s - 1];
+            }
+            return null;
+          },
           tableButtonKey: _tableButtonKey,
           blindsPillKey: _blindsPillKey,
           nextHandButtonKey: _nextHandButtonKey,

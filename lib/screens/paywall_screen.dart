@@ -523,18 +523,18 @@ class _PaywallScreenState extends State<PaywallScreen> {
   String _tierPrimaryPrice(String monthlyId, String annualId,
       AppLocalizations l10n, String monthlyFallback, String annualFallback) {
     if (_isAnnual) {
-      return '${_priceOf(annualId, annualFallback)}/year';
+      return l10n.paywallPriceYearly(_priceOf(annualId, annualFallback));
     }
-    return '${_priceOf(monthlyId, monthlyFallback)}/month';
+    return l10n.paywallPriceMonthly(_priceOf(monthlyId, monthlyFallback));
   }
 
   /// Secondary price line (the smaller "or …" alternate period).
   String _tierSecondaryPrice(String monthlyId, String annualId,
       AppLocalizations l10n, String monthlyFallback, String annualFallback) {
     if (_isAnnual) {
-      return 'or ${_priceOf(monthlyId, monthlyFallback)}/month';
+      return l10n.paywallOrPriceMonthly(_priceOf(monthlyId, monthlyFallback));
     }
-    return 'or ${_priceOf(annualId, annualFallback)}/year';
+    return l10n.paywallOrPriceYearly(_priceOf(annualId, annualFallback));
   }
 
   Widget _buildPlanCards(AppLocalizations l10n) {

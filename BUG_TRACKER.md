@@ -34,6 +34,11 @@ Next session: HL-5 (press-hold shown cards + tour step) → audit defects D1-D5,
 
 All device-approved 2026-07-22. Commits: 8739b82 (HL-1..4,7,8), 47c8007 (HL-8b). Local only — not pushed.
 
+## Features in flight
+- GS-1 Sign-up-first get-started flow 🟠 — guest mode removed for new users: intro "Get Started" → register screen; AuthWrapper routes ALL anonymous sessions to the hard gate (stray guests upgraded in place). Order (v2 per owner): signup → onboarding (username+survey via startup gate — username guaranteed: fresh docs carry hasSetUsername:false) → tour auto-starts on Home → tour ends → bankroll step (BankrollCardTour) → "you're done" dialog → once-ever paywall (new postTourWrapUpPending flag, kill-resume safe). Guest machinery kept dormant
+
+- GS-2 Stack-ring tour step 🟠 — discovered the existing stack-ring coach mark NEVER fired (targeted a StackRangeCircle widget that never renders during the guided hand; also absent from the tour reference step list). Moved to a deterministic slot: post-hand-1 coach marks now run Stack ring (hold opponent seat, circle spotlight) → Blinds pill → Next Hand → Undo. Copy rewritten to teach the press-and-hold entry (8 locales). Diary reference updated
+
 ## Audit-found defects (details in test/HAND_LOGGING_SPEC.md §4)
 - D1 UserStats DateTime crash 🟠 DONE — tolerant lastUpdated parse (Timestamp/DateTime/missing); BONUS: 'EP'/'MP' added to position whitelist (their position stats were silently dropped). user_stats suites 42/42 green
 - D2 duplicate hand on save retry 🟠 — save is now retry-idempotent: local skipped when localHandId set (re-insert minted a new row id), cloud skipped when cloudHandId set (re-save minted a new doc + re-incremented totalHands)

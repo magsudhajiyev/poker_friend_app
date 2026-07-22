@@ -4296,7 +4296,7 @@
   "guidedDealFlopTitle": "Distribuir o Flop",
   "guidedDealRiverBody": "Selecione 1 carta para o River.",
   "guidedStackRingTitle": "Faixa de Stack",
-  "guidedStackRingBody": "Pressione e segure o anel, gire o dedo para selecionar uma faixa de stack e solte. Isso ajuda a configurar os stacks dos oponentes antes do flop.",
+  "guidedStackRingBody": "Mantenha pressionado o assento de um jogador para abrir o anel de stack, gire o dedo para definir o tamanho e solte para aplicar.",
   "guidedTableButtonTitle": "Gerenciar Mesa",
   "guidedTableButtonBody": "Toque neste botão para gerenciar jogadores, atualizar stacks, trocar assentos ou mover o botão do dealer.",
   "guidedBlindsPillTitle": "Blinds",
@@ -5442,5 +5442,9 @@
   "pokerHandDiscardAndChangeTable": "Descartar e mudar de mesa",
   "handShownCardsDialogTitle": "Cartas mostradas",
   "handRecordShownCards": "Registrar cartas mostradas",
-  "handShownCardsWhoShowed": "Quem mostrou as cartas?"
+  "handShownCardsWhoShowed": "Quem mostrou as cartas?",
+  "paywallPriceYearly": "{price}/ano",
+  "paywallPriceMonthly": "{price}/mês",
+  "paywallOrPriceMonthly": "ou {price}/mês",
+  "paywallOrPriceYearly": "ou {price}/ano"
 }

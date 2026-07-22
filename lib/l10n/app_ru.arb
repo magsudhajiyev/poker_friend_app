@@ -4112,7 +4112,7 @@
   "guidedDealFlopTitle": "Сдать Flop",
   "guidedDealRiverBody": "Выберите 1 карту для River.",
   "guidedStackRingTitle": "Диапазон Стека",
-  "guidedStackRingBody": "Нажмите и удерживайте кольцо, поверните палец, чтобы выбрать диапазон стека, затем отпустите. Это помогает настроить стеки соперников до флопа.",
+  "guidedStackRingBody": "Удерживайте место игрока, чтобы открыть кольцо стека, поверните палец, чтобы выбрать размер, и отпустите, чтобы применить.",
   "guidedTableButtonTitle": "Управление Столом",
   "guidedTableButtonBody": "Нажмите на эту кнопку, чтобы управлять игроками, обновить стеки, изменить рассадку или переместить кнопку дилера.",
   "guidedBlindsPillTitle": "Блайнды",
@@ -5442,5 +5442,9 @@
   "pokerHandDiscardAndChangeTable": "Отменить и сменить стол",
   "handShownCardsDialogTitle": "Показанные карты",
   "handRecordShownCards": "Записать показанные карты",
-  "handShownCardsWhoShowed": "Кто показал карты?"
+  "handShownCardsWhoShowed": "Кто показал карты?",
+  "paywallPriceYearly": "{price}/год",
+  "paywallPriceMonthly": "{price}/мес.",
+  "paywallOrPriceMonthly": "или {price}/мес.",
+  "paywallOrPriceYearly": "или {price}/год"
 }

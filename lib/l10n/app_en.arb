@@ -4678,7 +4678,7 @@
   "guidedDealRiverTitle": "Deal the River",
   "guidedDealRiverBody": "Select 1 card for the river.",
   "guidedStackRingTitle": "Stack Range",
-  "guidedStackRingBody": "Press and hold the ring, rotate your finger to select a stack range, then release. This helps you set up opponents' stacks before the flop.",
+  "guidedStackRingBody": "Press and hold a player's seat to open the stack ring, then rotate your finger to set their stack size — release to apply.",
   "guidedTableButtonTitle": "Manage Table",
   "guidedTableButtonBody": "Tap this button to manage players, update stacks, change seating, or move the dealer button.",
   "guidedBlindsPillTitle": "Blinds",
@@ -5449,5 +5449,37 @@
   "pokerHandDiscardAndChangeTable": "Discard & Change Table",
   "handShownCardsDialogTitle": "Shown Cards",
   "handRecordShownCards": "Record shown cards",
-  "handShownCardsWhoShowed": "Who showed their cards?"
+  "handShownCardsWhoShowed": "Who showed their cards?",
+  "paywallPriceYearly": "{price}/year",
+  "@paywallPriceYearly": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "paywallPriceMonthly": "{price}/month",
+  "@paywallPriceMonthly": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "paywallOrPriceMonthly": "or {price}/month",
+  "@paywallOrPriceMonthly": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "paywallOrPriceYearly": "or {price}/year",
+  "@paywallOrPriceYearly": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  }
 }

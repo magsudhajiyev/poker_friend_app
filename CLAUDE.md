@@ -45,6 +45,7 @@ flutter clean && flutter pub get
 ## Project Rules
 - **DO NOT push to git unless explicitly asked by user**
 - **DO NOT commit unless explicitly asked by user**
+- **Authoritative docs**: `BUG_TRACKER.md` (live status of hand-logging bugs + features in flight), `test/HAND_LOGGING_SPEC.md` (hand-logging behaviour spec + bug diagnoses), `POKER_SEATING_RULES.md` (seating/dead-button rules). Check these before touching hand-logging code.
 - Always check `/diary` folder for previously solved bugs before implementing fixes. Treat every entry there as authoritative documentation of the current behaviour — respect it and do not break it. **In particular, `/diary/2026-07-15-in-app-tour-complete-reference.md` is the canonical reference for the in-app tour flow: any change touching onboarding, guided overlays, tour phases, `OnboardingState`, `guided_hand_overlay`, `onboarding_tour`, or the screens the tour highlights (home, session details, poker hand, session end) must preserve the behaviour documented there.**
 - Create diary entry after user confirms a fix
 - Never commit debug logging, unnecessary files, or unstabilized code
@@ -93,7 +94,7 @@ flutter clean && flutter pub get
 - **Voice Recognition**: Deepgram ASR via backend "Dealer Brain" endpoint
 - **Payments**: RevenueCat SDK
 - **State Management**: StatefulWidget pattern (no Provider/BLoC/Riverpod — **exception**: the dealer voice pipeline uses `flutter_bloc` via `lib/features/dealer_voice/cubit/`)
-- **Localization**: Flutter's built-in `gen-l10n` system; `.arb` files in `lib/l10n/`; supported: EN, DE, ES, FR, PT, RU, PL. Use `AppLocalizations.of(context)` — never hardcode UI strings.
+- **Localization**: Flutter's built-in `gen-l10n` system; `.arb` files in `lib/l10n/`; supported: EN, DE, ES, FR, PT, RO, RU, PL, UK. Use `AppLocalizations.of(context)` — never hardcode UI strings.
 
 ### Data Flow
 1. User logs hand actions during gameplay
@@ -123,6 +124,8 @@ Four tiers — check via `SubscriptionService`:
 - **Club** (`isClub`/`isPremium`): like Elite + club creation rights (owner pays; club members operate freely regardless of their own tier)
 
 Feature gates live in `lib/services/free_tier_limits.dart` (hand/opponent caps) and `lib/services/feature_flag_service.dart` (remote Firestore flags for `training_drills`, `ai_hand_analysis`). Use `FreeTierLimits.showHandsLimitDialog()` / `PaywallScreen.show()` for upgrade prompts.
+
+**Partner grants** (`lib/services/partner_grant_service.dart`): super-admin can grant users a free tier (Pro/Elite/Club) with expiry (1 week / 1 month / 3 months). `partnerTier` getter returns `null` for expired grants client-side; `init()` awaits the first Firestore snapshot (3s timeout) and must be `await`ed in sign-in paths (not `unawaited`) or the user briefly appears free-tier. Admin UI: `lib/screens/admin/partner_grants_screen.dart`. See `diary/2026-07-08-partner-grants-system.md`.
 
 ### Caching Pattern (`lib/services/app_data_cache.dart`)
 `AppDataCache` is a static dirty-flag cache. Screens serve from cache if clean; write points (`saveHand`, `endSession`, bankroll/opponent changes) call `markHomeDirty()` / `markSessionsDirty()` / etc. **Always call the appropriate `mark*Dirty()` after any write** or the next screen visit will show stale data.
@@ -216,6 +219,11 @@ Top offenders still to migrate (Phase 4): `dealer/dealer_table_screen` (158), `p
 - Support chopped pots (multiple winners) and side pots
 - Undo last action with full state restoration
 - Navigation confirmation dialog prevents accidental data loss
+
+### 1b. Live Scouting Mode
+- Opt-in setting (`SkipHandScoutingService`, gated behind the `training_drills` feature flag): when the hero folds preflop, the logger enters scouting mode — keep logging opponents' real preflop actions (type-only, no bet sizes) and finish the hand early
+- Saved as a preflop-only record with `isScouted: true`; feeds **opponent** stats (incl. winner → Showdown stat) but hero stat gating is split so scouted hands don't distort hero postflop stats
+- Entry points: `poker_hand_screen.dart` `_scoutingMode` / `_finishScoutedHand`
 
 ### 2. Individual Session Tracking (Quick Logging)
 - Quick profit/loss tracking without full hand details
@@ -315,6 +323,19 @@ Classifies based on VPIP, PFR, 3-bet%, AF thresholds:
 - Firestore Snapshot listeners as primary, WebSocket for fast broadcasting
 - Fallback: Firestore-based rankings when backend unavailable
 
+### 11. Training Drills
+- GTO practice drills (gated by `training_drills` feature flag): open-raise/3-bet/blind-defend charts, Nash push-fold
+- Engine/grading/data in `lib/services/drill_*.dart`; screens in `lib/screens/training/` (`drill_setup_screen`, `drill_table_screen`)
+- Tests: `test/services/drill_*_test.dart`
+
+### 12. Range Grid
+- `RangeGridService` (`lib/services/range_grid_service.dart`) indexes hero hands into a 13×13 range grid; dedupe key `{sessionId}:{handNumber}` merges local SQLite and Firestore copies of the same hand; cloud backfill via `range_grid_cloud_backfill.dart`
+
+### 13. In-App Tour / Onboarding
+- Guided first-hand tour lives in `lib/onboarding/` (`onboarding_tour.dart`, `guided_hand_overlay.dart`, `onboarding_state.dart`)
+- Tour hands are NOT persisted (`OnboardingState.isGuidedHandActive` guard in save path)
+- **Canonical reference: `diary/2026-07-15-in-app-tour-complete-reference.md`** — see Project Rules
+
 ---
 
 ## Data Structures
@@ -347,7 +368,8 @@ Classifies based on VPIP, PFR, 3-bet%, AF thresholds:
   'gameType': String,  // 'cash' or 'tournament'
   'isChoppedPot': bool?, 'choppedWinners': List<int>?,
   'individualShares': Map<int, double>?, 'sharePerWinner': double?,
-  'isStarred': bool?, 'tags': List<String>?, 'notes': String?
+  'isStarred': bool?, 'tags': List<String>?, 'notes': String?,
+  'isScouted': bool?  // preflop-only scouting record (hero folded, opponents logged)
 }
 ```
 
@@ -484,6 +506,11 @@ saveHand() called
 | DeepLinkService | `lib/services/deep_link_service.dart` | Email invitation deep links |
 | AiAnalyzerService | `lib/services/ai_analyzer_service.dart` | Hand analysis API calls |
 | FeatureFlagService | `lib/services/feature_flag_service.dart` | Global remote feature flags (Firestore `app_config/feature_flags`, super-admin toggles on Profile, offline cache). Gated: training_drills, ai_hand_analysis |
+| PartnerGrantService | `lib/services/partner_grant_service.dart` | Admin-granted free tiers with expiry (see Subscription section) |
+| SkipHandScoutingService | `lib/services/skip_hand_scouting_service.dart` | On/off toggle for live scouting mode |
+| RangeGridService | `lib/services/range_grid_service.dart` | Hero hand range-grid index (local+cloud dedupe) |
+| StatsVerificationService | `lib/services/stats_verification_service.dart` | Debug audit: recompute stats from raw hands, print report |
+| Drill services | `lib/services/drill_*.dart` | Training drills: engine, grader, GTO charts, Nash push-fold |
 
 ---
 
@@ -523,6 +550,9 @@ saveHand() called
 | Profile | `lib/screens/profile_screen.dart` | User profile, bankroll |
 | Seat Setup | `lib/screens/seat_setup_screen.dart` | Table config with visual layout |
 | Logging Mode | `lib/screens/logging_mode_selection_screen.dart` | Full vs quick logging |
+| Session Setup | `lib/screens/unified_session_setup_screen.dart` | Unified full/quick session setup |
+| Paywall | `lib/screens/paywall_screen.dart` | 3 paid tiers, `preselectedTier` param |
+| Admin | `lib/screens/admin/` | Partner grants, club requests, support requests (super-admin only) |
 | Earnings Chart | `lib/screens/earnings_chart_screen.dart` | Landscape zoom/pan chart |
 | Dealer Table | `lib/screens/dealer/dealer_table_screen.dart` | Dealer voice + manual logging |
 | Club Dashboard | `lib/screens/club/club_dashboard_screen.dart` | Club overview, events |
@@ -591,6 +621,13 @@ seat_assignments/{id}/
 
 user_notifications/{notificationId}/
   (club notifications for specific users)
+
+partner_grants/{grantId}/
+  userId, tier, status ('active'|'expired'|'revoked'), expiresAt (Timestamp)
+
+app_admins/{userId}/          — super-admin allowlist
+club_requests/{requestId}/    — club registration requests (admin approves)
+support_requests/{requestId}/ — in-app support requests
 ```
 
 ---
@@ -684,6 +721,9 @@ Tests are organized in subdirectories mirroring `lib/`:
 - `test/utils/user_facing_error_test.dart` — Error message mapping
 - `test/fixtures/mock_hand_actions.dart` — Shared test fixtures
 - `test/multi_pot_dialog_selection_test.dart` — Dialog selection logic
+- `test/HAND_LOGGING_SPEC.md` — hand-logging behaviour spec (bug diagnoses live here, not in code comments)
+- Hand-logging regression suite: `hand_logging_edge_cases_test.dart`, `raise_gesture_mode_test.dart`, `seating_boundary_test.dart`, `shown_cards_test.dart`, `table_change_discard_test.dart`, `side_pot_display_test.dart`
+- `test/onboarding_state_test.dart` — tour state machine
 
 ### Testing Checklist
 - [ ] Test with both cash and tournament games
@@ -743,6 +783,6 @@ flutter test test/services/stats_calculator_test.dart
 
 ---
 
-**Last Updated**: March 2026
+**Last Updated**: July 2026
 **Maintained by**: User + Claude
 **Update this file**: After major feature additions, architectural changes, or new bug patterns

@@ -54,7 +54,10 @@ String _actionLabel(AppLocalizations l10n, PlayerAction a) {
 class GuidedHandOverlay extends StatefulWidget {
   final GlobalKey gestureInfoKey;
   final GlobalKey? skipButtonKey;
-  final GlobalKey? stackRingKey;
+  /// Resolver for an opponent's seat anchor — the press-and-hold target of
+  /// the stack-ring coach mark shown after hand 1 (resolved lazily because
+  /// seats are assigned during the session, not at overlay construction).
+  final GlobalKey? Function()? opponentSeatKey;
   final GlobalKey? tableButtonKey;
   final GlobalKey? blindsPillKey;
   final GlobalKey? nextHandButtonKey;
@@ -99,7 +102,7 @@ class GuidedHandOverlay extends StatefulWidget {
     super.key,
     required this.gestureInfoKey,
     this.skipButtonKey,
-    this.stackRingKey,
+    this.opponentSeatKey,
     this.tableButtonKey,
     this.blindsPillKey,
     this.nextHandButtonKey,
@@ -534,79 +537,6 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
     }
   }
 
-  // ---------------------------------------------------------------------------
-  // Stack Range Ring Coach Mark
-  // ---------------------------------------------------------------------------
-
-  void _showStackRingCoachMark(VoidCallback onDone) {
-    final ringKey = widget.stackRingKey;
-    if (ringKey == null) {
-      onDone();
-      return;
-    }
-
-    // Hide the floating overlay while coach mark is visible
-    _animController.reverse();
-
-    // Wait for widget tree to rebuild (current player may have just changed,
-    // so StackRangeCircle might not be in the tree yet).
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Future.delayed(const Duration(milliseconds: 300), () {
-        if (!mounted) return;
-        if (ringKey.currentContext == null) {
-          // Key still not rendered — allow retry on next scriptedAction
-          _animController.forward();
-          onDone();
-          return;
-        }
-
-        _stackRingTourShown = true;
-
-        final l10n = AppLocalizations.of(context);
-        final targets = <TargetFocus>[
-          TargetFocus(
-            identify: 'stack_ring',
-            keyTarget: ringKey,
-            shape: ShapeLightFocus.Circle,
-            paddingFocus: 20,
-            contents: [
-              TargetContent(
-                align: ContentAlign.top,
-                builder: (context, controller) {
-                  return buildTooltip(
-                    title: l10n.guidedStackRingTitle,
-                    body: l10n.guidedStackRingBody,
-                    onNext: () => controller.next(),
-                    context: context,
-                    isLast: true,
-                  );
-                },
-              ),
-            ],
-          ),
-        ];
-
-        final coach = TutorialCoachMark(
-          targets: targets,
-          colorShadow: Colors.black,
-          opacityShadow: 0.85,
-          paddingFocus: 12,
-          hideSkip: true,
-          onFinish: () {
-            _animController.forward();
-            onDone();
-          },
-          onSkip: () {
-            _animController.forward();
-            onDone();
-            return true;
-          },
-        );
-        coach.show(context: context);
-      });
-    });
-  }
-
   void _beginScriptedHand() {
     if (!mounted) return;
     _animController.forward();
@@ -768,7 +698,41 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
 
     final targets = <TargetFocus>[];
 
-    // 1. Blinds pill
+    // 1. Stack ring — press-and-hold an opponent's seat (deterministic slot:
+    // the hand is over, all seats are rendered and idle).
+    final seatKey = widget.opponentSeatKey?.call();
+    // The seat lives inside two nested RotatedBoxes (table 270°, seat 90°) —
+    // keyTarget math mis-places the spotlight there, so pass the true
+    // transformed rect instead.
+    final seatPos =
+        seatKey == null ? null : transformedTargetPosition(seatKey, inflate: 4);
+    if (!_stackRingTourShown && seatPos != null) {
+      _stackRingTourShown = true;
+      targets.add(
+        TargetFocus(
+          identify: 'stack_ring_seat',
+          targetPosition: seatPos,
+          shape: ShapeLightFocus.Circle,
+          paddingFocus: 14,
+          contents: [
+            TargetContent(
+              align: ContentAlign.bottom,
+              builder: (context, controller) {
+                final l10n = AppLocalizations.of(context);
+                return buildTooltip(
+                  title: l10n.guidedStackRingTitle,
+                  body: l10n.guidedStackRingBody,
+                  onNext: () => controller.next(),
+                  context: context,
+                );
+              },
+            ),
+          ],
+        ),
+      );
+    }
+
+    // 2. Blinds pill
     final blindsKey = widget.blindsPillKey;
     if (blindsKey != null && blindsKey.currentContext != null) {
       targets.add(
@@ -994,17 +958,6 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
 
   void _setPhase(GuidedPhase phase) {
     if (!mounted) return;
-
-    // Show stack ring coach mark the first time a non-hero player is about to act
-    if (phase == GuidedPhase.scriptedAction &&
-        !_stackRingTourShown &&
-        widget.currentRound == BettingRound.preflop) {
-      _showStackRingCoachMark(() {
-        _doSetPhase(phase);
-      });
-      return;
-    }
-
     _doSetPhase(phase);
   }
 

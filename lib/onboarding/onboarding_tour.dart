@@ -706,8 +706,7 @@ class ButtonTokenTour {
 /// only now do we ask them to create an account (hard gate), answer the
 /// onboarding questions, and see the paywall. A user who already had an account
 /// before the tour keeps the original behavior (dialog → paywall → Home).
-Future<void> finishOnboardingTour(BuildContext context,
-    {bool showPaywall = true}) async {
+Future<void> finishOnboardingTour(BuildContext context) async {
   OnboardingState.complete();
   OnboardingPrefs.markOnboardingSeen();
   OnboardingPrefs.setBankrollTourPending();
@@ -721,6 +720,36 @@ Future<void> finishOnboardingTour(BuildContext context,
     await OnboardingPrefs.setPostTourSignupRequired();
   }
 
+  if (isGuest) {
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => _OnboardingCompleteDialog(
+        onDone: () {},
+      ),
+    );
+    if (!context.mounted) return;
+    // Required sign-up → questions → paywall → Home (same chain used on relaunch).
+    await completeGuestSignup(context);
+    return;
+  }
+
+  // Non-guest: the tour's final beats — bankroll step → "you're done" dialog
+  // → paywall — run ON Home (the bankroll card lives there). Persist the
+  // pending flag first so an app kill can't lose the wrap-up, then reset to
+  // Home where HomeScreen picks it up (bankroll tip → showPostTourWrapUp).
+  await OnboardingPrefs.setPostTourWrapUpPending();
+  if (!context.mounted) return;
+  Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
+}
+
+/// Post-tour wrap-up, run on Home AFTER the bankroll-card step: the
+/// "you're done" completion dialog, then the skippable paywall (at most
+/// once ever).
+Future<void> showPostTourWrapUp(BuildContext context) async {
+  await OnboardingPrefs.clearPostTourWrapUpPending();
+  if (!context.mounted) return;
+
   await showDialog(
     context: context,
     barrierDismissible: false,
@@ -730,14 +759,7 @@ Future<void> finishOnboardingTour(BuildContext context,
   );
   if (!context.mounted) return;
 
-  if (isGuest) {
-    // Required sign-up → questions → paywall → Home (same chain used on relaunch).
-    await completeGuestSignup(context);
-    return;
-  }
-
-  // Non-guest: skippable paywall (at most once ever), then Home.
-  if (showPaywall && !(await OnboardingPrefs.wasPostTourPaywallShown())) {
+  if (!(await OnboardingPrefs.wasPostTourPaywallShown())) {
     await OnboardingPrefs.markPostTourPaywallShown();
     if (!context.mounted) return;
     await Navigator.of(context).push(
@@ -747,9 +769,6 @@ Future<void> finishOnboardingTour(BuildContext context,
       ),
     );
   }
-
-  if (!context.mounted) return;
-  Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
 }
 
 /// The mandatory guest sign-up chain: hard-gate sign-up → onboarding questions
@@ -1292,7 +1311,11 @@ class _OnboardingCompleteDialog extends StatelessWidget {
 class BankrollCardTour {
   final GlobalKey bankrollCardKey;
 
-  BankrollCardTour({required this.bankrollCardKey});
+  /// Invoked when the tip is finished OR skipped — Home chains the post-tour
+  /// wrap-up (completion dialog + paywall) from here.
+  final VoidCallback? onDone;
+
+  BankrollCardTour({required this.bankrollCardKey, this.onDone});
 
   void show(BuildContext context) {
     if (bankrollCardKey.currentContext == null) return;
@@ -1326,14 +1349,34 @@ class BankrollCardTour {
       opacityShadow: 0.85,
       paddingFocus: 12,
       hideSkip: true,
-      onFinish: () => OnboardingPrefs.clearBankrollTourPending(),
+      onFinish: () {
+        OnboardingPrefs.clearBankrollTourPending();
+        onDone?.call();
+      },
       onSkip: () {
         OnboardingPrefs.clearBankrollTourPending();
+        onDone?.call();
         return true;
       },
     );
     coach.show(context: context);
   }
+}
+
+/// Axis-aligned GLOBAL rect for [key]'s render box honoring EVERY ancestor
+/// transform. tutorial_coach_mark's keyTarget path computes
+/// `localToGlobal(Offset.zero) & size`, which mis-places the spotlight for
+/// targets inside rotated subtrees (the poker table is a RotatedBox(3) and
+/// every seat a RotatedBox(1)). Passing an explicit TargetPosition computed
+/// via the full transform chain spotlights the true on-screen rect.
+TargetPosition? transformedTargetPosition(GlobalKey key, {double inflate = 0}) {
+  final box = key.currentContext?.findRenderObject() as RenderBox?;
+  if (box == null || !box.attached) return null;
+  final rect = MatrixUtils.transformRect(
+    box.getTransformTo(null),
+    Offset.zero & box.size,
+  ).inflate(inflate);
+  return TargetPosition(rect.size, rect.topLeft);
 }
 
 /// Bottom-of-tour progress bar — thin `accentPrimary` fill + "Step X of Y"
