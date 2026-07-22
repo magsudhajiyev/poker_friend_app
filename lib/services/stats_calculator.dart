@@ -4,6 +4,23 @@
 /// All methods are static and operate on action lists without
 /// requiring Firebase or any external dependencies.
 class StatsCalculator {
+
+  /// True when [seat]'s participation in the hand ended with a PREFLOP fold.
+  /// Used to hide such hands from the hero's hand history (they still feed
+  /// stats + the range grid). Map-based twin of HandRecord.heroFoldedPreflop
+  /// for screens working with raw stored hands.
+  static bool playerFoldedPreflop(List<dynamic> actions, int seat) {
+    for (final raw in actions) {
+      if (raw is! Map) continue;
+      if (raw['player'] == seat &&
+          raw['action'] == 'fold' &&
+          raw['street'] == 'preflop') {
+        return true;
+      }
+    }
+    return false;
+  }
+
   // Private constructor - only static methods
   StatsCalculator._();
 

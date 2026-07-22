@@ -5439,5 +5439,8 @@
   "sessionDetailsLeaveConfirmTitle": "Quitter la Session ?",
   "sessionDetailsLeaveConfirmBody": "Votre session est encore active. Voulez-vous la terminer ?",
   "pokerHandChangeTableDiscardMessage": "Une main est en cours. Changer de table l'abandonnera — rien de cette main ne sera enregistré.",
-  "pokerHandDiscardAndChangeTable": "Abandonner et changer de table"
+  "pokerHandDiscardAndChangeTable": "Abandonner et changer de table",
+  "handShownCardsDialogTitle": "Cartes montrées",
+  "handRecordShownCards": "Enregistrer les cartes montrées",
+  "handShownCardsWhoShowed": "Qui a montré ses cartes ?"
 }

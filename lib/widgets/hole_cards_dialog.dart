@@ -14,6 +14,9 @@ class HoleCardsDialog extends StatefulWidget {
   final String? playerName; // Optional player name to highlight
   final bool isWinner; // Whether this player is a winner (shows badge)
   final bool showSkipAll; // Show "Skip All" button for remaining opponents
+  // HL-5: players often show only ONE card — allow saving a single card
+  // (shown-cards recording). Default false: normal flows still require both.
+  final bool allowSingleCard;
 
   const HoleCardsDialog({
     Key? key,
@@ -23,6 +26,7 @@ class HoleCardsDialog extends StatefulWidget {
     this.playerName,
     this.isWinner = false,
     this.showSkipAll = false,
+    this.allowSingleCard = false,
   }) : super(key: key);
 
   @override
@@ -304,6 +308,17 @@ class _HoleCardsDialogState extends State<HoleCardsDialog> {
         return;
       }
       Navigator.pop(context, HoleCards(card1: _slots[0], card2: _slots[1]));
+      return;
+    }
+
+    // HL-5: a single shown card is a valid save when allowed.
+    if (widget.allowSingleCard) {
+      Navigator.pop(
+          context,
+          HoleCards(
+            card1: c1 ? _slots[0] : (c2 ? _slots[1] : null),
+            card2: null,
+          ));
       return;
     }
 

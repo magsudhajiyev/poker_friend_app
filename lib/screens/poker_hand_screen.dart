@@ -22,6 +22,7 @@ import '../widgets/global_bottom_nav_bar.dart';
 import '../widgets/board_cards_dialog.dart';
 import '../widgets/all_in_board_cards_dialog.dart';
 import '../widgets/hole_cards_dialog.dart';
+import '../design_system/components/sheets/app_sheet.dart';
 import '../widgets/hand_review_dialog.dart';
 import 'session_details_screen.dart';
 import '../widgets/showdown_dialog.dart';
@@ -125,6 +126,10 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
   bool _allInHandCompleted = false;
   bool _showStreetCompleteIndicator = false;
   bool _isSettlingBetweenHands = false; // Brief pause after hand completes
+  // HL-5: card-entry (or the one-time tip) holds the settling auto-advance.
+  bool _settlingCardEntryOpen = false;
+  // Pill anchor — the future HL-5t tour step spotlights this.
+  final GlobalKey _settlingHintKey = GlobalKey(debugLabel: 'settlingHint');
   bool _isNavigatingAway = false; // Guard against double-tap back
   String? _settlingWinnerName; // Winner name for settling overlay
   double? _settlingPotAmount; // Pot amount for settling overlay
@@ -1659,6 +1664,44 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                                     fontWeight: FontWeight.w400,
                                   ),
                                 ),
+                                const SizedBox(height: 14),
+                                // HL-5: explicit shown-cards entry point.
+                                GestureDetector(
+                                  onTap: _openShownCardsFlow,
+                                  child: Container(
+                                    key: _settlingHintKey,
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 16, vertical: 8),
+                                    decoration: BoxDecoration(
+                                      color:
+                                          Colors.white.withValues(alpha: 0.08),
+                                      borderRadius: BorderRadius.circular(
+                                          AppDecorations.pillRadius),
+                                      border: Border.all(
+                                          color: Colors.white
+                                              .withValues(alpha: 0.12)),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(Icons.style_outlined,
+                                            size: 15,
+                                            color: Colors.white
+                                                .withValues(alpha: 0.7)),
+                                        const SizedBox(width: 6),
+                                        Text(
+                                          l10n.handRecordShownCards,
+                                          style: AppTypography.ibm(
+                                            fontSize: 13,
+                                            color: Colors.white
+                                                .withValues(alpha: 0.7),
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
                               ],
                               ),
                             ),
@@ -2566,6 +2609,10 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
   static const double _ringStartAngle = -math.pi / 2;
 
   void _onSeatLongPressStart(int seatNumber, Offset globalPosition) {
+    // Settling overlay owns long-press then (HL-5 shown-cards recording).
+    // Unreachable in practice — the opaque overlay wins hit-testing — but
+    // keep the two gestures explicitly exclusive.
+    if (_isSettlingBetweenHands) return;
     final playerState = gameState.players[seatNumber - 1];
     if (!playerState.isActive) return;
     final isHero = seatNumber == (sessionManager.ourSeatNumber ?? -1);
@@ -6366,17 +6413,129 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       _settlingPotAmount = potAmount;
     });
 
-    // After 1.5s, dismiss settling and start next hand (unless already dismissed)
-    Future.delayed(const Duration(milliseconds: 1500), () {
-      if (!mounted || !_isSettlingBetweenHands) return;
+    // After 1.5s, dismiss settling and start next hand (unless already
+    // dismissed, or held open by shown-cards entry / the one-time tip).
+    _restartSettlingTimer();
+    return true;
+  }
+
+  /// Restart the settling auto-advance timer (paused while shown-cards
+  /// entry or the one-time tip is open).
+  void _restartSettlingTimer() {
+    Future.delayed(const Duration(milliseconds: 2500), () {
+      if (!mounted || !_isSettlingBetweenHands || _settlingCardEntryOpen) {
+        return;
+      }
       _skipSettling();
     });
-    return true;
+  }
+
+  /// HL-5: explicit shown-cards flow from the settling overlay pill —
+  /// pick the player who showed, then enter their card(s). Pauses the
+  /// settling auto-advance while open.
+  void _openShownCardsFlow() async {
+    if (!_isSettlingBetweenHands || _settlingCardEntryOpen) return;
+    final hand = sessionManager.lastFinishedHand;
+    if (hand == null) return;
+
+    final hero = sessionManager.ourSeatNumber;
+    final candidates =
+        sessionManager.activeSeats.where((s) => s != hero).toList()..sort();
+    if (candidates.isEmpty) return;
+
+    setState(() => _settlingCardEntryOpen = true);
+    HapticFeedback.selectionClick();
+
+    final l10n = AppLocalizations.of(context);
+
+    // Single opponent → straight to cards; otherwise pick who showed
+    // (standard AppSheet drawer for design consistency).
+    int? seat = candidates.length == 1 ? candidates.first : null;
+    seat ??= await AppSheet.show<int>(
+      context: context,
+      title: l10n.handShownCardsWhoShowed,
+      heightFraction: null,
+      scrollable: false,
+      bodyPadding: const EdgeInsets.fromLTRB(
+          AppSpacing.xl, AppSpacing.xs, AppSpacing.xl, AppSpacing.xl),
+      body: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (final s in candidates) ...[
+            InkWell(
+              onTap: () => Navigator.pop(context, s),
+              borderRadius:
+                  BorderRadius.circular(AppDecorations.radiusLg),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.xxs, vertical: AppSpacing.sm),
+                child: Text(
+                  sessionManager.playerNames[s] ?? 'Seat $s',
+                  style: AppTypography.ibm(
+                    color: Colors.white,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ),
+            if (s != candidates.last)
+              Container(height: 1, color: AppColors.separatorDark),
+          ],
+        ],
+      ),
+    );
+
+    if (seat == null || !mounted) {
+      if (mounted) setState(() => _settlingCardEntryOpen = false);
+      _restartSettlingTimer();
+      return;
+    }
+
+    // Exclude cards already known in this hand.
+    final used = <String>{};
+    final ourCards = hand.ourHoleCards;
+    if (ourCards?.card1 != null) used.add(ourCards!.card1!);
+    if (ourCards?.card2 != null) used.add(ourCards!.card2!);
+    final bc = hand.boardCards;
+    if (bc != null) {
+      used.addAll(bc.flop);
+      if (bc.turn != null) used.add(bc.turn!);
+      if (bc.river != null) used.add(bc.river!);
+    }
+    hand.showdownData?.playerCards.forEach((s, c) {
+      if (s == seat) return; // editing this seat — its cards stay pickable
+      if (c.card1 != null) used.add(c.card1!);
+      if (c.card2 != null) used.add(c.card2!);
+    });
+
+    final playerName = sessionManager.playerNames[seat] ?? 'Seat $seat';
+    final result = await showDialog<HoleCards>(
+      context: context,
+      barrierDismissible: true,
+      builder: (_) => HoleCardsDialog(
+        existingCards: hand.showdownData?.playerCards[seat],
+        usedCards: used,
+        title: l10n.handShownCardsDialogTitle,
+        playerName: playerName,
+        allowSingleCard: true,
+      ),
+    );
+
+    if (result != null && (result.card1 != null || result.card2 != null)) {
+      await sessionManager.attachShownCards(seat: seat, cards: result);
+    }
+
+    if (!mounted) return;
+    setState(() => _settlingCardEntryOpen = false);
+    _restartSettlingTimer();
   }
 
   /// Skip settling state immediately (user tapped to dismiss).
   void _skipSettling() {
     if (!_isSettlingBetweenHands) return;
+    if (_settlingCardEntryOpen) return; // card entry / tip holds the hand
     setState(() {
       _isSettlingBetweenHands = false;
       _settlingWinnerName = null;
@@ -7050,13 +7209,13 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       existingIsStarred = sessionManager.currentHand?.isStarred ?? false;
       existingTags = sessionManager.currentHand?.tags ?? [];
       existingNotes = sessionManager.currentHand?.notes;
-    } else if (sessionManager.completedHands.isNotEmpty) {
+    } else if (sessionManager.lastFinishedHand != null) {
       // Fallback to last completed hand (for editing after hand is fully complete)
-      boardCards = sessionManager.completedHands.last.boardCards;
-      existingHoleCards = sessionManager.completedHands.last.ourHoleCards;
-      existingIsStarred = sessionManager.completedHands.last.isStarred;
-      existingTags = sessionManager.completedHands.last.tags;
-      existingNotes = sessionManager.completedHands.last.notes;
+      boardCards = sessionManager.lastFinishedHand!.boardCards;
+      existingHoleCards = sessionManager.lastFinishedHand!.ourHoleCards;
+      existingIsStarred = sessionManager.lastFinishedHand!.isStarred;
+      existingTags = sessionManager.lastFinishedHand!.tags;
+      existingNotes = sessionManager.lastFinishedHand!.notes;
     }
 
     if (boardCards != null) {
@@ -7093,13 +7252,13 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         sessionManager.currentHand!.isStarred = result['isStarred'] ?? false;
         sessionManager.currentHand!.tags = List<String>.from(result['tags'] ?? []);
         sessionManager.currentHand!.notes = result['notes'];
-      } else if (sessionManager.completedHands.isNotEmpty) {
+      } else if (sessionManager.lastFinishedHand != null) {
         if (result['holeCards'] != null) {
-          sessionManager.completedHands.last.ourHoleCards = result['holeCards'];
+          sessionManager.lastFinishedHand!.ourHoleCards = result['holeCards'];
         }
-        sessionManager.completedHands.last.isStarred = result['isStarred'] ?? false;
-        sessionManager.completedHands.last.tags = List<String>.from(result['tags'] ?? []);
-        sessionManager.completedHands.last.notes = result['notes'];
+        sessionManager.lastFinishedHand!.isStarred = result['isStarred'] ?? false;
+        sessionManager.lastFinishedHand!.tags = List<String>.from(result['tags'] ?? []);
+        sessionManager.lastFinishedHand!.notes = result['notes'];
       }
 
       // Log actions
@@ -7169,9 +7328,9 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     if (sessionManager.currentHand != null) {
       boardCards = sessionManager.currentHand?.boardCards;
       ourCards = sessionManager.currentHand?.ourHoleCards;
-    } else if (sessionManager.completedHands.isNotEmpty) {
-      boardCards = sessionManager.completedHands.last.boardCards;
-      ourCards = sessionManager.completedHands.last.ourHoleCards;
+    } else if (sessionManager.lastFinishedHand != null) {
+      boardCards = sessionManager.lastFinishedHand!.boardCards;
+      ourCards = sessionManager.lastFinishedHand!.ourHoleCards;
     }
 
     if (boardCards != null) {
@@ -7275,14 +7434,14 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
             sessionManager.currentHand!.showdownData!.playerCards[playerId] = cards;
           }
         });
-      } else if (sessionManager.completedHands.isNotEmpty) {
+      } else if (sessionManager.lastFinishedHand != null) {
         // For completed hands
-        sessionManager.completedHands.last.showdownData ??= ShowdownData();
-        sessionManager.completedHands.last.reachedShowdown = true;
+        sessionManager.lastFinishedHand!.showdownData ??= ShowdownData();
+        sessionManager.lastFinishedHand!.reachedShowdown = true;
 
         opponentCards.forEach((playerId, cards) {
           if (cards.isComplete) {
-            sessionManager.completedHands.last.showdownData!.playerCards[playerId] = cards;
+            sessionManager.lastFinishedHand!.showdownData!.playerCards[playerId] = cards;
           }
         });
       }

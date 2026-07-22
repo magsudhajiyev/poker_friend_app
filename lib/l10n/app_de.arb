@@ -5439,5 +5439,8 @@
   "sessionDetailsLeaveConfirmTitle": "Session verlassen?",
   "sessionDetailsLeaveConfirmBody": "Deine Session ist noch aktiv. Möchtest du sie beenden?",
   "pokerHandChangeTableDiscardMessage": "Du hast eine laufende Hand. Beim Tischwechsel wird sie verworfen — nichts aus dieser Hand wird gespeichert.",
-  "pokerHandDiscardAndChangeTable": "Verwerfen & Tisch wechseln"
+  "pokerHandDiscardAndChangeTable": "Verwerfen & Tisch wechseln",
+  "handShownCardsDialogTitle": "Gezeigte Karten",
+  "handRecordShownCards": "Gezeigte Karten erfassen",
+  "handShownCardsWhoShowed": "Wer hat seine Karten gezeigt?"
 }

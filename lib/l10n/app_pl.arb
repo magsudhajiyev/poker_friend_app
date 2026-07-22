@@ -5439,5 +5439,8 @@
   "sessionDetailsLeaveConfirmTitle": "Opuścić Sesję?",
   "sessionDetailsLeaveConfirmBody": "Twoja sesja jest nadal aktywna. Czy chcesz ją zakończyć?",
   "pokerHandChangeTableDiscardMessage": "Masz rozdanie w toku. Zmiana stołu je odrzuci — nic z tego rozdania nie zostanie zapisane.",
-  "pokerHandDiscardAndChangeTable": "Odrzuć i zmień stół"
+  "pokerHandDiscardAndChangeTable": "Odrzuć i zmień stół",
+  "handShownCardsDialogTitle": "Pokazane karty",
+  "handRecordShownCards": "Zapisz pokazane karty",
+  "handShownCardsWhoShowed": "Kto pokazał karty?"
 }

@@ -5439,5 +5439,8 @@
   "sessionDetailsLeaveConfirmTitle": "Покинуть сессию?",
   "sessionDetailsLeaveConfirmBody": "Ваша сессия всё ещё активна. Хотите завершить её?",
   "pokerHandChangeTableDiscardMessage": "У вас идёт раздача. Смена стола отменит её — ничего из этой раздачи не будет сохранено.",
-  "pokerHandDiscardAndChangeTable": "Отменить и сменить стол"
+  "pokerHandDiscardAndChangeTable": "Отменить и сменить стол",
+  "handShownCardsDialogTitle": "Показанные карты",
+  "handRecordShownCards": "Записать показанные карты",
+  "handShownCardsWhoShowed": "Кто показал карты?"
 }

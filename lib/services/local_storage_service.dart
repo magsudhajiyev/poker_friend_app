@@ -564,7 +564,28 @@ class LocalStorageService {
       return null;
     }
   }
-  
+
+  /// HL-5: update a saved hand's showdown data (shown cards recorded after
+  /// the hand ended). Mirrors FirebaseService.updateHandShowdown.
+  static Future<bool> updateHandShowdown({
+    required String handId,
+    required Map<String, dynamic> showdownData,
+  }) async {
+    try {
+      final db = await database;
+      final rows = await db.update(
+        'hands',
+        {'showdownData': _safeJsonEncode(showdownData)},
+        where: 'id = ?',
+        whereArgs: [handId],
+      );
+      return rows > 0;
+    } catch (e) {
+      debugPrint('Error updating hand showdown locally: $e');
+      return false;
+    }
+  }
+
   // Get all sessions for current user
   static Future<List<Map<String, dynamic>>> getUserSessions() async {
     try {

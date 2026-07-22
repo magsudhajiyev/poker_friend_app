@@ -218,6 +218,25 @@ class HandRecord {
   /// session summary. See PokerSessionManager scouting flow.
   bool isScouted = false;
 
+  /// Storage identifiers, assigned AFTER the hand is saved (HL-5: needed to
+  /// UPDATE the persisted record when shown cards are recorded during the
+  /// settling overlay). In-memory only — the Firestore doc id IS the id.
+  String? cloudHandId;
+  String? localHandId;
+
+  /// True when the hero's participation ended with a PREFLOP fold (open-fold,
+  /// fold to a 3-bet, pure scout...). Such hands are saved — opponent stats,
+  /// hero preflop stats, range grid all still count — but are hidden from the
+  /// hero's hand history (walks and postflop folds are NOT affected).
+  bool get heroFoldedPreflop {
+    final hero = heroSeatNumber;
+    if (hero == null) return false;
+    return actions.any((a) =>
+        a.player == hero &&
+        a.action == PlayerAction.fold &&
+        a.street == BettingRound.preflop);
+  }
+
   HandRecord({
     required this.handNumber,
     required this.buttonPosition,
@@ -394,6 +413,11 @@ class PokerSessionManager {
   // Current hand tracking
   HandRecord? currentHand;
   final List<HandRecord> completedHands = [];
+
+  /// The most recently completed hand, regardless of whether it entered
+  /// [completedHands] (pure-scout hands don't). Target for post-hand
+  /// shown-cards recording during the settling overlay (HL-5).
+  HandRecord? lastFinishedHand;
   
   // Session settings
   double smallBlind;
@@ -806,8 +830,12 @@ class PokerSessionManager {
     // Note: heroPositionName is already set at hand start, don't overwrite it
 
     currentHand!.markCompleted();
-    // Only hero-counted hands enter the in-memory session summary list.
-    if (countForHero) {
+    lastFinishedHand = currentHand;
+    // Only hero-counted hands enter the in-memory session summary list —
+    // and hands whose hero participation ended with a PREFLOP fold are
+    // hidden from the hero's history entirely (HL-5 refinement): they are
+    // still saved and still feed hero preflop stats + the range grid.
+    if (countForHero && !currentHand!.heroFoldedPreflop) {
       completedHands.add(currentHand!);
     }
 
@@ -897,7 +925,12 @@ class PokerSessionManager {
     }
 
     currentHand!.markCompleted();
-    completedHands.add(currentHand!);
+    lastFinishedHand = currentHand;
+    // Same history rule as completeCurrentHand: hero folded preflop while
+    // the others chopped → saved, but not the hero's hand history.
+    if (!currentHand!.heroFoldedPreflop) {
+      completedHands.add(currentHand!);
+    }
 
     // Update opponent statistics for this hand
     _updateOpponentStats();
@@ -959,6 +992,8 @@ class PokerSessionManager {
       notes: hand.notes,
     );
 
+    hand.localHandId = localHandId;
+
     // Index for the range grid — local derived data, fire-and-forget so it
     // can never block or break the save path.
     if (localHandId != null && !skipStats) {
@@ -974,7 +1009,7 @@ class PokerSessionManager {
 
     try {
       // Try to save to Firebase as well
-      await FirebaseService.saveHand(
+      final cloudHandId = await FirebaseService.saveHand(
         sessionId: sessionId!,
         handNumber: hand.handNumber,
         buttonPosition: hand.buttonPosition,
@@ -1013,6 +1048,7 @@ class PokerSessionManager {
         skipHeroStats: skipHeroStats,
       );
 
+      hand.cloudHandId = cloudHandId;
       hand.markSaved();
 
       // Update optimized stats for all participants
@@ -1570,6 +1606,50 @@ class PokerSessionManager {
         activeSeats.toList(),
       );
       hand.heroSeatNumber = ourSeatNumber;
+    }
+  }
+
+  // ── Shown cards after the hand (HL-5) ────────────────────────────────
+
+  /// Record cards an opponent SHOWED after the hand ended (settling overlay
+  /// press-and-hold). Stored in the finished hand's showdownData so the
+  /// range/scouting pipeline picks them up; `reachedShowdown` stays false.
+  ///
+  /// The hand is already saved at this point, so the update is PERSISTED to
+  /// both stores via the captured storage ids — never an in-memory-only
+  /// patch (the HL-6 lesson). [persist] exists as a test seam.
+  Future<void> attachShownCards({
+    required int seat,
+    required HoleCards cards,
+    bool persist = true,
+  }) async {
+    final hand = lastFinishedHand;
+    if (hand == null) return;
+    if (cards.card1 == null && cards.card2 == null) return;
+
+    hand.showdownData ??= ShowdownData();
+    hand.showdownData!.playerCards[seat] = cards;
+
+    if (!persist) return;
+    final showdownMap = hand.showdownData!.toMap();
+
+    if (hand.localHandId != null) {
+      unawaited(LocalStorageService.updateHandShowdown(
+        handId: hand.localHandId!,
+        showdownData: showdownMap,
+      ));
+    }
+    if (hand.cloudHandId != null && sessionId != null) {
+      try {
+        await FirebaseService.updateHandShowdown(
+          sessionId: sessionId!,
+          handId: hand.cloudHandId!,
+          showdownData: showdownMap,
+        );
+      } catch (e) {
+        await LoggerService.error(
+            'Shown-cards cloud update failed (kept locally)', e, StackTrace.current);
+      }
     }
   }
 

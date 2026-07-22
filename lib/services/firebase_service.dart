@@ -129,7 +129,7 @@ class FirebaseService {
   }
 
   // Save a completed poker hand
-  static Future<void> saveHand({
+  static Future<String> saveHand({
     required String sessionId,
     required int handNumber,
     required int buttonPosition,
@@ -362,8 +362,33 @@ class FirebaseService {
         AppDataCache.markOpponentsDirty();
         AppDataCache.markOpponentHandsDirty();
       }
+
+      return handDocId;
     } catch (e) {
       await LoggerService.error('Error saving hand', e, StackTrace.current);
+      rethrow;
+    }
+  }
+
+  /// HL-5: update a saved hand's showdown data (opponent showed cards after
+  /// the hand ended — recorded during the settling overlay). Persisted, not
+  /// an in-memory-only patch (the HL-6 lesson).
+  static Future<void> updateHandShowdown({
+    required String sessionId,
+    required String handId,
+    required Map<String, dynamic> showdownData,
+  }) async {
+    try {
+      await _firestore
+          .collection(_sessionsCollection)
+          .doc(sessionId)
+          .collection(_handsCollection)
+          .doc(handId)
+          .update({'showdownData': showdownData});
+      AppDataCache.markSessionsDirty();
+    } catch (e) {
+      await LoggerService.error(
+          'Error updating hand showdown data', e, StackTrace.current);
       rethrow;
     }
   }

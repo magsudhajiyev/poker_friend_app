@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../services/currency_service.dart';
 import '../l10n/app_localizations.dart';
 import '../services/firebase_service.dart';
+import '../services/stats_calculator.dart';
 import '../services/dealer_service.dart';
 import '../services/auth_service.dart';
 import '../utils/poker_positions.dart';
@@ -141,6 +142,20 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
           }
         }
       }
+
+      // HL-5 refinement: the hero's hand history hides scouted hands and any
+      // hand where the hero folded PREFLOP (open-fold, fold to 3-bet...).
+      // They stay saved — opponent stats, hero preflop stats and the range
+      // grid all still count — they're just not history the hero replays.
+      loadedHands = loadedHands.where((hand) {
+        if (hand['isScouted'] == true) return false;
+        final heroSeat = hand['heroSeatNumber'] is int
+            ? hand['heroSeatNumber'] as int
+            : int.tryParse('${hand['heroSeatNumber'] ?? ''}');
+        final actions = hand['actions'];
+        if (heroSeat == null || actions is! List) return true;
+        return !StatsCalculator.playerFoldedPreflop(actions, heroSeat);
+      }).toList();
 
       // Filter hands by participation periods for live sessions
       final isLiveSession = widget.session['isLive'] == true;

@@ -5439,5 +5439,8 @@
   "sessionDetailsLeaveConfirmTitle": "¿Abandonar Sesión?",
   "sessionDetailsLeaveConfirmBody": "Tu sesión sigue activa. ¿Quieres terminarla?",
   "pokerHandChangeTableDiscardMessage": "Tienes una mano en curso. Al cambiar de mesa se descartará — no se guardará nada de esta mano.",
-  "pokerHandDiscardAndChangeTable": "Descartar y cambiar de mesa"
+  "pokerHandDiscardAndChangeTable": "Descartar y cambiar de mesa",
+  "handShownCardsDialogTitle": "Cartas mostradas",
+  "handRecordShownCards": "Registrar cartas mostradas",
+  "handShownCardsWhoShowed": "¿Quién mostró sus cartas?"
 }
