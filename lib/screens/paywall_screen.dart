@@ -7,6 +7,8 @@ import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../l10n/app_localizations.dart';
 import '../design_system/components/buttons/back_button_circle.dart';
+import '../design_system/components/dialogs/app_dialog.dart';
+import '../design_system/components/dialogs/dialog_action_bar.dart';
 import '../design_system/components/success_check_overlay.dart';
 import '../design_system/components/overlays/subscription_success_popup.dart';
 import '../design_system/constants/colors.dart';
@@ -28,6 +30,11 @@ class PaywallScreen extends StatefulWidget {
   final bool showSkip;
   final int? preselectedTier;
 
+  /// Launch-promo variant: the user was just auto-granted 1 month of free Pro
+  /// (RevenueCat promotional entitlement). Shows a celebratory dialog on open
+  /// and presents Pro monthly with a "1 MONTH FREE" badge.
+  final bool launchPromo;
+
   /// Debug-only: when true, tapping Continue simulates a successful purchase
   /// (via a debug tier override) instead of hitting RevenueCat, so the full
   /// post-purchase success flow can be exercised. No-op in release builds.
@@ -38,6 +45,7 @@ class PaywallScreen extends StatefulWidget {
     this.featureName,
     this.showSkip = false,
     this.preselectedTier,
+    this.launchPromo = false,
     this.mockPurchase = false,
   });
 
@@ -45,6 +53,7 @@ class PaywallScreen extends StatefulWidget {
     BuildContext context, {
     String? featureName,
     int? preselectedTier,
+    bool launchPromo = false,
     bool mockPurchase = false,
   }) {
     return Navigator.of(context).push<bool>(
@@ -53,6 +62,7 @@ class PaywallScreen extends StatefulWidget {
         builder: (context) => PaywallScreen(
           featureName: featureName,
           preselectedTier: preselectedTier,
+          launchPromo: launchPromo,
           mockPurchase: mockPurchase,
         ),
       ),
@@ -93,6 +103,62 @@ class _PaywallScreenState extends State<PaywallScreen> {
         });
       }
     }
+    if (widget.launchPromo) {
+      _selectedPlanIndex = 0;
+      _isAnnual = false;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _showPromoWelcomeDialog();
+      });
+    }
+  }
+
+  /// Launch-promo celebration: the free Pro month was already granted
+  /// server-side; this dialog just announces it over the paywall.
+  Future<void> _showPromoWelcomeDialog() {
+    final l10n = AppLocalizations.of(context);
+    return showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AppDialog(
+        showCloseButton: false,
+        barrierDismissible: false,
+        body: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.card_giftcard,
+              color: AppColors.accentPrimary,
+              size: 48,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              l10n.promoWelcomeTitle,
+              style: AppTypography.ibm(
+                color: AppColors.textPrimary,
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                height: 1.3,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              l10n.promoWelcomeBody,
+              style: AppTypography.ibm(
+                color: AppColors.textSecondary,
+                fontSize: 15,
+                height: 1.44,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+        actions: DialogActionBar.single(
+          cancelLabel: l10n.onboardingGotIt,
+          onCancel: () {},
+        ),
+      ),
+    );
   }
 
   @override
@@ -557,7 +623,9 @@ class _PaywallScreenState extends State<PaywallScreen> {
             l10n.paywallProFeature5,
           ],
           showTrialBadge: true,
-          trialBadgeText: l10n.paywallFreeTrialBadge,
+          trialBadgeText: widget.launchPromo
+              ? l10n.promoFreeMonthBadge
+              : l10n.paywallFreeTrialBadge,
           isSelected: _selectedPlanIndex == 0,
           onTap: () => setState(() => _selectedPlanIndex = 0),
         ),

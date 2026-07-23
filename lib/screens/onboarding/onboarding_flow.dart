@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../services/auth_service.dart';
 import '../../services/currency_service.dart';
 import '../../services/onboarding_service.dart';
 import 'welcome_step.dart';
@@ -169,7 +170,10 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
       // Guest post-tour chain: pop back so the caller can continue to the paywall.
       Navigator.pop(context, true);
     } else {
-      // In real flow, go to home
+      // In real flow, go to home. Drop the startup prefetch snapshot first —
+      // it predates the flag writes above, and the gate re-runs after this
+      // reset (a stale hasCompletedOnboarding:false replays onboarding).
+      AuthService.clearPrefetchedUserDoc();
       Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
     }
   }

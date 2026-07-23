@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import '../design_system/constants/colors.dart';
@@ -9,6 +12,8 @@ import '../screens/paywall_screen.dart';
 import '../screens/auth_screen_experimental.dart';
 import '../screens/onboarding/onboarding_flow.dart';
 import '../services/auth_service.dart';
+import '../services/notification_service.dart';
+import '../services/subscription_service.dart';
 import 'onboarding_prefs.dart';
 import 'onboarding_state.dart';
 import '../design_system/constants/decorations.dart';
@@ -65,9 +70,15 @@ TutorialCoachMark createOnboardingCoachMark({
       OnboardingState.cancel();
       OnboardingPrefs.markOnboardingSeen();
       if (!wasReplay) {
-        // Don't push the paywall from mid-tour contexts — the next Home
-        // visit shows it once via the pending flag
+        // Kill-safety first: if the app dies before the paywall below gets
+        // shown, the next Home visit recovers it via the pending flag.
         OnboardingPrefs.setPostTourPaywallPending();
+        // Then show the paywall right away, over whatever screen the skip
+        // happened on (launch-promo variant included when the free month
+        // is live). Small delay lets the overlay dismiss cleanly.
+        Future.delayed(const Duration(milliseconds: 350), () {
+          if (context.mounted) maybeShowPostTourPaywall(context);
+        });
       }
       onSkip?.call();
       return true;
@@ -743,6 +754,66 @@ Future<void> finishOnboardingTour(BuildContext context) async {
   Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
 }
 
+/// Launch promo detection: true when this user was auto-granted the free Pro
+/// month at sign-up (users-doc marker written by the grantFreeMonthOnSignup
+/// Cloud Function) AND the RevenueCat 'pro' entitlement is actually live.
+/// Also schedules the courtesy expiry reminders. Any failure → false, which
+/// just means the normal paywall — never a broken state.
+Future<bool> _detectLaunchPromo(BuildContext context) async {
+  try {
+    final uid = AuthService.currentUser?.uid;
+    if (uid == null) return false;
+    final doc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(uid)
+        .get();
+    if (doc.data()?['freeMonthGranted'] != true) return false;
+
+    // Confirm the grant landed in RevenueCat (expiry lives on RC's servers —
+    // the client never computes it).
+    await SubscriptionService.refreshOnResume();
+    final entitlement = SubscriptionService
+        .customerInfo?.entitlements.all[SubscriptionService.premiumEntitlement];
+    if (entitlement?.isActive != true) return false;
+
+    final expiresAt = DateTime.tryParse(entitlement?.expirationDate ?? '');
+    if (expiresAt != null && context.mounted) {
+      final l10n = AppLocalizations.of(context);
+      unawaited(NotificationService.schedulePromoExpiryReminders(
+        expiresAt: expiresAt.toLocal(),
+        warnTitle: l10n.promoNotifWarnTitle,
+        warnBody: l10n.promoNotifWarnBody,
+        endedTitle: l10n.promoNotifEndedTitle,
+        endedBody: l10n.promoNotifEndedBody,
+      ));
+    }
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
+/// Shows the post-tour paywall AT MOST ONCE EVER — shared by the tour
+/// completion wrap-up, the skip paths (coach-mark skip + mid-hand skip), and
+/// Home's deferred-pending recovery. Applies the launch-promo variant
+/// (celebration dialog + "1 MONTH FREE" badge on Pro monthly) when the free
+/// Pro month is live. Clears the deferred-pending flag since the paywall is
+/// being handled now.
+Future<void> maybeShowPostTourPaywall(BuildContext context) async {
+  if (await OnboardingPrefs.wasPostTourPaywallShown()) return;
+  await OnboardingPrefs.markPostTourPaywallShown();
+  await OnboardingPrefs.clearPostTourPaywallPending();
+  if (!context.mounted) return;
+  final launchPromo = await _detectLaunchPromo(context);
+  if (!context.mounted) return;
+  await Navigator.of(context).push(
+    MaterialPageRoute(
+      fullscreenDialog: true,
+      builder: (_) => PaywallScreen(showSkip: true, launchPromo: launchPromo),
+    ),
+  );
+}
+
 /// Post-tour wrap-up, run on Home AFTER the bankroll-card step: the
 /// "you're done" completion dialog, then the skippable paywall (at most
 /// once ever).
@@ -759,16 +830,7 @@ Future<void> showPostTourWrapUp(BuildContext context) async {
   );
   if (!context.mounted) return;
 
-  if (!(await OnboardingPrefs.wasPostTourPaywallShown())) {
-    await OnboardingPrefs.markPostTourPaywallShown();
-    if (!context.mounted) return;
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        fullscreenDialog: true,
-        builder: (_) => const PaywallScreen(showSkip: true),
-      ),
-    );
-  }
+  await maybeShowPostTourPaywall(context);
 }
 
 /// The mandatory guest sign-up chain: hard-gate sign-up → onboarding questions
@@ -810,16 +872,7 @@ Future<void> completeGuestSignup(BuildContext context) async {
     if (!context.mounted) return;
 
     // 3. Skippable paywall (at most once ever).
-    if (!(await OnboardingPrefs.wasPostTourPaywallShown())) {
-      await OnboardingPrefs.markPostTourPaywallShown();
-      if (!context.mounted) return;
-      await Navigator.of(context).push(
-        MaterialPageRoute(
-          fullscreenDialog: true,
-          builder: (_) => const PaywallScreen(showSkip: true),
-        ),
-      );
-    }
+    await maybeShowPostTourPaywall(context);
   }
 
   if (!context.mounted) return;

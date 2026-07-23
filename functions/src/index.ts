@@ -1,7 +1,9 @@
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
 import { onSchedule } from "firebase-functions/v2/scheduler";
+import { defineSecret } from "firebase-functions/params";
 import { initializeApp } from "firebase-admin/app";
-import { getFirestore } from "firebase-admin/firestore";
+import { getAuth } from "firebase-admin/auth";
+import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { getMessaging } from "firebase-admin/messaging";
 
 // Initialize Firebase Admin SDK
@@ -9,6 +11,8 @@ initializeApp();
 
 const db = getFirestore();
 const messaging = getMessaging();
+
+const revenuecatKey = defineSecret("REVENUECAT_SECRET_API_KEY");
 
 /**
  * Cloud Function: Send FCM push notification when a new user notification is created
@@ -210,6 +214,110 @@ export const sendClubNotification = onDocumentCreated(
       console.log(`FCM topic message sent: ${response}`);
     } catch (error) {
       console.error("Error sending FCM topic notification:", error);
+    }
+  }
+);
+
+/**
+ * Cloud Function: Launch promo — grant 1 month of free Pro to new sign-ups.
+ *
+ * Triggers once per new user (users/{uid} is only ever created by
+ * AuthService._createUserDocument, guarded by a doc-exists check). Gated by
+ * the super-admin toggle app_config/promotions.freeMonthOnSignup. The grant
+ * is a RevenueCat promotional entitlement, so its expiry is computed and
+ * enforced by RC's servers — the client never runs any expiry logic.
+ */
+export const grantFreeMonthOnSignup = onDocumentCreated(
+  { document: "users/{userId}", secrets: [revenuecatKey] },
+  async (event) => {
+    const snapshot = event.data;
+    if (!snapshot) {
+      return;
+    }
+    const userId = event.params.userId;
+
+    // Toggle gate — fail closed: no doc, missing field, or read error all
+    // mean "promo off".
+    try {
+      const promoDoc = await db.collection("app_config").doc("promotions").get();
+      if (promoDoc.data()?.freeMonthOnSignup !== true) {
+        return;
+      }
+    } catch (error) {
+      console.error("Promo toggle read failed, skipping grant:", error);
+      return;
+    }
+
+    // Strict-new guard: the users doc can also be backfilled for an old
+    // account that never had one (ensureUserDocument). Only auth accounts
+    // created within the last hour count as new sign-ups.
+    try {
+      const authUser = await getAuth().getUser(userId);
+      const createdMs = Date.parse(authUser.metadata.creationTime);
+      if (!Number.isFinite(createdMs) || Date.now() - createdMs > 60 * 60 * 1000) {
+        console.log(`Skipping promo for ${userId}: auth account is not new`);
+        return;
+      }
+    } catch (error) {
+      console.error(`Auth lookup failed for ${userId}, skipping grant:`, error);
+      return;
+    }
+
+    // Grant the promotional entitlement. app_user_id in RevenueCat is the
+    // Firebase uid (Purchases.logIn(uid) on every sign-in path).
+    try {
+      // Ensure the RC customer exists first — the promotional endpoint does
+      // NOT auto-create subscribers (404 code 7259), and this trigger
+      // usually beats the client's Purchases.logIn(uid). GET
+      // returns-or-creates the customer.
+      const ensureResponse = await fetch(
+        `https://api.revenuecat.com/v1/subscribers/${encodeURIComponent(userId)}`,
+        { headers: { "Authorization": `Bearer ${revenuecatKey.value()}` } }
+      );
+      if (!ensureResponse.ok) {
+        const body = await ensureResponse.text();
+        console.error(
+          `RevenueCat customer ensure failed for ${userId}: HTTP ${ensureResponse.status} ${body}`
+        );
+        return;
+      }
+
+      const response = await fetch(
+        `https://api.revenuecat.com/v1/subscribers/${encodeURIComponent(userId)}` +
+          "/entitlements/pro/promotional",
+        {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${revenuecatKey.value()}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ duration: "monthly" }),
+        }
+      );
+      if (!response.ok) {
+        const body = await response.text();
+        console.error(
+          `RevenueCat grant failed for ${userId}: HTTP ${response.status} ${body}`
+        );
+        return;
+      }
+    } catch (error) {
+      console.error(`RevenueCat grant request failed for ${userId}:`, error);
+      return;
+    }
+
+    // Marker for the client's post-tour promo paywall variant. An update
+    // cannot re-trigger this onDocumentCreated function.
+    try {
+      await snapshot.ref.update({
+        freeMonthGranted: true,
+        freeMonthGrantedAt: FieldValue.serverTimestamp(),
+      });
+      console.log(`Free Pro month granted to new user ${userId}`);
+    } catch (error) {
+      // Entitlement is already live in RC; only the celebratory UI signal is
+      // lost. Log and move on.
+      console.error(`Failed to write freeMonthGranted marker for ${userId}:`, error);
     }
   }
 );

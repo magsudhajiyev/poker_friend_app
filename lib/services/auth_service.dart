@@ -69,6 +69,12 @@ class AuthService {
   static Future<void> prefetchUserDocument() async {
     final uid = currentUser?.uid;
     if (uid == null) return;
+    // Invalidate any previous snapshot SYNCHRONOUSLY, before the network
+    // read. The static survives '/' resets (splash → gate), so a consumer
+    // racing this fetch must fall back to a fresh Firestore read rather
+    // than see data captured before the latest flag writes — a stale
+    // hasCompletedOnboarding:false here made onboarding repeat.
+    clearPrefetchedUserDoc();
     try {
       final doc = await _firestore.collection('users').doc(uid).get();
       if (doc.exists) {

@@ -981,9 +981,14 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
     OnboardingState.complete();
     OnboardingPrefs.markOnboardingSeen();
     if (!wasReplay) {
-      // Tour skipped mid-hand — the next Home visit shows the post-tour
-      // paywall once via the pending flag
+      // Tour skipped mid-hand. Kill-safety first (next Home visit recovers
+      // via the pending flag), then show the paywall right away over the
+      // hand screen — launch-promo variant included when the free month is
+      // live.
       OnboardingPrefs.setPostTourPaywallPending();
+      Future.delayed(const Duration(milliseconds: 350), () {
+        if (mounted) maybeShowPostTourPaywall(context);
+      });
     }
     // Notify parent so it can rebuild (e.g. hide progress bar).
     widget.onSkipOrFinish?.call();

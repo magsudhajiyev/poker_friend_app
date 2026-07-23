@@ -259,6 +259,58 @@ class NotificationService {
     }
   }
 
+  static const int _promoExpiryWarningId = 888890;
+  static const int _promoExpiredId = 888891;
+
+  /// Courtesy reminders for the launch-promo free Pro month ("ends in 3 days"
+  /// + "has ended"). The entitlement itself expires server-side in RevenueCat
+  /// regardless of these. Strings are passed in so the call site can localize.
+  static Future<void> schedulePromoExpiryReminders({
+    required DateTime expiresAt,
+    required String warnTitle,
+    required String warnBody,
+    required String endedTitle,
+    required String endedBody,
+  }) async {
+    try {
+      if (!_initialized) await initialize();
+      await requestPermissions();
+
+      final now = DateTime.now();
+      final warnAt = expiresAt.subtract(const Duration(days: 3));
+      if (warnAt.isAfter(now)) {
+        await _scheduleNotification(
+          id: _promoExpiryWarningId,
+          title: warnTitle,
+          body: warnBody,
+          scheduledDate: warnAt,
+          payload: 'promo_expiry_warning',
+        );
+      }
+      if (expiresAt.isAfter(now)) {
+        await _scheduleNotification(
+          id: _promoExpiredId,
+          title: endedTitle,
+          body: endedBody,
+          scheduledDate: expiresAt,
+          payload: 'promo_expired',
+        );
+      }
+    } catch (e) {
+      debugPrint('Error scheduling promo expiry reminders: $e');
+    }
+  }
+
+  /// Cancel the promo expiry reminders.
+  static Future<void> cancelPromoExpiryReminders() async {
+    try {
+      await _notifications.cancel(_promoExpiryWarningId);
+      await _notifications.cancel(_promoExpiredId);
+    } catch (e) {
+      debugPrint('Error cancelling promo expiry reminders: $e');
+    }
+  }
+
   /// Show a test notification immediately (for debugging)
   static Future<void> showTestNotification() async {
     try {
