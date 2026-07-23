@@ -6,6 +6,7 @@ import '../../design_system/constants/colors.dart';
 import '../../design_system/constants/typography.dart';
 import '../../design_system/constants/decorations.dart';
 import '../../design_system/constants/spacing.dart';
+import '../../design_system/components/app_toggle.dart';
 import '../../design_system/components/backgrounds/gradient_background.dart';
 import '../../design_system/components/modals/confirm_dialog.dart';
 import '../../services/partner_grant_service.dart';
@@ -226,11 +227,9 @@ class _PartnerGrantsScreenState extends State<PartnerGrantsScreen> {
               ),
             ),
             const SizedBox(width: AppSpacing.xxs),
-            Switch(
+            AppToggle(
               value: _promoEnabled,
               onChanged: _promoLoaded ? _setPromoToggle : null,
-              activeTrackColor: AppColors.accentPrimary,
-              thumbColor: const WidgetStatePropertyAll(Colors.white),
             ),
           ],
         ),

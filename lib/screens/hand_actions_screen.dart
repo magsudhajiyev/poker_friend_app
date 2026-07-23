@@ -21,8 +21,11 @@ import 'paywall_screen.dart';
 import '../services/currency_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/feature_flag_service.dart';
+import '../design_system/components/app_toggle.dart';
 import '../design_system/components/buttons/back_button_circle.dart';
+import '../design_system/components/form_drawer.dart';
 import '../design_system/constants/colors.dart';
+import '../design_system/constants/spacing.dart';
 import '../design_system/constants/typography.dart';
 import '../design_system/constants/decorations.dart';
 import '../utils/user_facing_error.dart';
@@ -183,49 +186,63 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
 
   Future<void> _handleShareButtonTap() async {
     if (_isSharing) return;
+    final l10n = AppLocalizations.of(context);
 
-    // Ask whether to hide hole cards
-    final hideHoleCards = await showModalBottomSheet<bool>(
+    // Standard drawer with a single "Show hole cards" toggle; the checkmark
+    // confirms and shares, closing without it cancels.
+    bool showCards = true;
+    final confirmed = await FormDrawer.show<bool>(
       context: context,
-      backgroundColor: AppColors.bgSurface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(AppDecorations.radius20)),
-      ),
-      builder: (ctx) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
+      title: l10n.handActionsShareHand,
+      heightFraction: null, // hug content — single toggle row
+      scrollable: false,
+      onSave: () => Navigator.of(context).pop(true),
+      body: StatefulBuilder(
+        builder: (ctx, setSheetState) => Container(
+          padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.05),
+            borderRadius: BorderRadius.circular(AppDecorations.radius14),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+          ),
+          child: Row(
             children: [
-              Container(
-                width: 36, height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(2),
+              Icon(
+                showCards ? Icons.visibility : Icons.visibility_off,
+                color: AppColors.accentPrimary,
+                size: 22,
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.handActionsShowHoleCards,
+                      style: AppTypography.ibm(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      showCards
+                          ? l10n.handActionsShowHoleCardsSubtitle
+                          : l10n.handActionsHideHoleCardsSubtitle,
+                      style: AppTypography.ibm(
+                        fontSize: 12,
+                        color: Colors.white.withValues(alpha: 0.4),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 16),
-              Text(
-                AppLocalizations.of(context).handActionsShareHand,
-                style: AppTypography.ibm(
-                  fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white,
-                ),
-              ),
-              const SizedBox(height: 16),
-              _buildShareOption(
-                ctx,
-                icon: Icons.visibility,
-                label: AppLocalizations.of(context).handActionsShowHoleCards,
-                subtitle: AppLocalizations.of(context).handActionsShowHoleCardsSubtitle,
-                value: false,
-              ),
-              const SizedBox(height: 10),
-              _buildShareOption(
-                ctx,
-                icon: Icons.visibility_off,
-                label: AppLocalizations.of(context).handActionsHideHoleCards,
-                subtitle: AppLocalizations.of(context).handActionsHideHoleCardsSubtitle,
-                value: true,
+              const SizedBox(width: AppSpacing.xxs),
+              AppToggle(
+                value: showCards,
+                onChanged: (v) => setSheetState(() => showCards = v),
               ),
             ],
           ),
@@ -233,7 +250,8 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
       ),
     );
 
-    if (hideHoleCards == null || !mounted) return;
+    if (confirmed != true || !mounted) return;
+    final hideHoleCards = !showCards;
 
     setState(() => _isSharing = true);
 
@@ -274,47 +292,6 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
     } finally {
       if (mounted) setState(() => _isSharing = false);
     }
-  }
-
-  Widget _buildShareOption(
-    BuildContext ctx, {
-    required IconData icon,
-    required String label,
-    required String subtitle,
-    required bool value,
-  }) {
-    return GestureDetector(
-      onTap: () => Navigator.pop(ctx, value),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.05),
-          borderRadius: BorderRadius.circular(AppDecorations.radius14),
-          border: Border.all(color: Colors.white.withOpacity(0.08)),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, color: AppColors.accentPrimary, size: 22),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(label, style: AppTypography.ibm(
-                    fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white,
-                  )),
-                  const SizedBox(height: 2),
-                  Text(subtitle, style: AppTypography.ibm(
-                    fontSize: 12, color: Colors.white.withOpacity(0.4),
-                  )),
-                ],
-              ),
-            ),
-            Icon(Icons.chevron_right, color: Colors.white.withOpacity(0.3), size: 20),
-          ],
-        ),
-      ),
-    );
   }
 
   static const int _maxMonthlyExportsPro = 30;
