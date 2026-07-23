@@ -4,12 +4,20 @@ import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../design_system/constants/colors.dart';
+import '../screens/paywall_screen.dart';
+import 'auth_service.dart';
 
 class NotificationService {
   static final FlutterLocalNotificationsPlugin _notifications =
       FlutterLocalNotificationsPlugin();
 
   static bool _initialized = false;
+
+  /// Root navigator key, injected from main.dart before [initialize] so
+  /// notification taps can route (e.g. promo expiry → paywall).
+  static GlobalKey<NavigatorState>? navigatorKey;
+
+  static const _promoPayloads = {'promo_expiry_warning', 'promo_expired'};
 
   /// Initialize the notification service
   static Future<void> initialize() async {
@@ -19,8 +27,11 @@ class NotificationService {
       // Initialize timezone data
       tz.initializeTimeZones();
 
-      // Android initialization settings
-      const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+      // Android initialization settings (default small icon: white logo
+      // silhouette — full-colour launcher icons render as a blank blob in
+      // the status bar because Android only uses the alpha channel there)
+      const androidSettings =
+          AndroidInitializationSettings('@drawable/ic_notification');
 
       // iOS initialization settings
       const iosSettings = DarwinInitializationSettings(
@@ -39,6 +50,19 @@ class NotificationService {
         onDidReceiveNotificationResponse: _onNotificationTapped,
       );
 
+      // Cold start from a notification tap: the tap callback doesn't fire
+      // when the app was terminated — the payload arrives in launch details.
+      final launchDetails =
+          await _notifications.getNotificationAppLaunchDetails();
+      final launchPayload =
+          launchDetails?.notificationResponse?.payload;
+      debugPrint('📲 Notif init: launchedByNotification='
+          '${launchDetails?.didNotificationLaunchApp} payload=$launchPayload');
+      if (launchDetails?.didNotificationLaunchApp == true &&
+          _promoPayloads.contains(launchPayload)) {
+        _openPaywallWhenReady();
+      }
+
       _initialized = true;
       debugPrint('✅ Notification service initialized');
     } catch (e) {
@@ -49,7 +73,40 @@ class NotificationService {
   /// Handle notification tap
   static void _onNotificationTapped(NotificationResponse response) {
     debugPrint('📲 Notification tapped: ${response.payload}');
-    // You can handle navigation here based on payload
+    if (_promoPayloads.contains(response.payload)) {
+      _openPaywallWhenReady();
+    }
+  }
+
+  /// Promo expiry notification tapped → paywall (Pro pre-selected). Waits
+  /// for the navigator + a signed-in user, since a cold start is still on
+  /// the splash/auth gate when the launch payload is read.
+  static Future<void> _openPaywallWhenReady() async {
+    debugPrint('📲 Promo tap: routing requested '
+        '(navigator=${navigatorKey?.currentState != null}, '
+        'user=${AuthService.currentUser != null})');
+    for (int i = 0; i < 30; i++) {
+      if (navigatorKey?.currentState != null &&
+          AuthService.currentUser != null) {
+        break;
+      }
+      await Future.delayed(const Duration(milliseconds: 500));
+    }
+    final nav = navigatorKey?.currentState;
+    if (nav == null || AuthService.currentUser == null) {
+      debugPrint(
+          '📲 Promo tap: cannot route (navigator=${nav != null}, user=${AuthService.currentUser != null})');
+      return;
+    }
+    // Let the startup gate finish routing before pushing on top of it.
+    await Future.delayed(const Duration(milliseconds: 800));
+    debugPrint('📲 Promo tap: pushing paywall');
+    nav.push(
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (_) => const PaywallScreen(showSkip: true, preselectedTier: 0),
+      ),
+    );
   }
 
   /// Request notification permissions (especially for iOS)
@@ -166,10 +223,10 @@ class NotificationService {
             channelDescription: 'Notifications for upcoming poker events',
             importance: Importance.high,
             priority: Priority.high,
-            icon: '@mipmap/ic_launcher',
+            icon: '@drawable/ic_notification',
             largeIcon: const DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
             styleInformation: const BigTextStyleInformation(''),
-            color: AppColors.errorRedVariant, // App's red color for the small icon
+            color: AppColors.accentPrimary, // brand teal tint for the small icon
           ),
           iOS: DarwinNotificationDetails(
             presentAlert: true,
@@ -262,9 +319,11 @@ class NotificationService {
   static const int _promoExpiryWarningId = 888890;
   static const int _promoExpiredId = 888891;
 
-  /// Courtesy reminders for the launch-promo free Pro month ("ends in 3 days"
+  /// Courtesy reminders for the launch-promo free Pro month ("1 day left"
   /// + "has ended"). The entitlement itself expires server-side in RevenueCat
   /// regardless of these. Strings are passed in so the call site can localize.
+  /// Idempotent: fixed ids are cancelled first, so re-syncing on every app
+  /// open never duplicates notifications.
   static Future<void> schedulePromoExpiryReminders({
     required DateTime expiresAt,
     required String warnTitle,
@@ -275,9 +334,10 @@ class NotificationService {
     try {
       if (!_initialized) await initialize();
       await requestPermissions();
+      await cancelPromoExpiryReminders();
 
       final now = DateTime.now();
-      final warnAt = expiresAt.subtract(const Duration(days: 3));
+      final warnAt = expiresAt.subtract(const Duration(days: 1));
       if (warnAt.isAfter(now)) {
         await _scheduleNotification(
           id: _promoExpiryWarningId,
@@ -298,6 +358,46 @@ class NotificationService {
       }
     } catch (e) {
       debugPrint('Error scheduling promo expiry reminders: $e');
+    }
+  }
+
+  /// Debug-only: fire the promo expiry warning IMMEDIATELY so the
+  /// tap→paywall route can be tested. Scheduling is deliberately not used
+  /// here — Android batches inexact alarms, so a seconds-away scheduled
+  /// notification can be delayed by minutes and looks broken.
+  static Future<void> debugFirePromoWarnNow({
+    required String title,
+    required String body,
+  }) async {
+    if (kReleaseMode) return;
+    if (!_initialized) await initialize();
+    final granted = await requestPermissions();
+    debugPrint('🧪 Promo test: permission granted=$granted');
+    try {
+      await _notifications.show(
+        _promoExpiryWarningId,
+        title,
+        body,
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'poker_events',
+            'Poker Events',
+            channelDescription: 'Notifications for upcoming poker events',
+            importance: Importance.high,
+            priority: Priority.high,
+            icon: '@drawable/ic_notification',
+          ),
+          iOS: DarwinNotificationDetails(
+            presentAlert: true,
+            presentBadge: true,
+            presentSound: true,
+          ),
+        ),
+        payload: 'promo_expiry_warning',
+      );
+      debugPrint('🧪 Promo test: shown immediately, tap it to test routing');
+    } catch (e) {
+      debugPrint('🧪 Promo test: SHOW FAILED: $e');
     }
   }
 
@@ -329,10 +429,10 @@ class NotificationService {
             channelDescription: 'Notifications for upcoming poker events',
             importance: Importance.high,
             priority: Priority.high,
-            icon: '@mipmap/ic_launcher',
+            icon: '@drawable/ic_notification',
             largeIcon: const DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
             styleInformation: const BigTextStyleInformation(''),
-            color: AppColors.errorRedVariant, // App's red color for the small icon
+            color: AppColors.accentPrimary, // brand teal tint for the small icon
           ),
           iOS: DarwinNotificationDetails(
             presentAlert: true,

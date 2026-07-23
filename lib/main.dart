@@ -114,6 +114,7 @@ void main() async {
 Future<void> _initServicesInBackground() async {
   // Local notifications
   try {
+    NotificationService.navigatorKey = navigatorKey;
     await NotificationService.initialize();
     await NotificationService.requestPermissions();
     debugPrint('Local notification service initialized successfully');
@@ -382,6 +383,10 @@ class _PokerTrackerAppState extends State<PokerTrackerApp>
 
   @override
   Widget build(BuildContext context) {
+    // Re-assert on every build (not just startup) so the notification tap
+    // router always has the key — startup-only injection breaks under hot
+    // reload, where main() doesn't re-run.
+    NotificationService.navigatorKey = navigatorKey;
     return ValueListenableBuilder<Locale?>(
       valueListenable: LocaleService.localeNotifier,
       builder: (context, locale, _) {

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/typography.dart';
@@ -776,21 +777,54 @@ Future<bool> _detectLaunchPromo(BuildContext context) async {
         .customerInfo?.entitlements.all[SubscriptionService.premiumEntitlement];
     if (entitlement?.isActive != true) return false;
 
-    final expiresAt = DateTime.tryParse(entitlement?.expirationDate ?? '');
-    if (expiresAt != null && context.mounted) {
-      final l10n = AppLocalizations.of(context);
-      unawaited(NotificationService.schedulePromoExpiryReminders(
-        expiresAt: expiresAt.toLocal(),
-        warnTitle: l10n.promoNotifWarnTitle,
-        warnBody: l10n.promoNotifWarnBody,
-        endedTitle: l10n.promoNotifEndedTitle,
-        endedBody: l10n.promoNotifEndedBody,
-      ));
-    }
+    if (context.mounted) _schedulePromoReminders(context, entitlement!);
     return true;
   } catch (_) {
     return false;
   }
+}
+
+/// Heal-on-open resync of the free-month expiry reminders ("1 day left" +
+/// "has ended"). Local notifications are only as good as their scheduling
+/// moment — if the app died before the post-tour paywall scheduled them,
+/// they'd never fire. Called from Home on startup; idempotent (fixed
+/// notification ids, cancelled before rescheduling). Cancels the reminders
+/// outright when the promo is no longer the active entitlement (expired, or
+/// superseded by a PAID subscription — a "free month ends tomorrow" reminder
+/// would be wrong either way).
+Future<void> syncPromoExpiryReminders(BuildContext context) async {
+  try {
+    final uid = AuthService.currentUser?.uid;
+    if (uid == null) return;
+    final doc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(uid)
+        .get();
+    if (doc.data()?['freeMonthGranted'] != true) return;
+
+    final entitlement = SubscriptionService
+        .customerInfo?.entitlements.all[SubscriptionService.premiumEntitlement];
+    final promoActive = entitlement?.isActive == true &&
+        entitlement?.store == Store.promotional;
+    if (!promoActive) {
+      await NotificationService.cancelPromoExpiryReminders();
+      return;
+    }
+    if (context.mounted) _schedulePromoReminders(context, entitlement!);
+  } catch (_) {}
+}
+
+void _schedulePromoReminders(BuildContext context, EntitlementInfo entitlement) {
+  final expiresAt = DateTime.tryParse(entitlement.expirationDate ?? '');
+  if (expiresAt == null) return;
+  final l10n = AppLocalizations.of(context);
+  unawaited(NotificationService.schedulePromoExpiryReminders(
+    expiresAt: expiresAt.toLocal(),
+    warnTitle: l10n.promoNotifWarnTitle,
+    warnBody: l10n.promoNotifWarnBody,
+    endedTitle: l10n.promoNotifEndedTitle,
+    endedBody: l10n.promoNotifEndedBody,
+  ));
 }
 
 /// Shows the post-tour paywall AT MOST ONCE EVER — shared by the tour

@@ -14,6 +14,7 @@ import '../design_system/components/app_toggle.dart';
 import '../services/auth_service.dart';
 import '../services/username_service.dart';
 import '../services/display_identity_service.dart';
+import '../services/notification_service.dart';
 import '../services/subscription_service.dart';
 import '../models/hand_state_machine.dart';
 import '../models/game_types.dart';
@@ -1087,6 +1088,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
           const SizedBox(height: 8),
           _devButton('Simulate Subscription Flow', const Color(0xFF62E3BC), () {
             PaywallScreen.show(context, mockPurchase: true);
+          }),
+          const SizedBox(height: 8),
+          _devButton('Test Promo Expiry Notification', const Color(0xFFF6B26B),
+              () async {
+            final l10n = AppLocalizations.of(context);
+            await NotificationService.debugFirePromoWarnNow(
+              title: l10n.promoNotifWarnTitle,
+              body: l10n.promoNotifWarnBody,
+            );
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                content:
+                    Text('Notification fired — open the shade and tap it'),
+              ));
+            }
           }),
           const SizedBox(height: 8),
           _devButton('Design Preview', const Color(0xFFAB9FF2), () {

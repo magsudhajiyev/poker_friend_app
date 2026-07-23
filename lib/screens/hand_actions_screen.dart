@@ -1875,10 +1875,15 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                 ),
               ),
             ] else ...[
-              Icon(
-                _aiAnalysis != null ? Icons.check_circle_outline : Icons.psychology,
-                color: textColor,
-              ),
+              if (_aiAnalysis != null)
+                Icon(Icons.check_circle_outline, color: textColor)
+              else
+                SvgPicture.asset(
+                  'icons/figma_icons/sparkle.svg',
+                  width: 22,
+                  height: 22,
+                  colorFilter: ColorFilter.mode(textColor, BlendMode.srcIn),
+                ),
               const SizedBox(width: 12),
               Text(
                 _aiAnalysis != null ? AppLocalizations.of(context).handActionsAnalysisComplete : AppLocalizations.of(context).handActionsAiAnalyzerBeta,

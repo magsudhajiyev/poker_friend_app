@@ -157,6 +157,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     _setupSeatListener();
     _scheduleOnboardingTour();
     OnboardingState.notifier.addListener(_onOnboardingChanged);
+    // Free-month expiry reminders: re-derive the local notification schedule
+    // every session ("1 day left" must fire even if the one-time scheduling
+    // at the post-tour paywall was missed). Idempotent; no-op for non-promo
+    // users. Post-frame so RC customerInfo from startup init is available.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) unawaited(syncPromoExpiryReminders(context));
+    });
   }
 
   void _scheduleOnboardingTour() async {

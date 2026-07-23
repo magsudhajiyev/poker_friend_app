@@ -585,6 +585,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
         fallback;
   }
 
+
   /// Primary price line for a tier (the big price shown on the card).
   String _tierPrimaryPrice(String monthlyId, String annualId,
       AppLocalizations l10n, String monthlyFallback, String annualFallback) {
@@ -622,10 +623,10 @@ class _PaywallScreenState extends State<PaywallScreen> {
             l10n.paywallProFeature4,
             l10n.paywallProFeature5,
           ],
-          showTrialBadge: true,
-          trialBadgeText: widget.launchPromo
-              ? l10n.promoFreeMonthBadge
-              : l10n.paywallFreeTrialBadge,
+          // Free-trial badge removed — no introductory offers are configured
+          // in the stores. Only the launch-promo gift badge remains.
+          showTrialBadge: widget.launchPromo,
+          trialBadgeText: widget.launchPromo ? l10n.promoFreeMonthBadge : null,
           isSelected: _selectedPlanIndex == 0,
           onTap: () => setState(() => _selectedPlanIndex = 0),
         ),
