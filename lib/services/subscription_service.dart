@@ -162,15 +162,28 @@ class SubscriptionService {
   static List<Package> get availablePackages =>
       defaultOffering?.availablePackages ?? [];
 
+  /// Identifier aliases: the Pro packages are the offering's STANDARD
+  /// monthly/annual packages (RC identifiers $rc_monthly / $rc_annual), but
+  /// call sites look them up as 'pro_monthly' / 'pro_annual'. Without the
+  /// alias that lookup silently failed and the paywall showed the hardcoded
+  /// USD fallback prices for Pro — non-USD storefronts saw "$19.99" next to
+  /// correctly localized Elite/Club prices.
+  static const Map<String, String> _packageIdAliases = {
+    'pro_monthly': pkgProMonthly,
+    'pro_annual': pkgProAnnual,
+  };
+
   /// Look up a package by its identifier in the default offering.
   /// Custom package identifiers (elite_monthly, club_annual, etc.) are only
   /// accessible this way — NOT via the .monthly/.annual convenience getters.
   /// Returns null if the package doesn't exist on the current platform.
   static Package? packageById(String identifier) {
     final packages = defaultOffering?.availablePackages ?? [];
-    // Try exact RC package identifier match first
+    final alias = _packageIdAliases[identifier];
+    // Try exact RC package identifier match first (alias-aware)
     for (final p in packages) {
       if (p.identifier == identifier) return p;
+      if (alias != null && p.identifier == alias) return p;
     }
     // Fallback: match by store product identifier.
     // Store IDs use colons (e.g. 'pro:monthly') while lookup keys use
