@@ -14,9 +14,9 @@ class AIAnalyzerService {
 
   /// Analyze a poker hand using the backend AI service.
   /// Redirects to analyzeHandFull for full Claude analysis.
-  /// Locales the backend can generate analysis in (mirrors the app's 9).
+  /// Locales the backend can generate analysis in (mirrors the app's 10).
   static const _analysisLanguages = {
-    'en', 'de', 'es', 'fr', 'pl', 'pt', 'ro', 'ru', 'uk'
+    'en', 'de', 'es', 'fr', 'it', 'pl', 'pt', 'ro', 'ru', 'uk'
   };
 
   /// The language the analysis should be written in: the in-app selection,

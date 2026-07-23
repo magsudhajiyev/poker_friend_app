@@ -94,7 +94,7 @@ flutter clean && flutter pub get
 - **Voice Recognition**: Deepgram ASR via backend "Dealer Brain" endpoint
 - **Payments**: RevenueCat SDK
 - **State Management**: StatefulWidget pattern (no Provider/BLoC/Riverpod — **exception**: the dealer voice pipeline uses `flutter_bloc` via `lib/features/dealer_voice/cubit/`)
-- **Localization**: Flutter's built-in `gen-l10n` system; `.arb` files in `lib/l10n/`; supported: EN, DE, ES, FR, PT, RO, RU, PL, UK. Use `AppLocalizations.of(context)` — never hardcode UI strings.
+- **Localization**: Flutter's built-in `gen-l10n` system; `.arb` files in `lib/l10n/`; supported: EN, DE, ES, FR, IT, PT, RO, RU, PL, UK. Use `AppLocalizations.of(context)` — never hardcode UI strings.
 
 ### Data Flow
 1. User logs hand actions during gameplay

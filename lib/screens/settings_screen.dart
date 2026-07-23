@@ -118,6 +118,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       case 'en': return 'English';
       case 'es': return 'Español';
       case 'fr': return 'Français';
+      case 'it': return 'Italiano';
       case 'pl': return 'Polski';
       case 'pt': return 'Português';
       case 'ro': return 'Română';
@@ -185,6 +186,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     (code: 'de',  label: 'Deutsch',        flagAsset: 'assets/icons/Property 1=Germany (DE).svg'),
     (code: 'es',  label: 'Español',        flagAsset: 'assets/icons/Property 1=Spain (ES).svg'),
     (code: 'fr',  label: 'Français',       flagAsset: 'assets/icons/Property 1=France (FR).svg'),
+    (code: 'it',  label: 'Italiano',       flagAsset: 'assets/icons/Property 1=Italy (IT).svg'),
     (code: 'pl',  label: 'Polski',         flagAsset: 'assets/icons/Property 1=Poland (PL).svg'),
     (code: 'pt',  label: 'Português',      flagAsset: 'assets/icons/Property 1=Portugal (PT).svg'),
     (code: 'ro',  label: 'Română',         flagAsset: 'assets/icons/Property 1=Romania (RO).svg'),
