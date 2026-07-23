@@ -1,0 +1,5492 @@
+{
+  "@@locale": "sk",
+  "navHome": "Domov",
+  "navOpponents": "Súperi",
+  "navSessions": "Sessiony",
+  "navProfile": "Profil",
+  "commonCancel": "Zrušiť",
+  "commonConfirm": "Potvrdiť",
+  "commonDelete": "Vymazať",
+  "commonError": "Chyba",
+  "commonLoading": "Načítava sa...",
+  "commonSave": "Uložiť",
+  "commonRetry": "Skúsiť znova",
+  "commonDone": "Hotovo",
+  "commonOk": "OK",
+  "commonYes": "Áno",
+  "commonNo": "Nie",
+  "commonBack": "Späť",
+  "commonSearch": "Hľadať",
+  "commonNoData": "Žiadne dáta",
+  "commonClose": "Zavrieť",
+  "commonNotAvailable": "N/A",
+  "commonApply": "Použiť",
+  "commonUpdate": "Aktualizovať",
+  "commonClear": "Vyčistiť",
+  "commonToday": "Dnes",
+  "statsTitle": "Štatistiky",
+  "statsSubtitle": "Pokročilá analytika",
+  "statsHandsPlayed": "Odohrané handy",
+  "statsFoldTo3Bet": "Fold to 3-Bet",
+  "statsWinRate": "Winrate",
+  "statsSessionStatistics": "Štatistiky sessionov",
+  "statsSessions": "Sessiony",
+  "statsTotalTime": "Celkový čas",
+  "statsAvgSession": "Priemerná session",
+  "statsPlayToSee": "Odohraj sessiony a uvidíš štatistiky času",
+  "statsGeneral": "Všeobecné",
+  "statsCash": "Cash",
+  "statsTournament": "Turnaj",
+  "statsTotalBuyIn": "Celkový buy-in",
+  "statsTotalCashOut": "Celkový cash-out",
+  "statsNetProfit": "Čistý zisk",
+  "statsItm": "ITM%",
+  "statsAvgFinish": "Priemerné umiestnenie",
+  "statsBestFinish": "Najlepšie umiestnenie",
+  "statsRoi": "ROI%",
+  "statsFinalTables": "Finálové stoly",
+  "statsAvgBuyIn": "Priemerný buy-in",
+  "statsAvgFieldSize": "Priemerná veľkosť poľa",
+  "statsHourlyRate": "Hodinový zárobok",
+  "statsHourlyRateNotAvailable": "Dostupné po 60 minútach sledovania",
+  "errorNoConnection": "Žiadne internetové pripojenie. Skontroluj sieť a skús to znova.",
+  "errorTimeout": "Čas požiadavky vypršal. Skús to znova.",
+  "errorServer": "Niečo sa pokazilo na našej strane. Skús to znova o pár minút.",
+  "errorNotAuthorized": "Na toto nemáš oprávnenie. Skús sa znova prihlásiť.",
+  "errorGeneric": "Niečo sa pokazilo. Skús to znova.",
+  "statsBBPerHour": "BB / hod.",
+  "statsLoadingMessage": "Načítavajú sa štatistiky...",
+  "statsFetchingMessage": "Získavajú sa štatistiky používateľa...",
+  "statsFailedToLoad": "Nepodarilo sa načítať štatistiky: {error}",
+  "@statsFailedToLoad": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsTitle": "Nastavenia",
+  "settingsLanguage": "Jazyk",
+  "settingsLanguageSubtitle": "Vyber jazyk aplikácie",
+  "settingsLanguageSystem": "Podľa systému",
+  "settingsCurrency": "Mena",
+  "settingsKnowledgeBase": "ZNALOSTNÁ BÁZA",
+  "settingsGuidedTour": "Sprievodca aplikáciou",
+  "settingsGuidedTourSubtitle": "Znovu si prehraj úvodných sprievodcov",
+  "settingsFullLoggingTour": "Sprievodca plným logovaním",
+  "settingsFullLoggingTourSubtitle": "Kompletný postup sledovania session",
+  "settingsUnderstandingStats": "Pochop svoje štatistiky",
+  "settingsUnderstandingStatsSubtitle": "Zisti, čo znamená každá metrika",
+  "settingsClubsEvents": "Kluby a eventy",
+  "settingsClubsEventsSubtitle": "Ako funguje hra v klube",
+  "settingsLegal": "PRÁVNE",
+  "settingsTermsOfService": "Podmienky používania",
+  "settingsTermsOfServiceSubtitle": "Pozri si naše podmienky používania",
+  "settingsPrivacyPolicy": "Zásady ochrany súkromia",
+  "settingsPrivacyPolicySubtitle": "Pozri si naše zásady ochrany súkromia",
+  "settingsAdmin": "ADMIN",
+  "settingsClubRequests": "Žiadosti o klub",
+  "settingsClubRequestsSubtitle": "Spravuj registračné žiadosti",
+  "settingsSupportRequests": "Žiadosti o podporu",
+  "settingsSupportRequestsSubtitle": "Spravuj tikety používateľov",
+  "settingsNotificationTester": "Tester notifikácií",
+  "settingsNotificationTesterSubtitle": "Náhľad všetkých dizajnov notifikácií",
+  "profileUpgrade": "Upgrade",
+  "profileUsername": "Používateľské meno",
+  "profileNotSet": "Nenastavené",
+  "profileChange": "Zmeniť",
+  "profileSetUsername": "Nastaviť používateľské meno",
+  "profileUseNicknameInGames": "Používať prezývku v hrách",
+  "profileUseNicknameDescription": "Zobrazí @{username} namiesto tvojho mena v eventoch a pri logovaní hánd",
+  "@profileUseNicknameDescription": {
+    "placeholders": {
+      "username": {
+        "type": "String"
+      }
+    }
+  },
+  "profileBankrollGoal": "Cieľ bankrollu",
+  "profileUpdateGoal": "Aktualizovať cieľ",
+  "profileCurrentBankroll": "Aktuálny bankroll",
+  "profileUpdateBankroll": "Aktualizovať bankroll",
+  "profileAddSessionResult": "Pridať výsledok session",
+  "profileSessionResultHint": "Zadaj kladné číslo pre výhru, záporné pre prehru",
+  "profileAddResult": "Pridať výsledok",
+  "profileGoalUpdatedSuccess": "Cieľ bol úspešne aktualizovaný!",
+  "profileErrorUpdatingGoal": "Chyba pri aktualizácii cieľa",
+  "profileBankrollUpdatedSuccess": "Bankroll bol úspešne aktualizovaný!",
+  "profileErrorUpdatingBankroll": "Chyba pri aktualizácii bankrollu",
+  "profileSessionResultAdded": "Výsledok session bol pridaný!",
+  "profileErrorAddingResult": "Chyba pri pridávaní výsledku session",
+  "profilePleaseEnterValidAmount": "Zadaj platnú sumu",
+  "profileLogOut": "Odhlásiť sa",
+  "profileSignOut": "Odhlásiť sa",
+  "profileSignOutConfirmation": "Naozaj sa chceš odhlásiť?",
+  "sessionHistoryTitle": "História sessionov",
+  "sessionLast30Days": "Posledných 30 dní",
+  "sessionUpgradeForFullHistory": "Upgradni pre celú históriu",
+  "sessionLoadingMessage": "Načítavajú sa sessiony...",
+  "sessionNoSessions": "Žiadne {gameType} sessiony",
+  "@sessionNoSessions": {
+    "placeholders": {
+      "gameType": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionPlayToSee": "Odohraj nejaké {gameType} pokrové handy\na uvidíš výsledky",
+  "@sessionPlayToSee": {
+    "placeholders": {
+      "gameType": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionLive": "Live",
+  "sessionPlayersCount": "{count} hráčov",
+  "@sessionPlayersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sessionSyncingToCloud": "Synchronizuje sa do cloudu...",
+  "sessionClearAllTitle": "Vymazať všetky sessiony?",
+  "sessionClearAllDescription": "Toto natrvalo vymaže všetky pokrové sessiony a handy z Firebase aj z lokálneho úložiska.",
+  "sessionClearAllWarning": "Túto akciu nie je možné vrátiť späť!",
+  "sessionClearAll": "Vymazať všetko",
+  "sessionClearedSuccessfully": "Všetky sessiony boli úspešne vymazané",
+  "sessionHandDetails": "Detaily handy #{handNumber}",
+  "@sessionHandDetails": {
+    "placeholders": {
+      "handNumber": {
+        "type": "int"
+      }
+    }
+  },
+  "sessionYourCards": "Tvoje karty:",
+  "sessionBoardCards": "Karty na boarde:",
+  "sessionPotByStreet": "Pot podľa streetov:",
+  "sessionActions": "Akcie:",
+  "sessionNoActionsRecorded": "Žiadne zaznamenané akcie",
+  "sessionNoCardsRecorded": "Žiadne zaznamenané karty",
+  "sessionFinalPot": "Konečný pot:",
+  "sessionChoppedPot": "Chopped pot ({count} víťazov):",
+  "@sessionChoppedPot": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sessionWinnerNotAvailable": "Informácie o víťazovi nie sú dostupné",
+  "opponentsTitle": "Súperi",
+  "opponentsCountFree": "{count}/{max} zadarmo",
+  "@opponentsCountFree": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "opponentsCountPremium": "{count} sledovaných hráčov",
+  "@opponentsCountPremium": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "opponentsSearchHint": "Hľadať súperov...",
+  "opponentsLoadingMessage": "Načítavajú sa súperi...",
+  "opponentsNoResults": "Žiadne výsledky",
+  "opponentsEmptyTitle": "Zatiaľ žiadni súperi",
+  "opponentsEmptySubtitle": "Pridaj si súperov a sleduj ich herný štýl a štatistiky",
+  "opponentsEmptySearchSubtitle": "Skús iný výraz",
+  "opponentsAddButton": "Pridať súpera",
+  "opponentsLastSeen": "Naposledy videný: {date}",
+  "@opponentsLastSeen": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "opponentsHands": "Handy",
+  "opponentsEditMenu": "Upraviť súpera",
+  "opponentsDeleteMenu": "Vymazať súpera",
+  "opponentsAddDialogTitle": "Pridať súpera",
+  "opponentsEditDialogTitle": "Upraviť súpera",
+  "opponentsNameHint": "Meno súpera",
+  "opponentsNotesHint": "Poznámky (voliteľné)",
+  "opponentsPickColor": "Vyber farbu",
+  "opponentsAddedSuccess": "Súper bol úspešne pridaný",
+  "opponentAlreadyExists": "Súper s menom \"{name}\" už existuje",
+  "@opponentAlreadyExists": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "opponentsUpdatedSuccess": "Súper bol úspešne aktualizovaný",
+  "opponentsDeleteConfirmTitle": "Vymazať súpera?",
+  "opponentsDeleteConfirmMessage": "Naozaj chceš vymazať \"{name}\"?\nTúto akciu nie je možné vrátiť späť",
+  "@opponentsDeleteConfirmMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "opponentsDeletedSuccess": "Súper bol úspešne vymazaný",
+  "opponentsAnalyticsTitle": "Analytika súperov",
+  "opponentsAnalyticsTotalLabel": "Celkový počet súperov",
+  "opponentsAnalyticsHandsTracked": "Celkový počet sledovaných hánd",
+  "opponentsAnalyticsAverage": "Priemer hánd na súpera",
+  "opponentsAnalyticsMostPlayed": "Najčastejší súper",
+  "opponentsAnalyticsDistribution": "Rozdelenie typov hráčov:",
+  "opponentsClearAllTitle": "Vymazať všetkých súperov?",
+  "opponentsClearAllMessage": "Toto natrvalo vymaže všetky dáta o súperoch. Túto akciu nie je možné vrátiť späť!",
+  "opponentsClearAllButton": "Vymazať všetko",
+  "opponentsClearedSuccess": "Všetci súperi boli vymazaní",
+  "setupSessionSetup": "Nastavenie session",
+  "setupSessionName": "Názov session",
+  "setupSessionNameHint": "napr. \"Piatkový poker\"",
+  "setupGameType": "Typ hry",
+  "setupCashGame": "Cash game",
+  "setupTournament": "Turnaj",
+  "setupSmallBlind": "Small blind",
+  "setupBigBlind": "Big blind",
+  "setupBuyInAmount": "Výška buy-inu",
+  "setupEnterAmount": "Zadaj sumu",
+  "setupStartingStackEqualsBuyIn": "Počiatočný stack sa rovná tvojmu buy-inu.",
+  "setupStartingStack": "Počiatočný stack",
+  "setupEnterChipStack": "Zadaj výšku stacku",
+  "setupMustBeAtLeastBigBlind": "Musí byť aspoň big blind ({bigBlind})",
+  "@setupMustBeAtLeastBigBlind": {
+    "placeholders": {
+      "bigBlind": {
+        "type": "int"
+      }
+    }
+  },
+  "setupBbAnte": "BB ante",
+  "setupTableSection": "STÔL",
+  "setupTableInstructions": "Ťukni na miesto a pridaj hráča.\nPotiahnutím buttonu nastav dealera.",
+  "setupStartSession": "Spustiť session",
+  "setupMe": "Ja",
+  "setupPlayerSeat": "Hráč {seatNumber}",
+  "@setupPlayerSeat": {
+    "placeholders": {
+      "seatNumber": {
+        "type": "int"
+      }
+    }
+  },
+  "setupHero": "Hero",
+  "homeLoadingPokerData": "Načítavajú sa tvoje pokrové dáta...",
+  "homeWelcomeBack": "Vitaj späť",
+  "homeNoActiveSessions": "Žiadne aktívne sessiony",
+  "homeLiveSessions": "Live sessiony",
+  "homeClubNotFound": "Klub sa nenašiel",
+  "homeEventNotFound": "Event sa nenašiel",
+  "homeRecentActivity": "Nedávna aktivita",
+  "homeWinRate": "Winrate",
+  "homeHours": "Hodiny",
+  "homePlayStyle": "Herný štýl",
+  "homePlayStyleTooltip": "Tvoj herný štýl sa určí po zalogovaní 50 preflop hánd.",
+  "homeBankroll": "Bankroll",
+  "homeBankrollOfGoal": "{current} z {goal}",
+  "@homeBankrollOfGoal": {
+    "placeholders": {
+      "current": {
+        "type": "String"
+      },
+      "goal": {
+        "type": "String"
+      }
+    }
+  },
+  "homeAmountLeft": "zostáva {amount}",
+  "@homeAmountLeft": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "homeEarnings": "Zárobky",
+  "homeNetProfitWeek": "Čistý zisk / týždeň · {week}",
+  "@homeNetProfitWeek": {
+    "placeholders": {
+      "week": {
+        "type": "String"
+      }
+    }
+  },
+  "homeAvgAmount": "Priem. {amount}",
+  "@homeAvgAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "homeNoEarningsDataYet": "Zatiaľ žiadne dáta o zárobkoch",
+  "homeRecentSessions": "Nedávne sessiony",
+  "homeViewAll": "Zobraziť všetko",
+  "homeNoRecentSessions": "Žiadne nedávne sessiony",
+  "homeStartFirstSession": "Spusti svoju prvú pokrovú session!",
+  "homeAddNew": "Pridať nový",
+  "homeUpcomingEvents": "Nadchádzajúce eventy",
+  "homeNoRecentEvents": "Žiadne nedávne eventy",
+  "homeAddFirstEvent": "Pridaj svoj prvý pokrový event!",
+  "homePlayersCount": "{count} hráčov",
+  "@homePlayersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "homeGoingCount": "{count} sa zúčastní",
+  "@homeGoingCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "homePrivateGame": "Súkromná hra",
+  "homeHomeGame": "Domáca hra",
+  "homeOnline": "Online",
+  "homeEditEvent": "Upraviť event",
+  "homeDeleteEvent": "Vymazať event",
+  "homeEventName": "Názov eventu",
+  "homeLocationVenue": "Miesto konania",
+  "homeBuyInAmount": "Výška buy-inu",
+  "homeSelectDate": "Vyber dátum:",
+  "homeSaveChanges": "Uložiť zmeny",
+  "homeDeleteEventConfirm": "Vymazať {eventName}?",
+  "@homeDeleteEventConfirm": {
+    "placeholders": {
+      "eventName": {
+        "type": "String"
+      }
+    }
+  },
+  "homeDeleteEventDescription": "Naozaj chceš vymazať \"{eventName}\"?",
+  "@homeDeleteEventDescription": {
+    "placeholders": {
+      "eventName": {
+        "type": "String"
+      }
+    }
+  },
+  "homeEventDeletedSuccessfully": "Event bol úspešne vymazaný",
+  "homeClubInvitation": "Pozvánka do klubu",
+  "homeYouveBeenInvitedToJoin": "Dostal si pozvánku do",
+  "homeDecline": "Odmietnuť",
+  "homeAccept": "Prijať",
+  "homeInvitationDeclined": "Pozvánka odmietnutá",
+  "homeInvitationAccepted": "Pozvánka prijatá",
+  "homeClubInvitations": "Pozvánky do klubov",
+  "homeLater": "Neskôr",
+  "homeViewInvitations": "Zobraziť pozvánky",
+  "homeNoEarningsDataTitle": "Zatiaľ žiadne dáta o zárobkoch",
+  "homeNoEarningsDataDescription": "Najprv pridaj výsledky sessionov, aby si videl graf zárobkov. Výsledky môžeš pridať na stránke Profil.",
+  "handHandNumber": "Handa #{number}",
+  "@handHandNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "handFreeCounter": "{used}/{max} zadarmo",
+  "@handFreeCounter": {
+    "placeholders": {
+      "used": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "handAvgPill": "{ratio} priem.",
+  "@handAvgPill": {
+    "placeholders": {
+      "ratio": {
+        "type": "String"
+      }
+    }
+  },
+  "handNextHand": "Ďalšia handa",
+  "handFoldedToMe": "Všetci foldli ku mne",
+  "handUndoLastAction": "Vrátiť poslednú akciu",
+  "handAllInHand": "ALL-IN HANDA",
+  "handPot": "Pot",
+  "handStack": "Stack",
+  "handToAct": "Na rade",
+  "handToActYou": "Ty",
+  "handStopSessionTitle": "Ukončiť session?",
+  "handStopSessionMessage": "Naozaj chceš ukončiť túto session? Všetky handy budú uložené.",
+  "handStop": "Ukončiť",
+  "handChangeTable": "Zmeniť stôl",
+  "handBlinds": "Blindy",
+  "handTakesEffectNextHand": "Platí od ďalšej handy",
+  "handLeaveSession": "Opustiť session?",
+  "handSaveAndExit": "Uložiť a odísť",
+  "handDiscardAndExit": "Zahodiť a odísť",
+  "handInProgress": "Handa prebieha",
+  "handDiscardCurrentHand": "Práve loguješ aktívnu handu. Zahodiť ju a vrátiť sa?",
+  "handDiscardHand": "Zahodiť handu",
+  "handAdjustStack": "Upraviť stack",
+  "handEnterStackAmount": "Zadaj výšku stacku",
+  "handGestureGuide": "Sprievodca gestami",
+  "handManagePlayers": "Spravovať hráčov",
+  "handStopSession": "Ukončiť session",
+  "handRebuy": "Rebuy",
+  "handGestures": "Gestá",
+  "handGestureTap": "Ťuknutie",
+  "handGestureCheckCall": "Check / Call",
+  "handGestureSwipeOut": "Potiahnutie von",
+  "handGestureSwipeUp": "Stlač a potiahni hore",
+  "handGestureBetRaise": "Bet / Raise",
+  "handStreetComplete": "Street dokončený",
+  "handWinsThePot": "vyhráva pot",
+  "handHandComplete": "Handa dokončená",
+  "handTapToContinue": "Pokračuj ťuknutím",
+  "handRaiseAmount": "Výška raisu",
+  "handBetAmount": "Výška betu",
+  "handPleaseEnterValidNumber": "Zadaj platné číslo",
+  "handConfirmRebuy": "Potvrdiť rebuy",
+  "handRebuyReplaceStack": "Rebuy nahradí tvoj aktuálny stack. Naozaj chceš pokračovať?",
+  "handProceed": "Pokračovať",
+  "handEnterRebuyDetails": "Zadaj detaily rebuyu pre turnaj",
+  "handRebuyAmount": "Výška rebuyu",
+  "handNewStackSize": "Nová veľkosť stacku",
+  "handChipCountAfterRebuy": "Počet žetónov po rebuyi",
+  "handSessionInfo": "Info o session",
+  "handTotalInvested": "Celkovo investované: {amount}",
+  "@handTotalInvested": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "handRebuysCount": "Rebuye: {count}",
+  "@handRebuysCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "handAddRebuy": "Pridať rebuy",
+  "handPleaseEnterValidAmounts": "Zadaj platné sumy",
+  "handHandInProgress": "Handa prebieha",
+  "handHandInProgressMessage": "Prebieha handa. Prechodom na ďalšiu handu sa zahodia všetky akcie a obnovia sa stacky hráčov.",
+  "handMoveToNextHand": "Prejsť na ďalšiu handu",
+  "handMainPot": "Hlavný",
+  "handSidePot": "Side {index}",
+  "@handSidePot": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "handPokerSession": "Pokrová session",
+  "handActionsHandNumber": "Handa #{number}",
+  "@handActionsHandNumber": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "handActionsPosition": "Pozícia: {position}",
+  "@handActionsPosition": {
+    "placeholders": {
+      "position": {
+        "type": "String"
+      }
+    }
+  },
+  "handActionsShareHand": "Zdieľať handu",
+  "handActionsShowHoleCards": "Zobraziť hole karty",
+  "handActionsShowHoleCardsSubtitle": "Tvoje karty budú viditeľné v zdieľanom odkaze",
+  "handActionsHideHoleCards": "Skryť hole karty",
+  "handActionsHideHoleCardsSubtitle": "Tvoje karty budú v zdieľanom odkaze skryté",
+  "handActionsShareMessage": "Pozri si túto hand na Final Table!",
+  "handActionsShareSubject": "Pokrová hand #{number}",
+  "@handActionsShareSubject": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "handActionsFailedToShareHand": "Nepodarilo sa zdieľať hand",
+  "handActionsGeneratingExport": "Generujem PokerStars export...",
+  "handActionsExportedSuccessfully": "Hand #{number} bola úspešne exportovaná!",
+  "@handActionsExportedSuccessfully": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "handActionsFailedToExport": "Nepodarilo sa exportovať hand: {error}",
+  "@handActionsFailedToExport": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "handActionsMissingHeroCards": "Chýbajú karty hrdinu",
+  "handActionsMissingHeroCardsMessage": "AI analýza vyžaduje zaznamenané hole karty. Túto hand nie je možné analyzovať, pretože karty hrdinu chýbajú.",
+  "handActionsYourCards": "Tvoje karty",
+  "handActionsOpponentCards": "Karty súpera",
+  "handActionsPlayerSeat": "Hráč {id}",
+  "@handActionsPlayerSeat": {
+    "placeholders": {
+      "id": {
+        "type": "int"
+      }
+    }
+  },
+  "handActionsPot": "POT",
+  "handActionsBlinds": "BLINDS",
+  "handActionsWinner": "VÍŤAZ",
+  "handActionsPlayersCount": "{count} hráčov",
+  "@handActionsPlayersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "handActionsActionSummary": "Prehľad akcií",
+  "handActionsPreflop": "PREFLOP",
+  "handActionsBoard": "BOARD",
+  "handActionsPlayer": "HRÁČ",
+  "handActionsStack": "STACK",
+  "handActionsAction": "AKCIA",
+  "handActionsAmount": "SUMA",
+  "handActionsYou": "Ty",
+  "handActionsAllIn": "ALL IN",
+  "handActionsNotes": "Poznámky",
+  "handActionsAnalyzingHand": "Analyzujem hand...",
+  "handActionsHeroCardsMissing": "Chýbajú karty hrdinu",
+  "handActionsUnlockAiAnalysis": "Odomkni AI analýzu",
+  "handActionsAnalysisComplete": "Analýza dokončená",
+  "handActionsAiAnalyzerBeta": "AI analyzátor (beta)",
+  "handActionsAnalysisFailed": "Analýza zlyhala",
+  "handActionsAiAnalysis": "AI analýza",
+  "handActionsStreetByStreetBreakdown": "Rozbor po jednotlivých streetoch",
+  "handActionsAnalysisCompletedIn": "Analýza dokončená za {time} s",
+  "@handActionsAnalysisCompletedIn": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "handActionsFailedToUpdateStar": "Nepodarilo sa aktualizovať označenie hviezdičkou",
+  "handActionsPotAmount": "Pot: {amount}",
+  "@handActionsPotAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "opponentDetailHandsTracked": "{count} sledovaných hands",
+  "@opponentDetailHandsTracked": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "opponentDetailNoDataYet": "Zatiaľ žiadne dáta",
+  "opponentDetailHands": "Hands",
+  "opponentDetailLastSeen": "Naposledy videný:",
+  "opponentDetailNotes": "Poznámky",
+  "opponentDetailEditOpponent": "Upraviť súpera",
+  "opponentDetailDeleteOpponent": "Vymazať súpera",
+  "opponentDetailStatistics": "Štatistiky",
+  "opponentDetailNoStatisticsAvailable": "Žiadne štatistiky nie sú k dispozícii",
+  "opponentDetailStatsDisclaimer": "Štatistiky vychádzajú len z hands, ktoré ste spolu zalogovali. VPIP sa nesleduje, pretože nepozorované foldy by ho nadhodnotili.",
+  "opponentDetailAggressionFreq": "Agresivita %",
+  "opponentDetailShowdownPercent": "Showdown %",
+  "opponentDetailHandHistory": "História hands",
+  "opponentDetailViewAllHands": "Zobraziť všetky hands odohrané s týmto súperom",
+  "opponentDetailViewHandHistory": "Zobraziť históriu hands",
+  "opponentDetailNoHandsFound": "Nenašli sa žiadne hands",
+  "opponentDetailNoHandsMessage": "S hráčom \"{name}\" si zatiaľ neodohral žiadne hands",
+  "@opponentDetailNoHandsMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "opponentDetailOpponentName": "Meno súpera",
+  "opponentDetailNotesOptional": "Poznámky (voliteľné)",
+  "opponentDetailPickColor": "Vyber si farbu",
+  "opponentDetailColorRed": "Červená",
+  "opponentDetailColorLightBlue": "Svetlomodrá",
+  "opponentDetailColorGreen": "Zelená",
+  "opponentDetailColorOrange": "Oranžová",
+  "opponentDetailColorPurple": "Fialová",
+  "opponentDetailColorTeal": "Tyrkysová",
+  "opponentDetailColorPink": "Ružová",
+  "opponentDetailColorIndigo": "Indigová",
+  "opponentDetailUpdatedSuccessfully": "Súper bol úspešne aktualizovaný",
+  "opponentDetailDeleteConfirmTitle": "Vymazať súpera?",
+  "opponentDetailDeleteConfirmMessage": "Naozaj chceš vymazať hráča \"{name}\"?\nTúto akciu nie je možné vrátiť späť",
+  "@opponentDetailDeleteConfirmMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "opponentDetailDeletedSuccessfully": "Súper bol úspešne vymazaný",
+  "opponentDetailErrorDeleting": "Chyba pri mazaní súpera: {error}",
+  "@opponentDetailErrorDeleting": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "individualSessionCreatedLocally": "Session bola vytvorená lokálne. Synchronizuje sa do cloudu, keď bude dostupné pripojenie.",
+  "individualUpdateCurrentStack": "Aktualizovať aktuálny stack",
+  "individualCurrentStack": "Aktuálny stack:",
+  "individualSetNewTotal": "Nastaviť nový celkový stav",
+  "individualEnterNewTotalStack": "Zadaj nový celkový stack",
+  "individualAddSubtractAmount": "Pridať/odobrať sumu",
+  "individualAmount": "Suma",
+  "individualSetTotal": "Nastaviť celkovo",
+  "individualNoteLabel": "Poznámka (voliteľné)",
+  "individualNoteHint": "napr. Vyhral som veľký pot s AA",
+  "individualTableAvgHint": "Priemer stola (voliteľné)",
+  "individualUpdateBlinds": "Aktualizovať blinds",
+  "individualSmallBlind": "Small Blind",
+  "individualBigBlind": "Big Blind",
+  "individualBbMode": "BB režim",
+  "individualCurrentStackLabel": "Aktuálny stack",
+  "individualSessionInfo": "Info o session",
+  "individualStartingStack": "Počiatočný stack",
+  "individualInitialBuyIn": "Počiatočný buy-in",
+  "individualRebuys": "Rebuys",
+  "individualTotalInvested": "Celkovo investované",
+  "individualBlindsLabel": "Blinds",
+  "individualHandsLogged": "Zalogované hands",
+  "individualLogAHand": "Zalogovať hand",
+  "individualGoBackToHand": "Späť na hand",
+  "individualStackChart": "Graf stacku",
+  "individualCompleteHandToSee": "Dokonči hand, aby si videl vývoj svojho stacku",
+  "individualStopSessionTitle": "Ukončiť session?",
+  "individualStopSessionMessage": "Naozaj chceš ukončiť túto session? Všetky hands budú uložené.",
+  "individualStop": "Ukončiť",
+  "individualConfirmRebuy": "Potvrdiť rebuy",
+  "individualRebuyCurrentStack": "Momentálne ti zostáva {stack}.",
+  "@individualRebuyCurrentStack": {
+    "placeholders": {
+      "stack": {
+        "type": "String"
+      }
+    }
+  },
+  "individualRebuyReplaceMessage": "Rebuy nahradí tvoj aktuálny stack. Naozaj chceš pokračovať?",
+  "individualProceedWithRebuy": "Pokračovať s rebuy",
+  "individualAddOn": "Add-on",
+  "individualAddOnDescription": "Zadaj sumu add-onu na zvýšenie celkovej investície",
+  "individualAddOnAmount": "Suma add-onu",
+  "individualAddOnConfirm": "Pridať",
+  "individualAddOnDescriptionTournament": "Zadaj cenu add-onu a získané žetóny",
+  "individualAddOnPrice": "Cena add-onu",
+  "individualAddOnChips": "Získané žetóny",
+  "individualRebuy": "Rebuy",
+  "individualEnterRebuyAmount": "Zadaj sumu rebuy (stack sa bude rovnať sume rebuy)",
+  "individualEnterRebuyAmountAndStack": "Zadaj sumu rebuy a novú veľkosť stacku",
+  "individualRebuyAmount": "Suma rebuy",
+  "individualNewStackSize": "Nová veľkosť stacku",
+  "individualChipCountAfterRebuy": "Počet žetónov po rebuy",
+  "individualTotalInvestedAmount": "Celkovo investované: ${amount}",
+  "@individualTotalInvestedAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "individualCurrentStackAmount": "Aktuálny stack: {stack}",
+  "@individualCurrentStackAmount": {
+    "placeholders": {
+      "stack": {
+        "type": "String"
+      }
+    }
+  },
+  "individualRebuysCount": "Rebuys: {count}",
+  "@individualRebuysCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "individualAddRebuy": "Pridať rebuy",
+  "individualPleaseEnterValidRebuy": "Zadaj platnú sumu rebuy",
+  "individualPleaseEnterValidStack": "Zadaj platnú veľkosť stacku",
+  "individualRebuyAddedSimple": "Rebuy pridaný: ${amount}",
+  "@individualRebuyAddedSimple": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "individualRebuyAddedWithStack": "Rebuy pridaný: ${amount} (stack: {stack})",
+  "@individualRebuyAddedWithStack": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "stack": {
+        "type": "String"
+      }
+    }
+  },
+  "authWelcome": "Vitaj vo Final Table",
+  "authSignIn": "Prihlásiť sa",
+  "authRegister": "Registrovať sa",
+  "authEmail": "E-mail",
+  "authPassword": "Heslo",
+  "authDisplayName": "Zobrazované meno",
+  "authConfirmPassword": "Potvrď heslo",
+  "authPleaseEnterEmail": "Zadaj svoj e-mail",
+  "authPleaseEnterValidEmail": "Zadaj platný e-mail",
+  "authPleaseEnterPassword": "Zadaj svoje heslo",
+  "authPleaseEnterName": "Zadaj svoje meno",
+  "authNameMinLength": "Meno musí mať aspoň 2 znaky",
+  "authPleaseEnterAPassword": "Zadaj heslo",
+  "authPasswordMinLength": "Heslo musí mať aspoň 6 znakov",
+  "authPleaseConfirmPassword": "Potvrď svoje heslo",
+  "authPasswordsDoNotMatch": "Heslá sa nezhodujú",
+  "authCreateAccount": "Vytvoriť účet",
+  "authForgotPassword": "Zabudol si heslo?",
+  "authResetPassword": "Obnoviť heslo",
+  "authResetPasswordMessage": "Zadaj svoju e-mailovú adresu a pošleme ti odkaz na obnovenie hesla.",
+  "authSendResetLink": "Poslať odkaz na obnovenie",
+  "authPasswordResetSent": "E-mail na obnovenie hesla bol odoslaný!",
+  "paywallRestore": "Obnoviť",
+  "paywallTitle": "FINAL TABLE PREMIUM",
+  "paywallAvailablePlans": "Dostupné plány",
+  "paywallStepLabel": "Krok 1 z 2",
+  "paywallChooseYourPlan": "Vyber si svoj plán",
+  "paywallUpgradeOrCancel": "Prejdi na vyšší plán alebo zruš kedykoľvek",
+  "paywallContinue": "Pokračovať",
+  "paywallUnlockFeature": "Odomkni {featureName}",
+  "@paywallUnlockFeature": {
+    "placeholders": {
+      "featureName": {
+        "type": "String"
+      }
+    }
+  },
+  "paywallGoPremium": "Prejdi na Premium",
+  "paywallFeatureSubtitle": "Táto funkcia je súčasťou Final Table Premium. Vyber si plán, ktorý sedí tvojmu štýlu hry.",
+  "paywallGeneralSubtitle": "Odomkni všetko, čo Final Table ponúka. Sleduj viac hands, analyzuj svoju hru, spravuj svoj klub.",
+  "paywallProTier": "Pro",
+  "paywallFreeTrialBadge": "7-dňová skúšobná verzia zadarmo",
+  "promoFreeMonthBadge": "1 MESIAC ZADARMO",
+  "promoWelcomeTitle": "Darček od nás 🎁",
+  "promoWelcomeBody": "Uži si 1 mesiac Pro zážitku na náš účet! Pro prístup je už aktívny na tvojom účte.",
+  "promoNotifWarnTitle": "Tvoj bezplatný Pro mesiac čoskoro končí",
+  "promoNotifWarnBody": "Z tvojho bezplatného Pro prístupu zostáva už len 1 deň.",
+  "promoNotifEndedTitle": "Tvoj bezplatný Pro mesiac skončil",
+  "promoNotifEndedBody": "Udrž si náskok — na Pro môžeš prejsť kedykoľvek.",
+  "paywallProDescription": "Všetko, čo potrebuješ na zvládnutie svojej hry.",
+  "paywallUnlimitedHandLogging": "Neobmedzené logovanie hands",
+  "paywallFullSessionHistory": "Kompletná história sessions",
+  "paywallAiHandAnalysis": "AI analýza hands",
+  "paywallExportHandsCsv": "Export hands do CSV",
+  "paywallProMonthly": "19,99 $/mesiac",
+  "paywallProYearly": "alebo 199,99 $/rok. Ušetríš približne 25 %**",
+  "paywallStartFreeTrial": "Začni 7-dňovú skúšobnú verziu zadarmo",
+  "paywallEliteTier": "Elite",
+  "paywallEliteDescription": "Posuň svoju hru na vyšší level.",
+  "paywallEverythingInProElite": "Všetko z Pro",
+  "paywallEliteFeature1": "Pokročilé profilovanie súperov",
+  "paywallEliteFeature2": "Detailná analytika sessions",
+  "paywallEliteFeature3": "Prioritná podpora",
+  "paywallEliteMonthly": "29,99 $/mesiac",
+  "paywallEliteYearly": "alebo 199,99 $/rok. Ušetríš približne 25 %**",
+  "paywallGetElite": "Získať Elite",
+  "paywallClubTier": "Club",
+  "paywallClubDescription": "Pre domáce hry, kluby a live podniky.",
+  "paywallEverythingInPro": "Všetko z Pro",
+  "paywallClubManagement": "Správa klubu a role členov",
+  "paywallLiveDealerVoice": "Hlasové logovanie live dealerom",
+  "paywallMultiTableEvents": "Eventy na viacerých stoloch s rebríčkami",
+  "paywallClubMonthly": "39,99 $/mesiac",
+  "paywallClubYearly": "alebo 199,99 $/rok. Ušetríš približne 25 %**",
+  "paywallGetClub": "Získať Club",
+  "paywallDisclaimer": "Predplatné sa automaticky obnovuje. Uvedená cena ti bude účtovaná, ak predplatné nezrušíš aspoň 24 hodín pred koncom obdobia. Zrušiť ho môžeš kedykoľvek v nastaveniach účtu.",
+  "paywallTerms": "Podmienky",
+  "paywallPrivacy": "Súkromie",
+  "paywallPurchasesRestored": "Nákupy boli obnovené",
+  "paywallNoPreviousPurchases": "Nenašli sa žiadne predchádzajúce nákupy",
+  "paywallWelcomePro": "Vitaj v Pro!",
+  "paywallPurchaseFailed": "Nákup zlyhal. Skús to znova.",
+  "paywallSubscriptionUnavailable": "Možnosti predplatného nie sú dostupné. Skús to znova.",
+  "paywallMonthly": "Mesačne",
+  "paywallAnnual": "Ročne",
+  "paywallAnnualSave": "Ročne (ušetríš ~35 %)",
+  "introGameSetup": "Nastavenie hry",
+  "introConfigureSession": "Nastav si svoju session",
+  "introSmallBlind": "Small Blind",
+  "introBigBlind": "Big Blind",
+  "introPlayers": "Hráči",
+  "introGameType": "Typ hry",
+  "introBbAnte": "BB ante",
+  "introBbAnteDescription": "Zapnúť pravidlo big blind ante",
+  "introStartGame": "SPUSTIŤ HRU",
+  "introStartingSession": "Spúšťam tvoju pokrovú session...",
+  "introEnterField": "Zadaj {title}",
+  "@introEnterField": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "introEnterAmount": "Zadaj sumu",
+  "introPleaseEnterValidNumber": "Zadaj platné kladné číslo",
+  "introRingGame": "Ring Game",
+  "introMultiTable": "Viac stolov",
+  "invitationTitle": "Pozvánky do klubov",
+  "invitationNoPending": "Žiadne čakajúce pozvánky",
+  "invitationYouWillSeeHere": "Tu uvidíš pozvánky z klubov",
+  "invitationGoBack": "Späť",
+  "invitationFailedToLoad": "Nepodarilo sa načítať pozvánky: {error}",
+  "@invitationFailedToLoad": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "invitationJoinedAs": "Pripojil si sa do {clubName} ako {role}",
+  "@invitationJoinedAs": {
+    "placeholders": {
+      "clubName": {
+        "type": "String"
+      },
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "invitationFailedToAccept": "Nepodarilo sa prijať pozvánku: {error}",
+  "@invitationFailedToAccept": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "invitationDeclined": "Pozvánka odmietnutá",
+  "invitationFailedToDecline": "Nepodarilo sa odmietnuť pozvánku: {error}",
+  "@invitationFailedToDecline": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "invitationUnknownClub": "Neznámy klub",
+  "invitationInvitedBy": "Pozval ťa {name}",
+  "@invitationInvitedBy": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "invitationExpiresDate": "Vyprší {date}",
+  "@invitationExpiresDate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "invitationExpired": "Vypršala",
+  "invitationExpiresInDays": "o {days} deň/dni/dní",
+  "@invitationExpiresInDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "invitationExpiresInHours": "o {hours} hod.",
+  "@invitationExpiresInHours": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "invitationExpiresSoon": "čoskoro",
+  "invitationDeclineButton": "Odmietnuť",
+  "invitationAcceptButton": "Prijať",
+  "notificationTitle": "Upozornenia",
+  "notificationToday": "Dnes",
+  "notificationYesterday": "Včera",
+  "notificationThisWeek": "Tento týždeň",
+  "notificationEarlier": "Staršie",
+  "notificationMarkAllRead": "Označiť všetko ako prečítané",
+  "notificationMarkAsRead": "Označiť ako prečítané",
+  "notificationNoNotifications": "Žiadne upozornenia",
+  "notificationEvents": "Eventy",
+  "notificationRsvp": "RSVP",
+  "notificationClubs": "Kluby",
+  "notificationInvitations": "Pozvánky",
+  "notificationSeats": "Miesta",
+  "notificationSupport": "Podpora",
+  "notificationClubNotFound": "Klub sa nenašiel",
+  "notificationEventNotFound": "Event sa nenašiel",
+  "notificationError": "Chyba: {error}",
+  "@notificationError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationErrorLoadingEvent": "Chyba pri načítaní eventu: {error}",
+  "@notificationErrorLoadingEvent": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationFailedToLoadClub": "Nepodarilo sa načítať klub: {error}",
+  "@notificationFailedToLoadClub": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationClubInvitation": "Pozvánka do klubu",
+  "notificationInvitedToJoin": "Dostal si pozvánku pripojiť sa",
+  "notificationInvitationDeclined": "Pozvánka odmietnutá",
+  "notificationNotAuthenticated": "Nie si prihlásený",
+  "notificationInvitationAccepted": "Pozvánka prijatá",
+  "notificationAcceptedMessage": "{name} prijal pozvánku pripojiť sa do {clubName}.",
+  "@notificationAcceptedMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "clubName": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationInvitationDeclinedTitle": "Pozvánka odmietnutá",
+  "notificationDeclinedMessage": "{name} odmietol pozvánku pripojiť sa do {clubName}.",
+  "@notificationDeclinedMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "clubName": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationRequestResolved": "Požiadavka vyriešená",
+  "notificationRequestClosed": "Požiadavka uzavretá",
+  "notificationResponse": "Odpoveď",
+  "calendarTitle": "Pokrový kalendár",
+  "calendarNewEvent": "Nový event",
+  "calendarEventType": "Typ eventu",
+  "calendarEventTitle": "Názov",
+  "calendarLocation": "Miesto",
+  "calendarBuyInAmount": "Suma buy-inu",
+  "calendarEventDateTime": "Dátum a čas eventu",
+  "calendarStarts": "Začína",
+  "calendarSelectDate": "Vyber dátum:",
+  "calendarReset": "Resetovať",
+  "calendarSun": "NE",
+  "calendarMon": "PO",
+  "calendarTue": "UT",
+  "calendarWed": "ST",
+  "calendarThu": "ŠT",
+  "calendarFri": "PI",
+  "calendarSat": "SO",
+  "calendarNoRecentEvents": "Žiadne nedávne eventy",
+  "calendarAddFirstEvent": "Pridaj svoj prvý pokrový event!",
+  "calendarAddNewEvent": "Pridať nový event",
+  "calendarSelectYear": "Vyber rok",
+  "calendarEditEvent": "Upraviť event",
+  "calendarDeleteEvent": "Vymazať event",
+  "calendarTournament": "Turnaj",
+  "calendarCashGame": "Cash Game",
+  "calendarPrivateGame": "Súkromná hra",
+  "calendarOnline": "Online",
+  "calendarFailedToCreateEvent": "Nepodarilo sa vytvoriť event: {error}",
+  "@calendarFailedToCreateEvent": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "calendarFailedToUpdateEvent": "Nepodarilo sa aktualizovať event: {error}",
+  "@calendarFailedToUpdateEvent": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "calendarFailedToDeleteEvent": "Nepodarilo sa vymazať event",
+  "calendarClubNotFound": "Klub sa nenašiel",
+  "calendarEventNotFound": "Event sa nenašiel",
+  "calendarFailedToLoadEvent": "Nepodarilo sa načítať event: {error}",
+  "@calendarFailedToLoadEvent": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "calendarDeleteConfirmTitle": "Vymazať {title}?",
+  "@calendarDeleteConfirmTitle": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "calendarDeleteConfirmMessage": "Naozaj chceš vymazať \"{title}\"?\nTúto akciu nie je možné vrátiť späť.",
+  "@calendarDeleteConfirmMessage": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionAnalyticsTitle": "Analytika session",
+  "sessionAnalyticsHandsLogged": "{count} zalogovaných hands",
+  "@sessionAnalyticsHandsLogged": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sessionAnalyticsDeleteTitle": "Vymazať session?",
+  "sessionAnalyticsDeleteMessage": "Toto natrvalo vymaže túto session vrátane celej histórie hands, dát grafu stacku a reportov AI analýzy. Túto akciu nie je možné vrátiť späť.",
+  "sessionAnalyticsDeleted": "Session vymazaná",
+  "sessionAnalyticsFailedToDelete": "Session sa nepodarilo vymazať",
+  "sessionAnalyticsExportSession": "Exportovať session",
+  "sessionAnalyticsExportConfirm": "Exportovať {count} hánd na {email}?",
+  "@sessionAnalyticsExportConfirm": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionAnalyticsExport": "Exportovať",
+  "sessionAnalyticsExportSent": "Export odoslaný na {email}",
+  "@sessionAnalyticsExportSent": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionAnalyticsExportFailed": "Export zlyhal: {error}",
+  "@sessionAnalyticsExportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionAnalyticsNoEmailFound": "Nenašla sa žiadna e-mailová adresa. Prihlás sa pomocou e-mailového účtu.",
+  "sessionAnalyticsPokerSession": "Poker session",
+  "sessionAnalyticsTotalInvested": "Celkovo investované",
+  "sessionAnalyticsFinalStack": "Finálny stack",
+  "sessionAnalyticsCashout": "Cashout",
+  "sessionAnalyticsProfitLoss": "Zisk/Strata",
+  "sessionAnalyticsProfit": "Zisk",
+  "sessionAnalyticsLoss": "Strata",
+  "sessionAnalyticsNotAvailableFull": "Nedostupné",
+  "sessionAnalyticsAvgGrowth": "Priem. rast",
+  "sessionAnalyticsHourlyRate": "Hodinová sadzba",
+  "sessionAnalyticsFinished": "Ukončené",
+  "sessionAnalyticsDuration": "Trvanie",
+  "sessionAnalyticsRebuys": "Rebuys",
+  "sessionAnalyticsAddons": "Add-ons",
+  "sessionAnalyticsStackChart": "Graf stacku",
+  "sessionAnalyticsNoStackHistory": "História stacku nie je k dispozícii",
+  "sessionAnalyticsStackTrackedFuture": "Zmeny stacku sa budú sledovať v ďalších sessions",
+  "sessionAnalyticsViewLoggedHands": "Zobraziť zaznamenané handy",
+  "sessionAnalyticsStart": "Štart",
+  "sessionAnalyticsRebuy": "Rebuy",
+  "sessionAnalyticsEnd": "Koniec",
+  "seatSetupTitle": "Nastavenie miesta",
+  "seatSetupManagePlayers": "Spravovať hráčov",
+  "seatSetupClickToConfig": "Ťukni na miesto a nastav ho. Button potiahni na pozíciu",
+  "seatSetupButtonLocked": "Button je uzamknutý – prebieha handa",
+  "seatSetupUpdatePlayerInfo": "Aktualizuj informácie o hráčovi",
+  "seatSetupEmpty": "Voľné",
+  "seatSetupThisIsMySeat": "Toto je moje miesto",
+  "seatSetupPlayerName": "Meno hráča",
+  "seatSetupBuyInAmount": "Výška buy-inu ($)",
+  "seatSetupStartingChips": "Počiatočné žetóny",
+  "seatSetupSaveAsOpponent": "Uložiť \"{name}\" ako súpera?",
+  "@seatSetupSaveAsOpponent": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "seatSetupOpponentSaved": "Súper uložený!",
+  "seatSetupFailedToSave": "Uloženie zlyhalo: {error}",
+  "@seatSetupFailedToSave": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "seatSetupNoData": "Žiadne dáta",
+  "seatSetupStartSession": "Spustiť session",
+  "seatSetupSaveChanges": "Uložiť zmeny",
+  "seatSetupPleaseSelectSeat": "Vyber si svoje miesto",
+  "seatSetupSeatNumber": "Miesto {number}",
+  "@seatSetupSeatNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "seatSetupPlayerDefault": "Hráč {number}",
+  "@seatSetupPlayerDefault": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "handReviewTitle": "Prehľad handy",
+  "handReviewYourHoleCards": "Tvoje hole karty",
+  "handReviewOptional": "(voliteľné)",
+  "handReviewQuickTags": "Rýchle tagy",
+  "handReviewTagBluff": "Bluff",
+  "handReviewTagValue": "Value",
+  "handReviewTagMistake": "Chyba",
+  "handReviewTagCooler": "Cooler",
+  "handReviewTagHeroCall": "Hero Call",
+  "handReviewTagExploit": "Exploit",
+  "handReviewNotes": "Poznámky",
+  "handReviewNotesHint": "Pridaj poznámku k tejto hande...",
+  "handReviewSaveHand": "Uložiť handu",
+  "handReviewSkip": "Preskočiť",
+  "handReviewDuplicateCardError": "Nemôžeš vybrať tú istú kartu dvakrát!",
+  "handReviewSelectBothOrNone": "Vyber obe hole karty alebo nechaj obe prázdne",
+  "holeCardsTitle": "Tvoje hole karty",
+  "holeCardsSubtitle": "Hole karty",
+  "holeCardsWinnerBadge": "VÍŤAZ",
+  "holeCardsSave": "Uložiť",
+  "holeCardsSkip": "Preskočiť",
+  "holeCardsSkipAllRemaining": "Preskočiť všetky zostávajúce",
+  "holeCardsDuplicateCardError": "Nemôžeš vybrať tú istú kartu dvakrát!",
+  "holeCardsSelectBothOrSkip": "Vyber obe hole karty alebo pokračuj preskočením",
+  "holeCardsClearAll": "Vymazať všetko",
+  "showdownTitle": "Showdown",
+  "showdownEnterOpponentCards": "Zadaj karty súperov na showdowne:",
+  "showdownPlayerLabel": "Hráč {seatNumber}",
+  "@showdownPlayerLabel": {
+    "placeholders": {
+      "seatNumber": {
+        "type": "int"
+      }
+    }
+  },
+  "showdownCard1": "Karta 1",
+  "showdownCard2": "Karta 2",
+  "showdownClear": "Vymazať",
+  "showdownWinner": "Víťaz:",
+  "showdownHandDescriptionLabel": "Popis handy (voliteľné)",
+  "showdownHandDescriptionHint": "napr. \"Straight flush\", \"Full house – esá cez kráľov\"",
+  "showdownSkip": "Preskočiť",
+  "showdownSave": "Uložiť",
+  "showdownSelectCard": "Vyber kartu",
+  "tableManagementSectionTitle": "STÔL",
+  "tableManagementPlayersCount": "{count} hráčov",
+  "@tableManagementPlayersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "tableManagementDealerButton": "Dealer button",
+  "tableManagementAddPlayer": "Pridať hráča",
+  "tableManagementYouSuffix": "{name} (Ty)",
+  "@tableManagementYouSuffix": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "tableManagementAdjustStack": "Upraviť stack",
+  "tableManagementRebuy": "Rebuy",
+  "tableManagementRemove": "Odstrániť",
+  "tableManagementAdjustStackTitle": "Upraviť stack",
+  "tableManagementEnterStackAmount": "Zadaj výšku stacku",
+  "tableManagementRebuyTitle": "Rebuy",
+  "tableManagementRebuyAmountHint": "Suma rebuy na pridanie",
+  "tableManagementAdd": "Pridať",
+  "tableManagementRemovePlayerTitle": "Odstrániť hráča?",
+  "tableManagementRemovePlayerMessage": "Odstrániť hráča {playerName} od stola?",
+  "@tableManagementRemovePlayerMessage": {
+    "placeholders": {
+      "playerName": {
+        "type": "String"
+      }
+    }
+  },
+  "tableManagementAddPlayerSeatTitle": "Pridať hráča — Miesto {seatNumber}",
+  "@tableManagementAddPlayerSeatTitle": {
+    "placeholders": {
+      "seatNumber": {
+        "type": "int"
+      }
+    }
+  },
+  "tableManagementThisIsMe": "To som ja",
+  "tableManagementNameLabel": "Meno",
+  "tableManagementSearchOrEnterName": "Vyhľadaj alebo zadaj meno",
+  "tableManagementSaveAsOpponent": "Uložiť \"{name}\" ako súpera",
+  "@tableManagementSaveAsOpponent": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "tableManagementSavedAsOpponent": "{name} uložený ako súper",
+  "@tableManagementSavedAsOpponent": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "tableManagementStartingStack": "Počiatočný stack",
+  "tableManagementStackAmountHint": "Výška stacku",
+  "tableManagementMoveMeHere": "Presunúť ma sem",
+  "tableManagementSeatLabel": "Miesto {seatNumber}",
+  "@tableManagementSeatLabel": {
+    "placeholders": {
+      "seatNumber": {
+        "type": "int"
+      }
+    }
+  },
+  "seatConfigRemove": "Odstrániť",
+  "seatConfigRemoveMe": "Odstrániť ma z tohto miesta",
+  "seatConfigThisIsMe": "To som ja",
+  "seatConfigNameLabel": "Meno",
+  "seatConfigSearchOrEnterName": "Vyhľadaj alebo zadaj meno",
+  "seatConfigSaveAsOpponent": "Uložiť \"{name}\" ako súpera",
+  "@seatConfigSaveAsOpponent": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "seatConfigSavedAsOpponent": "{name} uložený ako súper",
+  "@seatConfigSavedAsOpponent": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "seatConfigSeatTitle": "Miesto {seatNumber}",
+  "@seatConfigSeatTitle": {
+    "placeholders": {
+      "seatNumber": {
+        "type": "int"
+      }
+    }
+  },
+  "seatConfigStackLabel": "Stack",
+  "seatConfigUpdateButton": "Aktualizovať",
+  "seatConfigAddPlayerButton": "Pridať hráča",
+  "seatManagementSetupSeats": "Nastavenie miest",
+  "seatManagementManagePlayers": "Spravovať hráčov",
+  "seatManagementChooseSeatSubtitle": "Vyber si miesto a nastav stôl",
+  "seatManagementUpdatePlayerSubtitle": "Aktualizuj informácie o hráčovi",
+  "seatManagementButtonPosition": "Pozícia buttonu",
+  "seatManagementSeatLabel": "Miesto {seatNumber}",
+  "@seatManagementSeatLabel": {
+    "placeholders": {
+      "seatNumber": {
+        "type": "int"
+      }
+    }
+  },
+  "seatManagementEmpty": "Voľné",
+  "seatManagementActive": "Aktívne",
+  "seatManagementPlayerNameLabel": "Meno hráča",
+  "seatManagementEnterPlayerName": "Zadaj meno hráča",
+  "seatManagementBuyInAmountCash": "Výška buy-inu ($)",
+  "seatManagementStartingChips": "Počiatočné žetóny",
+  "seatManagementSaveOpponentTitle": "Uložiť súpera?",
+  "seatManagementSaveOpponentMessage": "Chceš uložiť \"{name}\" do zoznamu súperov pre budúce sledovanie?",
+  "@seatManagementSaveOpponentMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "seatManagementNotNow": "Teraz nie",
+  "seatManagementSaveAsOpponentPrompt": "Uložiť \"{name}\" ako súpera?",
+  "@seatManagementSaveAsOpponentPrompt": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "seatManagementOpponentSavedSuccess": "Súper \"{name}\" bol úspešne uložený!",
+  "@seatManagementOpponentSavedSuccess": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "seatManagementFailedToSaveOpponent": "Nepodarilo sa uložiť súpera: {error}",
+  "@seatManagementFailedToSaveOpponent": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "seatManagementStartSession": "Spustiť session",
+  "seatManagementSaveChanges": "Uložiť zmeny",
+  "seatManagementSelectYourSeat": "Vyber si svoje miesto",
+  "inviteMemberTitle": "Pozvať člena",
+  "inviteMemberEmailLabel": "E-MAILOVÁ ADRESA",
+  "inviteMemberEmailHint": "Zadaj e-mailovú adresu",
+  "inviteMemberEmailRequired": "Zadaj e-mailovú adresu",
+  "inviteMemberEmailInvalid": "Zadaj platnú e-mailovú adresu",
+  "inviteMemberRoleLabel": "ROLA",
+  "inviteMemberRoleDealer": "Dealer",
+  "inviteMemberRoleAdmin": "Admin",
+  "inviteMemberSendInvite": "Odoslať pozvánku",
+  "inviteMemberAlreadyMember": "{displayName} už je členom klubu {clubName}",
+  "@inviteMemberAlreadyMember": {
+    "placeholders": {
+      "displayName": {
+        "type": "String"
+      },
+      "clubName": {
+        "type": "String"
+      }
+    }
+  },
+  "inviteMemberAddedNotificationTitle": "Bol si pridaný do klubu!",
+  "inviteMemberAddedNotificationBody": "{inviterName} ťa pridal do klubu \"{clubName}\" ako {role}.",
+  "@inviteMemberAddedNotificationBody": {
+    "placeholders": {
+      "inviterName": {
+        "type": "String"
+      },
+      "clubName": {
+        "type": "String"
+      },
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "inviteMemberAddedSuccessTitle": "Člen pridaný!",
+  "inviteMemberAddedSuccessMessage": "{displayName} bol pridaný do klubu {clubName} ako {role}.",
+  "@inviteMemberAddedSuccessMessage": {
+    "placeholders": {
+      "displayName": {
+        "type": "String"
+      },
+      "clubName": {
+        "type": "String"
+      },
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "inviteMemberInvitationSentTitle": "Pozvánka odoslaná!",
+  "inviteMemberInvitationSentMessage": "Pozvánka bola odoslaná e-mailom na {email}. Po registrácii sa bude môcť pripojiť do klubu {clubName}.",
+  "@inviteMemberInvitationSentMessage": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      },
+      "clubName": {
+        "type": "String"
+      }
+    }
+  },
+  "inviteMemberError": "Chyba: {error}",
+  "@inviteMemberError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "inviteMemberRoleAnAdmin": "admin",
+  "inviteMemberRoleADealer": "dealer",
+  "registerClubTitle": "Registrovať klub",
+  "registerClubNameLabel": "Názov klubu",
+  "registerClubNamePlaceholder": "napr. Lucky Aces Poker Club",
+  "registerClubNameRequired": "Zadaj názov klubu",
+  "registerClubAddressLabel": "Adresa",
+  "registerClubAddressPlaceholder": "napr. Hlavná 123, Mesto, Krajina",
+  "registerClubAddressRequired": "Zadaj adresu klubu",
+  "registerClubPhoneLabel": "Telefónne číslo",
+  "registerClubPhonePlaceholder": "napr. +421 900 123 456",
+  "registerClubPhoneRequired": "Zadaj telefónne číslo",
+  "registerClubAdminEmailLabel": "E-mail admina klubu",
+  "registerClubAdminEmailPlaceholder": "napr. admin@mojklub.sk",
+  "registerClubAdminEmailRequired": "Zadaj e-mail admina",
+  "registerClubAdminEmailInvalid": "Zadaj platný e-mail",
+  "registerClubInfoMessage": "Táto osoba dostane upozornenie po schválení klubu a stane sa jeho vlastníkom.",
+  "registerClubSubmitRequest": "Odoslať žiadosť",
+  "registerClubFailedToSubmit": "Nepodarilo sa odoslať žiadosť: {error}",
+  "@registerClubFailedToSubmit": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "registerClubSuccessTitle": "Žiadosť odoslaná!",
+  "registerClubSuccessMessage": "Tvoja žiadosť o registráciu klubu bola odoslaná. Po jej posúdení ťa upozorníme na {email}.",
+  "@registerClubSuccessMessage": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "registerClubGotIt": "Rozumiem",
+  "loggingModeChooseMode": "Vyber režim",
+  "loggingModeFullTitle": "Režim zaznamenávania",
+  "loggingModeFullSubtitle": "Kompletné sledovanie session",
+  "loggingModeFullFeature1": "Sledovanie session s viacerými handami",
+  "loggingModeFullFeature2": "Štatistiky v reálnom čase",
+  "loggingModeFullFeature3": "Detailná história hánd",
+  "loggingModeFullFeature4": "Analytika session",
+  "loggingModeFeatures": "Funkcie",
+  "loggingModeStart": "Štart",
+  "earningsChartAllTimeEarnings": "Celkové zárobky",
+  "earningsChartSinceDate": "Od {date}",
+  "@earningsChartSinceDate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "earningsChartTournament": "Turnaj",
+  "earningsChartCash": "Cash",
+  "earningsChartNoData": "Zatiaľ žiadne dáta o zárobkoch",
+  "earningsChartNoDataSubtitle": "Dokonči nejaké sessions a uvidíš graf svojich zárobkov",
+  "earningsChartMtt": "MTT",
+  "opponentHandsTitle": "História hánd",
+  "opponentHandsCount": "{count} hánd",
+  "@opponentHandsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "opponentHandsLoading": "Načítavam históriu hánd...",
+  "opponentHandsError": "Niečo sa pokazilo",
+  "opponentHandsRetry": "Skúsiť znova",
+  "opponentHandsNoHandsTitle": "Žiadne handy",
+  "opponentHandsNoHandsSubtitle": "Zatiaľ si nehral žiadne handy\ns hráčom {name}.",
+  "@opponentHandsNoHandsSubtitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "opponentHandsOppWon": "SÚPER VYHRAL",
+  "opponentHandsYou": "Ty",
+  "opponentHandsPot": "Pot {amount}",
+  "@opponentHandsPot": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "opponentHandsUnknownSession": "Neznáma session",
+  "clubDashboardLive": "Naživo",
+  "clubDashboardUpcoming": "Nadchádzajúce",
+  "clubDashboardPast": "Minulé",
+  "clubDashboardNoLiveEvents": "Žiadne prebiehajúce udalosti",
+  "clubDashboardNoUpcomingEvents": "Žiadne nadchádzajúce udalosti",
+  "clubDashboardNoPastEvents": "Žiadne minulé udalosti",
+  "clubDashboardAdmin": "Admin",
+  "clubDashboardCreateEventHint": "Ťukni na tlačidlo nižšie a vytvor prvú",
+  "clubDashboardCheckBackLater": "Vráť sa neskôr pre nové udalosti",
+  "clubDashboardEventsWillAppear": "Udalosti sa tu zobrazia, keď začnú",
+  "clubDashboardPastEventsWillAppear": "Ukončené udalosti sa zobrazia tu",
+  "clubDashboardCashGameStakes": "Cash game {stakes}",
+  "@clubDashboardCashGameStakes": {
+    "placeholders": {
+      "stakes": {
+        "type": "String"
+      }
+    }
+  },
+  "clubDashboardCash": "Cash",
+  "clubDashboardTables": "Stoly",
+  "clubDashboardStakes": "Stakes",
+  "clubDashboardPlayingCount": "{count} hrá",
+  "@clubDashboardPlayingCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "clubDashboardMemberCount": "{count} členov",
+  "@clubDashboardMemberCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "clubSettingsTitle": "Nastavenia klubu",
+  "clubSettingsClubInfo": "Informácie o klube",
+  "clubSettingsClubName": "Názov klubu",
+  "clubSettingsAddress": "Adresa",
+  "clubSettingsPhone": "Telefón",
+  "clubSettingsDescription": "Popis",
+  "clubSettingsSaveChanges": "Uložiť zmeny",
+  "clubSettingsInfoSaved": "Informácie o klube uložené",
+  "clubSettingsErrorSaving": "Chyba pri ukladaní: {error}",
+  "@clubSettingsErrorSaving": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "clubSettingsNoTablesYet": "Zatiaľ žiadne stoly",
+  "clubSettingsAddTableHint": "Začni pridaním stola",
+  "clubSettingsErrorLoading": "Chyba pri načítaní dát: {error}",
+  "@clubSettingsErrorLoading": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "eventEditTitle": "Upraviť udalosť",
+  "eventNewTitle": "Nová udalosť",
+  "eventNoTablesAssigned": "Žiadne priradené stoly",
+  "eventNoTablesAssignedDesc": "K tejto udalosti nie sú priradené žiadne stoly. Vráť sa a najprv priraď stoly.",
+  "eventGoBack": "Späť",
+  "eventContinue": "Pokračovať",
+  "eventNameOptional": "Názov udalosti (voliteľné)",
+  "eventNameLabel": "Názov udalosti",
+  "eventStakesHint": "Stakes (napr. 1/2)",
+  "eventBuyInAmount": "Výška buy-inu",
+  "eventMinBuyIn": "Min. buy-in ($)",
+  "eventStartingStack": "Počiatočný stack",
+  "eventGameType": "Typ hry",
+  "eventTournament": "Turnaj",
+  "eventCashGame": "Cash game",
+  "eventDateAndTime": "Dátum a čas udalosti",
+  "eventStarts": "Začína",
+  "eventTables": "Stoly",
+  "eventDeselectAll": "Zrušiť výber",
+  "eventSelectAll": "Vybrať všetko",
+  "eventAllTablesInUse": "Všetky stoly sú obsadené prebiehajúcimi udalosťami",
+  "eventNoTablesConfigured": "Zatiaľ nie sú nastavené žiadne stoly",
+  "eventDescriptionLabel": "Popis",
+  "eventNotifyMembers": "Upozorniť členov",
+  "eventNotifyMembersSubtitle": "Poslať upozornenie všetkým členom klubu",
+  "eventDeleteEvent": "Vymazať udalosť",
+  "eventDeleteConfirmTitle": "Vymazať udalosť?",
+  "eventDeleteConfirmBody": "Toto natrvalo vymaže udalosť a všetky súvisiace dáta. Túto akciu nemožno vrátiť späť.",
+  "eventDeleteFailed": "Nepodarilo sa vymazať udalosť: {error}",
+  "@eventDeleteFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "eventAttendeesTitle": "Účastníci",
+  "eventAttendeesGoing": "Prídu ({count})",
+  "@eventAttendeesGoing": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "eventAttendeesMaybe": "Možno ({count})",
+  "@eventAttendeesMaybe": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "eventAttendeesNo": "Nie ({count})",
+  "@eventAttendeesNo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "eventAttendeesNoConfirmed": "Zatiaľ nikto nepotvrdil",
+  "eventAttendeesNoMaybes": "Nikto nezvolil možno",
+  "eventAttendeesNoDeclines": "Nikto neodmietol",
+  "eventDetailLiveNow": "Udalosť je teraz LIVE!",
+  "eventDetailEnded": "Udalosť skončila",
+  "eventDetailCancelled": "Udalosť bola zrušená",
+  "eventDetailPaused": "Udalosť je pozastavená",
+  "eventDetailStatusUpdated": "Stav udalosti aktualizovaný",
+  "eventDetailRemovedFromCalendar": "Udalosť odstránená z tvojho kalendára",
+  "eventDetailRsvpGoing": "Idem",
+  "eventDetailRsvpMaybe": "Možno",
+  "eventDetailRsvpCantGo": "Nemôžem",
+  "eventDetailRsvpFailed": "Nepodarilo sa aktualizovať RSVP: {error}",
+  "@eventDetailRsvpFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "eventDetailCantStartTitle": "Udalosť sa nedá spustiť",
+  "eventDetailCantStartBody": "K tejto udalosti nie sú priradené žiadne stoly. Najprv pridaj stoly.",
+  "eventDetailStarted": "Udalosť spustená!",
+  "eventDetailStartFailed": "Nepodarilo sa spustiť udalosť: {error}",
+  "@eventDetailStartFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "eventDetailFinishTitle": "Ukončiť udalosť?",
+  "eventDetailCancelTitle": "Zrušiť udalosť?",
+  "eventDetailFinishBody": "Toto ukončí všetky aktívne stoly a uzavrie konečné poradie.",
+  "eventDetailCancelBody": "Toto upozorní všetkých členov a zruší udalosť.",
+  "eventDetailFinishButton": "Ukončiť udalosť",
+  "eventDetailCancelButton": "Zrušiť udalosť",
+  "eventDetailKeepEvent": "Ponechať udalosť",
+  "eventDetailLiveBadge": "PRÁVE LIVE",
+  "eventDetailCancelledBadge": "ZRUŠENÉ",
+  "eventDetailCompletedBadge": "UKONČENÉ",
+  "eventDetailUpcomingBadge": "NADCHÁDZAJÚCE",
+  "eventDetailLocation": "Miesto konania",
+  "eventDetailBuyIn": "Buy-in",
+  "eventDetailStakes": "Stakes",
+  "eventDetailStartingStack": "Počiatočný stack",
+  "eventDetailAbout": "O UDALOSTI",
+  "eventDetailAddedToCalendar": "Udalosť pridaná do tvojho kalendára!",
+  "eventDetailCalendarFailed": "Nepodarilo sa pridať do kalendára: {error}",
+  "@eventDetailCalendarFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "eventManagementEventsTitle": "Udalosti",
+  "eventManagementNewEvent": "Nová udalosť",
+  "eventManagementNoEvents": "Žiadne udalosti",
+  "eventManagementNoEventsSubtitle": "Vytvor udalosť na sledovanie živého poradia",
+  "eventManagementActiveEvents": "Aktívne udalosti",
+  "eventManagementPastEvents": "Minulé udalosti",
+  "eventManagementErrorLoading": "Chyba pri načítaní udalostí: {error}",
+  "@eventManagementErrorLoading": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "eventManagementNoTables": "Žiadne stoly nie sú k dispozícii. Najprv vytvor stoly.",
+  "eventManagementCreated": "Udalosť \"{name}\" vytvorená",
+  "@eventManagementCreated": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "eventManagementCreateFailed": "Nepodarilo sa vytvoriť udalosť: {error}",
+  "@eventManagementCreateFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "eventManagementEndEvent": "Ukončiť udalosť",
+  "eventManagementEndConfirm": "Naozaj chceš ukončiť \"{name}\"?",
+  "@eventManagementEndConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "eventManagementEnded": "Udalosť \"{name}\" ukončená",
+  "@eventManagementEnded": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "eventManagementEndFailed": "Nepodarilo sa ukončiť udalosť: {error}",
+  "@eventManagementEndFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "eventManagementLinkCopied": "Odkaz skopírovaný do schránky",
+  "eventManagementShare": "Zdieľať",
+  "eventManagementPause": "Pozastaviť",
+  "eventManagementResume": "Pokračovať",
+  "eventManagementEnd": "Ukončiť",
+  "eventManagementCreateEvent": "Vytvoriť udalosť",
+  "eventManagementEventNameHint": "napr. Piatkový večerný turnaj",
+  "eventManagementSelectTables": "Vyber stoly",
+  "eventManagementTableNumber": "Stôl {number}",
+  "@eventManagementTableNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "eventManagementPublicEvent": "Verejná udalosť",
+  "eventManagementPublicSubtitle": "Rebríček môže vidieť ktokoľvek",
+  "eventManagementAccessCode": "Prístupový kód (voliteľné)",
+  "eventManagementAccessCodeSubtitle": "Na zdieľanie s konkrétnymi používateľmi",
+  "eventManagementEnterName": "Zadaj názov udalosti",
+  "eventManagementSelectTable": "Vyber aspoň jeden stôl",
+  "eventManagementPublic": "Verejná",
+  "eventManagementPrivate": "Súkromná",
+  "adminEventTablesSummary": "{count} stolov • {occupied} usadených • {open} voľných",
+  "@adminEventTablesSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "occupied": {
+        "type": "int"
+      },
+      "open": {
+        "type": "int"
+      }
+    }
+  },
+  "adminEventTablesAddTable": "Pridať stôl",
+  "adminEventTablesNoTables": "Žiadne dostupné stoly na pridanie",
+  "adminEventTablesCloseConfirm": "Zavrieť {tableName}?",
+  "@adminEventTablesCloseConfirm": {
+    "placeholders": {
+      "tableName": {
+        "type": "String"
+      }
+    }
+  },
+  "adminEventTablesCloseWithPlayers": "Presunie sa tým {count} hráč(ov) do poradovníka a stôl sa odstráni z tejto udalosti.",
+  "@adminEventTablesCloseWithPlayers": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "adminEventTablesCloseEmpty": "Stôl sa tým odstráni z tejto udalosti.",
+  "adminEventTablesCloseButton": "Zavrieť stôl",
+  "adminEventTablesTableAdded": "{tableName} pridaný do udalosti",
+  "@adminEventTablesTableAdded": {
+    "placeholders": {
+      "tableName": {
+        "type": "String"
+      }
+    }
+  },
+  "adminEventTablesClosedWithWaitlist": "{tableName} zavretý. {count} hráč(ov) presunutých do poradovníka.",
+  "@adminEventTablesClosedWithWaitlist": {
+    "placeholders": {
+      "tableName": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "adminEventTablesClosed": "{tableName} zavretý.",
+  "@adminEventTablesClosed": {
+    "placeholders": {
+      "tableName": {
+        "type": "String"
+      }
+    }
+  },
+  "adminEventTablesNoWaitlist": "V poradovníku nikto nie je",
+  "adminEventTablesWaitlistCount": "{count} v poradovníku",
+  "@adminEventTablesWaitlistCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "adminEventTablesWaitlistNext": "Ďalší: {name}",
+  "@adminEventTablesWaitlistNext": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "adminEventTablesWaitlist": "Poradovník",
+  "adminEventTablesNotified": "Upozornený",
+  "adminEventTablesNotify": "Upozorniť",
+  "adminEventTablesSeat": "Usadiť",
+  "adminEventTablesSeatAt": "{tableName} ({count} voľných)",
+  "@adminEventTablesSeatAt": {
+    "placeholders": {
+      "tableName": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "adminEventTablesNoEmptySeats": "Na tomto stole nie sú voľné miesta",
+  "adminEventTablesPlayerSeated": "{name} usadený pri {tableName}",
+  "@adminEventTablesPlayerSeated": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "tableName": {
+        "type": "String"
+      }
+    }
+  },
+  "adminEventTablesPlayerNotified": "Upozornili sme {name}",
+  "@adminEventTablesPlayerNotified": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "adminTableSeatPlayer": "Usadiť hráča",
+  "adminTableFromWaitlist": "Z poradovníka",
+  "adminTableWaitlistNextIs": "{name} je na rade",
+  "@adminTableWaitlistNextIs": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "adminTableClubMember": "Člen klubu",
+  "adminTableSearchMembers": "Hľadaj existujúcich členov",
+  "adminTableWalkUpPlayer": "Hráč bez registrácie",
+  "adminTableAddByName": "Pridať podľa mena",
+  "adminTableSelectMember": "Vyber člena",
+  "adminTableSearch": "Hľadať...",
+  "adminTablePlayerName": "Meno hráča",
+  "adminTableWaitingForApproval": "Čaká na schválenie miesta č. {seatNumber}",
+  "@adminTableWaitingForApproval": {
+    "placeholders": {
+      "seatNumber": {
+        "type": "int"
+      }
+    }
+  },
+  "adminTableReject": "Odmietnuť",
+  "adminTableApprove": "Schváliť",
+  "adminTableRemove": "Odstrániť",
+  "adminTableSeatNumber": "Miesto č. {seatNumber}",
+  "@adminTableSeatNumber": {
+    "placeholders": {
+      "seatNumber": {
+        "type": "int"
+      }
+    }
+  },
+  "adminTableNoEmptySeats": "Žiadne voľné miesta",
+  "adminTableSeatPlayerName": "Usadiť {name}",
+  "@adminTableSeatPlayerName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "adminTableSelectSeat": "Vyber miesto:",
+  "adminTablePlayerSeated": "{name} usadený",
+  "@adminTablePlayerSeated": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "adminTableAlreadySeated": "{name} už sedí pri {location}",
+  "@adminTableAlreadySeated": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "location": {
+        "type": "String"
+      }
+    }
+  },
+  "adminTablePlayerApproved": "{name} schválený",
+  "@adminTablePlayerApproved": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "adminTablePlayerRejected": "Hráč odmietnutý",
+  "adminTablePlayerRemoved": "Hráč odstránený",
+  "adminTableWaitlistInCount": "{count} v poradovníku",
+  "@adminTableWaitlistInCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "adminTableWaitlistNextName": "Ďalší: {name}",
+  "@adminTableWaitlistNextName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "adminTableNotifiedName": "Upozornili sme {name}",
+  "@adminTableNotifiedName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "clubCashGameStakes": "Cash game {stakes}",
+  "@clubCashGameStakes": {
+    "placeholders": {
+      "stakes": {
+        "type": "String"
+      }
+    }
+  },
+  "clubCashGameTablesSummary": "{count} stolov · {occupied} usadených · {open} voľných",
+  "@clubCashGameTablesSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "occupied": {
+        "type": "int"
+      },
+      "open": {
+        "type": "int"
+      }
+    }
+  },
+  "clubCashGameTableNumber": "Stôl {number}",
+  "@clubCashGameTableNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "clubCashGameNoTables": "V tejto skupine nie sú žiadne stoly",
+  "clubCashGameFailedToLoad": "Nepodarilo sa načítať stoly: {error}",
+  "@clubCashGameFailedToLoad": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "clubCashGameAlreadySeated": "Už sedíš pri stole",
+  "clubCashGameSeatAvailable": "Máš k dispozícii voľné miesto, príď na registráciu",
+  "clubCashGameJoinedWaitlist": "Si v poradovníku na pozícii #{position}",
+  "@clubCashGameJoinedWaitlist": {
+    "placeholders": {
+      "position": {
+        "type": "int"
+      }
+    }
+  },
+  "clubCashGameJoinFailed": "Nepodarilo sa pridať do poradovníka: {error}",
+  "@clubCashGameJoinFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "clubCashGameLeftWaitlist": "Opustil si poradovník",
+  "clubCashGameLeaveFailed": "Nepodarilo sa opustiť poradovník: {error}",
+  "@clubCashGameLeaveFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "clubCashGameViewWaitlist": "Zobraziť poradovník",
+  "clubCashGameInWaitlist": "V poradovníku",
+  "clubCashGameInWaitlistPosition": "V poradovníku · #{position}",
+  "@clubCashGameInWaitlistPosition": {
+    "placeholders": {
+      "position": {
+        "type": "int"
+      }
+    }
+  },
+  "clubCashGameJoinWaitlist": "Pridať sa do poradovníka",
+  "clubCashGameLeaveWaitlistConfirm": "Opustiť poradovník?",
+  "clubCashGameLosePosition": "Prídeš o svoju aktuálnu pozíciu.",
+  "clubCashGameKeep": "Zostať",
+  "clubCashGameLeave": "Odísť",
+  "clubCashGameRefreshFailed": "Nepodarilo sa obnoviť stoly: {error}",
+  "@clubCashGameRefreshFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "clubCashGameWaitlistTitle": "Poradovník",
+  "clubCashGameNotified": "{name} bol upozornený",
+  "@clubCashGameNotified": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "clubCashGameNotifyFailed": "Nepodarilo sa upozorniť: {error}",
+  "@clubCashGameNotifyFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "clubCashGameCouldNotLoad": "Nepodarilo sa načítať poradovník",
+  "clubCashGameNoOneOnWaitlist": "V poradovníku nikto nie je",
+  "clubCashGamePlayer": "Hráč",
+  "clubCashGameNotifiedStatus": "Upozornený • {time}",
+  "@clubCashGameNotifiedStatus": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "clubCashGameJoinedTime": "Pridal sa {time}",
+  "@clubCashGameJoinedTime": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "clubCashGameJustNow": "práve teraz",
+  "clubCashGameMinutesAgo": "pred {count} min",
+  "@clubCashGameMinutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "clubCashGameHoursAgo": "pred {count} h",
+  "@clubCashGameHoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "clubCashGameDaysAgo": "pred {count} d",
+  "@clubCashGameDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "clubCashGameAddTable": "Pridať stôl",
+  "clubCashGameNewTableName": "Názov nového stola (voliteľné)",
+  "clubCashGameAdd": "Pridať",
+  "clubCashGameAddedToGroup": "{tableName} pridaný do skupiny",
+  "@clubCashGameAddedToGroup": {
+    "placeholders": {
+      "tableName": {
+        "type": "String"
+      }
+    }
+  },
+  "clubCashGameAddFailed": "Nepodarilo sa pridať stôl: {error}",
+  "@clubCashGameAddFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "clubCashGameAttachFailed": "Nepodarilo sa pripojiť stôl: {error}",
+  "@clubCashGameAttachFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "clubCashGameAvailableTables": "Dostupné stoly",
+  "clubCashGameInUseByOther": "Používané inými udalosťami",
+  "clubCashGameNoOtherTables": "V tomto klube zatiaľ nie sú žiadne ďalšie stoly",
+  "clubCashGameInUseBy": "Používa ho {eventName}",
+  "@clubCashGameInUseBy": {
+    "placeholders": {
+      "eventName": {
+        "type": "String"
+      }
+    }
+  },
+  "clubCashGameSeats": "Miest: {count}",
+  "@clubCashGameSeats": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "memberEventTablesSummary": "{count} stolov • {occupied} usadených • {open} voľných",
+  "@memberEventTablesSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "occupied": {
+        "type": "int"
+      },
+      "open": {
+        "type": "int"
+      }
+    }
+  },
+  "memberEventJoinedWaitlist": "Si v poradovníku na pozícii #{position}",
+  "@memberEventJoinedWaitlist": {
+    "placeholders": {
+      "position": {
+        "type": "int"
+      }
+    }
+  },
+  "memberEventJoinFailed": "Nepodarilo sa pridať do poradovníka: {error}",
+  "@memberEventJoinFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "memberEventLeftWaitlist": "Opustil si poradovník",
+  "memberEventLeaveFailed": "Nepodarilo sa opustiť poradovník: {error}",
+  "@memberEventLeaveFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "memberEventWaitlistPosition": "Pozícia #{position} v poradovníku",
+  "@memberEventWaitlistPosition": {
+    "placeholders": {
+      "position": {
+        "type": "int"
+      }
+    }
+  },
+  "memberEventTotalWaiting": "{count} čakajúcich celkom",
+  "@memberEventTotalWaiting": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "memberEventLeaveWaitlist": "Opustiť poradovník",
+  "memberEventJoinWaitlistWithCount": "Pridať sa do poradovníka ({count} čaká)",
+  "@memberEventJoinWaitlistWithCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "memberEventJoinWaitlist": "Pridať sa do poradovníka",
+  "memberEventAllTablesFull": "Všetky stoly sú plné",
+  "dealerHomeTitle": "Režim dealera",
+  "dealerHomeNoClubs": "Žiadne kluby",
+  "dealerHomeNoClubsOwnerHint": "Začni vytvorením svojho prvého klubu.",
+  "dealerHomeNoClubsMemberHint": "Zatiaľ nie si členom žiadneho klubu.\nPožiadaj majiteľa klubu o pozvánku.",
+  "dealerHomeCreateClub": "Vytvoriť klub",
+  "dealerHomeDealer": "Dealer",
+  "dealerHomeClubCount": "{count} klubov",
+  "@dealerHomeClubCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dealerHomeActiveSessions": "Aktívne sessions",
+  "dealerHomeClubs": "Kluby",
+  "dealerHomeTables": "Stoly",
+  "dealerHomeAddTable": "Pridať stôl",
+  "dealerHomeTableNameLabel": "Názov stola",
+  "dealerHomeTableNameHint": "napr. Stôl 1, Hlavný stôl",
+  "dealerHomeTableAdded": "Stôl \"{name}\" pridaný do {clubName}!",
+  "@dealerHomeTableAdded": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "clubName": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerHomeAddTableFailed": "Nepodarilo sa pridať stôl: {error}",
+  "@dealerHomeAddTableFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerHomeClubName": "Názov klubu",
+  "dealerHomeCreate": "Vytvoriť",
+  "dealerHomeClubCreated": "Klub \"{name}\" úspešne vytvorený!",
+  "@dealerHomeClubCreated": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerHomeClubCreateFailed": "Nepodarilo sa vytvoriť klub: {error}",
+  "@dealerHomeClubCreateFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerHomeNoTables": "V tomto klube nie sú žiadne stoly",
+  "dealerHomeActiveHand": "Aktívny – hand #{number}",
+  "@dealerHomeActiveHand": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "dealerHomeInactive": "Neaktívny",
+  "dealerHomeResume": "Pokračovať",
+  "dealerHomeStart": "Spustiť",
+  "dealerHomeSessionSettings": "Nastavenia session",
+  "dealerHomeSmallBlind": "Small Blind",
+  "dealerHomeBigBlind": "Big Blind",
+  "dealerHomeBBAnte": "BB Ante",
+  "dealerHomeGameType": "Typ hry",
+  "dealerHomeCash": "Cash",
+  "dealerHomeTournament": "Turnaj",
+  "dealerHomeButtonPosition": "Pozícia buttonu",
+  "dealerHomeStartSession": "Spustiť session",
+  "dealerHomeCouldNotFind": "Klub alebo stôl sa nepodarilo nájsť",
+  "dealerHomeStartFailed": "Nepodarilo sa spustiť session: {error}",
+  "@dealerHomeStartFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerHomeErrorLoading": "Chyba pri načítaní dát: {error}",
+  "@dealerHomeErrorLoading": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerHomeTableCount": "{count} stolov",
+  "@dealerHomeTableCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dealerTableFailedStartHand": "Nepodarilo sa spustiť hand: {error}",
+  "@dealerTableFailedStartHand": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableChopSummary": "Chop: {winners} si delia {amount}",
+  "@dealerTableChopSummary": {
+    "placeholders": {
+      "winners": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableWins": "{name} vyhráva {amount}",
+  "@dealerTableWins": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTablePotChopped": "Pot rozdelený medzi {names}",
+  "@dealerTablePotChopped": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableFailedCompleteHand": "Nepodarilo sa dokončiť hand: {error}",
+  "@dealerTableFailedCompleteHand": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTablePlayerBusted": "{name} vypadol!",
+  "@dealerTablePlayerBusted": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableNoChipsRemaining": "Miesto {seatNumber} nemá žiadne žetóny.\nSuma rebuy: {amount}",
+  "@dealerTableNoChipsRemaining": {
+    "placeholders": {
+      "seatNumber": {
+        "type": "int"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableRemovePlayer": "Odstrániť hráča",
+  "dealerTableRebuy": "Rebuy",
+  "dealerTableRebuysFor": "{name} si robí rebuy za {amount}",
+  "@dealerTableRebuysFor": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableFinishesIn": "{name} končí na mieste {position}",
+  "@dealerTableFinishesIn": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "position": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableEndSessionTitle": "Ukončiť session?",
+  "dealerTableEndSessionBody": "Naozaj chceš ukončiť túto session?",
+  "dealerTableEnd": "Ukončiť",
+  "dealerTableDealerChange": "Zmena dealera",
+  "dealerTableDealerChangeBody": "Session sa pozastaví a iný dealer môže naskenovať QR kód stola a pokračovať tam, kde si skončil.",
+  "dealerTableDealerChangePreserve": "Všetci hráči, blinds aj stav hry zostanú zachované.",
+  "dealerTableDealerChangeResume": "Session môžeš neskôr obnoviť aj ty sám.",
+  "dealerTableHandOff": "Odovzdať",
+  "dealerTableSessionPaused": "Session pozastavená. Teraz ju môže prevziať iný dealer.",
+  "dealerTablePauseFailed": "Nepodarilo sa pozastaviť session: {error}",
+  "@dealerTablePauseFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableEventCancelled": "Udalosť zrušená",
+  "dealerTableEventFinished": "Udalosť ukončená",
+  "dealerTableEventCancelledBody": "Admin klubu zrušil túto udalosť. Všetky sessions boli uložené.",
+  "dealerTableEventFinishedBody": "Admin klubu ukončil túto udalosť. Všetky sessions boli uložené.",
+  "dealerTableSessionEnded": "Session ukončená",
+  "dealerTableSessionEndedBody": "Táto session bola ukončená. Všetky dáta boli uložené.",
+  "dealerTableLeaveTitle": "Opustiť dealerský stôl?",
+  "dealerTableLeaveActiveHand": "Práve prebieha hand. Ak teraz odídeš, môže to narušiť logovanie.",
+  "dealerTableLeaveInactive": "Session zostáva aktívna. Môžeš sa kedykoľvek vrátiť.",
+  "dealerTableAutoCorrection": "Automaticky opravené \"{detected}\" → \"{corrected}\"",
+  "@dealerTableAutoCorrection": {
+    "placeholders": {
+      "detected": {
+        "type": "String"
+      },
+      "corrected": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableApprovePlayer": "Schváliť {name}?",
+  "@dealerTableApprovePlayer": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableStartingChipStack": "Počiatočný stack",
+  "dealerTablePlayerRejected": "{name} odmietnutý",
+  "@dealerTablePlayerRejected": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableRejectFailed": "Nepodarilo sa odmietnuť: {error}",
+  "@dealerTableRejectFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTablePlayerJoined": "{name} sa pridal s {amount}",
+  "@dealerTablePlayerJoined": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableApproveFailed": "Nepodarilo sa schváliť: {error}",
+  "@dealerTableApproveFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableChipStack": "Stack",
+  "dealerTableSave": "Uložiť",
+  "liveSessionHand": "HAND",
+  "liveSessionPot": "POT",
+  "liveSessionStatus": "STAV",
+  "liveSessionLive": "NAŽIVO",
+  "liveSessionWaiting": "ČAKÁ SA",
+  "liveSessionWinnerSummary": "{winner} vyhráva ${amount}",
+  "@liveSessionWinnerSummary": {
+    "placeholders": {
+      "winner": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "liveSessionSessionEnded": "Session ukončená",
+  "liveSessionSessionEndedBody": "Dealer ukončil túto session.",
+  "liveSessionLeaveTitle": "Opustiť stôl?",
+  "liveSessionLeaveBody": "Naozaj chceš opustiť tento stôl?",
+  "liveSessionLeave": "Odísť",
+  "liveSessionLeaveFailed": "Nepodarilo sa odísť: {error}",
+  "@liveSessionLeaveFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "liveSessionLeaveTooltip": "Opustiť stôl",
+  "liveSessionSeat": "Miesto {number}",
+  "@liveSessionSeat": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "liveSessionYourSeat": "Tvoje miesto",
+  "liveSessionStack": "Stack: {amount}",
+  "@liveSessionStack": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "liveSessionWaitingForDealer": "Čaká sa na dealera...",
+  "liveSessionOffline": "OFFLINE",
+  "liveSessionRecentActions": "Posledné akcie",
+  "liveSessionWaitingForAction": "Čaká sa na akciu...",
+  "liveSessionD": "D",
+  "qrScanTitle": "Skenovať QR stola",
+  "qrScanInvalidCode": "Neplatný QR kód. Naskenuj platný QR kód pokrového stola.",
+  "qrScanError": "Chyba pri spracovaní QR kódu: {error}",
+  "@qrScanError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "qrScanInstructions": "Namier kameru na QR kód na stole a pripoj sa",
+  "clubRequestsTitle": "Žiadosti o klub",
+  "clubRequestsAll": "Všetky",
+  "clubRequestsPending": "Čakajúce",
+  "clubRequestsApproved": "Schválené",
+  "clubRequestsRejected": "Zamietnuté",
+  "clubRequestsApproveTitle": "Schváliť žiadosť",
+  "clubRequestsApproveBody": "Naozaj chceš schváliť \"{name}\"? Vytvorí sa nový klub a ty budeš pridaný ako admin.",
+  "@clubRequestsApproveBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "clubRequestsRejectTitle": "Zamietnuť žiadosť",
+  "clubRequestsRejectBody": "Uveď dôvod zamietnutia \"{name}\":",
+  "@clubRequestsRejectBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "clubRequestsRejectHint": "Dôvod zamietnutia...",
+  "clubRequestsApproveButton": "Schváliť",
+  "clubRequestsRejectButton": "Zamietnuť",
+  "clubRequestsApproved2": "{name} bol schválený!",
+  "@clubRequestsApproved2": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "clubRequestsRejected2": "{name} bol zamietnutý.",
+  "@clubRequestsRejected2": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "clubRequestsNoRequests": "Žiadne žiadosti",
+  "clubRequestsPendingBadge": "ČAKÁ",
+  "clubRequestsApprovedBadge": "SCHVÁLENÉ",
+  "clubRequestsRejectedBadge": "ZAMIETNUTÉ",
+  "clubRequestsAddress": "Adresa",
+  "clubRequestsPhone": "Telefón",
+  "clubRequestsAdminEmail": "E-mail admina",
+  "clubRequestsRequestedBy": "Požiadal",
+  "clubRequestsRequesterEmail": "E-mail žiadateľa",
+  "clubRequestsRequestedAt": "Dátum žiadosti",
+  "clubRequestsReviewedAt": "Dátum posúdenia",
+  "clubRequestsRejectionReason": "Dôvod zamietnutia:",
+  "supportRequestsTitle": "Žiadosti o podporu",
+  "supportRequestsAll": "Všetky",
+  "supportRequestsPending": "Čakajúce",
+  "supportRequestsClosed": "Uzavreté",
+  "supportRequestsResolveTitle": "Vyriešiť žiadosť",
+  "supportRequestsResolveBody": "Voliteľná odpoveď používateľovi:",
+  "supportRequestsResponseHint": "Odpoveď (voliteľné)...",
+  "supportRequestsResolve": "Vyriešiť",
+  "supportRequestsResolved": "Žiadosť vyriešená",
+  "supportRequestsRejectTitle": "Zamietnuť žiadosť",
+  "supportRequestsRejectBody": "Dôvod zamietnutia:",
+  "supportRequestsRejectHint": "Dôvod...",
+  "supportRequestsReject": "Zamietnuť",
+  "supportRequestsRejected": "Žiadosť zamietnutá",
+  "supportRequestsNoRequests": "Žiadne žiadosti",
+  "supportRequestsPendingBadge": "ČAKÁ",
+  "supportRequestsResolvedBadge": "VYRIEŠENÉ",
+  "supportRequestsRejectedBadge": "ZAMIETNUTÉ",
+  "supportRequestsCategory": "Kategória",
+  "supportRequestsUser": "Používateľ",
+  "supportRequestsEmail": "E-mail",
+  "supportRequestsSubmitted": "Odoslané",
+  "supportRequestsDescription": "Popis",
+  "supportRequestsAdminResponse": "Odpoveď admina",
+  "supportRequestsBugReport": "Nahlásenie chyby",
+  "supportRequestsFeatureRequest": "Návrh funkcie",
+  "supportRequestsAccountIssue": "Problém s účtom",
+  "debugHandViewerTitle": "Debug prehliadač handov",
+  "debugHandViewerSessionName": "Názov session",
+  "debugHandViewerHandNumbers": "Čísla handov (oddelené čiarkou, napr. 27,28)",
+  "debugHandViewerFetchData": "Načítať dáta",
+  "debugHandViewerCopied": "Skopírované do schránky",
+  "debugHandViewerNoData": "Zatiaľ žiadne dáta. Zadaj názov session a klikni na Načítať dáta.",
+  "navDrawerSettings": "Nastavenia",
+  "navDrawerRegisterClub": "Registrovať klub",
+  "navDrawerHelpSupport": "Pomoc a podpora",
+  "navDrawerLogOut": "Odhlásiť sa",
+  "navDrawerUpgrade": "Upgrade",
+  "navDrawerUserFallback": "Používateľ",
+  "navDrawerStatistics": "Štatistiky",
+  "navDrawerEvents": "Udalosti",
+  "navDrawerBankroll": "Bankroll",
+  "navDrawerClubs": "Kluby",
+  "navDrawerNoClubsYet": "Zatiaľ žiadne kluby",
+  "navDrawerMemberCount": "{count} členov",
+  "@navDrawerMemberCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "navDrawerRoleAdmin": "Admin",
+  "navDrawerRoleDealer": "Dealer",
+  "navDrawerRoleMember": "Člen",
+  "navDrawerVersion": "Verzia 1.0.0",
+  "navDrawerLastLoginToday": "Posledné prihlásenie: Dnes",
+  "navDrawerNoEarningsTitle": "Zatiaľ žiadne dáta o výnosoch",
+  "navDrawerNoEarningsBody": "Najprv pridaj výsledky session, aby si videl graf výnosov. Výsledky môžeš pridať na stránke Profil.",
+  "navDrawerSignOutTitle": "Odhlásiť sa",
+  "navDrawerSignOutMessage": "Naozaj sa chceš odhlásiť?",
+  "navDrawerSignOut": "Odhlásiť sa",
+  "multiPotMainPot": "Hlavný pot",
+  "multiPotSidePot": "Side pot {index}",
+  "@multiPotSidePot": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "multiPotPlayerFallback": "Hráč {id}",
+  "@multiPotPlayerFallback": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "multiPotMainPotWinner": "víťaz hlavného potu",
+  "multiPotEligibleFromPrevious": "oprávnený z predchádzajúceho potu",
+  "multiPotAutoAwarded": "Automaticky pridelené hráčovi {name} ({reason})",
+  "@multiPotAutoAwarded": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "multiPotChoppedPot": "Delený pot",
+  "multiPotSingleWinner": "Jeden víťaz",
+  "multiPotSelectAllWinners": "Vyber všetkých víťazov:",
+  "multiPotSelectTheWinner": "Vyber víťaza:",
+  "multiPotSelectWinnersTitle": "Vyber víťazov",
+  "multiPotMultiplePots": "Viacero potov – vyber víťaza pre každý pot",
+  "winnerSelectionWhoChopped": "Kto si delil tento pot?",
+  "winnerSelectionWhoWon": "Kto vyhral túto hand?",
+  "winnerSelectionChoppedPot": "Delený pot",
+  "winnerSelectionIndividualShares": "Jednotlivé podiely:",
+  "winnerSelectionSelectAllWinners": "Vyber všetkých víťazov:",
+  "winnerSelectionTapTheWinner": "Ťukni na víťaza:",
+  "winnerSelectionLongPressHint": "Podrž pre delený pot",
+  "winnerSelectionConfirmChop": "Potvrdiť delenie",
+  "winnerSelectionConfirmWinner": "Potvrdiť víťaza",
+  "winnerSelectionBackToSingle": "Späť na jedného víťaza",
+  "boardCardsCards": "Karty",
+  "boardCardsCard": "Karta",
+  "allInBoardTitle": "All-in board karty",
+  "raiseSnapReleaseToType": "Pusti na minime a zadaj sumu ručne",
+  "slidingNotificationHeader": "UPOZORNENIE",
+  "eventSuccessTitle": "Super! Tvoja udalosť je už v kalendári.",
+  "eventSuccessSubtitle": "Kedykoľvek ju môžeš upraviť alebo odstrániť",
+  "eventSuccessGoToCalendar": "Prejsť do kalendára",
+  "eventSuccessAddAnother": "Pridať ďalšiu udalosť",
+  "subscriptionSuccessTitle": "Teraz si {tier}!",
+  "@subscriptionSuccessTitle": {
+    "placeholders": {
+      "tier": {
+        "type": "String"
+      }
+    }
+  },
+  "subscriptionSuccessSubtitle": "Tvoj plán {tier} je aktívny. Uži si nové funkcie!",
+  "@subscriptionSuccessSubtitle": {
+    "placeholders": {
+      "tier": {
+        "type": "String"
+      }
+    }
+  },
+  "subscriptionSuccessCta": "Začni objavovať",
+  "stackChartNoData": "Zatiaľ žiadne dáta",
+  "stackChartStart": "Štart",
+  "stackChartRebuy": "Rebuy",
+  "stackChartEnd": "Koniec",
+  "stackChartTitle": "Graf stacku",
+  "stackChartAvgGrowth": "Priem. rast",
+  "stackChartDuration": "Trvanie",
+  "stackChartProfitLoss": "P/L",
+  "actionGridSelectAction": "Vyber akciu",
+  "pokerTablePlayerFallback": "Hráč",
+  "loadingDefault": "Načítava sa...",
+  "forgotPasswordFailedSendCode": "Nepodarilo sa odoslať kód. Skús to znova.",
+  "forgotPasswordNewCodeSent": "Nový kód bol odoslaný na tvoj e-mail.",
+  "forgotPasswordFailedResend": "Nepodarilo sa znova odoslať kód.",
+  "forgotPasswordEnterFullCode": "Zadaj celý 6-miestny kód.",
+  "forgotPasswordInvalidCode": "Neplatný alebo expirovaný kód. Skús to znova.",
+  "forgotPasswordResetSuccess": "Heslo bolo úspešne zmenené! Prihlás sa.",
+  "forgotPasswordResetTitle": "Obnovenie hesla",
+  "forgotPasswordResetSubtitle": "Zadaj svoj e-mail a dostaneš overovací kód",
+  "forgotPasswordCheckEmail": "Skontroluj si e-mail",
+  "forgotPasswordSetNewPassword": "Nastav nové heslo",
+  "forgotPasswordSetNewSubtitle": "Zvoľ si silné heslo pre svoj účet",
+  "forgotPasswordEmail": "E-mail",
+  "forgotPasswordEnterEmail": "Zadaj svoj e-mail",
+  "forgotPasswordValidEmail": "Zadaj platný e-mail",
+  "forgotPasswordSendCode": "Odoslať kód",
+  "forgotPasswordVerifyCode": "Overiť kód",
+  "forgotPasswordResendCode": "Znova odoslať kód",
+  "forgotPasswordResendIn": "Znova odoslať kód o {time}",
+  "@forgotPasswordResendIn": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "forgotPasswordNewPassword": "Nové heslo",
+  "forgotPasswordEnterPassword": "Zadaj heslo",
+  "forgotPasswordMinLength": "Heslo musí mať aspoň 6 znakov",
+  "forgotPasswordConfirm": "Potvrď heslo",
+  "forgotPasswordConfirmRequired": "Potvrď svoje heslo",
+  "forgotPasswordMismatch": "Heslá sa nezhodujú",
+  "forgotPasswordResetButton": "Obnoviť heslo",
+  "onboardingTrackTitle": "ZAZNAMENAJ KAŽDÚ\nHAND",
+  "onboardingTrackSubtitle": "Zaznamenávaj akcie, board karty a výsledky každej hand, ktorú odohráš — naživo alebo po session.",
+  "onboardingKnowTitle": "POZNAJ SVOJU\nHRU",
+  "onboardingKnowSubtitle": "VPIP, PFR, 3-Bet, C-Bet a ďalšie — sleduj, ako sa tvoje štatistiky vyvíjajú v reálnom čase.",
+  "onboardingClubsTitle": "HRAJ V\nKLUBOCH",
+  "onboardingClubsSubtitle": "Zapoj sa do živých udalostí, sleduj rebríčky a svojich súperov naprieč sessions.",
+  "dealerTableEnterStartingStack": "Zadaj počiatočný stack",
+  "dealerTableNoPendingRequests": "Žiadne čakajúce žiadosti o pripojenie",
+  "dealerTablePendingJoinRequests": "Čakajúce žiadosti o pripojenie",
+  "dealerTableUnknown": "Neznámy",
+  "dealerTableSeatNumber": "Miesto {number}",
+  "@dealerTableSeatNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "dealerTableReview": "Posúdiť",
+  "dealerTableSmallBlind": "Small Blind",
+  "dealerTableBigBlind": "Big Blind",
+  "dealerTableNewBlindsNote": "Nové blindy budú platiť od ďalšej hand.",
+  "dealerTableSmallMustBeLess": "Small blind musí byť menší ako big blind",
+  "dealerTableBlindsMustBePositive": "Blindy musia byť väčšie ako 0",
+  "dealerTableBlindsUpdated": "Blindy zmenené na {sb}/{bb}",
+  "@dealerTableBlindsUpdated": {
+    "placeholders": {
+      "sb": {
+        "type": "String"
+      },
+      "bb": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableFailedUpdateBlinds": "Nepodarilo sa aktualizovať blindy: {error}",
+  "@dealerTableFailedUpdateBlinds": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableFailedMoveButton": "Nepodarilo sa posunúť button: {error}",
+  "@dealerTableFailedMoveButton": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTablePending": "ČAKÁ",
+  "dealerTableConnectionLost": "Spojenie prerušené",
+  "dealerTableReconnecting": "Pokus o opätovné pripojenie...",
+  "dealerTableReconnect": "Znova pripojiť",
+  "dealerTableResetHandTitle": "Resetovať hand?",
+  "dealerTableResetHandBody": "Všetky akcie boli vrátené späť. Chceš začať novú hand?",
+  "dealerTableKeepCurrent": "Ponechať aktuálnu",
+  "dealerTableNewHand": "Nová hand",
+  "dealerTableHandReset": "Hand resetovaná – pripravené na novú hand",
+  "dealerTableAddPlayerToSeat": "Pridať hráča na miesto {number}",
+  "@dealerTableAddPlayerToSeat": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "dealerTableSearchUser": "Hľadať používateľa",
+  "dealerTableManualEntry": "Manuálne zadanie",
+  "dealerTableSearchByName": "Hľadať podľa mena",
+  "dealerTableTypeToSearch": "Píš pre vyhľadanie používateľov...",
+  "dealerTableNoUsersFound": "Nenašli sa žiadni používatelia. Skús manuálne zadanie.",
+  "dealerTablePlayerNameLabel": "Meno hráča",
+  "dealerTableEnterPlayerName": "Zadaj meno hráča",
+  "dealerTableAddPlayer": "Pridať hráča",
+  "dealerTableEndSession": "Ukončiť session",
+  "dealerTableUpdatedStack": "Stack hráča {name} zmenený na {amount}",
+  "@dealerTableUpdatedStack": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableFailedUpdateStack": "Nepodarilo sa aktualizovať stack: {error}",
+  "@dealerTableFailedUpdateStack": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableSittingAtSeat": "Teraz hráš na mieste {number}",
+  "@dealerTableSittingAtSeat": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "dealerTableFailedSitAt": "Nepodarilo sa sadnúť k stolu: {error}",
+  "@dealerTableFailedSitAt": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableFailedAddPlayer": "Nepodarilo sa pridať hráča: {error}",
+  "@dealerTableFailedAddPlayer": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableFailedRemovePlayer": "Nepodarilo sa odstrániť hráča: {error}",
+  "@dealerTableFailedRemovePlayer": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "eventDetailEventType": "Typ udalosti",
+  "eventDetailSeated": "Usadený",
+  "eventDetailAreYouGoing": "PRÍDEŠ?",
+  "eventDetailAddedToCalendarBtn": "Pridané do kalendára",
+  "eventDetailAddToCalendarBtn": "Pridať do kalendára",
+  "eventDetailWhosGoing": "Kto príde",
+  "eventDetailSeeAll": "Zobraziť všetkých",
+  "eventDetailStartDealing": "Začať rozdávať",
+  "eventDetailViewLiveRankings": "Zobraziť live rebríček",
+  "eventDetailNotSeatedAtTable": "Momentálne nesedíš pri žiadnom stole",
+  "eventDetailNotSeatedInEvent": "V tejto udalosti nemáš miesto",
+  "eventDetailErrorFindingSeat": "Chyba pri hľadaní tvojho miesta: {error}",
+  "@eventDetailErrorFindingSeat": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "eventDetailReturnToSeat": "Vrátiť sa na moje miesto",
+  "eventDetailViewFinalStandings": "Zobraziť konečné poradie",
+  "eventDetailManageTables": "Spravovať stoly",
+  "eventDetailManageTable": "Spravovať stôl",
+  "eventDetailSeeAvailability": "Zobraziť dostupnosť",
+  "eventDetailYoureSeated": "Si usadený",
+  "eventDetailNoTablesAssigned": "K tejto udalosti nie sú priradené žiadne stoly",
+  "eventDetailStartEvent": "Spustiť udalosť",
+  "eventDetailFinish": "Ukončiť",
+  "eventDetailFailedFinishCancel": "Nepodarilo sa {action} udalosť: {error}",
+  "@eventDetailFailedFinishCancel": {
+    "placeholders": {
+      "action": {
+        "type": "String"
+      },
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "homeTableSeatInfo": "Stôl {table}, miesto č. {seat}",
+  "@homeTableSeatInfo": {
+    "placeholders": {
+      "table": {
+        "type": "String"
+      },
+      "seat": {
+        "type": "String"
+      }
+    }
+  },
+  "homeRequestResolved": "Žiadosť vyriešená",
+  "homeRequestClosed": "Žiadosť uzavretá",
+  "homeResponse": "Odpoveď",
+  "homeErrorGeneric": "Chyba: {error}",
+  "@homeErrorGeneric": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "homeErrorLoadingEvent": "Chyba pri načítaní udalosti: {error}",
+  "@homeErrorLoadingEvent": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "homeFailedLoadEvent": "Nepodarilo sa načítať udalosť: {error}",
+  "@homeFailedLoadEvent": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "homeFailedUpdateEvent": "Nepodarilo sa aktualizovať udalosť: {error}",
+  "@homeFailedUpdateEvent": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "homeErrorDeletingEvent": "Chyba pri mazaní udalosti: {error}",
+  "@homeErrorDeletingEvent": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "homeTournament": "Turnaj",
+  "homeCashGame": "Cash game",
+  "commonErrorGeneric": "Chyba: {error}",
+  "@commonErrorGeneric": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "commonLeave": "Odísť",
+  "commonAccept": "Prijať",
+  "commonLoadingHands": "Načítavajú sa hands...",
+  "sessionHistoryButtonPosition": "Pozícia buttonu: {position}",
+  "@sessionHistoryButtonPosition": {
+    "placeholders": {
+      "position": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionHistoryPlayerCount": "Počet hráčov: {count}",
+  "@sessionHistoryPlayerCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionHistoryStartTime": "Čas začiatku: {time}",
+  "@sessionHistoryStartTime": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionHistoryPreflop": "Preflop:",
+  "sessionHistoryFlop": "Flop:",
+  "sessionHistoryTurn": "Turn:",
+  "sessionHistoryRiver": "River:",
+  "sessionHistorySyncFailed": "Synchronizácia zlyhala: {error}",
+  "@sessionHistorySyncFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionHistoryClearFailed": "Nepodarilo sa vymazať sessions: {error}",
+  "@sessionHistoryClearFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationsClubNotFound": "Klub sa nenašiel",
+  "notificationsAccept": "Prijať",
+  "notificationsInvitationAccepted": "Pozvánka prijatá",
+  "notificationsInvitationDeclined": "Pozvánka odmietnutá",
+  "notificationsInvitationDeclinedMsg": "Pozvánka odmietnutá",
+  "notificationsEventNotFound": "Udalosť sa nenašla",
+  "notificationsFailedLoadClub": "Nepodarilo sa načítať klub: {error}",
+  "@notificationsFailedLoadClub": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationsErrorLoadingEvent": "Chyba pri načítaní udalosti: {error}",
+  "@notificationsErrorLoadingEvent": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "invitationsFailedLoad": "Nepodarilo sa načítať pozvánky: {error}",
+  "@invitationsFailedLoad": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "invitationsFailedAccept": "Nepodarilo sa prijať pozvánku: {error}",
+  "@invitationsFailedAccept": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "invitationsDeclined": "Pozvánka odmietnutá",
+  "invitationsFailedDecline": "Nepodarilo sa odmietnuť pozvánku: {error}",
+  "@invitationsFailedDecline": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "clubSettingsTableAdded": "Stôl pridaný",
+  "clubSettingsTableDeleted": "Stôl odstránený",
+  "clubSettingsQrRegenerated": "QR kódy boli pregenerované",
+  "clubSettingsErrorPdf": "Chyba pri generovaní PDF: {error}",
+  "@clubSettingsErrorPdf": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "clubDashboardActiveDealers": "Aktívni dealeri",
+  "clubDashboardPendingInvitations": "Čakajúce pozvánky",
+  "clubDashboardDealerEmailHint": "dealer@example.com",
+  "clubDashboardInvitationSent": "Pozvánka odoslaná na {email}",
+  "@clubDashboardInvitationSent": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "clubDashboardFailedSendInvite": "Nepodarilo sa odoslať pozvánku: {error}",
+  "@clubDashboardFailedSendInvite": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "clubDashboardFailedCancelInvite": "Nepodarilo sa zrušiť pozvánku: {error}",
+  "@clubDashboardFailedCancelInvite": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "eventManagementClubEvents": "Udalosti klubu {name}",
+  "@eventManagementClubEvents": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "eventManagementFailedUpdate": "Nepodarilo sa aktualizovať udalosť: {error}",
+  "@eventManagementFailedUpdate": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "profileCash": "Cash",
+  "profileTournament": "Turnaj",
+  "profileDevTools": "Dev Tools",
+  "profilePremiumOverride": "Premium Override",
+  "profileUsingRealStatus": "Používa sa skutočný stav: {status}",
+  "@profileUsingRealStatus": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "profileOverridden": "Prepísané: {status}",
+  "@profileOverridden": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "profileResetToReal": "Obnoviť skutočný stav",
+  "profileVersion": "Verzia 1.0",
+  "profileLastLogin": "Posledné prihlásenie {date}",
+  "@profileLastLogin": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "pokerHandFailedEndSession": "Nepodarilo sa ukončiť session: {error}",
+  "@pokerHandFailedEndSession": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "pokerHandFailedSaveSession": "Nepodarilo sa uložiť session: {error}",
+  "@pokerHandFailedSaveSession": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "pokerHandRebuyAdded": "Rebuy pridaný: ${amount} (Stack: {stack})",
+  "@pokerHandRebuyAdded": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "stack": {
+        "type": "String"
+      }
+    }
+  },
+  "pokerHandEndSession": "Ukončiť session",
+  "pokerHandRebuyAmountDollar": "Suma rebuy ($)",
+  "pokerHandRebuyChips": "Rebuy žetóny",
+  "seatSetupFailedSave": "Nepodarilo sa uložiť: {error}",
+  "@seatSetupFailedSave": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "seatSetupSelectYourSeat": "Vyber si svoje miesto",
+  "authExpLinkGoogleTitle": "Prepojiť účet Google",
+  "authExpPassword": "Heslo",
+  "authExpLinkAccount": "Prepojiť účet",
+  "playerSessionYourHoleCards": "Tvoje hole cards",
+  "playerSessionSeat": "MIESTO",
+  "playerSessionStack": "STACK",
+  "playerSessionPot": "POT",
+  "playerSessionNotesHint": "Pridaj poznámky k tejto hand...",
+  "dealerQrScanInvalidCode": "Neplatný QR kód. Naskenuj platný QR kód stola.",
+  "dealerQrScanWrongClub": "Tento stôl patrí inému klubu.",
+  "dealerQrScanTableNotFound": "Stôl sa nenašiel. Naskenuj platný QR kód stola.",
+  "dealerQrScanError": "Chyba pri spracovaní QR kódu: {error}",
+  "@dealerQrScanError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerQrScanFailedStart": "Nepodarilo sa spustiť session: {error}",
+  "@dealerQrScanFailedStart": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerQrScanTakingOver": "Preberáš stôl od {name}",
+  "@dealerQrScanTakingOver": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerQrScanHandsPlayed": "Odohrané hands",
+  "dealerQrScanBlinds": "Blindy",
+  "dealerQrScanPlayers": "Hráči",
+  "dealerQrScanFailedResume": "Nepodarilo sa obnoviť session: {error}",
+  "@dealerQrScanFailedResume": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "usernameSetupLabel": "Používateľské meno",
+  "stackChartScreenAvgGrowth": "Priem. rast",
+  "stackChartScreenDuration": "Trvanie",
+  "stackChartScreenProfitLoss": "P/L",
+  "stackChartScreenStack": "Stack",
+  "sessionHandsLoading": "Načítavajú sa hands...",
+  "createEventDefaultCashGame": "Cash game {stakes}",
+  "@createEventDefaultCashGame": {
+    "placeholders": {
+      "stakes": {
+        "type": "String"
+      }
+    }
+  },
+  "createEventDefaultCashGameNoStakes": "Cash game",
+  "eventDashboardTvMode": "Režim TV zobrazenia",
+  "tableSelectionTitle": "Vyber stôl",
+  "tableSelectionAdminSubtitle": "Vyber stôl na spravovanie",
+  "tableSelectionMemberSubtitle": "Vyber stôl a pozri si dostupnosť",
+  "tableSelectionNoTables": "Žiadne dostupné stoly",
+  "tableSelectionOpenSeats": "{count} voľných",
+  "@tableSelectionOpenSeats": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "tableSelectionSeated": "{occupied}/9 obsadených",
+  "@tableSelectionSeated": {
+    "placeholders": {
+      "occupied": {
+        "type": "int"
+      }
+    }
+  },
+  "monthJan": "Jan",
+  "monthFeb": "Feb",
+  "monthMar": "Mar",
+  "monthApr": "Apr",
+  "monthMay": "Máj",
+  "monthJun": "Jún",
+  "monthJul": "Júl",
+  "monthAug": "Aug",
+  "monthSep": "Sep",
+  "monthOct": "Okt",
+  "monthNov": "Nov",
+  "monthDec": "Dec",
+  "weekdaySun": "Ne",
+  "weekdayMon": "Po",
+  "weekdayTue": "Ut",
+  "weekdayWed": "St",
+  "weekdayThu": "Št",
+  "weekdayFri": "Pi",
+  "weekdaySat": "So",
+  "opponentsErrorGeneric": "Chyba: {error}",
+  "@opponentsErrorGeneric": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "opponentsErrorDeleting": "Chyba pri mazaní súpera: {error}",
+  "@opponentsErrorDeleting": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "opponentsErrorClearing": "Chyba pri mazaní súperov: {error}",
+  "@opponentsErrorClearing": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "onboardingReadTitle": "ČÍTAJ HRU\nAKO PROFÍK",
+  "onboardingReadSubtitle": "Vytvor si účet a začni sledovať svoju pokerovú cestu.",
+  "onboardingCreateAccount": "Vytvoriť účet",
+  "onboardingLogIn": "Prihlásiť sa",
+  "onboardingSkip": "Preskočiť",
+  "onboardingFinalTable": "Final Table",
+  "authExpSignUpTitle": "Registrácia",
+  "authExpLogInTitle": "Prihlás sa do svojho účtu",
+  "authExpSignUpSubtitle": "Vytvor si účet a pokračuj",
+  "authExpLogInSubtitle": "Zadaj svoj e-mail a heslo na prihlásenie",
+  "authExpName": "Meno",
+  "authExpEmail": "E-mail",
+  "authExpEnterName": "Zadaj svoje meno",
+  "authExpNameMinLength": "Meno musí mať aspoň 2 znaky",
+  "authExpEnterEmail": "Zadaj svoj e-mail",
+  "authExpValidEmail": "Zadaj platný e-mail",
+  "authExpEnterPassword": "Zadaj svoje heslo",
+  "authExpPasswordMinLength": "Heslo musí mať aspoň 6 znakov",
+  "authExpBySigningUp": "Registráciou súhlasíš s ",
+  "authExpTermsOfService": "Podmienkami používania",
+  "authExpAnd": "\na ",
+  "authExpPrivacyPolicy": "Zásadami ochrany osobných údajov",
+  "authExpCreateAccount": "Vytvoriť účet",
+  "authExpAlreadyHaveAccount": "Už máš účet? ",
+  "authExpSignIn": "Prihlás sa",
+  "authExpForgotPassword": "Zabudnuté heslo?",
+  "authExpDontHaveAccount": "Nemáš účet? ",
+  "authExpSignUp": "Zaregistruj sa",
+  "authExpOr": "alebo",
+  "authExpContinueGoogle": "Pokračovať cez Google",
+  "authExpLinkGoogleMessage": "Účet s {email} už existuje. Zadaj heslo na prepojenie svojho účtu Google.",
+  "@authExpLinkGoogleMessage": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "forgotPasswordCodeSubtitle": "Zadaj 6-miestny kód odoslaný na {email}",
+  "@forgotPasswordCodeSubtitle": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "usernameSetupChangeTitle": "Zmeň si používateľské meno",
+  "usernameSetupChooseTitle": "Vyber si používateľské meno",
+  "usernameSetupSubtitle": "Takto ťa budú poznať ostatní hráči pri stole",
+  "usernameSetupRequired": "Používateľské meno je povinné",
+  "usernameSetupCheckingAvailability": "Kontrolujem dostupnosť…",
+  "usernameSetupAvailable": "Dostupné!",
+  "usernameSetupAlreadyTaken": "Už je obsadené",
+  "usernameSetupCurrentUsername": "Toto je tvoje aktuálne používateľské meno",
+  "usernameSetupCouldNotCheck": "Nepodarilo sa skontrolovať dostupnosť",
+  "usernameSetupJustTaken": "Používateľské meno bolo práve obsadené. Skús iné.",
+  "usernameSetupRulesHint": "3–20 znakov · písmená, čísla, podčiarkovníky",
+  "usernameSetupUpdateButton": "Aktualizovať používateľské meno",
+  "usernameSetupClaimButton": "Získať používateľské meno",
+  "usernameSetupSkip": "Zatiaľ preskočiť",
+  "sessionHandsTitle": "Session",
+  "sessionHandsHandsLogged": "{count} zaznamenaných hánd",
+  "@sessionHandsHandsLogged": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sessionHandsError": "Chyba",
+  "sessionHandsNoHandsTitle": "Žiadne zaznamenané handy",
+  "sessionHandsNoHandsSubtitle": "Táto session zatiaľ nemá žiadne zaznamenané handy.",
+  "sessionHandsWon": "VÝHRA",
+  "sessionHandsActions": "{count} akcií",
+  "@sessionHandsActions": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sessionHandsPot": "Pot",
+  "stackChartScreenTitle": "Graf stacku",
+  "stackChartScreenPokerSession": "Pokrová session",
+  "notificationsScreenTitle": "Notifikácie",
+  "notificationsScreenToday": "Dnes",
+  "notificationsScreenMarkAllAsRead": "Označiť všetky ako prečítané",
+  "notificationsScreenMarkAsRead": "Označiť ako prečítané",
+  "notificationsScreenNoNotifications": "Žiadne notifikácie",
+  "notificationsScreenClubInvitation": "Pozvánka do klubu",
+  "notificationsScreenInvitedToJoin": "Máš pozvánku do",
+  "notificationsScreenDecline": "Odmietnuť",
+  "notificationsScreenNotAuthenticated": "Nie si prihlásený",
+  "notificationsScreenRequestResolved": "Požiadavka vyriešená",
+  "notificationsScreenRequestClosed": "Požiadavka uzavretá",
+  "notificationsScreenResponse": "Odpoveď",
+  "notificationsScreenEvents": "Eventy",
+  "notificationsScreenRsvp": "RSVP",
+  "notificationsScreenClubs": "Kluby",
+  "notificationsScreenInvitations": "Pozvánky",
+  "notificationsScreenSeats": "Miesta",
+  "notificationsScreenSupport": "Podpora",
+  "notifEventCreatedTitle": "Nový event: {eventName}",
+  "@notifEventCreatedTitle": {
+    "placeholders": {
+      "eventName": {
+        "type": "String"
+      }
+    }
+  },
+  "notifEventCreatedBody": "{date}",
+  "@notifEventCreatedBody": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "notifEventUpdatedTitle": "Event aktualizovaný: {eventName}",
+  "@notifEventUpdatedTitle": {
+    "placeholders": {
+      "eventName": {
+        "type": "String"
+      }
+    }
+  },
+  "notifEventUpdatedBody": "{clubName} aktualizoval detaily eventu",
+  "@notifEventUpdatedBody": {
+    "placeholders": {
+      "clubName": {
+        "type": "String"
+      }
+    }
+  },
+  "notifEventCancelledTitle": "Event zrušený: {eventName}",
+  "@notifEventCancelledTitle": {
+    "placeholders": {
+      "eventName": {
+        "type": "String"
+      }
+    }
+  },
+  "notifEventCancelledBody": "{clubName} zrušil event naplánovaný na {date}",
+  "@notifEventCancelledBody": {
+    "placeholders": {
+      "clubName": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "notifEventStartingTitle": "{eventName} začína o 1 hodinu!",
+  "@notifEventStartingTitle": {
+    "placeholders": {
+      "eventName": {
+        "type": "String"
+      }
+    }
+  },
+  "notifEventStartingBody": "Event klubu {clubName} čoskoro začne",
+  "@notifEventStartingBody": {
+    "placeholders": {
+      "clubName": {
+        "type": "String"
+      }
+    }
+  },
+  "notifEventStartedTitle": "{eventName} je práve LIVE!",
+  "@notifEventStartedTitle": {
+    "placeholders": {
+      "eventName": {
+        "type": "String"
+      }
+    }
+  },
+  "notifEventStartedBody": "Event klubu {clubName} začal – pripoj sa a sleduj",
+  "@notifEventStartedBody": {
+    "placeholders": {
+      "clubName": {
+        "type": "String"
+      }
+    }
+  },
+  "notifSeatAvailableTitle": "Voľné miesto: {eventName}",
+  "@notifSeatAvailableTitle": {
+    "placeholders": {
+      "eventName": {
+        "type": "String"
+      }
+    }
+  },
+  "notifSeatAvailableBody": "V klube {clubName} sa uvoľnilo miesto! Otvor apku a obsaď si ho.",
+  "@notifSeatAvailableBody": {
+    "placeholders": {
+      "clubName": {
+        "type": "String"
+      }
+    }
+  },
+  "notifMemberRsvpTitle": "RSVP: {memberName}",
+  "@notifMemberRsvpTitle": {
+    "placeholders": {
+      "memberName": {
+        "type": "String"
+      }
+    }
+  },
+  "notifMemberRsvpBody": "{memberName} odpovedal \"{rsvpStatus}\" na {eventName}",
+  "@notifMemberRsvpBody": {
+    "placeholders": {
+      "memberName": {
+        "type": "String"
+      },
+      "rsvpStatus": {
+        "type": "String"
+      },
+      "eventName": {
+        "type": "String"
+      }
+    }
+  },
+  "notifNewClubRequestTitle": "Nová žiadosť o klub",
+  "notifNewClubRequestBody": "Bola odoslaná nová žiadosť o registráciu klubu",
+  "notifClubApprovedTitle": "Klub schválený",
+  "notifClubApprovedBody": "Tvoj klub bol schválený!",
+  "notifClubRejectedTitle": "Klub zamietnutý",
+  "notifClubRejectedBody": "Tvoja žiadosť o klub bola zamietnutá",
+  "notifMemberInvitedTitle": "Pozvánka do klubu",
+  "notifMemberInvitedBody": "Máš pozvánku do klubu",
+  "notifInvitationAcceptedTitle": "Pozvánka prijatá",
+  "notifInvitationAcceptedBody": "{memberName} prijal pozvánku",
+  "@notifInvitationAcceptedBody": {
+    "placeholders": {
+      "memberName": {
+        "type": "String"
+      }
+    }
+  },
+  "notifInvitationDeclinedTitle": "Pozvánka odmietnutá",
+  "notifInvitationDeclinedBody": "{memberName} odmietol pozvánku",
+  "@notifInvitationDeclinedBody": {
+    "placeholders": {
+      "memberName": {
+        "type": "String"
+      }
+    }
+  },
+  "notifSupportRequestTitle": "Žiadosť o podporu",
+  "notifSupportRequestBody": "Bola odoslaná nová žiadosť o podporu",
+  "notifSupportUpdatedTitle": "Aktualizácia podpory",
+  "notifSupportUpdatedBody": "Tvoja žiadosť o podporu bola aktualizovaná",
+  "notifTypeEventCreated": "Nový event",
+  "notifTypeEventUpdated": "Event aktualizovaný",
+  "notifTypeEventCancelled": "Event zrušený",
+  "notifTypeEventStarting": "Event čoskoro začína",
+  "notifTypeEventStarted": "Event začal",
+  "notifTypeMemberRsvp": "RSVP člena",
+  "notifTypeNewClubRequest": "Nová žiadosť o klub",
+  "notifTypeClubApproved": "Klub schválený",
+  "notifTypeClubRejected": "Klub zamietnutý",
+  "notifTypeMemberInvited": "Pozvánka do klubu",
+  "notifTypeInvitationAccepted": "Pozvánka prijatá",
+  "notifTypeInvitationDeclined": "Pozvánka odmietnutá",
+  "notifTypeSeatAvailable": "Voľné miesto",
+  "notifTypeSupportRequest": "Žiadosť o podporu",
+  "notifTypeSupportUpdated": "Aktualizácia podpory",
+  "invitationsScreenTitle": "Pozvánky do klubov",
+  "invitationsScreenNoPending": "Žiadne čakajúce pozvánky",
+  "invitationsScreenYouWillSee": "Tu uvidíš pozvánky z klubov",
+  "invitationsScreenGoBack": "Späť",
+  "invitationsScreenUnknownClub": "Neznámy klub",
+  "invitationsScreenInvitedBy": "Pozval ťa {name}",
+  "@invitationsScreenInvitedBy": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "invitationsScreenExpires": "Vyprší {date}",
+  "@invitationsScreenExpires": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "invitationsScreenExpired": "Vypršala",
+  "invitationsScreenExpiresInDays": "o {days} dní",
+  "@invitationsScreenExpiresInDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "invitationsScreenExpiresInHours": "o {hours} hod.",
+  "@invitationsScreenExpiresInHours": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "invitationsScreenExpiresSoon": "čoskoro",
+  "invitationsScreenDecline": "Odmietnuť",
+  "invitationsScreenAccept": "Prijať",
+  "invitationsScreenJoinedAs": "Pridal si sa do {clubName} ako {role}",
+  "@invitationsScreenJoinedAs": {
+    "placeholders": {
+      "clubName": {
+        "type": "String"
+      },
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "profilePremium": "Premium",
+  "profileFree": "Free",
+  "dealerTableStartNewHand": "Začať novú handu",
+  "dealerTableStartSessionBtn": "Spustiť session",
+  "dealerTableNeedTwoPlayers": "Na štart treba aspoň 2 hráčov",
+  "dealerTableAddTestPlayers": "Pridať testovacích hráčov",
+  "dealerTableAddedTestPlayers": "Pridaných {count} testovacích hráčov",
+  "@dealerTableAddedTestPlayers": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dealerTableRolledBack": "Vrátené späť na {street}",
+  "@dealerTableRolledBack": {
+    "placeholders": {
+      "street": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableUndoneAction": "Vrátené: {playerName} {action}",
+  "@dealerTableUndoneAction": {
+    "placeholders": {
+      "playerName": {
+        "type": "String"
+      },
+      "action": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableScanToJoin": "Naskenuj a obsaď toto miesto",
+  "dealerTableOccupiedDot": "Obsadené · ",
+  "dealerTableEmptyLabel": "Voľné",
+  "dealerTableOccupiedLabel": "Obsadené",
+  "dealerTableSelectedLabel": "Vybrané",
+  "dealerTableSelectSeatLabel": "VYBER MIESTO",
+  "dealerTableBetAmountDialog": "Výška betu",
+  "dealerTableRaiseToDialog": "Raise na",
+  "dealerTablePausedLabel": "Pozastavené",
+  "dealerTableListeningLabel": "Počúvam",
+  "dealerTableResumeVoiceTooltip": "Obnoviť hlas",
+  "dealerTablePauseVoiceTooltip": "Pozastaviť hlas",
+  "dealerTableVoiceOffLabel": "Hlas vypnutý",
+  "dealerTableCalibratingLabel": "Kalibrujem...",
+  "dealerTableCalibrationPrompt": "Povedz: \"Stôl [číslo], dealer [meno]\"",
+  "dealerTableDealerLockedMsg": "Dealer uzamknutý: {name} pri stole {table}",
+  "@dealerTableDealerLockedMsg": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "table": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableNoSpeakersMsg": "Nezachytil som žiadny hlas – hovor zreteľne",
+  "dealerTableSayTableDealerMsg": "Povedz: \"Stôl [číslo], dealer [meno]\"",
+  "dealerTableConnectionLostRecovery": "Spojenie prerušené – pokúšam sa obnoviť...",
+  "dealerTableConnectionTimeout": "Časový limit spojenia vypršal – potrebná rekalibrácia",
+  "dealerTableConnectionRecovered": "Spojenie obnovené!",
+  "dealerTableActionHeldMsg": "Akcia pozdržaná",
+  "dealerTableFailedStartStreaming": "Nepodarilo sa spustiť streamovanie – skontroluj pripojenie k serveru a mikrofón",
+  "dealerTableFailedStartVoice": "Nepodarilo sa spustiť hlas: {error}",
+  "@dealerTableFailedStartVoice": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableAddPlayerActionLabel": "Pridať hráča",
+  "dealerTableSeatAnotherPlayer": "Posadiť sem ďalšieho hráča",
+  "dealerTableSitHereLabel": "Sadnúť si sem",
+  "dealerTableJoinAsDealerPlayer": "Pridaj sa do hry ako dealer-hráč",
+  "dealerTableDealerFallback": "Dealer",
+  "dealerTableUpdatedStackMsg": "Stack hráča {name} aktualizovaný na {amount}",
+  "@dealerTableUpdatedStackMsg": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableFailedUpdateStackMsg": "Nepodarilo sa aktualizovať stack: {error}",
+  "@dealerTableFailedUpdateStackMsg": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableSittingAtSeatMsg": "Teraz hráš na mieste {number}",
+  "@dealerTableSittingAtSeatMsg": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "dealerTableFailedSitMsg": "Nepodarilo sa sadnúť k stolu: {error}",
+  "@dealerTableFailedSitMsg": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableFailedAddPlayerMsg": "Nepodarilo sa pridať hráča: {error}",
+  "@dealerTableFailedAddPlayerMsg": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableRemovedFromSeat": "{name} odstránený z miesta {seat}",
+  "@dealerTableRemovedFromSeat": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "seat": {
+        "type": "int"
+      }
+    }
+  },
+  "dealerTableFailedRemoveMsg": "Nepodarilo sa odstrániť hráča: {error}",
+  "@dealerTableFailedRemoveMsg": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "eventDetailDateAndTime": "Dátum a čas",
+  "eventDetailTableSeatInfo": "Stôl {table}, miesto #{seat}",
+  "@eventDetailTableSeatInfo": {
+    "placeholders": {
+      "table": {
+        "type": "String"
+      },
+      "seat": {
+        "type": "int"
+      }
+    }
+  },
+  "eventDetailYoureSeatedGoodLuck": "Máš miesto, veľa šťastia!",
+  "eventDetailHomeGame": "Domáca hra",
+  "clubDashboardDateLabel": "Dátum",
+  "clubDashboardUnknownLabel": "Neznáme",
+  "clubDashboardActiveLabel": "Aktívny",
+  "clubDashboardIdleLabel": "Nečinný",
+  "clubDashboardInvitedTimeAgo": "Pozvaný {time}",
+  "@clubDashboardInvitedTimeAgo": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "clubDashboardPendingLabel": "Čaká",
+  "clubDashboardNoDealersYet": "Zatiaľ žiadni dealeri",
+  "clubDashboardInviteDealersHint": "Pozvi dealerov, ktorí ti pomôžu spravovať stoly",
+  "clubDashboardInviteDealer": "Pozvať dealera",
+  "clubDashboardInviteDealerBody": "Zadaj e-mailovú adresu dealera, ktorého chceš pozvať.",
+  "clubDashboardSendInvitationBtn": "Odoslať pozvánku",
+  "clubDashboardInvitationSentTo": "Pozvánka odoslaná na {email}",
+  "@clubDashboardInvitationSentTo": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "clubDashboardFailedSendInvitationMsg": "Nepodarilo sa odoslať pozvánku: {error}",
+  "@clubDashboardFailedSendInvitationMsg": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "clubDashboardCancelInvitationTitle": "Zrušiť pozvánku?",
+  "clubDashboardCancelInvitationBody": "Zrušiť pozvánku pre {email}?",
+  "@clubDashboardCancelInvitationBody": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "clubDashboardKeepBtn": "Ponechať",
+  "clubDashboardCancelInvitationBtn": "Zrušiť pozvánku",
+  "clubDashboardFailedCancelMsg": "Nepodarilo sa zrušiť pozvánku: {error}",
+  "@clubDashboardFailedCancelMsg": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "clubSettingsMembers": "Členovia ({count})",
+  "@clubSettingsMembers": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "clubSettingsNoMembersFound": "Nenašli sa žiadni členovia",
+  "clubSettingsRoleOwner": "Majiteľ",
+  "clubSettingsRoleAdmin": "Admin",
+  "clubSettingsRoleDealer": "Dealer",
+  "clubSettingsRolePlayer": "Hráč",
+  "clubSettingsTableAddedMsg": "Stôl pridaný",
+  "clubSettingsEditTableTitle": "Upraviť stôl",
+  "clubSettingsDeleteTableTitle": "Vymazať stôl?",
+  "clubSettingsDeleteTableBody": "Naozaj chceš vymazať \"{name}\"? Túto akciu nie je možné vrátiť späť.",
+  "@clubSettingsDeleteTableBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "clubSettingsTableDeletedMsg": "Stôl vymazaný",
+  "clubSettingsDealerScanHint": "Dealeri toto naskenujú a spustia session pri tomto stole",
+  "clubSettingsRegenerateBtn": "Vygenerovať znova",
+  "clubSettingsAppQrCodes": "QR kódy apky",
+  "clubSettingsShareWithPlayers": "Zdieľaj s hráčmi na stiahnutie apky",
+  "clubSettingsDownloadPdf": "Stiahnuť PDF",
+  "clubSettingsDownloadFinalTable": "Stiahni si apku Final Table",
+  "clubSettingsScanQrToGetStarted": "Naskenuj QR kód pre svoje zariadenie a začni",
+  "clubSettingsScanToStartSession": "Naskenovaním tohto QR kódu spustíš session",
+  "clubSettingsForDealersOnly": "Len pre dealerov",
+  "clubSettingsTableDefault": "Stôl {number}",
+  "@clubSettingsTableDefault": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "eventManagementFailedUpdateEvent": "Nepodarilo sa aktualizovať event: {error}",
+  "@eventManagementFailedUpdateEvent": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "adminTableThisWillMoveMsg": "Toto presunie {count} hráča(ov) na waitlist a odstráni stôl z tohto eventu.",
+  "@adminTableThisWillMoveMsg": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "adminTableThisWillRemoveMsg": "Toto odstráni stôl z tohto eventu.",
+  "adminTableClosedWithWaitlistMsg": "{table} zatvorený. {count} hráč(ov) presunutých na waitlist.",
+  "@adminTableClosedWithWaitlistMsg": {
+    "placeholders": {
+      "table": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "adminTableClosedMsg": "{table} zatvorený.",
+  "@adminTableClosedMsg": {
+    "placeholders": {
+      "table": {
+        "type": "String"
+      }
+    }
+  },
+  "adminTableEmptyLabel": "Voľné",
+  "adminTableTableFallback": "Stôl",
+  "adminTableTableNumberLabel": "Stôl {number}",
+  "@adminTableTableNumberLabel": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "homePendingInvitationsMsg": "Máš {count} čakajúcich pozvánok do klubu.",
+  "@homePendingInvitationsMsg": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "homeEventFallback": "Event",
+  "homePokerFallback": "Poker",
+  "homeUserFallback": "Používateľ",
+  "homeSeatInfoStr": "Miesto #{seat}  •  {chipStack}",
+  "@homeSeatInfoStr": {
+    "placeholders": {
+      "seat": {
+        "type": "int"
+      },
+      "chipStack": {
+        "type": "String"
+      }
+    }
+  },
+  "pokerHandYouLabel": "Ty",
+  "pokerHandMovingToTable": "Presúvaš sa k inému stolu. Tvoj stack ({stack}) sa prenesie. Ostatní hráči budú vymazaní.",
+  "@pokerHandMovingToTable": {
+    "placeholders": {
+      "stack": {
+        "type": "String"
+      }
+    }
+  },
+  "pokerHandActiveSessionMsg": "Máš aktívnu session s {count} zaznamenanými handami. Čo chceš urobiť?",
+  "@pokerHandActiveSessionMsg": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pokerHandUnknownLabel": "Neznáme",
+  "pokerHandFoldAction": "Fold",
+  "pokerHandRaiseAction": "Raise",
+  "pokerHandBetAction": "Bet",
+  "pokerHandAllInAction": "All-In",
+  "pokerHandAllPlayersAllIn": "Všetci hráči all-in – rozdávajú sa zvyšné karty",
+  "pokerHandWaitingForCards": "Čaká sa na rozdanie kariet",
+  "pokerHandBettingComplete": "Stávkovanie dokončené – pripravené na ďalšiu street",
+  "pokerHandSeatFallback": "Miesto {id}",
+  "@pokerHandSeatFallback": {
+    "placeholders": {
+      "id": {
+        "type": "int"
+      }
+    }
+  },
+  "pokerHandPlayerFallback": "Hráč {id}",
+  "@pokerHandPlayerFallback": {
+    "placeholders": {
+      "id": {
+        "type": "int"
+      }
+    }
+  },
+  "pokerHandChooseOption": "Vyber možnosť:",
+  "pokerHandLeaveBtn": "Odísť",
+  "pokerHandConfirmBtn": "Potvrdiť",
+  "pokerHandCurrentlyHaveRemaining": "Momentálne ti zostáva {stack}.",
+  "@pokerHandCurrentlyHaveRemaining": {
+    "placeholders": {
+      "stack": {
+        "type": "String"
+      }
+    }
+  },
+  "opponentsColorRed": "Červená",
+  "opponentsColorLightBlue": "Svetlomodrá",
+  "opponentsColorGreen": "Zelená",
+  "opponentsColorOrange": "Oranžová",
+  "opponentsColorPurple": "Fialová",
+  "opponentsColorTeal": "Tyrkysová",
+  "opponentsColorPink": "Ružová",
+  "opponentsColorIndigo": "Indigová",
+  "opponentsFailedToLoad": "Nepodarilo sa načítať súperov: {error}",
+  "@opponentsFailedToLoad": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "opponentDetailFoldTo3Bet": "Fold to 3-Bet",
+  "opponentDetailStealLabel": "Steal",
+  "opponentDetailCheckRaiseLabel": "Check/Raise",
+  "playerSessionBluff": "Bluff",
+  "playerSessionValue": "Value",
+  "playerSessionMistake": "Chyba",
+  "playerSessionCooler": "Cooler",
+  "playerSessionHeroCall": "Hero Call",
+  "playerSessionExploit": "Exploit",
+  "playerSessionToughSpot": "Ťažký spot",
+  "playerSessionEasyFold": "Jasný fold",
+  "playerSessionEndedTitle": "Session ukončená",
+  "playerSessionEndedBody": "Dealer ukončil túto session.",
+  "playerSessionRemovedTitle": "Odstránený od stola",
+  "playerSessionRemovedBody": "Dealer ťa odstránil od stola.",
+  "playerSessionYouWon": "Vyhral si {amount}!",
+  "@playerSessionYouWon": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "playerSessionSeatWins": "Miesto {seat} vyhráva {amount}",
+  "@playerSessionSeatWins": {
+    "placeholders": {
+      "seat": {
+        "type": "int"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "playerSessionYourHoleCardsTitle": "Tvoje hole cards",
+  "playerSessionConnecting": "Pripájam sa...",
+  "playerSessionGoBackBtn": "Späť",
+  "playerSessionHoleCardsLabel": "Hole cards",
+  "playerSessionEditBtn": "Upraviť",
+  "playerSessionAddBtn": "Pridať",
+  "playerSessionBoardLabel": "Board",
+  "playerSessionNoCardsDealt": "Žiadne rozdané karty",
+  "playerSessionWaitingForAction": "Čaká sa na akciu...",
+  "playerSessionActionsLabel": "Akcie",
+  "playerSessionYouLabel": "Ty",
+  "playerSessionSeatFallback": "Miesto {seat}",
+  "@playerSessionSeatFallback": {
+    "placeholders": {
+      "seat": {
+        "type": "int"
+      }
+    }
+  },
+  "playerSessionNotesHintText": "Pridaj poznámky k tejto hande...",
+  "playerSessionHandHistoryLabel": "História hánd",
+  "playerSessionNoCompletedHands": "Zatiaľ žiadne dokončené handy",
+  "playerSessionWonAmount": "Výhra {amount}",
+  "@playerSessionWonAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "playerSessionLostLabel": "Prehra",
+  "playerSessionDealerChangeTitle": "Zmena dealera",
+  "playerSessionWaitingForDealer": "Čaká sa, kým prevezme nový dealer...",
+  "playerSessionHandUpdated": "Handa #{number} aktualizovaná",
+  "@playerSessionHandUpdated": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "playerSessionErrorSaving": "Chyba pri ukladaní: {error}",
+  "@playerSessionErrorSaving": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "playerSessionEditHand": "Upraviť handu #{number}",
+  "@playerSessionEditHand": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "playerSessionViewDetails": "Zobraziť detaily",
+  "playerSessionTapToAddHoleCards": "Ťukni a pridaj hole cards",
+  "playerSessionSaveChanges": "Uložiť zmeny",
+  "playerSessionLeaveTableTitle": "Odísť od stola?",
+  "playerSessionLeaveTableBody": "Naozaj chceš odísť od tohto stola?",
+  "playerSessionFailedLeave": "Nepodarilo sa odísť: {error}",
+  "@playerSessionFailedLeave": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "playerSessionTableSession": "Session pri stole",
+  "playerSessionHandNumber": "Handa #{number}",
+  "@playerSessionHandNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "playerSessionUnknownDealer": "Neznámy",
+  "playerSessionNotAuthenticated": "Nie si prihlásený",
+  "dealerQrScanSessionSettings": "Nastavenia session",
+  "dealerQrScanTableNameLabel": "Stôl: {name}",
+  "@dealerQrScanTableNameLabel": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerQrScanEventNameLabel": "Event: {name}",
+  "@dealerQrScanEventNameLabel": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerQrScanBlindsLabel": "Blinds",
+  "dealerQrScanSmallBlindLabel": "Small Blind",
+  "dealerQrScanBigBlindLabel": "Big Blind",
+  "dealerQrScanStartDealingBtn": "Začať rozdávať",
+  "dealerQrScanResumeSessionTitle": "Obnoviť session",
+  "dealerQrScanTakingOverFrom": "Preberáš po {name}",
+  "@dealerQrScanTakingOverFrom": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerQrScanHandsPlayedLabel": "Odohrané handy",
+  "dealerQrScanBlindsInfoLabel": "Blinds",
+  "dealerQrScanPlayersLabel": "Hráči",
+  "dealerQrScanResumeBtn": "Pokračovať",
+  "dealerQrScanTableNotAssigned": "Stôl nie je priradený",
+  "dealerQrScanEventTablesLabel": "Stoly eventu:",
+  "dealerQrScanNoTablesAssigned": "Žiadne priradené stoly",
+  "dealerQrScanThisTableId": "ID tohto stola:",
+  "dealerQrScanCorrectQrUrl": "Správna URL QR kódu:",
+  "dealerQrScanScanTableQrTitle": "Naskenuj QR stola",
+  "dealerQrScanScanInstructions": "Naskenuj QR kód stola a začni rozdávať",
+  "eventDashboardTournamentOnBreak": "Turnaj má prestávku",
+  "eventDashboardLiveLabel": "Live",
+  "eventDashboardLocalLabel": "Lokálne",
+  "eventDashboardDisconnectedLabel": "Odpojené",
+  "eventDashboardPlayersLabel": "Hráči",
+  "eventDashboardTablesLabel": "Stoly",
+  "eventDashboardTotalChipsLabel": "Žetóny spolu",
+  "eventDashboardAvgStackLabel": "Priemerný stack",
+  "eventDashboardChipLeaderLabel": "Chipleader",
+  "eventDashboardNoRankingsYet": "Zatiaľ žiadne poradie",
+  "eventDashboardRankingsWillAppear": "Poradie sa zobrazí, keď si hráči sadnú k stolom",
+  "eventDashboardTableSeatLabel": "{table} - miesto {seat}",
+  "@eventDashboardTableSeatLabel": {
+    "placeholders": {
+      "table": {
+        "type": "String"
+      },
+      "seat": {
+        "type": "int"
+      }
+    }
+  },
+  "eventDashboardPlayerFallback": "Hráč {id}",
+  "@eventDashboardPlayerFallback": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "commonNA": "N/A",
+  "sessionHistoryFailedLoad": "Nepodarilo sa načítať sessions: {error}",
+  "@sessionHistoryFailedLoad": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionHistoryCash": "Cash",
+  "sessionHistoryTournament": "Turnaj",
+  "sessionHistorySessionId": "Session {id}...",
+  "@sessionHistorySessionId": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionHistorySeatWithPosition": "Miesto {seat} ({position})",
+  "@sessionHistorySeatWithPosition": {
+    "placeholders": {
+      "seat": {
+        "type": "String"
+      },
+      "position": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionHistorySeat": "Miesto {seat}",
+  "@sessionHistorySeat": {
+    "placeholders": {
+      "seat": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionHistorySyncCompleted": "Synchronizácia dokončená",
+  "sessionHistoryFullHistory": "Kompletná história session",
+  "sessionHandsRetry": "Skúsiť znova",
+  "stackChartScreenStart": "Štart",
+  "stackChartScreenRebuy": "Rebuy",
+  "stackChartScreenEnd": "Koniec",
+  "seatSetupDone": "Hotovo",
+  "seatSetupCancel": "Zrušiť",
+  "authConnectionIssue": "Problém s pripojením",
+  "authConnectionIssueBody": "Nepodarilo sa nám pripojiť k serverom.\nSkontroluj si internetové pripojenie\na skús to znova.",
+  "authTryAgain": "Skúsiť znova",
+  "redeemInvitationTitle": "Uplatniť pozvánku",
+  "redeemEnterCode": "Zadaj kód pozvánky",
+  "redeemCodeDescription": "Zadaj 8-znakový kód, ktorý si dostal od správcu klubu, aby si sa pridal do jeho klubu.",
+  "redeemJoinClub": "Pridať sa do klubu",
+  "redeemWelcome": "Vitaj!",
+  "redeemJoinedAs": "Pridal si sa do {clubName} ako {role}",
+  "@redeemJoinedAs": {
+    "placeholders": {
+      "clubName": {
+        "type": "String"
+      },
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "redeemContinue": "Pokračovať",
+  "supportBugReport": "Nahlásenie chyby",
+  "supportFeatureRequest": "Návrh funkcie",
+  "supportAccountIssue": "Problém s účtom",
+  "supportOther": "Iné",
+  "supportFillAllFields": "Vyplň prosím všetky polia",
+  "supportSubmitted": "Žiadosť o podporu bola úspešne odoslaná",
+  "supportFailedSubmit": "Odoslanie zlyhalo: {error}",
+  "@supportFailedSubmit": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "supportTitle": "Pomoc a podpora",
+  "supportSubmitButton": "Odoslať",
+  "supportCategoryLabel": "Kategória",
+  "supportSubjectLabel": "Predmet",
+  "supportDescriptionLabel": "Popis",
+  "supportSubjectHint": "Stručné zhrnutie problému",
+  "supportDescriptionHint": "Popíš problém podrobne...",
+  "calendarEventLocation": "Miesto konania",
+  "calendarEventBuyIn": "Výška buy-inu",
+  "calendarEventEdit": "Upraviť",
+  "calendarEventDelete": "Vymazať udalosť",
+  "calendarEventDeleteConfirm": "Vymazať {title}?",
+  "@calendarEventDeleteConfirm": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "calendarEventDeleteBody": "Naozaj chceš vymazať \"{title}\"?\nTúto akciu nie je možné vrátiť späť.",
+  "@calendarEventDeleteBody": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "calendarEventDeleteButton": "Vymazať",
+  "clubInfoTitle": "Info o klube",
+  "clubInfoMembersCount": "Členovia ({count})",
+  "@clubInfoMembersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "clubInfoNoMembers": "Nenašli sa žiadni členovia",
+  "finalStandingsNoData": "Poradie nie je k dispozícii",
+  "finalStandingsNoDataHint": "Táto udalosť možno nemá zaznamenané poradie",
+  "finalStandingsEmpty": "Žiadne zaznamenané poradie",
+  "finalStandingsTitle": "Konečné poradie",
+  "finalStandingsPlayers": "Hráči",
+  "finalStandingsCompleted": "Dokončené",
+  "liveRankingsTitle": "Živé poradie",
+  "liveRankingsEliminated": "Vyradení hráči",
+  "liveRankingsWaiting": "Čaká sa na hráčov",
+  "liveRankingsWaitingHint": "Poradie sa zobrazí, keď si hráči sadnú",
+  "liveRankingsError": "Chyba pri načítaní poradia",
+  "liveRankingsTryAgain": "Skúsiť znova",
+  "leaderboardPlayers": "Hráči",
+  "leaderboardTotalChips": "Celkové žetóny",
+  "leaderboardWaiting": "Čaká sa na hráčov...",
+  "leaderboardChipLeader": "Chip leader: {name}",
+  "@leaderboardChipLeader": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerQrScanBbAnte": "BB ante",
+  "mainDealerOnClub": "Teraz si dealer v {clubName}",
+  "@mainDealerOnClub": {
+    "placeholders": {
+      "clubName": {
+        "type": "String"
+      }
+    }
+  },
+  "raiseSnapMin": "Min",
+  "raiseSnapPot": "Pot",
+  "raiseSnapAllIn": "All-In",
+  "sessionHistoryPlayerWins": "Hráč {playerId} vyhráva:",
+  "@sessionHistoryPlayerWins": {
+    "placeholders": {
+      "playerId": {
+        "type": "int"
+      }
+    }
+  },
+  "inviteClubAdminFallback": "Správca klubu",
+  "pokerHandBetRange": "Min: {min} · Max: {max}",
+  "@pokerHandBetRange": {
+    "placeholders": {
+      "min": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "pokerHandAmountBetween": "Suma musí byť medzi {min} a {max}",
+  "@pokerHandAmountBetween": {
+    "placeholders": {
+      "min": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableBlindsLabel": "BLINDS",
+  "dealerTableAnteLabel": "ANTE {amount}",
+  "@dealerTableAnteLabel": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTablePotLabel": "POT",
+  "dealerTableCheckLabel": "CHECK",
+  "dealerTablePlayerToAct": "{playerName} je na rade ({stack})",
+  "@dealerTablePlayerToAct": {
+    "placeholders": {
+      "playerName": {
+        "type": "String"
+      },
+      "stack": {
+        "type": "String"
+      }
+    }
+  },
+  "eventDashboardOnBreakBadge": "PRESTÁVKA",
+  "eventDetailAdminActions": "AKCIE SPRÁVCU",
+  "playerSessionHandNotesLabel": "POZNÁMKY K HANDE",
+  "playerSessionTagsLabel": "TAGY",
+  "playerSessionNotesLabel": "POZNÁMKY",
+  "playerSessionHoleCardsUpperLabel": "HOLE CARDS",
+  "qrJoinDeclined": "Tvoja žiadosť o pripojenie bola zamietnutá",
+  "qrJoinFailed": "Nepodarilo sa pripojiť k miestu: {error}",
+  "@qrJoinFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "qrJoinTable": "Pripojiť sa k stolu",
+  "qrJoinLoading": "Načítavam info o stole...",
+  "qrJoinError": "Niečo sa pokazilo",
+  "qrJoinGoBack": "Späť",
+  "qrJoinSeatOccupied": "Toto miesto už môže byť obsadené. Pripojením nahradíš aktuálneho hráča.",
+  "qrJoinWaitingDealer": "Čaká sa na dealera",
+  "qrJoinRequestSent": "Tvoja žiadosť o pripojenie na miesto {seatNumber} bola odoslaná.",
+  "@qrJoinRequestSent": {
+    "placeholders": {
+      "seatNumber": {
+        "type": "int"
+      }
+    }
+  },
+  "qrJoinDealerApproval": "Dealer ti nastaví stack a schváli tvoje pripojenie.",
+  "qrJoinCancelRequest": "Zrušiť žiadosť",
+  "qrJoinRequestButton": "Požiadať o pripojenie",
+  "onboardingSkipTour": "Preskočiť prehliadku",
+  "onboardingWelcomeTitle": "Vitaj vo\nFinal Table",
+  "onboardingWelcomeBody": "Poď na rýchlu prehliadku, ktorá ti pomôže začať.\n\nPrehliadku si môžeš kedykoľvek zopakovať cez\nProfil → Nastavenia → Databáza znalostí.",
+  "onboardingLetsGo": "Poďme na to",
+  "onboardingGotIt": "Rozumiem",
+  "onboardingNext": "Ďalej",
+  "onboardingStartLoggingTitle": "Začni logovať",
+  "onboardingStartLoggingBody": "Ťukni na tlačidlo + a začni logovať handu.",
+  "onboardingFullModeTitle": "Režim logovania",
+  "onboardingFullModeBody": "Sleduj svoje aj súperove handy počas celej session. Loguj to, čo je pre teba dôležité — ideálne na neskoršiu analýzu.",
+  "onboardingSessionSetupTitle": "Detaily session",
+  "onboardingSessionSetupBody": "Tu si nastavíš názov session, typ hry, blinds, výšku buy-inu a počiatočný stack.",
+  "onboardingTableSetupTitle": "Nastav si stôl",
+  "onboardingTableSetupBody": "Usaď seba a aspoň jedného súpera, aby si mohol začať. Na spustenie session potrebuješ minimálne 2 hráčov. Potiahnutím dealer buttonu (D) nastavíš pozíciu buttonu.",
+  "onboardingSeatOpenTitle": "Voľné miesto",
+  "onboardingSeatOpenBody": "Prepínačom označíš miesto ako obsadené alebo voľné. Voľné miesta sa počas handy preskakujú.",
+  "onboardingThisIsMySeatTitle": "Toto je moje miesto",
+  "onboardingThisIsMySeatBody": "Ťukni sem, ak je toto tvoje miesto. Automaticky sa doplní tvoje meno a budú sa sledovať tvoje osobné štatistiky.",
+  "onboardingPlayerNameTitle": "Meno hráča",
+  "onboardingPlayerNameBody": "Napíš meno alebo vyber z uložených súperov. Uloženým súperom sa štatistiky sledujú naprieč sessionmi.",
+  "onboardingSaveOpponentTitle": "Ulož súpera",
+  "onboardingSaveOpponentBody": "Ulož si súpera, ak s ním hrávaš pravidelne. Ak ho nepoznáš, nechaj meno prázdne — FT ho nazve Player + číslo miesta.",
+  "onboardingDealerButtonTitle": "Dealer button",
+  "onboardingDealerButtonBody": "Potiahni ho na miesto s pozíciou dealera. Určuje blinds a poradie akcií.",
+  "onboardingViewSessionsTitle": "Tu nájdeš svoje sessions",
+  "onboardingViewSessionsBody": "Ťukni na ikonu Sessions a pozri si session, ktorú si práve odohral.",
+  "onboardingSessionHistoryCardTitle": "Session, ktorú si práve odohral",
+  "onboardingSessionHistoryCardBody": "Toto je tvoja tutoriálová session — kedykoľvek na ňu ťukni a pozri si každú handu.",
+  "onboardingHandListTitle": "Každá handa uložená",
+  "onboardingHandListBody": "Ťukni sem a otvor handy, ktoré si v tejto session zalogoval. Môžeš tiež ťuknúť na body v grafe stacku, zobraziť tooltip a prejsť priamo na danú handu.",
+  "onboardingHandCardTitle": "Tvoja zalogovaná handa",
+  "onboardingHandCardBody": "Ťukni na handu a pozri si kompletný prehľad akcií, street po streete.",
+  "onboardingHandToolsTitle": "Nástroje handy",
+  "onboardingHandToolsBody": "Prepni sumy na big blindy (BB), exportuj alebo zdieľaj handu a označ ju hviezdičkou, aby si si uložil obľúbené — všetko odtiaľto. Na tejto obrazovke môžeš aj potiahnuť doľava a prechádzať medzi handami.",
+  "onboardingAiAnalysisTitle": "AI analýza handy",
+  "onboardingAiAnalysisBody": "Získaj okamžitý koučing k tejto hande — prvá analýza je na nás. Ťukni na tlačidlo!",
+  "sessionTutorialBadge": "Tutoriál",
+  "introGetStarted": "Začať",
+  "linkAccountTitle": "Hráš ako hosť",
+  "linkAccountBody": "Vytvor si bezplatný účet a udrž svoje dáta v bezpečí naprieč zariadeniami.",
+  "linkAccountSuccess": "Účet vytvorený — tvoje dáta sú teraz zálohované.",
+  "linkAccountConflictTitle": "Účet už existuje",
+  "linkAccountConflictBody": "Tento účet už existuje. Chceš sa doň radšej prihlásiť? Tvoje dáta hosťa sa neprenesú.",
+  "anonSignOutWarning": "Si prihlásený ako hosť. Odhlásením natrvalo stratíš prístup k svojim sessions a handám.",
+  "paywallAccountReady": "Účet vytvorený! Teraz môžeš dokončiť nákup.",
+  "onboardingAllSetTitle": "Všetko je pripravené!",
+  "onboardingAllSetBody": "Môžeš začať sledovať svoje pokrové sessions.",
+  "onboardingLetsPlay": "Poďme hrať",
+  "onboardingStepOf": "Krok {step} z {total}",
+  "@onboardingStepOf": {
+    "placeholders": {
+      "step": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "guidedGestureGuideTitle": "Sprievodca gestami",
+  "guidedGestureGuideBody": "Ťukni na túto ikonu kedykoľvek a znova si zobraz sprievodcu gestami.",
+  "guidedSkipButtonTitle": "Tlačidlo preskočenia",
+  "guidedSkipButtonBody": "Ak preskočíš handu, toto tlačidlo posunie dealer button na ďalšieho hráča. Mysli na to, že stacky nebudú synchronizované — aktualizovať ich môžeš v Správe hráčov.",
+  "guidedGameMenuTitle": "Herné menu",
+  "guidedGameMenuBody": "Toto menu obsahuje užitočné možnosti. Pozrime sa na jedno dôležité nastavenie.",
+  "guidedGameSettingsTitle": "Nastavenia hry",
+  "guidedGameSettingsBody": "Tu môžeš zmeniť blinds počas session — hodí sa v turnajoch, keď sa zvyšujú levely.",
+  "guidedEndSessionTitle": "Ukonči session",
+  "guidedEndSessionBody": "Ťukni na toto menu a vyber \"Ukončiť session\", aby si uložil svoje výsledky.",
+  "guidedEndSessionHubBody": "Ťukni sem, ukonči session a pozri si svoje výsledky.",
+  "guidedReviewHandTitle": "Prezri si handu",
+  "guidedReviewHandBody": "Zadaj svoje hole cards a prípadné poznámky.",
+  "guidedHandCompleteTitle": "Handa dokončená!",
+  "guidedHandCompleteBody": "Skvelá práca! Práve si zalogoval svoju prvú handu.",
+  "guidedSkip": "Preskočiť",
+  "guidedYourTurn": "Si na rade!",
+  "guidedOpenThePotTitle": "Otvor pot",
+  "guidedBetOnceBody": "Tento hráč betuje.",
+  "guidedFoldTitle": "Fold",
+  "guidedFoldBody": "Tento hráč folduje.",
+  "guidedCallTitle": "Call",
+  "guidedCallBody": "Tento hráč calluje.",
+  "guidedCheckTitle": "Check",
+  "guidedCheckBody": "Tento hráč checkuje.",
+  "guidedGestureFold": "Potiahni doľava alebo doprava",
+  "guidedGestureCheck": "Ťukni",
+  "guidedGestureCall": "Ťukni",
+  "guidedGestureBet": "Stlač a potiahni hore ↑",
+  "guidedGestureRaise": "Stlač a potiahni hore ↑",
+  "guidedGestureManualBet": "Manuálny bet: stlač a potiahni dole ↓",
+  "guidedActionFold": "Fold",
+  "guidedActionCheck": "Check",
+  "guidedActionCall": "Call",
+  "guidedActionBet": "Bet",
+  "guidedActionRaise": "Raise",
+  "guidedDealFlopTitle": "Vyber flop",
+  "guidedDealFlopBody": "Potiahni hodnotu karty na farbu, alebo ťukni na hodnotu a potom na farbu a vyber tak kartu. Ťuknutím na vybranú kartu ju odstrániš. Vyber 3 karty pre flop.",
+  "guidedDealTurnTitle": "Rozdaj turn",
+  "guidedDealTurnBody": "Vyber 1 kartu pre turn.",
+  "guidedDealRiverTitle": "Rozdaj river",
+  "guidedDealRiverBody": "Vyber 1 kartu pre river.",
+  "guidedStackRingTitle": "Rozsah stacku",
+  "guidedStackRingBody": "Podrž prst na mieste hráča, aby sa otvoril kruh stacku, potom otáčaním prsta nastav veľkosť jeho stacku — pustením potvrdíš.",
+  "guidedTableButtonTitle": "Správa stola",
+  "guidedTableButtonBody": "Ťukni na toto tlačidlo a spravuj hráčov, aktualizuj stacky, meň rozsadenie alebo presuň dealer button.",
+  "guidedBlindsPillTitle": "Blinds",
+  "guidedBlindsPillBody": "Ťukni sem a kedykoľvek aktualizuj úrovne blinds — hodí sa, keď sa v turnaji zvyšujú levely.",
+  "guidedNextHandTitle": "Ďalšia handa",
+  "guidedNextHandBody": "Ťukni sem a preskoč aktuálnu handu, ak si ju nehral alebo ju nechceš logovať — dealer button sa posunie na ďalšieho hráča.",
+  "guidedInfoButtonTitle": "Sprievodca gestami",
+  "guidedInfoButtonBody": "Ťukni na toto tlačidlo kedykoľvek a pozri si všetky dostupné gestá na logovanie akcií.",
+  "guidedSessionInfoTitle": "Detaily session",
+  "guidedSessionInfoBody": "Skvelé! Ťukni sem a otvor detaily svojej session — budeme pokračovať tam.",
+  "guidedAddOnTitle": "Add-ony a rebuye",
+  "guidedAddOnBody": "Tu spravuješ svoje add-ony a rebuye.",
+  "guidedUpdateStackTitle": "Aktualizuj stack",
+  "guidedUpdateStackBody": "Aktualizuj svoj stack manuálne a rob si rýchle poznámky. Zobrazia sa v grafe tvojho stacku.",
+  "guidedStackChartTitle": "Graf stacku",
+  "guidedStackChartBody": "Ťukni na ktorýkoľvek bod a pozri sa, ako sa ti počas session darilo.",
+  "guidedStopSessionTitle": "Dokonči session",
+  "guidedStopSessionBody": "Ťukni na tlačidlo stop a ukonči session — potom ti ukážeme, kde je uložená.",
+  "guidedTableIntroTitle": "Herná plocha",
+  "guidedTableIntroBody": "Toto je tvoja herná plocha — tu robíš všetky akcie. Fold: potiahni doľava alebo doprava. Check / Call: ťukni. Bet / Raise: stlač a potiahni hore. Manuálna výška betu: stlač a potiahni dole. Poďme zalogovať prvú handu!",
+  "guidedUndoTitle": "Vráť späť kedykoľvek",
+  "guidedUndoBody": "Urobil si chybu? Ťukni na Vrátiť poslednú akciu a zruš svoj posledný ťah — obnoví sa aj pot a stacky.",
+  "guidedSessionInfoFinishTitle": "Dokonči to",
+  "guidedSessionInfoFinishBody": "Pripravený skončiť? Ťukni sem, otvor detaily session a dokonči ju.",
+  "guidedDetailsBackTitle": "Späť k stolu",
+  "guidedDetailsBackBody": "Ťukni sem, vráť sa a zaloguj ešte jednu handu.",
+  "guidedLogOneMoreTitle": "Zaloguj ešte jednu handu",
+  "guidedLogOneMoreBody": "Poď a zaloguj ešte jednu handu — odohraj si ju sám.\n\nMimochodom, ak preskočíš logovanie niektorých hánd, button môžeš kedykoľvek posunúť manuálne. Vyskúšaj to teraz, pred logovaním druhej handy!",
+  "guidedCurrentStackTitle": "Aktuálny stack",
+  "guidedCurrentStackBody": "Toto je tvoj živý stack — aktualizuje sa po každej zalogovanej hande.",
+  "guidedTourCompleteTitle": "Prehliadka dokončená!",
+  "guidedTourCompleteBody": "To je z prehliadky všetko! Vytvor si bezplatný účet a ulož si svoje handy a štatistiky.",
+  "onboardingBankrollCardTitle": "Tvoj bankroll",
+  "onboardingBankrollCardBody": "Ťukni na \"Celkový bankroll\", zadaj svoj aktuálny bankroll a nastav si cieľ. Sleduj svoj pokrok v čase!",
+  "kbStatsTitle": "Tvoje štatistiky",
+  "kbClubsTitle": "Kluby a udalosti",
+  "kbStatsIntro": "Final Table sleduje 7 základných pokrových metrík, ktoré ti pomôžu pochopiť a zlepšiť tvoju hru.",
+  "kbClubsIntro": "Kluby ťa spoja s tvojou miestnou pokrovou herňou a umožnia ti sledovať živé hry.",
+  "kbVpipName": "VPIP",
+  "kbVpipFullName": "Voluntarily Put $ In Pot",
+  "kbVpipDescription": "Ako často dobrovoľne vstupuješ do potu (bez povinných blindov). Vysoký VPIP znamená, že hráš veľa hánd; nízky VPIP znamená, že si selektívny.",
+  "kbPfrName": "PFR",
+  "kbPfrFullName": "Preflop Raise",
+  "kbPfrDescription": "Ako často raisuješ pred flopom. Rozdiel medzi VPIP a PFR ukazuje, ako často limpuješ alebo cold-calluješ.",
+  "kbThreeBetName": "3-Bet",
+  "kbThreeBetFullName": "Percento 3-betov",
+  "kbThreeBetDescription": "Ako často preflop re-raisuješ súperov open raise. Vyššie percento 3-betov znamená agresívny preflop štýl.",
+  "kbFoldTo3BetName": "Fold na 3-Bet",
+  "kbFoldTo3BetFullName": "Fold na 3-bet",
+  "kbFoldTo3BetDescription": "Ako často foldneš po tom, čo si raisol a čelíš 3-betu. Ak je príliš vysoký, súperi ťa môžu exploatovať ľahkými 3-betmi.",
+  "kbCBetName": "C-Bet",
+  "kbCBetFullName": "Continuation Bet",
+  "kbCBetDescription": "Ako často betuješ na flope, keď si bol posledný preflop agresor. Štandardná hra, ktorá ukazuje silu.",
+  "kbStealName": "Steal",
+  "kbStealFullName": "Pokus o steal blindov",
+  "kbStealDescription": "Ako často open-raisuješ z neskorej pozície (CO, BTN, SB), keď je pot neotvorený, s cieľom zobrať blinds.",
+  "kbCheckRaiseName": "Check-Raise",
+  "kbCheckRaiseFullName": "Check-raise na flope",
+  "kbCheckRaiseDescription": "Ako často checkneš a potom raisneš na flope. Klamlivý ťah, ktorý dokáže nachytať agresívnych súperov.",
+  "kbLiveEventsTitle": "Živé udalosti",
+  "kbLiveEventsDescription": "Manažéri klubov vytvárajú udalosti s viacerými stolmi. Pridaj sa k udalosti a buď súčasťou živého poradia.",
+  "kbLiveRankingsTitle": "Živé poradie",
+  "kbLiveRankingsDescription": "Sleduj v reálnom čase, ako si na tom počas udalostí. Poradie sa aktualizuje po každej hande.",
+  "kbOpponentTrackingTitle": "Sledovanie súperov",
+  "kbOpponentTrackingDescription": "Hráči, s ktorými hráš v klube, sa sledujú automaticky. Ulož si súperov a vytvor si podrobné profily.",
+  "kbQrSeatTitle": "Priradenie miesta cez QR",
+  "kbQrSeatDescription": "Naskenuj QR kód pri svojom stole a okamžite sa pripoj k session. Tvoje handy automaticky zaznamenáva dealer.",
+  "kbDealerLoggingTitle": "Logovanie s pomocou dealera",
+  "kbDealerLoggingDescription": "Dealeri logujú akcie za celý stôl hlasovými príkazmi. Hráči nemusia nič zadávať manuálne.",
+  "kbSessionStatsTitle": "Štatistiky session",
+  "kbSessionStatsDescription": "Po každej session uvidíš svoj zisk/stratu a to, ako sa zmenili tvoje štatistiky. Každá handa je zaznamenaná.",
+  "qrJoinTableInfo": "INFO O STOLE",
+  "qrJoinSeat": "Miesto {number}",
+  "@qrJoinSeat": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "qrJoinTableFallback": "Stôl",
+  "qrJoinClubLabel": "Klub",
+  "qrJoinTableLabel": "Stôl",
+  "qrJoinSeatLabel": "Miesto",
+  "qrJoinStatusLabel": "Stav",
+  "qrJoinActiveGame": "Aktívna hra",
+  "qrJoinWaitingStatus": "Čaká sa",
+  "dealerQrTablesAssigned": "Stoly priradené k tejto udalosti: {count}",
+  "@dealerQrTablesAssigned": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dealerQrTableNotAssigned": "{tableName} nie je priradený k tejto udalosti.",
+  "@dealerQrTableNotAssigned": {
+    "placeholders": {
+      "tableName": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTablePlayerAdded": "{playerName} pridaný na miesto {seatNumber}",
+  "@dealerTablePlayerAdded": {
+    "placeholders": {
+      "playerName": {
+        "type": "String"
+      },
+      "seatNumber": {
+        "type": "int"
+      }
+    }
+  },
+  "memberTableSeatedOpen": "{seated} obsadených  •  {open} voľných",
+  "@memberTableSeatedOpen": {
+    "placeholders": {
+      "seated": {
+        "type": "int"
+      },
+      "open": {
+        "type": "int"
+      }
+    }
+  },
+  "memberTablePlayer": "Hráč",
+  "memberTableEmpty": "Voľné",
+  "memberTableFallback": "Stôl",
+  "homeEventTypeTournament": "Turnaj",
+  "homeEventTypeCashGame": "Cash game",
+  "homeEventTypeHomeGame": "Domáca hra",
+  "homeEventTypeOnline": "Online",
+  "bankrollSheetTitle": "Pridať výsledok",
+  "bankrollSheetEditSection": "Upraviť bankroll",
+  "bankrollSheetGoalLabel": "Cieľ bankrollu",
+  "bankrollSheetCurrentLabel": "Aktuálny bankroll",
+  "bankrollSheetGoalUpdated": "Cieľ aktualizovaný",
+  "bankrollSheetBankrollUpdated": "Bankroll aktualizovaný",
+  "sessionEndResultTitle": "Výsledok session",
+  "sessionEndTournamentTitle": "Výsledok turnaja",
+  "sessionEndProfit": "Zisk",
+  "sessionEndLoss": "Strata",
+  "sessionEndApply": "Použiť",
+  "sessionEndSkip": "Preskočiť",
+  "sessionEndFinishingPosition": "Konečné umiestnenie",
+  "sessionEndFieldSize": "Celkový počet vstupov",
+  "sessionEndPrizeWon": "Výhra",
+  "sessionEndTotalInvested": "Celková investícia",
+  "sessionEndCalculatedProfit": "Vypočítaný zisk: {amount}",
+  "@sessionEndCalculatedProfit": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "onboardingWelcomeSubtitle": "Tvoj osobný pokrový spoločník na logovanie hánd, sledovanie štatistík a zlepšovanie hry.",
+  "onboardingNicknameTitle": "Začnime výberom tvojej prezývky",
+  "onboardingNicknameSubtitle": "Medzi menom a prezývkou môžeš prepínať a kedykoľvek si ich zmeniť.",
+  "onboardingCurrencyTitle": "Vyber menu",
+  "onboardingCurrencySubtitle": "Použije sa pre buy-iny, cashouty aj štatistiky. Kedykoľvek ju môžeš zmeniť v Nastaveniach.",
+  "onboardingGameTypeTitle": "Vyber si typ hry",
+  "onboardingGameTypeSubtitle": "Prispôsobíme ti zážitok podľa toho, čo hrávaš. Si cash hráč, turnajový hráč alebo mix?",
+  "onboardingGameTypeCash": "Cash game",
+  "onboardingGameTypeTournament": "Turnaj (MTT)",
+  "onboardingGameTypeBoth": "Mix oboch",
+  "onboardingJourneyTitle": "Kde sa nachádzaš na svojej pokrovej ceste?",
+  "onboardingJourneySubtitle": "Pomôže nám to prispôsobiť ti zážitok.",
+  "onboardingJourneyBeginner": "Začiatočník",
+  "onboardingJourneyFun": "Hrám pre zábavu",
+  "onboardingJourneyRegular": "Pravidelný hráč",
+  "onboardingJourneyPro": "Pro",
+  "onboardingMonthlySessionsTitle": "Koľko sessions odohráš za mesiac?",
+  "onboardingMonthlySessionsSubtitle": "Potiahnutím kolieska vyber počet mesačných sessions.",
+  "onboardingMonthlySessionsUnit": "sessions / mesiac",
+  "onboardingPurposeTitle": "Na čo chceš Final Table hlavne používať?",
+  "onboardingPurposeSubtitle": "Vyber všetko, čo platí.",
+  "onboardingPurposeLogging": "Zaznamenávanie handiek",
+  "onboardingPurposeBankroll": "Sledovanie bankrollu",
+  "onboardingPurposeOpponents": "Analýza súperov",
+  "onboardingPurposeActions": "Zaznamenávanie každej akcie na neskoršiu analýzu",
+  "onboardingPurposeStudying": "Štúdium spotov",
+  "onboardingPurposeSharing": "Zdieľanie hand histories s kamarátmi",
+  "onboardingPurposeAi": "Analýza pomocou AI",
+  "onboardingPurposeExport": "Export handiek do GTO nástrojov",
+  "onboardingPurposeStacks": "Sledovanie stackov v turnajoch",
+  "onboardingContinue": "Pokračovať",
+  "onboardingGetStarted": "Začať",
+  "onboardingSkipNickname": "Zatiaľ preskočiť",
+  "drillTitle": "Tréningové drily",
+  "drillSaveLineup": "Uložiť zostavu",
+  "drillSaveLineupHint": "napr. utorková domáca hra",
+  "drillDeleteLineup": "Vymazať zostavu",
+  "drillDeleteLineupMessage": "Odstrániť \"{name}\" z tvojich uložených zostáv?",
+  "@drillDeleteLineupMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "drillSavedLineups": "ULOŽENÉ ZOSTAVY",
+  "drillTable": "STÔL",
+  "drillSeats": "MIESTA",
+  "drillSeatsInstruction": "Ťukni na miesto a prirad súpera alebo sa presuň.",
+  "drillSaveThisLineup": "Uložiť túto zostavu",
+  "drillStartDrill": "Spustiť dril",
+  "drillPlayers": "Hráči",
+  "drillStackDepth": "Hĺbka stacku",
+  "drillFormat": "Formát",
+  "drillFormatCash": "Cash",
+  "drillFormatAnte": "MTT · Ante",
+  "drillScouting": "SCOUTING",
+  "drillYou": "Ty",
+  "drillSeatNumber": "Miesto {seat}",
+  "@drillSeatNumber": {
+    "placeholders": {
+      "seat": {
+        "type": "int"
+      }
+    }
+  },
+  "drillPremiumTitle": "Trénuj proti svojim skutočným súperom",
+  "drillPremiumDescription": "Posaď hráčov, proti ktorým naozaj hrávaš, driluj preflop spoty proti botom s ich nameranými tendenciami a dostávaj exploit spätnú väzbu na každé rozhodnutie.",
+  "drillUpgradeToPremium": "Prejsť na Premium",
+  "drillSearchOpponents": "Hľadať súperov",
+  "drillThisIsMe": "To som ja",
+  "drillMoveYourSeatHere": "Presunúť moje miesto sem",
+  "drillGenericBot": "Generický bot",
+  "drillBalancedRegular": "Vyvážený regular",
+  "drillHandNumber": "Handa #{number}",
+  "@drillHandNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "drillHandedLabel": "{stack}BB · {players}-handed",
+  "@drillHandedLabel": {
+    "placeholders": {
+      "stack": {
+        "type": "int"
+      },
+      "players": {
+        "type": "int"
+      }
+    }
+  },
+  "drillPot": "POT",
+  "drillWalkedNote": "Všetci foldli — vyhrávaš blinds.",
+  "drillWonUncontestedNote": "Všetci foldli — berieš to bez boja ({pot}BB).",
+  "@drillWonUncontestedNote": {
+    "placeholders": {
+      "pot": {
+        "type": "String"
+      }
+    }
+  },
+  "drillReachedFlopNote": "Handa ide na flop — preflop dril dokončený.",
+  "drillHandOverNote": "Handa skončila.",
+  "drillCorrect": "SPRÁVNE",
+  "drillClose": "TESNÉ",
+  "drillMistake": "CHYBA",
+  "drillYouChose": "· zvolil si {action}",
+  "@drillYouChose": {
+    "placeholders": {
+      "action": {
+        "type": "String"
+      }
+    }
+  },
+  "drillTopPercent": "top {percent}%",
+  "@drillTopPercent": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "drillLineupChanges": "Táto zostava mení hru: GTO {gto}, exploit {exploit}",
+  "@drillLineupChanges": {
+    "placeholders": {
+      "gto": {
+        "type": "String"
+      },
+      "exploit": {
+        "type": "String"
+      }
+    }
+  },
+  "drillGto": "GTO",
+  "drillExploit": "EXPLOIT",
+  "drillContinue": "Pokračovať",
+  "drillGotIt": "Rozumiem",
+  "drillRaiseTo": "Raise na:",
+  "drillJam": "JAM",
+  "drillPotLabel": "Pot {pot}BB",
+  "@drillPotLabel": {
+    "placeholders": {
+      "pot": {
+        "type": "String"
+      }
+    }
+  },
+  "drillToCall": "{amount}BB na call",
+  "@drillToCall": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "drillFold": "FOLD",
+  "drillCheck": "CHECK",
+  "drillCall": "CALL",
+  "drillRaise": "RAISE",
+  "drillNextHand": "Ďalšia handa",
+  "drillSummaryTitle": "Zhrnutie drilu",
+  "drillAccuracy": "Presnosť",
+  "drillDecisions": "Rozhodnutia",
+  "drillCorrectLabel": "Správne",
+  "drillCloseLabel": "Tesné",
+  "drillMistakes": "Chyby",
+  "drillWhereYouLeaked": "KDE SI STRÁCAL",
+  "drillMistakeDetail": "{handClass} · {position} · zvolil si {heroAction}, správne bolo {recommendedAction}",
+  "@drillMistakeDetail": {
+    "placeholders": {
+      "handClass": {
+        "type": "String"
+      },
+      "position": {
+        "type": "String"
+      },
+      "heroAction": {
+        "type": "String"
+      },
+      "recommendedAction": {
+        "type": "String"
+      }
+    }
+  },
+  "drillKeepDrilling": "Pokračovať v drilovaní",
+  "drillEndDrill": "Ukončiť dril",
+  "drillActionSb": "SB 0.5",
+  "drillActionBb": "BB 1",
+  "drillActionFold": "FOLD",
+  "drillActionCheck": "CHECK",
+  "drillActionLimp": "LIMP",
+  "drillActionCall": "CALL {amount}",
+  "@drillActionCall": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "drillActionRaise": "RAISE {amount}",
+  "@drillActionRaise": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "drillAction3bet": "3-BET {amount}",
+  "@drillAction3bet": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "drillAction4bet": "4-BET {amount}",
+  "@drillAction4bet": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "drillActionJam": "JAM {amount}",
+  "@drillActionJam": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "rangeCash": "Cash",
+  "rangeTourney": "Turnaj",
+  "rangeAllStacks": "Všetky stacky",
+  "rangeStackDepth": "Hĺbka stacku",
+  "rangeAllPositions": "Všetky",
+  "rangeAllSpots": "Všetky spoty",
+  "rangeRfi": "RFI",
+  "rangeVsRaise": "vs raise",
+  "rangeHandsLogged": "{count} / 169 zaznamenaných handiek",
+  "@rangeHandsLogged": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "rangeSyncingHistory": "Synchronizujem tvoju históriu handiek…",
+  "rangePreflopHeader": "PREFLOP RANGE — ZOSTAVENÁ Z TVOJICH ZAZNAMENANÝCH HANDIEK",
+  "rangeEmptyHint": "Tvoja preflop tabuľka sa buduje sama: zaznamenávaj handy a zadávaj svoje hole cards a každá štartovacia handa sa vyplní podľa toho, ako si ju pred flopom skutočne hral.",
+  "rangeSpotsCount": "{count} preflop {count, plural, =1{spot} few{spoty} other{spotov}}",
+  "@rangeSpotsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "rangeRfiSuffix": " · RFI",
+  "rangeVsRaiseSuffix": " · vs raise",
+  "rangeRaised": "Raise",
+  "rangeRaisedLabel": "Raise",
+  "rangeCalled": "Call",
+  "rangeChecked": "Check",
+  "rangeFolded": "Fold",
+  "rangeCalledLimped": "Call / limp",
+  "rangeToday": "Dnes",
+  "rangeYesterday": "Včera",
+  "rangeDaysAgo": "pred {days} d",
+  "@rangeDaysAgo": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "rangeWeeksAgo": "pred {weeks} týž.",
+  "@rangeWeeksAgo": {
+    "placeholders": {
+      "weeks": {
+        "type": "int"
+      }
+    }
+  },
+  "rangeMonthsAgo": "pred {months} mes.",
+  "@rangeMonthsAgo": {
+    "placeholders": {
+      "months": {
+        "type": "int"
+      }
+    }
+  },
+  "rangeYearsAgo": "pred {years} r.",
+  "@rangeYearsAgo": {
+    "placeholders": {
+      "years": {
+        "type": "int"
+      }
+    }
+  },
+  "rangeWonBB": "W {bb} BB",
+  "@rangeWonBB": {
+    "placeholders": {
+      "bb": {
+        "type": "int"
+      }
+    }
+  },
+  "rangeLostBB": "– {bb} BB",
+  "@rangeLostBB": {
+    "placeholders": {
+      "bb": {
+        "type": "int"
+      }
+    }
+  },
+  "rangeScoutingTitle": "{name} · Scouting report",
+  "@rangeScoutingTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "rangeShowdownBias": "Ukázané handy sú vychýlené smerom k value a dohratým handám — prezradia ti, čo v range je a aký má tvar, nie celú range.",
+  "rangeNoShowdowns": "Zaznamenaj pár handiek do showdownu so zadanými kartami tohto súpera a jeho range sa tu začne vypĺňať.",
+  "rangePremium": "Prémiové",
+  "rangeStrong": "Silné",
+  "rangeMedium": "Stredné",
+  "rangeWeak": "Slabé",
+  "profileSettings": "Nastavenia profilu",
+  "profileEditName": "Upraviť meno",
+  "profileYourName": "Tvoje meno",
+  "profileEditEmail": "Upraviť e-mail",
+  "profileEditEmailHint": "Zmena e-mailu vyžaduje opätovné overenie účtu. Ak chceš zmeniť e-mail, kontaktuj podporu.",
+  "profileChangePassword": "Zmeniť heslo",
+  "profilePasswordMask": "***********",
+  "profileContactSupport": "Kontaktovať podporu",
+  "profileShareFeedback": "Podeľ sa o spätnú väzbu",
+  "profileEmailUpdates": "E-mailové novinky",
+  "profileFollowUs": "Sleduj @finaltable",
+  "profileEdit": "Upraviť",
+  "profileEditUsername": "Upraviť používateľské meno",
+  "profileUsernameHint": "používateľské meno",
+  "profileInsteadOfName": "namiesto tvojho mena v eventoch a pri zaznamenávaní handiek",
+  "profileUsernameTaken": "Používateľské meno je už obsadené",
+  "profileFixUsernameError": "Pred uložením oprav chybu v používateľskom mene",
+  "profileUsernameUnavailable": "Používateľské meno už nie je dostupné",
+  "profileSavedSuccessfully": "Úspešne uložené",
+  "profileDeleteAccount": "Vymazať účet",
+  "profileDeleteAccountMessage": "Toto natrvalo vymaže tvoj účet a všetky súvisiace dáta. Túto akciu nie je možné vrátiť späť.\n\nAk máš aktívne predplatné, najprv ho zruš v nastaveniach svojho zariadenia.",
+  "profileChangePasswordTitle": "Zmeniť heslo",
+  "profileChangePasswordMessage": "Pošleme ti odkaz na obnovenie hesla na tvoju e-mailovú adresu.",
+  "profileChangeEmailTitle": "Zmeniť e-mail",
+  "profileResetEmailSent": "E-mail na obnovenie hesla odoslaný na {email}",
+  "@profileResetEmailSent": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "profileResetEmailFailed": "Nepodarilo sa odoslať e-mail na obnovenie hesla",
+  "profileSendResetEmail": "Poslať e-mail na obnovenie",
+  "settingsGeneral": "Všeobecné",
+  "settingsClubs": "Kluby",
+  "settingsBankroll": "Bankroll",
+  "settingsRegisterClub": "Zaregistrovať klub",
+  "settingsChooseLanguage": "Vyber jazyk",
+  "settingsMoreLanguagesLater": "Ďalšie jazyky oznámime neskôr",
+  "settingsChoose": "Vybrať",
+  "settingsChooseCurrency": "Vyber menu",
+  "settingsMoreCurrenciesLater": "Ďalšie meny oznámime neskôr",
+  "settingsNoClubs": "Žiadne kluby",
+  "settingsNoClubsYet": "Zatiaľ žiadne kluby",
+  "settingsNoClubsHint": "Zaregistruj klub alebo sa k nejakému pridaj a uvidíš ich tu.",
+  "settingsRegisterAClub": "Zaregistrovať klub",
+  "settingsYourClubs": "Tvoje kluby",
+  "settingsChooseTour": "Vyber, ktorú prehliadku si chceš zopakovať",
+  "settingsAbout": "O aplikácii",
+  "settingsPending": "{count} čakajúce",
+  "@settingsPending": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsGetPlus": "Získaj Final Table Plus",
+  "settingsGetPlusSubtitle": "Zaznamenávaj viac handiek a AI analýzy",
+  "settingsPlusActiveTitle": "Final Table {tier}",
+  "@settingsPlusActiveTitle": {
+    "placeholders": {
+      "tier": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsPlusActiveSubtitle": "Máš plán {tier}",
+  "@settingsPlusActiveSubtitle": {
+    "placeholders": {
+      "tier": {
+        "type": "String"
+      }
+    }
+  },
+  "statsHandsLogged": "Zaznamenané handy",
+  "statsVpip": "VPIP",
+  "statsPfr": "PFR",
+  "stats3Bet": "3-Bet",
+  "statsCBet": "C-Bet",
+  "statsSteal": "Steal",
+  "statsCheckRaise": "Check-Raise",
+  "statsRanges": "Ranges",
+  "statsStats": "Štatistiky",
+  "loggingChoose": "Vybrať",
+  "loggingTrainingDrills": "Tréningové drily",
+  "loggingTrainingDrillsSubtitle": "Precvičuj preflop spoty proti svojim skutočným súperom",
+  "loggingTrainingDrillsFeature1": "Preflop drily",
+  "loggingTrainingDrillsFeature2": "GTO ranges",
+  "loggingTrainingDrillsFeature3": "Podľa súperov",
+  "loggingPro": "PRO",
+  "opponentsEnterName": "Zadaj meno",
+  "opponentsAddNotes": "Pridať poznámky",
+  "opponentsNoNotesAdded": "Žiadne poznámky",
+  "opponentsDeleteOpponent": "Vymazať súpera",
+  "seatManagePlayers": "Spravovať hráčov",
+  "seatUpdatePlayerInfo": "Upraviť informácie o hráčovi",
+  "seatStartSession": "Spustiť session",
+  "seatSaveChanges": "Uložiť zmeny",
+  "seatYou": "Ty",
+  "seatKeep": "Ponechať",
+  "seatMove": "Presunúť",
+  "tableManageTitle": "Stôl",
+  "tableButtonOnEmpty": "Button na prázdnom mieste",
+  "handPlayerLabel": "Hráč ",
+  "handBbLabel": "BB",
+  "handRaiseLabel": "RAISE",
+  "handBetLabel": "BET",
+  "handFoldLabel": "FOLD",
+  "handRaiseAction": "Raise",
+  "handBetAction": "Bet",
+  "handOnlyOneRemaining": "Handa končí: zostal už len jeden hráč",
+  "handSessionTitle": "Session",
+  "settingsSkipHandScouting": "Scouting preskočených handiek",
+  "settingsSkipHandScoutingDesc": "Sleduj akcie súperov, keď foldneš preflop",
+  "skipScoutTitle": "Čo sa stalo?",
+  "skipScoutNoRaise": "Nikto neraisoval",
+  "skipScoutSkip": "Preskočiť",
+  "paywallNotNow": "Teraz nie",
+  "paywallFreeTrialBadge14": "14-dňová skúšobná verzia zadarmo",
+  "freeTierHandLimitTitle": "Dosiahnutý limit handiek",
+  "freeTierHandLimitFree": "Bezplatné účty môžu zaznamenať až {free} handiek na session. Prejdi na Pro pre {pro} handiek alebo na Elite pre neobmedzený počet.",
+  "@freeTierHandLimitFree": {
+    "placeholders": {
+      "free": {
+        "type": "int"
+      },
+      "pro": {
+        "type": "int"
+      }
+    }
+  },
+  "freeTierHandLimitPro": "Pro účty môžu zaznamenať až {pro} handiek na session. Prejdi na Elite pre neobmedzené zaznamenávanie handiek.",
+  "@freeTierHandLimitPro": {
+    "placeholders": {
+      "pro": {
+        "type": "int"
+      }
+    }
+  },
+  "freeTierOpponentLimitTitle": "Dosiahnutý limit súperov",
+  "freeTierOpponentLimitFree": "Bezplatné účty môžu uložiť až {free} profilov súperov. Prejdi na Pro pre {pro} alebo na Elite pre neobmedzený počet.",
+  "@freeTierOpponentLimitFree": {
+    "placeholders": {
+      "free": {
+        "type": "int"
+      },
+      "pro": {
+        "type": "int"
+      }
+    }
+  },
+  "freeTierOpponentLimitPro": "Pro účty môžu uložiť až {pro} profilov súperov. Prejdi na Elite pre neobmedzený počet súperov.",
+  "@freeTierOpponentLimitPro": {
+    "placeholders": {
+      "pro": {
+        "type": "int"
+      }
+    }
+  },
+  "freeTierUpgrade": "Prejsť na vyšší plán",
+  "freeTierNotNow": "Teraz nie",
+  "quotaMonthlyLimitTitle": "Dosiahnutý mesačný limit",
+  "quotaAiLimitElite": "Tento mesiac si využil všetkých {max} AI analýz. Tvoja kvóta sa obnoví budúci mesiac.",
+  "@quotaAiLimitElite": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "quotaAiLimitPro": "Tento mesiac si využil všetkých {max} AI analýz (limit Pro). Prejdi na Elite pre {elite} analýz mesačne.",
+  "@quotaAiLimitPro": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      },
+      "elite": {
+        "type": "int"
+      }
+    }
+  },
+  "quotaExportLimitTitle": "Dosiahnutý limit exportov",
+  "quotaExportLimitPro": "Tento mesiac si využil všetkých {max} exportov (limit Pro). Prejdi na Elite pre neobmedzené exporty.",
+  "@quotaExportLimitPro": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "quotaSessionExportLimitPro": "Tento mesiac si využil všetkých {max} exportov sessions (limit Pro). Prejdi na Elite pre neobmedzené exporty.",
+  "@quotaSessionExportLimitPro": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "quotaUpgradeToElite": "Prejsť na Elite",
+  "quotaOk": "OK",
+  "statsLockedTitle": "Odomkni vyšším plánom",
+  "statsLockedSubtitle": "Táto sekcia je dostupná od plánu Pro vyššie.",
+  "statsLockedUpgrade": "Prejsť na vyšší plán",
+  "paywallBestValue": "NAJVÝHODNEJŠIE",
+  "paywallWelcomeElite": "Vitaj v Elite!",
+  "paywallWelcomeClub": "Vitaj v Club!",
+  "paywallStartWithPro": "Začni s Pro",
+  "paywallGetEliteAction": "Získať Elite",
+  "paywallGetClubAction": "Získať Club",
+  "paywallCurrentPlan": "Aktuálny plán",
+  "paywallProFeature1": "50 handiek na session",
+  "paywallProFeature2": "História sessions za 90 dní",
+  "paywallProFeature3": "30 profilov súperov",
+  "paywallProFeature4": "20 AI analýz / mesiac",
+  "paywallProFeature5": "30 exportov / mesiac",
+  "paywallEliteFeature4": "Neobmedzené zaznamenávanie handiek",
+  "paywallEliteFeature5": "Kompletná história sessions",
+  "paywallEliteFeature6": "Neobmedzený počet súperov",
+  "paywallEliteFeature7": "50 AI analýz / mesiac",
+  "paywallEliteFeature8": "Neobmedzené exporty",
+  "paywallClubFeature1": "Všetko z Elite",
+  "paywallClubFeature2": "Vytvor a spravuj vlastný klub",
+  "paywallClubFeature3": "Pozývaj dílerov a spravuj členov",
+  "paywallClubFeature4": "Organizuj eventy na viacerých stoloch so živým poradím",
+  "profileTierOverride": "Prepísanie úrovne predplatného",
+  "profileTierOverrideSubtitleReal": "Skutočná: {tier}",
+  "@profileTierOverrideSubtitleReal": {
+    "placeholders": {
+      "tier": {
+        "type": "String"
+      }
+    }
+  },
+  "profileTierOverrideSubtitleActive": "Prepísaná: {tier}",
+  "@profileTierOverrideSubtitleActive": {
+    "placeholders": {
+      "tier": {
+        "type": "String"
+      }
+    }
+  },
+  "profileTierFree": "free",
+  "profileTierPro": "Pro",
+  "profileTierElite": "Elite",
+  "profileTierClub": "Club",
+  "authExpContinueApple": "Pokračovať cez Apple",
+  "authExpLinkAppleTitle": "Prepojiť Apple účet",
+  "authExpLinkAppleMessage": "Účet s adresou {email} už existuje. Zadaj svoje heslo a prepoj svoj Apple účet.",
+  "@authExpLinkAppleMessage": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionDetailsLogAHand": "Zaznamenať handu",
+  "setupTableOptionalHint": "Na spustenie session posaď aspoň 2 hráčov",
+  "onboardingSessionDetailsHubTitle": "Tvoje centrum session",
+  "onboardingSessionDetailsHubBody": "Sleduj tu svoj stack, spravuj rebuy a add-ony a prezeraj si priebeh svojej session.",
+  "onboardingHubMenuTitle": "Menu session",
+  "onboardingHubMenuBody": "Toto menu použi na rebuy, add-ony a ukončenie session.",
+  "onboardingHubLogHandTitle": "Začni zaznamenávať",
+  "onboardingHubLogHandBody": "Ťukni sem a zaznamenaj svoju prvú handu. Potom sa sem vrátime a pozrieme si graf tvojho stacku.",
+  "guidedAddOpponentsTitle": "Pridaj svojich súperov",
+  "guidedAddOpponentsBody": "Ťukni na toto prázdne miesto a pridaj súpera. Daj mu meno a nastav jeho stack — ďalších môžeš pridať kedykoľvek neskôr.",
+  "guidedHandTwoTitle": "Ešte jedna handa",
+  "guidedHandTwoBody": "Teraz si na rade ty! Skús zaznamenať túto handu pomocou gest, ktoré si sa práve naučil. Prevedieme ťa tým.",
+  "guidedReturnToDetailsTitle": "Skontroluj svoj postup",
+  "guidedReturnToDetailsBody": "Ťukni sem, vráť sa späť a pozri si graf svojho stacku.",
+  "guidedStackChartReturnTitle": "Graf tvojho stacku",
+  "guidedStackChartReturnBody": "Tu je vývoj tvojho stacku. Každý bod je zaznamenaná handa — ťukni na ľubovoľný bod pre detaily.",
+  "guidedStackAdjustTitle": "Uprav jeho stack",
+  "guidedStackAdjustBody": "Podrž prst na mieste hráča a aktivuje sa kruh stacku. Otáčaním prsta vyber veľkosť stacku a potom pusti.",
+  "sessionDetailsEndSession": "Ukončiť session",
+  "sessionDetailsLeaveConfirmTitle": "Opustiť session?",
+  "sessionDetailsLeaveConfirmBody": "Tvoja session je stále aktívna. Chceš ju ukončiť?",
+  "pokerHandChangeTableDiscardMessage": "Máš rozohranú handu. Zmena stola ju zahodí — nič z tejto handy sa neuloží.",
+  "pokerHandDiscardAndChangeTable": "Zahodiť a zmeniť stôl",
+  "handShownCardsDialogTitle": "Ukázané karty",
+  "handRecordShownCards": "Zaznamenať ukázané karty",
+  "handShownCardsWhoShowed": "Kto ukázal svoje karty?",
+  "paywallPriceYearly": "{price}/rok",
+  "@paywallPriceYearly": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "paywallPriceMonthly": "{price}/mesiac",
+  "@paywallPriceMonthly": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "paywallOrPriceMonthly": "alebo {price}/mesiac",
+  "@paywallOrPriceMonthly": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "paywallOrPriceYearly": "alebo {price}/rok",
+  "@paywallOrPriceYearly": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  }
+}

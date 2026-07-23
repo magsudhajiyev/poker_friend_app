@@ -123,6 +123,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       case 'pt': return 'Português';
       case 'ro': return 'Română';
       case 'ru': return 'Русский';
+      case 'sk': return 'Slovenčina';
       case 'uk': return 'Українська';
       default: return code;
     }
@@ -191,6 +192,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     (code: 'pt',  label: 'Português',      flagAsset: 'assets/icons/Property 1=Portugal (PT).svg'),
     (code: 'ro',  label: 'Română',         flagAsset: 'assets/icons/Property 1=Romania (RO).svg'),
     (code: 'ru',  label: 'Русский',        flagAsset: 'assets/icons/Property 1=Russia (RU).svg'),
+    (code: 'sk',  label: 'Slovenčina',     flagAsset: 'assets/icons/Property 1=Slovakia (SK).svg'),
     (code: 'uk',  label: 'Українська',     flagAsset: 'assets/icons/Property 1=ukraine.svg'),
   ];
 
