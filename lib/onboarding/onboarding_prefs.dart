@@ -10,6 +10,7 @@ class OnboardingPrefs {
   static const _signupRequiredField = 'postTourSignupRequired';
   static const _bankrollTourField = 'bankrollTourPending';
   static const _wrapUpPendingField = 'postTourWrapUpPending';
+  static const _promoCongratsField = 'promoCongratsPending';
 
   static String? get _userId => FirebaseAuth.instance.currentUser?.uid;
 
@@ -150,4 +151,18 @@ class OnboardingPrefs {
 
   static Future<void> clearPostTourWrapUpPending() =>
       _writeFlag(_wrapUpPendingField, false);
+
+  // ── Launch-promo congratulations ─────────────────────────────────────
+  // Set when the user taps "Got it" on the free-month gift dialog; the
+  // paywall then resets to Home, where the congratulations dialog shows
+  // once. Persisted so an app kill in between can't lose it.
+
+  static Future<bool> isPromoCongratsPending() =>
+      _readFlag(_promoCongratsField, onError: false);
+
+  static Future<void> setPromoCongratsPending() =>
+      _writeFlag(_promoCongratsField, true);
+
+  static Future<void> clearPromoCongratsPending() =>
+      _writeFlag(_promoCongratsField, false);
 }

@@ -190,6 +190,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     final seen = await OnboardingPrefs.hasSeenOnboarding();
     if (!mounted) return;
     if (seen) {
+      // Launch promo: "Got it" on the gift dialog reset to Home with this
+      // flag pending — congratulate once, before any other Home overlay.
+      if (await OnboardingPrefs.isPromoCongratsPending()) {
+        await OnboardingPrefs.clearPromoCongratsPending();
+        if (!mounted) return;
+        await showPromoCongratsDialog(context);
+        if (!mounted) return;
+      }
+
       // Tour skipped earlier and the app died before the immediate paywall
       // could show — recover the deferred post-tour paywall once (launch
       // promo variant included), then never again.

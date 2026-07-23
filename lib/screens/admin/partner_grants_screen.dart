@@ -10,6 +10,7 @@ import '../../design_system/components/app_toggle.dart';
 import '../../design_system/components/backgrounds/gradient_background.dart';
 import '../../design_system/components/modals/confirm_dialog.dart';
 import '../../services/partner_grant_service.dart';
+import '../../utils/user_facing_error.dart';
 
 class PartnerGrantsScreen extends StatefulWidget {
   const PartnerGrantsScreen({super.key});
@@ -65,7 +66,7 @@ class _PartnerGrantsScreenState extends State<PartnerGrantsScreen> {
         setState(() => _promoEnabled = previous);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to update promo toggle: $e',
+            content: Text('Failed to update promo toggle: ${UserFacingError.message(e)}',
                 style: AppTypography.ibm(color: Colors.white)),
             backgroundColor: AppColors.errorRed,
           ),
@@ -674,7 +675,7 @@ class _AddPartnerSheetState extends State<_AddPartnerSheet> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to create grant: $e',
+            content: Text('Failed to create grant: ${UserFacingError.message(e)}',
                 style: AppTypography.ibm(color: Colors.white)),
             backgroundColor: AppColors.errorRed,
           ),
@@ -1136,7 +1137,7 @@ class _EditGrantSheetState extends State<_EditGrantSheet> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to update: $e',
+            content: Text('Failed to update: ${UserFacingError.message(e)}',
                 style: AppTypography.ibm(color: Colors.white)),
             backgroundColor: AppColors.errorRed,
           ),
@@ -1166,7 +1167,7 @@ class _EditGrantSheetState extends State<_EditGrantSheet> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to revoke: $e',
+            content: Text('Failed to revoke: ${UserFacingError.message(e)}',
                 style: AppTypography.ibm(color: Colors.white)),
             backgroundColor: AppColors.errorRed,
           ),
@@ -1189,7 +1190,7 @@ class _EditGrantSheetState extends State<_EditGrantSheet> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to reactivate: $e',
+            content: Text('Failed to reactivate: ${UserFacingError.message(e)}',
                 style: AppTypography.ibm(color: Colors.white)),
             backgroundColor: AppColors.errorRed,
           ),

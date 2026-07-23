@@ -46,6 +46,13 @@ StreamSubscription<bool>? _subscriptionStatusListener;
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Audit M1: debugPrint is NOT a no-op in release builds, and the codebase
+  // logs emails/uids through it. Silence it in release — LoggerService and
+  // Crashlytics remain the production logging paths.
+  if (kReleaseMode) {
+    debugPrint = (String? message, {int? wrapWidth}) {};
+  }
+
   // Lock to portrait globally. Individual chart screens (earnings, stack,
   // public leaderboard) opt into landscape and restore this lock on dispose.
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);

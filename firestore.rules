@@ -13,7 +13,11 @@ service cloud.firestore {
 
     // Helper function to check if user is the super admin
     function isSuperAdmin() {
-      return request.auth != null && request.auth.token.email == 'magsud94@gmail.com';
+      // email_verified guard (audit B10): without it, registering an
+      // unverified account with this email would grant full admin.
+      return request.auth != null &&
+        request.auth.token.email == 'magsud94@gmail.com' &&
+        request.auth.token.email_verified == true;
     }
 
     // FCM tokens - users can only manage their own tokens
@@ -22,11 +26,19 @@ service cloud.firestore {
         (resource == null || resource.data.userId == request.auth.uid || request.resource.data.userId == request.auth.uid);
     }
 
-    // User notifications - users can read/update/delete their own, authenticated can create
+    // User notifications - users can read/update/delete their own.
+    // Create stays open to authenticated users (club invitations create
+    // docs FOR the invitee) but content is size/type-capped (audit B6
+    // partial mitigation — full fix is moving sends server-side).
     match /user_notifications/{notificationId} {
       allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
       allow update: if isAuthenticated() && resource.data.userId == request.auth.uid;
-      allow create: if isAuthenticated();
+      allow create: if isAuthenticated() &&
+        request.resource.data.userId is string &&
+        (!('title' in request.resource.data) ||
+          (request.resource.data.title is string && request.resource.data.title.size() <= 200)) &&
+        (!('body' in request.resource.data) ||
+          (request.resource.data.body is string && request.resource.data.body.size() <= 500));
       allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
     }
 
@@ -36,9 +48,10 @@ service cloud.firestore {
       allow write: if isSuperAdmin();
     }
 
-    // Users collection - public read, owner or superAdmin write
+    // Users collection - authenticated read (audit B8: was public — email
+    // scraping), owner or superAdmin write
     match /users/{userId} {
-      allow read: if true;
+      allow read: if isAuthenticated();
       allow write: if isOwner(userId) || isSuperAdmin();
     }
 
@@ -56,9 +69,19 @@ service cloud.firestore {
       allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
       allow update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
 
-      // Hands subcollection inherits session access
+      // Hands subcollection inherits session access (audit B7: was open to
+      // any authenticated user — others' hole cards readable/tamperable).
+      // Owner logs hands; live-session participants only read.
       match /poker_hands/{handId} {
-        allow read, write: if isAuthenticated();
+        function sessionData() {
+          return get(/databases/$(database)/documents/poker_sessions/$(sessionId)).data;
+        }
+        allow read: if isSuperAdmin() || (isAuthenticated() &&
+          (sessionData().userId == request.auth.uid ||
+           (sessionData().participantIds != null &&
+            request.auth.uid in sessionData().participantIds)));
+        allow write: if isAuthenticated() &&
+          sessionData().userId == request.auth.uid;
       }
     }
 
@@ -76,9 +99,12 @@ service cloud.firestore {
       allow update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
     }
 
-    // Opponent stats - authenticated users (linked to opponents via app logic)
+    // Opponent stats - owner of the opponent profile only (audit B7: was
+    // open to any authenticated user). Stats docs are only ever written for
+    // saved opponents, whose profile doc exists first.
     match /opponent_stats/{opponentId} {
-      allow read, write: if isAuthenticated();
+      allow read, write: if isSuperAdmin() || (isAuthenticated() &&
+        get(/databases/$(database)/documents/opponents/$(opponentId)).data.userId == request.auth.uid);
     }
 
     // Dealers collection

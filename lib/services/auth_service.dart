@@ -493,6 +493,10 @@ class AuthService {
       UsernameService.clearCache();
       DisplayIdentityService.clearCache();
       AppDataCache.clearAll();  // Clear all in-memory cached data
+      // Audit M3: the splash-era user-doc snapshot must not survive into a
+      // same-session re-login — a stale hasSetUsername:false replays
+      // onboarding for the re-logged-in user.
+      clearPrefetchedUserDoc();
 
       // Clear user-data SharedPreferences keys that aren't user-scoped
       try {

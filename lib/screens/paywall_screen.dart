@@ -14,6 +14,7 @@ import '../design_system/components/overlays/subscription_success_popup.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/spacing.dart';
 import '../design_system/constants/typography.dart';
+import '../onboarding/onboarding_prefs.dart';
 import '../services/subscription_service.dart';
 import '../services/auth_service.dart';
 import '../services/logger_service.dart';
@@ -82,8 +83,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
 
   final ScrollController _scrollController = ScrollController();
   // Keys on each plan card so we can scroll the preselected one into view.
-  final List<GlobalKey> _planCardKeys =
-      List.generate(3, (_) => GlobalKey());
+  final List<GlobalKey> _planCardKeys = List.generate(3, (_) => GlobalKey());
 
   @override
   void initState() {
@@ -122,40 +122,65 @@ class _PaywallScreenState extends State<PaywallScreen> {
       builder: (ctx) => AppDialog(
         showCloseButton: false,
         barrierDismissible: false,
-        body: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(
-              Icons.card_giftcard,
-              color: AppColors.accentPrimary,
-              size: 48,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              l10n.promoWelcomeTitle,
-              style: AppTypography.ibm(
-                color: AppColors.textPrimary,
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-                height: 1.3,
+        // Full width so the column centers within the dialog (AppDialog's
+        // internal layout is start-aligned).
+        body: SizedBox(
+          width: double.infinity,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.card_giftcard,
+                color: AppColors.accentPrimary,
+                size: 48,
               ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 12),
-            Text(
-              l10n.promoWelcomeBody,
-              style: AppTypography.ibm(
-                color: AppColors.textSecondary,
-                fontSize: 15,
-                height: 1.44,
+              const SizedBox(height: 16),
+              Text(
+                l10n.promoWelcomeTitle,
+                style: AppTypography.ibm(
+                  color: AppColors.textPrimary,
+                  fontSize: 24,
+                  fontWeight: FontWeight.w700,
+                  height: 1.3,
+                ),
+                textAlign: TextAlign.center,
               ),
-              textAlign: TextAlign.center,
-            ),
-          ],
+              const SizedBox(height: 12),
+              Text.rich(
+                TextSpan(
+                  children: [
+                    TextSpan(text: l10n.promoWelcomeBodyPre),
+                    TextSpan(
+                      text: l10n.promoWelcomeBodyBold,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    TextSpan(text: l10n.promoWelcomeBodyPost),
+                  ],
+                ),
+                style: AppTypography.ibm(
+                  color: AppColors.textSecondary,
+                  fontSize: 15,
+                  height: 1.44,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
         ),
         actions: DialogActionBar.single(
           cancelLabel: l10n.onboardingGotIt,
-          onCancel: () {},
+          // "Got it" ends the promo funnel: leave the paywall entirely and
+          // land on Home, where the congratulations dialog shows once
+          // (pending flag persisted FIRST so an app kill can't lose it).
+          onCancel: () async {
+            await OnboardingPrefs.setPromoCongratsPending();
+            if (!mounted) return;
+            Navigator.of(context)
+                .pushNamedAndRemoveUntil('/', (route) => false);
+          },
         ),
       ),
     );
@@ -232,18 +257,22 @@ class _PaywallScreenState extends State<PaywallScreen> {
       ['club_monthly', 'club_annual'],
     ];
     final ids = tierIds[_selectedPlanIndex];
-    final package = SubscriptionService.packageById(
-        _isAnnual ? ids[1] : ids[0]);
-    unawaited(LoggerService.debug('📦 Paywall: offering=$_offering, isAnnual=$_isAnnual, package=${package?.identifier}'));
+    final package =
+        SubscriptionService.packageById(_isAnnual ? ids[1] : ids[0]);
+    unawaited(LoggerService.debug(
+        '📦 Paywall: offering=$_offering, isAnnual=$_isAnnual, package=${package?.identifier}'));
     if (package == null) {
       // Try fetching offerings one more time before giving up
       await SubscriptionService.fetchOfferings();
+      if (!mounted) return;
       _offering = SubscriptionService.currentOffering;
-      final retryPackage = SubscriptionService.packageById(
-          _isAnnual ? ids[1] : ids[0]);
-      unawaited(LoggerService.debug('📦 Paywall retry: offering=$_offering, package=${retryPackage?.identifier}'));
+      final retryPackage =
+          SubscriptionService.packageById(_isAnnual ? ids[1] : ids[0]);
+      unawaited(LoggerService.debug(
+          '📦 Paywall retry: offering=$_offering, package=${retryPackage?.identifier}'));
       if (retryPackage != null) {
-        if (mounted) setState(() {});
+        if (!mounted) return; // disposed during the fetch — don't recurse
+        setState(() {});
         // Re-run with the now-available package
         return _onContinue();
       }
@@ -397,57 +426,57 @@ class _PaywallScreenState extends State<PaywallScreen> {
             children: [
               SizedBox(
                 height: 44,
-            child: Stack(
-              children: [
-                // Back button — hidden when the Skip button is shown
-                // (onboarding paywall), kept for feature-gate paywalls so they
-                // stay dismissible.
-                if (!widget.showSkip)
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Padding(
-                      padding: const EdgeInsets.only(left: AppSpacing.md),
-                      child: BackButtonCircle(
-                        onPressed: () => Navigator.of(context).pop(),
-                      ),
-                    ),
-                  ),
-                Center(
-                  child: Text(
-                    l10n.paywallAvailablePlans,
-                    style: AppTypography.ibm(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w600,
-                      height: 22 / 17,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-                // Skip affordance — only when the paywall is dismissible
-                // (post-tour onboarding). Pops with no purchase.
-                if (widget.showSkip)
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: GestureDetector(
-                      onTap: () => Navigator.of(context).pop(),
-                      child: Padding(
-                        padding: EdgeInsets.only(right: AppSpacing.md),
-                        child: Text(
-                          l10n.onboardingSkip,
-                          style: AppTypography.ibm(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
+                child: Stack(
+                  children: [
+                    // Back button — hidden when the Skip button is shown
+                    // (onboarding paywall), kept for feature-gate paywalls so they
+                    // stay dismissible.
+                    if (!widget.showSkip)
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: AppSpacing.md),
+                          child: BackButtonCircle(
+                            onPressed: () => Navigator.of(context).pop(),
                           ),
                         ),
                       ),
+                    Center(
+                      child: Text(
+                        l10n.paywallAvailablePlans,
+                        style: AppTypography.ibm(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w600,
+                          height: 22 / 17,
+                          color: Colors.white,
+                        ),
+                      ),
                     ),
-                  ),
-              ],
-            ),
+                    // Skip affordance — only when the paywall is dismissible
+                    // (post-tour onboarding). Pops with no purchase.
+                    if (widget.showSkip)
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: GestureDetector(
+                          onTap: () => Navigator.of(context).pop(),
+                          child: Padding(
+                            padding: EdgeInsets.only(right: AppSpacing.md),
+                            child: Text(
+                              l10n.onboardingSkip,
+                              style: AppTypography.ibm(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
         ),
       ),
     );
@@ -585,7 +614,6 @@ class _PaywallScreenState extends State<PaywallScreen> {
         fallback;
   }
 
-
   /// Primary price line for a tier (the big price shown on the card).
   String _tierPrimaryPrice(String monthlyId, String annualId,
       AppLocalizations l10n, String monthlyFallback, String annualFallback) {
@@ -610,69 +638,70 @@ class _PaywallScreenState extends State<PaywallScreen> {
         KeyedSubtree(
           key: _planCardKeys[0],
           child: _PlanCard(
-          tierLabel: l10n.paywallProTier,
-          tagline: l10n.paywallProDescription,
-          primaryPrice: _tierPrimaryPrice(
-              'pro_monthly', 'pro_annual', l10n, '\$19.99', '\$159.99'),
-          secondaryPrice: _tierSecondaryPrice(
-              'pro_monthly', 'pro_annual', l10n, '\$19.99', '\$159.99'),
-          features: [
-            l10n.paywallProFeature1,
-            l10n.paywallProFeature2,
-            l10n.paywallProFeature3,
-            l10n.paywallProFeature4,
-            l10n.paywallProFeature5,
-          ],
-          // Free-trial badge removed — no introductory offers are configured
-          // in the stores. Only the launch-promo gift badge remains.
-          showTrialBadge: widget.launchPromo,
-          trialBadgeText: widget.launchPromo ? l10n.promoFreeMonthBadge : null,
-          isSelected: _selectedPlanIndex == 0,
-          onTap: () => setState(() => _selectedPlanIndex = 0),
-        ),
+            tierLabel: l10n.paywallProTier,
+            tagline: l10n.paywallProDescription,
+            primaryPrice: _tierPrimaryPrice(
+                'pro_monthly', 'pro_annual', l10n, '\$19.99', '\$159.99'),
+            secondaryPrice: _tierSecondaryPrice(
+                'pro_monthly', 'pro_annual', l10n, '\$19.99', '\$159.99'),
+            features: [
+              l10n.paywallProFeature1,
+              l10n.paywallProFeature2,
+              l10n.paywallProFeature3,
+              l10n.paywallProFeature4,
+              l10n.paywallProFeature5,
+            ],
+            // Free-trial badge removed — no introductory offers are configured
+            // in the stores. Only the launch-promo gift badge remains.
+            showTrialBadge: widget.launchPromo,
+            trialBadgeText:
+                widget.launchPromo ? l10n.promoFreeMonthBadge : null,
+            isSelected: _selectedPlanIndex == 0,
+            onTap: () => setState(() => _selectedPlanIndex = 0),
+          ),
         ),
         const SizedBox(height: 16),
         KeyedSubtree(
           key: _planCardKeys[1],
           child: _PlanCard(
-          tierLabel: l10n.paywallEliteTier,
-          tagline: l10n.paywallEliteDescription,
-          primaryPrice: _tierPrimaryPrice(
-              'elite_monthly', 'elite_annual', l10n, '\$24.99', '\$189.99'),
-          secondaryPrice: _tierSecondaryPrice(
-              'elite_monthly', 'elite_annual', l10n, '\$24.99', '\$189.99'),
-          features: [
-            l10n.paywallEliteFeature4,
-            l10n.paywallEliteFeature5,
-            l10n.paywallEliteFeature6,
-            l10n.paywallEliteFeature7,
-            l10n.paywallEliteFeature8,
-          ],
-          showTrialBadge: false,
-          isSelected: _selectedPlanIndex == 1,
-          onTap: () => setState(() => _selectedPlanIndex = 1),
-        ),
+            tierLabel: l10n.paywallEliteTier,
+            tagline: l10n.paywallEliteDescription,
+            primaryPrice: _tierPrimaryPrice(
+                'elite_monthly', 'elite_annual', l10n, '\$24.99', '\$189.99'),
+            secondaryPrice: _tierSecondaryPrice(
+                'elite_monthly', 'elite_annual', l10n, '\$24.99', '\$189.99'),
+            features: [
+              l10n.paywallEliteFeature4,
+              l10n.paywallEliteFeature5,
+              l10n.paywallEliteFeature6,
+              l10n.paywallEliteFeature7,
+              l10n.paywallEliteFeature8,
+            ],
+            showTrialBadge: false,
+            isSelected: _selectedPlanIndex == 1,
+            onTap: () => setState(() => _selectedPlanIndex = 1),
+          ),
         ),
         const SizedBox(height: 16),
         KeyedSubtree(
           key: _planCardKeys[2],
           child: _PlanCard(
-          tierLabel: l10n.paywallClubTier,
-          tagline: l10n.paywallClubDescription,
-          primaryPrice: _tierPrimaryPrice(
-              'club_monthly', 'club_annual', l10n, '\$59.99', '\$449.99'),
-          secondaryPrice: _tierSecondaryPrice(
-              'club_monthly', 'club_annual', l10n, '\$59.99', '\$449.99'),
-          features: [
-            l10n.paywallClubFeature1,
-            l10n.paywallClubManagement,
-            l10n.paywallLiveDealerVoice,
-            l10n.paywallMultiTableEvents,
-          ],
-          showTrialBadge: false,
-          isSelected: _selectedPlanIndex == 2,
-          onTap: () => setState(() => _selectedPlanIndex = 2),
-        ),
+            tierLabel: l10n.paywallClubTier,
+            tagline: l10n.paywallClubDescription,
+            primaryPrice: _tierPrimaryPrice(
+                'club_monthly', 'club_annual', l10n, '\$59.99', '\$449.99'),
+            secondaryPrice: _tierSecondaryPrice(
+                'club_monthly', 'club_annual', l10n, '\$59.99', '\$449.99'),
+            features: [
+              l10n.paywallClubFeature1,
+              l10n.paywallClubManagement,
+              l10n.paywallLiveDealerVoice,
+              l10n.paywallMultiTableEvents,
+            ],
+            showTrialBadge: false,
+            isSelected: _selectedPlanIndex == 2,
+            onTap: () => setState(() => _selectedPlanIndex = 2),
+          ),
         ),
       ],
     );
@@ -721,7 +750,8 @@ class _PaywallScreenState extends State<PaywallScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             GestureDetector(
-              onTap: () => launchUrl(Uri.parse('https://www.finaltable.io/terms')),
+              onTap: () =>
+                  launchUrl(Uri.parse('https://www.finaltable.io/terms')),
               child: Text(
                 l10n.paywallTerms,
                 style: AppTypography.ibm(
@@ -745,7 +775,8 @@ class _PaywallScreenState extends State<PaywallScreen> {
               ),
             ),
             GestureDetector(
-              onTap: () => launchUrl(Uri.parse('https://www.finaltable.io/privacy')),
+              onTap: () =>
+                  launchUrl(Uri.parse('https://www.finaltable.io/privacy')),
               child: Text(
                 l10n.paywallPrivacy,
                 style: AppTypography.ibm(
@@ -877,7 +908,8 @@ class _PlanCard extends StatelessWidget {
                     ),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
+                      borderRadius:
+                          BorderRadius.circular(AppDecorations.radiusFull),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,

@@ -1090,6 +1090,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
             PaywallScreen.show(context, mockPurchase: true);
           }),
           const SizedBox(height: 8),
+          _devButton('Test Promo Paywall Flow', AppColors.accentPrimary, () {
+            // Full launch-promo funnel without touring: gift dialog →
+            // "Got it" → reset to Home → congratulations dialog.
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                fullscreenDialog: true,
+                builder: (_) =>
+                    const PaywallScreen(showSkip: true, launchPromo: true),
+              ),
+            );
+          }),
+          const SizedBox(height: 8),
           _devButton('Test Promo Expiry Notification', const Color(0xFFF6B26B),
               () async {
             final l10n = AppLocalizations.of(context);

@@ -148,6 +148,11 @@ class LoggerService {
     }
   }
 
+  /// Log file size cap (audit M2): append-only with no rotation grew
+  /// without bound. When the cap is exceeded the file is truncated and
+  /// restarted — crude rotation, but bounds disk (and iCloud backup) usage.
+  static const int _maxLogFileBytes = 2 * 1024 * 1024; // 2 MB
+
   /// Write a message to the log file
   static Future<void> _writeToFile(String message) async {
     if (_logFile == null) {
@@ -155,6 +160,10 @@ class LoggerService {
     }
 
     try {
+      if (await _logFile!.exists() &&
+          await _logFile!.length() > _maxLogFileBytes) {
+        await _logFile!.writeAsString('[log rotated]\n');
+      }
       await _logFile!.writeAsString('$message\n', mode: FileMode.append);
     } catch (e) {
       debugPrint('Failed to write to log file: $e');

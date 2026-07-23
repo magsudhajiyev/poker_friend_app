@@ -81,10 +81,28 @@ class NotificationService {
   /// Promo expiry notification tapped → paywall (Pro pre-selected). Waits
   /// for the navigator + a signed-in user, since a cold start is still on
   /// the splash/auth gate when the launch payload is read.
+  /// Reentrancy guard (audit H3): held while a promo paywall push is in
+  /// flight OR the pushed paywall is still open, so tapping the second tray
+  /// notification (warn + ended coexist after expiry) can't stack paywalls.
+  static bool _promoRoutingInFlight = false;
+
   static Future<void> _openPaywallWhenReady() async {
+    if (_promoRoutingInFlight) {
+      debugPrint('📲 Promo tap: ignored (already routing/showing)');
+      return;
+    }
+    _promoRoutingInFlight = true;
     debugPrint('📲 Promo tap: routing requested '
         '(navigator=${navigatorKey?.currentState != null}, '
         'user=${AuthService.currentUser != null})');
+    try {
+      await _openPaywallWhenReadyInner();
+    } finally {
+      _promoRoutingInFlight = false;
+    }
+  }
+
+  static Future<void> _openPaywallWhenReadyInner() async {
     for (int i = 0; i < 30; i++) {
       if (navigatorKey?.currentState != null &&
           AuthService.currentUser != null) {
@@ -101,7 +119,8 @@ class NotificationService {
     // Let the startup gate finish routing before pushing on top of it.
     await Future.delayed(const Duration(milliseconds: 800));
     debugPrint('📲 Promo tap: pushing paywall');
-    nav.push(
+    // Awaited so the reentrancy guard stays held while the paywall is open.
+    await nav.push(
       MaterialPageRoute(
         fullscreenDialog: true,
         builder: (_) => const PaywallScreen(showSkip: true, preselectedTier: 0),

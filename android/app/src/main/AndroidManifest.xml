@@ -13,6 +13,8 @@
     <!-- Billing permission for in-app purchases -->
     <uses-permission android:name="com.android.vending.BILLING"/>
 
+    <!-- Explicit (audit M8): release relied on library manifests merging this in -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
         android:label="Final Table"
         android:name="${applicationName}"
