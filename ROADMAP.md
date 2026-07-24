@@ -68,6 +68,23 @@ Library < 8.0.0 after this date.
 
 ## Update 3 — product backlog
 
+**PostHog product analytics (minimal viable setup)** — the Data Warehouse
+is already connected (RevenueCat + Resend sources synced; EU cloud, project
+222008 — see `posthog-warehouse-report.md`), but NO app behavior events are
+sent yet, so funnels/retention can't be built and the report's example
+`revenuecat JOIN events` query has no `events` side. To close the gap:
+- Add the PostHog Flutter SDK; `identify()` with the **Firebase uid** on
+  every sign-in (so it matches RevenueCat's customer_id — the join key).
+- Fire ~8 events that matter: `signup`, `hand_logged`, `session_ended`,
+  `paywall_opened`, `subscribed`, `ai_analysis_used`, `promo_redeemed`,
+  `tour_completed`.
+- Build ONE funnel (signup → hand_logged → paywall_opened → subscribed)
+  and ONE 7-day retention chart. That's ~90% of the value.
+- Keep it lean: skip session replay + PostHog feature flags (we have our
+  own Firestore flag system). ~half a day of work.
+- Note: use the PostHog SDK's public/project API key (safe to ship), NOT
+  the warehouse's read-scoped Resend/RevenueCat keys.
+
 9. Club FCM pushes (club notifications are in-app only — TODO at
    `club_notification_service.dart:123`).
 10. Referral system (double-sided free time via partner_grants + Cloud
