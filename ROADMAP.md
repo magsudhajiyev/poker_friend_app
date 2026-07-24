@@ -4,6 +4,24 @@ Living document (created 2026-07-23, launch night). Ordered by urgency.
 Sources: `SECURITY_AUDIT_2026-07-23.md` (full findings + context),
 `BUG_TRACKER.md` (hand-logging backlog), `todo/` items.
 
+## STATUS — 2026-07-24
+
+**v2.1.0+14 SUBMITTED to Google Play** (launch night). Shipped with it:
+launch promo (free Pro month, admin-toggled), 11 locales, experience-level
++ language-aware AI analysis, active-player-aware analysis, audit fixes
+(rules hardening deployed, backend rate-limited, API keys rotated), store
+listing rewritten (`release-plan/store-listing.md` — trial claim removed).
+iOS submission: pending (build + upload via Xcode).
+
+Launch-window operational notes:
+- Promo toggle (User Management) is ON — flip OFF after the club window;
+  granted months keep running on their own (RC-enforced).
+- Play advertising-ID warning: declaration purpose = Analytics; clears when
+  build 14 supersedes the old artifact. Optional privacy-clean route
+  (declare none + tools:node="remove" AD_ID) is an Update-1 candidate.
+- Club features were NOT smoke-tested against the new Firestore rules
+  scoping — do this FIRST in Update 1 (see item 3).
+
 ## Update 1 — "compliance + club" (target: well before Aug 31, 2026)
 
 **HARD DEADLINE Aug 31, 2026** — Google Play rejects app UPDATES on Billing
@@ -35,10 +53,10 @@ Library < 8.0.0 after this date.
 
 ## Update 2 — security hardening round 2
 
-5. **Rotate keys** (if not done launch week — audit B1/B2): backend
-   `API_KEYS` (old value is in git history forever) + `RESEND_API_KEY` +
-   `SONIOX_API_KEY` (all three ship inside the app binary via the bundled
-   `.env` asset).
+5. **Rotate remaining keys** (audit B1/B2): backend `API_KEYS` and
+   `RESEND_API_KEY` were ROTATED on launch night (2026-07-24, old key
+   verified dead). Still to rotate: `SONIOX_API_KEY` (ships in the binary
+   via the bundled `.env` asset).
 6. **Move email + AI calls behind the backend** and remove `.env` from the
    Flutter asset bundle (use `--dart-define` for the few truly-client keys,
    e.g. RevenueCat public SDK keys which are safe to ship).
