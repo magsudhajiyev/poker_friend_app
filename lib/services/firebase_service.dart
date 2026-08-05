@@ -914,6 +914,7 @@ class FirebaseService {
     required String sessionId,
     int? handsLogged,
     double? biggestPot,
+    double? biggestPotBB,
     List<Map<String, dynamic>>? stackHistory,
     double? totalBuyIn,
     double? averageGrowth,
@@ -937,6 +938,12 @@ class FirebaseService {
 
       if (biggestPot != null) {
         updateData['biggestPot'] = biggestPot;
+      }
+
+      // BB level at the time of the biggest pot — needed to render the pot
+      // in BBs on the tournament summary card after the session is closed.
+      if (biggestPotBB != null) {
+        updateData['biggestPotBB'] = biggestPotBB;
       }
 
       if (stackHistory != null) {

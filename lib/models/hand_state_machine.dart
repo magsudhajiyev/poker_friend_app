@@ -796,10 +796,7 @@ class PokerSessionManager {
     // awarded and must not affect the biggest-pot display.
     if (potAmount != null) {
       currentHand!.potAmount = potAmount;
-      if (!isScouted && potAmount > biggestPot) {
-        biggestPot = potAmount;
-        biggestPotBB = bigBlind;
-      }
+      if (!isScouted) updateBiggestPot(potAmount);
     }
     if (winnerId != null) {
       currentHand!.winnerId = winnerId;
@@ -852,6 +849,25 @@ class PokerSessionManager {
     currentHand = null;
   }
 
+  /// Track the biggest pot of the session. Tournaments compare pots in
+  /// BB-relative terms: blind levels grow ~100x across an MTT, so on absolute
+  /// chips a late 7BB pot beats an early 300BB monster (live bug 2026-08-04:
+  /// summary card showed "Biggest pot 7 BB" after a 9h tournament). Cash
+  /// games keep the absolute comparison — one blind level, same ordering.
+  void updateBiggestPot(double potAmount) {
+    if (potAmount <= 0) return;
+    final bool newBiggest;
+    if (gameType == GameType.tournament && bigBlind > 0 && biggestPotBB > 0) {
+      newBiggest = potAmount / bigBlind > biggestPot / biggestPotBB;
+    } else {
+      newBiggest = potAmount > biggestPot;
+    }
+    if (newBiggest) {
+      biggestPot = potAmount;
+      biggestPotBB = bigBlind;
+    }
+  }
+
   /// True if the hero voluntarily put chips in the pot preflop (call/bet/raise)
   /// in the current hand — i.e. it's a real played hand, not a pure fold-around.
   bool _heroVoluntarilyEnteredPot() {
@@ -884,10 +900,7 @@ class PokerSessionManager {
     currentHand!.potAmount = potAmount;
 
     // Track biggest pot with BB level for display
-    if (potAmount > biggestPot) {
-      biggestPot = potAmount;
-      biggestPotBB = bigBlind;
-    }
+    updateBiggestPot(potAmount);
 
     // For chopped pots, we'll store the first winner in winnerId for compatibility
     // and store additional chop data in a custom field
@@ -1111,6 +1124,7 @@ class PokerSessionManager {
         sessionId: sessionId!,
         handsLogged: completedHands.length,
         biggestPot: biggestPot,
+        biggestPotBB: biggestPotBB,
         stackHistory: stackHistory,
         totalBuyIn: totalBuyIn,
       );
