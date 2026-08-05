@@ -27,11 +27,13 @@ Launch-window operational notes:
 **HARD DEADLINE Aug 31, 2026** — Google Play rejects app UPDATES on Billing
 Library < 8.0.0 after this date.
 
-1. **Google Play Billing Library 8 migration** ⏰ — bump `purchases_flutter`
-   8.11.0 → 9.15.1 (bundles Billing 8; verified compatible with pinned
-   Flutter 3.38.10). Work = RevenueCat Dart API 8→9 breaking changes,
-   contained to `SubscriptionService` + paywall; full sandbox re-test of all
-   6 packages + promo entitlement flow.
+1. **Google Play Billing Library 8 migration** ⏰ — CODE SHIPPED 2026-08-05:
+   `purchases_flutter` ^9.15.1, Gradle bundles `billingclient:billing:8.0.0`
+   (verified in dependency tree), SDK isolated in `revenuecat_client.dart`,
+   pure tier logic in `subscription_logic.dart`, 24 unit tests green.
+   ⚠️ REMAINING before next store release: on-device sandbox matrix — all 6
+   packages, restore, cancel-and-repurchase override, external cancellation
+   on resume, promo entitlement flow (checklist in the 2026-08-05 session).
 2. **Forgot-password is BROKEN in production** (audit B9) — the live screen
    uses the custom `password_reset_codes` flow which Firestore rules deny.
    Users cannot reset passwords today. Cheapest: switch

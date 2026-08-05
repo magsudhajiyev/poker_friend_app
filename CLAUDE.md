@@ -7,6 +7,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Overview
 Flutter/Dart poker hand logging application with Firebase backend, club management, dealer-assisted voice logging, and real-time WebSocket sync. Allows users to track poker hands, sessions, statistics, opponents, and bankroll.
 
+**The app is LIVE** (v2.1.0+14 submitted to Google Play on launch night 2026-07-24; iOS submission pending). Post-launch work is queued in `ROADMAP.md` — check it before planning any change.
+
 ---
 
 ## Commands
@@ -45,7 +47,7 @@ flutter clean && flutter pub get
 ## Project Rules
 - **DO NOT push to git unless explicitly asked by user**
 - **DO NOT commit unless explicitly asked by user**
-- **Authoritative docs**: `BUG_TRACKER.md` (live status of hand-logging bugs + features in flight), `test/HAND_LOGGING_SPEC.md` (hand-logging behaviour spec + bug diagnoses), `POKER_SEATING_RULES.md` (seating/dead-button rules), `ROADMAP.md` (post-launch work queue incl. HARD Aug 31 2026 Play Billing deadline + deferred security fixes), `SECURITY_AUDIT_2026-07-23.md` (audit findings + per-item status). Check these before touching hand-logging code, and check ROADMAP.md before planning any update.
+- **Authoritative docs**: `BUG_TRACKER.md` (live status of hand-logging bugs + features in flight), `test/HAND_LOGGING_SPEC.md` (hand-logging behaviour spec + bug diagnoses), `POKER_SEATING_RULES.md` (seating/dead-button rules), `ROADMAP.md` (post-launch work queue incl. HARD Aug 31 2026 Play Billing deadline + deferred security fixes), `SECURITY_AUDIT_2026-07-23.md` (audit findings + per-item status), `BACKLOG.md` (triaged product backlog with stable B#/U#/F#/M#/G# IDs). Check these before touching hand-logging code, and check ROADMAP.md before planning any update.
 - Always check `/diary` folder for previously solved bugs before implementing fixes. Treat every entry there as authoritative documentation of the current behaviour — respect it and do not break it. **In particular, `/diary/2026-07-15-in-app-tour-complete-reference.md` is the canonical reference for the in-app tour flow: any change touching onboarding, guided overlays, tour phases, `OnboardingState`, `guided_hand_overlay`, `onboarding_tour`, or the screens the tour highlights (home, session details, poker hand, session end) must preserve the behaviour documented there.**
 - Create diary entry after user confirms a fix
 - Never commit debug logging, unnecessary files, or unstabilized code
@@ -79,8 +81,9 @@ flutter clean && flutter pub get
 ### Dependency Version Policy
 - All dependencies pinned to Flutter 3.38-compatible versions (see pubspec.yaml)
 - When upgrading Flutter, ALL Firebase/plugin dependencies must be upgraded together
-- Key version constraints: cloud_firestore ^5.5.0, firebase_core ^3.8.0, purchases_flutter ^8.1.0
+- Key version constraints: cloud_firestore ^5.5.0, firebase_core ^3.8.0, purchases_flutter ^9.15.1 (bundles Play Billing 8 — required for Play updates after Aug 31 2026)
 - API differences exist between old and new versions (positional vs named params) — see diary entry
+- RevenueCat SDK calls are isolated in `lib/services/revenuecat_client.dart` — a future purchases_flutter bump should only touch that file (see Subscription section)
 
 ---
 
@@ -94,7 +97,7 @@ flutter clean && flutter pub get
 - **Voice Recognition**: Deepgram ASR via backend "Dealer Brain" endpoint
 - **Payments**: RevenueCat SDK
 - **State Management**: StatefulWidget pattern (no Provider/BLoC/Riverpod — **exception**: the dealer voice pipeline uses `flutter_bloc` via `lib/features/dealer_voice/cubit/`)
-- **Localization**: Flutter's built-in `gen-l10n` system; `.arb` files in `lib/l10n/`; supported: EN, DE, ES, FR, IT, PT, RO, RU, PL, UK. Use `AppLocalizations.of(context)` — never hardcode UI strings.
+- **Localization**: Flutter's built-in `gen-l10n` system; `.arb` files in `lib/l10n/`; 11 locales: EN, DE, ES, FR, IT, PT, RO, RU, PL, SK, UK. Use `AppLocalizations.of(context)` — never hardcode UI strings. When enumerating locales, list `lib/l10n/app_*.arb` dynamically — don't trust hardcoded lists.
 
 ### Data Flow
 1. User logs hand actions during gameplay
@@ -117,9 +120,18 @@ flutter clean && flutter pub get
 Loaded at startup via `flutter_dotenv`. Required keys: `SONIOX_API_KEY`, `REVENUECAT_IOS_API_KEY`, `REVENUECAT_ANDROID_API_KEY`, `RESEND_API_KEY`, `AI_API_KEY`, `WEBSOCKET_SERVER_URL`, `API_SERVER_URL`, `ENVIRONMENT`. Access via `EnvConfig.*` (never `dotenv.env` directly).
 
 ### Subscription Tiers (RevenueCat)
+**Play Billing 8 migration SHIPPED 2026-08-05** (`purchases_flutter` 8.11.0 → ^9.15.1, bundles `com.android.billingclient:billing:8.0.0` — required for Play updates after Aug 31 2026). Unit tests + Gradle build verified; **on-device sandbox matrix NOT yet run** (all 6 packages, restore, cancel-and-repurchase override, external cancellation on resume, promo entitlement) — run it before the next store release.
+
+The subscription code is split into three layers (keep it that way):
+- `lib/services/subscription_service.dart` — orchestration + cached state; the API the app calls
+- `lib/services/revenuecat_client.dart` — the ONLY place `Purchases.*` is called (`LiveRevenueCatClient`); returns app-owned value types (`TierEntitlements`, `PurchaseOutcome`) so SDK version differences are absorbed here. Tests inject `FakeRevenueCatClient` via `SubscriptionService.debugSetClient()`
+- `lib/services/subscription_logic.dart` — pure tier/override/package-resolution functions (no SDK, no static state); package-ID constants (`kPkg*`) live here and must match the RevenueCat dashboard. Pro uses the standard `$rc_monthly`/`$rc_annual` identifiers; Elite/Club use custom ones
+
+Launch promo: new sign-ups can receive a free Pro month as a RevenueCat **promotional** entitlement (admin-toggled in User Management). `TierEntitlements.proIsPromotional`/`proExpirationIso` carry this; promo expiry notifications fire 1 day before.
+
 Four tiers — check via `SubscriptionService`:
 - **Free**: 10 hands/session, 5 opponents, 30-day session history
-- **Pro** (`isPro`/`isPremium`): 50 hands/session, 15 opponents, 90-day history
+- **Pro** (`isPro`/`isPremium`): 50 hands/session, 30 opponents, 90-day history
 - **Elite** (`isElite`/`isPremium`): unlimited everything, AI analysis, all history
 - **Club** (`isClub`/`isPremium`): like Elite + club creation rights (owner pays; club members operate freely regardless of their own tier)
 
@@ -235,7 +247,7 @@ Top offenders still to migrate (Phase 4): `dealer/dealer_table_screen` (158), `p
 - Shows: session name, game type badge, duration, net P/L, hands played, biggest pot, best/worst hand
 - **Cash**: Net P/L = `finalStack - totalBuyIn` (both in currency)
 - **Tournament**: Net P/L = `prizeWon - totalBuyIn` from `SessionEndBankrollSheet` result (NEVER use chips - money). Also shows placement (e.g., "11th / 28"), prize won, and net profit
-- **Biggest pot**: Cash shows currency; Tournament shows BB equivalent (`biggestPot / biggestPotBB` where `biggestPotBB` is the BB level when the biggest pot occurred)
+- **Biggest pot**: Cash shows currency; Tournament shows BB equivalent (`biggestPot / biggestPotBB` where `biggestPotBB` is the BB level when the biggest pot occurred). **Selection is BB-relative for tournaments** (`PokerSessionManager.updateBiggestPot`): pots are compared as `pot / currentBB`, NOT absolute chips — blind levels grow ~100x across an MTT, so absolute comparison let a late 7 BB pot displace an early 317 BB pot (bug 2026-08-04). Cash keeps absolute comparison. `biggestPotBB` is persisted on the session doc.
 - **Best/worst hand**: Uses pot-to-stack ratio (`pot / heroPreHandStack`) for meaningful cross-blind-level comparison. Falls back to "Hand #N" when hole cards not entered
 - `SessionSummaryData` is the data class; `SessionSummaryCard.show()` displays it as a dialog
 - Card is captured via `RepaintBoundary` for PNG sharing
@@ -282,7 +294,7 @@ Classifies based on VPIP, PFR, 3-bet%, AF thresholds:
 - **Balanced**: VPIP 20-28%, PFR 17-22%, gap 2-5%, AF 2-4
 - **Calling Station**: VPIP≥25%, PFR<10%, gap≥15%, 3-bet<3%, AF<1
 - **Nit**: VPIP≤15%, PFR≤12%, 3-bet≤5%, AF≤2
-- **Unknown**: < 50 hands
+- **Unknown**: ONLY when < 50 hands or zeroed stats. With a full sample the detector is total: specific branches first, then a coarse quadrant fallback (tight/loose at VPIP 22 × aggressive/passive at AF 2 or PFR/VPIP ≥ 0.6) — it must never return Unknown for ≥50 hands (bug 2026-08-04: home tile showed "762/50" for a profile no branch matched). Home tile renders `N/50` only when N < 50. Tests: `test/services/play_style_detector_test.dart` (includes an exhaustive no-holes sweep).
 
 ### 5. Opponent Tracking
 - Automatically creates opponent profiles from logged hands
@@ -501,7 +513,7 @@ saveHand() called
 ### Other Services
 | Service | File | Purpose |
 |---------|------|---------|
-| SubscriptionService | `lib/services/subscription_service.dart` | RevenueCat integration |
+| SubscriptionService | `lib/services/subscription_service.dart` | Subscription orchestration (see Subscription section for the 3-layer split with `revenuecat_client.dart` + `subscription_logic.dart`) |
 | FCMService | `lib/services/fcm_service.dart` | Push notifications (fire-and-forget!) |
 | DeepLinkService | `lib/services/deep_link_service.dart` | Email invitation deep links |
 | AiAnalyzerService | `lib/services/ai_analyzer_service.dart` | Hand analysis API calls |
@@ -583,8 +595,9 @@ user_stats/{userId}/
 poker_sessions/{sessionId}/
   userId, sessionName, smallBlind, bigBlind, hasBBante, playerCount,
   ourSeatNumber, gameType, startTime, endTime, totalHands, handsLogged,
-  biggestPot, isIndividualSession, buyInAmount, totalBuyIn, startingStack,
-  currentStack, stackHistory, participantIds, isLive, isDealerSession
+  biggestPot, biggestPotBB, isIndividualSession, buyInAmount, totalBuyIn,
+  startingStack, currentStack, stackHistory, participantIds, isLive,
+  isDealerSession, finishedPlace?, fieldSize?, prizeWon?
   poker_hands/{handId}/
     handNumber, buttonPosition, actions[], boardCards, ourHoleCards,
     showdownData, potAmount, winnerId, playerNames, playerIds,
@@ -695,6 +708,13 @@ support_requests/{requestId}/ — in-app support requests
 3. **Cache staleness**: Static caches must be invalidated when data changes
 4. **Gradient harshness**: Apply 0.6 opacity to ALL gradient colors, use elliptical shape
 
+### Firestore Rules Bugs
+1. **Admin-on-behalf-of-user writes**: flows the super admin performs FOR another user (club-request approval writes the new owner's `dealers/{uid}` doc and updates a club whose `ownerId` is the requester) need explicit `isSuperAdmin()` allowances in `firestore.rules` — owner-only rules deny them (production bug 2026-08-02, fixed + deployed). When adding admin flows, trace EVERY write against the rules.
+2. Rules changes must be deployed (`firebase deploy --only firestore:rules`) — editing the file does nothing live. Smoke-test club flows after any rules scoping change (ROADMAP item 3).
+
+### Tournament Math Bugs
+1. **Never compare chip amounts across blind levels**: blinds grow ~100x in an MTT. Biggest-pot uses BB-relative comparison; best/worst hand uses pot-to-stack ratio. Any new "biggest/best X" tournament stat must normalize by BB level or stack.
+
 ### Auth/Network Bugs
 1. **Auto-logout**: Firebase authStateChanges emits null on network issues → add 3s recovery delay
 2. **FCM blocking**: ALL FCM operations must be fire-and-forget with 5s timeouts using `unawaited()`
@@ -724,6 +744,7 @@ Tests are organized in subdirectories mirroring `lib/`:
 - `test/HAND_LOGGING_SPEC.md` — hand-logging behaviour spec (bug diagnoses live here, not in code comments)
 - Hand-logging regression suite: `hand_logging_edge_cases_test.dart`, `raise_gesture_mode_test.dart`, `seating_boundary_test.dart`, `shown_cards_test.dart`, `table_change_discard_test.dart`, `side_pot_display_test.dart`
 - `test/onboarding_state_test.dart` — tour state machine
+- `test/services/subscription_logic_test.dart` + `test/services/subscription_service_test.dart` — tier resolution, purchase overrides, service flow against `FakeRevenueCatClient`
 
 ### Testing Checklist
 - [ ] Test with both cash and tournament games
@@ -783,6 +804,6 @@ flutter test test/services/stats_calculator_test.dart
 
 ---
 
-**Last Updated**: July 2026
+**Last Updated**: August 5, 2026
 **Maintained by**: User + Claude
 **Update this file**: After major feature additions, architectural changes, or new bug patterns
