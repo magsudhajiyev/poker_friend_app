@@ -107,10 +107,11 @@ service cloud.firestore {
         get(/databases/$(database)/documents/opponents/$(opponentId)).data.userId == request.auth.uid);
     }
 
-    // Dealers collection
+    // Dealers collection. Super admin writes others' docs during club-request
+    // approval (_addClubToDealer runs as the approving admin, not the owner).
     match /dealers/{userId} {
       allow read: if isAuthenticated();
-      allow write: if isOwner(userId);
+      allow write: if isOwner(userId) || isSuperAdmin();
     }
 
     // Dealer sessions - participants can read, creator can write
@@ -132,11 +133,14 @@ service cloud.firestore {
         (resource.data.playerId == request.auth.uid || resource.data.dealerId == request.auth.uid);
     }
 
-    // Clubs - readable by all authenticated, writable by members
+    // Clubs - readable by all authenticated, writable by owner. Super admin
+    // updates during club-request approval (club is created with the
+    // REQUESTER as ownerId, then the approving admin sets address/phone/QR).
     match /clubs/{clubId} {
       allow read: if isAuthenticated();
       allow create: if isAuthenticated();
-      allow update, delete: if isAuthenticated() && resource.data.ownerId == request.auth.uid;
+      allow update, delete: if isSuperAdmin() ||
+        (isAuthenticated() && resource.data.ownerId == request.auth.uid);
 
       // Club members subcollection
       match /members/{memberId} {
