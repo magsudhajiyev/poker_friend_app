@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' show User;
 import 'package:flutter/material.dart';
-import 'package:purchases_flutter/purchases_flutter.dart';
+import '../services/revenuecat_client.dart' show TierEntitlements;
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/typography.dart';
@@ -794,11 +794,10 @@ Future<bool> _detectLaunchPromo(BuildContext context) async {
     // against a hung network call (audit H2).
     await SubscriptionService.refreshOnResume()
         .timeout(const Duration(seconds: 6));
-    final entitlement = SubscriptionService
-        .customerInfo?.entitlements.all[SubscriptionService.premiumEntitlement];
-    if (entitlement?.isActive != true) return false;
+    final ent = SubscriptionService.proEntitlement;
+    if (!ent.proActive) return false;
 
-    if (context.mounted) _schedulePromoReminders(context, entitlement!);
+    if (context.mounted) _schedulePromoReminders(context, ent);
     return true;
   } catch (_) {
     return false;
@@ -838,22 +837,21 @@ Future<void> syncPromoExpiryReminders(BuildContext context) async {
     final doc =
         await FirebaseFirestore.instance.collection('users').doc(uid).get();
 
-    final customerInfo = SubscriptionService.customerInfo;
-    final entitlement =
-        customerInfo?.entitlements.all[SubscriptionService.premiumEntitlement];
     // Audit H1: on cold starts this sync can run BEFORE RevenueCat init has
-    // populated customerInfo. Unknown state must be a no-op — treating it
-    // as "inactive" cancelled valid, already-scheduled reminders. The pure
-    // decision lives in promo_reminder_logic.dart (unit tested).
+    // populated entitlements. Unknown state must be a no-op — treating it as
+    // "inactive" cancelled valid, already-scheduled reminders. The pure
+    // decision lives in promo_reminder_logic.dart (unit tested). "Loaded" =
+    // the service has been initialized (empty snapshot until then).
+    final ent = SubscriptionService.proEntitlement;
     final action = promoReminderAction(
       markerSet: doc.data()?['freeMonthGranted'] == true,
-      customerInfoLoaded: customerInfo != null,
-      entitlementActive: entitlement?.isActive == true,
-      entitlementIsPromotional: entitlement?.store == Store.promotional,
+      customerInfoLoaded: SubscriptionService.isInitialized,
+      entitlementActive: ent.proActive,
+      entitlementIsPromotional: ent.proIsPromotional == true,
     );
     switch (action) {
       case PromoReminderAction.schedule:
-        if (context.mounted) _schedulePromoReminders(context, entitlement!);
+        if (context.mounted) _schedulePromoReminders(context, ent);
       case PromoReminderAction.cancel:
         await NotificationService.cancelPromoExpiryReminders();
       case PromoReminderAction.none:
@@ -862,9 +860,8 @@ Future<void> syncPromoExpiryReminders(BuildContext context) async {
   } catch (_) {}
 }
 
-void _schedulePromoReminders(
-    BuildContext context, EntitlementInfo entitlement) {
-  final expiresAt = DateTime.tryParse(entitlement.expirationDate ?? '');
+void _schedulePromoReminders(BuildContext context, TierEntitlements entitlement) {
+  final expiresAt = DateTime.tryParse(entitlement.proExpirationIso ?? '');
   if (expiresAt == null) return;
   final l10n = AppLocalizations.of(context);
   unawaited(NotificationService.schedulePromoExpiryReminders(
