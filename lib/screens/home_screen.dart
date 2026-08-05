@@ -4765,8 +4765,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
     final style = result['style'] ?? 'Balanced';
     if (style == 'Unknown') {
+      // The "N/50" progress format is ONLY the count-up to the 50-hand
+      // minimum. 'Unknown' with a full sample (e.g. zeroed stats doc) must
+      // not render as "762/50".
       final count = handsPlayed ?? 0;
-      return '$count/50';
+      if (count < PlayStyleDetector.minHandsForReliableStats) {
+        return '$count/${PlayStyleDetector.minHandsForReliableStats}';
+      }
+      return PlayStyleDetector.getStyleAbbreviation(style); // 'N/A'
     }
     return PlayStyleDetector.getStyleAbbreviation(style);
   }
