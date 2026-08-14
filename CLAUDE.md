@@ -40,6 +40,14 @@ flutter gen-l10n
 
 # Clean build artifacts
 flutter clean && flutter pub get
+
+# Cloud Functions (run from functions/)
+npm run build            # tsc compile
+npm run deploy           # firebase deploy --only functions
+npm run logs             # firebase functions:log
+
+# Deploy Firestore rules (editing firestore.rules alone does nothing live)
+firebase deploy --only firestore:rules
 ```
 
 ---
@@ -48,6 +56,7 @@ flutter clean && flutter pub get
 - **DO NOT push to git unless explicitly asked by user**
 - **DO NOT commit unless explicitly asked by user**
 - **Authoritative docs**: `BUG_TRACKER.md` (live status of hand-logging bugs + features in flight), `test/HAND_LOGGING_SPEC.md` (hand-logging behaviour spec + bug diagnoses), `POKER_SEATING_RULES.md` (seating/dead-button rules), `ROADMAP.md` (post-launch work queue incl. HARD Aug 31 2026 Play Billing deadline + deferred security fixes), `SECURITY_AUDIT_2026-07-23.md` (audit findings + per-item status), `BACKLOG.md` (triaged product backlog with stable B#/U#/F#/M#/G# IDs). Check these before touching hand-logging code, and check ROADMAP.md before planning any update.
+- **`docs/` folder**: reference docs (`ARCHITECTURE.md`, `SERVICES.md`, `SCREENS.md`, `NAVIGATION.md`, `STATE.md`, `DESIGN_SYSTEM.md`, `SUBSCRIPTIONS.md`, `GLOSSARY.md`) plus feature specs — **`docs/social-feed-spec.md` is the decision record for the social feed** (D1–D11); any feed/follow change must respect it.
 - Always check `/diary` folder for previously solved bugs before implementing fixes. Treat every entry there as authoritative documentation of the current behaviour — respect it and do not break it. **In particular, `/diary/2026-07-15-in-app-tour-complete-reference.md` is the canonical reference for the in-app tour flow: any change touching onboarding, guided overlays, tour phases, `OnboardingState`, `guided_hand_overlay`, `onboarding_tour`, or the screens the tour highlights (home, session details, poker hand, session end) must preserve the behaviour documented there.**
 - Create diary entry after user confirms a fix
 - Never commit debug logging, unnecessary files, or unstabilized code
@@ -58,6 +67,8 @@ flutter clean && flutter pub get
 ---
 
 ## Development Environment
+
+Full machine setup (tool versions, keystores, step-by-step install) lives in `SETUP.md`.
 
 ### CRITICAL: Flutter Version Constraint
 - **Flutter 3.38.10** — DO NOT upgrade to 3.41.x (Firestore write performance regression)
@@ -91,13 +102,23 @@ flutter clean && flutter pub get
 
 ### Tech Stack
 - **Frontend**: Flutter/Dart (179+ Dart files)
-- **Backend**: Firebase (Firestore, Auth, FCM) + FastAPI backend (Render)
+- **Backend**: Firebase (Firestore, Auth, FCM, Cloud Functions in `functions/`) + FastAPI backend (Render)
 - **Local Storage**: SQLite (sqflite v13) + SharedPreferences
 - **Real-time**: Socket.IO WebSocket + Firestore Snapshot listeners
 - **Voice Recognition**: Deepgram ASR via backend "Dealer Brain" endpoint
 - **Payments**: RevenueCat SDK
 - **State Management**: StatefulWidget pattern (no Provider/BLoC/Riverpod — **exception**: the dealer voice pipeline uses `flutter_bloc` via `lib/features/dealer_voice/cubit/`)
 - **Localization**: Flutter's built-in `gen-l10n` system; `.arb` files in `lib/l10n/`; 11 locales: EN, DE, ES, FR, IT, PT, RO, RU, PL, SK, UK. Use `AppLocalizations.of(context)` — never hardcode UI strings. When enumerating locales, list `lib/l10n/app_*.arb` dynamically — don't trust hardcoded lists.
+- **Note**: the root `package.json` and `src/` are a legacy TypeScript prototype ("poker-logger") — NOT the app and NOT the Cloud Functions. The real Functions codebase is `functions/` (own `package.json`).
+
+### Cloud Functions (`functions/src/index.ts`)
+Node 20 / TypeScript, firebase-functions v7. Deploy with `npm run deploy` from `functions/`. Current functions:
+- `sendPushNotification` — FCM push on `user_notifications` doc create
+- `sendClubNotification` — topic-based FCM to all club members
+- `grantFreeMonthOnSignup` — launch promo: RevenueCat promotional Pro month on `users/{uid}` create, gated by `app_config/promotions.freeMonthOnSignup`
+- `cleanupOldTokens` — daily scheduled FCM token cleanup
+- `notifyFollowersOnSessionStart` — social feed: one FCM topic message (`live_{userId}`) on `feed_sessions` create — no per-follower fan-out
+- `revenuecatWebhook` — mirrors subscription tier onto `users/{uid}` (`subscriptionTier` + `subscriptionTierExpiresAt`) by re-fetching the subscriber from the RC REST API on every event; Firestore rules use the mirror to gate paid features (rules can't see RC entitlements)
 
 ### Data Flow
 1. User logs hand actions during gameplay
@@ -348,6 +369,16 @@ Classifies based on VPIP, PFR, 3-bet%, AF thresholds:
 - Tour hands are NOT persisted (`OnboardingState.isGuidedHandActive` guard in save path)
 - **Canonical reference: `diary/2026-07-15-in-app-tour-complete-reference.md`** — see Project Rules
 
+### 14. Social Feed (ON HOLD — client code lives in git stash "social-feed-client-phases-1-3", deliberately NOT in the billing-update release; backend rules/CFs ARE committed and deployed. Spec: `docs/social-feed-spec.md`)
+Follow other players and "rail" their shared sessions: delayed stack chart + hand replay, plus 48h recap cards. Key invariants (all from the spec's decision record — read it before changing anything):
+- **Paid-only hard wall** (D9/D10): free users see no entry points; Firestore rules independently enforce via the tier mirrored on `users/{uid}` by `revenuecatWebhook`. Client checks are UX, not security.
+- **1-hour lag** (D5/D6): presence is immediate; hands + stack lag via `visibleAt` stamps that rules enforce (`request.time >= visibleAt`). ⚠️ `FeedPublisher.lag` is currently `Duration.zero` **for testing only** — rules deliberately don't enforce a minimum, so this constant is the only privacy barrier. **Restore `Duration(hours: 1)` before any release.**
+- **Sanitization is a privacy guarantee** (D11): `feed_sanitizer.dart` is pure functions (unit-tested in `test/services/feed_sanitizer_test.dart`); non-hero seats render as positions (BTN/SB/…) or `P{seat}`, real `playerNames`/`playerIds` stripped, non-hero showdown cards stripped in ALL modes, hero cards only in `cards` mode.
+- **Client dual-write** (D6): `feed_publisher.dart` writes sanitized copies to `feed_sessions`/`feed_hands`/`feed_stack`; every method is best-effort (feed failures must never break gameplay).
+- Per-session share modes: `off` / `no_cards` / `cards` (`FeedShareMode`), default from settings.
+- Files: services `feed_sanitizer.dart`, `feed_publisher.dart`, `feed_service.dart`, `follow_service.dart` (follow graph: `follows/{follower}_{followed}`, `blocks/{blocker}_{blocked}`, FCM topic `live_{uid}` subscribe on follow); screens `lib/screens/social/` (feed, rail viewer, public profile, follows, find players); home entry `lib/widgets/live_now_strip.dart`.
+- Phase 4 (bell-mute UI) + tier-mirror backfill for existing subscribers are outstanding — see MEMORY/ROADMAP before shipping.
+
 ---
 
 ## Data Structures
@@ -524,6 +555,14 @@ saveHand() called
 | StatsVerificationService | `lib/services/stats_verification_service.dart` | Debug audit: recompute stats from raw hands, print report |
 | Drill services | `lib/services/drill_*.dart` | Training drills: engine, grader, GTO charts, Nash push-fold |
 
+### Social Feed Services (see Key Feature 14)
+| Service | File | Purpose |
+|---------|------|---------|
+| FeedSanitizer | `lib/services/feed_sanitizer.dart` | Pure sanitization (identity/card stripping) — privacy-critical, unit-tested |
+| FeedPublisher | `lib/services/feed_publisher.dart` | Best-effort dual-write of sanitized, delay-stamped feed docs |
+| FeedService | `lib/services/feed_service.dart` | Follower-side reads: live sessions, recaps, rail data |
+| FollowService | `lib/services/follow_service.dart` | Follow graph, blocks, FCM `live_{uid}` topic subscriptions |
+
 ---
 
 ## Key Models
@@ -582,7 +621,8 @@ saveHand() called
 
 ```
 users/{userId}/
-  uid, displayName, displayNameLower, email, createdAt, updatedAt
+  uid, displayName, displayNameLower, email, createdAt, updatedAt,
+  subscriptionTier?, subscriptionTierExpiresAt?   — mirrored by revenuecatWebhook CF; rules gate paid features on these
 
 user_stats/{userId}/
   totalHands, handsPlayed, walksCount, vpipCount, pfrCount,
@@ -638,9 +678,17 @@ user_notifications/{notificationId}/
 partner_grants/{grantId}/
   userId, tier, status ('active'|'expired'|'revoked'), expiresAt (Timestamp)
 
+follows/{followerId}_{followedId}/ — follow edge + denormalized display names
+blocks/{blockerId}_{blockedId}/    — existence denies future follow creates in rules
+
+feed_sessions/{sessionId}/    — sanitized session presence + stackHistory copy (social feed)
+feed_hands/{...}/             — sanitized hand copies, visibleAt-stamped
+feed_stack/{...}/             — sanitized stack entries, visibleAt-stamped
+
 app_admins/{userId}/          — super-admin allowlist
 club_requests/{requestId}/    — club registration requests (admin approves)
 support_requests/{requestId}/ — in-app support requests
+app_config/                   — feature_flags, promotions (super-admin toggles)
 ```
 
 ---
@@ -745,6 +793,7 @@ Tests are organized in subdirectories mirroring `lib/`:
 - Hand-logging regression suite: `hand_logging_edge_cases_test.dart`, `raise_gesture_mode_test.dart`, `seating_boundary_test.dart`, `shown_cards_test.dart`, `table_change_discard_test.dart`, `side_pot_display_test.dart`
 - `test/onboarding_state_test.dart` — tour state machine
 - `test/services/subscription_logic_test.dart` + `test/services/subscription_service_test.dart` — tier resolution, purchase overrides, service flow against `FakeRevenueCatClient`
+- `test/services/feed_sanitizer_test.dart` — social feed privacy guarantees (identity/card stripping) — treat failures here as privacy leaks, not glitches
 
 ### Testing Checklist
 - [ ] Test with both cash and tournament games
@@ -792,6 +841,8 @@ flutter test test/services/stats_calculator_test.dart
 ---
 
 ## Open Items / Known Limitations
+- ⚠️ **Social feed lag disabled for testing**: the STASHED `FeedPublisher.lag = Duration.zero` — restore `Duration(hours: 1)` when the feed stash is popped, before ANY release with feed code (see Key Feature 14)
+- Social feed tier-mirror backfill for existing subscribers not run (rules deny paid users until their next RevenueCat event)
 - Position mismatch between hand card and details view (needs investigation)
 - Deep link app-not-installed handling not implemented
 - Hand logging screen not yet migrated to new design system (plan exists)
@@ -804,6 +855,6 @@ flutter test test/services/stats_calculator_test.dart
 
 ---
 
-**Last Updated**: August 5, 2026
+**Last Updated**: August 11, 2026
 **Maintained by**: User + Claude
 **Update this file**: After major feature additions, architectural changes, or new bug patterns
