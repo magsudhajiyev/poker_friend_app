@@ -2860,7 +2860,19 @@
   "forgotPasswordInvalidCode": "Invalid or expired code. Please try again.",
   "forgotPasswordResetSuccess": "Password reset successfully! Please sign in.",
   "forgotPasswordResetTitle": "Reset password",
-  "forgotPasswordResetSubtitle": "Enter your email to receive a verification code",
+  "forgotPasswordResetSubtitle": "Enter your email to receive a password reset link",
+  "forgotPasswordSendLink": "Send Reset Link",
+  "forgotPasswordLinkSubtitle": "We've sent a password reset link to {email}. Open it to set a new password, then sign in.",
+  "@forgotPasswordLinkSubtitle": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "forgotPasswordResendLink": "Resend link",
+  "forgotPasswordLinkSent": "Reset link sent.",
+  "forgotPasswordBackToSignIn": "Back to Sign In",
   "forgotPasswordCheckEmail": "Check your email",
   "forgotPasswordSetNewPassword": "Set new password",
   "forgotPasswordSetNewSubtitle": "Choose a strong password for your account",
@@ -2870,7 +2882,7 @@
   "forgotPasswordSendCode": "Send Code",
   "forgotPasswordVerifyCode": "Verify Code",
   "forgotPasswordResendCode": "Resend code",
-  "forgotPasswordResendIn": "Resend code in {time}",
+  "forgotPasswordResendIn": "Resend in {time}",
   "@forgotPasswordResendIn": {
     "placeholders": {
       "time": {

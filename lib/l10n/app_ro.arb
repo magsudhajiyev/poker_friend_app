@@ -2860,7 +2860,12 @@
   "forgotPasswordInvalidCode": "Cod invalid sau expirat. Încearcă din nou.",
   "forgotPasswordResetSuccess": "Parola a fost resetată cu succes! Autentifică-te.",
   "forgotPasswordResetTitle": "Resetează parola",
-  "forgotPasswordResetSubtitle": "Introdu e-mailul pentru a primi un cod de verificare",
+  "forgotPasswordResetSubtitle": "Introdu adresa de e-mail pentru a primi un link de resetare",
+  "forgotPasswordSendLink": "Trimite linkul de resetare",
+  "forgotPasswordLinkSubtitle": "Am trimis un link de resetare a parolei la {email}. Deschide-l pentru a seta o parolă nouă, apoi autentifică-te.",
+  "forgotPasswordResendLink": "Retrimite linkul",
+  "forgotPasswordLinkSent": "Linkul de resetare a fost trimis.",
+  "forgotPasswordBackToSignIn": "Înapoi la autentificare",
   "forgotPasswordCheckEmail": "Verifică-ți e-mailul",
   "forgotPasswordSetNewPassword": "Setează o parolă nouă",
   "forgotPasswordSetNewSubtitle": "Alege o parolă puternică pentru contul tău",
@@ -2870,7 +2875,7 @@
   "forgotPasswordSendCode": "Trimite codul",
   "forgotPasswordVerifyCode": "Verifică codul",
   "forgotPasswordResendCode": "Retrimite codul",
-  "forgotPasswordResendIn": "Retrimite codul în {time}",
+  "forgotPasswordResendIn": "Retrimite în {time}",
   "@forgotPasswordResendIn": {
     "placeholders": {
       "time": {

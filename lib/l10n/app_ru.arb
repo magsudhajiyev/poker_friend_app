@@ -2857,7 +2857,7 @@
   "forgotPasswordNewCodeSent": "Новый код отправлен на вашу почту.",
   "forgotPasswordNewPassword": "Новый пароль",
   "forgotPasswordResendCode": "Отправить код повторно",
-  "forgotPasswordResendIn": "Повторная отправка через {time}",
+  "forgotPasswordResendIn": "Отправить повторно через {time}",
   "@forgotPasswordResendIn": {
     "placeholders": {
       "time": {
@@ -2866,7 +2866,12 @@
     }
   },
   "forgotPasswordResetButton": "Сбросить пароль",
-  "forgotPasswordResetSubtitle": "Введите ваш e-mail для получения кода подтверждения",
+  "forgotPasswordResetSubtitle": "Введите ваш e-mail для получения ссылки для сброса пароля",
+  "forgotPasswordSendLink": "Отправить ссылку для сброса",
+  "forgotPasswordLinkSubtitle": "Мы отправили ссылку для сброса пароля на {email}. Откройте её, задайте новый пароль и войдите.",
+  "forgotPasswordResendLink": "Отправить ссылку ещё раз",
+  "forgotPasswordLinkSent": "Ссылка для сброса отправлена.",
+  "forgotPasswordBackToSignIn": "Вернуться ко входу",
   "forgotPasswordResetSuccess": "Пароль успешно сброшен! Пожалуйста, войдите в систему.",
   "forgotPasswordResetTitle": "Сброс пароля",
   "forgotPasswordSendCode": "Отправить код",

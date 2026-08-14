@@ -877,6 +877,14 @@ class AuthService {
       await _auth.sendPasswordResetEmail(email: email);
       unawaited(LoggerService.debug('Password reset email sent to: $email'));
     } on FirebaseAuthException catch (e) {
+      // Anti-enumeration: an unknown email must look identical to success,
+      // or the reset screen becomes an account-existence oracle. (Firebase
+      // projects with email-enumeration protection return success silently;
+      // this covers projects/SDK paths that still surface the code.)
+      if (e.code == 'user-not-found') {
+        unawaited(LoggerService.debug('Password reset: unknown email, reported as sent'));
+        return;
+      }
       await LoggerService.error('Password reset error', e);
       throw _getAuthException(e);
     } catch (e) {

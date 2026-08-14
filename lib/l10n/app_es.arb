@@ -3041,7 +3041,7 @@
   "forgotPasswordNewCodeSent": "Nuevo código enviado a tu correo.",
   "forgotPasswordNewPassword": "Nueva contraseña",
   "forgotPasswordResendCode": "Reenviar código",
-  "forgotPasswordResendIn": "Reenviar código en {time}",
+  "forgotPasswordResendIn": "Reenviar en {time}",
   "@forgotPasswordResendIn": {
     "placeholders": {
       "time": {
@@ -3050,7 +3050,12 @@
     }
   },
   "forgotPasswordResetButton": "Restablecer contraseña",
-  "forgotPasswordResetSubtitle": "Introduce tu correo para recibir un código de verificación",
+  "forgotPasswordResetSubtitle": "Introduce tu correo para recibir un enlace de restablecimiento",
+  "forgotPasswordSendLink": "Enviar enlace de restablecimiento",
+  "forgotPasswordLinkSubtitle": "Hemos enviado un enlace para restablecer la contraseña a {email}. Ábrelo para establecer una nueva contraseña y luego inicia sesión.",
+  "forgotPasswordResendLink": "Reenviar enlace",
+  "forgotPasswordLinkSent": "Enlace de restablecimiento enviado.",
+  "forgotPasswordBackToSignIn": "Volver a iniciar sesión",
   "forgotPasswordResetSuccess": "¡Contraseña restablecida! Por favor, inicia sesión.",
   "forgotPasswordResetTitle": "Restablecer contraseña",
   "forgotPasswordSendCode": "Enviar código",

@@ -3041,7 +3041,7 @@
   "forgotPasswordNewCodeSent": "Neuer Code an Ihre E-Mail gesendet.",
   "forgotPasswordNewPassword": "Neues Passwort",
   "forgotPasswordResendCode": "Code erneut senden",
-  "forgotPasswordResendIn": "Code erneut senden in {time}",
+  "forgotPasswordResendIn": "Erneut senden in {time}",
   "@forgotPasswordResendIn": {
     "placeholders": {
       "time": {
@@ -3050,7 +3050,12 @@
     }
   },
   "forgotPasswordResetButton": "Passwort zurücksetzen",
-  "forgotPasswordResetSubtitle": "Geben Sie Ihre E-Mail ein, um einen Bestätigungscode zu erhalten",
+  "forgotPasswordResetSubtitle": "Geben Sie Ihre E-Mail ein, um einen Link zum Zurücksetzen zu erhalten",
+  "forgotPasswordSendLink": "Link zum Zurücksetzen senden",
+  "forgotPasswordLinkSubtitle": "Wir haben einen Link zum Zurücksetzen des Passworts an {email} gesendet. Öffnen Sie ihn, um ein neues Passwort festzulegen, und melden Sie sich dann an.",
+  "forgotPasswordResendLink": "Link erneut senden",
+  "forgotPasswordLinkSent": "Link zum Zurücksetzen gesendet.",
+  "forgotPasswordBackToSignIn": "Zurück zur Anmeldung",
   "forgotPasswordResetSuccess": "Passwort erfolgreich zurückgesetzt! Bitte melden Sie sich an.",
   "forgotPasswordResetTitle": "Passwort zurücksetzen",
   "forgotPasswordSendCode": "Code senden",

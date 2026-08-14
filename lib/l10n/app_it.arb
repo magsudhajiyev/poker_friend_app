@@ -2860,7 +2860,12 @@
   "forgotPasswordInvalidCode": "Codice non valido o scaduto. Riprova.",
   "forgotPasswordResetSuccess": "Password reimpostata con successo! Accedi.",
   "forgotPasswordResetTitle": "Reimposta password",
-  "forgotPasswordResetSubtitle": "Inserisci la tua email per ricevere un codice di verifica",
+  "forgotPasswordResetSubtitle": "Inserisci la tua email per ricevere un link di reimpostazione",
+  "forgotPasswordSendLink": "Invia link di reimpostazione",
+  "forgotPasswordLinkSubtitle": "Abbiamo inviato un link per reimpostare la password a {email}. Aprilo per impostare una nuova password, poi accedi.",
+  "forgotPasswordResendLink": "Invia di nuovo il link",
+  "forgotPasswordLinkSent": "Link di reimpostazione inviato.",
+  "forgotPasswordBackToSignIn": "Torna all'accesso",
   "forgotPasswordCheckEmail": "Controlla la tua email",
   "forgotPasswordSetNewPassword": "Imposta nuova password",
   "forgotPasswordSetNewSubtitle": "Scegli una password sicura per il tuo account",
@@ -2870,7 +2875,7 @@
   "forgotPasswordSendCode": "Invia codice",
   "forgotPasswordVerifyCode": "Verifica codice",
   "forgotPasswordResendCode": "Reinvia codice",
-  "forgotPasswordResendIn": "Reinvia codice tra {time}",
+  "forgotPasswordResendIn": "Reinvia tra {time}",
   "@forgotPasswordResendIn": {
     "placeholders": {
       "time": {

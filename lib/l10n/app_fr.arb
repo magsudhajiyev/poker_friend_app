@@ -3041,7 +3041,7 @@
   "forgotPasswordNewCodeSent": "Nouveau code envoyé à votre e-mail.",
   "forgotPasswordNewPassword": "Nouveau mot de passe",
   "forgotPasswordResendCode": "Renvoyer le code",
-  "forgotPasswordResendIn": "Renvoyer le code dans {time}",
+  "forgotPasswordResendIn": "Renvoyer dans {time}",
   "@forgotPasswordResendIn": {
     "placeholders": {
       "time": {
@@ -3050,7 +3050,12 @@
     }
   },
   "forgotPasswordResetButton": "Réinitialiser le mot de passe",
-  "forgotPasswordResetSubtitle": "Entrez votre e-mail pour recevoir un code de vérification",
+  "forgotPasswordResetSubtitle": "Saisissez votre e-mail pour recevoir un lien de réinitialisation",
+  "forgotPasswordSendLink": "Envoyer le lien de réinitialisation",
+  "forgotPasswordLinkSubtitle": "Nous avons envoyé un lien de réinitialisation du mot de passe à {email}. Ouvrez-le pour définir un nouveau mot de passe, puis connectez-vous.",
+  "forgotPasswordResendLink": "Renvoyer le lien",
+  "forgotPasswordLinkSent": "Lien de réinitialisation envoyé.",
+  "forgotPasswordBackToSignIn": "Retour à la connexion",
   "forgotPasswordResetSuccess": "Mot de passe réinitialisé avec succès ! Veuillez vous connecter.",
   "forgotPasswordResetTitle": "Réinitialiser le mot de passe",
   "forgotPasswordSendCode": "Envoyer le code",

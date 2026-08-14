@@ -2866,7 +2866,12 @@
     }
   },
   "forgotPasswordResetButton": "Zresetuj hasło",
-  "forgotPasswordResetSubtitle": "Wpisz swój e-mail, aby otrzymać kod weryfikacyjny",
+  "forgotPasswordResetSubtitle": "Podaj adres e-mail, aby otrzymać link do zresetowania hasła",
+  "forgotPasswordSendLink": "Wyślij link resetujący",
+  "forgotPasswordLinkSubtitle": "Wysłaliśmy link do zresetowania hasła na {email}. Otwórz go, ustaw nowe hasło, a następnie zaloguj się.",
+  "forgotPasswordResendLink": "Wyślij link ponownie",
+  "forgotPasswordLinkSent": "Link resetujący został wysłany.",
+  "forgotPasswordBackToSignIn": "Wróć do logowania",
   "forgotPasswordResetSuccess": "Hasło zresetowane pomyślnie! Proszę się zalogować.",
   "forgotPasswordResetTitle": "Resetowanie hasła",
   "forgotPasswordSendCode": "Wyślij kod",

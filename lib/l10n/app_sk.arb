@@ -2860,7 +2860,12 @@
   "forgotPasswordInvalidCode": "Neplatný alebo expirovaný kód. Skús to znova.",
   "forgotPasswordResetSuccess": "Heslo bolo úspešne zmenené! Prihlás sa.",
   "forgotPasswordResetTitle": "Obnovenie hesla",
-  "forgotPasswordResetSubtitle": "Zadaj svoj e-mail a dostaneš overovací kód",
+  "forgotPasswordResetSubtitle": "Zadajte svoj e-mail a dostanete odkaz na obnovenie hesla",
+  "forgotPasswordSendLink": "Odoslať odkaz na obnovenie",
+  "forgotPasswordLinkSubtitle": "Poslali sme odkaz na obnovenie hesla na {email}. Otvorte ho, nastavte nové heslo a potom sa prihláste.",
+  "forgotPasswordResendLink": "Znova odoslať odkaz",
+  "forgotPasswordLinkSent": "Odkaz na obnovenie bol odoslaný.",
+  "forgotPasswordBackToSignIn": "Späť na prihlásenie",
   "forgotPasswordCheckEmail": "Skontroluj si e-mail",
   "forgotPasswordSetNewPassword": "Nastav nové heslo",
   "forgotPasswordSetNewSubtitle": "Zvoľ si silné heslo pre svoj účet",
@@ -2870,7 +2875,7 @@
   "forgotPasswordSendCode": "Odoslať kód",
   "forgotPasswordVerifyCode": "Overiť kód",
   "forgotPasswordResendCode": "Znova odoslať kód",
-  "forgotPasswordResendIn": "Znova odoslať kód o {time}",
+  "forgotPasswordResendIn": "Znova odoslať o {time}",
   "@forgotPasswordResendIn": {
     "placeholders": {
       "time": {

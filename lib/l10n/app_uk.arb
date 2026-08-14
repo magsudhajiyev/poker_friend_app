@@ -2860,7 +2860,12 @@
   "forgotPasswordInvalidCode": "Недійсний або прострочений код. Спробуйте ще раз.",
   "forgotPasswordResetSuccess": "Пароль успішно скинуто! Будь ласка, увійдіть.",
   "forgotPasswordResetTitle": "Скинути пароль",
-  "forgotPasswordResetSubtitle": "Введіть свою пошту, щоб отримати код підтвердження",
+  "forgotPasswordResetSubtitle": "Введіть свою електронну пошту, щоб отримати посилання для скидання пароля",
+  "forgotPasswordSendLink": "Надіслати посилання для скидання",
+  "forgotPasswordLinkSubtitle": "Ми надіслали посилання для скидання пароля на {email}. Відкрийте його, встановіть новий пароль і увійдіть.",
+  "forgotPasswordResendLink": "Надіслати посилання ще раз",
+  "forgotPasswordLinkSent": "Посилання для скидання надіслано.",
+  "forgotPasswordBackToSignIn": "Повернутися до входу",
   "forgotPasswordCheckEmail": "Перевірте свою пошту",
   "forgotPasswordSetNewPassword": "Встановити новий пароль",
   "forgotPasswordSetNewSubtitle": "Виберіть надійний пароль для свого облікового запису",
@@ -2870,7 +2875,7 @@
   "forgotPasswordSendCode": "Надіслати код",
   "forgotPasswordVerifyCode": "Підтвердити код",
   "forgotPasswordResendCode": "Надіслати код повторно",
-  "forgotPasswordResendIn": "Повторно надіслати код через {time}",
+  "forgotPasswordResendIn": "Надіслати повторно через {time}",
   "@forgotPasswordResendIn": {
     "placeholders": {
       "time": {
