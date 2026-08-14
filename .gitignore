@@ -86,3 +86,4 @@ release-plan/
 legal/
 landing-page-features.md
 session_*.json
+.rc-webhook-auth.local

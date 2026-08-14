@@ -1,9 +1,10 @@
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
 import { onSchedule } from "firebase-functions/v2/scheduler";
+import { onRequest } from "firebase-functions/v2/https";
 import { defineSecret } from "firebase-functions/params";
 import { initializeApp } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
-import { getFirestore, FieldValue } from "firebase-admin/firestore";
+import { getFirestore, FieldValue, Timestamp } from "firebase-admin/firestore";
 import { getMessaging } from "firebase-admin/messaging";
 
 // Initialize Firebase Admin SDK
@@ -13,6 +14,9 @@ const db = getFirestore();
 const messaging = getMessaging();
 
 const revenuecatKey = defineSecret("REVENUECAT_SECRET_API_KEY");
+// Shared secret RevenueCat sends as the Authorization header on webhook
+// calls (configured in the RC dashboard webhook settings).
+const rcWebhookAuth = defineSecret("RC_WEBHOOK_AUTH");
 
 /**
  * Cloud Function: Send FCM push notification when a new user notification is created
@@ -354,5 +358,214 @@ export const cleanupOldTokens = onSchedule(
 
     await batch.commit();
     console.log(`Deleted ${oldTokensSnapshot.size} old FCM tokens`);
+  }
+);
+
+/**
+ * Social feed phase 4: "X is playing" push when a shared session goes live.
+ *
+ * Followers subscribe to topic `live_{userId}` at follow time
+ * (FollowService), so ONE topic message reaches everyone — no per-follower
+ * fan-out writes (audit B6 pattern). Fires on feed_sessions create; the doc
+ * may be a bare ensure-upsert (no sessionName) when the presence write
+ * failed, which is still the moment the session became visible.
+ */
+export const notifyFollowersOnSessionStart = onDocumentCreated(
+  "feed_sessions/{sessionId}",
+  async (event) => {
+    const data = event.data?.data();
+    const userId = data?.userId as string | undefined;
+    if (!userId) return;
+    // Never announce sessions that are already over (ensure-upsert created
+    // by publishSessionEnd after a fully-offline session).
+    if (data?.status === "ended") return;
+
+    const userName = (data?.userName as string) || "A player";
+    const sessionName = (data?.sessionName as string) || "";
+    const gameType = (data?.gameType as string) || "";
+    const detail = [sessionName, gameType].filter((s) => s.length > 0).join(" · ");
+
+    const notification = {
+      title: `${userName} is playing 🔴`,
+      body: detail.length > 0 ? detail : "Live session started",
+    };
+    const messageData = {
+      action: "view_feed",
+      sessionId: event.params.sessionId,
+      userId: userId,
+    };
+
+    try {
+      // PRIMARY: direct token fan-out. Topic delivery depends on every
+      // follower device having successfully subscribed client-side — which
+      // failed silently in the field (bug 2026-08-06). Tokens are
+      // server-registered on every app start, so this path is guaranteed
+      // for any device that can receive pushes at all.
+      const followsSnap = await db
+        .collection("follows")
+        .where("followedId", "==", userId)
+        .get();
+      const followerIds = followsSnap.docs
+        .map((d) => d.data().followerId as string | undefined)
+        .filter((id): id is string => typeof id === "string" && id.length > 0);
+
+      const tokens: string[] = [];
+      for (let i = 0; i < followerIds.length; i += 10) {
+        const chunk = followerIds.slice(i, i + 10);
+        const tokSnap = await db
+          .collection("fcm_tokens")
+          .where("userId", "in", chunk)
+          .get();
+        tokSnap.docs.forEach((d) => {
+          const t = (d.data().token as string) || d.id;
+          if (t) tokens.push(t);
+        });
+      }
+
+      // channelId MUST be the app's registered channel ("poker_events") —
+      // Android silently drops notifications sent to an unknown/blocked
+      // channel even when app notifications are allowed (bug 2026-08-06:
+      // this exact miss ate every went-live push).
+      const androidConfig = {
+        notification: {
+          channelId: "poker_events",
+          priority: "high" as const,
+          defaultSound: true,
+          defaultVibrateTimings: true,
+        },
+      };
+      const apnsConfig = { payload: { aps: { sound: "default" } } };
+
+      if (tokens.length > 0) {
+        for (let i = 0; i < tokens.length; i += 500) {
+          const resp = await messaging.sendEachForMulticast({
+            tokens: tokens.slice(i, i + 500),
+            notification,
+            data: messageData,
+            apns: apnsConfig,
+            android: androidConfig,
+          });
+          console.log(
+            `went-live multicast for ${userId}: ${resp.successCount}/${tokens.length} delivered`
+          );
+        }
+      } else {
+        console.log(`went-live: no follower tokens for ${userId}`);
+      }
+
+      // SECONDARY: topic send kept for devices whose token doc is missing
+      // but whose topic subscription survived.
+      await messaging.send({
+        topic: `live_${userId}`,
+        notification,
+        data: messageData,
+        apns: apnsConfig,
+        android: androidConfig,
+      });
+    } catch (error) {
+      console.error(`Went-live push failed for ${userId}:`, error);
+    }
+  }
+);
+
+/**
+ * RevenueCat webhook → mirror the subscription tier onto users/{uid}.
+ *
+ * Firestore rules cannot see RevenueCat entitlements, so paid-gated
+ * features (social feed) check the mirrored `subscriptionTier` +
+ * `subscriptionTierExpiresAt` on the user doc. Registered in the RC
+ * dashboard with the RC_WEBHOOK_AUTH value as the Authorization header.
+ *
+ * Strategy: on ANY event, re-fetch the subscriber from the RC REST API and
+ * derive the tier from active entitlements — no per-event-type logic, so
+ * renewals, cancellations, expirations, transfers and refunds all converge
+ * to the same source of truth.
+ */
+export const revenuecatWebhook = onRequest(
+  { secrets: [revenuecatKey, rcWebhookAuth] },
+  async (req, res) => {
+    if (req.method !== "POST") {
+      res.status(405).send("Method not allowed");
+      return;
+    }
+    if (req.headers.authorization !== rcWebhookAuth.value()) {
+      console.error("Webhook auth mismatch");
+      res.status(401).send("Unauthorized");
+      return;
+    }
+
+    // TRANSFER events carry transferred_from/transferred_to instead of
+    // app_user_id (review finding) — re-mirror EVERY affected uid so the
+    // old account's stale paid mirror is corrected immediately.
+    const event = req.body?.event ?? {};
+    const uids: string[] = [
+      event.app_user_id,
+      ...(Array.isArray(event.transferred_from) ? event.transferred_from : []),
+      ...(Array.isArray(event.transferred_to) ? event.transferred_to : []),
+    ].filter(
+      (id: unknown): id is string =>
+        typeof id === "string" && id.length > 0 && !id.startsWith("$RCAnonymousID:")
+    );
+    const appUserId = uids[0];
+    if (uids.length === 0) {
+      // Anonymous RC customers have no Firebase uid to mirror onto.
+      res.status(200).send("Ignored (no app user id)");
+      return;
+    }
+
+    try {
+      for (const uid of uids) {
+        const response = await fetch(
+          `https://api.revenuecat.com/v1/subscribers/${encodeURIComponent(uid)}`,
+          { headers: { "Authorization": `Bearer ${revenuecatKey.value()}` } }
+        );
+        if (!response.ok) {
+          const body = await response.text();
+          console.error(
+            `RC subscriber fetch failed for ${uid}: HTTP ${response.status} ${body}`
+          );
+          // Non-2xx → RevenueCat retries the webhook later.
+          res.status(502).send("RC fetch failed");
+          return;
+        }
+        const subscriber = (await response.json()).subscriber;
+        const entitlements: Record<string, { expires_date: string | null }> =
+          subscriber?.entitlements ?? {};
+
+        // Highest active entitlement wins; expires_date null = lifetime.
+        const now = Date.now();
+        const isActive = (id: string) => {
+          const e = entitlements[id];
+          if (!e) return false;
+          return e.expires_date === null || Date.parse(e.expires_date) > now;
+        };
+        const tier = isActive("club") ? "club"
+          : isActive("elite") ? "elite"
+          : isActive("pro") ? "pro"
+          : "free";
+
+        let expiresAt: Timestamp | null = null;
+        if (tier !== "free") {
+          const raw = entitlements[tier].expires_date;
+          expiresAt = raw === null
+            ? Timestamp.fromMillis(now + 100 * 365 * 24 * 3600 * 1000) // lifetime
+            : Timestamp.fromDate(new Date(raw));
+        }
+
+        await db.collection("users").doc(uid).set(
+          {
+            subscriptionTier: tier,
+            subscriptionTierExpiresAt: expiresAt,
+            tierSyncedAt: FieldValue.serverTimestamp(),
+          },
+          { merge: true }
+        );
+        console.log(`Mirrored tier for ${uid}: ${tier}`);
+      }
+      res.status(200).send("OK");
+    } catch (error) {
+      console.error(`Webhook processing failed for ${appUserId}:`, error);
+      res.status(500).send("Internal error");
+    }
   }
 );

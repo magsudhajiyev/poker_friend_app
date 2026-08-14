@@ -48,11 +48,28 @@ service cloud.firestore {
       allow write: if isSuperAdmin();
     }
 
+    // Fields on users/{uid} that only the RevenueCat webhook (Admin SDK,
+    // bypasses rules) or the super admin may write. Owners must NOT be able
+    // to set their own tier — it gates the paid social features.
+    function touchesTierFields() {
+      return request.resource.data.diff(
+        resource == null ? {} : resource.data
+      ).affectedKeys().hasAny(
+        ['subscriptionTier', 'subscriptionTierExpiresAt', 'tierSyncedAt']
+      );
+    }
+
     // Users collection - authenticated read (audit B8: was public — email
-    // scraping), owner or superAdmin write
+    // scraping), owner or superAdmin write; tier mirror fields are
+    // owner-immutable (see touchesTierFields). Delete MUST be its own
+    // clause: touchesTierFields reads request.resource.data, which is
+    // undefined on deletes — a combined `write` rule errors → denies and
+    // breaks account deletion (found in social-feed security review).
     match /users/{userId} {
       allow read: if isAuthenticated();
-      allow write: if isOwner(userId) || isSuperAdmin();
+      allow create, update: if isSuperAdmin() ||
+        (isOwner(userId) && !touchesTierFields());
+      allow delete: if isOwner(userId) || isSuperAdmin();
     }
 
     // User stats - owner or superAdmin can read, only owner can write
@@ -174,6 +191,32 @@ service cloud.firestore {
         allow create: if isAuthenticated();
         allow update, delete: if false;
       }
+
+      // Club invitations (fix 2026-08-06: this subcollection had NO rules
+      // after the launch-night hardening — the entire invite flow was
+      // silently permission-denied). Same access level as tables/events.
+      match /invitations/{invitationId} {
+        allow read, write: if isAuthenticated();
+      }
+    }
+
+    // Collection-group read for invitations — getPendingInvitations()
+    // queries across all clubs by (email, status); the nested rule above
+    // does not cover collection-group scope.
+    match /{path=**}/invitations/{invitationId} {
+      allow read: if isAuthenticated();
+    }
+
+    // Personal calendar events (Home "upcoming events" — fix 2026-08-06:
+    // no rules block existed, so every Home load logged permission-denied
+    // and the feature silently showed nothing). Owner-only.
+    match /poker_events/{eventId} {
+      allow read: if isSuperAdmin() ||
+        (isAuthenticated() && resource.data.userId == request.auth.uid);
+      allow create: if isAuthenticated() &&
+        request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAuthenticated() &&
+        resource.data.userId == request.auth.uid;
     }
 
     // Shared hands - public read for web viewer, authenticated create, admin delete
@@ -257,6 +300,132 @@ service cloud.firestore {
     match /support_requests/{requestId} {
       allow create: if isAuthenticated();
       allow read, update, delete: if isSuperAdmin();
+    }
+
+    // ── Social feed (docs/social-feed-spec.md) — PAID-ONLY feature ──
+
+    // Tier mirrored onto users/{uid} by the revenuecatWebhook function.
+    function hasMirroredPaidTier() {
+      return exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid))
+          .data.get('subscriptionTier', 'free') in ['pro', 'elite', 'club'] &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid))
+          .data.get('subscriptionTierExpiresAt', timestamp.value(0)) > request.time;
+    }
+
+    // Admin-granted tiers qualify too. A grant without expiresAt is
+    // permanent (mirrors PartnerGrantService client logic).
+    function hasActivePartnerGrant() {
+      return exists(/databases/$(database)/documents/partner_grants/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/partner_grants/$(request.auth.uid))
+          .data.get('status', '') == 'active' &&
+        (!('expiresAt' in get(/databases/$(database)/documents/partner_grants/$(request.auth.uid)).data) ||
+          get(/databases/$(database)/documents/partner_grants/$(request.auth.uid))
+            .data.expiresAt > request.time);
+    }
+
+    function hasSocialAccess() {
+      return isAuthenticated() &&
+        (hasMirroredPaidTier() || hasActivePartnerGrant());
+    }
+
+    // Follow graph. Doc id is '{followerId}_{followedId}' so a relationship
+    // is a single addressable doc (no queries needed for isFollowing).
+    match /follows/{followId} {
+      // Involved parties only — follower lists are not public in v1.
+      // get: authorize by doc ID, not resource.data — isFollowing() reads
+      // docs that may not exist, and resource is null then (live bug
+      // 2026-08-05: permission-denied on every not-yet-followed check).
+      allow get: if isAuthenticated() &&
+        (followId.split('_')[0] == request.auth.uid ||
+         followId.split('_')[1] == request.auth.uid);
+      allow list: if isAuthenticated() &&
+        (resource.data.followerId == request.auth.uid ||
+         resource.data.followedId == request.auth.uid);
+      allow create: if hasSocialAccess() &&
+        request.resource.data.followerId == request.auth.uid &&
+        request.resource.data.followedId is string &&
+        // No underscores: composite '{follower}_{followed}' ids must split
+        // into exactly two segments or the get-rule authorization skews
+        // (review finding; Firebase uids never contain '_').
+        request.resource.data.followedId.matches('[^_]+') &&
+        request.resource.data.followedId != request.auth.uid &&
+        followId == request.auth.uid + '_' + request.resource.data.followedId &&
+        !exists(/databases/$(database)/documents/blocks/$(request.resource.data.followedId + '_' + request.auth.uid));
+      allow update: if false;
+      // Follower unfollows; followed removes an unwanted follower.
+      allow delete: if isAuthenticated() &&
+        (resource.data.followerId == request.auth.uid ||
+         resource.data.followedId == request.auth.uid);
+    }
+
+    // True when the requester follows [ownerId] (single-doc existence
+    // check via the composite id — no query needed).
+    function isFollowerOf(ownerId) {
+      return exists(/databases/$(database)/documents/follows/$(request.auth.uid + '_' + ownerId));
+    }
+
+    // Sanitized, delay-stamped feed of a shared session (spec D6). Written
+    // ONLY by the owner (client dual-write); read by paid followers. The
+    // raw poker_sessions data is never follower-readable — only these
+    // sanitized copies, and hands/stack only once visibleAt has passed or
+    // the session ended (D5: recap unlocks everything).
+    match /feed_sessions/{sessionId} {
+      allow read: if isAuthenticated() &&
+        (resource.data.userId == request.auth.uid ||
+         (hasSocialAccess() && isFollowerOf(resource.data.userId)));
+      // Publishing is part of the PAID feature (spec D9): tier-gated
+      // server-side, not just in the setup-screen UI (review finding).
+      allow create: if hasSocialAccess() &&
+        request.resource.data.userId == request.auth.uid &&
+        request.resource.data.shareMode in ['no_cards', 'cards'];
+      allow update, delete: if isAuthenticated() &&
+        resource.data.userId == request.auth.uid;
+
+      function feedOwner() {
+        return get(/databases/$(database)/documents/feed_sessions/$(sessionId)).data.userId;
+      }
+      function feedEnded() {
+        return get(/databases/$(database)/documents/feed_sessions/$(sessionId)).data.get('status', '') == 'ended';
+      }
+
+      // ONE policy for both delayed subcollections (feed_hands, feed_stack)
+      // — a wildcard so the delay rule cannot silently diverge between them
+      // (review finding). visibleAt is REQUIRED and type-checked at write
+      // time; reads default a missing visibleAt to far-future (fail closed,
+      // not fail-error) so a malformed doc can never break recap access.
+      match /{feedChild}/{entryId} {
+        allow read: if isAuthenticated() &&
+          (feedOwner() == request.auth.uid ||
+           (hasSocialAccess() && isFollowerOf(feedOwner()) &&
+            (feedEnded() ||
+             request.time >= resource.data.get('visibleAt', timestamp.date(9999, 1, 1)))));
+        allow create, update: if hasSocialAccess() &&
+          feedOwner() == request.auth.uid &&
+          request.resource.data.visibleAt is timestamp;
+        // Owner cleanup (session delete cascades here; children first,
+        // then the parent — feedOwner() needs the parent alive).
+        allow delete: if isAuthenticated() && feedOwner() == request.auth.uid;
+      }
+    }
+
+    // Blocks. Doc id is '{blockerId}_{blockedId}'. Existence alone denies
+    // the blocked user's future follow creates (checked above); the client
+    // also deletes both follow directions when blocking.
+    match /blocks/{blockId} {
+      // get by doc ID (missing docs have null resource — see follows note).
+      allow get: if isAuthenticated() &&
+        blockId.split('_')[0] == request.auth.uid;
+      allow list: if isAuthenticated() &&
+        resource.data.blockerId == request.auth.uid;
+      allow create: if isAuthenticated() &&
+        request.resource.data.blockerId == request.auth.uid &&
+        request.resource.data.blockedId is string &&
+        request.resource.data.blockedId != request.auth.uid &&
+        blockId == request.auth.uid + '_' + request.resource.data.blockedId;
+      allow update: if false;
+      allow delete: if isAuthenticated() &&
+        resource.data.blockerId == request.auth.uid;
     }
   }
 }
