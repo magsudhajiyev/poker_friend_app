@@ -14,16 +14,21 @@ class DecimalInputFormatter extends TextInputFormatter {
 
   DecimalInputFormatter({this.signed = false});
 
+  static final RegExp _unsigned = RegExp(r'^\d*\.?\d*$');
+  static final RegExp _signed = RegExp(r'^-?\d*\.?\d*$');
+
   @override
   TextEditingValue formatEditUpdate(
       TextEditingValue oldValue, TextEditingValue newValue) {
     // 1:1 replacement keeps length identical, so selection stays valid.
     final text = newValue.text.replaceAll(',', '.');
-    final pattern = signed ? r'^-?\d*\.?\d*$' : r'^\d*\.?\d*$';
-    if (!RegExp(pattern).hasMatch(text)) {
+    if (!(signed ? _signed : _unsigned).hasMatch(text)) {
       return oldValue;
     }
-    return newValue.copyWith(text: text);
+    if (text == newValue.text) return newValue;
+    // Text was rewritten under the IME: drop the composing region so the
+    // keyboard's composing state can't point at content that changed.
+    return newValue.copyWith(text: text, composing: TextRange.empty);
   }
 }
 

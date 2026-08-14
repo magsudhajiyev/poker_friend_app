@@ -3927,28 +3927,26 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                       // Full-width Confirm button
                       GestureDetector(
                         onTap: () {
-                          final text = amountController.text.trim();
-                          double? amount;
-                          try {
-                            amount = double.parse(text.replaceAll(',', '.'));
-                            if (amount < effectiveMinBet || amount > maxBet) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    l10n.pokerHandAmountBetween(
-                              effectiveMinBet.toStringAsFixed(widget.gameType == GameType.cash ? 2 : 0),
-                              maxBet.toStringAsFixed(widget.gameType == GameType.cash ? 2 : 0),
-                            ),
-                                  ),
-                                  backgroundColor: Colors.red,
-                                ),
-                              );
-                              return;
-                            }
-                          } catch (e) {
+                          final amount =
+                              parseDecimal(amountController.text);
+                          if (amount == null) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text(l10n.handPleaseEnterValidNumber),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                            return;
+                          }
+                          if (amount < effectiveMinBet || amount > maxBet) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  l10n.pokerHandAmountBetween(
+                            effectiveMinBet.toStringAsFixed(widget.gameType == GameType.cash ? 2 : 0),
+                            maxBet.toStringAsFixed(widget.gameType == GameType.cash ? 2 : 0),
+                          ),
+                                ),
                                 backgroundColor: Colors.red,
                               ),
                             );

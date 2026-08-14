@@ -218,10 +218,10 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
   void _startSession() {
     if (!_isFormValid) return;
 
-    final buyIn = double.parse(_buyInController.text);
+    final buyIn = parseDecimal(_buyInController.text) ?? 0.0;
     final startingStack = _gameType == GameType.cash
         ? buyIn
-        : double.parse(_startingStackController.text);
+        : parseDecimal(_startingStackController.text) ?? 0.0;
     final l10n = AppLocalizations.of(context);
     final sessionName = _sessionNameController.text.isNotEmpty
         ? _sessionNameController.text

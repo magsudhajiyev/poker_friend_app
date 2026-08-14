@@ -1071,12 +1071,8 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
         
         // Parse and store stack size
         final stackText = stackControllers[seat]?.text ?? '0';
-        double stackSize = 0.0;
-        try {
-          stackSize = double.parse(stackText.replaceAll(',', '.'));
-        } catch (e) {
-          stackSize = widget.isCashGame ? 100.0 : 1500.0; // Default values
-        }
+        final stackSize =
+            parseDecimal(stackText) ?? (widget.isCashGame ? 100.0 : 1500.0);
         playerStacks[seat] = stackSize;
       } else {
         widget.sessionManager.removePlayer(seat);

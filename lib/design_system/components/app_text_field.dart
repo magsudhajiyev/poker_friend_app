@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../constants/colors.dart';
 
@@ -19,6 +20,7 @@ class AppTextField extends StatefulWidget {
     required this.controller,
     this.focusNode,
     this.keyboardType = TextInputType.text,
+    this.inputFormatters,
     this.textInputAction,
     this.maxLines = 1,
     this.minLines = 1,
@@ -34,6 +36,7 @@ class AppTextField extends StatefulWidget {
   final TextEditingController controller;
   final FocusNode? focusNode;
   final TextInputType keyboardType;
+  final List<TextInputFormatter>? inputFormatters;
   final TextInputAction? textInputAction;
   final int maxLines;
   final int minLines;
@@ -128,6 +131,7 @@ class _AppTextFieldState extends State<AppTextField> {
                   focusNode: _focusNode,
                   autofocus: widget.autofocus,
                   keyboardType: widget.keyboardType,
+                  inputFormatters: widget.inputFormatters,
                   textInputAction: widget.textInputAction,
                   maxLines: widget.maxLines,
                   minLines: widget.minLines,

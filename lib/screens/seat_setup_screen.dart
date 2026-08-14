@@ -1048,12 +1048,9 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
         widget.sessionManager?.addPlayer(seat, name);
 
         final stackText = stackControllers[seat]?.text ?? '0';
-        double stackSize = 0.0;
-        try {
-          stackSize = double.parse(stackText.replaceAll(',', '.'));
-        } catch (e) {
-          stackSize = widget.startingStack ?? (widget.isCashGame ? 100.0 : 1500.0);
-        }
+        final stackSize = parseDecimal(stackText) ??
+            widget.startingStack ??
+            (widget.isCashGame ? 100.0 : 1500.0);
         playerStacks[seat] = stackSize;
         widget.sessionManager?.setPlayerStack(seat, stackSize);
       } else {
