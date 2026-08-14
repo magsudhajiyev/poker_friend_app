@@ -11,6 +11,7 @@ import '../models/account_type.dart';
 import 'app_data_cache.dart';
 import 'currency_service.dart';
 import 'fcm_service.dart';
+import 'locale_service.dart';
 import 'logger_service.dart';
 import 'partner_grant_service.dart';
 import 'subscription_service.dart';
@@ -874,6 +875,13 @@ class AuthService {
   // Send password reset email
   static Future<void> sendPasswordReset(String email) async {
     try {
+      // Localize Firebase's email (and the lang= param on the reset link,
+      // which the finaltable.io/reset_password page reads). Null = app
+      // follows the system locale; let Firebase fall back to its default.
+      final locale = LocaleService.currentLocaleCode;
+      if (locale != null) {
+        await _auth.setLanguageCode(locale);
+      }
       await _auth.sendPasswordResetEmail(email: email);
       unawaited(LoggerService.debug('Password reset email sent to: $email'));
     } on FirebaseAuthException catch (e) {
