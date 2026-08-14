@@ -23,6 +23,7 @@ import '../design_system/constants/decorations.dart';
 import '../design_system/components/buttons/primary_pill_button.dart';
 import '../design_system/components/buttons/outlined_pill_button.dart';
 import '../design_system/components/app_toggle.dart';
+import '../utils/decimal_input.dart';
 
 class SeatSetupScreen extends StatefulWidget {
   final int? playerCount;
@@ -655,6 +656,7 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                             enabled: !_areSeatChangesLocked(),
                             keyboardType: TextInputType.numberWithOptions(
                                 decimal: widget.isCashGame),
+                            inputFormatters: [DecimalInputFormatter()],
                             style: AppTypography.ibm(
                               fontSize: 15,
                               color: AppColors.textInverse,
@@ -1048,7 +1050,7 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
         final stackText = stackControllers[seat]?.text ?? '0';
         double stackSize = 0.0;
         try {
-          stackSize = double.parse(stackText);
+          stackSize = double.parse(stackText.replaceAll(',', '.'));
         } catch (e) {
           stackSize = widget.startingStack ?? (widget.isCashGame ? 100.0 : 1500.0);
         }

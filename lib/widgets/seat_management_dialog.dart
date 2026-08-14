@@ -11,6 +11,7 @@ import '../design_system/constants/colors.dart';
 import '../design_system/constants/decorations.dart';
 import '../design_system/components/app_toggle.dart';
 import '../utils/user_facing_error.dart';
+import '../utils/decimal_input.dart';
 
 class SeatManagementDialog extends StatefulWidget {
   final int playerCount;
@@ -899,6 +900,7 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
                                           child: TextField(
                                             controller: stackControllers[seatNumber],
                                             keyboardType: TextInputType.numberWithOptions(decimal: widget.isCashGame),
+                                            inputFormatters: [DecimalInputFormatter()],
                                             style: TextStyle(color: Colors.white, fontSize: 16),
                                             decoration: InputDecoration(
                                               labelText: widget.isCashGame ? l10n.seatManagementBuyInAmountCash : l10n.seatManagementStartingChips,
@@ -1071,7 +1073,7 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
         final stackText = stackControllers[seat]?.text ?? '0';
         double stackSize = 0.0;
         try {
-          stackSize = double.parse(stackText);
+          stackSize = double.parse(stackText.replaceAll(',', '.'));
         } catch (e) {
           stackSize = widget.isCashGame ? 100.0 : 1500.0; // Default values
         }

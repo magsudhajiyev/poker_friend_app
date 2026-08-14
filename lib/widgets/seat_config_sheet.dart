@@ -11,6 +11,7 @@ import '../design_system/components/buttons/outlined_pill_button.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/decorations.dart';
 import '../design_system/constants/typography.dart';
+import '../utils/decimal_input.dart';
 
 class SeatConfigSheet extends StatefulWidget {
   final int seatNumber;
@@ -193,7 +194,7 @@ class _SeatConfigSheetState extends State<SeatConfigSheet> {
     final stackText = _stackController.text.trim();
     final stack = stackText.isEmpty
         ? widget.defaultStack
-        : (double.tryParse(stackText) ?? widget.defaultStack);
+        : (parseDecimal(stackText) ?? widget.defaultStack);
     final name = _isHero && widget.heroName.isNotEmpty
         ? widget.heroName
         : _nameController.text.trim();
@@ -568,10 +569,8 @@ class _SeatConfigSheetState extends State<SeatConfigSheet> {
                         controller: _stackController,
                         focusNode: _stackFocusNode,
                         keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        inputFormatters: [DecimalInputFormatter()],
                         textInputAction: TextInputAction.done,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
-                        ],
                         style: AppTypography.ibm(
                             fontSize: 15, color: AppColors.textPrimary),
                         decoration: InputDecoration(

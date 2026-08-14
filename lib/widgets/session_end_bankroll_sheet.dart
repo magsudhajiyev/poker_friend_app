@@ -11,6 +11,7 @@ import '../services/currency_service.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/typography.dart';
 import '../design_system/constants/decorations.dart';
+import '../utils/decimal_input.dart';
 
 /// Shows session-end bankroll sheet using FormDrawer.
 /// Cash: editable pre-filled profit + total invested.
@@ -44,9 +45,9 @@ class SessionEndBankrollSheet {
     Future<void> handleSave(BuildContext sheetCtx) async {
       double profit;
       if (isCash) {
-        profit = double.tryParse(amountController.text) ?? 0.0;
+        profit = parseDecimal(amountController.text) ?? 0.0;
       } else {
-        final prize = double.tryParse(prizeController.text) ?? 0.0;
+        final prize = parseDecimal(prizeController.text) ?? 0.0;
         profit = prize - totalBuyIn;
       }
 
@@ -55,7 +56,7 @@ class SessionEndBankrollSheet {
         amount: profit,
         gameType: isCash ? 'cash' : 'tournament',
         buyInAmount: totalBuyIn,
-        prizeWon: isCash ? null : (double.tryParse(prizeController.text) ?? 0.0),
+        prizeWon: isCash ? null : (parseDecimal(prizeController.text) ?? 0.0),
         finishedPlace: isCash ? null : int.tryParse(positionController.text),
         fieldSize: isCash ? null : int.tryParse(fieldSizeController.text),
         durationMinutes: durationMinutes,
@@ -67,7 +68,7 @@ class SessionEndBankrollSheet {
         'profitLoss': profit,
         'finishedPlace': isCash ? null : int.tryParse(positionController.text),
         'fieldSize': isCash ? null : int.tryParse(fieldSizeController.text),
-        'prizeWon': isCash ? null : (double.tryParse(prizeController.text) ?? 0.0),
+        'prizeWon': isCash ? null : (parseDecimal(prizeController.text) ?? 0.0),
       };
 
       if (sheetCtx.mounted) {
@@ -163,7 +164,7 @@ class _CashBodyState extends State<_CashBody> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final profit = double.tryParse(widget.amountController.text) ?? 0.0;
+    final profit = parseDecimal(widget.amountController.text) ?? 0.0;
     final isPositive = profit >= 0;
 
     return Container(
@@ -219,6 +220,9 @@ class _CashBodyState extends State<_CashBody> {
                               signed: true,
                               decimal: true,
                             ),
+                            inputFormatters: [
+                              DecimalInputFormatter(signed: true),
+                            ],
                             textInputAction: TextInputAction.done,
                             style: AppTypography.mono(
                               fontSize: 28,
@@ -314,7 +318,7 @@ class _TournamentBodyState extends State<_TournamentBody> {
   }
 
   void _recalculate() {
-    final prize = double.tryParse(widget.prizeController.text) ?? 0.0;
+    final prize = parseDecimal(widget.prizeController.text) ?? 0.0;
     setState(() {
       _calculatedProfit = prize - widget.totalBuyIn;
     });
@@ -438,6 +442,7 @@ class _TournamentBodyState extends State<_TournamentBody> {
             child: TextField(
               controller: controller,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              inputFormatters: [DecimalInputFormatter()],
               textInputAction: TextInputAction.done,
               textAlign: TextAlign.right,
               style: AppTypography.ibm(

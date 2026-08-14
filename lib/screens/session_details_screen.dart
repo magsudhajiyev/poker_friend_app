@@ -34,6 +34,7 @@ import 'poker_hand_screen.dart';
 import 'home_screen.dart';
 import '../widgets/main_shell.dart';
 import '../utils/user_facing_error.dart';
+import '../utils/decimal_input.dart';
 
 class SessionDetailsScreen extends StatefulWidget {
   final String sessionName;
@@ -698,7 +699,7 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
       title: l10n.individualUpdateCurrentStack,
       heightFraction: 0.62,
       onSave: () {
-        final value = double.tryParse(newStackController.text);
+        final value = parseDecimal(newStackController.text);
         if (value != null) {
           result = {
             'stack': value,
@@ -747,6 +748,7 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
                 controller: newStackController,
                 autofocus: true,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                inputFormatters: [DecimalInputFormatter()],
                 style: AppTypography.ibm(
                   fontSize: 17,
                   color: Colors.white,
@@ -965,7 +967,7 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
             controller: ctrl,
             autofocus: autofocus,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[\d.]'))],
+            inputFormatters: [DecimalInputFormatter()],
             style: AppTypography.ibm(
               fontSize: 15,
               color: AppColors.textPrimary,
@@ -1027,8 +1029,8 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
               child: PrimaryPillButton(
                 label: l10n.commonApply,
                 onTap: () {
-                  final sb = double.tryParse(smallBlindController.text);
-                  final bb = double.tryParse(bigBlindController.text);
+                  final sb = parseDecimal(smallBlindController.text);
+                  final bb = parseDecimal(bigBlindController.text);
                   if (sb != null && bb != null && sb > 0 && bb >= sb) {
                     Navigator.pop(ctx, {'smallBlind': sb, 'bigBlind': bb});
                   }
@@ -1364,6 +1366,7 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
             prefixText: CurrencyService.prefixText,
             suffixText: CurrencyService.suffixText,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            inputFormatters: [DecimalInputFormatter()],
             autofocus: true,
           ),
           if (isTournament) ...[
@@ -1373,6 +1376,7 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
               label: l10n.individualAddOnChips,
               keyboardType:
                   const TextInputType.numberWithOptions(decimal: true),
+              inputFormatters: [DecimalInputFormatter()],
             ),
           ],
         ],
@@ -1383,10 +1387,10 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
         confirmTextColor: AppColors.textInverse,
         autoDismiss: false,
         onConfirm: () {
-          final price = double.tryParse(priceController.text);
+          final price = parseDecimal(priceController.text);
           if (price == null || price <= 0) return;
           if (isTournament) {
-            final chips = double.tryParse(chipsController.text);
+            final chips = parseDecimal(chipsController.text);
             if (chips == null || chips <= 0) return;
             Navigator.pop(context, {'price': price, 'chips': chips});
           } else {
@@ -1459,6 +1463,7 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
             suffixText: CurrencyService.suffixText,
             keyboardType:
                 const TextInputType.numberWithOptions(decimal: true),
+            inputFormatters: [DecimalInputFormatter()],
             autofocus: true,
           ),
           if (widget.gameType == GameType.tournament) ...[
@@ -1469,6 +1474,7 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
               hintText: l10n.individualChipCountAfterRebuy,
               keyboardType:
                   const TextInputType.numberWithOptions(decimal: true),
+              inputFormatters: [DecimalInputFormatter()],
             ),
           ],
           const SizedBox(height: 20),
@@ -1518,7 +1524,7 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
         confirmTextColor: AppColors.textInverse,
         autoDismiss: false,
         onConfirm: () {
-          final rebuyAmount = double.tryParse(rebuyAmountController.text);
+          final rebuyAmount = parseDecimal(rebuyAmountController.text);
           if (rebuyAmount == null || rebuyAmount <= 0) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -1534,7 +1540,7 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
               'newStack': rebuyAmount,
             });
           } else {
-            final stackSize = double.tryParse(stackSizeController.text);
+            final stackSize = parseDecimal(stackSizeController.text);
             if (stackSize == null || stackSize <= 0) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(

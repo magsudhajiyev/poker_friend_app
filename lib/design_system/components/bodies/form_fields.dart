@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../constants/colors.dart';
 import '../../constants/decorations.dart';
@@ -18,6 +19,7 @@ class AppFormField extends StatelessWidget {
   final String? prefixText;
   final String? suffixText;
   final TextInputType? keyboardType;
+  final List<TextInputFormatter>? inputFormatters;
   final bool autofocus;
   final int? maxLines;
   final ValueChanged<String>? onChanged;
@@ -30,6 +32,7 @@ class AppFormField extends StatelessWidget {
     this.prefixText,
     this.suffixText,
     this.keyboardType,
+    this.inputFormatters,
     this.autofocus = false,
     this.maxLines = 1,
     this.onChanged,
@@ -51,6 +54,7 @@ class AppFormField extends StatelessWidget {
         TextField(
           controller: controller,
           keyboardType: keyboardType,
+          inputFormatters: inputFormatters,
           autofocus: autofocus,
           maxLines: maxLines,
           onChanged: onChanged,

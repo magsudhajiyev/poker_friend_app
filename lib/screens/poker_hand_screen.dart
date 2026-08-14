@@ -57,6 +57,7 @@ import '../onboarding/onboarding_progress_bar.dart';
 import '../onboarding/guided_hand_overlay.dart';
 import 'session_history_screen.dart';
 import '../utils/user_facing_error.dart';
+import '../utils/decimal_input.dart';
 
 class PokerHandScreen extends StatefulWidget {
   final double smallBlind;
@@ -784,7 +785,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
             controller: ctrl,
             autofocus: autofocus,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[\d.]'))],
+            inputFormatters: [DecimalInputFormatter()],
             style: AppTypography.ibm(
               fontSize: 15,
               color: AppColors.textPrimary,
@@ -846,9 +847,9 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
               child: PrimaryPillButton(
                 label: l10n.commonApply,
                 onTap: () {
-                  final sb = double.tryParse(sbController.text) ??
+                  final sb = parseDecimal(sbController.text) ??
                       gameState.smallBlind;
-                  final bb = double.tryParse(bbController.text) ??
+                  final bb = parseDecimal(bbController.text) ??
                       gameState.bigBlind;
                   Navigator.pop(
                       ctx, {'sb': sb, 'bb': bb >= sb ? bb : sb});
@@ -1214,7 +1215,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
           ),
           TextButton(
             onPressed: () {
-              final newStack = double.tryParse(controller.text);
+              final newStack = parseDecimal(controller.text);
               if (newStack != null && newStack >= 0) {
                 setState(() {
                   gameState.setPlayerStack(player, newStack);
@@ -3869,6 +3870,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                       keyboardType: TextInputType.numberWithOptions(
                         decimal: widget.gameType == GameType.cash,
                       ),
+                      inputFormatters: [DecimalInputFormatter()],
                       style: AppTypography.ibm(
                         color: Colors.white,
                         fontSize: 24,
@@ -3928,7 +3930,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                           final text = amountController.text.trim();
                           double? amount;
                           try {
-                            amount = double.parse(text);
+                            amount = double.parse(text.replaceAll(',', '.'));
                             if (amount < effectiveMinBet || amount > maxBet) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
@@ -7661,6 +7663,7 @@ class _BustedPlayerDialogState extends State<_BustedPlayerDialog> {
               child: TextField(
                 controller: _amountController,
                 keyboardType: TextInputType.numberWithOptions(decimal: widget.isCashGame),
+                inputFormatters: [DecimalInputFormatter()],
                 style: AppTypography.ibm(
                   color: AppColors.textDisabled,
                   fontSize: 17,
@@ -7688,7 +7691,7 @@ class _BustedPlayerDialogState extends State<_BustedPlayerDialog> {
                 Expanded(
                   child: GestureDetector(
                     onTap: () {
-                      double amount = double.tryParse(_amountController.text) ?? 100.0;
+                      double amount = parseDecimal(_amountController.text) ?? 100.0;
                       Navigator.pop(context, {
                         'action': 'rebuy',
                         'amount': amount,
@@ -7750,7 +7753,7 @@ class _BustedPlayerDialogState extends State<_BustedPlayerDialog> {
             // Confirm button
             GestureDetector(
               onTap: () {
-                double amount = double.tryParse(_amountController.text) ?? 100.0;
+                double amount = parseDecimal(_amountController.text) ?? 100.0;
                 Navigator.pop(context, {
                   'action': 'rebuy',
                   'amount': amount,
@@ -7806,8 +7809,8 @@ class _RebuyBody extends StatefulWidget {
 
 class _RebuyBodyState extends State<_RebuyBody> {
   void _save() {
-    final rebuyAmount = double.tryParse(widget.rebuyAmountController.text);
-    final stackSize = double.tryParse(widget.stackSizeController.text);
+    final rebuyAmount = parseDecimal(widget.rebuyAmountController.text);
+    final stackSize = parseDecimal(widget.stackSizeController.text);
 
     if (rebuyAmount != null && stackSize != null && rebuyAmount > 0 && stackSize > 0) {
       Navigator.pop(context);
@@ -7850,6 +7853,7 @@ class _RebuyBodyState extends State<_RebuyBody> {
             child: TextField(
               controller: widget.rebuyAmountController,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              inputFormatters: [DecimalInputFormatter()],
               style: AppTypography.ibm(
                 fontSize: 17,
                 color: Colors.white,
@@ -7887,6 +7891,7 @@ class _RebuyBodyState extends State<_RebuyBody> {
             child: TextField(
               controller: widget.stackSizeController,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              inputFormatters: [DecimalInputFormatter()],
               style: AppTypography.ibm(
                 fontSize: 17,
                 color: Colors.white,
