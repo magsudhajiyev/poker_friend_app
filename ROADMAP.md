@@ -27,21 +27,31 @@ Launch-window operational notes:
 **HARD DEADLINE Aug 31, 2026** — Google Play rejects app UPDATES on Billing
 Library < 8.0.0 after this date.
 
-1. **Google Play Billing Library 8 migration** ⏰ — CODE SHIPPED 2026-08-05:
+1. **Google Play Billing Library 8 migration** — ✅ DONE, released in v2.1.1+15
+   (2026-08-14) after on-device sandbox verification. Original notes:
    `purchases_flutter` ^9.15.1, Gradle bundles `billingclient:billing:8.0.0`
    (verified in dependency tree), SDK isolated in `revenuecat_client.dart`,
    pure tier logic in `subscription_logic.dart`, 24 unit tests green.
    ⚠️ REMAINING before next store release: on-device sandbox matrix — all 6
    packages, restore, cancel-and-repurchase override, external cancellation
    on resume, promo entitlement flow (checklist in the 2026-08-05 session).
-2. **Forgot-password is BROKEN in production** (audit B9) — the live screen
+2. **Forgot-password** — ✅ FIXED 2026-08-15 (commit d40a9e3): switched to
+   Firebase's built-in `sendPasswordResetEmail`; custom `password_reset_codes`
+   flow deleted; branded action page live at finaltable.io/reset_password
+   (final-table-web repo). Remaining console steps: public-facing name,
+   action URL, sender domain. Original description: the live screen
    uses the custom `password_reset_codes` flow which Firestore rules deny.
    Users cannot reset passwords today. Cheapest: switch
    `forgot_password_screen.dart` to Firebase's built-in
    `sendPasswordResetEmail` (wrapped at `auth_service.dart:877`), then style
    the Firebase email template (todo/21). Proper: server-side custom-code
    flow via Cloud Function.
-3. **Club rules hardening** (audit B5, deferred): members can still write
+3. **Club rules hardening** (audit B5) — CODE READY 2026-08-15 (uncommitted
+   deploy): members/invitations rules rewritten (no owner-role minting,
+   invitee-only accept/decline, staff-gated invites via dealers/{uid});
+   validated, NOT yet deployed — deploy together with the club smoke test
+   below. Residual gap (documented in rules): dealers docs are self-writable,
+   so full enforcement still needs server-side redemption. Original: members can still write
    `role: 'owner'` on their own member doc. Rules-only fix breaks admin/
    owner invitation redemption (`invitation_service.dart:191`) — needs
    server-validated invitations (Cloud Function or rules `get()` against the

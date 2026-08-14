@@ -159,13 +159,48 @@ service cloud.firestore {
       allow update, delete: if isSuperAdmin() ||
         (isAuthenticated() && resource.data.ownerId == request.auth.uid);
 
-      // Club members subcollection
+      function isClubOwner() {
+        return isAuthenticated() &&
+          get(/databases/$(database)/documents/clubs/$(clubId)).data.ownerId == request.auth.uid;
+      }
+
+      // Dealer/admin ACTOR gate via the uid-keyed dealers/{uid} doc (member
+      // docs have random ids, so an actor's club role can't be looked up
+      // directly). dealers docs are self-writable (redemption needs it), so
+      // this raises the bar rather than being tamper-proof — the complete
+      // fix is server-side (Cloud Function) invitation redemption (B5).
+      function isClubStaff() {
+        return isAuthenticated() &&
+          exists(/databases/$(database)/documents/dealers/$(request.auth.uid)) &&
+          get(/databases/$(database)/documents/dealers/$(request.auth.uid))
+            .data.get('clubIds', []).hasAny([clubId]);
+      }
+
+      // Club members subcollection. Docs are created with RANDOM ids by
+      // every code path; the user is identified by the userId FIELD (the
+      // old `memberId == request.auth.uid` self-clause never matched).
       match /members/{memberId} {
         allow read: if isAuthenticated();
-        allow create: if isAuthenticated();
-        allow update, delete: if isAuthenticated() &&
-          (memberId == request.auth.uid ||
-           get(/databases/$(database)/documents/clubs/$(clubId)).data.ownerId == request.auth.uid);
+        // Audit B5: nobody mints an 'owner' member doc except the club
+        // owner or super admin (was: any authenticated user, any role).
+        // Self-create with a non-owner role keeps invitation redemption
+        // and QR seat self-join working for shipped clients; club staff
+        // may seat OTHER users as plain players (dealer mode).
+        allow create: if isSuperAdmin() || isClubOwner() ||
+          (isAuthenticated() &&
+            request.resource.data.userId == request.auth.uid &&
+            request.resource.data.role in ['player', 'dealer', 'admin']) ||
+          (isClubStaff() && request.resource.data.role == 'player');
+        // Role changes stay owner-only; a member may edit their own doc
+        // (matched by userId field) as long as the role is untouched.
+        allow update: if isSuperAdmin() || isClubOwner() ||
+          (isAuthenticated() &&
+            resource.data.userId == request.auth.uid &&
+            request.resource.data.role == resource.data.role);
+        // Owner removes members; a member may remove THEMSELVES (leave
+        // club) — by userId field, which the old id-based clause intended.
+        allow delete: if isSuperAdmin() || isClubOwner() ||
+          (isAuthenticated() && resource.data.userId == request.auth.uid);
       }
 
       // Club tables
@@ -194,9 +229,28 @@ service cloud.firestore {
 
       // Club invitations (fix 2026-08-06: this subcollection had NO rules
       // after the launch-night hardening — the entire invite flow was
-      // silently permission-denied). Same access level as tables/events.
+      // silently permission-denied). Hardened for audit B5: was open
+      // read/write to any authenticated user.
       match /invitations/{invitationId} {
-        allow read, write: if isAuthenticated();
+        allow read: if isAuthenticated();
+        // Only club staff invite; never for the 'owner' role; invitedBy
+        // must be the actor (delete/resend authorization keys off it).
+        allow create: if isSuperAdmin() ||
+          ((isClubOwner() || isClubStaff()) &&
+            request.resource.data.invitedBy == request.auth.uid &&
+            request.resource.data.status == 'pending' &&
+            request.resource.data.role in ['player', 'dealer', 'admin']);
+        // The INVITEE accepts/declines their own invitation (email is
+        // stored lowercased at create), touching only the status fields.
+        allow update: if isSuperAdmin() ||
+          (isAuthenticated() &&
+            resource.data.email == request.auth.token.email.lower() &&
+            request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly(['status', 'acceptedAt', 'declinedAt']) &&
+            request.resource.data.status in ['accepted', 'declined']);
+        // The inviter cancels/resends; the owner cleans up anything.
+        allow delete: if isSuperAdmin() || isClubOwner() ||
+          (isAuthenticated() && resource.data.invitedBy == request.auth.uid);
       }
     }
 
