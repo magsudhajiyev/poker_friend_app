@@ -14,6 +14,7 @@ import 'user_stats_service.dart';
 import 'app_data_cache.dart';
 import 'subscription_service.dart';
 import 'free_tier_limits.dart';
+import 'analytics_service.dart';
 
 class FirebaseService {
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -301,6 +302,11 @@ class FirebaseService {
           .collection(_handsCollection)
           .doc(handDocId)
           .set(handData);
+
+      AnalyticsService.capture('hand_logged', {
+        'is_scouted': isScouted,
+        if (gameType != null) 'game_type': gameType,
+      });
 
       // Update session total hands count
       await _firestore.collection(_sessionsCollection).doc(sessionId).update({

@@ -75,6 +75,7 @@ import '../services/display_identity_service.dart';
 import '../services/logger_service.dart';
 import '../l10n/app_localizations.dart';
 import '../utils/user_facing_error.dart';
+import '../services/analytics_service.dart';
 
 /// Home screen
 class HomeScreen extends StatefulWidget {
@@ -194,6 +195,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       // flag pending — congratulate once, before any other Home overlay.
       if (await OnboardingPrefs.isPromoCongratsPending()) {
         await OnboardingPrefs.clearPromoCongratsPending();
+        AnalyticsService.capture('promo_redeemed');
         if (!mounted) return;
         await showPromoCongratsDialog(context);
         if (!mounted) return;

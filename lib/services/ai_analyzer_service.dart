@@ -7,6 +7,7 @@ import '../config/env_config.dart';
 import 'auth_service.dart';
 import 'locale_service.dart';
 import 'logger_service.dart';
+import 'analytics_service.dart';
 
 class AIAnalyzerService {
   static String get _apiKey => EnvConfig.aiApiKey;
@@ -99,6 +100,7 @@ class AIAnalyzerService {
 
       if (response.statusCode == 200) {
         final responseJson = jsonDecode(response.body) as Map<String, dynamic>;
+        AnalyticsService.capture('ai_analysis_used');
         // Carried through so saveAnalysis can persist the voice this
         // analysis was written in (mirrors the 'language' field).
         if (experienceLevel != null) {

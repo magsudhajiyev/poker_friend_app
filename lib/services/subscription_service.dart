@@ -8,6 +8,7 @@ import 'logger_service.dart';
 import 'partner_grant_service.dart';
 import 'revenuecat_client.dart';
 import 'subscription_logic.dart' as logic;
+import 'analytics_service.dart';
 
 /// Service for managing subscriptions via RevenueCat
 ///
@@ -387,6 +388,10 @@ class SubscriptionService {
 
     if (isPremium) {
       await LoggerService.info('Purchase successful - Tier: $currentTier');
+      AnalyticsService.capture('subscribed', {
+        'package_id': package.identifier,
+        'tier': currentTier,
+      });
       unawaited(LoggerService.logEvent('purchase_success', parameters: {
         'package_id': package.identifier,
         'tier': currentTier,

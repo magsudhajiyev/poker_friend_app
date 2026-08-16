@@ -36,6 +36,10 @@ class EnvConfig {
   static String get aiApiKey =>
       dotenv.env['AI_API_KEY'] ?? '';
 
+  /// PostHog project API key (public token, safe to ship)
+  static String get posthogApiKey =>
+      dotenv.env['POSTHOG_API_KEY'] ?? '';
+
   // ==================== Server URLs ====================
 
   /// WebSocket server URL for real-time communication

@@ -20,6 +20,7 @@ import '../services/auth_service.dart';
 import '../services/logger_service.dart';
 import '../design_system/constants/decorations.dart';
 import 'auth_screen_experimental.dart';
+import '../services/analytics_service.dart';
 
 /// Paywall screen showing subscription plan selection.
 ///
@@ -57,6 +58,11 @@ class PaywallScreen extends StatefulWidget {
     bool launchPromo = false,
     bool mockPurchase = false,
   }) {
+    AnalyticsService.capture('paywall_opened', {
+      if (featureName != null) 'feature': featureName,
+      if (preselectedTier != null) 'preselected_tier': preselectedTier,
+      'launch_promo': launchPromo,
+    });
     return Navigator.of(context).push<bool>(
       MaterialPageRoute(
         fullscreenDialog: true,

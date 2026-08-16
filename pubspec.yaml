@@ -59,6 +59,7 @@ dependencies:
   tutorial_coach_mark: ^1.2.11  # Onboarding tour
   url_launcher: ^6.2.5  # Open URLs in browser (T&C, privacy policy)
   video_player: ^2.9.3  # Loading screen video animation
+  posthog_flutter: ^5.36.2
 
 dependency_overrides:
   # Fix Linux plugin incompatibility (not needed for iOS/Android/macOS development)

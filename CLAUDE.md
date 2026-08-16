@@ -138,7 +138,7 @@ Node 20 / TypeScript, firebase-functions v7. Deploy with `npm run deploy` from `
 - All API calls require `X-API-Key` header
 
 ### Environment Configuration (`.env`)
-Loaded at startup via `flutter_dotenv`. Required keys: `SONIOX_API_KEY`, `REVENUECAT_IOS_API_KEY`, `REVENUECAT_ANDROID_API_KEY`, `RESEND_API_KEY`, `AI_API_KEY`, `WEBSOCKET_SERVER_URL`, `API_SERVER_URL`, `ENVIRONMENT`. Access via `EnvConfig.*` (never `dotenv.env` directly).
+Loaded at startup via `flutter_dotenv`. Required keys: `SONIOX_API_KEY`, `REVENUECAT_IOS_API_KEY`, `REVENUECAT_ANDROID_API_KEY`, `RESEND_API_KEY`, `AI_API_KEY`, `WEBSOCKET_SERVER_URL`, `API_SERVER_URL`, `ENVIRONMENT`; optional `POSTHOG_API_KEY` (analytics silently disabled without it). Access via `EnvConfig.*` (never `dotenv.env` directly).
 
 ### Subscription Tiers (RevenueCat)
 **Play Billing 8 migration SHIPPED 2026-08-05** (`purchases_flutter` 8.11.0 → ^9.15.1, bundles `com.android.billingclient:billing:8.0.0` — required for Play updates after Aug 31 2026). Unit tests + Gradle build verified; **on-device sandbox matrix NOT yet run** (all 6 packages, restore, cancel-and-repurchase override, external cancellation on resume, promo entitlement) — run it before the next store release.
@@ -549,6 +549,7 @@ saveHand() called
 | DeepLinkService | `lib/services/deep_link_service.dart` | Email invitation deep links |
 | AiAnalyzerService | `lib/services/ai_analyzer_service.dart` | Hand analysis API calls |
 | FeatureFlagService | `lib/services/feature_flag_service.dart` | Global remote feature flags (Firestore `app_config/feature_flags`, super-admin toggles on Profile, offline cache). Gated: training_drills, ai_hand_analysis |
+| AnalyticsService | `lib/services/analytics_service.dart` | PostHog product analytics (EU cloud). distinct_id = Firebase uid (matches RevenueCat customer_id — the warehouse join key); identity auto-follows authStateChanges. Event vocabulary lives in the service header — fire each event at ONE canonical site only. All calls fire-and-forget/no-throw; no-op without `POSTHOG_API_KEY` (tests, dev) |
 | PartnerGrantService | `lib/services/partner_grant_service.dart` | Admin-granted free tiers with expiry (see Subscription section) |
 | SkipHandScoutingService | `lib/services/skip_hand_scouting_service.dart` | On/off toggle for live scouting mode |
 | RangeGridService | `lib/services/range_grid_service.dart` | Hero hand range-grid index (local+cloud dedupe) |

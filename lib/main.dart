@@ -28,6 +28,7 @@ import 'services/currency_service.dart';
 import 'services/skip_hand_scouting_service.dart';
 import 'services/opponent_service.dart';
 import 'config/env_config.dart';
+import 'services/analytics_service.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'l10n/app_localizations.dart';
 import 'design_system/poker_friend_theme.dart';
@@ -79,6 +80,10 @@ void main() async {
   } catch (e) {
     debugPrint('Firebase initialization failed: $e');
   }
+
+  // PostHog product analytics — after EnvConfig (key) and Firebase (auth
+  // stream drives identify/reset). Fire-and-forget; no-op without a key.
+  unawaited(AnalyticsService.init());
 
   // Start loading the splash video in parallel with everything else so
   // it's ready by the time SplashScreen mounts (avoids blank frames).

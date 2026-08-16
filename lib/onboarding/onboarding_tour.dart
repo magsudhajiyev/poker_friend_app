@@ -20,6 +20,7 @@ import 'onboarding_prefs.dart';
 import 'onboarding_state.dart';
 import 'promo_reminder_logic.dart';
 import '../design_system/constants/decorations.dart';
+import '../services/analytics_service.dart';
 
 // ---------------------------------------------------------------------------
 // Shared helpers
@@ -728,6 +729,9 @@ class ButtonTokenTour {
 /// onboarding questions, and see the paywall. A user who already had an account
 /// before the tour keeps the original behavior (dialog → paywall → Home).
 Future<void> finishOnboardingTour(BuildContext context) async {
+  if (!OnboardingState.isReplay) {
+    AnalyticsService.capture('tour_completed');
+  }
   OnboardingState.complete();
   OnboardingPrefs.markOnboardingSeen();
   OnboardingPrefs.setBankrollTourPending();
