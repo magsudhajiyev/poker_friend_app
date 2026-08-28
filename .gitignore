@@ -87,3 +87,6 @@ legal/
 landing-page-features.md
 session_*.json
 .rc-webhook-auth.local
+
+# Play Store listing metadata (uploaded via fastlane supply; not part of the app build)
+android/fastlane/
