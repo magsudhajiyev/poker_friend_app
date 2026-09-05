@@ -31,7 +31,12 @@ import 'drill_table_screen.dart';
 /// your saved opponents, pick a stack depth, and start drilling against bots
 /// that play like the real lineup.
 class DrillSetupScreen extends StatefulWidget {
-  const DrillSetupScreen({super.key});
+  /// Optional presets (Leak Detector "practice this spot" jump): pre-select
+  /// stack depth and format so the drill approximates the leaky spot.
+  final double? presetStackBB;
+  final bool? presetAnte;
+
+  const DrillSetupScreen({super.key, this.presetStackBB, this.presetAnte});
 
   @override
   State<DrillSetupScreen> createState() => _DrillSetupScreenState();
@@ -58,6 +63,13 @@ class _DrillSetupScreenState extends State<DrillSetupScreen> {
   @override
   void initState() {
     super.initState();
+    final presetStack = widget.presetStackBB;
+    if (presetStack != null) {
+      // Snap to the nearest offered stack option.
+      _stackBB = _stackOptions.reduce((a, b) =>
+          (a - presetStack).abs() < (b - presetStack).abs() ? a : b);
+    }
+    if (widget.presetAnte != null) _ante = widget.presetAnte!;
     _loadData();
   }
 

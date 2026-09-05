@@ -37,6 +37,7 @@ import 'club/club_dashboard_screen.dart';
 import 'admin/club_requests_screen.dart';
 import 'admin/support_requests_screen.dart';
 import 'admin/notification_tester_screen.dart';
+import 'leak_detector_screen.dart';
 import '../widgets/register_club_dialog.dart';
 import '../design_system/constants/typography.dart';
 import '../design_system/constants/decorations.dart';
@@ -934,6 +935,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         title: l10n.settingsBankroll,
                         onTap: _navigateToBankroll,
                       ),
+                      // Leak Detector — feature-flagged phase-1 experiment;
+                      // English-only until GA, matching the flag gating.
+                      if (FeatureFlagService.isEnabled(FeatureFlagService.leakDetector))
+                        _buildRow(
+                          icon: const Icon(Icons.plumbing, color: AppColors.contentInactive, size: 24),
+                          title: 'Leak Detector',
+                          onTap: () => Navigator.push(context, MaterialPageRoute(
+                              builder: (_) => const LeakDetectorScreen())),
+                        ),
                       _buildRow(
                         icon: const Icon(Icons.add_circle_outline_rounded, color: AppColors.contentInactive, size: 24),
                         title: l10n.settingsRegisterClub,
