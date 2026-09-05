@@ -1,9 +1,13 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../../models/stack_bucket.dart';
 import '../../screens/hand_actions_screen.dart';
+import '../../services/led_grid_publisher.dart';
 import '../../services/range_grid_cloud_backfill.dart';
 import '../../services/range_grid_service.dart';
 import 'range_frequency_bar.dart';
@@ -42,6 +46,13 @@ class _RangeGridViewState extends State<RangeGridView>
   bool _loading = true;
   bool _syncingCloud = false;
 
+  // EXPERIMENTAL physical LED board (hardware/led-range-board, debug-only):
+  // when LED mode is on, cell taps select cells for the board's clusters
+  // (tap order = cluster order) instead of opening the detail sheet.
+  static const _ledClusters = 4;
+  bool _ledMode = false;
+  final List<String> _ledSelected = [];
+
   @override
   bool get wantKeepAlive => true;
 
@@ -65,6 +76,9 @@ class _RangeGridViewState extends State<RangeGridView>
       _aggregates = aggregates;
       _loading = false;
     });
+    // Filter changes re-aggregate — keep the physical board in sync with
+    // what the grid shows.
+    if (_ledMode && _ledSelected.isNotEmpty) unawaited(_pushLed());
   }
 
   /// Pull the full hand history from Firestore once and refresh the grid
@@ -82,6 +96,104 @@ class _RangeGridViewState extends State<RangeGridView>
     HapticFeedback.selectionClick();
     setState(apply);
     _load();
+  }
+
+  // ── LED board mode (debug-only experiment) ──────────────────────────
+
+  Future<void> _onLedCellTap(String handClass) async {
+    HapticFeedback.selectionClick();
+    setState(() {
+      if (_ledSelected.contains(handClass)) {
+        _ledSelected.remove(handClass);
+      } else {
+        if (_ledSelected.length >= _ledClusters) {
+          _ledSelected.removeAt(0); // oldest selection makes room
+        }
+        _ledSelected.add(handClass);
+      }
+    });
+    await _pushLed();
+  }
+
+  Future<void> _pushLed() async {
+    if (_ledSelected.isEmpty) {
+      await LedGridPublisher.pushOff();
+      return;
+    }
+    if (await LedGridPublisher.getBoardIp() == null) {
+      if (!mounted) return;
+      await _editLedIp();
+      if (await LedGridPublisher.getBoardIp() == null) return;
+    }
+    final cells =
+        _ledSelected.map((c) => _aggregates[c]).toList(growable: false);
+    await LedGridPublisher.pushCells(cells);
+  }
+
+  Future<void> _editLedIp() async {
+    final controller =
+        TextEditingController(text: await LedGridPublisher.getBoardIp() ?? '');
+    if (!mounted) return;
+    final ip = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: AppColors.bgSurface,
+        title: Text('LED board IP',
+            style: AppTypography.ibm(
+                fontSize: 17,
+                fontWeight: FontWeight.w600,
+                color: Colors.white)),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          keyboardType: TextInputType.url,
+          style: AppTypography.ibm(fontSize: 15, color: Colors.white),
+          decoration: const InputDecoration(hintText: 'e.g. 192.168.1.50'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () =>
+                Navigator.pop(dialogContext, controller.text.trim()),
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+    if (ip == null || ip.isEmpty) return;
+    await LedGridPublisher.setBoardIp(ip);
+  }
+
+  /// Bulb icon: tap toggles LED mode, long-press edits the board IP.
+  Widget _buildLedToggle() {
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.selectionClick();
+        setState(() {
+          _ledMode = !_ledMode;
+          if (!_ledMode) _ledSelected.clear();
+        });
+        // Deactivating the bulb darkens the physical board too.
+        if (!_ledMode) unawaited(LedGridPublisher.pushOff());
+      },
+      onLongPress: _editLedIp,
+      child: Container(
+        padding: const EdgeInsets.all(6),
+        decoration: BoxDecoration(
+          color: _ledMode ? AppColors.accentPrimary : AppColors.bgSurface,
+          borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        ),
+        child: Icon(
+          Icons.lightbulb_outline,
+          size: 18,
+          color: _ledMode ? Colors.black : Colors.white.withValues(alpha: 0.65),
+        ),
+      ),
+    );
   }
 
   /// Hand class for grid cell (row, col): pairs on the diagonal, suited
@@ -370,6 +482,7 @@ class _RangeGridViewState extends State<RangeGridView>
               runSpacing: 8,
               children: [
                 _buildGameTypeToggle(),
+                if (kDebugMode) _buildLedToggle(),
                 _buildStackSelector(),
               ],
             ),
@@ -552,8 +665,14 @@ class _RangeGridViewState extends State<RangeGridView>
     final intensity =
         hasData ? (0.35 + 0.55 * (total / 6).clamp(0.0, 1.0)) : 0.0;
 
+    final ledIndex = _ledMode ? _ledSelected.indexOf(handClass) : -1;
+
     return GestureDetector(
-      onTap: hasData ? () => _showCellDetail(handClass) : null,
+      onTap: !hasData
+          ? null
+          : _ledMode
+              ? () => _onLedCellTap(handClass)
+              : () => _showCellDetail(handClass),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(3),
         child: Stack(
@@ -600,6 +719,35 @@ class _RangeGridViewState extends State<RangeGridView>
                 ),
               ),
             ),
+            if (ledIndex >= 0) ...[
+              Container(
+                decoration: BoxDecoration(
+                  border: Border.all(color: AppColors.accentPrimary, width: 1.5),
+                  borderRadius: BorderRadius.circular(3),
+                ),
+              ),
+              Positioned(
+                top: 1,
+                right: 1,
+                child: Container(
+                  width: 9,
+                  height: 9,
+                  decoration: const BoxDecoration(
+                    color: AppColors.accentPrimary,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: Text(
+                      '${ledIndex + 1}',
+                      style: AppTypography.ibm(
+                          fontSize: 7,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.black),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),

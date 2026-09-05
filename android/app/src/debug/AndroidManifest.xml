@@ -4,4 +4,9 @@
          to allow setting breakpoints, to provide hot reload, etc.
     -->
     <uses-permission android:name="android.permission.INTERNET"/>
+
+    <!-- Debug-only: allow plain-HTTP on the local network for the ESP32 LED
+         range board (hardware/led-range-board). Android 9+ blocks cleartext
+         by default; release builds keep the block. -->
+    <application android:usesCleartextTraffic="true" tools:replace="android:usesCleartextTraffic" xmlns:tools="http://schemas.android.com/tools" />
 </manifest>
