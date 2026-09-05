@@ -65,7 +65,7 @@
       }
     }
   },
-  "settingsTitle": "Settings",
+  "settingsTitle": "Menu",
   "settingsLanguage": "Language",
   "settingsLanguageSubtitle": "Choose app language",
   "settingsLanguageSystem": "System Default",

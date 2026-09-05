@@ -54,7 +54,7 @@
   "statsLoadingMessage": "Ładowanie statystyk...",
   "statsFetchingMessage": "Pobieranie statystyk...",
   "statsFailedToLoad": "Nie udało się załadować statystyk: {error}",
-  "settingsTitle": "Ustawienia",
+  "settingsTitle": "Menu",
   "settingsLanguage": "Język",
   "settingsLanguageSubtitle": "Wybierz język aplikacji",
   "settingsLanguageSystem": "Domyślny systemowy",

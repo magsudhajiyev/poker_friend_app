@@ -54,7 +54,7 @@
   "statsLoadingMessage": "Загрузка статистики...",
   "statsFetchingMessage": "Получение статистики...",
   "statsFailedToLoad": "Не удалось загрузить статистику: {error}",
-  "settingsTitle": "Настройки",
+  "settingsTitle": "Меню",
   "settingsLanguage": "Язык",
   "settingsLanguageSubtitle": "Выберите язык приложения",
   "settingsLanguageSystem": "Системный",
