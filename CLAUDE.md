@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Overview
 Flutter/Dart poker hand logging application with Firebase backend, club management, dealer-assisted voice logging, and real-time WebSocket sync. Allows users to track poker hands, sessions, statistics, opponents, and bankroll.
 
-**The app is LIVE** (v2.1.0+14 submitted to Google Play on launch night 2026-07-24; iOS submission pending). Post-launch work is queued in `ROADMAP.md` — check it before planning any change.
+**The app is LIVE** (v2.1.0+14 submitted to Google Play on launch night 2026-07-24; iOS submission pending). Current working version: 2.1.2+16 (forgot-password fix + PostHog analytics). Post-launch work is queued in `ROADMAP.md` — check it before planning any change.
 
 ---
 
@@ -78,6 +78,7 @@ Full machine setup (tool versions, keystores, step-by-step install) lives in `SE
 - See `diary/2026-03-29-flutter-firestore-regression-fix.md` for full details
 
 ### iOS Simulator
+- Runner iOS deployment target: **15.5** (raised from 13.0, commit 3aaabf4)
 - Use **iOS 18.5** runtime (Flutter 3.38 does not support iOS 26 simulators)
 - iPhone 16 Pro simulator with iOS 18.5 runtime
 - Download runtime via Xcode → Settings → Platforms → iOS → Get
@@ -520,7 +521,7 @@ saveHand() called
 | StatsCalculator | `lib/services/stats_calculator.dart` | Pure stat detection functions (testable) |
 | PlayStyleDetector | `lib/services/play_style_detector.dart` | Player classification |
 | BankrollService | `lib/services/bankroll_service.dart` | Bankroll goals + stats aggregation |
-| AuthService | `lib/services/auth_service.dart` | Firebase Auth wrapper |
+| AuthService | `lib/services/auth_service.dart` | Firebase Auth wrapper. Forgot-password uses Firebase's built-in reset email; the branded reset page is NOT in this repo — it lives in the separate `final-table-web` repo (finaltable.io/reset_password, deployed via Vercel) |
 
 ### Club/Dealer Services
 | Service | File | Purpose |
@@ -705,6 +706,7 @@ app_config/                   — feature_flags, promotions (super-admin toggles
 - SB and BB always set together
 - Stored as `double` throughout — supports decimal values for small-stakes cash games (e.g. $0.25/$0.50)
 - Cash game input allows decimals; tournament input restricted to whole numbers
+- All money/chip inputs accept comma OR dot as decimal separator via `DecimalInputFormatter` + `parseDecimal()` (`lib/utils/decimal_input.dart`) — see UI Bugs pattern 5
 - Display uses `formatBlindValue()` helper (in `poker_game_state.dart`) — shows `0.25` not `0.25000`
 - Can increase during tournament (level changes)
 - On preflop: BET is always invalid, RAISE is always valid
@@ -756,6 +758,7 @@ app_config/                   — feature_flags, promotions (super-admin toggles
 2. **Controller disposal crash**: Move `setState()` to `.then()` callback after dialog closes
 3. **Cache staleness**: Static caches must be invalidated when data changes
 4. **Gradient harshness**: Apply 0.6 opacity to ALL gradient colors, use elliptical shape
+5. **Comma decimal separator**: EVERY money/chip/blind text input must use `DecimalInputFormatter` and be parsed with `parseDecimal()` (`lib/utils/decimal_input.dart`) — never `FilteringTextInputFormatter.allow(RegExp(r'[\d.]'))` (silently deletes the comma: RO user typing "50,00" got BB 5000) and never bare `double.tryParse` on user-typed text
 
 ### Firestore Rules Bugs
 1. **Admin-on-behalf-of-user writes**: flows the super admin performs FOR another user (club-request approval writes the new owner's `dealers/{uid}` doc and updates a club whose `ownerId` is the requester) need explicit `isSuperAdmin()` allowances in `firestore.rules` — owner-only rules deny them (production bug 2026-08-02, fixed + deployed). When adding admin flows, trace EVERY write against the rules.
@@ -842,6 +845,7 @@ flutter test test/services/stats_calculator_test.dart
 ---
 
 ## Open Items / Known Limitations
+- ⚠️ **Club rules hardening (audit B5, commit 725c067) committed but NOT yet deployed** — run `firebase deploy --only firestore:rules` together with a club smoke test (invitation, approval, role flows)
 - ⚠️ **Social feed lag disabled for testing**: the STASHED `FeedPublisher.lag = Duration.zero` — restore `Duration(hours: 1)` when the feed stash is popped, before ANY release with feed code (see Key Feature 14)
 - Social feed tier-mirror backfill for existing subscribers not run (rules deny paid users until their next RevenueCat event)
 - Position mismatch between hand card and details view (needs investigation)
@@ -856,6 +860,6 @@ flutter test test/services/stats_calculator_test.dart
 
 ---
 
-**Last Updated**: August 11, 2026
+**Last Updated**: August 19, 2026
 **Maintained by**: User + Claude
 **Update this file**: After major feature additions, architectural changes, or new bug patterns
