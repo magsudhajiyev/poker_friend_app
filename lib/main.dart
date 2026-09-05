@@ -28,6 +28,7 @@ import 'services/currency_service.dart';
 import 'services/skip_hand_scouting_service.dart';
 import 'services/opponent_service.dart';
 import 'config/env_config.dart';
+import 'services/activity_heartbeat_service.dart';
 import 'services/analytics_service.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'l10n/app_localizations.dart';
@@ -84,6 +85,11 @@ void main() async {
   // PostHog product analytics — after EnvConfig (key) and Firebase (auth
   // stream drives identify/reset). Fire-and-forget; no-op without a key.
   unawaited(AnalyticsService.init());
+
+  // DAU heartbeat: stamps users/{uid}.lastActiveAt on sign-in (incl. the
+  // persisted-session restore at launch); resume hook lives in
+  // _AppLifecycleObserver. Feeds the admin dashboard's daily_stats cron.
+  ActivityHeartbeatService.init();
 
   // Start loading the splash video in parallel with everything else so
   // it's ready by the time SplashScreen mounts (avoids blank frames).
@@ -387,6 +393,7 @@ class _PokerTrackerAppState extends State<PokerTrackerApp>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       SubscriptionService.refreshOnResume();
+      unawaited(ActivityHeartbeatService.recordActive());
       unawaited(LoggerService.logEvent('app_resume'));
     } else if (state == AppLifecycleState.paused) {
       unawaited(LoggerService.logEvent('app_background'));
