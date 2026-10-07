@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Overview
 Flutter/Dart poker hand logging application with Firebase backend, club management, dealer-assisted voice logging, and real-time WebSocket sync. Allows users to track poker hands, sessions, statistics, opponents, and bankroll.
 
-**The app is LIVE** (v2.1.0+14 submitted to Google Play on launch night 2026-07-24; iOS submission pending). Current working version: 2.1.2+16 (forgot-password fix + PostHog analytics). Post-launch work is queued in `ROADMAP.md` — check it before planning any change.
+**The app is LIVE** (v2.1.0+14 submitted to Google Play on launch night 2026-07-24; iOS submission pending). Current working version: 2.1.3+17 (DAU heartbeat, Settings→"Menu" rename, feature-flagged Leak Detector). Post-launch work is queued in `ROADMAP.md` — check it before planning any change.
 
 ---
 
@@ -56,6 +56,7 @@ firebase deploy --only firestore:rules
 - **DO NOT push to git unless explicitly asked by user**
 - **DO NOT commit unless explicitly asked by user**
 - **Authoritative docs**: `BUG_TRACKER.md` (live status of hand-logging bugs + features in flight), `test/HAND_LOGGING_SPEC.md` (hand-logging behaviour spec + bug diagnoses), `POKER_SEATING_RULES.md` (seating/dead-button rules), `ROADMAP.md` (post-launch work queue incl. HARD Aug 31 2026 Play Billing deadline + deferred security fixes), `SECURITY_AUDIT_2026-07-23.md` (audit findings + per-item status), `BACKLOG.md` (triaged product backlog with stable B#/U#/F#/M#/G# IDs). Check these before touching hand-logging code, and check ROADMAP.md before planning any update.
+- **`marketing/` folder**: `MARKETING_MASTER.md` is the single-file source of truth for the marketing agent; video scripts and prompts live alongside it. Not app code.
 - **`docs/` folder**: reference docs (`ARCHITECTURE.md`, `SERVICES.md`, `SCREENS.md`, `NAVIGATION.md`, `STATE.md`, `DESIGN_SYSTEM.md`, `SUBSCRIPTIONS.md`, `GLOSSARY.md`) plus feature specs — **`docs/social-feed-spec.md` is the decision record for the social feed** (D1–D11); any feed/follow change must respect it.
 - Always check `/diary` folder for previously solved bugs before implementing fixes. Treat every entry there as authoritative documentation of the current behaviour — respect it and do not break it. **In particular, `/diary/2026-07-15-in-app-tour-complete-reference.md` is the canonical reference for the in-app tour flow: any change touching onboarding, guided overlays, tour phases, `OnboardingState`, `guided_hand_overlay`, `onboarding_tour`, or the screens the tour highlights (home, session details, poker hand, session end) must preserve the behaviour documented there.**
 - Create diary entry after user confirms a fix
@@ -102,9 +103,9 @@ Full machine setup (tool versions, keystores, step-by-step install) lives in `SE
 ## Architecture
 
 ### Tech Stack
-- **Frontend**: Flutter/Dart (179+ Dart files)
+- **Frontend**: Flutter/Dart (300+ Dart files)
 - **Backend**: Firebase (Firestore, Auth, FCM, Cloud Functions in `functions/`) + FastAPI backend (Render)
-- **Local Storage**: SQLite (sqflite v13) + SharedPreferences
+- **Local Storage**: SQLite (sqflite, DB schema v19) + SharedPreferences
 - **Real-time**: Socket.IO WebSocket + Firestore Snapshot listeners
 - **Voice Recognition**: Deepgram ASR via backend "Dealer Brain" endpoint
 - **Payments**: RevenueCat SDK
@@ -157,7 +158,7 @@ Four tiers — check via `SubscriptionService`:
 - **Elite** (`isElite`/`isPremium`): unlimited everything, AI analysis, all history
 - **Club** (`isClub`/`isPremium`): like Elite + club creation rights (owner pays; club members operate freely regardless of their own tier)
 
-Feature gates live in `lib/services/free_tier_limits.dart` (hand/opponent caps) and `lib/services/feature_flag_service.dart` (remote Firestore flags for `training_drills`, `ai_hand_analysis`). Use `FreeTierLimits.showHandsLimitDialog()` / `PaywallScreen.show()` for upgrade prompts.
+Feature gates live in `lib/services/free_tier_limits.dart` (hand/opponent caps) and `lib/services/feature_flag_service.dart` (remote Firestore flags for `training_drills`, `ai_hand_analysis`, `leak_detector`). Use `FreeTierLimits.showHandsLimitDialog()` / `PaywallScreen.show()` for upgrade prompts.
 
 **Partner grants** (`lib/services/partner_grant_service.dart`): super-admin can grant users a free tier (Pro/Elite/Club) with expiry (1 week / 1 month / 3 months). `partnerTier` getter returns `null` for expired grants client-side; `init()` awaits the first Firestore snapshot (3s timeout) and must be `await`ed in sign-in paths (not `unawaited`) or the user briefly appears free-tier. Admin UI: `lib/screens/admin/partner_grants_screen.dart`. See `diary/2026-07-08-partner-grants-system.md`.
 
@@ -364,6 +365,8 @@ Classifies based on VPIP, PFR, 3-bet%, AF thresholds:
 
 ### 12. Range Grid
 - `RangeGridService` (`lib/services/range_grid_service.dart`) indexes hero hands into a 13×13 range grid; dedupe key `{sessionId}:{handNumber}` merges local SQLite and Firestore copies of the same hand; cloud backfill via `range_grid_cloud_backfill.dart`
+- `primaryAction` is the hero's FIRST voluntary preflop action: `'allin' | 'raise' | 'call' | 'fold' | 'check'`. `'allin'` means an explicit jam only — an all-in CALL stays `'call'` (a call is never aggressive). Changing this classification requires bumping the backfill flag key (`range_grid_backfilled_vN`) so existing local indexes rebuild
+- Grid cell colors are tokenized in `AppColors` (`rangeRaise`/`rangeCall`/`rangeFold`/`rangeAllIn`; check uses `accentPrimary`); all-in is hidden by default in the grid and chip-toggled
 
 ### 13. In-App Tour / Onboarding
 - Guided first-hand tour lives in `lib/onboarding/` (`onboarding_tour.dart`, `guided_hand_overlay.dart`, `onboarding_state.dart`)
@@ -379,6 +382,20 @@ Follow other players and "rail" their shared sessions: delayed stack chart + han
 - Per-session share modes: `off` / `no_cards` / `cards` (`FeedShareMode`), default from settings.
 - Files: services `feed_sanitizer.dart`, `feed_publisher.dart`, `feed_service.dart`, `follow_service.dart` (follow graph: `follows/{follower}_{followed}`, `blocks/{blocker}_{blocked}`, FCM topic `live_{uid}` subscribe on follow); screens `lib/screens/social/` (feed, rail viewer, public profile, follows, find players); home entry `lib/widgets/live_now_strip.dart`.
 - Phase 4 (bell-mute UI) + tier-mirror backfill for existing subscribers are outstanding — see MEMORY/ROADMAP before shipping.
+
+### 15. Leak Detector (feature-flagged: `leak_detector`)
+Frequency-based leak coaching over the player's own hand history. Design doc: `docs/features/leak-detector.md` — read it before changing bands/detectors. Three layers, all pure below the service:
+- `lib/services/leak_extractor.dart` (phase 1) — per-hand fact extraction (hand map → `LeakHandFacts`); reuses `StatsCalculator` for spots it already detects — never re-derive tested detection logic
+- `lib/services/leak_engine.dart` (phase 2) — frequency detectors + coach layer. A leak is a deviation from a healthy BAND, not a raw number; every detector has minimum samples (below them → "not enough data", never a verdict); every finding explains meaning/cost/fix + example hands. Money view is BB-normalized TOTALS (not per-hand rates on tiny n)
+- `lib/services/leak_report_service.dart` — loads ALL user hands from Firestore and aggregates at read time (deliberately NO incremental counters — see stats double-counting history); excludes tutorial sessions, quick sessions, scouted hands. Returns `LeakReportBundle` (report + raw hands keyed by ref for "show me the hand" drill-through)
+- Supporting pure helpers: `board_texture.dart` (flop texture classification), `flop_strength.dart` (hero flop strength labels)
+- Screen: `lib/screens/leak_detector_screen.dart` (entry from Settings/"Menu" screen). Tests: `test/services/leak_detector_test.dart`, `test/services/flop_strength_test.dart`
+
+### 16. DAU Heartbeat
+`ActivityHeartbeatService` (`lib/services/activity_heartbeat_service.dart`) stamps `users/{uid}.lastActiveAt` (server timestamp) on sign-in and app foreground, throttled to once/hour via SharedPreferences. Fire-and-forget like FCM/analytics — must never break the app. The admin dashboard's daily cron counts these into `daily_stats` (dashboard lives outside this repo). Test: `test/services/activity_heartbeat_test.dart`.
+
+### 17. LED Range Board (EXPERIMENTAL)
+Physical 13×13 range display (ESP32 + WS2812B), firmware in `hardware/led-range-board/` (`led_range_board.ino`). `lib/services/led_grid_publisher.dart` encodes the range grid into a 1014-char hex payload (3 bytes/cell: raise/call/check/fold shares largest-remainder-normalized to 15, + intensity) and pushes over local HTTP. The wire spec stays 4-action even though the app tracks all-in separately — all-in jams count into the raise share (v0; v1 plan = Firebase RTDB). **Payload spec is shared with the .ino — keep both in sync.** Docs: `docs/features/led-board-live-range.md`, `led-board-gtow-import.md`. Test: `test/services/led_grid_publisher_test.dart`.
 
 ---
 
@@ -515,7 +532,7 @@ saveHand() called
 | Service | File | Purpose |
 |---------|------|---------|
 | FirebaseService | `lib/services/firebase_service.dart` (1631 lines) | Session/hand CRUD, stats orchestration |
-| LocalStorageService | `lib/services/local_storage_service.dart` | SQLite v13 mirror of Firebase |
+| LocalStorageService | `lib/services/local_storage_service.dart` | SQLite mirror of Firebase (schema v19) |
 | UserStatsService | `lib/services/user_stats_service.dart` | Atomic user stat transactions |
 | OpponentStatsService | `lib/services/opponent_stats_service.dart` | Atomic opponent stat transactions |
 | StatsCalculator | `lib/services/stats_calculator.dart` | Pure stat detection functions (testable) |
@@ -549,11 +566,14 @@ saveHand() called
 | FCMService | `lib/services/fcm_service.dart` | Push notifications (fire-and-forget!) |
 | DeepLinkService | `lib/services/deep_link_service.dart` | Email invitation deep links |
 | AiAnalyzerService | `lib/services/ai_analyzer_service.dart` | Hand analysis API calls |
-| FeatureFlagService | `lib/services/feature_flag_service.dart` | Global remote feature flags (Firestore `app_config/feature_flags`, super-admin toggles on Profile, offline cache). Gated: training_drills, ai_hand_analysis |
+| FeatureFlagService | `lib/services/feature_flag_service.dart` | Global remote feature flags (Firestore `app_config/feature_flags`, super-admin toggles on Profile, offline cache). Gated: training_drills, ai_hand_analysis, leak_detector |
 | AnalyticsService | `lib/services/analytics_service.dart` | PostHog product analytics (EU cloud). distinct_id = Firebase uid (matches RevenueCat customer_id — the warehouse join key); identity auto-follows authStateChanges. Event vocabulary lives in the service header — fire each event at ONE canonical site only. All calls fire-and-forget/no-throw; no-op without `POSTHOG_API_KEY` (tests, dev) |
 | PartnerGrantService | `lib/services/partner_grant_service.dart` | Admin-granted free tiers with expiry (see Subscription section) |
 | SkipHandScoutingService | `lib/services/skip_hand_scouting_service.dart` | On/off toggle for live scouting mode |
 | RangeGridService | `lib/services/range_grid_service.dart` | Hero hand range-grid index (local+cloud dedupe) |
+| ActivityHeartbeatService | `lib/services/activity_heartbeat_service.dart` | DAU heartbeat: `users/{uid}.lastActiveAt`, 1h throttle, fire-and-forget |
+| Leak Detector services | `lib/services/leak_extractor.dart`, `leak_engine.dart`, `leak_report_service.dart` | Frequency leak coaching (see Key Feature 15) |
+| LedGridPublisher | `lib/services/led_grid_publisher.dart` | Experimental ESP32 LED range board payload + push (see Key Feature 17) |
 | StatsVerificationService | `lib/services/stats_verification_service.dart` | Debug audit: recompute stats from raw hands, print report |
 | Drill services | `lib/services/drill_*.dart` | Training drills: engine, grader, GTO charts, Nash push-fold |
 
@@ -624,6 +644,7 @@ saveHand() called
 ```
 users/{userId}/
   uid, displayName, displayNameLower, email, createdAt, updatedAt,
+  lastActiveAt?,   — DAU heartbeat (ActivityHeartbeatService), server timestamp, ≤1/hour
   subscriptionTier?, subscriptionTierExpiresAt?   — mirrored by revenuecatWebhook CF; rules gate paid features on these
 
 user_stats/{userId}/
@@ -740,6 +761,7 @@ app_config/                   — feature_flags, promotions (super-admin toggles
 3. **Preflop gesture**: Use `gameState.isValidAction()` not `hasBetThisRound` for raise detection
 4. **Hole cards lost**: Show hole cards dialog BEFORE hand completion, not after
 5. **Hand ID collision**: Always use timestamp suffix in hand document IDs
+6. **Short-stack clamp crash**: `double.clamp(min, max)` throws when min > max — any bet/raise amount clamp must first check whether the player's stack is below the minimum and resolve it as all-in for less (Crashlytics 90a88414; see `test/short_stack_bet_clamp_test.dart`)
 
 ### Position Bugs
 1. **UTG wrong seat**: Use active player count, NOT total seats (9)
@@ -798,6 +820,8 @@ Tests are organized in subdirectories mirroring `lib/`:
 - `test/onboarding_state_test.dart` — tour state machine
 - `test/services/subscription_logic_test.dart` + `test/services/subscription_service_test.dart` — tier resolution, purchase overrides, service flow against `FakeRevenueCatClient`
 - `test/services/feed_sanitizer_test.dart` — social feed privacy guarantees (identity/card stripping) — treat failures here as privacy leaks, not glitches
+- `test/services/leak_detector_test.dart`, `test/services/flop_strength_test.dart` — leak detector extraction/bands
+- `test/services/activity_heartbeat_test.dart`, `test/services/led_grid_publisher_test.dart`, `test/short_stack_bet_clamp_test.dart`
 
 ### Testing Checklist
 - [ ] Test with both cash and tournament games
@@ -860,6 +884,6 @@ flutter test test/services/stats_calculator_test.dart
 
 ---
 
-**Last Updated**: August 19, 2026
+**Last Updated**: October 7, 2026
 **Maintained by**: User + Claude
 **Update this file**: After major feature additions, architectural changes, or new bug patterns
