@@ -39,8 +39,10 @@ class _RangeGridViewState extends State<RangeGridView>
   String? _stackBucket; // null = all stacks
   String? _scenario; // null = all spots | 'rfi' | 'vs_raise'
   // Actions included in cell coloring/frequencies (raise/fold is the
-  // classic GTO chart view)
-  Set<String> _visibleActions = {'raise', 'call', 'check', 'fold'};
+  // classic GTO chart view). All-in is tracked but hidden by default —
+  // enable it via its chip. Check is tracked (walks, BB free checks) but
+  // NEVER displayed: preflop charts have no check action — no chip for it.
+  Set<String> _visibleActions = {'raise', 'call', 'fold'};
 
   Map<String, RangeCellAggregate> _aggregates = {};
   bool _loading = true;
@@ -49,7 +51,8 @@ class _RangeGridViewState extends State<RangeGridView>
   // EXPERIMENTAL physical LED board (hardware/led-range-board, debug-only):
   // when LED mode is on, cell taps select cells for the board's clusters
   // (tap order = cluster order) instead of opening the detail sheet.
-  static const _ledClusters = 4;
+  // Strip build: 13 cells (5 LEDs + divider gap each on the 144-LED strip).
+  static const _ledClusters = 13;
   bool _ledMode = false;
   final List<String> _ledSelected = [];
 
@@ -205,10 +208,11 @@ class _RangeGridViewState extends State<RangeGridView>
   }
 
   /// (count, color) per action, restricted to the enabled action filters.
-  /// Order is fixed (raise, call, check, fold) so cell splits read
+  /// Order is fixed (all-in, raise, call, check, fold) so cell splits read
   /// consistently across the grid.
   List<(int, Color)> _visibleSegments(RangeCellAggregate agg) {
     return <(String, int, Color)>[
+      ('allin', agg.allInCount, RangeFrequencyBar.allInColor),
       ('raise', agg.raiseCount, RangeFrequencyBar.raiseColor),
       ('call', agg.callCount, RangeFrequencyBar.callColor),
       ('check', agg.checkCount, RangeFrequencyBar.checkColor),
@@ -524,7 +528,7 @@ class _RangeGridViewState extends State<RangeGridView>
                   if (value == 'rfi') {
                     _visibleActions = {'raise', 'fold'};
                   } else {
-                    _visibleActions = {'raise', 'call', 'check', 'fold'};
+                    _visibleActions = {'raise', 'call', 'fold'};
                   }
                 }),
         child: AnimatedContainer(
@@ -626,9 +630,9 @@ class _RangeGridViewState extends State<RangeGridView>
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
+        chip('allin', 'AI', RangeFrequencyBar.allInColor),
         chip('raise', 'R', RangeFrequencyBar.raiseColor),
         chip('call', 'C', RangeFrequencyBar.callColor),
-        chip('check', 'X', RangeFrequencyBar.checkColor),
         chip('fold', 'F', RangeFrequencyBar.foldColor),
       ],
     );
@@ -661,10 +665,6 @@ class _RangeGridViewState extends State<RangeGridView>
     final total = segments.fold(0, (sum, s) => sum + s.$1);
     final hasData = total > 0;
 
-    // More samples → stronger tint (caps at 6 samples)
-    final intensity =
-        hasData ? (0.35 + 0.55 * (total / 6).clamp(0.0, 1.0)) : 0.0;
-
     final ledIndex = _ledMode ? _ledSelected.indexOf(handClass) : -1;
 
     return GestureDetector(
@@ -687,9 +687,7 @@ class _RangeGridViewState extends State<RangeGridView>
                   for (final (count, color) in segments)
                     Expanded(
                       flex: count,
-                      child: Container(
-                        color: color.withValues(alpha: intensity),
-                      ),
+                      child: Container(color: color),
                     ),
                 ],
               ),
@@ -1011,6 +1009,7 @@ class _CellDetailSheetState extends State<_CellDetailSheet> {
           ),
           const SizedBox(height: 14),
           RangeFrequencyBar(
+            allInCount: agg.allInCount,
             raiseCount: agg.raiseCount,
             callCount: agg.callCount,
             foldCount: agg.foldCount,

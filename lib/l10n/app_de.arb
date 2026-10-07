@@ -4860,6 +4860,7 @@
     }
   },
   "rangeFolded": "Gefoldet",
+  "rangeAllIn": "All-in",
   "@drillHandNumber": {
     "placeholders": {
       "number": {

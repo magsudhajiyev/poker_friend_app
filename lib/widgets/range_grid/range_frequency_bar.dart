@@ -4,13 +4,15 @@ import '../../l10n/app_localizations.dart';
 import '../../design_system/constants/colors.dart';
 import '../../design_system/constants/typography.dart';
 
-/// Stacked raise/call/check/fold frequency bar with a legend.
-/// Colors follow the action-flash palette used during hand logging.
+/// Stacked all-in/raise/call/check/fold frequency bar with a legend.
+/// Palette: raise orange, call light green, check teal, fold blue,
+/// all-in dark purple.
 class RangeFrequencyBar extends StatelessWidget {
   final int raiseCount;
   final int callCount;
   final int foldCount;
   final int checkCount;
+  final int allInCount;
 
   const RangeFrequencyBar({
     super.key,
@@ -18,14 +20,17 @@ class RangeFrequencyBar extends StatelessWidget {
     required this.callCount,
     required this.foldCount,
     required this.checkCount,
+    this.allInCount = 0,
   });
 
-  static const raiseColor = Color(0xFFFFC857);
-  static const callColor = AppColors.accentPrimary;
-  static const checkColor = Color(0xFF3BA55D);
-  static const foldColor = Color(0xFFE85D5D);
+  static const allInColor = AppColors.rangeAllIn;
+  static const raiseColor = AppColors.rangeRaise;
+  static const callColor = AppColors.rangeCall;
+  static const checkColor = AppColors.accentPrimary;
+  static const foldColor = AppColors.rangeFold;
 
-  int get _total => raiseCount + callCount + foldCount + checkCount;
+  int get _total =>
+      allInCount + raiseCount + callCount + foldCount + checkCount;
 
   @override
   Widget build(BuildContext context) {
@@ -33,6 +38,7 @@ class RangeFrequencyBar extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
 
     final segments = <(int, Color)>[
+      (allInCount, allInColor),
       (raiseCount, raiseColor),
       (callCount, callColor),
       (checkCount, checkColor),
@@ -87,6 +93,7 @@ class RangeFrequencyBar extends StatelessWidget {
           spacing: 14,
           runSpacing: 4,
           children: [
+            if (allInCount > 0) _legendItem(l10n.rangeAllIn, allInCount, allInColor),
             if (raiseCount > 0) _legendItem(l10n.rangeRaised, raiseCount, raiseColor),
             if (callCount > 0) _legendItem(l10n.rangeCalled, callCount, callColor),
             if (checkCount > 0) _legendItem(l10n.rangeChecked, checkCount, checkColor),

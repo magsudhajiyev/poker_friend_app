@@ -58,6 +58,15 @@ void main() {
       expect(hex.substring(66, 72), '870004');
     });
 
+    test('all-in jams fold into the raise share (wire spec stays 4-action)', () {
+      final hex = LedGridPublisher.encodeGrid({
+        'AA': const RangeCellAggregate(
+            handClass: 'AA', raiseCount: 5, allInCount: 5),
+      });
+      // 10 aggressive hands of 10 total -> raise nibble 15, sample 10
+      expect(hex.substring(0, 6), 'f0000a');
+    });
+
     test('intensity caps at 255', () {
       final hex = LedGridPublisher.encodeGrid({
         'AA': const RangeCellAggregate(handClass: 'AA', raiseCount: 999),

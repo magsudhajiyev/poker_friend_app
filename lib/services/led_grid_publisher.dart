@@ -68,10 +68,17 @@ class LedGridPublisher {
   }
 
   /// [raise<<4|call, check<<4|fold, intensity] for one cell.
+  /// The app tracks all-in as its own category; the wire spec stays
+  /// 4-action (v2), so all-in jams count into the raise share here.
   static List<int> _cellBytes(RangeCellAggregate? agg) {
     if (agg == null || agg.total == 0) return const [0, 0, 0];
     final shares = _normalizedShares(
-        [agg.raiseCount, agg.callCount, agg.checkCount, agg.foldCount],
+        [
+          agg.raiseCount + agg.allInCount,
+          agg.callCount,
+          agg.checkCount,
+          agg.foldCount
+        ],
         agg.total);
     return [
       (shares[0] << 4) | shares[1],
