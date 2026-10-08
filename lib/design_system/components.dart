@@ -60,6 +60,7 @@ export 'components/app_toggle.dart';
 export 'components/overlays/sliding_notification.dart';
 export 'components/overlays/raise_snap_overlay.dart';
 export 'components/overlays/event_success_popup.dart';
+export 'components/overlays/subscription_success_popup.dart';
 
 // Pickers
 export 'components/pickers/card_keyboard.dart';

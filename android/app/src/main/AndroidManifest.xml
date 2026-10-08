@@ -13,6 +13,8 @@
     <!-- Billing permission for in-app purchases -->
     <uses-permission android:name="com.android.vending.BILLING"/>
 
+    <!-- Explicit (audit M8): release relied on library manifests merging this in -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
         android:label="Final Table"
         android:name="${applicationName}"
@@ -46,6 +48,18 @@
                 <data android:scheme="pkr" android:host="invite"/>
             </intent-filter>
         </activity>
+        <!-- Default notification icon/colour for FCM pushes (Cloud Functions) -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_notification" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_color"
+            android:resource="@color/notification_color" />
+        <!-- PostHog: SDK is initialized manually in Dart (AnalyticsService)
+             so the key can come from .env — disable native auto-init. -->
+        <meta-data
+            android:name="com.posthog.posthog.AUTO_INIT"
+            android:value="false" />
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

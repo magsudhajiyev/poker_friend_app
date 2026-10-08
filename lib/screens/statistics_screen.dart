@@ -767,56 +767,116 @@ class _StatisticsScreenState extends State<StatisticsScreen>
               color: Colors.black.withOpacity(0.45),
               borderRadius: BorderRadius.circular(AppDecorations.radius18),
             ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.lock_outline,
-                  color: Colors.white,
-                  size: screenWidth * 0.07,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  l10n.statsLockedTitle,
-                  style: AppTypography.ibm(
-                    color: Colors.white,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  l10n.statsLockedSubtitle,
-                  style: AppTypography.ibm(
-                    color: Colors.white.withOpacity(0.7),
-                    fontSize: 13,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 12),
-                GestureDetector(
-                  onTap: () => PaywallScreen.show(context, featureName: featureName),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            // Short sections (empty-state cards) can't fit the full lock
+            // stack, so they get a compact one-row variant at readable sizes
+            // instead of scaling everything down.
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final compact = constraints.maxHeight < 160;
+                if (compact) {
+                  return Center(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.lock_outline,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            l10n.statsLockedTitle,
+                            style: AppTypography.ibm(
+                              color: Colors.white,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(width: 14),
+                          _buildLockedUpgradeButton(
+                            featureName,
+                            const EdgeInsets.symmetric(
+                                horizontal: 18, vertical: 8),
+                          ),
+                        ],
+                      ),
                     ),
-                    child: Text(
-                      l10n.statsLockedUpgrade,
-                      style: AppTypography.ibm(
-                        color: Colors.black,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
+                  );
+                }
+                return Center(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: ConstrainedBox(
+                      constraints:
+                          BoxConstraints(maxWidth: screenWidth * 0.75),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.lock_outline,
+                            color: Colors.white,
+                            size: screenWidth * 0.07,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            l10n.statsLockedTitle,
+                            style: AppTypography.ibm(
+                              color: Colors.white,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            l10n.statsLockedSubtitle,
+                            style: AppTypography.ibm(
+                              color: Colors.white.withOpacity(0.7),
+                              fontSize: 13,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 12),
+                          _buildLockedUpgradeButton(
+                            featureName,
+                            const EdgeInsets.symmetric(
+                                horizontal: 24, vertical: 10),
+                          ),
+                        ],
                       ),
                     ),
                   ),
-                ),
-              ],
+                );
+              },
             ),
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildLockedUpgradeButton(String featureName, EdgeInsets padding) {
+    final l10n = AppLocalizations.of(context);
+    return GestureDetector(
+      onTap: () => PaywallScreen.show(context, featureName: featureName),
+      child: Container(
+        padding: padding,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
+        ),
+        child: Text(
+          l10n.statsLockedUpgrade,
+          style: AppTypography.ibm(
+            color: Colors.black,
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
     );
   }
 

@@ -16,6 +16,7 @@ import 'club/event_detail_screen.dart' as club_detail;
 import 'event_detail_screen.dart';
 import '../l10n/app_localizations.dart';
 import '../utils/user_facing_error.dart';
+import '../utils/decimal_input.dart';
 
 class CalendarScreen extends StatefulWidget {
   @override
@@ -94,7 +95,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
             type: selectedType,
             location: locationController.text,
             date: eventDate,
-            buyIn: double.tryParse(buyInController.text) ?? 0.0,
+            buyIn: parseDecimal(buyInController.text) ?? 0.0,
           );
 
           final newEvent = PokerEvent(
@@ -103,7 +104,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
             type: selectedType,
             location: locationController.text,
             date: eventDate,
-            buyIn: double.tryParse(buyInController.text) ?? 0.0,
+            buyIn: parseDecimal(buyInController.text) ?? 0.0,
           );
 
           setState(() {
@@ -278,7 +279,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 // Buy In Input
                 TextField(
                   controller: buyInController,
-                  keyboardType: TextInputType.number,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  inputFormatters: [DecimalInputFormatter()],
                   style: AppTypography.ibm(
                     color: Colors.white,
                     fontSize: 17,
@@ -1583,7 +1585,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
             type: selectedType,
             location: locationController.text,
             date: eventDate,
-            buyIn: double.tryParse(buyInController.text) ?? 0.0,
+            buyIn: parseDecimal(buyInController.text) ?? 0.0,
           );
 
           Navigator.pop(context);
@@ -1655,7 +1657,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
           dialogSelectedTime.minute,
         );
         final newTitle = titleController.text.isEmpty ? selectedType : titleController.text;
-        final newBuyIn = double.tryParse(buyInController.text) ?? 0.0;
+        final newBuyIn = parseDecimal(buyInController.text) ?? 0.0;
 
         try {
           await CalendarEventService.updateEvent(

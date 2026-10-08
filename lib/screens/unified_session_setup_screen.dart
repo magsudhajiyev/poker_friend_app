@@ -9,6 +9,7 @@ import '../models/game_types.dart';
 import '../models/hand_state_machine.dart';
 import '../models/poker_game_state.dart' show formatBlindValue;
 import '../services/display_identity_service.dart';
+import '../utils/decimal_input.dart';
 import '../widgets/poker_table_widget.dart';
 import '../widgets/seat_config_sheet.dart';
 import '../onboarding/onboarding_state.dart';
@@ -84,16 +85,16 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
   }
 
   bool get _isFormValid {
-    final sb = double.tryParse(_sbController.text);
-    final bb = double.tryParse(_bbController.text);
+    final sb = parseDecimal(_sbController.text);
+    final bb = parseDecimal(_bbController.text);
     final hasBlinds = (sb != null && sb > 0) && (bb != null && bb > 0);
     final hasBuyIn = _buyInController.text.isNotEmpty &&
-        double.tryParse(_buyInController.text) != null;
+        parseDecimal(_buyInController.text) != null;
     final hasHero = _heroSeat != null;
     final hasEnoughPlayers = _seatedPlayerCount >= 2;
 
     if (_gameType == GameType.tournament) {
-      final stack = double.tryParse(_startingStackController.text);
+      final stack = parseDecimal(_startingStackController.text);
       return hasBlinds && hasBuyIn && hasHero && hasEnoughPlayers && stack != null && stack >= _bigBlind;
     }
 
@@ -192,7 +193,7 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
         _kLastGameType, _gameType == GameType.tournament ? 'tournament' : 'cash');
     await prefs.setDouble(_kLastSmallBlind, _smallBlind);
     await prefs.setDouble(_kLastBigBlind, _bigBlind);
-    final buyIn = double.tryParse(_buyInController.text);
+    final buyIn = parseDecimal(_buyInController.text);
     if (buyIn != null) await prefs.setDouble(_kLastBuyIn, buyIn);
     await prefs.setBool(_kLastHasBBante, _hasBBante);
   }
@@ -217,10 +218,10 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
   void _startSession() {
     if (!_isFormValid) return;
 
-    final buyIn = double.parse(_buyInController.text);
+    final buyIn = parseDecimal(_buyInController.text) ?? 0.0;
     final startingStack = _gameType == GameType.cash
         ? buyIn
-        : double.parse(_startingStackController.text);
+        : parseDecimal(_startingStackController.text) ?? 0.0;
     final l10n = AppLocalizations.of(context);
     final sessionName = _sessionNameController.text.isNotEmpty
         ? _sessionNameController.text
@@ -291,10 +292,10 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
 
   void _onSeatTap(int seatNumber) {
     final isActive = _seatActive[seatNumber] ?? false;
-    final buyIn = double.tryParse(_buyInController.text) ?? 0;
+    final buyIn = parseDecimal(_buyInController.text) ?? 0;
     final defaultStack = _gameType == GameType.cash
         ? buyIn
-        : (double.tryParse(_startingStackController.text) ?? 0);
+        : (parseDecimal(_startingStackController.text) ?? 0);
 
     final seatedPlayers = <String, int>{};
     for (int s = 1; s <= 9; s++) {
@@ -439,7 +440,7 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
       children: [
         // Session Name
         _buildFormRow(
-          label: 'Session\nName',
+          label: l10n.setupSessionName,
           crossAxisAlignment: CrossAxisAlignment.center,
           content: _buildTextField(
             controller: _sessionNameController,
@@ -450,7 +451,7 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
 
         // Game Type
         _buildFormRow(
-          label: 'Game Type',
+          label: l10n.setupGameType,
           crossAxisAlignment: CrossAxisAlignment.center,
           content: Row(
             children: [
@@ -478,7 +479,7 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
 
         // Buy-in Amount
         _buildFormRow(
-          label: 'Buy-in\nAmount',
+          label: l10n.setupBuyInAmount,
           crossAxisAlignment: CrossAxisAlignment.start,
           content: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -514,7 +515,7 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
                         keyboardType: const TextInputType.numberWithOptions(decimal: true),
                         textInputAction: TextInputAction.done,
                         inputFormatters: [
-                          FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+                          DecimalInputFormatter(),
                         ],
                         style: AppTypography.ibm(
                           color: Colors.white,
@@ -567,7 +568,7 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
 
         // Blinds
         _buildFormRow(
-          label: 'Blinds',
+          label: l10n.handBlinds,
           crossAxisAlignment: CrossAxisAlignment.center,
           content: Row(
             children: [
@@ -602,10 +603,10 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
         if (_gameType == GameType.tournament) ...[
           _buildDivider(),
           Builder(builder: (context) {
-            final stack = double.tryParse(_startingStackController.text);
+            final stack = parseDecimal(_startingStackController.text);
             final hasError = stack != null && stack < _bigBlind;
             return _buildFormRow(
-              label: 'Starting\nStack',
+              label: l10n.setupStartingStack,
               crossAxisAlignment: CrossAxisAlignment.start,
               content: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -630,7 +631,7 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
                       keyboardType: const TextInputType.numberWithOptions(decimal: true),
                       textInputAction: TextInputAction.done,
                       inputFormatters: [
-                        FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+                        DecimalInputFormatter(),
                       ],
                       style: AppTypography.ibm(
                         color: Colors.white,
@@ -896,7 +897,7 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
                   textInputAction: TextInputAction.done,
                   inputFormatters: [
                     allowDecimal
-                        ? FilteringTextInputFormatter.allow(RegExp(r'[\d.]'))
+                        ? DecimalInputFormatter()
                         : FilteringTextInputFormatter.digitsOnly,
                   ],
                   style: AppTypography.ibm(
@@ -922,7 +923,7 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
                     isDense: true,
                   ),
                   onChanged: (value) {
-                    final v = double.tryParse(value);
+                    final v = parseDecimal(value);
                     if (v != null && v > 0) onChanged(v);
                     setState(() {});
                   },

@@ -282,12 +282,11 @@ class ClubRequestService {
     );
 
     // Update club with address, phone, and app download QR URLs
-    // TODO(pre-release): Replace placeholder App Store URL with real one
     await ClubService.updateClub(
       club.id,
       address: request.address,
       phone: request.phone,
-      appStoreQRUrl: 'https://apps.apple.com/app/final-table/PLACEHOLDER',
+      appStoreQRUrl: 'https://apps.apple.com/us/app/final-table/id6760188970',
       playStoreQRUrl: 'https://play.google.com/store/apps/details?id=com.finaltable.app',
     );
 

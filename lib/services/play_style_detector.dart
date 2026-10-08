@@ -144,12 +144,37 @@ class PlayStyleDetector {
       };
     }
 
-    // Final fallback
-    return {
-      'style': 'Unknown',
-      'icon': 'tag.png',
-      'description': 'Play style unclear, need more data',
-    };
+    // Total fallback: with a real sample (>=50 hands guaranteed above), never
+    // return Unknown — the branches above have coverage holes (e.g. VPIP 28.4
+    // / PFR 18.9 / AF 2.0 matched none of them). Classify coarsely on the two
+    // primary axes instead: loose vs tight (VPIP 22) and aggressive vs
+    // passive (AF 2, or raising the majority of played hands).
+    final isAggressive =
+        aggressionFactor >= 2 || (vpip > 0 && pfr / vpip >= 0.6);
+    if (vpip < 22) {
+      return isAggressive
+          ? {
+              'style': 'TAG',
+              'icon': 'tag.png',
+              'description': 'Tight and aggressive, plays solid poker',
+            }
+          : {
+              'style': 'Tight-Passive',
+              'icon': 'nit.png',
+              'description': 'Plays few hands with passive approach',
+            };
+    }
+    return isAggressive
+        ? {
+            'style': 'LAG',
+            'icon': 'lag.png',
+            'description': 'Loose and aggressive, plays many hands aggressively',
+          }
+        : {
+            'style': 'Loose-Passive',
+            'icon': 'calling_station.png',
+            'description': 'Plays many hands with passive approach',
+          };
   }
 
   /// Get play style abbreviation for compact display

@@ -76,6 +76,14 @@ class AppColors {
   static const Color opponentPurple = Color(0xFFBF5AF2);  // light violet
   static const Color opponentYellow = Color(0xFFFFD60A);  // amber-yellow
 
+  // Range chart action palette: raise orange, call light green, fold blue,
+  // all-in dark purple (hidden by default in the grid — chip-toggled).
+  // Check uses accentPrimary (teal) so it reads apart from the green call.
+  static const Color rangeAllIn = Color(0xFF5E2B8F);  // dark purple — jam
+  static const Color rangeRaise = Color(0xFFF5923E);  // orange
+  static const Color rangeCall  = Color(0xFF5BC873);  // light green
+  static const Color rangeFold  = Color(0xFF4A90E2);  // blue
+
   // Core brand palette (were hardcoded across screens; tokenized 2026-07)
   static const Color paper       = Color(0xFF02050B);  // App background "Paper"
   static const Color surfaceDark = Color(0xFF101115);  // Card/sheet surface

@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/user_stats.dart';
 import '../services/firebase_service.dart';
 import '../services/logger_service.dart';
+import '../services/stats_calculator.dart';
 
 class UserStatsService {
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -139,7 +140,7 @@ class UserStatsService {
   /// Known safe position names that can be used as Firestore map keys.
   static const _safePositionNames = {
     'BTN', 'SB', 'BB', 'UTG', 'UTG+1', 'UTG+2',
-    'LJ', 'HJ', 'CO', 'BTN/SB', 'Empty',
+    'EP', 'MP', 'LJ', 'HJ', 'CO', 'BTN/SB', 'Empty',
     'P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8', 'P9',
   };
 
@@ -242,7 +243,7 @@ class UserStatsService {
           // Check for 3-bet using proper detection logic
           // 3-bet = re-raise AFTER seeing an opponent's raise (not just any raise)
           if (didPlay) {
-            didThreeBet = _didPlayerThreeBetInHand(actions, ourSeatNumber);
+            didThreeBet = StatsCalculator.didPlayerThreeBet(actions, ourSeatNumber);
           }
 
           if (didPlay) {
@@ -404,7 +405,7 @@ class UserStatsService {
           }
 
           // Check for 3-bet using proper detection logic
-          final didThreeBet = _didPlayerThreeBetInHand(actions, ourSeatNumber);
+          final didThreeBet = StatsCalculator.didPlayerThreeBet(actions, ourSeatNumber);
 
           // Check if we won
           final winnerId = handData['winnerId'];
@@ -469,29 +470,6 @@ class UserStatsService {
            actionType == 'big blind' ||
            actionType == 'ante' ||
            actionType == 'post';
-  }
-
-  /// Helper to detect 3-bet (re-raise after opponent's raise)
-  static bool _didPlayerThreeBetInHand(List<Map<String, dynamic>> actions, int playerSeatNumber) {
-    bool sawOpponentRaise = false;
-
-    for (final action in actions) {
-      final street = action['street']?.toString().toLowerCase() ?? '';
-      if (street != 'preflop') continue;
-
-      final playerId = action['player'] as int?;
-      final actionType = action['action']?.toString().toLowerCase() ?? '';
-
-      // Only look at raise actions
-      if (actionType != 'raise') continue;
-
-      if (playerId != playerSeatNumber) {
-        sawOpponentRaise = true;
-      } else if (sawOpponentRaise) {
-        return true; // Hero raised AFTER opponent = 3-bet
-      }
-    }
-    return false;
   }
 
 }

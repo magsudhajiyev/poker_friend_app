@@ -18,6 +18,7 @@ import '../../design_system/constants/colors.dart';
 import '../../design_system/constants/typography.dart';
 import '../../design_system/constants/decorations.dart';
 import '../../utils/user_facing_error.dart';
+import '../../utils/decimal_input.dart';
 
 /// Screen for dealers to scan a table QR code to start dealing at an event
 class DealerQRScanScreen extends StatefulWidget {
@@ -317,8 +318,8 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
                       GestureDetector(
                         onTap: () async {
                           // Parse final values from controllers
-                          smallBlind = double.tryParse(sbController.text) ?? smallBlind;
-                          bigBlind = double.tryParse(bbController.text) ?? bigBlind;
+                          smallBlind = parseDecimal(sbController.text) ?? smallBlind;
+                          bigBlind = parseDecimal(bbController.text) ?? bigBlind;
                           Navigator.pop(context);
                           await _startSession(
                             table: table,
@@ -393,7 +394,7 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
               color: AppColors.textDisabled,
               height: 1.44,
             ),
-            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            inputFormatters: [DecimalInputFormatter()],
             decoration: InputDecoration(
               isDense: true,
               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -425,7 +426,7 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
               ),
             ),
             onChanged: (v) {
-              final parsed = double.tryParse(v);
+              final parsed = parseDecimal(v);
               if (parsed != null) onChanged(parsed);
             },
           ),

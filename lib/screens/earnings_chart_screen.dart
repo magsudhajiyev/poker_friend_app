@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../design_system/components/chart_reveal_clip.dart';
+import '../design_system/components/buttons/back_button_circle.dart';
 import '../l10n/app_localizations.dart';
 import '../services/session_result_service.dart';
 import '../design_system/constants/colors.dart';
@@ -141,18 +142,9 @@ class _EarningsChartScreenState extends State<EarningsChartScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topRight,
-            end: Alignment.bottomLeft,
-            colors: [
-              AppColors.accentPrimary,
-              AppColors.surfaceVariant1,
-              AppColors.surfaceVariant1,
-            ],
-            stops: const [0.0, 0.3, 1.0],
-          ),
-        ),
+        // Solid dark surface — the green (accentPrimary) gradient corner was
+        // removed for a cleaner chart backdrop.
+        color: AppColors.surfaceVariant1,
         child: SafeArea(
           child: _isLoading
               ? const Center(
@@ -225,22 +217,9 @@ class _EarningsChartScreenState extends State<EarningsChartScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         children: [
-          // Back button
-          GestureDetector(
-            onTap: () => Navigator.pop(context),
-            child: Container(
-              width: 44,
-              height: 44,
-              decoration: const BoxDecoration(
-                color: AppColors.surfaceDark,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.arrow_back,
-                color: Colors.white,
-                size: 22,
-              ),
-            ),
+          // Back button — global left-chevron circle used across the app.
+          BackButtonCircle(
+            onPressed: () => Navigator.pop(context),
           ),
           const SizedBox(width: 16),
           // Title
@@ -474,6 +453,10 @@ class _EarningsChartScreenState extends State<EarningsChartScreen> {
               getTooltipColor: (_) => const Color(0xFF1C2926),
               tooltipRoundedRadius: 12,
               tooltipPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              // Keep the tooltip inside the chart bounds — it flips below the
+              // point (or shifts sideways) instead of overflowing the top/edge.
+              fitInsideVertically: true,
+              fitInsideHorizontally: true,
               getTooltipItems: (touchedSpots) {
                 final l10nChart = AppLocalizations.of(context);
               return touchedSpots.map((spot) {

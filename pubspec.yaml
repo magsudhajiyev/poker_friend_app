@@ -1,7 +1,7 @@
 name: poker_logger
 publish_to: "none"
 description: Final Table - Track your poker hands, stats, and bankroll
-version: 1.0.3+11
+version: 2.1.3+17
 
 
 environment:
@@ -54,11 +54,12 @@ dependencies:
   pdf: ^3.11.0  # PDF generation
   flutter_bloc: ^8.1.3  # State management for voice pipeline
   equatable: ^2.0.5  # Value equality for state objects
-  purchases_flutter: ^8.1.0  # RevenueCat for subscription management
+  purchases_flutter: ^9.15.1  # RevenueCat (Play Billing 8 — required for Play updates after Aug 31, 2026)
   flutter_svg: ^2.0.10+1  # SVG icon rendering
   tutorial_coach_mark: ^1.2.11  # Onboarding tour
   url_launcher: ^6.2.5  # Open URLs in browser (T&C, privacy policy)
   video_player: ^2.9.3  # Loading screen video animation
+  posthog_flutter: ^5.36.2
 
 dependency_overrides:
   # Fix Linux plugin incompatibility (not needed for iOS/Android/macOS development)
