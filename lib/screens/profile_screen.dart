@@ -31,6 +31,7 @@ import '../design_system/constants/typography.dart';
 import '../design_system/constants/decorations.dart';
 import '../utils/user_facing_error.dart';
 import 'design_preview_screen.dart';
+import 'design_v3_gallery_screen.dart';
 import 'paywall_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -1120,6 +1121,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
           const SizedBox(height: 8),
           _devButton('Design Preview', const Color(0xFFAB9FF2), () {
             Navigator.push(context, MaterialPageRoute(builder: (_) => const DesignPreviewScreen()));
+          }),
+          const SizedBox(height: 8),
+          _devButton('Design v3', AppColors.accentPrimary, () {
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const DesignV3GalleryScreen()));
           }),
         ],
       ),

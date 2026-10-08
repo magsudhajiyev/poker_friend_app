@@ -78,3 +78,6 @@ export 'components/tabs/app_tab_selector.dart';
 // Chips
 export 'components/chips/info_chip_dark.dart';
 export 'components/chips/player_chip.dart';
+
+// Final Table v3 components (redesign).
+export 'components/v3/v3.dart';
