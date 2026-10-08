@@ -212,6 +212,31 @@ class HandRecord {
   List<String> tags = [];
   String? notes;
 
+  /// True when this hand was finished early via scouting mode (hero folded
+  /// preflop, board skipped). The record is preflop-only and exists to feed
+  /// opponent stats / the scouting report — it is excluded from the hero's own
+  /// session summary. See PokerSessionManager scouting flow.
+  bool isScouted = false;
+
+  /// Storage identifiers, assigned AFTER the hand is saved (HL-5: needed to
+  /// UPDATE the persisted record when shown cards are recorded during the
+  /// settling overlay). In-memory only — the Firestore doc id IS the id.
+  String? cloudHandId;
+  String? localHandId;
+
+  /// True when the hero's participation ended with a PREFLOP fold (open-fold,
+  /// fold to a 3-bet, pure scout...). Such hands are saved — opponent stats,
+  /// hero preflop stats, range grid all still count — but are hidden from the
+  /// hero's hand history (walks and postflop folds are NOT affected).
+  bool get heroFoldedPreflop {
+    final hero = heroSeatNumber;
+    if (hero == null) return false;
+    return actions.any((a) =>
+        a.player == hero &&
+        a.action == PlayerAction.fold &&
+        a.street == BettingRound.preflop);
+  }
+
   HandRecord({
     required this.handNumber,
     required this.buttonPosition,
@@ -293,6 +318,7 @@ class HandRecord {
       if (tableNumber != null) 'tableNumber': tableNumber,
       // Hand annotations
       'isStarred': isStarred,
+      'isScouted': isScouted,
       'tags': tags,
       'notes': notes,
     };
@@ -340,6 +366,7 @@ class HandRecord {
 
     // Set annotation fields
     hand.isStarred = map['isStarred'] ?? false;
+    hand.isScouted = map['isScouted'] ?? false;
     hand.tags = List<String>.from(map['tags'] ?? []);
     hand.notes = map['notes'];
 
@@ -386,6 +413,11 @@ class PokerSessionManager {
   // Current hand tracking
   HandRecord? currentHand;
   final List<HandRecord> completedHands = [];
+
+  /// The most recently completed hand, regardless of whether it entered
+  /// [completedHands] (pure-scout hands don't). Target for post-hand
+  /// shown-cards recording during the settling overlay (HL-5).
+  HandRecord? lastFinishedHand;
   
   // Session settings
   double smallBlind;
@@ -740,59 +772,117 @@ class PokerSessionManager {
     }
   }
 
-  // Complete the current hand
-  void completeCurrentHand({double? potAmount, int? winnerId, double? currentStack, PokerGameState? gameState}) {
+  // Complete the current hand.
+  //
+  // [isScouted] finishes a preflop-only scouting hand (hero folded, board
+  // skipped): the pot is NOT awarded and the hero's stack is unchanged. Such a
+  // hand always feeds OPPONENT stats via saveHand; whether it also counts for
+  // the hero (session summary + user stats) is decided by whether the hero
+  // voluntarily entered the pot preflop (call/bet/raise) — a pure fold-around
+  // scout is kept out of the hero's session history, while a "called then
+  // folded" hand is a normal folded hand and stays in.
+  void completeCurrentHand({double? potAmount, int? winnerId, double? currentStack, PokerGameState? gameState, bool isScouted = false}) {
     if (currentHand == null) return;
 
-    // Set pot amount and winner if provided
+    currentHand!.isScouted = isScouted;
+
+    // Whether the hero voluntarily put chips in preflop before folding.
+    final heroVoluntarilyEntered = _heroVoluntarilyEnteredPot();
+    // A pure scout (folded without entering) is excluded from the hero's
+    // session summary + user stats. A voluntary-entry fold counts normally.
+    final countForHero = !isScouted || heroVoluntarilyEntered;
+
+    // Set pot amount and winner if provided. For scout hands the pot is not
+    // awarded and must not affect the biggest-pot display.
     if (potAmount != null) {
       currentHand!.potAmount = potAmount;
-      // Track biggest pot with BB level for display
-      if (potAmount > biggestPot) {
-        biggestPot = potAmount;
-        biggestPotBB = bigBlind;
-      }
+      if (!isScouted) updateBiggestPot(potAmount);
     }
     if (winnerId != null) {
       currentHand!.winnerId = winnerId;
     }
 
-    // Track biggest pot won/lost with hole cards
-    _trackBiggestPotWonLost(potAmount, winnerId);
+    if (!isScouted) {
+      // Track biggest pot won/lost with hole cards
+      _trackBiggestPotWonLost(potAmount, winnerId);
 
-    // Apply street-by-street pot data from game state (unified for manual + dealer)
-    if (gameState != null) {
-      _applyStreetPots(gameState);
+      // Apply street-by-street pot data from game state
+      if (gameState != null) {
+        _applyStreetPots(gameState);
+      }
+
+      // Track stack history if current stack is provided
+      if (currentStack != null) {
+        if (stackHistory.isEmpty) {
+          _addStackHistoryEntry(currentStack, 'initial', 0.0, 0);
+        } else {
+          final previousStack = stackHistory.last['stackSize'] as double;
+          final stackChange = currentStack - previousStack;
+          final changeType = stackChange >= 0 ? 'win' : 'loss';
+          _addStackHistoryEntry(currentStack, changeType, stackChange.abs(), currentHand!.handNumber);
+        }
+      }
     }
 
     // Note: heroPositionName is already set at hand start, don't overwrite it
 
-    // Track stack history if current stack is provided
-    if (currentStack != null) {
-      if (stackHistory.isEmpty) {
-        _addStackHistoryEntry(currentStack, 'initial', 0.0, 0);
-      } else {
-        final previousStack = stackHistory.last['stackSize'] as double;
-        final stackChange = currentStack - previousStack;
-        final changeType = stackChange >= 0 ? 'win' : 'loss';
-        _addStackHistoryEntry(currentStack, changeType, stackChange.abs(), currentHand!.handNumber);
-      }
-    }
-
     currentHand!.markCompleted();
-    completedHands.add(currentHand!);
-
+    lastFinishedHand = currentHand;
+    // Only hero-counted hands enter the in-memory session summary list —
+    // and hands whose hero participation ended with a PREFLOP fold are
+    // hidden from the hero's history entirely (HL-5 refinement): they are
+    // still saved and still feed hero preflop stats + the range grid.
+    if (countForHero && !currentHand!.heroFoldedPreflop) {
+      completedHands.add(currentHand!);
+    }
 
     // Update opponent statistics for this hand
     _updateOpponentStats();
 
-    // Save hand to Firebase and local storage
-    _saveHandToFirebase(currentHand!);
+    // Save hand to Firebase and local storage. Pure-scout hands skip hero
+    // user-stats (skipHeroStats) but still update opponent stats.
+    _saveHandToFirebase(currentHand!, skipHeroStats: !countForHero);
 
     // Update session with latest hand count
     _updateSessionProgress();
 
     currentHand = null;
+  }
+
+  /// Track the biggest pot of the session. Tournaments compare pots in
+  /// BB-relative terms: blind levels grow ~100x across an MTT, so on absolute
+  /// chips a late 7BB pot beats an early 300BB monster (live bug 2026-08-04:
+  /// summary card showed "Biggest pot 7 BB" after a 9h tournament). Cash
+  /// games keep the absolute comparison — one blind level, same ordering.
+  void updateBiggestPot(double potAmount) {
+    if (potAmount <= 0) return;
+    final bool newBiggest;
+    if (gameType == GameType.tournament && bigBlind > 0 && biggestPotBB > 0) {
+      newBiggest = potAmount / bigBlind > biggestPot / biggestPotBB;
+    } else {
+      newBiggest = potAmount > biggestPot;
+    }
+    if (newBiggest) {
+      biggestPot = potAmount;
+      biggestPotBB = bigBlind;
+    }
+  }
+
+  /// True if the hero voluntarily put chips in the pot preflop (call/bet/raise)
+  /// in the current hand — i.e. it's a real played hand, not a pure fold-around.
+  bool _heroVoluntarilyEnteredPot() {
+    final hero = ourSeatNumber;
+    if (hero == null || currentHand == null) return false;
+    for (final a in currentHand!.actions) {
+      if (a.player == hero &&
+          a.street == BettingRound.preflop &&
+          (a.action == PlayerAction.call ||
+              a.action == PlayerAction.bet ||
+              a.action == PlayerAction.raise)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   void completeCurrentHandWithChop({
@@ -810,10 +900,7 @@ class PokerSessionManager {
     currentHand!.potAmount = potAmount;
 
     // Track biggest pot with BB level for display
-    if (potAmount > biggestPot) {
-      biggestPot = potAmount;
-      biggestPotBB = bigBlind;
-    }
+    updateBiggestPot(potAmount);
 
     // For chopped pots, we'll store the first winner in winnerId for compatibility
     // and store additional chop data in a custom field
@@ -851,7 +938,12 @@ class PokerSessionManager {
     }
 
     currentHand!.markCompleted();
-    completedHands.add(currentHand!);
+    lastFinishedHand = currentHand;
+    // Same history rule as completeCurrentHand: hero folded preflop while
+    // the others chopped → saved, but not the hero's hand history.
+    if (!currentHand!.heroFoldedPreflop) {
+      completedHands.add(currentHand!);
+    }
 
     // Update opponent statistics for this hand
     _updateOpponentStats();
@@ -866,7 +958,7 @@ class PokerSessionManager {
   }
 
   // Save a completed hand to both Firebase and local storage
-  Future<void> _saveHandToFirebase(HandRecord hand) async {
+  Future<void> _saveHandToFirebase(HandRecord hand, {bool skipHeroStats = false}) async {
     if (sessionId == null) return;
     // Knowledge-Base replay hands are never persisted
     if (OnboardingState.isGuidedHandActive && OnboardingState.isReplay) return;
@@ -875,8 +967,10 @@ class PokerSessionManager {
     // Covers every hand of the tutorial session, not just the scripted one.
     final skipStats = isTutorialSession || OnboardingState.isGuidedHandActive;
 
-    // Always save to local storage first
-    final localHandId = await LocalStorageService.saveHand(
+    // Save to local storage first — but never twice (D2): a retry re-insert
+    // would mint a NEW time-based row id and duplicate the hand locally.
+    final localHandId = hand.localHandId ??
+        await LocalStorageService.saveHand(
       sessionId: sessionId!,
       handNumber: hand.handNumber,
       buttonPosition: hand.buttonPosition,
@@ -908,9 +1002,12 @@ class PokerSessionManager {
       sharePerWinner: hand.sharePerWinner,
       // Hand annotations
       isStarred: hand.isStarred,
+      isScouted: hand.isScouted,
       tags: hand.tags,
       notes: hand.notes,
     );
+
+    hand.localHandId = localHandId;
 
     // Index for the range grid — local derived data, fire-and-forget so it
     // can never block or break the save path.
@@ -925,9 +1022,16 @@ class PokerSessionManager {
       ));
     }
 
+    // D2: already in Firestore → nothing to retry (a re-save would create a
+    // second hand doc under a new time-based id and re-increment totalHands).
+    if (hand.cloudHandId != null) {
+      hand.markSaved();
+      return;
+    }
+
     try {
       // Try to save to Firebase as well
-      await FirebaseService.saveHand(
+      final cloudHandId = await FirebaseService.saveHand(
         sessionId: sessionId!,
         handNumber: hand.handNumber,
         buttonPosition: hand.buttonPosition,
@@ -957,158 +1061,32 @@ class PokerSessionManager {
         sharePerWinner: hand.sharePerWinner,
         // Hand annotations
         isStarred: hand.isStarred,
+        isScouted: hand.isScouted,
         tags: hand.tags,
         notes: hand.notes,
         // Dealer mode: pass playerIds for stats tracking
         playerIds: playerIds.isNotEmpty ? playerIds : null,
         skipStats: skipStats,
+        skipHeroStats: skipHeroStats,
       );
 
+      hand.cloudHandId = cloudHandId;
       hand.markSaved();
-
-      // Update optimized stats for all participants
-      if (!skipStats) await _updateOptimizedStats(hand);
     } catch (e) {
       await LoggerService.error('Firebase hand save failed, using local fallback', e, StackTrace.current);
       // Mark as saved since we have it locally
       hand.markSaved();
-
-      // Still update optimized stats even if Firebase failed
-      if (!skipStats) await _updateOptimizedStats(hand);
     }
-  }
 
-  /// Update optimized statistics for all participants in the hand
-  Future<void> _updateOptimizedStats(HandRecord hand) async {
-    try {
-      // Get all player names from this hand
-      Set<String> playersInHand = {};
-
-      // Collect all player names who took actions
-      for (final action in hand.actions) {
-        if (action.playerName != null &&
-            action.playerName!.isNotEmpty &&
-            !action.playerName!.toLowerCase().contains('player')) {
-          playersInHand.add(action.playerName!);
-        }
-      }
-
-      // Process each player's actions in this hand
-      for (final playerName in playersInHand) {
-
-        // Calculate stats for this specific hand
-        int vpipDelta = 0;
-        int pfrDelta = 0;
-        int aggressionDelta = 0;
-        int passiveDelta = 0;
-        int foldDelta = 0;
-        int checkDelta = 0;
-        int callDelta = 0;
-        int betDelta = 0;
-        int raiseDelta = 0;
-
-        bool vpipThisHand = false;
-        bool pfrThisHand = false;
-        bool playedPastPreflop = false; // Track if player saw flop/turn/river
-        String currentStreet = 'preflop';
-
-        // Process this player's actions in this hand
-        for (final action in hand.actions) {
-          if (action.playerName == playerName) {
-            // Track street changes
-            if (action.street != null) {
-              currentStreet = action.street!.name.toLowerCase();
-              // If player has action on flop/turn/river, they played past preflop
-              if (currentStreet != 'preflop') {
-                playedPastPreflop = true;
-              }
-            }
-
-            final actionType = action.action.name.toLowerCase();
-
-            // Count action types
-            switch (actionType) {
-              case 'fold':
-                foldDelta++;
-                break;
-              case 'call':
-                callDelta++;
-                passiveDelta++;
-                if (currentStreet == 'preflop' && !vpipThisHand) {
-                  vpipThisHand = true;
-                }
-                break;
-              case 'bet':
-                betDelta++;
-                aggressionDelta++;
-                if (currentStreet == 'preflop') {
-                  if (!vpipThisHand) vpipThisHand = true;
-                  if (!pfrThisHand) pfrThisHand = true;
-                }
-                break;
-              case 'raise':
-                raiseDelta++;
-                aggressionDelta++;
-                if (currentStreet == 'preflop') {
-                  if (!vpipThisHand) vpipThisHand = true;
-                  if (!pfrThisHand) pfrThisHand = true;
-                }
-                break;
-              case 'check':
-                checkDelta++;
-                passiveDelta++;
-                break;
-            }
-          }
-        }
-
-        if (vpipThisHand) {
-          vpipDelta = 1;
-        }
-        if (pfrThisHand) {
-          pfrDelta = 1;
-        }
-
-        // Update opponent stats (incremental)
-        if (playerName.toLowerCase() != 'hero' && playerName.toLowerCase() != 'you') {
-          // Check if this is first time seeing this opponent in this session
-          final isFirstTimeSeen = !opponentsSeenThisSession.contains(playerName);
-          if (isFirstTimeSeen) {
-            opponentsSeenThisSession.add(playerName);
-          }
-
-          await OpponentStatsService.updateStatsIncremental(
-            opponentId: playerName,
-            handsDelta: 1,
-            sessionsDelta: isFirstTimeSeen ? 1 : 0, // Increment session only first time
-            vpipDelta: vpipDelta,
-            pfrDelta: pfrDelta,
-            aggressionDelta: aggressionDelta,
-            passiveDelta: passiveDelta,
-            foldDelta: foldDelta,
-            checkDelta: checkDelta,
-            callDelta: callDelta,
-            betDelta: betDelta,
-            raiseDelta: raiseDelta,
-          );
-        } else {
-          // DO NOT update user stats here - already done in FirebaseService.saveHand()
-          // via _updateUserStatsFromHand(). This block was causing DOUBLE-COUNTING
-          // of stats (stats were being incremented twice per hand).
-          // See: https://github.com/anthropics/claude-code/issues/stats-double-counting
-          //
-          // The correct stats update flow is:
-          // 1. PokerSessionManager._saveHandToFirebase() calls FirebaseService.saveHand()
-          // 2. FirebaseService.saveHand() calls _updateUserStatsFromHand() - INCREMENT #1 (correct)
-          // 3. This _updateOptimizedStats() method should ONLY update opponent stats
-          //
-          // Previously this block also called UserStatsService.updateStatsAtomic() - INCREMENT #2 (DUPLICATE!)
-          // which caused all stats to be ~2x the actual values.
-        }
-      }
-    } catch (e) {
-      await LoggerService.error('Error updating optimized stats', e, StackTrace.current);
-    }
+    // D4 (audit): the old _updateOptimizedStats call here wrote opponent
+    // stats keyed by player NAME — documents nothing ever reads (every
+    // consumer loads opponent_stats/{opponent.id}) — with per-ACTION VPIP
+    // deltas (known-wrong pattern). Opponent stats are updated exactly once,
+    // correctly, inside FirebaseService.saveHand →
+    // updateOpponentStatsFromHand (per-hand booleans, real opponent ids).
+    // Hero stats likewise live ONLY in FirebaseService._updateUserStatsFromHand
+    // — re-adding a hero-stats call here recreates the historical ~2x
+    // double-counting bug.
   }
 
   // Add stack history entry
@@ -1146,6 +1124,7 @@ class PokerSessionManager {
         sessionId: sessionId!,
         handsLogged: completedHands.length,
         biggestPot: biggestPot,
+        biggestPotBB: biggestPotBB,
         stackHistory: stackHistory,
         totalBuyIn: totalBuyIn,
       );
@@ -1438,6 +1417,136 @@ class PokerSessionManager {
   /// Deactivates the old seat (unless [keepOldSeatActive] is true, e.g. when
   /// another player is taking the old seat) and activates the new one.
   /// [gameState] is updated in sync if provided.
+  // ── Mid-hand seating (HL-1/HL-3) ──────────────────────────────────────
+  //
+  // Boundary rule: a seat change while currentHand.actions.isEmpty joins the
+  // CURRENT hand (caller re-posts blinds + recalculates action order). A seat
+  // change after any action is DEFERRED: it lives here (so the seat renders,
+  // dimmed) and the game engine is only told at the next hand start.
+
+  /// Seats added mid-hand, waiting to join at the next hand. The seat's
+  /// name/stack already live in [playerNames]/[playerStacks]/[activeSeats];
+  /// only the gameState activation is deferred.
+  final Set<int> pendingSeats = <int>{};
+
+  int? _pendingHeroSeat;
+  String? _pendingHeroName;
+  double? _pendingHeroStack;
+
+  /// Hero re-seat requested mid-hand — applied at the next hand start.
+  int? get pendingHeroSeat => _pendingHeroSeat;
+  double? get pendingHeroStack => _pendingHeroStack;
+
+  /// Defer a hero move to [newSeat] until the next hand (mid-hand re-seat
+  /// follows the same sit-out rule as any other mid-hand seating).
+  void deferHeroReseat({
+    required int newSeat,
+    String? heroName,
+    double? heroStack,
+  }) {
+    _pendingHeroSeat = newSeat;
+    _pendingHeroName = heroName;
+    _pendingHeroStack = heroStack;
+  }
+
+  /// HL-2: throw away an in-progress hand (mid-hand table change). The
+  /// discarded hand never happened: no record, no stats, and — critically —
+  /// nulling it BEFORE the next startHand() prevents the auto-complete path
+  /// (startHand → completeCurrentHand) from silently saving a corrupt
+  /// half-hand. Returns the discarded hand's number so the replacement hand
+  /// can reuse it (no numbering gap).
+  int? discardCurrentHand() {
+    final n = currentHand?.handNumber;
+    currentHand = null;
+    return n;
+  }
+
+  /// Activate all deferred seating in [gameState]. MUST be called before
+  /// gameState.startNewHand() so button rotation and blind posting include
+  /// the new players.
+  void flushPendingSeats(PokerGameState gameState) {
+    for (final seat in pendingSeats) {
+      // Seat may have been removed again while pending — skip those.
+      if (!activeSeats.contains(seat)) continue;
+      gameState.setPlayerActive(seat, true);
+      gameState.setPlayerStack(seat, playerStacks[seat] ?? 0.0);
+    }
+    pendingSeats.clear();
+
+    if (_pendingHeroSeat != null) {
+      reseatHero(
+        newSeat: _pendingHeroSeat!,
+        gameState: gameState,
+        heroName: _pendingHeroName,
+        heroStack: _pendingHeroStack,
+      );
+      _pendingHeroSeat = null;
+      _pendingHeroName = null;
+      _pendingHeroStack = null;
+    }
+  }
+
+  /// Re-sync blind seats and the frozen hero position after a PRE-ACTION
+  /// seat change (HL-1). Only valid while the current hand has no actions —
+  /// the hero position is otherwise frozen for the hand (invariant I11).
+  void refreshPreActionPositions(PokerGameState gameState) {
+    actualSBSeat = gameState.effectiveSBPosition;
+    actualBBSeat = gameState.effectiveBBPosition;
+    final hand = currentHand;
+    if (hand != null && hand.actions.isEmpty && ourSeatNumber != null) {
+      hand.heroPositionName = PokerPositions.getPositionNameForActivePlayers(
+        ourSeatNumber!,
+        buttonPosition,
+        activeSeats.toList(),
+      );
+      hand.heroSeatNumber = ourSeatNumber;
+    }
+  }
+
+  // ── Shown cards after the hand (HL-5) ────────────────────────────────
+
+  /// Record cards an opponent SHOWED after the hand ended (settling overlay
+  /// press-and-hold). Stored in the finished hand's showdownData so the
+  /// range/scouting pipeline picks them up; `reachedShowdown` stays false.
+  ///
+  /// The hand is already saved at this point, so the update is PERSISTED to
+  /// both stores via the captured storage ids — never an in-memory-only
+  /// patch (the HL-6 lesson). [persist] exists as a test seam.
+  Future<void> attachShownCards({
+    required int seat,
+    required HoleCards cards,
+    bool persist = true,
+  }) async {
+    final hand = lastFinishedHand;
+    if (hand == null) return;
+    if (cards.card1 == null && cards.card2 == null) return;
+
+    hand.showdownData ??= ShowdownData();
+    hand.showdownData!.playerCards[seat] = cards;
+
+    if (!persist) return;
+    final showdownMap = hand.showdownData!.toMap();
+
+    if (hand.localHandId != null) {
+      unawaited(LocalStorageService.updateHandShowdown(
+        handId: hand.localHandId!,
+        showdownData: showdownMap,
+      ));
+    }
+    if (hand.cloudHandId != null && sessionId != null) {
+      try {
+        await FirebaseService.updateHandShowdown(
+          sessionId: sessionId!,
+          handId: hand.cloudHandId!,
+          showdownData: showdownMap,
+        );
+      } catch (e) {
+        await LoggerService.error(
+            'Shown-cards cloud update failed (kept locally)', e, StackTrace.current);
+      }
+    }
+  }
+
   void reseatHero({
     required int newSeat,
     required PokerGameState? gameState,

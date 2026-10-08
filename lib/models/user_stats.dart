@@ -189,8 +189,20 @@ class UserStats {
       positionPfrCount: _parsePositionMap(data['positionPfrCount']),
       positionThreeBetCount: _parsePositionMap(data['positionThreeBetCount']),
       totalPlayTimeMinutes: data['totalPlayTimeMinutes'] ?? 0,
-      lastUpdated: data['lastUpdated']?.toDate() ?? DateTime.now(),
+      lastUpdated: _parseLastUpdated(data['lastUpdated']),
     );
+  }
+
+  /// D1: `lastUpdated` may arrive as a Firestore Timestamp (cloud read),
+  /// a DateTime (in-memory round-trip — the Firestore SDK converts DateTime
+  /// to Timestamp only on a real write), or be missing entirely.
+  static DateTime _parseLastUpdated(dynamic value) {
+    if (value is DateTime) return value;
+    try {
+      return value?.toDate() ?? DateTime.now();
+    } catch (_) {
+      return DateTime.now();
+    }
   }
 
   /// Convert to map for Firestore storage

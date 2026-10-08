@@ -4,6 +4,23 @@
 /// All methods are static and operate on action lists without
 /// requiring Firebase or any external dependencies.
 class StatsCalculator {
+
+  /// True when [seat]'s participation in the hand ended with a PREFLOP fold.
+  /// Used to hide such hands from the hero's hand history (they still feed
+  /// stats + the range grid). Map-based twin of HandRecord.heroFoldedPreflop
+  /// for screens working with raw stored hands.
+  static bool playerFoldedPreflop(List<dynamic> actions, int seat) {
+    for (final raw in actions) {
+      if (raw is! Map) continue;
+      if (raw['player'] == seat &&
+          raw['action'] == 'fold' &&
+          raw['street'] == 'preflop') {
+        return true;
+      }
+    }
+    return false;
+  }
+
   // Private constructor - only static methods
   StatsCalculator._();
 
@@ -33,15 +50,17 @@ class StatsCalculator {
     return type == 'bet' || type == 'raise' || type == 'all-in';
   }
 
-  /// Detect if a player made a 3-bet (the 3rd raise preflop).
+  /// Detect if a player made a 3-bet (the 2nd voluntary raise preflop).
   ///
-  /// In poker, preflop raises are counted as:
-  ///   1st raise = open raise
-  ///   2nd raise = re-raise
-  ///   3rd raise = 3-bet
-  ///   4th raise = 4-bet, etc.
+  /// Blind posts are forced bets, NOT an open — they never count as raises
+  /// (see [isRaiseAction], which excludes blinds). Preflop voluntary raises
+  /// are counted as:
+  ///   1st voluntary raise = the open ("2-bet")
+  ///   2nd voluntary raise = 3-bet
+  ///   3rd voluntary raise = 4-bet, etc.
   ///
-  /// A player 3-bet if they made the raise that was the 3rd raise in the hand.
+  /// A player 3-bet if they made the raise that was the 2nd voluntary raise in
+  /// the hand (i.e. they re-raised over an open). All-in counts as a raise.
   static bool didPlayerThreeBet(List<Map<String, dynamic>> actions, int playerSeatNumber) {
     int raiseCount = 0;
 
@@ -56,25 +75,23 @@ class StatsCalculator {
 
       raiseCount++;
 
-      // The 3rd raise is the 3-bet
-      if (raiseCount == 3 && playerId == playerSeatNumber) {
+      // The 2nd voluntary raise is the 3-bet.
+      if (raiseCount == 2 && playerId == playerSeatNumber) {
         return true;
       }
 
-      // Past 3rd raise, no point continuing
-      if (raiseCount >= 3) break;
+      // Past the 2nd raise it's a 4-bet+, no point continuing.
+      if (raiseCount >= 2) break;
     }
     return false;
   }
 
-  /// Check if player had opportunity to 3-bet (exactly 2 raises already
-  /// happened in the hand, and player can make the 3rd).
+  /// Check if player had opportunity to 3-bet (exactly 1 voluntary raise — the
+  /// open — already happened, and the player can make the 2nd raise).
   ///
-  /// This covers two scenarios:
-  /// 1. Player hasn't raised yet — 2 raises by others, player can 3-bet
-  /// 2. Player opened (1st raise) — someone else raised (2nd), player can 3-bet
-  ///
-  /// Only counts when totalRaiseCount == 2 (not 3+, which would be 4-bet opp).
+  /// This covers the cold-3-bet spot (player hasn't raised, faces an open) and
+  /// is the denominator for 3-bet%. It does NOT count 4-bet spots (2+ prior
+  /// raises). Blind posts are excluded (see [isRaiseAction]).
   static bool hadThreeBetOpportunity(List<Map<String, dynamic>> actions, int playerSeatNumber) {
     int totalRaiseCount = 0;
 
@@ -86,16 +103,16 @@ class StatsCalculator {
       final actionType = action['action']?.toString().toLowerCase() ?? '';
 
       if (isRaiseAction(actionType)) {
-        // If this IS the player's action AND exactly 2 raises already happened,
-        // they had the opportunity and took it (3-bet)
-        if (playerId == playerSeatNumber && totalRaiseCount == 2) {
+        // If this IS the player's raise AND exactly 1 raise (the open) already
+        // happened, they had the opportunity and took it (3-bet).
+        if (playerId == playerSeatNumber && totalRaiseCount == 1) {
           return true;
         }
         totalRaiseCount++;
       } else if (playerId == playerSeatNumber) {
-        // Non-raise action by player — if exactly 2 raises already happened,
-        // they had 3-bet opportunity but declined (called/folded)
-        if (totalRaiseCount == 2) {
+        // Non-raise action by player — if exactly 1 raise (the open) already
+        // happened, they had a 3-bet opportunity but declined (called/folded).
+        if (totalRaiseCount == 1) {
           return true;
         }
       }
@@ -104,10 +121,11 @@ class StatsCalculator {
     return false;
   }
 
-  /// Check if player raised pre-flop and then faced a 3-bet (the 3rd raise).
+  /// Check if player opened (made the 1st voluntary raise) pre-flop and then
+  /// faced a 3-bet (the 2nd voluntary raise, by someone else).
   ///
-  /// The player must have raised at some point, and then the 3rd raise
-  /// in the hand happened (by someone else), leaving the player to act.
+  /// The player must have raised at some point, and then the 2nd voluntary
+  /// raise in the hand happened (by someone else), leaving the player to act.
   static bool facedThreeBet(List<Map<String, dynamic>> actions, int playerSeatNumber) {
     int raiseCount = 0;
     bool playerRaised = false;
@@ -123,8 +141,8 @@ class StatsCalculator {
         raiseCount++;
         if (playerId == playerSeatNumber) {
           playerRaised = true;
-        } else if (playerRaised && raiseCount >= 3) {
-          // The 3rd+ raise happened after player raised
+        } else if (playerRaised && raiseCount >= 2) {
+          // The 2nd+ raise (a 3-bet) happened after the player opened.
           return true;
         }
       }
@@ -133,8 +151,8 @@ class StatsCalculator {
     return false;
   }
 
-  /// Check if player folded to a 3-bet (raised earlier, then the 3rd raise
-  /// happened, and the player folded).
+  /// Check if player folded to a 3-bet (opened with the 1st voluntary raise,
+  /// then the 2nd voluntary raise happened, and the player folded).
   static bool didFoldTo3Bet(List<Map<String, dynamic>> actions, int playerSeatNumber) {
     int raiseCount = 0;
     bool playerRaised = false;
@@ -151,7 +169,7 @@ class StatsCalculator {
         raiseCount++;
         if (playerId == playerSeatNumber) {
           playerRaised = true;
-        } else if (playerRaised && raiseCount >= 3) {
+        } else if (playerRaised && raiseCount >= 2) {
           faced3Bet = true;
         }
       }

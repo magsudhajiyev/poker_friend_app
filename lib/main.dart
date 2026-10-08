@@ -28,6 +28,8 @@ import 'services/currency_service.dart';
 import 'services/skip_hand_scouting_service.dart';
 import 'services/opponent_service.dart';
 import 'config/env_config.dart';
+import 'services/activity_heartbeat_service.dart';
+import 'services/analytics_service.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'l10n/app_localizations.dart';
 import 'design_system/poker_friend_theme.dart';
@@ -45,6 +47,13 @@ StreamSubscription<bool>? _subscriptionStatusListener;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Audit M1: debugPrint is NOT a no-op in release builds, and the codebase
+  // logs emails/uids through it. Silence it in release — LoggerService and
+  // Crashlytics remain the production logging paths.
+  if (kReleaseMode) {
+    debugPrint = (String? message, {int? wrapWidth}) {};
+  }
 
   // Lock to portrait globally. Individual chart screens (earnings, stack,
   // public leaderboard) opt into landscape and restore this lock on dispose.
@@ -72,6 +81,15 @@ void main() async {
   } catch (e) {
     debugPrint('Firebase initialization failed: $e');
   }
+
+  // PostHog product analytics — after EnvConfig (key) and Firebase (auth
+  // stream drives identify/reset). Fire-and-forget; no-op without a key.
+  unawaited(AnalyticsService.init());
+
+  // DAU heartbeat: stamps users/{uid}.lastActiveAt on sign-in (incl. the
+  // persisted-session restore at launch); resume hook lives in
+  // _AppLifecycleObserver. Feeds the admin dashboard's daily_stats cron.
+  ActivityHeartbeatService.init();
 
   // Start loading the splash video in parallel with everything else so
   // it's ready by the time SplashScreen mounts (avoids blank frames).
@@ -114,6 +132,7 @@ void main() async {
 Future<void> _initServicesInBackground() async {
   // Local notifications
   try {
+    NotificationService.navigatorKey = navigatorKey;
     await NotificationService.initialize();
     await NotificationService.requestPermissions();
     debugPrint('Local notification service initialized successfully');
@@ -374,6 +393,7 @@ class _PokerTrackerAppState extends State<PokerTrackerApp>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       SubscriptionService.refreshOnResume();
+      unawaited(ActivityHeartbeatService.recordActive());
       unawaited(LoggerService.logEvent('app_resume'));
     } else if (state == AppLifecycleState.paused) {
       unawaited(LoggerService.logEvent('app_background'));
@@ -382,6 +402,10 @@ class _PokerTrackerAppState extends State<PokerTrackerApp>
 
   @override
   Widget build(BuildContext context) {
+    // Re-assert on every build (not just startup) so the notification tap
+    // router always has the key — startup-only injection breaks under hot
+    // reload, where main() doesn't re-run.
+    NotificationService.navigatorKey = navigatorKey;
     return ValueListenableBuilder<Locale?>(
       valueListenable: LocaleService.localeNotifier,
       builder: (context, locale, _) {

@@ -1,16 +1,23 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/decorations.dart';
 import '../design_system/constants/typography.dart';
 import '../design_system/components/backgrounds/gradient_background.dart';
 import '../design_system/components/buttons/glassy_icon_button.dart';
 import '../l10n/app_localizations.dart';
-import '../services/password_reset_service.dart';
+import '../services/auth_service.dart';
 import '../utils/user_facing_error.dart';
 
-enum _Phase { email, code, password }
+/// Password reset via Firebase's built-in email link.
+///
+/// Replaces the custom `password_reset_codes` Firestore flow (audit B9):
+/// that collection is denied by rules since the launch-night hardening, so
+/// the old screen could never send a code — and its reset step required a
+/// matching GOOGLE account to change an email/password account. The
+/// built-in `sendPasswordResetEmail` link needs no Firestore, no Resend
+/// and no re-authentication.
+enum _Phase { email, sent }
 
 class ForgotPasswordScreen extends StatefulWidget {
   final String? initialEmail;
@@ -25,24 +32,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   _Phase _phase = _Phase.email;
   bool _isLoading = false;
 
-  // Phase 1 — Email
   final _emailController = TextEditingController();
   final _emailFormKey = GlobalKey<FormState>();
 
-  // Phase 2 — Code
-  final List<TextEditingController> _codeControllers =
-      List.generate(6, (_) => TextEditingController());
-  final List<FocusNode> _codeFocusNodes = List.generate(6, (_) => FocusNode());
+  // Resend cooldown so the button can't be hammered.
   Timer? _countdownTimer;
   int _secondsRemaining = 60;
   bool _canResend = false;
-
-  // Phase 3 — Password
-  final _passwordController = TextEditingController();
-  final _confirmPasswordController = TextEditingController();
-  final _passwordFormKey = GlobalKey<FormState>();
-  bool _obscurePassword = true;
-  bool _obscureConfirm = true;
 
   @override
   void initState() {
@@ -55,14 +51,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   @override
   void dispose() {
     _emailController.dispose();
-    for (final c in _codeControllers) {
-      c.dispose();
-    }
-    for (final n in _codeFocusNodes) {
-      n.dispose();
-    }
-    _passwordController.dispose();
-    _confirmPasswordController.dispose();
     _countdownTimer?.cancel();
     super.dispose();
   }
@@ -86,38 +74,17 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     });
   }
 
-  String get _enteredCode =>
-      _codeControllers.map((c) => c.text).join();
-
-  void _clearCode() {
-    for (final c in _codeControllers) {
-      c.clear();
-    }
-    _codeFocusNodes[0].requestFocus();
-  }
-
   // ==================== Actions ====================
 
-  Future<void> _sendCode() async {
+  Future<void> _sendLink() async {
     if (!_emailFormKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
     try {
-      final success = await PasswordResetService.sendResetCode(
-        _emailController.text.trim(),
-      );
-      if (!success) {
-        _showError(AppLocalizations.of(context).forgotPasswordFailedSendCode);
-        return;
-      }
+      await AuthService.sendPasswordReset(_emailController.text.trim());
       if (mounted) {
-        setState(() {
-          _phase = _Phase.code;
-        });
+        setState(() => _phase = _Phase.sent);
         _startCountdown();
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          _codeFocusNodes[0].requestFocus();
-        });
       }
     } catch (e) {
       _showError(UserFacingError.message(e));
@@ -126,71 +93,17 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     }
   }
 
-  Future<void> _resendCode() async {
+  Future<void> _resendLink() async {
     if (!_canResend) return;
     setState(() => _isLoading = true);
     try {
-      final success = await PasswordResetService.sendResetCode(
-        _emailController.text.trim(),
-      );
-      if (success) {
-        _clearCode();
+      await AuthService.sendPasswordReset(_emailController.text.trim());
+      if (mounted) {
         _startCountdown();
-        _showSuccess(AppLocalizations.of(context).forgotPasswordNewCodeSent);
-      } else {
-        _showError(AppLocalizations.of(context).forgotPasswordFailedResend);
+        _showSuccess(AppLocalizations.of(context).forgotPasswordLinkSent);
       }
     } catch (e) {
       _showError(UserFacingError.message(e));
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
-
-  Future<void> _verifyCode() async {
-    final code = _enteredCode;
-    if (code.length != 6) {
-      _showError(AppLocalizations.of(context).forgotPasswordEnterFullCode);
-      return;
-    }
-
-    setState(() => _isLoading = true);
-    try {
-      final valid = await PasswordResetService.verifyCode(
-        _emailController.text.trim(),
-        code,
-      );
-      if (!valid) {
-        _showError(AppLocalizations.of(context).forgotPasswordInvalidCode);
-        _clearCode();
-        return;
-      }
-      if (mounted) {
-        setState(() => _phase = _Phase.password);
-      }
-    } catch (e) {
-      _showError(UserFacingError.message(e));
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
-
-  Future<void> _resetPassword() async {
-    if (!_passwordFormKey.currentState!.validate()) return;
-
-    setState(() => _isLoading = true);
-    try {
-      await PasswordResetService.resetPassword(
-        _emailController.text.trim(),
-        _passwordController.text,
-      );
-
-      if (mounted) {
-        _showSuccess(AppLocalizations.of(context).forgotPasswordResetSuccess);
-        Navigator.pop(context); // Back to auth screen
-      }
-    } catch (e) {
-      if (mounted) _showError(UserFacingError.message(e));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -230,8 +143,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     _buildHeader(),
                     const SizedBox(height: 40),
                     if (_phase == _Phase.email) _buildEmailPhase(),
-                    if (_phase == _Phase.code) _buildCodePhase(),
-                    if (_phase == _Phase.password) _buildPasswordPhase(),
+                    if (_phase == _Phase.sent) _buildSentPhase(),
                   ],
                 ),
               ),
@@ -244,22 +156,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   Widget _buildHeader() {
     final l10n = AppLocalizations.of(context);
-    String title;
-    String subtitle;
-    switch (_phase) {
-      case _Phase.email:
-        title = l10n.forgotPasswordResetTitle;
-        subtitle = l10n.forgotPasswordResetSubtitle;
-        break;
-      case _Phase.code:
-        title = l10n.forgotPasswordCheckEmail;
-        subtitle = l10n.forgotPasswordCodeSubtitle(_emailController.text.trim());
-        break;
-      case _Phase.password:
-        title = l10n.forgotPasswordSetNewPassword;
-        subtitle = l10n.forgotPasswordSetNewSubtitle;
-        break;
-    }
+    final title = _phase == _Phase.email
+        ? l10n.forgotPasswordResetTitle
+        : l10n.forgotPasswordCheckEmail;
+    final subtitle = _phase == _Phase.email
+        ? l10n.forgotPasswordResetSubtitle
+        : l10n.forgotPasswordLinkSubtitle(_emailController.text.trim());
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -269,11 +171,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           onPressed: () {
             if (_phase == _Phase.email) {
               Navigator.pop(context);
-            } else if (_phase == _Phase.code) {
+            } else {
               setState(() => _phase = _Phase.email);
               _countdownTimer?.cancel();
-            } else {
-              setState(() => _phase = _Phase.code);
             }
           },
           size: 40,
@@ -320,39 +220,51 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           ),
           const SizedBox(height: 32),
           _buildPrimaryButton(
-            label: l10n.forgotPasswordSendCode,
-            onPressed: _isLoading ? null : _sendCode,
+            label: l10n.forgotPasswordSendLink,
+            onPressed: _isLoading ? null : _sendLink,
           ),
         ],
       ),
     );
   }
 
-  // ==================== Phase 2: Code ====================
+  // ==================== Phase 2: Link sent ====================
 
-  Widget _buildCodePhase() {
+  Widget _buildSentPhase() {
     final l10n = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // 6 digit input boxes
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: List.generate(6, (i) => _buildCodeBox(i)),
+        Center(
+          child: Container(
+            width: 96,
+            height: 96,
+            decoration: BoxDecoration(
+              color: AppColors.whiteOverlay(opacity: 0.10),
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: AppColors.whiteOverlay(opacity: 0.20),
+              ),
+            ),
+            child: Icon(
+              Icons.mark_email_read_outlined,
+              size: 44,
+              color: AppColors.accentPrimary,
+            ),
+          ),
         ),
         const SizedBox(height: 32),
         _buildPrimaryButton(
-          label: l10n.forgotPasswordVerifyCode,
-          onPressed: _isLoading ? null : _verifyCode,
+          label: l10n.forgotPasswordBackToSignIn,
+          onPressed: _isLoading ? null : () => Navigator.pop(context),
         ),
         const SizedBox(height: 24),
-        // Resend / countdown
         Center(
           child: _canResend
               ? GestureDetector(
-                  onTap: _isLoading ? null : _resendCode,
+                  onTap: _isLoading ? null : _resendLink,
                   child: Text(
-                    l10n.forgotPasswordResendCode,
+                    l10n.forgotPasswordResendLink,
                     style: AppTypography.bodySmall(color: Colors.white).copyWith(
                       fontWeight: FontWeight.w600,
                       decoration: TextDecoration.underline,
@@ -370,121 +282,17 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     );
   }
 
-  Widget _buildCodeBox(int index) {
-    return SizedBox(
-      width: 48,
-      height: 56,
-      child: TextFormField(
-        controller: _codeControllers[index],
-        focusNode: _codeFocusNodes[index],
-        keyboardType: TextInputType.number,
-        textAlign: TextAlign.center,
-        maxLength: 1,
-        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-        style: AppTypography.mono(
-          color: Colors.white,
-          fontSize: 24,
-          fontWeight: FontWeight.w600,
-        ),
-        decoration: InputDecoration(
-          counterText: '',
-          filled: true,
-          fillColor: AppColors.whiteOverlay(opacity: 0.10),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(AppDecorations.cardRadius),
-            borderSide: BorderSide.none,
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(AppDecorations.cardRadius),
-            borderSide: BorderSide(color: AppColors.whiteOverlay(opacity: 0.20)),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(AppDecorations.cardRadius),
-            borderSide: BorderSide(color: AppColors.accentPrimary, width: 2),
-          ),
-          contentPadding: const EdgeInsets.symmetric(vertical: 14),
-        ),
-        onChanged: (value) {
-          if (value.isNotEmpty && index < 5) {
-            _codeFocusNodes[index + 1].requestFocus();
-          }
-          // Auto-submit when all 6 digits entered
-          if (index == 5 && value.isNotEmpty && _enteredCode.length == 6) {
-            _verifyCode();
-          }
-        },
-      ),
-    );
-  }
-
-  // ==================== Phase 3: Password ====================
-
-  Widget _buildPasswordPhase() {
-    final l10n = AppLocalizations.of(context);
-    return Form(
-      key: _passwordFormKey,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _buildInputField(
-            controller: _passwordController,
-            label: l10n.forgotPasswordNewPassword,
-            obscureText: _obscurePassword,
-            suffixIcon: IconButton(
-              icon: Icon(
-                _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                color: Colors.white.withOpacity(0.50),
-              ),
-              onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
-            ),
-            validator: (value) {
-              if (value == null || value.isEmpty) return l10n.forgotPasswordEnterPassword;
-              if (value.length < 6) return l10n.forgotPasswordMinLength;
-              return null;
-            },
-          ),
-          const SizedBox(height: 16),
-          _buildInputField(
-            controller: _confirmPasswordController,
-            label: l10n.forgotPasswordConfirm,
-            obscureText: _obscureConfirm,
-            suffixIcon: IconButton(
-              icon: Icon(
-                _obscureConfirm ? Icons.visibility_off : Icons.visibility,
-                color: Colors.white.withOpacity(0.50),
-              ),
-              onPressed: () => setState(() => _obscureConfirm = !_obscureConfirm),
-            ),
-            validator: (value) {
-              if (value == null || value.isEmpty) return l10n.forgotPasswordConfirmRequired;
-              if (value != _passwordController.text) return l10n.forgotPasswordMismatch;
-              return null;
-            },
-          ),
-          const SizedBox(height: 32),
-          _buildPrimaryButton(
-            label: l10n.forgotPasswordResetButton,
-            onPressed: _isLoading ? null : _resetPassword,
-          ),
-        ],
-      ),
-    );
-  }
-
   // ==================== Shared Widgets ====================
 
   Widget _buildInputField({
     required TextEditingController controller,
     required String label,
     TextInputType? keyboardType,
-    bool obscureText = false,
-    Widget? suffixIcon,
     String? Function(String?)? validator,
   }) {
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
-      obscureText: obscureText,
       style: AppTypography.bodyMedium().copyWith(fontSize: 16),
       decoration: InputDecoration(
         labelText: label,
@@ -515,7 +323,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           borderRadius: BorderRadius.circular(AppDecorations.cardRadius),
           borderSide: const BorderSide(color: Colors.red, width: 2),
         ),
-        suffixIcon: suffixIcon,
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
       ),
       validator: validator,

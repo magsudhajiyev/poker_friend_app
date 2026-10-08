@@ -504,7 +504,14 @@ class PokerStarsExportService {
           final callAmt = amount ?? (currentBetLevel - (committed[seat] ?? 0));
           final effectiveCall = callAmt > 0 ? callAmt : currentBetLevel - (committed[seat] ?? 0);
           committed[seat] = (committed[seat] ?? 0) + effectiveCall;
-          buf.writeln('$name: calls ${_fmtAmt(effectiveCall)}');
+          // HL-8: PokerStars marks a call for the whole stack as all-in.
+          final stackAtAction = (a['playerStack'] as num?)?.toDouble();
+          final callIsAllIn = stackAtAction != null &&
+              stackAtAction > 0 &&
+              effectiveCall >= stackAtAction - 0.01;
+          buf.writeln(callIsAllIn
+              ? '$name: calls ${_fmtAmt(effectiveCall)} and is all-in'
+              : '$name: calls ${_fmtAmt(effectiveCall)}');
         } else if (actionType == 'bet') {
           final betAmt = amount ?? 0;
           currentBetLevel = betAmt;

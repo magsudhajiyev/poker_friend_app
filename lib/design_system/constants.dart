@@ -9,3 +9,6 @@ export 'constants/colors.dart';
 export 'constants/spacing.dart';
 export 'constants/decorations.dart';
 export 'constants/typography.dart';
+
+// Final Table v3 tokens (generated from design_tokens/tokens.json).
+export 'tokens/ft_tokens.g.dart';

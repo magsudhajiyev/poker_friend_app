@@ -38,6 +38,8 @@ android {
         applicationId = "com.finaltable.app"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
+        // purchases_flutter 9.x (Play Billing 8) requires API 23+;
+        // flutter.minSdkVersion is 24 on Flutter 3.38, so delegation is safe.
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode

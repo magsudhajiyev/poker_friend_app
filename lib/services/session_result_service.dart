@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../services/auth_service.dart';
+import 'analytics_service.dart';
 
 class SessionResultService {
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -39,6 +40,11 @@ class SessionResultService {
       if (durationMinutes != null) data['durationMinutes'] = durationMinutes;
 
       await _firestore.collection(_sessionResultsCollection).add(data);
+
+      AnalyticsService.capture('session_ended', {
+        'game_type': gameType,
+        if (durationMinutes != null) 'duration_minutes': durationMinutes,
+      });
 
       debugPrint('✅ Session result added: $amount ($gameType)');
     } catch (e) {

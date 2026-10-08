@@ -15,6 +15,7 @@ import '../../design_system/constants/typography.dart';
 import '../../design_system/constants/decorations.dart';
 import '../../design_system/components/app_toggle.dart';
 import '../../utils/user_facing_error.dart';
+import '../../utils/decimal_input.dart';
 
 /// Shows the Create/Edit Event drawer as a modal bottom sheet.
 /// Returns true if event was created/updated, null otherwise.
@@ -244,14 +245,14 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
             ? _buyInController.text.trim()
             : null;
         startingStack = _startingStackController.text.isNotEmpty
-            ? double.tryParse(_startingStackController.text)
+            ? parseDecimal(_startingStackController.text)
             : null;
       } else {
         buyIn = _buyInController.text.isNotEmpty
-            ? double.tryParse(_buyInController.text)
+            ? parseDecimal(_buyInController.text)
             : null;
         startingStack = _startingStackController.text.isNotEmpty
-            ? double.tryParse(_startingStackController.text)
+            ? parseDecimal(_startingStackController.text)
             : null;
       }
 
@@ -466,7 +467,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
                   : const TextInputType.numberWithOptions(decimal: true),
               inputFormatters: _gameType == 'cash'
                   ? null
-                  : [FilteringTextInputFormatter.allow(RegExp(r'[\d.]'))],
+                  : [DecimalInputFormatter()],
               showError: _isFieldEmpty(_buyInController),
             ),
             _buildSeparator(),
@@ -475,7 +476,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
               controller: _startingStackController,
               hint: _gameType == 'cash' ? AppLocalizations.of(context).eventMinBuyIn : AppLocalizations.of(context).eventStartingStack,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[\d.]'))],
+              inputFormatters: [DecimalInputFormatter()],
               showError: _isFieldEmpty(_startingStackController),
             ),
           ],

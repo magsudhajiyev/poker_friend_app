@@ -14,6 +14,7 @@ import 'user_stats_service.dart';
 import 'app_data_cache.dart';
 import 'subscription_service.dart';
 import 'free_tier_limits.dart';
+import 'analytics_service.dart';
 
 class FirebaseService {
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -129,7 +130,7 @@ class FirebaseService {
   }
 
   // Save a completed poker hand
-  static Future<void> saveHand({
+  static Future<String> saveHand({
     required String sessionId,
     required int handNumber,
     required int buttonPosition,
@@ -165,6 +166,11 @@ class FirebaseService {
     Map<int, String>? playerIds,
     // Tutorial (first-run tour) hands: saved for display, never counted in stats
     bool skipStats = false,
+    // Scouting hand: preflop-only, board skipped. Still feeds opponent stats.
+    bool isScouted = false,
+    // Skip only the HERO's user-stats for this hand (opponent stats still run).
+    // Used for pure-scout hands where the hero folded without entering the pot.
+    bool skipHeroStats = false,
   }) async {
     try {
       final handData = {
@@ -269,6 +275,10 @@ class FirebaseService {
         handData['isStarred'] = isStarred;
       }
 
+      if (isScouted) {
+        handData['isScouted'] = true;
+      }
+
       if (tags != null && tags.isNotEmpty) {
         handData['tags'] = tags;
       }
@@ -293,40 +303,49 @@ class FirebaseService {
           .doc(handDocId)
           .set(handData);
 
+      AnalyticsService.capture('hand_logged', {
+        'is_scouted': isScouted,
+        if (gameType != null) 'game_type': gameType,
+      });
+
       // Update session total hands count
       await _firestore.collection(_sessionsCollection).doc(sessionId).update({
         'totalHands': FieldValue.increment(1),
       });
 
       if (!skipStats) {
-        // Check if this is dealer-assisted mode (playerIds present)
-        final isDealerMode = playerIds != null && playerIds.isNotEmpty;
+        // Hero user-stats are skipped for pure-scout hands (hero folded without
+        // entering the pot) — those hands exist only to feed OPPONENT stats.
+        if (!skipHeroStats) {
+          // Check if this is dealer-assisted mode (playerIds present)
+          final isDealerMode = playerIds != null && playerIds.isNotEmpty;
 
-        if (isDealerMode) {
-          // Dealer mode: update stats for ALL seated players (including dealer if playing)
-          final activeSeats = playerNames?.keys.toList() ?? [];
-          await _updateAllPlayerStatsFromHand(
-            actions: actions,
-            playerIds: playerIds,
-            buttonPosition: buttonPosition,
-            activeSeats: activeSeats,
-            winnerId: winnerId,
-            choppedWinners: choppedWinners,
-          );
-        } else {
-          // Normal mode: update stats for hero only
-          await _updateUserStatsFromHand(
-            actions: actions,
-            heroPositionName: heroPositionName,
-            heroSeatNumber: heroSeatNumber,
-            winnerId: winnerId,
-            playerNames: playerNames,
-            choppedWinners: choppedWinners,
-          );
+          if (isDealerMode) {
+            // Dealer mode: update stats for ALL seated players (including dealer if playing)
+            final activeSeats = playerNames?.keys.toList() ?? [];
+            await _updateAllPlayerStatsFromHand(
+              actions: actions,
+              playerIds: playerIds,
+              buttonPosition: buttonPosition,
+              activeSeats: activeSeats,
+              winnerId: winnerId,
+              choppedWinners: choppedWinners,
+            );
+          } else {
+            // Normal mode: update stats for hero only
+            await _updateUserStatsFromHand(
+              actions: actions,
+              heroPositionName: heroPositionName,
+              heroSeatNumber: heroSeatNumber,
+              winnerId: winnerId,
+              playerNames: playerNames,
+              choppedWinners: choppedWinners,
+            );
+          }
         }
 
-        // Update opponent statistics incrementally (both modes)
-        await _updateOpponentStatsFromHand(
+        // Update opponent statistics incrementally (runs even for scout hands).
+        await updateOpponentStatsFromHand(
           actions: actions,
           playerNames: playerNames,
           reachedShowdown: reachedShowdown,
@@ -342,12 +361,40 @@ class FirebaseService {
       AppDataCache.markHomeDirty();
       AppDataCache.markSessionsDirty();
       if (!skipStats) {
-        AppDataCache.markStatsDirty();
+        // Hero stats cache only when hero stats actually changed.
+        if (!skipHeroStats) {
+          AppDataCache.markStatsDirty();
+        }
         AppDataCache.markOpponentsDirty();
         AppDataCache.markOpponentHandsDirty();
       }
+
+      return handDocId;
     } catch (e) {
       await LoggerService.error('Error saving hand', e, StackTrace.current);
+      rethrow;
+    }
+  }
+
+  /// HL-5: update a saved hand's showdown data (opponent showed cards after
+  /// the hand ended — recorded during the settling overlay). Persisted, not
+  /// an in-memory-only patch (the HL-6 lesson).
+  static Future<void> updateHandShowdown({
+    required String sessionId,
+    required String handId,
+    required Map<String, dynamic> showdownData,
+  }) async {
+    try {
+      await _firestore
+          .collection(_sessionsCollection)
+          .doc(sessionId)
+          .collection(_handsCollection)
+          .doc(handId)
+          .update({'showdownData': showdownData});
+      AppDataCache.markSessionsDirty();
+    } catch (e) {
+      await LoggerService.error(
+          'Error updating hand showdown data', e, StackTrace.current);
       rethrow;
     }
   }
@@ -873,6 +920,7 @@ class FirebaseService {
     required String sessionId,
     int? handsLogged,
     double? biggestPot,
+    double? biggestPotBB,
     List<Map<String, dynamic>>? stackHistory,
     double? totalBuyIn,
     double? averageGrowth,
@@ -896,6 +944,12 @@ class FirebaseService {
 
       if (biggestPot != null) {
         updateData['biggestPot'] = biggestPot;
+      }
+
+      // BB level at the time of the biggest pot — needed to render the pot
+      // in BBs on the tournament summary card after the session is closed.
+      if (biggestPotBB != null) {
+        updateData['biggestPotBB'] = biggestPotBB;
       }
 
       if (stackHistory != null) {
@@ -1092,9 +1146,14 @@ class FirebaseService {
     }
   }
 
-  /// Process hand actions and update opponent stats incrementally
-  /// This is the key optimization - O(1) updates instead of O(n) recalculation
-  static Future<void> _updateOpponentStatsFromHand({
+  /// Process hand actions and update opponent stats incrementally.
+  /// O(1) updates instead of O(n) recalculation.
+  ///
+  /// Hero-INDEPENDENT: updates every saved opponent found in [playerNames]
+  /// purely from [actions]. Shared entry point for both full-hand saves and
+  /// preflop scouting hands, so scouted stats use the SAME StatsCalculator
+  /// detectors as fully-logged hands.
+  static Future<void> updateOpponentStatsFromHand({
     required List<Map<String, dynamic>> actions,
     required Map<int, String>? playerNames,
     bool? reachedShowdown,

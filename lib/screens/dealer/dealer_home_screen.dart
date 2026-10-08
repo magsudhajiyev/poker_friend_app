@@ -16,6 +16,7 @@ import '../../design_system/constants/typography.dart';
 import '../../design_system/components/dialogs/app_dialog.dart';
 import '../../design_system/components/dialogs/dialog_action_bar.dart';
 import '../../utils/user_facing_error.dart';
+import '../../utils/decimal_input.dart';
 
 /// Home screen for dealers to select a club and table
 class DealerHomeScreen extends StatefulWidget {
@@ -917,7 +918,8 @@ class _SessionSettingsDialogState extends State<_SessionSettingsDialog> {
         const SizedBox(height: 4),
         TextFormField(
           initialValue: formatBlindValue(current),
-          keyboardType: TextInputType.number,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          inputFormatters: [DecimalInputFormatter()],
           style: AppTypography.ibm(color: AppColors.textPrimary),
           decoration: InputDecoration(
             filled: true,
@@ -928,7 +930,7 @@ class _SessionSettingsDialogState extends State<_SessionSettingsDialog> {
             ),
           ),
           onChanged: (v) {
-            final parsed = double.tryParse(v);
+            final parsed = parseDecimal(v);
             if (parsed != null) onChanged(parsed);
           },
         ),

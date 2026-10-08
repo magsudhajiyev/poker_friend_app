@@ -7,8 +7,8 @@ void main() {
     test('Should trigger multi-pot dialog when 2+ pots exist (2 players, different stacks)', () {
       // Setup: 2 players with different contributions
       List<PlayerState> players = [
-        PlayerState(playerId: 1, isActive: true, hasFolded: false, currentStack: 0, totalContribution: 1000),
-        PlayerState(playerId: 2, isActive: true, hasFolded: false, currentStack: 0, totalContribution: 1200),
+        PlayerState(playerId: 1, isActive: true, hasFolded: false, isAllIn: true, currentStack: 0, totalContribution: 1000),
+        PlayerState(playerId: 2, isActive: true, hasFolded: false, isAllIn: true, currentStack: 0, totalContribution: 1200),
       ];
 
       final sidePots = SidePotCalculator.calculateSidePots(players);
@@ -24,10 +24,10 @@ void main() {
     test('Should trigger multi-pot dialog when 3+ pots exist (4 players - USER SCENARIO)', () {
       // Setup: User's exact scenario
       List<PlayerState> players = [
-        PlayerState(playerId: 1, isActive: true, hasFolded: false, currentStack: 0, totalContribution: 1400), // UTG
-        PlayerState(playerId: 2, isActive: true, hasFolded: false, currentStack: 0, totalContribution: 1400), // BTN
-        PlayerState(playerId: 3, isActive: true, hasFolded: false, currentStack: 0, totalContribution: 2500), // SB
-        PlayerState(playerId: 4, isActive: true, hasFolded: false, currentStack: 0, totalContribution: 3000), // BB
+        PlayerState(playerId: 1, isActive: true, hasFolded: false, isAllIn: true, currentStack: 0, totalContribution: 1400), // UTG
+        PlayerState(playerId: 2, isActive: true, hasFolded: false, isAllIn: true, currentStack: 0, totalContribution: 1400), // BTN
+        PlayerState(playerId: 3, isActive: true, hasFolded: false, isAllIn: true, currentStack: 0, totalContribution: 2500), // SB
+        PlayerState(playerId: 4, isActive: true, hasFolded: false, isAllIn: true, currentStack: 0, totalContribution: 3000), // BB
       ];
 
       final sidePots = SidePotCalculator.calculateSidePots(players);
@@ -43,9 +43,9 @@ void main() {
     test('Should trigger regular dialog when only 1 pot exists (all equal stacks)', () {
       // Setup: All players with same contribution
       List<PlayerState> players = [
-        PlayerState(playerId: 1, isActive: true, hasFolded: false, currentStack: 0, totalContribution: 1000),
-        PlayerState(playerId: 2, isActive: true, hasFolded: false, currentStack: 0, totalContribution: 1000),
-        PlayerState(playerId: 3, isActive: true, hasFolded: false, currentStack: 0, totalContribution: 1000),
+        PlayerState(playerId: 1, isActive: true, hasFolded: false, isAllIn: true, currentStack: 0, totalContribution: 1000),
+        PlayerState(playerId: 2, isActive: true, hasFolded: false, isAllIn: true, currentStack: 0, totalContribution: 1000),
+        PlayerState(playerId: 3, isActive: true, hasFolded: false, isAllIn: true, currentStack: 0, totalContribution: 1000),
       ];
 
       final sidePots = SidePotCalculator.calculateSidePots(players);
@@ -82,13 +82,13 @@ void main() {
       // UTG goes all-in 1400, BTN calls 1400, SB calls 2400 more (2500 total), BB calls 2600 more (3000 total)
 
       List<PlayerState> players = [
-        PlayerState(playerId: 1, isActive: true, hasFolded: false, currentStack: 0,
+        PlayerState(playerId: 1, isActive: true, hasFolded: false, isAllIn: true, currentStack: 0,
                    totalContribution: 0, betThisRound: 1400), // UTG: all-in preflop
-        PlayerState(playerId: 2, isActive: true, hasFolded: false, currentStack: 0,
+        PlayerState(playerId: 2, isActive: true, hasFolded: false, isAllIn: true, currentStack: 0,
                    totalContribution: 0, betThisRound: 1400), // BTN: all-in preflop
-        PlayerState(playerId: 3, isActive: true, hasFolded: false, currentStack: 0,
+        PlayerState(playerId: 3, isActive: true, hasFolded: false, isAllIn: true, currentStack: 0,
                    totalContribution: 100, betThisRound: 2400), // SB: 100 SB + 2400 more = 2500 total
-        PlayerState(playerId: 4, isActive: true, hasFolded: false, currentStack: 0,
+        PlayerState(playerId: 4, isActive: true, hasFolded: false, isAllIn: true, currentStack: 0,
                    totalContribution: 400, betThisRound: 2600), // BB: 400 (BB+ante) + 2600 more = 3000 total
       ];
 
@@ -115,9 +115,9 @@ void main() {
     test('Edge case: 2 players same stack, 1 player bigger stack', () {
       // Setup: P1 and P2 have 1000, P3 has 2000
       List<PlayerState> players = [
-        PlayerState(playerId: 1, isActive: true, hasFolded: false, currentStack: 0, totalContribution: 1000),
-        PlayerState(playerId: 2, isActive: true, hasFolded: false, currentStack: 0, totalContribution: 1000),
-        PlayerState(playerId: 3, isActive: true, hasFolded: false, currentStack: 0, totalContribution: 2000),
+        PlayerState(playerId: 1, isActive: true, hasFolded: false, isAllIn: true, currentStack: 0, totalContribution: 1000),
+        PlayerState(playerId: 2, isActive: true, hasFolded: false, isAllIn: true, currentStack: 0, totalContribution: 1000),
+        PlayerState(playerId: 3, isActive: true, hasFolded: false, isAllIn: true, currentStack: 0, totalContribution: 2000),
       ];
 
       final sidePots = SidePotCalculator.calculateSidePots(players);

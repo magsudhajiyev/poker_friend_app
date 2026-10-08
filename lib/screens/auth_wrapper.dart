@@ -34,7 +34,6 @@ class _AuthWrapperState extends State<AuthWrapper> {
   /// to avoid sequential FutureBuilder nesting.
   /// Returns: 'home' | 'onboarding_skip_nickname' | 'onboarding_with_nickname'
   Future<String>? _startupGateFuture;
-  Future<bool>? _anonSignupFuture;    // Whether an anonymous guest must sign up (finished tour)
   Timer? _authTimeoutTimer;
   @override
   void initState() {
@@ -73,11 +72,13 @@ class _AuthWrapperState extends State<AuthWrapper> {
       _checkUsernameSetup(),
       OnboardingService.hasCompletedOnboarding(),
     ]);
-    final usernameReady = results[0] as bool;
-    final onboardingDone = results[1] as bool;
+    final usernameReady = results[0];
+    final onboardingDone = results[1];
 
     debugPrint('📍 AUTH: usernameReady=$usernameReady, onboardingDone=$onboardingDone');
 
+    // Onboarding-first funnel: username + survey right after sign-up; the
+    // guided tour then auto-starts on Home (hasSeenOnboarding still false).
     if (!usernameReady) return 'onboarding_full';
     if (!onboardingDone) return 'onboarding_skip';
     return 'home';
@@ -160,20 +161,12 @@ class _AuthWrapperState extends State<AuthWrapper> {
           // But once a guest has FINISHED the tour, sign-up is mandatory: if they
           // killed the app before linking, force them back into it here (the flag
           // is persisted, so it survives an app kill).
+          // Hard sign-up gate: anonymous sessions can no longer use the
+          // app. Any stray guest (pre-gate installs) is upgraded in place —
+          // GuestSignupGate links the account (uid preserved, data kept),
+          // then runs the onboarding questions + paywall.
           if (AuthService.isAnonymous) {
-            _anonSignupFuture ??= OnboardingPrefs.isPostTourSignupRequired();
-            return FutureBuilder<bool>(
-              future: _anonSignupFuture,
-              builder: (context, signupSnapshot) {
-                if (signupSnapshot.connectionState == ConnectionState.waiting) {
-                  return _buildLoadingScreen(context);
-                }
-                if (signupSnapshot.data == true) {
-                  return const GuestSignupGate();
-                }
-                return MainShell();
-              },
-            );
+            return const GuestSignupGate();
           }
 
           // Single combined gate: username + onboarding checked together
@@ -240,7 +233,6 @@ class _AuthWrapperState extends State<AuthWrapper> {
         // Reset state when showing intro screen
         _wasSignedIn = false;
         _startupGateFuture = null;
-        _anonSignupFuture = null;
 
         // User is not signed in
         return IntroScreen();

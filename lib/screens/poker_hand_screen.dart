@@ -22,12 +22,13 @@ import '../widgets/global_bottom_nav_bar.dart';
 import '../widgets/board_cards_dialog.dart';
 import '../widgets/all_in_board_cards_dialog.dart';
 import '../widgets/hole_cards_dialog.dart';
+import '../design_system/components/sheets/app_sheet.dart';
 import '../widgets/hand_review_dialog.dart';
 import 'session_details_screen.dart';
 import '../widgets/showdown_dialog.dart';
 import 'seat_setup_screen.dart';
 import '../widgets/action_button_grid.dart';
-import '../widgets/table_management_sheet.dart';
+import '../design_system/components/modals/confirm_dialog.dart';
 import '../widgets/seat_config_sheet.dart';
 import '../widgets/poker_table_widget.dart';
 import '../design_system/components/overlays/raise_snap_overlay.dart';
@@ -49,13 +50,14 @@ import '../services/logger_service.dart';
 import '../services/free_tier_limits.dart';
 import '../services/subscription_service.dart';
 import '../services/skip_hand_scouting_service.dart';
-import '../widgets/skip_hand_scouting_sheet.dart';
+import '../services/feature_flag_service.dart';
 import '../onboarding/onboarding_state.dart';
 import '../widgets/main_shell.dart';
 import '../onboarding/onboarding_progress_bar.dart';
 import '../onboarding/guided_hand_overlay.dart';
 import 'session_history_screen.dart';
 import '../utils/user_facing_error.dart';
+import '../utils/decimal_input.dart';
 
 class PokerHandScreen extends StatefulWidget {
   final double smallBlind;
@@ -125,6 +127,10 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
   bool _allInHandCompleted = false;
   bool _showStreetCompleteIndicator = false;
   bool _isSettlingBetweenHands = false; // Brief pause after hand completes
+  // HL-5: card-entry (or the one-time tip) holds the settling auto-advance.
+  bool _settlingCardEntryOpen = false;
+  // Pill anchor — the future HL-5t tour step spotlights this.
+  final GlobalKey _settlingHintKey = GlobalKey(debugLabel: 'settlingHint');
   bool _isNavigatingAway = false; // Guard against double-tap back
   String? _settlingWinnerName; // Winner name for settling overlay
   double? _settlingPotAmount; // Pot amount for settling overlay
@@ -134,6 +140,14 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
   bool _isRaiseSnapping = false;
   List<SnapPoint> _raiseSnapPoints = [];
   int _activeSnapIndex = 0;
+
+  // Scouting mode: turns on when the hero folds preflop. In this mode the
+  // remaining opponents' actions are still logged (feeding opponent stats),
+  // but raises are recorded TYPE-ONLY (no bet-size overlay; amount auto-filled
+  // to keep the engine valid) and the pot is never awarded — the hand finishes
+  // early as a preflop-only scouting record.
+  bool _scoutingMode = false;
+  bool _finishingScout = false;
   double _raiseSnapProgress = 0.0;
   // Unclamped progress — goes negative when the finger drops back below the
   // entry threshold. Distinguishes "cancel intent" from "released on the
@@ -142,6 +156,11 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
   double _raiseSnapRawProgress = 0.0;
   double _raiseSnapAmount = 0.0;
   PlayerAction? _raiseSnapAction;
+  // HL-8b: the snap ladder collapsed to a single All-In (stack below a
+  // min-raise), and the special "all-in CALL" gesture (stack ≤ call amount —
+  // no raise exists at all; confirming performs a call, not a raise).
+  bool _raiseSnapAllInOnly = false;
+  bool _raiseSnapIsAllInCall = false;
   // Action flash state
   String? _actionFlashText;
   Color _actionFlashColor = Colors.white;
@@ -436,8 +455,25 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     // Get hero's current stack to carry over
     final heroSeat = sessionManager.ourSeatNumber;
     final heroStack = heroSeat != null ? gameState.getPlayerStack(heroSeat) : 0.0;
-    final heroName = heroSeat != null ? sessionManager.playerNames[heroSeat] : null;
 
+    final handInProgress =
+        sessionManager.currentHand?.actions.isNotEmpty ?? false;
+
+    if (handInProgress) {
+      // HL-2: a hand is running — standard destructive confirm.
+      // Confirm = discard the hand & change table; Cancel = resume the hand.
+      await ConfirmDialog.show(
+        context,
+        title: l10n.handChangeTable,
+        message: l10n.pokerHandChangeTableDiscardMessage,
+        confirmLabel: l10n.pokerHandDiscardAndChangeTable,
+        onConfirm: () => _performTableChange(
+            heroSeat: heroSeat, heroStack: heroStack, discardHand: true),
+      );
+      return;
+    }
+
+    // No hand in progress — keep the lighter informational confirm.
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -464,8 +500,24 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     );
 
     if (confirmed != true || !mounted) return;
+    _performTableChange(
+        heroSeat: heroSeat, heroStack: heroStack, discardHand: false);
+  }
 
+  void _performTableChange({
+    required int? heroSeat,
+    required double heroStack,
+    required bool discardHand,
+  }) {
+    if (!mounted) return;
     setState(() {
+      // HL-2: discard the in-progress hand BEFORE clearing seats so the
+      // auto-complete trap (startHand → completeCurrentHand on a non-empty
+      // hand, hand_state_machine.dart:548) can never save a corrupt
+      // half-hand.
+      final discardedHandNumber =
+          discardHand ? sessionManager.discardCurrentHand() : null;
+
       // Increment table number
       sessionManager.currentTableNumber++;
 
@@ -478,6 +530,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         sessionManager.playerNames.remove(seat);
         sessionManager.playerStacks.remove(seat);
         sessionManager.playerIds.remove(seat);
+        sessionManager.pendingSeats.remove(seat);
         gameState.setPlayerActive(seat, false);
       }
 
@@ -490,17 +543,21 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         // Reset hero confidence to high (known stack at table change)
         gameState.setPlayerStack(heroSeat, heroStack);
       }
-    });
 
-    // Open table management sheet so user can add new opponents
-    if (mounted) {
-      TableManagementSheet.show(
-        context: context,
-        gameState: gameState,
-        sessionManager: sessionManager,
-        onChanged: () => setState(() {}),
-      );
-    }
+      if (discardHand) {
+        // Wipe the discarded hand's engine state (pot, bets, street) and
+        // open a fresh hand reusing its number — the discarded hand never
+        // happened. Blinds re-post as players are seated at the new table
+        // via the pre-action join path (HL-1).
+        gameState.startNewHand();
+        sessionManager.startHand(
+          discardedHandNumber ?? sessionManager.completedHands.length + 1,
+          gameState.buttonPosition,
+        );
+      }
+    });
+    // HL-4: no auto-opened seat drawer — players are added by tapping
+    // empty seats.
   }
 
   Future<void> _stopSession() async {
@@ -728,7 +785,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
             controller: ctrl,
             autofocus: autofocus,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[\d.]'))],
+            inputFormatters: [DecimalInputFormatter()],
             style: AppTypography.ibm(
               fontSize: 15,
               color: AppColors.textPrimary,
@@ -790,9 +847,9 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
               child: PrimaryPillButton(
                 label: l10n.commonApply,
                 onTap: () {
-                  final sb = double.tryParse(sbController.text) ??
+                  final sb = parseDecimal(sbController.text) ??
                       gameState.smallBlind;
-                  final bb = double.tryParse(bbController.text) ??
+                  final bb = parseDecimal(bbController.text) ??
                       gameState.bigBlind;
                   Navigator.pop(
                       ctx, {'sb': sb, 'bb': bb >= sb ? bb : sb});
@@ -1158,7 +1215,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
           ),
           TextButton(
             onPressed: () {
-              final newStack = double.tryParse(controller.text);
+              final newStack = parseDecimal(controller.text);
               if (newStack != null && newStack >= 0) {
                 setState(() {
                   gameState.setPlayerStack(player, newStack);
@@ -1608,6 +1665,44 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                                     fontWeight: FontWeight.w400,
                                   ),
                                 ),
+                                const SizedBox(height: 14),
+                                // HL-5: explicit shown-cards entry point.
+                                GestureDetector(
+                                  onTap: _openShownCardsFlow,
+                                  child: Container(
+                                    key: _settlingHintKey,
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 16, vertical: 8),
+                                    decoration: BoxDecoration(
+                                      color:
+                                          Colors.white.withValues(alpha: 0.08),
+                                      borderRadius: BorderRadius.circular(
+                                          AppDecorations.pillRadius),
+                                      border: Border.all(
+                                          color: Colors.white
+                                              .withValues(alpha: 0.12)),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(Icons.style_outlined,
+                                            size: 15,
+                                            color: Colors.white
+                                                .withValues(alpha: 0.7)),
+                                        const SizedBox(width: 6),
+                                        Text(
+                                          l10n.handRecordShownCards,
+                                          style: AppTypography.ibm(
+                                            fontSize: 13,
+                                            color: Colors.white
+                                                .withValues(alpha: 0.7),
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
                               ],
                               ),
                             ),
@@ -1749,7 +1844,13 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
           key: _guidedOverlayKey,
           gestureInfoKey: _gestureInfoKey,
           skipButtonKey: _skipButtonKey,
-          stackRingKey: _stackRingKey,
+          opponentSeatKey: () {
+            final hero = sessionManager.ourSeatNumber;
+            for (final s in sessionManager.activeSeats) {
+              if (s != hero) return _seatAnchorKeys[s - 1];
+            }
+            return null;
+          },
           tableButtonKey: _tableButtonKey,
           blindsPillKey: _blindsPillKey,
           nextHandButtonKey: _nextHandButtonKey,
@@ -1766,6 +1867,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
           onDealNextHand: () {
             if (!mounted) return;
             setState(() {
+              sessionManager.flushPendingSeats(gameState); // HL-3: seat deferred joins
               gameState.startNewHand();
               gameState.initializePot();
               sessionManager.startHand(
@@ -1842,8 +1944,20 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     final seatLabels = <int, String>{};
     for (int widgetSeat = 1; widgetSeat <= 9; widgetSeat++) {
       final logical = _widgetSeatToLogical(widgetSeat);
-      seatActive[widgetSeat] = gameState.players[logical - 1].isActive;
-      seatLabels[widgetSeat] = sessionManager.playerNames[logical] ?? '';
+      // Pending seats (added mid-hand, joining next hand) render occupied
+      // even though the engine doesn't know them yet (HL-3).
+      final isPendingSeat = sessionManager.pendingSeats.contains(logical) ||
+          sessionManager.pendingHeroSeat == logical;
+      seatActive[widgetSeat] =
+          gameState.players[logical - 1].isActive || isPendingSeat;
+      var label = sessionManager.playerNames[logical] ?? '';
+      if (label.isEmpty && sessionManager.pendingHeroSeat == logical) {
+        final heroSeatNow = sessionManager.ourSeatNumber;
+        label = heroSeatNow != null
+            ? (sessionManager.playerNames[heroSeatNow] ?? '')
+            : '';
+      }
+      seatLabels[widgetSeat] = label;
     }
 
     // Remap button position to widget seat
@@ -1998,18 +2112,31 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
   /// Builds a compact seat widget showing player state (name, stack, bet, fold/all-in).
   Widget _buildHandSeat(int seatNumber, bool isActive, String label) {
     final playerState = gameState.players[seatNumber - 1];
+    // HL-3: seat added mid-hand — occupied but sitting out until next hand.
+    final isPending = !playerState.isActive &&
+        (sessionManager.pendingSeats.contains(seatNumber) ||
+            sessionManager.pendingHeroSeat == seatNumber);
     final isFolded = playerState.hasFolded;
-    final isAllIn = playerState.isAllIn;
-    final isCurrentPlayer = isActive && gameState.currentPlayer == seatNumber;
+    final isAllIn = !isPending && playerState.isAllIn;
+    final isCurrentPlayer =
+        isActive && !isPending && gameState.currentPlayer == seatNumber;
     final isHero = seatNumber == (sessionManager.ourSeatNumber ?? -1);
-    final stack = playerState.currentStack;
-    var bet = playerState.betThisRound;
-    final hasChecked = playerState.lastAction == PlayerAction.check && bet == 0 && !isFolded;
+    final stack = isPending
+        ? (sessionManager.pendingHeroSeat == seatNumber
+            ? (sessionManager.pendingHeroStack ?? 0.0)
+            : (sessionManager.playerStacks[seatNumber] ?? 0.0))
+        : playerState.currentStack;
+    var bet = isPending ? 0.0 : playerState.betThisRound;
+    final hasChecked = !isPending &&
+        playerState.lastAction == PlayerAction.check && bet == 0 && !isFolded;
 
     // Determine circle border color based on state
     Color borderColor;
     if (!isActive) {
       borderColor = AppColors.bgElevated;
+    } else if (isPending) {
+      // Joins next hand — same muted look as a folded player
+      borderColor = AppColors.accentSecondary.withValues(alpha: 0.3);
     } else if (isFolded) {
       borderColor = AppColors.accentSecondary.withValues(alpha: 0.3);
     } else if (isCurrentPlayer) {
@@ -2160,7 +2287,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
 
     // Player info column (circle + name + stack) — dims smoothly on fold
     final playerInfo = AnimatedOpacity(
-      opacity: isFolded ? 0.55 : 1.0,
+      opacity: (isFolded || isPending) ? 0.55 : 1.0,
       duration: const Duration(milliseconds: 250),
       curve: Curves.easeOut,
       child: Column(
@@ -2363,6 +2490,12 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         required bool isHero,
         required bool isActive,
       }) {
+        // HL-1/HL-3 boundary: a seat change before anyone acted joins the
+        // CURRENT hand (blinds + action order recomputed below); after any
+        // action it is deferred to the next hand (dimmed pending seat).
+        final handInProgress =
+            sessionManager.currentHand?.actions.isNotEmpty ?? false;
+
         if (!isActive) {
           // Remove player. Removing the hero's own seat unseats the user —
           // clear ourSeatNumber so it never points at a dead/reused seat.
@@ -2373,6 +2506,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
           sessionManager.playerNames.remove(seatNumber);
           sessionManager.playerStacks.remove(seatNumber);
           sessionManager.playerIds.remove(seatNumber);
+          sessionManager.pendingSeats.remove(seatNumber);
           gameState.setPlayerActive(seatNumber, false);
           setState(() {});
           return;
@@ -2383,12 +2517,26 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
           final oldSeat = sessionManager.ourSeatNumber;
           final heroStack =
               oldSeat != null ? gameState.getPlayerStack(oldSeat) : 0.0;
-          sessionManager.reseatHero(
-            newSeat: seatNumber,
-            gameState: gameState,
-            heroName: heroName.isNotEmpty ? heroName : name,
-            heroStack: heroStack > 0 ? heroStack : stack,
-          );
+          if (handInProgress) {
+            // HL-3: mid-hand hero move waits for the next hand.
+            sessionManager.deferHeroReseat(
+              newSeat: seatNumber,
+              heroName: heroName.isNotEmpty ? heroName : name,
+              heroStack: heroStack > 0 ? heroStack : stack,
+            );
+          } else {
+            sessionManager.reseatHero(
+              newSeat: seatNumber,
+              gameState: gameState,
+              heroName: heroName.isNotEmpty ? heroName : name,
+              heroStack: heroStack > 0 ? heroStack : stack,
+            );
+            // Pre-action re-seat shifts positions the same way a new
+            // player does — recompute blinds/action order/labels.
+            gameState.initializePot();
+            gameState.recalculateActionOrder();
+            sessionManager.refreshPreActionPositions(gameState);
+          }
         } else {
           // Editing hero's own seat, or adding/editing a regular player.
           // If the user unticked "This is my seat" on their OWN seat, they
@@ -2417,9 +2565,23 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
           // state mid-hand (betThisRound/totalContribution) — only activate
           // seats that are currently inactive.
           if (!gameState.players[seatNumber - 1].isActive) {
-            gameState.setPlayerActive(seatNumber, true);
+            if (handInProgress) {
+              // HL-3: seated mid-hand — the engine is NOT told until the
+              // next hand starts (deferred activation). Seat renders dimmed.
+              sessionManager.pendingSeats.add(seatNumber);
+            } else {
+              gameState.setPlayerActive(seatNumber, true);
+              gameState.setPlayerStack(seatNumber, stack);
+              // HL-1: pre-action join — re-post blinds (idempotent) and
+              // recompute action order so the new player can be UTG, then
+              // re-sync blind seats + the frozen hero position.
+              gameState.initializePot();
+              gameState.recalculateActionOrder();
+              sessionManager.refreshPreActionPositions(gameState);
+            }
+          } else {
+            gameState.setPlayerStack(seatNumber, stack);
           }
-          gameState.setPlayerStack(seatNumber, stack);
         }
         setState(() {});
       },
@@ -2454,6 +2616,10 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
   static const double _ringStartAngle = -math.pi / 2;
 
   void _onSeatLongPressStart(int seatNumber, Offset globalPosition) {
+    // Settling overlay owns long-press then (HL-5 shown-cards recording).
+    // Unreachable in practice — the opaque overlay wins hit-testing — but
+    // keep the two gestures explicitly exclusive.
+    if (_isSettlingBetweenHands) return;
     final playerState = gameState.players[seatNumber - 1];
     if (!playerState.isActive) return;
     final isHero = seatNumber == (sessionManager.ourSeatNumber ?? -1);
@@ -2806,19 +2972,21 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       },
     ));
 
-    items.add(_buildMenuSeparator());
-
-    // Skip-hand scouting toggle — same preference as the Settings row.
-    // Toggling keeps the menu open so the state change is visible.
-    items.add(_buildMenuToggleItem(
-      label: l10n.settingsSkipHandScouting,
-      value: SkipHandScoutingService.isEnabled,
-      onTap: () async {
-        await SkipHandScoutingService.setEnabled(
-            !SkipHandScoutingService.isEnabled);
-        if (mounted) setState(() {});
-      },
-    ));
+    // Skip-hand scouting toggle — same preference as the Settings row, and
+    // gated behind the Training Drills feature flag. Toggling keeps the menu
+    // open so the state change is visible.
+    if (FeatureFlagService.isEnabled(FeatureFlagService.trainingDrills)) {
+      items.add(_buildMenuSeparator());
+      items.add(_buildMenuToggleItem(
+        label: l10n.settingsSkipHandScouting,
+        value: SkipHandScoutingService.isEnabled,
+        onTap: () async {
+          await SkipHandScoutingService.setEnabled(
+              !SkipHandScoutingService.isEnabled);
+          if (mounted) setState(() {});
+        },
+      ));
+    }
 
     items.add(_buildMenuSeparator());
 
@@ -3334,7 +3502,19 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         action = PlayerAction.raise;
       }
       if (action != null) {
-        _enterRaiseSnapMode(action);
+        if (_scoutingMode) {
+          // Scouting: record a type-only raise (no bet-size overlay). The
+          // amount is auto-filled to keep the engine valid; it is never shown
+          // and the pot is not awarded on finish.
+          _swipePanStart = null;
+          _performScoutRaise(action);
+        } else {
+          _enterRaiseSnapMode(action);
+        }
+      } else if (_canOnlyAllInCall()) {
+        // HL-8b: stack ≤ call amount — no raise exists. Drag-up becomes an
+        // explicit all-in CALL gesture (single All-In snap; confirm calls).
+        _enterAllInCallSnap();
       }
     }
 
@@ -3376,8 +3556,23 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     final isCash = gameState.isCashGame;
     final lastBet = gameState.getCurrentBet();
 
+    // HL-8b: with a stack below a min-raise the ladder collapses to a single
+    // All-In snap; with a stack that can't even cover the call, no raise
+    // exists at all (handled by _enterAllInCallSnap — defensive here).
+    final mode = RaiseSnapOverlay.gestureMode(
+      maxBet: maxBet,
+      currentBet: lastBet,
+      minRaiseTotal: minBet,
+    );
+    if (mode == RaiseGestureMode.none) {
+      if (_canOnlyAllInCall()) _enterAllInCallSnap();
+      return;
+    }
+
     List<SnapPoint> points;
-    if (isPreflop) {
+    if (mode == RaiseGestureMode.allInOnly) {
+      points = RaiseSnapOverlay.allInOnlySnapPoints(maxBet: maxBet);
+    } else if (isPreflop) {
       points = RaiseSnapOverlay.preflopSnapPoints(
         minRaise: minBet,
         bigBlind: bigBlind,
@@ -3401,6 +3596,8 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       _isRaiseSnapping = true;
       _raiseSnapPoints = points;
       _raiseSnapAction = action;
+      _raiseSnapAllInOnly = mode == RaiseGestureMode.allInOnly;
+      _raiseSnapIsAllInCall = false;
       _activeSnapIndex = 0;
       _raiseSnapProgress = 0.0;
       _raiseSnapRawProgress = 0.0;
@@ -3408,6 +3605,37 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     });
 
     // Haptic feedback on entering raise mode
+    HapticFeedback.mediumImpact();
+  }
+
+  /// HL-8b: hero's whole stack can't cover the call — the only chip action
+  /// is an all-in CALL (no raise exists).
+  bool _canOnlyAllInCall() {
+    final hero = gameState.getCurrentPlayer();
+    if (hero == null || hero.currentStack <= 0) return false;
+    if (!gameState.isValidAction(PlayerAction.call)) return false;
+    return hero.currentStack + hero.betThisRound <= gameState.getCurrentBet();
+  }
+
+  /// HL-8b: single All-In snap whose confirmation performs a CALL (all-in
+  /// for less) — never a raise.
+  void _enterAllInCallSnap() {
+    final hero = gameState.getCurrentPlayer();
+    if (hero == null) return;
+    final maxBet = hero.currentStack + hero.betThisRound;
+
+    setState(() {
+      _isRaiseSnapping = true;
+      _raiseSnapPoints = RaiseSnapOverlay.allInOnlySnapPoints(maxBet: maxBet);
+      _raiseSnapAction = PlayerAction.call;
+      _raiseSnapAllInOnly = true;
+      _raiseSnapIsAllInCall = true;
+      _activeSnapIndex = 0;
+      _raiseSnapProgress = 0.0;
+      _raiseSnapRawProgress = 0.0;
+      _raiseSnapAmount = maxBet;
+    });
+
     HapticFeedback.mediumImpact();
   }
 
@@ -3443,6 +3671,8 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       _isRaiseSnapping = false;
       _raiseSnapPoints = [];
       _raiseSnapAction = null;
+      _raiseSnapAllInOnly = false;
+      _raiseSnapIsAllInCall = false;
       _activeSnapIndex = 0;
       _raiseSnapProgress = 0.0;
       _raiseSnapRawProgress = 0.0;
@@ -3454,6 +3684,8 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
   void _openNumpadFromSnap() async {
     final action = _raiseSnapAction;
     if (action == null) return;
+    // HL-8b: all-in is the only legal amount — nothing to type.
+    if (_raiseSnapAllInOnly || _raiseSnapIsAllInCall) return;
 
     // Cancel snap overlay first
     _cancelRaiseSnap();
@@ -3472,16 +3704,29 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       final action = _raiseSnapAction;
       final amount = _raiseSnapAmount;
       final rawProgress = _raiseSnapRawProgress;
+      final isAllInCall = _raiseSnapIsAllInCall;
+      final allInOnly = _raiseSnapAllInOnly;
       _cancelRaiseSnap();
       _swipePanStart = null;
 
       if (action == null) return;
+
+      // HL-8b: confirming the all-in CALL snap performs a call (engine caps
+      // at stack → all-in); dropping back below the threshold just cancels.
+      if (isAllInCall) {
+        if (rawProgress >= -0.1 && amount > 0) {
+          _performPokerAction(PlayerAction.call);
+        }
+        return;
+      }
 
       // Numpad only when the finger clearly dropped BACK BELOW the entry
       // threshold (raw progress negative) — releasing ON the first snap
       // point must bet it. (Min = 2x when facing a bet, so the old
       // `progress < 0.05` check made 2x unselectable.)
       if (rawProgress < -0.1) {
+        // HL-8b: nothing to type when all-in is the only legal amount.
+        if (allInOnly) return;
         _showBetAmountDialog(action).then((customAmount) {
           if (customAmount != null) {
             _performPokerActionWithAmount(action, customAmount);
@@ -3537,7 +3782,14 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         : gameState.getMinimumBet();
     final maxBet = currentPlayer.currentStack + currentPlayer.betThisRound;
 
+    // HL-8b: a "raise" that can't exceed the current bet doesn't exist —
+    // never offer manual entry for it (only fold / all-in call remain).
+    if (action == PlayerAction.raise && maxBet <= gameState.getCurrentBet()) {
+      return null;
+    }
+
     // If player is short-stacked (can't meet min bet), allow all-in for whatever they have
+    // (validation below then locks the input to exactly the all-in amount)
     final effectiveMinBet = maxBet < minBet ? maxBet : minBet;
 
     // Determine which multiplier mode to use
@@ -3618,6 +3870,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                       keyboardType: TextInputType.numberWithOptions(
                         decimal: widget.gameType == GameType.cash,
                       ),
+                      inputFormatters: [DecimalInputFormatter()],
                       style: AppTypography.ibm(
                         color: Colors.white,
                         fontSize: 24,
@@ -3674,28 +3927,26 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                       // Full-width Confirm button
                       GestureDetector(
                         onTap: () {
-                          final text = amountController.text.trim();
-                          double? amount;
-                          try {
-                            amount = double.parse(text);
-                            if (amount < effectiveMinBet || amount > maxBet) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    l10n.pokerHandAmountBetween(
-                              effectiveMinBet.toStringAsFixed(widget.gameType == GameType.cash ? 2 : 0),
-                              maxBet.toStringAsFixed(widget.gameType == GameType.cash ? 2 : 0),
-                            ),
-                                  ),
-                                  backgroundColor: Colors.red,
-                                ),
-                              );
-                              return;
-                            }
-                          } catch (e) {
+                          final amount =
+                              parseDecimal(amountController.text);
+                          if (amount == null) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text(l10n.handPleaseEnterValidNumber),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                            return;
+                          }
+                          if (amount < effectiveMinBet || amount > maxBet) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  l10n.pokerHandAmountBetween(
+                            effectiveMinBet.toStringAsFixed(widget.gameType == GameType.cash ? 2 : 0),
+                            maxBet.toStringAsFixed(widget.gameType == GameType.cash ? 2 : 0),
+                          ),
+                                ),
                                 backgroundColor: Colors.red,
                               ),
                             );
@@ -3969,8 +4220,14 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       amount: amount,
     );
 
-    // Flash the action on screen
-    _showActionFlash(_actionFlashLabel(action, amount), action: action);
+    // Flash the action on screen. Bet/raise amount is the TOTAL to-amount;
+    // the additional chips are (amount - betThisRound) — all-in when that
+    // consumes the whole remaining stack (HL-8).
+    final flashAllIn = (amount -
+            gameState.players[gameState.currentPlayer - 1].betThisRound) >=
+        currentPlayerStack - 1e-9;
+    _showActionFlash(_actionFlashLabel(action, amount, flashAllIn),
+        action: action);
 
     // Perform action with specified amount
     String result = gameState.performActionWithAmount(action, amount);
@@ -3985,41 +4242,194 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     // Notify guided hand overlay
     _guidedOverlayKey.currentState?.onActionPerformed(action);
 
-    // Auto-advance: the game state is the single source of truth. The guided
-    // overlay only decides what to *suggest* next — it never blocks or defers
-    // the core hand logging flow.
-    if (result.contains("Hand ends: Only one player remaining")) {
-      _schedulePostFrameAction(() {
-        _completeHandAutomatically();
-      });
-    } else {
-      _checkForAutomaticHandEnd();
-
-      if (gameState.bettingRoundComplete && gameState.currentRound != BettingRound.river) {
-        _schedulePostFrameAction(() {
-          if (gameState.shouldAutoAdvanceToShowdown()) {
-            _showAllInBoardCardsDialog();
-          } else {
-            _autoAdvanceWithIndicator();
-          }
-        });
-      } else if (gameState.bettingRoundComplete && gameState.currentRound == BettingRound.river) {
-        _schedulePostFrameAction(() {
-          _handleHandComplete();
-        });
-      } else if (gameState.areAllPlayersAllIn() && gameState.currentRound != BettingRound.river && !gameState.bettingRoundComplete) {
-        _schedulePostFrameAction(() {
-          gameState.bettingRoundComplete = true;
-          setState(() {});
-        });
-      }
-    }
+    // Auto-advance (shared): the game state is the single source of truth.
+    _handlePostActionAdvance(result);
 
     // Update UI
     setState(() {});
   }
 
+  /// Shared post-action flow: hand-ended → auto-complete; else advance the
+  /// street / prompt the board. In SCOUTING mode, when preflop betting
+  /// completes (the point that would normally deal a board), finish the hand
+  /// early as a scouting record instead of showing the board dialog.
+  void _handlePostActionAdvance(String result) {
+    if (result.contains("Hand ends: Only one player remaining")) {
+      _schedulePostFrameAction(() {
+        _completeHandAutomatically();
+      });
+      return;
+    }
+
+    _checkForAutomaticHandEnd();
+
+    // Scouting interception: preflop betting done → finish scouting (no board).
+    if (_scoutingMode &&
+        gameState.bettingRoundComplete &&
+        gameState.currentRound == BettingRound.preflop) {
+      _schedulePostFrameAction(() {
+        _finishScoutedHand();
+      });
+      return;
+    }
+
+    if (gameState.bettingRoundComplete && gameState.currentRound != BettingRound.river) {
+      _schedulePostFrameAction(() {
+        if (gameState.shouldAutoAdvanceToShowdown()) {
+          _showAllInBoardCardsDialog();
+        } else {
+          _autoAdvanceWithIndicator();
+        }
+      });
+    } else if (gameState.bettingRoundComplete && gameState.currentRound == BettingRound.river) {
+      _schedulePostFrameAction(() {
+        _handleHandComplete();
+      });
+    } else if (gameState.areAllPlayersAllIn() && gameState.currentRound != BettingRound.river && !gameState.bettingRoundComplete) {
+      _schedulePostFrameAction(() {
+        gameState.bettingRoundComplete = true;
+        setState(() {});
+      });
+    }
+  }
+
+  /// Finish a scouting hand: the hero folded preflop and we've logged the
+  /// opponents' preflop action. Optionally capture opponent hole cards, then
+  /// save a preflop-only `isScouted` record (no pot awarded) and move on.
+  Future<void> _finishScoutedHand() async {
+    if (_finishingScout) return;
+    _finishingScout = true;
+    try {
+      // Pot value at the moment of the fold — recorded on the hand but NOT
+      // awarded to anyone (stacks are frozen).
+      final potAtFold = gameState.currentPot;
+      final stillIn = _getActivePlayers();
+
+      // Optional: capture who won the hand (a scouting stat factor — it feeds
+      // the opponent Showdown %). Only meaningful when 2+ players are still in.
+      // Skippable: a null result just leaves the winner unknown.
+      List<int> winners = const [];
+      if (mounted && stillIn.length >= 2) {
+        final winnerResult = await WinnerSelectionDialog.show(
+          context: context,
+          activePlayers: stillIn,
+          playerNames: stillIn
+              .map((s) => sessionManager.playerNames[s] ?? 'Seat $s')
+              .toList(),
+          potAmount: potAtFold,
+          gameType: widget.gameType,
+          buttonPosition: gameState.buttonPosition,
+          playerCount: gameState.numberOfPlayers,
+          heroSeat: sessionManager.ourSeatNumber,
+        );
+        if (winnerResult != null) {
+          winners = _extractWinnersFromResult(winnerResult);
+        }
+      }
+
+      // Optional: capture opponent hole cards for the scouting report. Winners
+      // are collected first (they must show). Self-skips when < 2 players.
+      if (mounted && stillIn.length >= 2) {
+        await _showOpponentCardsDialog(stillIn, winners);
+      }
+
+      // If a winner was chosen among multiple live players, the hand reached
+      // showdown — mark it so opponents who didn't fold get the Showdown stat.
+      if (winners.isNotEmpty && stillIn.length >= 2) {
+        sessionManager.currentHand?.reachedShowdown = true;
+      }
+
+      // Complete as a scouting hand: feeds opponent stats via saveHand; the
+      // hero is only counted if they voluntarily entered the pot (decided in
+      // completeCurrentHand). The pot is NOT awarded to any stack.
+      final heroSeat = sessionManager.ourSeatNumber;
+      final heroStack =
+          heroSeat != null ? gameState.getPlayerStack(heroSeat) : null;
+      sessionManager.completeCurrentHand(
+        potAmount: potAtFold,
+        winnerId: winners.isNotEmpty ? winners.first : null,
+        currentStack: heroStack,
+        gameState: gameState,
+        isScouted: true,
+      );
+
+      _scoutingMode = false;
+      if (mounted) _advanceToNextHand();
+    } finally {
+      _finishingScout = false;
+    }
+  }
+
+  /// Scouting-mode raise: record the raise TYPE-ONLY (amount: null, so no
+  /// number is stored or shown) while driving the engine with an auto-filled
+  /// minimum raise so turn order / betting-complete / the board gate all keep
+  /// working. The pot is not awarded on finish. Shows a Raise/3-Bet/4-Bet
+  /// label derived from the preflop raise count.
+  void _performScoutRaise(PlayerAction action) {
+    if (gameState.bettingRoundComplete) {
+      _triggerInvalidActionVibration();
+      return;
+    }
+    if (!gameState.isValidAction(action)) {
+      _triggerInvalidActionVibration();
+      return;
+    }
+
+    final actingSeat = gameState.currentPlayer;
+    final currentPlayerStack = gameState.getPlayerStack(actingSeat);
+
+    // Label BEFORE recording (count of voluntary raises already in this hand).
+    final label = _scoutRaiseLabel();
+
+    // Record type-only: amount is null so history shows no bet size.
+    sessionManager.recordAction(
+      actingSeat,
+      action,
+      gameState.currentRound,
+      gameState.buttonPosition,
+      playerStack: currentPlayerStack,
+      amount: null,
+    );
+
+    _launchChipFly(action.name);
+    _showActionFlash(label, action: action);
+
+    // Drive the engine with an auto min-raise so state stays valid. The
+    // engine clamps to a legal amount internally.
+    final autoAmount = gameState.getMinimumRaise();
+    final result = gameState.performActionWithAmount(action, autoAmount);
+
+    _guidedOverlayKey.currentState?.onActionPerformed(action);
+
+    _handlePostActionAdvance(result);
+    setState(() {});
+  }
+
+  /// The poker label for the NEXT raise in the current preflop sequence:
+  /// 1st voluntary raise → "Raise", 2nd → "3-Bet", 3rd → "4-Bet", …
+  String _scoutRaiseLabel() {
+    final actions = sessionManager.currentHand?.actions ?? [];
+    int raiseCount = 0;
+    for (final a in actions) {
+      if (a.street == BettingRound.preflop &&
+          (a.action == PlayerAction.raise || a.action == PlayerAction.bet)) {
+        raiseCount++;
+      }
+    }
+    // This raise will be number (raiseCount + 1).
+    final n = raiseCount + 1;
+    return n <= 1 ? 'Raise' : '${n + 1}-Bet';
+  }
+
   Future<void> _skipCurrentAction() async {
+    // Scouting mode (hero folded preflop): finish the hand as a scouting
+    // record — this replaces the old skip-scouting sheet path so a hand never
+    // uses both. Opponent stats come from the saved preflop-only record.
+    if (_scoutingMode) {
+      await _finishScoutedHand();
+      return;
+    }
+
     final l10n = AppLocalizations.of(context);
     // If actions have been taken in this hand, confirm before discarding
     final hasActions = sessionManager.currentHand?.actions.isNotEmpty == true;
@@ -4105,33 +4515,9 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       if (confirmed != true) return;
     }
 
-    // --- Skip-hand scouting: ask "what happened?" before resetting state ---
-    SkipScoutResult? scoutResult;
-    Map<int, String>? scoutNames;
-    Set<int>? scoutSeats;
-    int? scoutButton;
-    int? scoutHero;
-
-    if (SkipHandScoutingService.isEnabled && !OnboardingState.isGuidedHandActive) {
-      scoutNames = Map<int, String>.from(sessionManager.playerNames);
-      scoutSeats = Set<int>.from(
-        gameState.players
-            .where((p) => p.isActive)
-            .map((p) => p.playerId),
-      );
-      scoutButton = gameState.buttonPosition;
-      scoutHero = sessionManager.ourSeatNumber;
-
-      if (scoutHero != null && scoutSeats.length > 1) {
-        scoutResult = await SkipHandScoutingSheet.show(
-          context: context,
-          playerNames: scoutNames,
-          activeSeats: scoutSeats,
-          heroSeat: scoutHero,
-          buttonPosition: scoutButton,
-        );
-      }
-    }
+    // Note: preflop-fold scouting now happens live (see _scoutingMode /
+    // _finishScoutedHand); reaching here means scouting was OFF, so this is a
+    // plain hand skip.
 
     // Play card scatter animation
     _scatterSeed = DateTime.now().millisecondsSinceEpoch;
@@ -4292,18 +4678,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         });
       }
 
-      // Fire-and-forget opponent stats from scouting
-      if (scoutResult != null) {
-        SkipHandScoutingService.applySkipDeltas(
-          result: scoutResult,
-          playerNames: scoutNames!,
-          activeSeats: scoutSeats!,
-          heroSeat: scoutHero!,
-          buttonPosition: scoutButton!,
-        ).catchError((e) {
-          debugPrint('⚠️ Skip scouting stats error: $e');
-        });
-      }
     }
   }
 
@@ -4468,8 +4842,20 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     });
   }
 
-  String _actionFlashLabel(PlayerAction action, [double? amount]) {
+  String _actionFlashLabel(PlayerAction action,
+      [double? amount, bool isAllIn = false]) {
     final playerName = sessionManager.getPlayerName(gameState.currentPlayer) ?? 'Seat ${gameState.currentPlayer}';
+    // HL-8: any action committing the whole stack reads ALL-IN, not
+    // call/bet/raise — an all-in for less must never look like a limp.
+    if (isAllIn &&
+        (action == PlayerAction.call ||
+            action == PlayerAction.bet ||
+            action == PlayerAction.raise)) {
+      if (amount != null) {
+        return '$playerName ALL-IN ${gameState.formatCurrency(amount)}';
+      }
+      return '$playerName ALL-IN';
+    }
     switch (action) {
       case PlayerAction.fold: return '$playerName FOLDS';
       case PlayerAction.check: return '$playerName CHECKS';
@@ -4522,9 +4908,12 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       actionAmount = callAmount.clamp(0.0, player.currentStack);
     }
 
+    // Capture the actor before the engine advances the turn.
+    final actingSeat = gameState.currentPlayer;
+
     // Record action in session manager BEFORE performing it
     sessionManager.recordAction(
-      gameState.currentPlayer,
+      actingSeat,
       action,
       gameState.currentRound,
       gameState.buttonPosition,
@@ -4532,8 +4921,27 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       amount: actionAmount,
     );
 
-    // Flash the action on screen
-    _showActionFlash(_actionFlashLabel(action, actionAmount), action: action);
+    // Flash the action on screen. A call that consumes the whole stack is an
+    // all-in for less — flash ALL-IN, never "CALLS"/limp (HL-8).
+    final flashAllIn = actionAmount != null &&
+        actionAmount >= currentPlayerStack - 1e-9 &&
+        currentPlayerStack > 0;
+    _showActionFlash(_actionFlashLabel(action, actionAmount, flashAllIn),
+        action: action);
+
+    // Enter scouting mode the moment the hero folds preflop. Requires both the
+    // Training Drills feature flag (scouting is gated with drills) AND the
+    // per-user "Skip Hand Scouting" setting. Turning the flag off disables
+    // scouting even if the user's setting is still on.
+    if (FeatureFlagService.isEnabled(FeatureFlagService.trainingDrills) &&
+        SkipHandScoutingService.isEnabled &&
+        !OnboardingState.isGuidedHandActive &&
+        action == PlayerAction.fold &&
+        gameState.currentRound == BettingRound.preflop &&
+        actingSeat == sessionManager.ourSeatNumber &&
+        !_scoutingMode) {
+      _scoutingMode = true;
+    }
 
     String result = gameState.performAction(action);
 
@@ -4547,33 +4955,8 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     // Notify guided hand overlay
     _guidedOverlayKey.currentState?.onActionPerformed(action);
 
-    // Auto-advance: game state is the single source of truth.
-    if (result.contains("Hand ends: Only one player remaining")) {
-      _schedulePostFrameAction(() {
-        _completeHandAutomatically();
-      });
-    } else {
-      _checkForAutomaticHandEnd();
-
-      if (gameState.bettingRoundComplete && gameState.currentRound != BettingRound.river) {
-        _schedulePostFrameAction(() {
-          if (gameState.shouldAutoAdvanceToShowdown()) {
-            _showAllInBoardCardsDialog();
-          } else {
-            _autoAdvanceWithIndicator();
-          }
-        });
-      } else if (gameState.bettingRoundComplete && gameState.currentRound == BettingRound.river) {
-        _schedulePostFrameAction(() {
-          _handleHandComplete();
-        });
-      } else if (gameState.areAllPlayersAllIn() && gameState.currentRound != BettingRound.river && !gameState.bettingRoundComplete) {
-        _schedulePostFrameAction(() {
-          gameState.bettingRoundComplete = true;
-          setState(() {});
-        });
-      }
-    }
+    // Auto-advance (shared): game state is the single source of truth.
+    _handlePostActionAdvance(result);
 
     // Update UI
     setState(() {});
@@ -5299,7 +5682,8 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         mounted) {
       OnboardingState.sessionDetailsExplainReturnPending = false;
       setState(() {
-        gameState.startNewHand();
+        sessionManager.flushPendingSeats(gameState); // HL-3: seat deferred joins
+              gameState.startNewHand();
         gameState.initializePot();
         sessionManager.startHand(
           gameState.handNumber,
@@ -5995,6 +6379,8 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
   ///
   /// Returns true if a new hand was started, false if blocked by the gate.
   bool _advanceToNextHand() {
+    // Scouting mode never carries into the next hand.
+    _scoutingMode = false;
     if (_freeTierLocked ||
         !FreeTierLimits.canLogAnotherHand(
           sessionManager.completedHands.length,
@@ -6033,22 +6419,135 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       _settlingPotAmount = potAmount;
     });
 
-    // After 1.5s, dismiss settling and start next hand (unless already dismissed)
-    Future.delayed(const Duration(milliseconds: 1500), () {
-      if (!mounted || !_isSettlingBetweenHands) return;
+    // After 1.5s, dismiss settling and start next hand (unless already
+    // dismissed, or held open by shown-cards entry / the one-time tip).
+    _restartSettlingTimer();
+    return true;
+  }
+
+  /// Restart the settling auto-advance timer (paused while shown-cards
+  /// entry or the one-time tip is open).
+  void _restartSettlingTimer() {
+    Future.delayed(const Duration(milliseconds: 2500), () {
+      if (!mounted || !_isSettlingBetweenHands || _settlingCardEntryOpen) {
+        return;
+      }
       _skipSettling();
     });
-    return true;
+  }
+
+  /// HL-5: explicit shown-cards flow from the settling overlay pill —
+  /// pick the player who showed, then enter their card(s). Pauses the
+  /// settling auto-advance while open.
+  void _openShownCardsFlow() async {
+    if (!_isSettlingBetweenHands || _settlingCardEntryOpen) return;
+    final hand = sessionManager.lastFinishedHand;
+    if (hand == null) return;
+
+    final hero = sessionManager.ourSeatNumber;
+    final candidates =
+        sessionManager.activeSeats.where((s) => s != hero).toList()..sort();
+    if (candidates.isEmpty) return;
+
+    setState(() => _settlingCardEntryOpen = true);
+    HapticFeedback.selectionClick();
+
+    final l10n = AppLocalizations.of(context);
+
+    // Single opponent → straight to cards; otherwise pick who showed
+    // (standard AppSheet drawer for design consistency).
+    int? seat = candidates.length == 1 ? candidates.first : null;
+    seat ??= await AppSheet.show<int>(
+      context: context,
+      title: l10n.handShownCardsWhoShowed,
+      heightFraction: null,
+      scrollable: false,
+      bodyPadding: const EdgeInsets.fromLTRB(
+          AppSpacing.xl, AppSpacing.xs, AppSpacing.xl, AppSpacing.xl),
+      body: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (final s in candidates) ...[
+            InkWell(
+              onTap: () => Navigator.pop(context, s),
+              borderRadius:
+                  BorderRadius.circular(AppDecorations.radiusLg),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.xxs, vertical: AppSpacing.sm),
+                child: Text(
+                  sessionManager.playerNames[s] ?? 'Seat $s',
+                  style: AppTypography.ibm(
+                    color: Colors.white,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ),
+            if (s != candidates.last)
+              Container(height: 1, color: AppColors.separatorDark),
+          ],
+        ],
+      ),
+    );
+
+    if (seat == null || !mounted) {
+      if (mounted) setState(() => _settlingCardEntryOpen = false);
+      _restartSettlingTimer();
+      return;
+    }
+
+    // Exclude cards already known in this hand.
+    final used = <String>{};
+    final ourCards = hand.ourHoleCards;
+    if (ourCards?.card1 != null) used.add(ourCards!.card1!);
+    if (ourCards?.card2 != null) used.add(ourCards!.card2!);
+    final bc = hand.boardCards;
+    if (bc != null) {
+      used.addAll(bc.flop);
+      if (bc.turn != null) used.add(bc.turn!);
+      if (bc.river != null) used.add(bc.river!);
+    }
+    hand.showdownData?.playerCards.forEach((s, c) {
+      if (s == seat) return; // editing this seat — its cards stay pickable
+      if (c.card1 != null) used.add(c.card1!);
+      if (c.card2 != null) used.add(c.card2!);
+    });
+
+    final playerName = sessionManager.playerNames[seat] ?? 'Seat $seat';
+    final result = await showDialog<HoleCards>(
+      context: context,
+      barrierDismissible: true,
+      builder: (_) => HoleCardsDialog(
+        existingCards: hand.showdownData?.playerCards[seat],
+        usedCards: used,
+        title: l10n.handShownCardsDialogTitle,
+        playerName: playerName,
+        allowSingleCard: true,
+      ),
+    );
+
+    if (result != null && (result.card1 != null || result.card2 != null)) {
+      await sessionManager.attachShownCards(seat: seat, cards: result);
+    }
+
+    if (!mounted) return;
+    setState(() => _settlingCardEntryOpen = false);
+    _restartSettlingTimer();
   }
 
   /// Skip settling state immediately (user tapped to dismiss).
   void _skipSettling() {
     if (!_isSettlingBetweenHands) return;
+    if (_settlingCardEntryOpen) return; // card entry / tip holds the hand
     setState(() {
       _isSettlingBetweenHands = false;
       _settlingWinnerName = null;
       _settlingPotAmount = null;
-      gameState.startNewHand();
+      sessionManager.flushPendingSeats(gameState); // HL-3: seat deferred joins
+              gameState.startNewHand();
       gameState.initializePot();
       sessionManager.startHand(
         gameState.handNumber,
@@ -6655,16 +7154,23 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     for (int playerId in bustedPlayers) {
       String playerName = sessionManager.getPlayerNameWithPosition(playerId) ?? "${l10n.handPlayerLabel}$playerId";
 
-      // Show rebuy/leave dialog
-      final result = await showDialog<Map<String, dynamic>>(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => _BustedPlayerDialog(
-          playerName: playerName,
-          playerId: playerId,
-          isCashGame: widget.gameType == GameType.cash,
-        ),
-      );
+      // Show rebuy/leave dialog. D5: a busted player MUST be resolved —
+      // barrierDismissible is false, but the system back button can still
+      // pop the dialog with null, which used to leave the player in limbo.
+      // Re-show until an explicit rebuy/leave choice is made.
+      Map<String, dynamic>? result;
+      while (result == null) {
+        if (!mounted) return;
+        result = await showDialog<Map<String, dynamic>>(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => _BustedPlayerDialog(
+            playerName: playerName,
+            playerId: playerId,
+            isCashGame: widget.gameType == GameType.cash,
+          ),
+        );
+      }
 
       if (result != null) {
         if (result['action'] == 'rebuy') {
@@ -6716,13 +7222,13 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       existingIsStarred = sessionManager.currentHand?.isStarred ?? false;
       existingTags = sessionManager.currentHand?.tags ?? [];
       existingNotes = sessionManager.currentHand?.notes;
-    } else if (sessionManager.completedHands.isNotEmpty) {
+    } else if (sessionManager.lastFinishedHand != null) {
       // Fallback to last completed hand (for editing after hand is fully complete)
-      boardCards = sessionManager.completedHands.last.boardCards;
-      existingHoleCards = sessionManager.completedHands.last.ourHoleCards;
-      existingIsStarred = sessionManager.completedHands.last.isStarred;
-      existingTags = sessionManager.completedHands.last.tags;
-      existingNotes = sessionManager.completedHands.last.notes;
+      boardCards = sessionManager.lastFinishedHand!.boardCards;
+      existingHoleCards = sessionManager.lastFinishedHand!.ourHoleCards;
+      existingIsStarred = sessionManager.lastFinishedHand!.isStarred;
+      existingTags = sessionManager.lastFinishedHand!.tags;
+      existingNotes = sessionManager.lastFinishedHand!.notes;
     }
 
     if (boardCards != null) {
@@ -6759,13 +7265,13 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         sessionManager.currentHand!.isStarred = result['isStarred'] ?? false;
         sessionManager.currentHand!.tags = List<String>.from(result['tags'] ?? []);
         sessionManager.currentHand!.notes = result['notes'];
-      } else if (sessionManager.completedHands.isNotEmpty) {
+      } else if (sessionManager.lastFinishedHand != null) {
         if (result['holeCards'] != null) {
-          sessionManager.completedHands.last.ourHoleCards = result['holeCards'];
+          sessionManager.lastFinishedHand!.ourHoleCards = result['holeCards'];
         }
-        sessionManager.completedHands.last.isStarred = result['isStarred'] ?? false;
-        sessionManager.completedHands.last.tags = List<String>.from(result['tags'] ?? []);
-        sessionManager.completedHands.last.notes = result['notes'];
+        sessionManager.lastFinishedHand!.isStarred = result['isStarred'] ?? false;
+        sessionManager.lastFinishedHand!.tags = List<String>.from(result['tags'] ?? []);
+        sessionManager.lastFinishedHand!.notes = result['notes'];
       }
 
       // Log actions
@@ -6835,9 +7341,9 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     if (sessionManager.currentHand != null) {
       boardCards = sessionManager.currentHand?.boardCards;
       ourCards = sessionManager.currentHand?.ourHoleCards;
-    } else if (sessionManager.completedHands.isNotEmpty) {
-      boardCards = sessionManager.completedHands.last.boardCards;
-      ourCards = sessionManager.completedHands.last.ourHoleCards;
+    } else if (sessionManager.lastFinishedHand != null) {
+      boardCards = sessionManager.lastFinishedHand!.boardCards;
+      ourCards = sessionManager.lastFinishedHand!.ourHoleCards;
     }
 
     if (boardCards != null) {
@@ -6941,14 +7447,14 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
             sessionManager.currentHand!.showdownData!.playerCards[playerId] = cards;
           }
         });
-      } else if (sessionManager.completedHands.isNotEmpty) {
+      } else if (sessionManager.lastFinishedHand != null) {
         // For completed hands
-        sessionManager.completedHands.last.showdownData ??= ShowdownData();
-        sessionManager.completedHands.last.reachedShowdown = true;
+        sessionManager.lastFinishedHand!.showdownData ??= ShowdownData();
+        sessionManager.lastFinishedHand!.reachedShowdown = true;
 
         opponentCards.forEach((playerId, cards) {
           if (cards.isComplete) {
-            sessionManager.completedHands.last.showdownData!.playerCards[playerId] = cards;
+            sessionManager.lastFinishedHand!.showdownData!.playerCards[playerId] = cards;
           }
         });
       }
@@ -7155,6 +7661,7 @@ class _BustedPlayerDialogState extends State<_BustedPlayerDialog> {
               child: TextField(
                 controller: _amountController,
                 keyboardType: TextInputType.numberWithOptions(decimal: widget.isCashGame),
+                inputFormatters: [DecimalInputFormatter()],
                 style: AppTypography.ibm(
                   color: AppColors.textDisabled,
                   fontSize: 17,
@@ -7182,7 +7689,7 @@ class _BustedPlayerDialogState extends State<_BustedPlayerDialog> {
                 Expanded(
                   child: GestureDetector(
                     onTap: () {
-                      double amount = double.tryParse(_amountController.text) ?? 100.0;
+                      double amount = parseDecimal(_amountController.text) ?? 100.0;
                       Navigator.pop(context, {
                         'action': 'rebuy',
                         'amount': amount,
@@ -7244,7 +7751,7 @@ class _BustedPlayerDialogState extends State<_BustedPlayerDialog> {
             // Confirm button
             GestureDetector(
               onTap: () {
-                double amount = double.tryParse(_amountController.text) ?? 100.0;
+                double amount = parseDecimal(_amountController.text) ?? 100.0;
                 Navigator.pop(context, {
                   'action': 'rebuy',
                   'amount': amount,
@@ -7300,8 +7807,8 @@ class _RebuyBody extends StatefulWidget {
 
 class _RebuyBodyState extends State<_RebuyBody> {
   void _save() {
-    final rebuyAmount = double.tryParse(widget.rebuyAmountController.text);
-    final stackSize = double.tryParse(widget.stackSizeController.text);
+    final rebuyAmount = parseDecimal(widget.rebuyAmountController.text);
+    final stackSize = parseDecimal(widget.stackSizeController.text);
 
     if (rebuyAmount != null && stackSize != null && rebuyAmount > 0 && stackSize > 0) {
       Navigator.pop(context);
@@ -7344,6 +7851,7 @@ class _RebuyBodyState extends State<_RebuyBody> {
             child: TextField(
               controller: widget.rebuyAmountController,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              inputFormatters: [DecimalInputFormatter()],
               style: AppTypography.ibm(
                 fontSize: 17,
                 color: Colors.white,
@@ -7381,6 +7889,7 @@ class _RebuyBodyState extends State<_RebuyBody> {
             child: TextField(
               controller: widget.stackSizeController,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              inputFormatters: [DecimalInputFormatter()],
               style: AppTypography.ibm(
                 fontSize: 17,
                 color: Colors.white,
