@@ -79,6 +79,20 @@ flutter:
     - icons/
     - icons/flat_icons/
     - icons/figma_icons/
+  fonts:
+    # Final Table v3 design system typeface. Static Latin subsets of the
+    # OFL variable font (google/fonts ofl/42dotsans); no Cyrillic glyphs, so
+    # RU/UK text falls back to the system font. Licence: OFL.txt alongside.
+    - family: 42dot Sans
+      fonts:
+        - asset: assets/fonts/42dot_sans/42dotSans-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/42dot_sans/42dotSans-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/42dot_sans/42dotSans-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/42dot_sans/42dotSans-Bold.ttf
+          weight: 700
 
 flutter_launcher_icons:
   android: false

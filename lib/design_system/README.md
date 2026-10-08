@@ -66,6 +66,20 @@ Top offenders by hardcoded values (migrate these first, one screen per PR):
 Replace bespoke containers with GlassyCard / InfoCard / PrimaryButton /
 SectionHeader / ConfirmDialog; retire `PokerFriendTheme` (legacy purple).
 
+## v3 redesign tokens (2026-10)
+
+The redesign builds on a new, generated token layer that mirrors the Figma
+file `finaltable_v3`: `FtColors` (Dark/Light `ThemeExtension`), `FtTextStyles`
+(42dot Sans), `FtSpacing`, `FtRadius`, `FtSize`, `FtBorderWidth`,
+`FtOpacity`, `FtShadows`. Source and regeneration steps: `design_tokens/README.md`.
+
+- `FtColors.dark` is registered in `AppTheme`, so `context.ftColors` works
+  everywhere. Nothing uses it yet — adding the layer changes no pixels.
+- Redesigned screens and components use only `Ft*` tokens; the `App*`
+  constants above stay until the last screen has moved, then get removed.
+- Components bind their component tokens (`buttonPrimaryBg`,
+  `textfieldBorder`, `toggleTrackOn`, `focusRing`), not semantic ones.
+
 ## Rules for new code
 
 1. No `Color(0x…)` literals outside `design_system/constants/colors.dart`.
