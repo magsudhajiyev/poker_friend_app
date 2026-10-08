@@ -481,9 +481,16 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> with SingleTicker
               color: _selectedFormColor,
             );
 
-      await OpponentService.saveOpponent(newOpponent);
+      // throwOnDuplicate surfaces same-name collisions the UI pre-check may
+      // miss (internal-whitespace differences, or a concurrent create race).
+      await OpponentService.saveOpponent(newOpponent, throwOnDuplicate: true);
       _closeAddForm(showToast: true, toastMessage: isEditing ? 'Opponent Updated Successfully' : 'Opponent Added');
       _loadOpponents(useCache: false);
+    } on DuplicateOpponentException catch (e) {
+      if (mounted) {
+        setState(() => _formNameError = l10n.opponentAlreadyExists(e.existing.name));
+      }
+      return;
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -677,14 +684,14 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> with SingleTicker
               children: [
                 Expanded(
                   child: OutlinedPillButton(
-                    label: 'Back',
+                    label: l10n.commonBack,
                     onTap: _closeAddForm,
                   ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
                   child: PrimaryPillButton(
-                    label: 'Save',
+                    label: l10n.commonSave,
                     onTap: _saveOpponent,
                   ),
                 ),
@@ -1062,7 +1069,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> with SingleTicker
                   const SizedBox(width: 16),
                   Expanded(
                     child: DestructivePillButton(
-                      label: 'Confirm',
+                      label: l10n.commonConfirm,
                       onTap: () async {
                         try {
                           await OpponentService.deleteOpponent(opponent.id);

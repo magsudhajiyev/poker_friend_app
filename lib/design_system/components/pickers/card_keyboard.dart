@@ -416,8 +416,11 @@ class _CardKeyboardState extends State<CardKeyboard> {
       key: _suitRowKey,
       children: List.generate(4, (i) {
         final suit = _suits[i];
-        final isHovered = _hoveredSuit == suit;
         final isExcluded = activeRank != null && _isCardExcluded(activeRank, suit);
+        // Drag-hover over an unselectable combo (card already on the board)
+        // must NOT light up green — the drop is rejected, so the highlight
+        // would promise a selection that can't happen.
+        final isHovered = _hoveredSuit == suit && !isExcluded;
         return Expanded(
           key: _suitKeys[i],
           child: Padding(

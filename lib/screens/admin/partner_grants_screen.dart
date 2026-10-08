@@ -5,9 +5,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../design_system/constants/colors.dart';
 import '../../design_system/constants/typography.dart';
 import '../../design_system/constants/decorations.dart';
+import '../../design_system/constants/spacing.dart';
+import '../../design_system/components/app_toggle.dart';
 import '../../design_system/components/backgrounds/gradient_background.dart';
 import '../../design_system/components/modals/confirm_dialog.dart';
 import '../../services/partner_grant_service.dart';
+import '../../utils/user_facing_error.dart';
 
 class PartnerGrantsScreen extends StatefulWidget {
   const PartnerGrantsScreen({super.key});
@@ -20,10 +23,56 @@ class _PartnerGrantsScreenState extends State<PartnerGrantsScreen> {
   List<Map<String, dynamic>> _grants = [];
   bool _isLoading = true;
 
+  // Launch promo toggle (app_config/promotions.freeMonthOnSignup). While ON,
+  // the grantFreeMonthOnSignup Cloud Function gives every new sign-up 1 month
+  // of free Pro via a RevenueCat promotional entitlement.
+  bool _promoEnabled = false;
+  bool _promoLoaded = false;
+
   @override
   void initState() {
     super.initState();
     _loadGrants();
+    _loadPromoToggle();
+  }
+
+  Future<void> _loadPromoToggle() async {
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('app_config')
+          .doc('promotions')
+          .get();
+      if (mounted) {
+        setState(() {
+          _promoEnabled = doc.data()?['freeMonthOnSignup'] == true;
+          _promoLoaded = true;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _promoLoaded = true);
+    }
+  }
+
+  Future<void> _setPromoToggle(bool value) async {
+    final previous = _promoEnabled;
+    setState(() => _promoEnabled = value);
+    try {
+      await FirebaseFirestore.instance
+          .collection('app_config')
+          .doc('promotions')
+          .set({'freeMonthOnSignup': value}, SetOptions(merge: true));
+    } catch (e) {
+      if (mounted) {
+        setState(() => _promoEnabled = previous);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to update promo toggle: ${UserFacingError.message(e)}',
+                style: AppTypography.ibm(color: Colors.white)),
+            backgroundColor: AppColors.errorRed,
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _loadGrants() async {
@@ -73,6 +122,7 @@ class _PartnerGrantsScreenState extends State<PartnerGrantsScreen> {
             child: Column(
               children: [
                 _buildHeader(),
+                _buildPromoToggleCard(),
                 Expanded(
                   child: _isLoading
                       ? const Center(
@@ -124,6 +174,66 @@ class _PartnerGrantsScreenState extends State<PartnerGrantsScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildPromoToggleCard() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+          AppSpacing.md, AppSpacing.xxxs, AppSpacing.md, AppSpacing.xxs),
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md, vertical: AppSpacing.xs),
+        decoration: BoxDecoration(
+          color: AppColors.bgSurface,
+          borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
+          border: Border.all(
+            color: _promoEnabled
+                ? AppColors.accentPrimary.withValues(alpha: 0.35)
+                : AppColors.separatorDark,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              Icons.card_giftcard,
+              color: _promoEnabled
+                  ? AppColors.accentPrimary
+                  : AppColors.textDisabled,
+              size: 22,
+            ),
+            const SizedBox(width: AppSpacing.xs),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Free Pro month for new sign-ups',
+                    style: AppTypography.ibm(
+                      color: Colors.white,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'While ON, every new account automatically gets 1 month of Pro',
+                    style: AppTypography.ibm(
+                      color: AppColors.textDisabled,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: AppSpacing.xxs),
+            AppToggle(
+              value: _promoEnabled,
+              onChanged: _promoLoaded ? _setPromoToggle : null,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -565,7 +675,7 @@ class _AddPartnerSheetState extends State<_AddPartnerSheet> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to create grant: $e',
+            content: Text('Failed to create grant: ${UserFacingError.message(e)}',
                 style: AppTypography.ibm(color: Colors.white)),
             backgroundColor: AppColors.errorRed,
           ),
@@ -1027,7 +1137,7 @@ class _EditGrantSheetState extends State<_EditGrantSheet> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to update: $e',
+            content: Text('Failed to update: ${UserFacingError.message(e)}',
                 style: AppTypography.ibm(color: Colors.white)),
             backgroundColor: AppColors.errorRed,
           ),
@@ -1057,7 +1167,7 @@ class _EditGrantSheetState extends State<_EditGrantSheet> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to revoke: $e',
+            content: Text('Failed to revoke: ${UserFacingError.message(e)}',
                 style: AppTypography.ibm(color: Colors.white)),
             backgroundColor: AppColors.errorRed,
           ),
@@ -1080,7 +1190,7 @@ class _EditGrantSheetState extends State<_EditGrantSheet> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to reactivate: $e',
+            content: Text('Failed to reactivate: ${UserFacingError.message(e)}',
                 style: AppTypography.ibm(color: Colors.white)),
             backgroundColor: AppColors.errorRed,
           ),

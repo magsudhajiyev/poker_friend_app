@@ -1,0 +1,23 @@
+# 2026-07-23 — Daily summary (one line per fix/adjustment)
+
+- Launch promo: free Pro month auto-granted to new sign-ups via RevenueCat promotional entitlement (Cloud Function `grantFreeMonthOnSignup`, server-enforced expiry).
+- Admin kill-switch toggle for the promo on the User Management screen (`app_config/promotions.freeMonthOnSignup`).
+- Fixed RC 404 "subscriber not found": customer is ensured via `GET /subscribers/{uid}` before the promotional grant (trigger beats the client's `Purchases.logIn`).
+- Promo paywall variant: Pro monthly pre-selected, "1 MONTH FREE" badge, "on us" gift dialog.
+- Post-tour paywall now opens IMMEDIATELY when the tour is skipped (all skip/completion paths unified into `maybeShowPostTourPaywall`).
+- Fixed intermittent onboarding replay after completion (stale splash user-doc prefetch now invalidated before each fetch).
+- Italian added as the 10th locale (full `app_it.arb`, settings picker, flag assets).
+- Pro tier opponent-profile cap raised 20 → 30 (limit logic + paywall feature line ×10 locales).
+- Share Hand drawer modernized: legacy sheet → standard FormDrawer with a single "Show hole cards" AppToggle.
+- `FormDrawer.heightFraction` widened to nullable so AppSheet's hug-content mode is reachable.
+- Fixed Pro paywall showing USD fallback prices on non-USD storefronts (`packageById` alias for the standard `$rc_monthly`/`$rc_annual` packages).
+- Free-month expiry warning moved to 1 day before expiry (copy ×10 locales), with idempotent scheduling.
+- Expiry reminders re-synced on every Home visit (heal-on-open) and cancelled when the entitlement is no longer promotional (expired or paid upgrade).
+- Tapping a promo expiry notification opens the paywall (warm taps + terminated-app cold starts via launch details; navigatorKey injection made hot-reload-proof).
+- Dev tool added: "Test Promo Expiry Notification" fires instantly (Android batches inexact alarms — short-delay scheduled tests never show).
+- Removed the hardcoded "7-Day Free Trial" badge and rewrote the paywall disclaimer without the trial clause ×10 locales (no intro offers are configured; real purchases charged immediately).
+- Android notifications now show the white "final table" wordmark icon with brand-teal tint (5 densities; FCM manifest meta-data added) instead of a blank blob.
+- AI Analyzer button icon swapped from the brain to `sparkle.svg`.
+- AI analysis voice now matches the onboarding experience answer (beginner/fun → inline explanations of advanced terms; pro → denser advanced voice; regular unchanged).
+- AI analysis now reasons about the ACTIVE player count (3 players at a 9-max table is analyzed as 3-handed, not full-ring).
+- Backend analysis language map gained Italian ('it').

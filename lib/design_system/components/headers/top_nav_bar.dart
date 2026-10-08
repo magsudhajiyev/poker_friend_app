@@ -101,10 +101,12 @@ class TopNavBar extends StatelessWidget {
             child: _CenterTitle(title: title, subtitle: subtitle),
           ),
         ),
-        SizedBox(
-          width: 44,
-          height: 44,
-          child: _rightSlot(),
+        // Right slot is 44px minimum (keeps circle icon buttons aligned across
+        // screens) but sizes up to its intrinsic width for text actions like
+        // "Save", so longer translations stay on a single line.
+        ConstrainedBox(
+          constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+          child: Center(child: _rightSlot()),
         ),
       ],
     );

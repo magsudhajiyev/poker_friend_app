@@ -139,15 +139,39 @@ void main() {
           reason: 'The pot was unopened when hero first acted');
     });
 
-    test('all-in counts as a raise', () {
+    test('all-in over a raise is its own allin category', () {
       final actions = [
         _action(2, 'raise', amount: 6),
         _action(3, 'all-in', amount: 200, isHero: true),
       ];
       final (primary, line, scenario) =
           RangeGridService.derivePreflopLine(actions, 3);
-      expect(primary, 'raise');
-      expect(line, 'Re-raised');
+      expect(primary, 'allin');
+      expect(line, 'Shoved over a raise');
+      expect(scenario, 'vs_raise');
+    });
+
+    test('open-shove in an unopened pot', () {
+      final actions = [
+        _action(2, 'fold'),
+        _action(3, 'all-in', amount: 200, isHero: true),
+      ];
+      final (primary, line, scenario) =
+          RangeGridService.derivePreflopLine(actions, 3);
+      expect(primary, 'allin');
+      expect(line, 'Open-shoved');
+      expect(scenario, 'rfi');
+    });
+
+    test('all-in CALL stays call (HL-8), never allin', () {
+      final actions = [
+        _action(2, 'all-in', amount: 200),
+        _action(3, 'call', amount: 150, stack: 150, isHero: true),
+      ];
+      final (primary, line, scenario) =
+          RangeGridService.derivePreflopLine(actions, 3);
+      expect(primary, 'call');
+      expect(line, 'All-in call');
       expect(scenario, 'vs_raise');
     });
 

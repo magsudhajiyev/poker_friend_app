@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -12,6 +14,7 @@ import '../design_system/components/app_toggle.dart';
 import '../services/auth_service.dart';
 import '../services/username_service.dart';
 import '../services/display_identity_service.dart';
+import '../services/notification_service.dart';
 import '../services/subscription_service.dart';
 import '../models/hand_state_machine.dart';
 import '../models/game_types.dart';
@@ -20,10 +23,7 @@ import 'auth_screen_experimental.dart';
 import 'help_support_screen.dart';
 import 'username_setup_screen.dart';
 import 'poker_hand_screen.dart';
-import 'session_analytics_screen.dart';
-import '../widgets/session_summary_card.dart';
 import 'onboarding/onboarding_flow.dart';
-import '../services/stats_calculator.dart';
 import '../l10n/app_localizations.dart';
 import '../services/feature_flag_service.dart';
 import 'admin/partner_grants_screen.dart';
@@ -31,6 +31,7 @@ import '../design_system/constants/typography.dart';
 import '../design_system/constants/decorations.dart';
 import '../utils/user_facing_error.dart';
 import 'design_preview_screen.dart';
+import 'paywall_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   @override
@@ -49,7 +50,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   late FocusNode _nameFocus;
   late FocusNode _usernameFocus;
   bool _useNicknameInGame = false;
-  bool _emailUpdates = false;
 
   // Username availability
   String? _usernameError;
@@ -407,11 +407,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
             rightAction: GestureDetector(
               onTap: _isSaving ? null : _save,
               behavior: HitTestBehavior.opaque,
-              child: SizedBox(
-                width: 44,
-                height: 44,
-                child: _isSaving
-                    ? Center(
+              child: _isSaving
+                  ? const SizedBox(
+                      width: 44,
+                      height: 44,
+                      child: Center(
                         child: SizedBox(
                           width: 16,
                           height: 16,
@@ -420,20 +420,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             valueColor: AlwaysStoppedAnimation(_saveGreen),
                           ),
                         ),
-                      )
-                    : Align(
-                        alignment: Alignment.centerRight,
-                        child: Text(
-                          l10n.commonSave,
-                          style: AppTypography.ibm(
-                            fontSize: 17,
-                            fontWeight: FontWeight.w600,
-                            color: _saveGreen,
-                            height: 20 / 17,
-                          ),
+                      ),
+                    )
+                  // Sizes to the label width so longer translations
+                  // (e.g. "Зберегти") stay on one line.
+                  : Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      child: Text(
+                        l10n.commonSave,
+                        maxLines: 1,
+                        softWrap: false,
+                        overflow: TextOverflow.visible,
+                        style: AppTypography.ibm(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w600,
+                          color: _saveGreen,
+                          height: 20 / 17,
                         ),
                       ),
-              ),
+                    ),
             ),
           ),
 
@@ -458,21 +463,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       height: 74 + 14.0, // avatar + button overlap
                       child: Stack(
                         clipBehavior: Clip.none,
+                        alignment: Alignment.center,
                         children: [
                           _buildAvatar(74),
+                          // Change pill — sized to its text (can overflow the
+                          // 74px avatar width) so longer translations stay on
+                          // one line, horizontally centered under the avatar.
                           Positioned(
                             bottom: 0,
-                            left: 0, right: 0,
-                            child: Center(
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: _elevated,
-                                  borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
-                                ),
-                                child: Text(l10n.profileEdit,
-                                    style: AppTypography.ibm(
-                                        fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white)),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: _elevated,
+                                borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
+                              ),
+                              child: Text(
+                                l10n.profileEdit,
+                                maxLines: 1,
+                                softWrap: false,
+                                overflow: TextOverflow.visible,
+                                style: AppTypography.ibm(
+                                    fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white),
                               ),
                             ),
                           ),
@@ -520,16 +531,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     placeholder: l10n.profileYourName,
                   ),
                   const SizedBox(height: 16),
+                  _buildUsernameField(),
+                  const SizedBox(height: 16),
                   _buildInputField(
                     label: l10n.profileEditEmail,
                     controller: _emailCtrl,
                     placeholder: 'your@email.com',
                     keyboardType: TextInputType.emailAddress,
                     readOnly: true,
-                    onTap: () => _showSnack(l10n.profileEditEmailHint),
+                    onTap: _showChangeEmailSheet,
                   ),
-                  const SizedBox(height: 16),
-                  _buildUsernameField(),
                   const SizedBox(height: 16),
                   _buildInputField(
                     label: l10n.profileChangePassword,
@@ -550,12 +561,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   _buildRow(
                     icon: const Icon(Icons.auto_awesome_outlined, color: AppColors.contentInactive, size: 24),
                     title: l10n.profileShareFeedback,
-                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const HelpSupportScreen())),
-                  ),
-                  _buildRow(
-                    icon: const Icon(Icons.email_outlined, color: AppColors.contentInactive, size: 24),
-                    title: l10n.profileEmailUpdates,
-                    trailing: AppToggle(value: _emailUpdates, onChanged: (v) => setState(() => _emailUpdates = v)),
+                    onTap: _openStoreReview,
                   ),
                   _buildRow(
                     icon: const Icon(Icons.logout_rounded, color: AppColors.contentInactive, size: 24),
@@ -646,37 +652,45 @@ class _ProfileScreenState extends State<ProfileScreen> {
         Text(label,
             style: AppTypography.ibm(fontSize: 13, fontWeight: FontWeight.w500, color: _secondary)),
         const SizedBox(height: 8),
-        Container(
-          decoration: BoxDecoration(
-            color: _surface,
-            borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
-            border: Border.all(color: borderColor, width: 1.5),
-          ),
-          child: TextField(
-            controller: controller,
-            focusNode: focusNode,
-            readOnly: readOnly,
-            onTap: onTap,
-            keyboardType: keyboardType,
-            style: AppTypography.ibm(
-              fontSize: 15,
-              color: readOnly ? _secondary : Colors.white,
+        Opacity(
+          // Read-only fields read as "locked / managed", not tappable inputs.
+          opacity: readOnly ? 0.6 : 1.0,
+          child: Container(
+            decoration: BoxDecoration(
+              color: _surface,
+              borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
+              border: Border.all(color: borderColor, width: 1.5),
             ),
-            decoration: InputDecoration(
-              hintText: placeholder,
-              hintStyle: AppTypography.ibm(fontSize: 15, color: _secondary),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              border: InputBorder.none,
-              enabledBorder: InputBorder.none,
-              focusedBorder: InputBorder.none,
-              suffixIcon: isFilled && !readOnly
-                  ? GestureDetector(
-                      onTap: () => setState(() => controller.clear()),
-                      child: const Icon(Icons.cancel_rounded, color: AppColors.contentInactive, size: 18),
-                    )
-                  : null,
+            child: TextField(
+              controller: controller,
+              focusNode: focusNode,
+              readOnly: readOnly,
+              onTap: onTap,
+              keyboardType: keyboardType,
+              style: AppTypography.ibm(
+                fontSize: 15,
+                color: readOnly ? _secondary : Colors.white,
+              ),
+              decoration: InputDecoration(
+                hintText: placeholder,
+                hintStyle: AppTypography.ibm(fontSize: 15, color: _secondary),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                suffixIcon: readOnly
+                    ? const Icon(Icons.lock_outline_rounded,
+                        color: AppColors.contentInactive, size: 18)
+                    : (isFilled
+                        ? GestureDetector(
+                            onTap: () => setState(() => controller.clear()),
+                            child: const Icon(Icons.cancel_rounded,
+                                color: AppColors.contentInactive, size: 18),
+                          )
+                        : null),
+              ),
+              onChanged: (_) => setState(() {}),
             ),
-            onChanged: (_) => setState(() {}),
           ),
         ),
       ],
@@ -838,6 +852,80 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  /// Email is not editable in-app (it's tied to the auth provider and needs
+  /// re-authentication). Mirrors the Change Password sheet, but routes to
+  /// support instead of a self-serve action.
+  void _showChangeEmailSheet() {
+    final l10n = AppLocalizations.of(context);
+    AppSheet.show<void>(
+      context: context,
+      title: l10n.profileChangeEmailTitle,
+      heightFraction: null,
+      body: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n.profileEditEmailHint,
+            style: AppTypography.ibm(fontSize: 14, color: _secondary),
+          ),
+          const SizedBox(height: 24),
+          SizedBox(
+            width: double.infinity,
+            child: GestureDetector(
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const HelpSupportScreen()),
+                );
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                decoration: BoxDecoration(
+                    color: _elevated, borderRadius: BorderRadius.circular(AppDecorations.buttonRadius)),
+                child: Text(
+                  l10n.profileContactSupport,
+                  textAlign: TextAlign.center,
+                  style: AppTypography.ibm(
+                      fontSize: 17, fontWeight: FontWeight.w600, color: Colors.white),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Open the platform's app-store review page so the user can leave a rating.
+  /// iOS deep-links straight to the write-review sheet; Android opens the Play
+  /// listing (with a market:// fallback to the Play app).
+  Future<void> _openStoreReview() async {
+    final Uri primary;
+    final Uri? fallback;
+    if (Platform.isIOS) {
+      primary = Uri.parse(
+          'https://apps.apple.com/us/app/final-table/id6760188970?action=write-review');
+      fallback = null;
+    } else {
+      // Prefer the Play Store app, fall back to the web listing.
+      primary = Uri.parse('market://details?id=com.finaltable.app');
+      fallback = Uri.parse(
+          'https://play.google.com/store/apps/details?id=com.finaltable.app');
+    }
+    try {
+      final ok = await launchUrl(primary, mode: LaunchMode.externalApplication);
+      if (!ok && fallback != null) {
+        await launchUrl(fallback, mode: LaunchMode.externalApplication);
+      }
+    } catch (_) {
+      if (fallback != null) {
+        await launchUrl(fallback, mode: LaunchMode.externalApplication);
+      }
+    }
+  }
+
   // ── Super-admin feature flags ──────────────────────────────────────────────
 
   Widget _buildFeatureFlags() {
@@ -993,16 +1081,42 @@ class _ProfileScreenState extends State<ProfileScreen> {
           const SizedBox(height: 8),
           _devButton('Quick Debug Session (7P Cash 1/2)', const Color(0xFFFF6B6B), _launchQuickDebugSession),
           const SizedBox(height: 8),
-          _devButton('Test Summary Card (Tournament)', const Color(0xFFFF6B6B), _showTestSummaryCard),
-          const SizedBox(height: 8),
           _devButton('Test Onboarding + Paywall', const Color(0xFF6B9FFF), () {
             Navigator.push(context, MaterialPageRoute(
                 builder: (_) => const OnboardingFlow(skipNickname: true, testMode: true)));
           }),
           const SizedBox(height: 8),
-          _devButton('Open Latest Session Analytics', AppColors.warningAmber, _openLatestSession),
+          _devButton('Simulate Subscription Flow', const Color(0xFF62E3BC), () {
+            PaywallScreen.show(context, mockPurchase: true);
+          }),
           const SizedBox(height: 8),
-          _devButton('Diagnose Stats (Latest Session)', AppColors.warningAmber, _diagnoseStats),
+          _devButton('Test Promo Paywall Flow', AppColors.accentPrimary, () {
+            // Full launch-promo funnel without touring: gift dialog →
+            // "Got it" → reset to Home → congratulations dialog.
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                fullscreenDialog: true,
+                builder: (_) =>
+                    const PaywallScreen(showSkip: true, launchPromo: true),
+              ),
+            );
+          }),
+          const SizedBox(height: 8),
+          _devButton('Test Promo Expiry Notification', const Color(0xFFF6B26B),
+              () async {
+            final l10n = AppLocalizations.of(context);
+            await NotificationService.debugFirePromoWarnNow(
+              title: l10n.promoNotifWarnTitle,
+              body: l10n.promoNotifWarnBody,
+            );
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                content:
+                    Text('Notification fired — open the shade and tap it'),
+              ));
+            }
+          }),
           const SizedBox(height: 8),
           _devButton('Design Preview', const Color(0xFFAB9FF2), () {
             Navigator.push(context, MaterialPageRoute(builder: (_) => const DesignPreviewScreen()));
@@ -1029,236 +1143,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
       ),
     );
-  }
-
-  void _showTestSummaryCard() {
-    SessionSummaryCard.show(
-      context: context,
-      data: SessionSummaryData(
-        sessionName: 'Deepstack Turbo',
-        gameType: GameType.tournament,
-        profitLoss: -600.0,
-        totalBuyIn: 600.0,
-        handsPlayed: 47,
-        biggestPot: 95000,
-        biggestPotBB: 1000.0,
-        durationMinutes: 185,
-        finishedPlace: 11,
-        fieldSize: 28,
-        prizeWon: 0,
-        biggestPotWonCards: 'A♠ K♥',
-        biggestPotLostCards: 'Hand #42',
-      ),
-    );
-  }
-
-  Future<void> _openLatestSession() async {
-    try {
-      final userId = AuthService.currentUser?.uid;
-      if (userId == null) return;
-      final snap = await FirebaseFirestore.instance
-          .collection('poker_sessions')
-          .where('userId', isEqualTo: userId)
-          .orderBy('startTime', descending: true)
-          .limit(1)
-          .get();
-      if (snap.docs.isEmpty) { if (mounted) _showSnack('No sessions found'); return; }
-      final doc = snap.docs.first;
-      final data = doc.data()..['id'] = doc.id;
-      if (!mounted) return;
-      Navigator.push(context, MaterialPageRoute(
-          builder: (_) => SessionAnalyticsScreen(sessionData: data, sessionId: doc.id)));
-    } catch (e) {
-      if (mounted) _showSnack(UserFacingError.message(e));
-    }
-  }
-
-  Future<void> _diagnoseStats() async {
-    final userId = AuthService.currentUser?.uid;
-    if (userId == null) { _showSnack('Not logged in'); return; }
-
-    _showSnack('Fetching latest session & stats...');
-    try {
-      final firestore = FirebaseFirestore.instance;
-
-      // 1. Get latest session
-      final sessSnap = await firestore
-          .collection('poker_sessions')
-          .where('userId', isEqualTo: userId)
-          .orderBy('startTime', descending: true)
-          .limit(1)
-          .get();
-      if (sessSnap.docs.isEmpty) { _showSnack('No sessions found'); return; }
-      final sessDoc = sessSnap.docs.first;
-      final sess = sessDoc.data();
-      final sessId = sessDoc.id;
-      final heroSeat = sess['ourSeatNumber'] as int?;
-
-      debugPrint('\n${'=' * 80}');
-      debugPrint('STATS DIAGNOSTIC — Latest Session');
-      debugPrint('${'=' * 80}');
-      debugPrint('Session: ${sess['sessionName']} | ID: $sessId');
-      debugPrint('Hero seat: $heroSeat | Game: ${sess['gameType']}');
-      debugPrint('Blinds: ${sess['smallBlind']}/${sess['bigBlind']}');
-
-      // 2. Get hands for this session
-      final handsSnap = await firestore
-          .collection('poker_sessions').doc(sessId)
-          .collection('poker_hands')
-          .orderBy('handNumber')
-          .get();
-      final hands = handsSnap.docs.map((d) => d.data()).toList();
-      debugPrint('Hands in session: ${hands.length}\n');
-
-      // 3. Recalculate ALL stats from these hands
-      int calcTotalHands = 0, calcHandsPlayed = 0, calcWonHands = 0;
-      int calcVpip = 0, calcPfr = 0, calcWalks = 0;
-      int calc3Bet = 0, calc3BetOpp = 0;
-      int calcFold3Bet = 0, calcFacing3Bet = 0;
-      int calcCbet = 0, calcCbetOpp = 0;
-      int calcSteal = 0, calcStealOpp = 0;
-      int calcCRFlop = 0, calcCRFlopOpp = 0;
-
-      for (final hand in hands) {
-        calcTotalHands++;
-        final actions = List<Map<String, dynamic>>.from(hand['actions'] ?? []);
-        final winnerId = hand['winnerId'] as int?;
-        final choppedWinners = (hand['choppedWinners'] as List?)?.cast<int>();
-        final handNum = hand['handNumber'] ?? '?';
-
-        if (heroSeat == null) continue;
-
-        // Replicate _updateUserStatsFromHand logic exactly
-        bool didPlay = false;
-        bool didVpip = false;
-        bool didPfr = false;
-        bool didWin = false;
-
-        if ((winnerId != null && winnerId == heroSeat) ||
-            (choppedWinners?.contains(heroSeat) ?? false)) {
-          didWin = true;
-        }
-
-        final heroActions = <String>[];
-        for (final action in actions) {
-          final pid = action['player'] as int?;
-          final aType = action['action']?.toString().toLowerCase() ?? '';
-          final street = action['street']?.toString().toLowerCase() ?? '';
-          if (pid != heroSeat) continue;
-
-          heroActions.add('$aType($street)');
-
-          if (aType == 'call' || aType == 'bet' || aType == 'raise' ||
-              aType == 'all-in' || aType == 'check') {
-            didPlay = true;
-          }
-
-          if (street == 'preflop') {
-            if (aType == 'bet' || aType == 'call' || aType == 'raise' || aType == 'all-in') {
-              if (!StatsCalculator.isBlindAction(action)) {
-                didVpip = true;
-              }
-              if (aType == 'bet' || aType == 'raise' || aType == 'all-in') {
-                didPfr = true;
-              }
-            }
-          }
-        }
-
-        final didThreeBet = didPlay ? StatsCalculator.didPlayerThreeBet(actions, heroSeat) : false;
-        final isWalk = StatsCalculator.isWalkHand(actions);
-        final isBBWalk = isWalk && StatsCalculator.isBigBlind(actions, heroSeat);
-        final had3BetOpp = StatsCalculator.hadThreeBetOpportunity(actions, heroSeat);
-        final foldedTo3Bet = StatsCalculator.didFoldTo3Bet(actions, heroSeat);
-        final faced3Bet = StatsCalculator.facedThreeBet(actions, heroSeat);
-        final hadCbetOpp = StatsCalculator.hadCbetOpportunity(actions, heroSeat);
-        final didCbet = hadCbetOpp && StatsCalculator.didCbet(actions, heroSeat);
-        final hadStealOpp = StatsCalculator.hadStealOpportunity(actions, heroSeat);
-        final didSteal = hadStealOpp && StatsCalculator.didSteal(actions, heroSeat);
-        final hadCROpp = StatsCalculator.hadCheckRaiseFlopOpportunity(actions, heroSeat);
-        final didCR = hadCROpp && StatsCalculator.didCheckRaiseFlop(actions, heroSeat);
-
-        // Get position from actions
-        String pos = '?';
-        for (final a in actions) {
-          if (a['player'] == heroSeat && a['playerPosition'] != null) {
-            pos = a['playerPosition'].toString();
-            break;
-          }
-        }
-
-        // Print hand detail
-        final flags = <String>[];
-        if (didVpip) flags.add('VPIP');
-        if (didPfr) flags.add('PFR');
-        if (didThreeBet) flags.add('3BET');
-        if (isWalk) flags.add('WALK');
-        if (isBBWalk) flags.add('BB-WALK');
-        if (had3BetOpp) flags.add('3BET-OPP');
-        if (foldedTo3Bet) flags.add('FOLD-3BET');
-        if (faced3Bet) flags.add('FACED-3BET');
-        if (hadCbetOpp) flags.add('CBET-OPP');
-        if (didCbet) flags.add('CBET');
-        if (hadStealOpp) flags.add('STEAL-OPP');
-        if (didSteal) flags.add('STEAL');
-        if (hadCROpp) flags.add('CR-OPP');
-        if (didCR) flags.add('CR');
-        if (didWin) flags.add('WON');
-
-        debugPrint('  H#$handNum [$pos] hero=${heroActions.join(",")} → ${flags.join(" ")}');
-
-        if (didPlay) calcHandsPlayed++;
-        if (didVpip) calcVpip++;
-        if (didPfr) calcPfr++;
-        if (isBBWalk) calcWalks++;
-        if (didThreeBet) calc3Bet++;
-        if (had3BetOpp) calc3BetOpp++;
-        if (foldedTo3Bet) calcFold3Bet++;
-        if (faced3Bet) calcFacing3Bet++;
-        if (didCbet) calcCbet++;
-        if (hadCbetOpp) calcCbetOpp++;
-        if (didSteal) calcSteal++;
-        if (hadStealOpp) calcStealOpp++;
-        if (didCR) calcCRFlop++;
-        if (hadCROpp) calcCRFlopOpp++;
-        if (didWin && didPlay) calcWonHands++;
-      }
-
-      // 4. Fetch current stored stats
-      final statsDoc = await firestore.collection('user_stats').doc(userId).get();
-      final db = statsDoc.data() ?? {};
-
-      final eligible = calcTotalHands - calcWalks;
-
-      debugPrint('\n${'=' * 80}');
-      debugPrint('CALCULATED FROM HANDS (this session only):');
-      debugPrint('${'=' * 80}');
-      debugPrint('totalHands=$calcTotalHands  handsPlayed=$calcHandsPlayed  walks=$calcWalks');
-      debugPrint('vpip=$calcVpip/${eligible > 0 ? eligible : "?"}=${eligible > 0 ? (calcVpip / eligible * 100).toStringAsFixed(1) : "?"}%');
-      debugPrint('pfr=$calcPfr/${eligible > 0 ? eligible : "?"}=${eligible > 0 ? (calcPfr / eligible * 100).toStringAsFixed(1) : "?"}%');
-      debugPrint('3bet=$calc3Bet/$calc3BetOpp  fold3bet=$calcFold3Bet/$calcFacing3Bet');
-      debugPrint('cbet=$calcCbet/$calcCbetOpp  steal=$calcSteal/$calcStealOpp');
-      debugPrint('crFlop=$calcCRFlop/$calcCRFlopOpp  wonHands=$calcWonHands');
-
-      debugPrint('\n${'=' * 80}');
-      debugPrint('DATABASE user_stats (cumulative, all sessions):');
-      debugPrint('${'=' * 80}');
-      final dbTotal = db['totalHands'] ?? 0;
-      final dbWalks = db['walksCount'] ?? 0;
-      final dbEligible = dbTotal - dbWalks;
-      debugPrint('totalHands=${db['totalHands']}  handsPlayed=${db['handsPlayed']}  walks=${db['walksCount']}');
-      debugPrint('vpip=${db['vpipCount']}/$dbEligible=${dbEligible > 0 ? ((db['vpipCount'] ?? 0) / dbEligible * 100).toStringAsFixed(1) : "?"}%');
-      debugPrint('pfr=${db['pfrCount']}/$dbEligible=${dbEligible > 0 ? ((db['pfrCount'] ?? 0) / dbEligible * 100).toStringAsFixed(1) : "?"}%');
-      debugPrint('3bet=${db['threeBetCount']}/${db['threeBetOpportunity']}  fold3bet=${db['fold3betCount']}/${db['facing3BetCount']}');
-      debugPrint('cbet=${db['cbetCount']}/${db['cbetOpportunity']}  steal=${db['stealCount']}/${db['stealOpportunity']}');
-      debugPrint('crFlop=${db['checkRaiseFlopCount']}/${db['checkRaiseFlopOpportunity']}  wonHands=${db['wonHands']}');
-      debugPrint('${'=' * 80}\n');
-
-      if (mounted) _showSnack('Stats diagnostic printed to console — check debug log');
-    } catch (e) {
-      debugPrint('Diagnostic error: $e');
-      if (mounted) _showSnack(UserFacingError.message(e));
-    }
   }
 
   void _launchQuickDebugSession() {

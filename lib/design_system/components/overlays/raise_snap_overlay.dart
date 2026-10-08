@@ -11,6 +11,20 @@ class SnapPoint {
   const SnapPoint({required this.label, required this.amount});
 }
 
+/// What the raise gesture can legally offer given the player's stack (HL-8b).
+enum RaiseGestureMode {
+  /// Full snap ladder — the player can make at least a min-raise.
+  normal,
+
+  /// The player can exceed the current bet only by shoving (stack below a
+  /// min-raise) — the ONLY legal raise is all-in.
+  allInOnly,
+
+  /// The player's whole stack cannot even cover the call — no raise exists;
+  /// only fold or all-in CALL.
+  none,
+}
+
 /// Overlay shown during swipe-up raise gesture.
 /// Displays a vertical slider with snap points (min, 2.5x, 3x, pot, all-in etc.)
 /// User drags up to increase, releases to confirm. Tap amount to open numpad.
@@ -228,6 +242,25 @@ class RaiseSnapOverlay extends StatelessWidget {
     );
   }
 
+  /// Decide what the raise gesture may offer (HL-8b).
+  /// [maxBet] = stack + betThisRound (the total if the player shoves),
+  /// [currentBet] = the bet to match, [minRaiseTotal] = minimum legal
+  /// raise-to amount.
+  static RaiseGestureMode gestureMode({
+    required double maxBet,
+    required double currentBet,
+    required double minRaiseTotal,
+  }) {
+    if (maxBet <= currentBet) return RaiseGestureMode.none;
+    if (maxBet < minRaiseTotal) return RaiseGestureMode.allInOnly;
+    return RaiseGestureMode.normal;
+  }
+
+  /// The collapsed ladder for [RaiseGestureMode.allInOnly] (and the all-in
+  /// CALL gesture): a single All-In snap.
+  static List<SnapPoint> allInOnlySnapPoints({required double maxBet}) =>
+      [SnapPoint(label: 'All-In', amount: maxBet)];
+
   /// Generate snap points for preflop raises.
   /// [lastBet] is the current bet to face (e.g. a previous raise amount).
   /// When lastBet > bigBlind, multipliers are based on lastBet instead of BB.
@@ -241,7 +274,11 @@ class RaiseSnapOverlay extends StatelessWidget {
   }) {
     final points = <SnapPoint>[];
 
-    points.add(SnapPoint(label: 'Min', amount: minRaise));
+    // HL-8b: never offer a "Min" the player cannot afford — when the stack
+    // is below a min-raise the ladder collapses to All-In only.
+    if (minRaise < maxBet) {
+      points.add(SnapPoint(label: 'Min', amount: minRaise));
+    }
 
     // Use lastBet as base when facing a raise, otherwise use BB
     final base = (lastBet > bigBlind) ? lastBet : bigBlind;
@@ -288,7 +325,10 @@ class RaiseSnapOverlay extends StatelessWidget {
   }) {
     final points = <SnapPoint>[];
 
-    points.add(SnapPoint(label: 'Min', amount: minBet));
+    // HL-8b: no "Min" above the player's stack (see preflopSnapPoints).
+    if (minBet < maxBet) {
+      points.add(SnapPoint(label: 'Min', amount: minBet));
+    }
 
     if (lastBet > 0) {
       // Facing a bet/raise — show multipliers of the last bet

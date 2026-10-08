@@ -7,6 +7,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Overview
 Flutter/Dart poker hand logging application with Firebase backend, club management, dealer-assisted voice logging, and real-time WebSocket sync. Allows users to track poker hands, sessions, statistics, opponents, and bankroll.
 
+**The app is LIVE** (v2.1.0+14 submitted to Google Play on launch night 2026-07-24; iOS submission pending). Current working version: 2.1.3+17 (DAU heartbeat, Settings→"Menu" rename, feature-flagged Leak Detector). Post-launch work is queued in `ROADMAP.md` — check it before planning any change.
+
 ---
 
 ## Commands
@@ -38,6 +40,14 @@ flutter gen-l10n
 
 # Clean build artifacts
 flutter clean && flutter pub get
+
+# Cloud Functions (run from functions/)
+npm run build            # tsc compile
+npm run deploy           # firebase deploy --only functions
+npm run logs             # firebase functions:log
+
+# Deploy Firestore rules (editing firestore.rules alone does nothing live)
+firebase deploy --only firestore:rules
 ```
 
 ---
@@ -45,6 +55,9 @@ flutter clean && flutter pub get
 ## Project Rules
 - **DO NOT push to git unless explicitly asked by user**
 - **DO NOT commit unless explicitly asked by user**
+- **Authoritative docs**: `BUG_TRACKER.md` (live status of hand-logging bugs + features in flight), `test/HAND_LOGGING_SPEC.md` (hand-logging behaviour spec + bug diagnoses), `POKER_SEATING_RULES.md` (seating/dead-button rules), `ROADMAP.md` (post-launch work queue incl. HARD Aug 31 2026 Play Billing deadline + deferred security fixes), `SECURITY_AUDIT_2026-07-23.md` (audit findings + per-item status), `BACKLOG.md` (triaged product backlog with stable B#/U#/F#/M#/G# IDs). Check these before touching hand-logging code, and check ROADMAP.md before planning any update.
+- **`marketing/` folder**: `MARKETING_MASTER.md` is the single-file source of truth for the marketing agent; video scripts and prompts live alongside it. Not app code.
+- **`docs/` folder**: reference docs (`ARCHITECTURE.md`, `SERVICES.md`, `SCREENS.md`, `NAVIGATION.md`, `STATE.md`, `DESIGN_SYSTEM.md`, `SUBSCRIPTIONS.md`, `GLOSSARY.md`) plus feature specs — **`docs/social-feed-spec.md` is the decision record for the social feed** (D1–D11); any feed/follow change must respect it.
 - Always check `/diary` folder for previously solved bugs before implementing fixes. Treat every entry there as authoritative documentation of the current behaviour — respect it and do not break it. **In particular, `/diary/2026-07-15-in-app-tour-complete-reference.md` is the canonical reference for the in-app tour flow: any change touching onboarding, guided overlays, tour phases, `OnboardingState`, `guided_hand_overlay`, `onboarding_tour`, or the screens the tour highlights (home, session details, poker hand, session end) must preserve the behaviour documented there.**
 - Create diary entry after user confirms a fix
 - Never commit debug logging, unnecessary files, or unstabilized code
@@ -56,6 +69,8 @@ flutter clean && flutter pub get
 
 ## Development Environment
 
+Full machine setup (tool versions, keystores, step-by-step install) lives in `SETUP.md`.
+
 ### CRITICAL: Flutter Version Constraint
 - **Flutter 3.38.10** — DO NOT upgrade to 3.41.x (Firestore write performance regression)
 - **Dart**: 3.9.x (bundled with Flutter 3.38.10)
@@ -64,6 +79,7 @@ flutter clean && flutter pub get
 - See `diary/2026-03-29-flutter-firestore-regression-fix.md` for full details
 
 ### iOS Simulator
+- Runner iOS deployment target: **15.5** (raised from 13.0, commit 3aaabf4)
 - Use **iOS 18.5** runtime (Flutter 3.38 does not support iOS 26 simulators)
 - iPhone 16 Pro simulator with iOS 18.5 runtime
 - Download runtime via Xcode → Settings → Platforms → iOS → Get
@@ -78,22 +94,33 @@ flutter clean && flutter pub get
 ### Dependency Version Policy
 - All dependencies pinned to Flutter 3.38-compatible versions (see pubspec.yaml)
 - When upgrading Flutter, ALL Firebase/plugin dependencies must be upgraded together
-- Key version constraints: cloud_firestore ^5.5.0, firebase_core ^3.8.0, purchases_flutter ^8.1.0
+- Key version constraints: cloud_firestore ^5.5.0, firebase_core ^3.8.0, purchases_flutter ^9.15.1 (bundles Play Billing 8 — required for Play updates after Aug 31 2026)
 - API differences exist between old and new versions (positional vs named params) — see diary entry
+- RevenueCat SDK calls are isolated in `lib/services/revenuecat_client.dart` — a future purchases_flutter bump should only touch that file (see Subscription section)
 
 ---
 
 ## Architecture
 
 ### Tech Stack
-- **Frontend**: Flutter/Dart (179+ Dart files)
-- **Backend**: Firebase (Firestore, Auth, FCM) + FastAPI backend (Render)
-- **Local Storage**: SQLite (sqflite v13) + SharedPreferences
+- **Frontend**: Flutter/Dart (300+ Dart files)
+- **Backend**: Firebase (Firestore, Auth, FCM, Cloud Functions in `functions/`) + FastAPI backend (Render)
+- **Local Storage**: SQLite (sqflite, DB schema v19) + SharedPreferences
 - **Real-time**: Socket.IO WebSocket + Firestore Snapshot listeners
 - **Voice Recognition**: Deepgram ASR via backend "Dealer Brain" endpoint
 - **Payments**: RevenueCat SDK
 - **State Management**: StatefulWidget pattern (no Provider/BLoC/Riverpod — **exception**: the dealer voice pipeline uses `flutter_bloc` via `lib/features/dealer_voice/cubit/`)
-- **Localization**: Flutter's built-in `gen-l10n` system; `.arb` files in `lib/l10n/`; supported: EN, DE, ES, FR, PT, RU, PL. Use `AppLocalizations.of(context)` — never hardcode UI strings.
+- **Localization**: Flutter's built-in `gen-l10n` system; `.arb` files in `lib/l10n/`; 11 locales: EN, DE, ES, FR, IT, PT, RO, RU, PL, SK, UK. Use `AppLocalizations.of(context)` — never hardcode UI strings. When enumerating locales, list `lib/l10n/app_*.arb` dynamically — don't trust hardcoded lists.
+- **Note**: the root `package.json` and `src/` are a legacy TypeScript prototype ("poker-logger") — NOT the app and NOT the Cloud Functions. The real Functions codebase is `functions/` (own `package.json`).
+
+### Cloud Functions (`functions/src/index.ts`)
+Node 20 / TypeScript, firebase-functions v7. Deploy with `npm run deploy` from `functions/`. Current functions:
+- `sendPushNotification` — FCM push on `user_notifications` doc create
+- `sendClubNotification` — topic-based FCM to all club members
+- `grantFreeMonthOnSignup` — launch promo: RevenueCat promotional Pro month on `users/{uid}` create, gated by `app_config/promotions.freeMonthOnSignup`
+- `cleanupOldTokens` — daily scheduled FCM token cleanup
+- `notifyFollowersOnSessionStart` — social feed: one FCM topic message (`live_{userId}`) on `feed_sessions` create — no per-follower fan-out
+- `revenuecatWebhook` — mirrors subscription tier onto `users/{uid}` (`subscriptionTier` + `subscriptionTierExpiresAt`) by re-fetching the subscriber from the RC REST API on every event; Firestore rules use the mirror to gate paid features (rules can't see RC entitlements)
 
 ### Data Flow
 1. User logs hand actions during gameplay
@@ -113,16 +140,27 @@ flutter clean && flutter pub get
 - All API calls require `X-API-Key` header
 
 ### Environment Configuration (`.env`)
-Loaded at startup via `flutter_dotenv`. Required keys: `SONIOX_API_KEY`, `REVENUECAT_IOS_API_KEY`, `REVENUECAT_ANDROID_API_KEY`, `RESEND_API_KEY`, `AI_API_KEY`, `WEBSOCKET_SERVER_URL`, `API_SERVER_URL`, `ENVIRONMENT`. Access via `EnvConfig.*` (never `dotenv.env` directly).
+Loaded at startup via `flutter_dotenv`. Required keys: `SONIOX_API_KEY`, `REVENUECAT_IOS_API_KEY`, `REVENUECAT_ANDROID_API_KEY`, `RESEND_API_KEY`, `AI_API_KEY`, `WEBSOCKET_SERVER_URL`, `API_SERVER_URL`, `ENVIRONMENT`; optional `POSTHOG_API_KEY` (analytics silently disabled without it). Access via `EnvConfig.*` (never `dotenv.env` directly).
 
 ### Subscription Tiers (RevenueCat)
+**Play Billing 8 migration SHIPPED 2026-08-05** (`purchases_flutter` 8.11.0 → ^9.15.1, bundles `com.android.billingclient:billing:8.0.0` — required for Play updates after Aug 31 2026). Unit tests + Gradle build verified; **on-device sandbox matrix NOT yet run** (all 6 packages, restore, cancel-and-repurchase override, external cancellation on resume, promo entitlement) — run it before the next store release.
+
+The subscription code is split into three layers (keep it that way):
+- `lib/services/subscription_service.dart` — orchestration + cached state; the API the app calls
+- `lib/services/revenuecat_client.dart` — the ONLY place `Purchases.*` is called (`LiveRevenueCatClient`); returns app-owned value types (`TierEntitlements`, `PurchaseOutcome`) so SDK version differences are absorbed here. Tests inject `FakeRevenueCatClient` via `SubscriptionService.debugSetClient()`
+- `lib/services/subscription_logic.dart` — pure tier/override/package-resolution functions (no SDK, no static state); package-ID constants (`kPkg*`) live here and must match the RevenueCat dashboard. Pro uses the standard `$rc_monthly`/`$rc_annual` identifiers; Elite/Club use custom ones
+
+Launch promo: new sign-ups can receive a free Pro month as a RevenueCat **promotional** entitlement (admin-toggled in User Management). `TierEntitlements.proIsPromotional`/`proExpirationIso` carry this; promo expiry notifications fire 1 day before.
+
 Four tiers — check via `SubscriptionService`:
 - **Free**: 10 hands/session, 5 opponents, 30-day session history
-- **Pro** (`isPro`/`isPremium`): 50 hands/session, 15 opponents, 90-day history
+- **Pro** (`isPro`/`isPremium`): 50 hands/session, 30 opponents, 90-day history
 - **Elite** (`isElite`/`isPremium`): unlimited everything, AI analysis, all history
 - **Club** (`isClub`/`isPremium`): like Elite + club creation rights (owner pays; club members operate freely regardless of their own tier)
 
-Feature gates live in `lib/services/free_tier_limits.dart` (hand/opponent caps) and `lib/services/feature_flag_service.dart` (remote Firestore flags for `training_drills`, `ai_hand_analysis`). Use `FreeTierLimits.showHandsLimitDialog()` / `PaywallScreen.show()` for upgrade prompts.
+Feature gates live in `lib/services/free_tier_limits.dart` (hand/opponent caps) and `lib/services/feature_flag_service.dart` (remote Firestore flags for `training_drills`, `ai_hand_analysis`, `leak_detector`). Use `FreeTierLimits.showHandsLimitDialog()` / `PaywallScreen.show()` for upgrade prompts.
+
+**Partner grants** (`lib/services/partner_grant_service.dart`): super-admin can grant users a free tier (Pro/Elite/Club) with expiry (1 week / 1 month / 3 months). `partnerTier` getter returns `null` for expired grants client-side; `init()` awaits the first Firestore snapshot (3s timeout) and must be `await`ed in sign-in paths (not `unawaited`) or the user briefly appears free-tier. Admin UI: `lib/screens/admin/partner_grants_screen.dart`. See `diary/2026-07-08-partner-grants-system.md`.
 
 ### Caching Pattern (`lib/services/app_data_cache.dart`)
 `AppDataCache` is a static dirty-flag cache. Screens serve from cache if clean; write points (`saveHand`, `endSession`, bankroll/opponent changes) call `markHomeDirty()` / `markSessionsDirty()` / etc. **Always call the appropriate `mark*Dirty()` after any write** or the next screen visit will show stale data.
@@ -217,6 +255,11 @@ Top offenders still to migrate (Phase 4): `dealer/dealer_table_screen` (158), `p
 - Undo last action with full state restoration
 - Navigation confirmation dialog prevents accidental data loss
 
+### 1b. Live Scouting Mode
+- Opt-in setting (`SkipHandScoutingService`, gated behind the `training_drills` feature flag): when the hero folds preflop, the logger enters scouting mode — keep logging opponents' real preflop actions (type-only, no bet sizes) and finish the hand early
+- Saved as a preflop-only record with `isScouted: true`; feeds **opponent** stats (incl. winner → Showdown stat) but hero stat gating is split so scouted hands don't distort hero postflop stats
+- Entry points: `poker_hand_screen.dart` `_scoutingMode` / `_finishScoutedHand`
+
 ### 2. Individual Session Tracking (Quick Logging)
 - Quick profit/loss tracking without full hand details
 - Records: start time, end time, profit/loss, session name
@@ -227,7 +270,7 @@ Top offenders still to migrate (Phase 4): `dealer/dealer_table_screen` (158), `p
 - Shows: session name, game type badge, duration, net P/L, hands played, biggest pot, best/worst hand
 - **Cash**: Net P/L = `finalStack - totalBuyIn` (both in currency)
 - **Tournament**: Net P/L = `prizeWon - totalBuyIn` from `SessionEndBankrollSheet` result (NEVER use chips - money). Also shows placement (e.g., "11th / 28"), prize won, and net profit
-- **Biggest pot**: Cash shows currency; Tournament shows BB equivalent (`biggestPot / biggestPotBB` where `biggestPotBB` is the BB level when the biggest pot occurred)
+- **Biggest pot**: Cash shows currency; Tournament shows BB equivalent (`biggestPot / biggestPotBB` where `biggestPotBB` is the BB level when the biggest pot occurred). **Selection is BB-relative for tournaments** (`PokerSessionManager.updateBiggestPot`): pots are compared as `pot / currentBB`, NOT absolute chips — blind levels grow ~100x across an MTT, so absolute comparison let a late 7 BB pot displace an early 317 BB pot (bug 2026-08-04). Cash keeps absolute comparison. `biggestPotBB` is persisted on the session doc.
 - **Best/worst hand**: Uses pot-to-stack ratio (`pot / heroPreHandStack`) for meaningful cross-blind-level comparison. Falls back to "Hand #N" when hole cards not entered
 - `SessionSummaryData` is the data class; `SessionSummaryCard.show()` displays it as a dialog
 - Card is captured via `RepaintBoundary` for PNG sharing
@@ -241,8 +284,8 @@ All stats use **incremental atomic updates** (O(1)) with opportunity-based denom
 |--------|---------|-------------|-------|
 | VPIP | vpipCount | totalHands - walksCount | Excludes blind posts & walks |
 | PFR | pfrCount | totalHands - walksCount | Preflop raises only |
-| 3-Bet | threeBetCount | threeBetOpportunity | The 3rd raise preflop (open=1st, re-raise=2nd, 3-bet=3rd) |
-| Fold-3Bet | fold3betCount | facing3BetCount | Raised earlier, 3rd raise happened, player folded |
+| 3-Bet | threeBetCount | threeBetOpportunity | The 2nd **voluntary** raise preflop (open=1st voluntary raise, 3-bet=2nd). Blinds are NOT an open. |
+| Fold-3Bet | fold3betCount | facing3BetCount | Opened (1st voluntary raise), the 2nd voluntary raise (a 3-bet) happened, player folded |
 | C-Bet | cbetCount | cbetOpportunity | Flop bet as last pre-aggressor |
 | Steal | stealCount | stealOpportunity | CO/BTN/SB with unopened pot |
 | Check-Raise | checkRaiseFlopCount | checkRaiseFlopOpportunity | Flop only |
@@ -274,7 +317,7 @@ Classifies based on VPIP, PFR, 3-bet%, AF thresholds:
 - **Balanced**: VPIP 20-28%, PFR 17-22%, gap 2-5%, AF 2-4
 - **Calling Station**: VPIP≥25%, PFR<10%, gap≥15%, 3-bet<3%, AF<1
 - **Nit**: VPIP≤15%, PFR≤12%, 3-bet≤5%, AF≤2
-- **Unknown**: < 50 hands
+- **Unknown**: ONLY when < 50 hands or zeroed stats. With a full sample the detector is total: specific branches first, then a coarse quadrant fallback (tight/loose at VPIP 22 × aggressive/passive at AF 2 or PFR/VPIP ≥ 0.6) — it must never return Unknown for ≥50 hands (bug 2026-08-04: home tile showed "762/50" for a profile no branch matched). Home tile renders `N/50` only when N < 50. Tests: `test/services/play_style_detector_test.dart` (includes an exhaustive no-holes sweep).
 
 ### 5. Opponent Tracking
 - Automatically creates opponent profiles from logged hands
@@ -315,6 +358,45 @@ Classifies based on VPIP, PFR, 3-bet%, AF thresholds:
 - Firestore Snapshot listeners as primary, WebSocket for fast broadcasting
 - Fallback: Firestore-based rankings when backend unavailable
 
+### 11. Training Drills
+- GTO practice drills (gated by `training_drills` feature flag): open-raise/3-bet/blind-defend charts, Nash push-fold
+- Engine/grading/data in `lib/services/drill_*.dart`; screens in `lib/screens/training/` (`drill_setup_screen`, `drill_table_screen`)
+- Tests: `test/services/drill_*_test.dart`
+
+### 12. Range Grid
+- `RangeGridService` (`lib/services/range_grid_service.dart`) indexes hero hands into a 13×13 range grid; dedupe key `{sessionId}:{handNumber}` merges local SQLite and Firestore copies of the same hand; cloud backfill via `range_grid_cloud_backfill.dart`
+- `primaryAction` is the hero's FIRST voluntary preflop action: `'allin' | 'raise' | 'call' | 'fold' | 'check'`. `'allin'` means an explicit jam only — an all-in CALL stays `'call'` (a call is never aggressive). Changing this classification requires bumping the backfill flag key (`range_grid_backfilled_vN`) so existing local indexes rebuild
+- Grid cell colors are tokenized in `AppColors` (`rangeRaise`/`rangeCall`/`rangeFold`/`rangeAllIn`; check uses `accentPrimary`); all-in is hidden by default in the grid and chip-toggled
+
+### 13. In-App Tour / Onboarding
+- Guided first-hand tour lives in `lib/onboarding/` (`onboarding_tour.dart`, `guided_hand_overlay.dart`, `onboarding_state.dart`)
+- Tour hands are NOT persisted (`OnboardingState.isGuidedHandActive` guard in save path)
+- **Canonical reference: `diary/2026-07-15-in-app-tour-complete-reference.md`** — see Project Rules
+
+### 14. Social Feed (ON HOLD — client code lives in git stash "social-feed-client-phases-1-3", deliberately NOT in the billing-update release; backend rules/CFs ARE committed and deployed. Spec: `docs/social-feed-spec.md`)
+Follow other players and "rail" their shared sessions: delayed stack chart + hand replay, plus 48h recap cards. Key invariants (all from the spec's decision record — read it before changing anything):
+- **Paid-only hard wall** (D9/D10): free users see no entry points; Firestore rules independently enforce via the tier mirrored on `users/{uid}` by `revenuecatWebhook`. Client checks are UX, not security.
+- **1-hour lag** (D5/D6): presence is immediate; hands + stack lag via `visibleAt` stamps that rules enforce (`request.time >= visibleAt`). ⚠️ `FeedPublisher.lag` is currently `Duration.zero` **for testing only** — rules deliberately don't enforce a minimum, so this constant is the only privacy barrier. **Restore `Duration(hours: 1)` before any release.**
+- **Sanitization is a privacy guarantee** (D11): `feed_sanitizer.dart` is pure functions (unit-tested in `test/services/feed_sanitizer_test.dart`); non-hero seats render as positions (BTN/SB/…) or `P{seat}`, real `playerNames`/`playerIds` stripped, non-hero showdown cards stripped in ALL modes, hero cards only in `cards` mode.
+- **Client dual-write** (D6): `feed_publisher.dart` writes sanitized copies to `feed_sessions`/`feed_hands`/`feed_stack`; every method is best-effort (feed failures must never break gameplay).
+- Per-session share modes: `off` / `no_cards` / `cards` (`FeedShareMode`), default from settings.
+- Files: services `feed_sanitizer.dart`, `feed_publisher.dart`, `feed_service.dart`, `follow_service.dart` (follow graph: `follows/{follower}_{followed}`, `blocks/{blocker}_{blocked}`, FCM topic `live_{uid}` subscribe on follow); screens `lib/screens/social/` (feed, rail viewer, public profile, follows, find players); home entry `lib/widgets/live_now_strip.dart`.
+- Phase 4 (bell-mute UI) + tier-mirror backfill for existing subscribers are outstanding — see MEMORY/ROADMAP before shipping.
+
+### 15. Leak Detector (feature-flagged: `leak_detector`)
+Frequency-based leak coaching over the player's own hand history. Design doc: `docs/features/leak-detector.md` — read it before changing bands/detectors. Three layers, all pure below the service:
+- `lib/services/leak_extractor.dart` (phase 1) — per-hand fact extraction (hand map → `LeakHandFacts`); reuses `StatsCalculator` for spots it already detects — never re-derive tested detection logic
+- `lib/services/leak_engine.dart` (phase 2) — frequency detectors + coach layer. A leak is a deviation from a healthy BAND, not a raw number; every detector has minimum samples (below them → "not enough data", never a verdict); every finding explains meaning/cost/fix + example hands. Money view is BB-normalized TOTALS (not per-hand rates on tiny n)
+- `lib/services/leak_report_service.dart` — loads ALL user hands from Firestore and aggregates at read time (deliberately NO incremental counters — see stats double-counting history); excludes tutorial sessions, quick sessions, scouted hands. Returns `LeakReportBundle` (report + raw hands keyed by ref for "show me the hand" drill-through)
+- Supporting pure helpers: `board_texture.dart` (flop texture classification), `flop_strength.dart` (hero flop strength labels)
+- Screen: `lib/screens/leak_detector_screen.dart` (entry from Settings/"Menu" screen). Tests: `test/services/leak_detector_test.dart`, `test/services/flop_strength_test.dart`
+
+### 16. DAU Heartbeat
+`ActivityHeartbeatService` (`lib/services/activity_heartbeat_service.dart`) stamps `users/{uid}.lastActiveAt` (server timestamp) on sign-in and app foreground, throttled to once/hour via SharedPreferences. Fire-and-forget like FCM/analytics — must never break the app. The admin dashboard's daily cron counts these into `daily_stats` (dashboard lives outside this repo). Test: `test/services/activity_heartbeat_test.dart`.
+
+### 17. LED Range Board (EXPERIMENTAL)
+Physical 13×13 range display (ESP32 + WS2812B), firmware in `hardware/led-range-board/` (`led_range_board.ino`). `lib/services/led_grid_publisher.dart` encodes the range grid into a 1014-char hex payload (3 bytes/cell: raise/call/check/fold shares largest-remainder-normalized to 15, + intensity) and pushes over local HTTP. The wire spec stays 4-action even though the app tracks all-in separately — all-in jams count into the raise share (v0; v1 plan = Firebase RTDB). **Payload spec is shared with the .ino — keep both in sync.** Docs: `docs/features/led-board-live-range.md`, `led-board-gtow-import.md`. Test: `test/services/led_grid_publisher_test.dart`.
+
 ---
 
 ## Data Structures
@@ -347,7 +429,8 @@ Classifies based on VPIP, PFR, 3-bet%, AF thresholds:
   'gameType': String,  // 'cash' or 'tournament'
   'isChoppedPot': bool?, 'choppedWinners': List<int>?,
   'individualShares': Map<int, double>?, 'sharePerWinner': double?,
-  'isStarred': bool?, 'tags': List<String>?, 'notes': String?
+  'isStarred': bool?, 'tags': List<String>?, 'notes': String?,
+  'isScouted': bool?  // preflop-only scouting record (hero folded, opponents logged)
 }
 ```
 
@@ -409,22 +492,23 @@ pfr% = (pfrCount / eligibleHands) * 100
 - Walk hands excluded because BB had no opportunity to act
 
 ### 3-Bet Detection (`StatsCalculator.didPlayerThreeBet`)
-A 3-bet is the **3rd raise** preflop. Blinds do NOT count as raises.
-- 1st raise = open raise
-- 2nd raise = re-raise
-- 3rd raise = **3-bet**
+A 3-bet is the **2nd voluntary raise** preflop. Blinds are forced bets, NOT an
+open — they do NOT count as raises. Counting voluntary raises only:
+- 1st voluntary raise = the open ("2-bet"; a limp/call before it is not an open)
+- 2nd voluntary raise = **3-bet**
+- 3rd voluntary raise = 4-bet, etc.
 ```dart
 int raiseCount = 0;
 for action in preflop_actions:
-  if isRaiseAction(action):
+  if isRaiseAction(action):   // excludes blinds; includes all-in
     raiseCount++;
-    if raiseCount == 3 && action.player == hero:
-      return true;  // THIS is a 3-bet
+    if raiseCount == 2 && action.player == hero:
+      return true;  // THIS is a 3-bet (the re-raise over the open)
 ```
-- All-in counts as raise for detection purposes
-- `hadThreeBetOpportunity`: exactly 2 total raises already happened when player acts (covers opener facing re-raise AND cold 3-bet spots). Does NOT count 4-bet opportunities (3+ raises).
-- `facedThreeBet`: player raised earlier, then the 3rd raise happened by someone else
-- `didFoldTo3Bet`: facing 3-bet and folded
+- All-in counts as a raise for detection purposes
+- `hadThreeBetOpportunity`: exactly 1 voluntary raise (the open) already happened when the player acts. Does NOT count 4-bet opportunities (2+ prior raises).
+- `facedThreeBet`: player opened (1st voluntary raise), then the 2nd voluntary raise (a 3-bet) happened by someone else
+- `didFoldTo3Bet`: facing a 3-bet and folded
 
 ### Stats Update Flow
 ```
@@ -448,13 +532,13 @@ saveHand() called
 | Service | File | Purpose |
 |---------|------|---------|
 | FirebaseService | `lib/services/firebase_service.dart` (1631 lines) | Session/hand CRUD, stats orchestration |
-| LocalStorageService | `lib/services/local_storage_service.dart` | SQLite v13 mirror of Firebase |
+| LocalStorageService | `lib/services/local_storage_service.dart` | SQLite mirror of Firebase (schema v19) |
 | UserStatsService | `lib/services/user_stats_service.dart` | Atomic user stat transactions |
 | OpponentStatsService | `lib/services/opponent_stats_service.dart` | Atomic opponent stat transactions |
 | StatsCalculator | `lib/services/stats_calculator.dart` | Pure stat detection functions (testable) |
 | PlayStyleDetector | `lib/services/play_style_detector.dart` | Player classification |
 | BankrollService | `lib/services/bankroll_service.dart` | Bankroll goals + stats aggregation |
-| AuthService | `lib/services/auth_service.dart` | Firebase Auth wrapper |
+| AuthService | `lib/services/auth_service.dart` | Firebase Auth wrapper. Forgot-password uses Firebase's built-in reset email; the branded reset page is NOT in this repo — it lives in the separate `final-table-web` repo (finaltable.io/reset_password, deployed via Vercel) |
 
 ### Club/Dealer Services
 | Service | File | Purpose |
@@ -478,11 +562,28 @@ saveHand() called
 ### Other Services
 | Service | File | Purpose |
 |---------|------|---------|
-| SubscriptionService | `lib/services/subscription_service.dart` | RevenueCat integration |
+| SubscriptionService | `lib/services/subscription_service.dart` | Subscription orchestration (see Subscription section for the 3-layer split with `revenuecat_client.dart` + `subscription_logic.dart`) |
 | FCMService | `lib/services/fcm_service.dart` | Push notifications (fire-and-forget!) |
 | DeepLinkService | `lib/services/deep_link_service.dart` | Email invitation deep links |
 | AiAnalyzerService | `lib/services/ai_analyzer_service.dart` | Hand analysis API calls |
-| FeatureFlagService | `lib/services/feature_flag_service.dart` | Global remote feature flags (Firestore `app_config/feature_flags`, super-admin toggles on Profile, offline cache). Gated: training_drills, ai_hand_analysis |
+| FeatureFlagService | `lib/services/feature_flag_service.dart` | Global remote feature flags (Firestore `app_config/feature_flags`, super-admin toggles on Profile, offline cache). Gated: training_drills, ai_hand_analysis, leak_detector |
+| AnalyticsService | `lib/services/analytics_service.dart` | PostHog product analytics (EU cloud). distinct_id = Firebase uid (matches RevenueCat customer_id — the warehouse join key); identity auto-follows authStateChanges. Event vocabulary lives in the service header — fire each event at ONE canonical site only. All calls fire-and-forget/no-throw; no-op without `POSTHOG_API_KEY` (tests, dev) |
+| PartnerGrantService | `lib/services/partner_grant_service.dart` | Admin-granted free tiers with expiry (see Subscription section) |
+| SkipHandScoutingService | `lib/services/skip_hand_scouting_service.dart` | On/off toggle for live scouting mode |
+| RangeGridService | `lib/services/range_grid_service.dart` | Hero hand range-grid index (local+cloud dedupe) |
+| ActivityHeartbeatService | `lib/services/activity_heartbeat_service.dart` | DAU heartbeat: `users/{uid}.lastActiveAt`, 1h throttle, fire-and-forget |
+| Leak Detector services | `lib/services/leak_extractor.dart`, `leak_engine.dart`, `leak_report_service.dart` | Frequency leak coaching (see Key Feature 15) |
+| LedGridPublisher | `lib/services/led_grid_publisher.dart` | Experimental ESP32 LED range board payload + push (see Key Feature 17) |
+| StatsVerificationService | `lib/services/stats_verification_service.dart` | Debug audit: recompute stats from raw hands, print report |
+| Drill services | `lib/services/drill_*.dart` | Training drills: engine, grader, GTO charts, Nash push-fold |
+
+### Social Feed Services (see Key Feature 14)
+| Service | File | Purpose |
+|---------|------|---------|
+| FeedSanitizer | `lib/services/feed_sanitizer.dart` | Pure sanitization (identity/card stripping) — privacy-critical, unit-tested |
+| FeedPublisher | `lib/services/feed_publisher.dart` | Best-effort dual-write of sanitized, delay-stamped feed docs |
+| FeedService | `lib/services/feed_service.dart` | Follower-side reads: live sessions, recaps, rail data |
+| FollowService | `lib/services/follow_service.dart` | Follow graph, blocks, FCM `live_{uid}` topic subscriptions |
 
 ---
 
@@ -522,6 +623,9 @@ saveHand() called
 | Profile | `lib/screens/profile_screen.dart` | User profile, bankroll |
 | Seat Setup | `lib/screens/seat_setup_screen.dart` | Table config with visual layout |
 | Logging Mode | `lib/screens/logging_mode_selection_screen.dart` | Full vs quick logging |
+| Session Setup | `lib/screens/unified_session_setup_screen.dart` | Unified full/quick session setup |
+| Paywall | `lib/screens/paywall_screen.dart` | 3 paid tiers, `preselectedTier` param |
+| Admin | `lib/screens/admin/` | Partner grants, club requests, support requests (super-admin only) |
 | Earnings Chart | `lib/screens/earnings_chart_screen.dart` | Landscape zoom/pan chart |
 | Dealer Table | `lib/screens/dealer/dealer_table_screen.dart` | Dealer voice + manual logging |
 | Club Dashboard | `lib/screens/club/club_dashboard_screen.dart` | Club overview, events |
@@ -539,7 +643,9 @@ saveHand() called
 
 ```
 users/{userId}/
-  uid, displayName, displayNameLower, email, createdAt, updatedAt
+  uid, displayName, displayNameLower, email, createdAt, updatedAt,
+  lastActiveAt?,   — DAU heartbeat (ActivityHeartbeatService), server timestamp, ≤1/hour
+  subscriptionTier?, subscriptionTierExpiresAt?   — mirrored by revenuecatWebhook CF; rules gate paid features on these
 
 user_stats/{userId}/
   totalHands, handsPlayed, walksCount, vpipCount, pfrCount,
@@ -552,8 +658,9 @@ user_stats/{userId}/
 poker_sessions/{sessionId}/
   userId, sessionName, smallBlind, bigBlind, hasBBante, playerCount,
   ourSeatNumber, gameType, startTime, endTime, totalHands, handsLogged,
-  biggestPot, isIndividualSession, buyInAmount, totalBuyIn, startingStack,
-  currentStack, stackHistory, participantIds, isLive, isDealerSession
+  biggestPot, biggestPotBB, isIndividualSession, buyInAmount, totalBuyIn,
+  startingStack, currentStack, stackHistory, participantIds, isLive,
+  isDealerSession, finishedPlace?, fieldSize?, prizeWon?
   poker_hands/{handId}/
     handNumber, buttonPosition, actions[], boardCards, ourHoleCards,
     showdownData, potAmount, winnerId, playerNames, playerIds,
@@ -590,6 +697,21 @@ seat_assignments/{id}/
 
 user_notifications/{notificationId}/
   (club notifications for specific users)
+
+partner_grants/{grantId}/
+  userId, tier, status ('active'|'expired'|'revoked'), expiresAt (Timestamp)
+
+follows/{followerId}_{followedId}/ — follow edge + denormalized display names
+blocks/{blockerId}_{blockedId}/    — existence denies future follow creates in rules
+
+feed_sessions/{sessionId}/    — sanitized session presence + stackHistory copy (social feed)
+feed_hands/{...}/             — sanitized hand copies, visibleAt-stamped
+feed_stack/{...}/             — sanitized stack entries, visibleAt-stamped
+
+app_admins/{userId}/          — super-admin allowlist
+club_requests/{requestId}/    — club registration requests (admin approves)
+support_requests/{requestId}/ — in-app support requests
+app_config/                   — feature_flags, promotions (super-admin toggles)
 ```
 
 ---
@@ -605,6 +727,7 @@ user_notifications/{notificationId}/
 - SB and BB always set together
 - Stored as `double` throughout — supports decimal values for small-stakes cash games (e.g. $0.25/$0.50)
 - Cash game input allows decimals; tournament input restricted to whole numbers
+- All money/chip inputs accept comma OR dot as decimal separator via `DecimalInputFormatter` + `parseDecimal()` (`lib/utils/decimal_input.dart`) — see UI Bugs pattern 5
 - Display uses `formatBlindValue()` helper (in `poker_game_state.dart`) — shows `0.25` not `0.25000`
 - Can increase during tournament (level changes)
 - On preflop: BET is always invalid, RAISE is always valid
@@ -626,7 +749,7 @@ user_notifications/{notificationId}/
 ### Stats Bugs (Most Common)
 1. **Double-counting**: Stats must be updated in ONE place only (FirebaseService)
 2. **Wrong denominator**: Use `totalHands - walksCount` for VPIP/PFR, NOT `handsPlayed`
-3. **3-bet = 3rd raise**: Count total raises preflop: open=1st, re-raise=2nd, 3-bet=3rd. Blinds don't count.
+3. **3-bet = 2nd voluntary raise**: Count voluntary raises preflop: open=1st, 3-bet=2nd, 4-bet=3rd. Blinds are forced (not an open) and don't count.
 4. **All-in ignored**: Always use `isRaiseAction()`/`isBetAction()` helpers that include 'all-in'. Also include 'all-in' in per-action switch statements.
 5. **Dealer mode zero stats**: Must pass `playerIds` map and update ALL players' stats
 6. **Opponent VPIP per-action**: VPIP must be per-hand (0 or 1), preflop only. Use boolean flags, not per-action increment.
@@ -638,6 +761,7 @@ user_notifications/{notificationId}/
 3. **Preflop gesture**: Use `gameState.isValidAction()` not `hasBetThisRound` for raise detection
 4. **Hole cards lost**: Show hole cards dialog BEFORE hand completion, not after
 5. **Hand ID collision**: Always use timestamp suffix in hand document IDs
+6. **Short-stack clamp crash**: `double.clamp(min, max)` throws when min > max — any bet/raise amount clamp must first check whether the player's stack is below the minimum and resolve it as all-in for less (Crashlytics 90a88414; see `test/short_stack_bet_clamp_test.dart`)
 
 ### Position Bugs
 1. **UTG wrong seat**: Use active player count, NOT total seats (9)
@@ -656,6 +780,14 @@ user_notifications/{notificationId}/
 2. **Controller disposal crash**: Move `setState()` to `.then()` callback after dialog closes
 3. **Cache staleness**: Static caches must be invalidated when data changes
 4. **Gradient harshness**: Apply 0.6 opacity to ALL gradient colors, use elliptical shape
+5. **Comma decimal separator**: EVERY money/chip/blind text input must use `DecimalInputFormatter` and be parsed with `parseDecimal()` (`lib/utils/decimal_input.dart`) — never `FilteringTextInputFormatter.allow(RegExp(r'[\d.]'))` (silently deletes the comma: RO user typing "50,00" got BB 5000) and never bare `double.tryParse` on user-typed text
+
+### Firestore Rules Bugs
+1. **Admin-on-behalf-of-user writes**: flows the super admin performs FOR another user (club-request approval writes the new owner's `dealers/{uid}` doc and updates a club whose `ownerId` is the requester) need explicit `isSuperAdmin()` allowances in `firestore.rules` — owner-only rules deny them (production bug 2026-08-02, fixed + deployed). When adding admin flows, trace EVERY write against the rules.
+2. Rules changes must be deployed (`firebase deploy --only firestore:rules`) — editing the file does nothing live. Smoke-test club flows after any rules scoping change (ROADMAP item 3).
+
+### Tournament Math Bugs
+1. **Never compare chip amounts across blind levels**: blinds grow ~100x in an MTT. Biggest-pot uses BB-relative comparison; best/worst hand uses pot-to-stack ratio. Any new "biggest/best X" tournament stat must normalize by BB level or stack.
 
 ### Auth/Network Bugs
 1. **Auto-logout**: Firebase authStateChanges emits null on network issues → add 3s recovery delay
@@ -683,6 +815,13 @@ Tests are organized in subdirectories mirroring `lib/`:
 - `test/utils/user_facing_error_test.dart` — Error message mapping
 - `test/fixtures/mock_hand_actions.dart` — Shared test fixtures
 - `test/multi_pot_dialog_selection_test.dart` — Dialog selection logic
+- `test/HAND_LOGGING_SPEC.md` — hand-logging behaviour spec (bug diagnoses live here, not in code comments)
+- Hand-logging regression suite: `hand_logging_edge_cases_test.dart`, `raise_gesture_mode_test.dart`, `seating_boundary_test.dart`, `shown_cards_test.dart`, `table_change_discard_test.dart`, `side_pot_display_test.dart`
+- `test/onboarding_state_test.dart` — tour state machine
+- `test/services/subscription_logic_test.dart` + `test/services/subscription_service_test.dart` — tier resolution, purchase overrides, service flow against `FakeRevenueCatClient`
+- `test/services/feed_sanitizer_test.dart` — social feed privacy guarantees (identity/card stripping) — treat failures here as privacy leaks, not glitches
+- `test/services/leak_detector_test.dart`, `test/services/flop_strength_test.dart` — leak detector extraction/bands
+- `test/services/activity_heartbeat_test.dart`, `test/services/led_grid_publisher_test.dart`, `test/short_stack_bet_clamp_test.dart`
 
 ### Testing Checklist
 - [ ] Test with both cash and tournament games
@@ -730,6 +869,9 @@ flutter test test/services/stats_calculator_test.dart
 ---
 
 ## Open Items / Known Limitations
+- ⚠️ **Club rules hardening (audit B5, commit 725c067) committed but NOT yet deployed** — run `firebase deploy --only firestore:rules` together with a club smoke test (invitation, approval, role flows)
+- ⚠️ **Social feed lag disabled for testing**: the STASHED `FeedPublisher.lag = Duration.zero` — restore `Duration(hours: 1)` when the feed stash is popped, before ANY release with feed code (see Key Feature 14)
+- Social feed tier-mirror backfill for existing subscribers not run (rules deny paid users until their next RevenueCat event)
 - Position mismatch between hand card and details view (needs investigation)
 - Deep link app-not-installed handling not implemented
 - Hand logging screen not yet migrated to new design system (plan exists)
@@ -742,6 +884,6 @@ flutter test test/services/stats_calculator_test.dart
 
 ---
 
-**Last Updated**: March 2026
+**Last Updated**: October 7, 2026
 **Maintained by**: User + Claude
 **Update this file**: After major feature additions, architectural changes, or new bug patterns

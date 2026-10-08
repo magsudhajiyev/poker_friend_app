@@ -24,7 +24,7 @@ class RangeGridEntry {
   final String posGroup; // 'EP' | 'MP' | 'CO' | 'BTN' | 'SB' | 'BB'
   final double? stackBB; // hero stack depth at first action, in BB
   final String? stackBucket; // StackRange.name, null when stack unknown
-  final String primaryAction; // 'raise' | 'call' | 'fold' | 'check'
+  final String primaryAction; // 'allin' | 'raise' | 'call' | 'fold' | 'check'
   final String scenario; // 'rfi' (unopened pot) | 'vs_raise'
   final String preflopLine; // human-readable summary
   final double potBB; // final pot in BB
@@ -94,6 +94,7 @@ class RangeGridEntry {
 /// Aggregated action frequencies for one 169-grid hand class (one grid cell).
 class RangeCellAggregate {
   final String handClass;
+  final int allInCount;
   final int raiseCount;
   final int callCount;
   final int foldCount;
@@ -101,17 +102,19 @@ class RangeCellAggregate {
 
   const RangeCellAggregate({
     required this.handClass,
+    this.allInCount = 0,
     this.raiseCount = 0,
     this.callCount = 0,
     this.foldCount = 0,
     this.checkCount = 0,
   });
 
-  int get total => raiseCount + callCount + foldCount + checkCount;
+  int get total => allInCount + raiseCount + callCount + foldCount + checkCount;
 
   RangeCellAggregate addingAction(String action, int count) {
     return RangeCellAggregate(
       handClass: handClass,
+      allInCount: allInCount + (action == 'allin' ? count : 0),
       raiseCount: raiseCount + (action == 'raise' ? count : 0),
       callCount: callCount + (action == 'call' ? count : 0),
       foldCount: foldCount + (action == 'fold' ? count : 0),
@@ -126,7 +129,8 @@ class RangeCellAggregate {
 /// Pure canonicalization/derivation logic lives in static functions (tested
 /// without a database); persistence goes through LocalStorageService.
 class RangeGridService {
-  static const _backfillFlagKey = 'range_grid_backfilled_v4';
+  // v5: all-in split out of 'raise' into its own 'allin' primaryAction
+  static const _backfillFlagKey = 'range_grid_backfilled_v5';
   static Future<void>? _backfillFuture;
 
   // ── Canonicalization ────────────────────────────────────────────────
@@ -184,7 +188,9 @@ class RangeGridService {
   ///
   /// Returns (primaryAction, line, scenario):
   /// - primaryAction: hero's first VOLUNTARY preflop action —
-  ///   'raise' | 'call' | 'fold' | 'check' — used for cell frequencies.
+  ///   'allin' | 'raise' | 'call' | 'fold' | 'check' — used for cell
+  ///   frequencies. 'allin' is the explicit all-in (jam) action only; an
+  ///   all-in CALL stays 'call' (HL-8 — a call is never aggressive).
   /// - line: short human-readable summary, e.g. "3-bet",
   ///   "Open-raised → folded".
   /// - scenario: 'rfi' when the pot was UNOPENED at hero's first decision
@@ -219,17 +225,38 @@ class RangeGridService {
       if (primary != null) continue; // only first voluntary action classifies
 
       if (isRaise(type) || type == 'bet') {
-        primary = 'raise';
         final raiseNumber = raisesBeforeHero + 1;
-        firstLabel = switch (raiseNumber) {
-          1 => 'Open-raised',
-          2 => 'Re-raised',
-          3 => '3-bet',
-          _ => '4-bet+',
-        };
+        if (type == 'all-in') {
+          primary = 'allin';
+          firstLabel = switch (raiseNumber) {
+            1 => 'Open-shoved',
+            2 => 'Shoved over a raise',
+            3 => '3-bet shove',
+            _ => '4-bet+ shove',
+          };
+        } else {
+          primary = 'raise';
+          firstLabel = switch (raiseNumber) {
+            1 => 'Open-raised',
+            2 => 'Re-raised',
+            3 => '3-bet',
+            _ => '4-bet+',
+          };
+        }
       } else if (type == 'call') {
         primary = 'call';
-        firstLabel = raisesBeforeHero == 0 ? 'Limped' : 'Called raise';
+        // HL-8: a call that committed the whole stack is an all-in for less
+        // — never label it a limp. primaryAction stays 'call' (an all-in
+        // call is NOT a raise; stats/frequencies are unaffected).
+        final amt = (action['amount'] as num?)?.toDouble();
+        final stackAtAction = (action['playerStack'] as num?)?.toDouble();
+        final wasAllIn = amt != null &&
+            stackAtAction != null &&
+            stackAtAction > 0 &&
+            amt >= stackAtAction - 1e-9;
+        firstLabel = wasAllIn
+            ? 'All-in call'
+            : (raisesBeforeHero == 0 ? 'Limped' : 'Called raise');
       } else if (type == 'check') {
         primary = 'check';
         firstLabel = 'Checked';

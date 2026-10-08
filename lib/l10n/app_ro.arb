@@ -1,0 +1,5475 @@
+{
+  "@@locale": "ro",
+  "navHome": "Acasă",
+  "navOpponents": "Adversari",
+  "navSessions": "Sesiuni",
+  "navProfile": "Profil",
+  "commonCancel": "Anulează",
+  "commonConfirm": "Confirmă",
+  "commonDelete": "Șterge",
+  "commonError": "Eroare",
+  "commonLoading": "Se încarcă...",
+  "commonSave": "Salvează",
+  "commonRetry": "Reîncearcă",
+  "commonDone": "Gata",
+  "commonOk": "OK",
+  "commonYes": "Da",
+  "commonNo": "Nu",
+  "commonBack": "Înapoi",
+  "commonSearch": "Caută",
+  "commonNoData": "Nu există date",
+  "commonClose": "Închide",
+  "commonNotAvailable": "N/A",
+  "commonApply": "Aplică",
+  "commonUpdate": "Actualizează",
+  "commonClear": "Golește",
+  "commonToday": "Azi",
+  "statsTitle": "Statistici",
+  "statsSubtitle": "Analize avansate",
+  "statsHandsPlayed": "Mâini jucate",
+  "statsFoldTo3Bet": "Fold to 3-Bet",
+  "statsWinRate": "Rată de câștig",
+  "statsSessionStatistics": "Statistici sesiuni",
+  "statsSessions": "Sesiuni",
+  "statsTotalTime": "Timp total",
+  "statsAvgSession": "Sesiune medie",
+  "statsPlayToSee": "Joacă sesiuni pentru a vedea statisticile de timp",
+  "statsGeneral": "General",
+  "statsCash": "Cash",
+  "statsTournament": "Turneu",
+  "statsTotalBuyIn": "Buy-In total",
+  "statsTotalCashOut": "Cash-Out total",
+  "statsNetProfit": "Profit net",
+  "statsItm": "ITM%",
+  "statsAvgFinish": "Clasare medie",
+  "statsBestFinish": "Cea mai bună clasare",
+  "statsRoi": "ROI%",
+  "statsFinalTables": "Mese finale",
+  "statsAvgBuyIn": "Buy-In mediu",
+  "statsAvgFieldSize": "Nr. mediu de jucători",
+  "statsHourlyRate": "Rată orară",
+  "statsHourlyRateNotAvailable": "Disponibil după 60 min de urmărire",
+  "errorNoConnection": "Nu există conexiune la internet. Verifică rețeaua și încearcă din nou.",
+  "errorTimeout": "Cererea a expirat. Încearcă din nou.",
+  "errorServer": "Ceva nu a mers bine la noi. Încearcă din nou în câteva minute.",
+  "errorNotAuthorized": "Nu ai permisiunea să faci asta. Încearcă să te autentifici din nou.",
+  "errorGeneric": "Ceva nu a mers bine. Încearcă din nou.",
+  "statsBBPerHour": "BB / oră",
+  "statsLoadingMessage": "Se încarcă statisticile...",
+  "statsFetchingMessage": "Se preiau statisticile utilizatorului...",
+  "statsFailedToLoad": "Nu s-au putut încărca statisticile: {error}",
+  "@statsFailedToLoad": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsTitle": "Meniu",
+  "settingsLanguage": "Limbă",
+  "settingsLanguageSubtitle": "Alege limba aplicației",
+  "settingsLanguageSystem": "Implicit sistem",
+  "settingsCurrency": "Monedă",
+  "settingsKnowledgeBase": "BAZĂ DE CUNOȘTINȚE",
+  "settingsGuidedTour": "Tur ghidat",
+  "settingsGuidedTourSubtitle": "Reia tururile de introducere",
+  "settingsFullLoggingTour": "Tur înregistrare completă",
+  "settingsFullLoggingTourSubtitle": "Fluxul complet de urmărire a sesiunii",
+  "settingsUnderstandingStats": "Înțelege-ți statisticile",
+  "settingsUnderstandingStatsSubtitle": "Află ce înseamnă fiecare metrică",
+  "settingsClubsEvents": "Cluburi și evenimente",
+  "settingsClubsEventsSubtitle": "Cum funcționează jocul în club",
+  "settingsLegal": "LEGAL",
+  "settingsTermsOfService": "Termeni și condiții",
+  "settingsTermsOfServiceSubtitle": "Vezi termenii și condițiile noastre",
+  "settingsPrivacyPolicy": "Politica de confidențialitate",
+  "settingsPrivacyPolicySubtitle": "Vezi politica noastră de confidențialitate",
+  "settingsAdmin": "ADMIN",
+  "settingsClubRequests": "Cereri de club",
+  "settingsClubRequestsSubtitle": "Gestionează cererile de înregistrare",
+  "settingsSupportRequests": "Cereri de suport",
+  "settingsSupportRequestsSubtitle": "Gestionează tichetele de suport",
+  "settingsNotificationTester": "Tester de notificări",
+  "settingsNotificationTesterSubtitle": "Previzualizează toate designurile de notificări",
+  "profileUpgrade": "Upgrade",
+  "profileUsername": "Nume de utilizator",
+  "profileNotSet": "Nesetat",
+  "profileChange": "Schimbă",
+  "profileSetUsername": "Setează numele de utilizator",
+  "profileUseNicknameInGames": "Folosește porecla în jocuri",
+  "profileUseNicknameDescription": "Afișează @{username} în locul numelui tău în evenimente și la înregistrarea mâinilor",
+  "@profileUseNicknameDescription": {
+    "placeholders": {
+      "username": {
+        "type": "String"
+      }
+    }
+  },
+  "profileBankrollGoal": "Obiectiv bankroll",
+  "profileUpdateGoal": "Actualizează obiectivul",
+  "profileCurrentBankroll": "Bankroll curent",
+  "profileUpdateBankroll": "Actualizează bankroll-ul",
+  "profileAddSessionResult": "Adaugă rezultat de sesiune",
+  "profileSessionResultHint": "Introdu valori pozitive pentru câștiguri, negative pentru pierderi",
+  "profileAddResult": "Adaugă rezultat",
+  "profileGoalUpdatedSuccess": "Obiectiv actualizat cu succes!",
+  "profileErrorUpdatingGoal": "Eroare la actualizarea obiectivului",
+  "profileBankrollUpdatedSuccess": "Bankroll actualizat cu succes!",
+  "profileErrorUpdatingBankroll": "Eroare la actualizarea bankroll-ului",
+  "profileSessionResultAdded": "Rezultat de sesiune adăugat!",
+  "profileErrorAddingResult": "Eroare la adăugarea rezultatului de sesiune",
+  "profilePleaseEnterValidAmount": "Introdu o sumă validă",
+  "profileLogOut": "Ieși din cont",
+  "profileSignOut": "Deconectare",
+  "profileSignOutConfirmation": "Sigur vrei să te deconectezi?",
+  "sessionHistoryTitle": "Istoric sesiuni",
+  "sessionLast30Days": "Ultimele 30 de zile",
+  "sessionUpgradeForFullHistory": "Fă upgrade pentru istoricul complet",
+  "sessionLoadingMessage": "Se încarcă sesiunile...",
+  "sessionNoSessions": "Nicio sesiune {gameType}",
+  "@sessionNoSessions": {
+    "placeholders": {
+      "gameType": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionPlayToSee": "Joacă mâini de poker {gameType}\npentru a vedea rezultatele",
+  "@sessionPlayToSee": {
+    "placeholders": {
+      "gameType": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionLive": "Live",
+  "sessionPlayersCount": "{count} jucători",
+  "@sessionPlayersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sessionSyncingToCloud": "Se sincronizează cu cloud-ul...",
+  "sessionClearAllTitle": "Ștergi toate sesiunile?",
+  "sessionClearAllDescription": "Aceasta va șterge definitiv toate sesiunile și mâinile de poker atât din Firebase, cât și din stocarea locală.",
+  "sessionClearAllWarning": "Această acțiune nu poate fi anulată!",
+  "sessionClearAll": "Șterge tot",
+  "sessionClearedSuccessfully": "Toate sesiunile au fost șterse cu succes",
+  "sessionHandDetails": "Detalii mâna #{handNumber}",
+  "@sessionHandDetails": {
+    "placeholders": {
+      "handNumber": {
+        "type": "int"
+      }
+    }
+  },
+  "sessionYourCards": "Cărțile tale:",
+  "sessionBoardCards": "Cărți pe board:",
+  "sessionPotByStreet": "Pot pe street:",
+  "sessionActions": "Acțiuni:",
+  "sessionNoActionsRecorded": "Nicio acțiune înregistrată",
+  "sessionNoCardsRecorded": "Nicio carte înregistrată",
+  "sessionFinalPot": "Pot final:",
+  "sessionChoppedPot": "Pot împărțit ({count} câștigători):",
+  "@sessionChoppedPot": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sessionWinnerNotAvailable": "Informațiile despre câștigător nu sunt disponibile",
+  "opponentsTitle": "Adversari",
+  "opponentsCountFree": "{count}/{max} gratuit",
+  "@opponentsCountFree": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "opponentsCountPremium": "{count} jucători urmăriți",
+  "@opponentsCountPremium": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "opponentsSearchHint": "Caută adversari...",
+  "opponentsLoadingMessage": "Se încarcă adversarii...",
+  "opponentsNoResults": "Niciun rezultat",
+  "opponentsEmptyTitle": "Încă nu ai adversari",
+  "opponentsEmptySubtitle": "Adaugă adversari pentru a le urmări stilul de joc și statisticile",
+  "opponentsEmptySearchSubtitle": "Încearcă alt termen de căutare",
+  "opponentsAddButton": "Adaugă adversar",
+  "opponentsLastSeen": "Văzut ultima dată: {date}",
+  "@opponentsLastSeen": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "opponentsHands": "Mâini",
+  "opponentsEditMenu": "Editează adversarul",
+  "opponentsDeleteMenu": "Șterge adversarul",
+  "opponentsAddDialogTitle": "Adaugă adversar",
+  "opponentsEditDialogTitle": "Editează adversarul",
+  "opponentsNameHint": "Nume adversar",
+  "opponentsNotesHint": "Note (opțional)",
+  "opponentsPickColor": "Alege o culoare",
+  "opponentsAddedSuccess": "Adversar adăugat cu succes",
+  "opponentAlreadyExists": "Există deja un adversar numit \"{name}\"",
+  "@opponentAlreadyExists": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "opponentsUpdatedSuccess": "Adversar actualizat cu succes",
+  "opponentsDeleteConfirmTitle": "Ștergi adversarul?",
+  "opponentsDeleteConfirmMessage": "Sigur vrei să ștergi \"{name}\"?\nAceastă acțiune nu poate fi anulată",
+  "@opponentsDeleteConfirmMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "opponentsDeletedSuccess": "Adversar șters cu succes",
+  "opponentsAnalyticsTitle": "Analiza adversarilor",
+  "opponentsAnalyticsTotalLabel": "Total adversari",
+  "opponentsAnalyticsHandsTracked": "Total mâini urmărite",
+  "opponentsAnalyticsAverage": "Medie mâini/adversar",
+  "opponentsAnalyticsMostPlayed": "Cel mai des întâlnit",
+  "opponentsAnalyticsDistribution": "Distribuția tipurilor de jucători:",
+  "opponentsClearAllTitle": "Ștergi toți adversarii?",
+  "opponentsClearAllMessage": "Aceasta va șterge definitiv toate datele despre adversari. Această acțiune nu poate fi anulată!",
+  "opponentsClearAllButton": "Șterge tot",
+  "opponentsClearedSuccess": "Toți adversarii au fost șterși",
+  "setupSessionSetup": "Configurare sesiune",
+  "setupSessionName": "Nume sesiune",
+  "setupSessionNameHint": "ex.: \"Poker de vineri seara\"",
+  "setupGameType": "Tip de joc",
+  "setupCashGame": "Cash Game",
+  "setupTournament": "Turneu",
+  "setupSmallBlind": "Small Blind",
+  "setupBigBlind": "Big Blind",
+  "setupBuyInAmount": "Sumă buy-in",
+  "setupEnterAmount": "Introdu suma",
+  "setupStartingStackEqualsBuyIn": "Stack-ul de start este egal cu buy-in-ul tău.",
+  "setupStartingStack": "Stack de start",
+  "setupEnterChipStack": "Introdu stack-ul de chips",
+  "setupMustBeAtLeastBigBlind": "Trebuie să fie cel puțin Big Blind ({bigBlind})",
+  "@setupMustBeAtLeastBigBlind": {
+    "placeholders": {
+      "bigBlind": {
+        "type": "int"
+      }
+    }
+  },
+  "setupBbAnte": "BB Ante",
+  "setupTableSection": "MASĂ",
+  "setupTableInstructions": "Atinge un loc pentru a adăuga un jucător.\nTrage butonul pentru a stabili dealerul.",
+  "setupStartSession": "Începe sesiunea",
+  "setupMe": "Eu",
+  "setupPlayerSeat": "Jucător {seatNumber}",
+  "@setupPlayerSeat": {
+    "placeholders": {
+      "seatNumber": {
+        "type": "int"
+      }
+    }
+  },
+  "setupHero": "Hero",
+  "homeLoadingPokerData": "Se încarcă datele tale de poker...",
+  "homeWelcomeBack": "Bine ai revenit",
+  "homeNoActiveSessions": "Nicio sesiune activă",
+  "homeLiveSessions": "Sesiuni live",
+  "homeClubNotFound": "Clubul nu a fost găsit",
+  "homeEventNotFound": "Evenimentul nu a fost găsit",
+  "homeRecentActivity": "Activitate recentă",
+  "homeWinRate": "Rată de câștig",
+  "homeHours": "Ore",
+  "homePlayStyle": "Stil de joc",
+  "homePlayStyleTooltip": "Stilul tău de joc va fi detectat după înregistrarea a 50 de mâini preflop.",
+  "homeBankroll": "Bankroll",
+  "homeBankrollOfGoal": "{current} din {goal}",
+  "@homeBankrollOfGoal": {
+    "placeholders": {
+      "current": {
+        "type": "String"
+      },
+      "goal": {
+        "type": "String"
+      }
+    }
+  },
+  "homeAmountLeft": "{amount} rămași",
+  "@homeAmountLeft": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "homeEarnings": "Câștiguri",
+  "homeNetProfitWeek": "Profit net / săpt. · {week}",
+  "@homeNetProfitWeek": {
+    "placeholders": {
+      "week": {
+        "type": "String"
+      }
+    }
+  },
+  "homeAvgAmount": "Medie {amount}",
+  "@homeAvgAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "homeNoEarningsDataYet": "Încă nu există date despre câștiguri",
+  "homeRecentSessions": "Sesiuni recente",
+  "homeViewAll": "Vezi tot",
+  "homeNoRecentSessions": "Nicio sesiune recentă",
+  "homeStartFirstSession": "Începe prima ta sesiune de poker!",
+  "homeAddNew": "Adaugă",
+  "homeUpcomingEvents": "Evenimente viitoare",
+  "homeNoRecentEvents": "Niciun eveniment recent",
+  "homeAddFirstEvent": "Adaugă primul tău eveniment de poker!",
+  "homePlayersCount": "{count} jucători",
+  "@homePlayersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "homeGoingCount": "{count} participă",
+  "@homeGoingCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "homePrivateGame": "Joc privat",
+  "homeHomeGame": "Home Game",
+  "homeOnline": "Online",
+  "homeEditEvent": "Editează evenimentul",
+  "homeDeleteEvent": "Șterge evenimentul",
+  "homeEventName": "Nume eveniment",
+  "homeLocationVenue": "Locație/Local",
+  "homeBuyInAmount": "Sumă buy-in",
+  "homeSelectDate": "Selectează data:",
+  "homeSaveChanges": "Salvează modificările",
+  "homeDeleteEventConfirm": "Ștergi {eventName}?",
+  "@homeDeleteEventConfirm": {
+    "placeholders": {
+      "eventName": {
+        "type": "String"
+      }
+    }
+  },
+  "homeDeleteEventDescription": "Sigur vrei să ștergi \"{eventName}\"?",
+  "@homeDeleteEventDescription": {
+    "placeholders": {
+      "eventName": {
+        "type": "String"
+      }
+    }
+  },
+  "homeEventDeletedSuccessfully": "Eveniment șters cu succes",
+  "homeClubInvitation": "Invitație la club",
+  "homeYouveBeenInvitedToJoin": "Ai fost invitat să te alături",
+  "homeDecline": "Refuză",
+  "homeAccept": "Acceptă",
+  "homeInvitationDeclined": "Invitație refuzată",
+  "homeInvitationAccepted": "Invitație acceptată",
+  "homeClubInvitations": "Invitații la club",
+  "homeLater": "Mai târziu",
+  "homeViewInvitations": "Vezi invitațiile",
+  "homeNoEarningsDataTitle": "Încă nu există date despre câștiguri",
+  "homeNoEarningsDataDescription": "Adaugă mai întâi câteva rezultate de sesiune pentru a vedea graficul câștigurilor. Poți adăuga rezultate din pagina Profil.",
+  "handHandNumber": "Mâna #{number}",
+  "@handHandNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "handFreeCounter": "{used}/{max} gratuit",
+  "@handFreeCounter": {
+    "placeholders": {
+      "used": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "handAvgPill": "{ratio} medie",
+  "@handAvgPill": {
+    "placeholders": {
+      "ratio": {
+        "type": "String"
+      }
+    }
+  },
+  "handNextHand": "Mâna următoare",
+  "handFoldedToMe": "Fold până la mine",
+  "handUndoLastAction": "Anulează ultima acțiune",
+  "handAllInHand": "MÂNĂ ALL-IN",
+  "handPot": "Pot",
+  "handStack": "Stack",
+  "handToAct": "La rând",
+  "handToActYou": "Tu",
+  "handStopSessionTitle": "Oprești sesiunea?",
+  "handStopSessionMessage": "Sigur vrei să oprești această sesiune? Toate mâinile vor fi salvate.",
+  "handStop": "Oprește",
+  "handChangeTable": "Schimbă masa",
+  "handBlinds": "Blinduri",
+  "handTakesEffectNextHand": "Se aplică din mâna următoare",
+  "handLeaveSession": "Părăsești sesiunea?",
+  "handSaveAndExit": "Salvează și ieși",
+  "handDiscardAndExit": "Renunță și ieși",
+  "handInProgress": "Mână în desfășurare",
+  "handDiscardCurrentHand": "Ai o mână activă în curs de înregistrare. Renunți la ea și te întorci?",
+  "handDiscardHand": "Renunță la mână",
+  "handAdjustStack": "Ajustează stack-ul",
+  "handEnterStackAmount": "Introdu valoarea stack-ului",
+  "handGestureGuide": "Ghid de gesturi",
+  "handManagePlayers": "Gestionează jucătorii",
+  "handStopSession": "Oprește sesiunea",
+  "handRebuy": "Rebuy",
+  "handGestures": "Gesturi",
+  "handGestureTap": "Atingere",
+  "handGestureCheckCall": "Check / Call",
+  "handGestureSwipeOut": "Glisează în afară",
+  "handGestureSwipeUp": "Apasă și trage în sus",
+  "handGestureBetRaise": "Bet / Raise",
+  "handStreetComplete": "Street încheiat",
+  "handWinsThePot": "câștigă potul",
+  "handHandComplete": "Mână încheiată",
+  "handTapToContinue": "Atinge pentru a continua",
+  "handRaiseAmount": "Sumă Raise",
+  "handBetAmount": "Sumă Bet",
+  "handPleaseEnterValidNumber": "Introdu un număr valid",
+  "handConfirmRebuy": "Confirmă Rebuy",
+  "handRebuyReplaceStack": "Continuarea cu un rebuy îți va înlocui stack-ul curent. Sigur vrei să continui?",
+  "handProceed": "Continuă",
+  "handEnterRebuyDetails": "Introdu detaliile rebuy-ului pentru turneu",
+  "handRebuyAmount": "Sumă Rebuy",
+  "handNewStackSize": "Noul stack",
+  "handChipCountAfterRebuy": "Număr de chips după rebuy",
+  "handSessionInfo": "Info sesiune",
+  "handTotalInvested": "Total investit: {amount}",
+  "@handTotalInvested": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "handRebuysCount": "Rebuy-uri: {count}",
+  "@handRebuysCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "handAddRebuy": "Adaugă Rebuy",
+  "handPleaseEnterValidAmounts": "Introdu sume valide",
+  "handHandInProgress": "Mână în desfășurare",
+  "handHandInProgressMessage": "Există o mână în desfășurare. Trecerea la mâna următoare va anula toate acțiunile și va restaura stack-urile jucătorilor.",
+  "handMoveToNextHand": "Treci la mâna următoare",
+  "handMainPot": "Principal",
+  "handSidePot": "Side {index}",
+  "@handSidePot": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "handPokerSession": "Sesiune de poker",
+  "handActionsHandNumber": "Mâna #{number}",
+  "@handActionsHandNumber": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "handActionsPosition": "Poziție: {position}",
+  "@handActionsPosition": {
+    "placeholders": {
+      "position": {
+        "type": "String"
+      }
+    }
+  },
+  "handActionsShareHand": "Distribuie mâna",
+  "handActionsShowHoleCards": "Arată cărțile din mână",
+  "handActionsShowHoleCardsSubtitle": "Cărțile tale vor fi vizibile în linkul partajat",
+  "handActionsHideHoleCards": "Ascunde hole cards",
+  "handActionsHideHoleCardsSubtitle": "Cărțile tale vor fi ascunse în linkul partajat",
+  "handActionsShareMessage": "Vezi această mână pe Final Table!",
+  "handActionsShareSubject": "Mână de poker #{number}",
+  "@handActionsShareSubject": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "handActionsFailedToShareHand": "Partajarea mâinii a eșuat",
+  "handActionsGeneratingExport": "Se generează exportul PokerStars...",
+  "handActionsExportedSuccessfully": "Mâna #{number} a fost exportată cu succes!",
+  "@handActionsExportedSuccessfully": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "handActionsFailedToExport": "Exportul mâinii a eșuat: {error}",
+  "@handActionsFailedToExport": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "handActionsMissingHeroCards": "Cărțile Hero lipsesc",
+  "handActionsMissingHeroCardsMessage": "Analiza AI necesită înregistrarea hole cards. Această mână nu poate fi analizată deoarece cărțile hero lipsesc.",
+  "handActionsYourCards": "Cărțile tale",
+  "handActionsOpponentCards": "Cărțile adversarului",
+  "handActionsPlayerSeat": "Jucător {id}",
+  "@handActionsPlayerSeat": {
+    "placeholders": {
+      "id": {
+        "type": "int"
+      }
+    }
+  },
+  "handActionsPot": "POT",
+  "handActionsBlinds": "BLINDURI",
+  "handActionsWinner": "CÂȘTIGĂTOR",
+  "handActionsPlayersCount": "{count} jucători",
+  "@handActionsPlayersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "handActionsActionSummary": "Rezumatul acțiunilor",
+  "handActionsPreflop": "PREFLOP",
+  "handActionsBoard": "BOARD",
+  "handActionsPlayer": "JUCĂTOR",
+  "handActionsStack": "STACK",
+  "handActionsAction": "ACȚIUNE",
+  "handActionsAmount": "SUMĂ",
+  "handActionsYou": "Tu",
+  "handActionsAllIn": "ALL IN",
+  "handActionsNotes": "Notițe",
+  "handActionsAnalyzingHand": "Se analizează mâna...",
+  "handActionsHeroCardsMissing": "Cărțile Hero lipsesc",
+  "handActionsUnlockAiAnalysis": "Deblochează analiza AI",
+  "handActionsAnalysisComplete": "Analiză finalizată",
+  "handActionsAiAnalyzerBeta": "AI Analyzer (beta)",
+  "handActionsAnalysisFailed": "Analiza a eșuat",
+  "handActionsAiAnalysis": "Analiză AI",
+  "handActionsStreetByStreetBreakdown": "Detaliere pe fiecare street",
+  "handActionsAnalysisCompletedIn": "Analiză finalizată în {time}s",
+  "@handActionsAnalysisCompletedIn": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "handActionsFailedToUpdateStar": "Actualizarea marcajului stea a eșuat",
+  "handActionsPotAmount": "Pot: {amount}",
+  "@handActionsPotAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "opponentDetailHandsTracked": "{count} mâini urmărite",
+  "@opponentDetailHandsTracked": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "opponentDetailNoDataYet": "Încă nu există date",
+  "opponentDetailHands": "Mâini",
+  "opponentDetailLastSeen": "Văzut ultima dată:",
+  "opponentDetailNotes": "Notițe",
+  "opponentDetailEditOpponent": "Editează adversarul",
+  "opponentDetailDeleteOpponent": "Șterge adversarul",
+  "opponentDetailStatistics": "Statistici",
+  "opponentDetailNoStatisticsAvailable": "Nu există statistici disponibile",
+  "opponentDetailStatsDisclaimer": "Statisticile se bazează doar pe mâinile jucate împreună. VPIP nu este urmărit, deoarece foldurile neobservate l-ar umfla artificial.",
+  "opponentDetailAggressionFreq": "Agresivitate %",
+  "opponentDetailShowdownPercent": "Showdown %",
+  "opponentDetailHandHistory": "Istoric mâini",
+  "opponentDetailViewAllHands": "Vezi toate mâinile jucate cu acest adversar",
+  "opponentDetailViewHandHistory": "Vezi istoricul mâinilor",
+  "opponentDetailNoHandsFound": "Nicio mână găsită",
+  "opponentDetailNoHandsMessage": "Nu ai jucat încă nicio mână cu \"{name}\"",
+  "@opponentDetailNoHandsMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "opponentDetailOpponentName": "Numele adversarului",
+  "opponentDetailNotesOptional": "Notițe (opțional)",
+  "opponentDetailPickColor": "Alege o culoare",
+  "opponentDetailColorRed": "Roșu",
+  "opponentDetailColorLightBlue": "Albastru deschis",
+  "opponentDetailColorGreen": "Verde",
+  "opponentDetailColorOrange": "Portocaliu",
+  "opponentDetailColorPurple": "Mov",
+  "opponentDetailColorTeal": "Turcoaz",
+  "opponentDetailColorPink": "Roz",
+  "opponentDetailColorIndigo": "Indigo",
+  "opponentDetailUpdatedSuccessfully": "Adversar actualizat cu succes",
+  "opponentDetailDeleteConfirmTitle": "Ștergi adversarul?",
+  "opponentDetailDeleteConfirmMessage": "Sigur vrei să ștergi \"{name}\"?\nAceastă acțiune nu poate fi anulată",
+  "@opponentDetailDeleteConfirmMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "opponentDetailDeletedSuccessfully": "Adversar șters cu succes",
+  "opponentDetailErrorDeleting": "Eroare la ștergerea adversarului: {error}",
+  "@opponentDetailErrorDeleting": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "individualSessionCreatedLocally": "Sesiune creată local. Se va sincroniza în cloud când conexiunea este disponibilă.",
+  "individualUpdateCurrentStack": "Actualizează stack-ul curent",
+  "individualCurrentStack": "Stack curent:",
+  "individualSetNewTotal": "Setează un nou total",
+  "individualEnterNewTotalStack": "Introdu noul stack total",
+  "individualAddSubtractAmount": "Adaugă/Scade o sumă",
+  "individualAmount": "Sumă",
+  "individualSetTotal": "Setează totalul",
+  "individualNoteLabel": "Notiță (opțional)",
+  "individualNoteHint": "ex. Am câștigat un pot mare cu AA",
+  "individualTableAvgHint": "Media mesei (opțional)",
+  "individualUpdateBlinds": "Actualizează blindurile",
+  "individualSmallBlind": "Small Blind",
+  "individualBigBlind": "Big Blind",
+  "individualBbMode": "Mod BB",
+  "individualCurrentStackLabel": "Stack curent",
+  "individualSessionInfo": "Informații sesiune",
+  "individualStartingStack": "Stack inițial",
+  "individualInitialBuyIn": "Buy-in inițial",
+  "individualRebuys": "Rebuy-uri",
+  "individualTotalInvested": "Total investit",
+  "individualBlindsLabel": "Blinduri",
+  "individualHandsLogged": "Mâini înregistrate",
+  "individualLogAHand": "Înregistrează o mână",
+  "individualGoBackToHand": "Înapoi la mână",
+  "individualStackChart": "Grafic stack",
+  "individualCompleteHandToSee": "Finalizează o mână pentru a vedea evoluția stack-ului",
+  "individualStopSessionTitle": "Oprești sesiunea?",
+  "individualStopSessionMessage": "Sigur vrei să oprești această sesiune? Toate mâinile vor fi salvate.",
+  "individualStop": "Oprește",
+  "individualConfirmRebuy": "Confirmă Rebuy",
+  "individualRebuyCurrentStack": "Momentan îți rămân {stack}.",
+  "@individualRebuyCurrentStack": {
+    "placeholders": {
+      "stack": {
+        "type": "String"
+      }
+    }
+  },
+  "individualRebuyReplaceMessage": "Continuarea cu un rebuy îți va înlocui stack-ul curent. Sigur vrei să continui?",
+  "individualProceedWithRebuy": "Continuă cu Rebuy",
+  "individualAddOn": "Add-on",
+  "individualAddOnDescription": "Introdu suma add-on pentru a-ți mări investiția totală",
+  "individualAddOnAmount": "Sumă add-on",
+  "individualAddOnConfirm": "Adaugă",
+  "individualAddOnDescriptionTournament": "Introdu prețul add-on-ului și jetoanele primite",
+  "individualAddOnPrice": "Preț add-on",
+  "individualAddOnChips": "Jetoane primite",
+  "individualRebuy": "Rebuy",
+  "individualEnterRebuyAmount": "Introdu suma de rebuy (stack-ul va fi egal cu suma de rebuy)",
+  "individualEnterRebuyAmountAndStack": "Introdu suma de rebuy și noua mărime a stack-ului",
+  "individualRebuyAmount": "Sumă rebuy",
+  "individualNewStackSize": "Noua mărime a stack-ului",
+  "individualChipCountAfterRebuy": "Numărul de jetoane după rebuy",
+  "individualTotalInvestedAmount": "Total investit: ${amount}",
+  "@individualTotalInvestedAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "individualCurrentStackAmount": "Stack curent: {stack}",
+  "@individualCurrentStackAmount": {
+    "placeholders": {
+      "stack": {
+        "type": "String"
+      }
+    }
+  },
+  "individualRebuysCount": "Rebuy-uri: {count}",
+  "@individualRebuysCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "individualAddRebuy": "Adaugă Rebuy",
+  "individualPleaseEnterValidRebuy": "Introdu o sumă de rebuy validă",
+  "individualPleaseEnterValidStack": "Introdu o mărime de stack validă",
+  "individualRebuyAddedSimple": "Rebuy adăugat: ${amount}",
+  "@individualRebuyAddedSimple": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "individualRebuyAddedWithStack": "Rebuy adăugat: ${amount} (Stack: {stack})",
+  "@individualRebuyAddedWithStack": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "stack": {
+        "type": "String"
+      }
+    }
+  },
+  "authWelcome": "Bine ai venit la Final Table",
+  "authSignIn": "Autentificare",
+  "authRegister": "Înregistrare",
+  "authEmail": "Email",
+  "authPassword": "Parolă",
+  "authDisplayName": "Nume afișat",
+  "authConfirmPassword": "Confirmă parola",
+  "authPleaseEnterEmail": "Introdu adresa de email",
+  "authPleaseEnterValidEmail": "Introdu o adresă de email validă",
+  "authPleaseEnterPassword": "Introdu parola",
+  "authPleaseEnterName": "Introdu numele",
+  "authNameMinLength": "Numele trebuie să aibă cel puțin 2 caractere",
+  "authPleaseEnterAPassword": "Introdu o parolă",
+  "authPasswordMinLength": "Parola trebuie să aibă cel puțin 6 caractere",
+  "authPleaseConfirmPassword": "Confirmă parola",
+  "authPasswordsDoNotMatch": "Parolele nu coincid",
+  "authCreateAccount": "Creează cont",
+  "authForgotPassword": "Ai uitat parola?",
+  "authResetPassword": "Resetează parola",
+  "authResetPasswordMessage": "Introdu adresa de email pentru a primi un link de resetare a parolei.",
+  "authSendResetLink": "Trimite linkul de resetare",
+  "authPasswordResetSent": "Emailul de resetare a parolei a fost trimis!",
+  "paywallRestore": "Restaurează",
+  "paywallTitle": "FINAL TABLE PREMIUM",
+  "paywallAvailablePlans": "Planuri disponibile",
+  "paywallStepLabel": "Pasul 1 din 2",
+  "paywallChooseYourPlan": "Alege-ți planul",
+  "paywallUpgradeOrCancel": "Fă upgrade sau anulează oricând",
+  "paywallContinue": "Continuă",
+  "paywallUnlockFeature": "Deblochează {featureName}",
+  "@paywallUnlockFeature": {
+    "placeholders": {
+      "featureName": {
+        "type": "String"
+      }
+    }
+  },
+  "paywallGoPremium": "Treci la Premium",
+  "paywallFeatureSubtitle": "Această funcție face parte din Final Table Premium. Alege un plan potrivit stilului tău de joc.",
+  "paywallGeneralSubtitle": "Deblochează tot ce oferă Final Table. Urmărește mai multe mâini, analizează-ți jocul, administrează-ți clubul.",
+  "paywallProTier": "Pro",
+  "paywallFreeTrialBadge": "7 zile de probă gratuită",
+  "promoFreeMonthBadge": "1 LUNĂ GRATUITĂ",
+  "promoWelcomeTitle": "Un cadou din partea noastră 🎁",
+  "promoWelcomeBody": "Bucură-te de luna ta de experiență Pro, din partea noastră! Accesul Pro este deja activ pe contul tău.",
+  "promoWelcomeBodyPre": "Bucură-te de ",
+  "promoWelcomeBodyBold": "luna ta de experiență Pro",
+  "promoWelcomeBodyPost": ", din partea noastră! Accesul Pro este deja activ pe contul tău.",
+  "promoCongratsTitle": "Felicitări!",
+  "promoCongratsBody": "Luna ta gratuită de Pro a fost activată — mult noroc!",
+  "promoNotifWarnTitle": "Luna ta gratuită de Pro se termină în curând",
+  "promoNotifWarnBody": "Mai ai doar 1 zi de acces Pro gratuit.",
+  "promoNotifEndedTitle": "Luna ta gratuită de Pro s-a încheiat",
+  "promoNotifEndedBody": "Păstrează-ți avantajul — treci la Pro oricând.",
+  "paywallProDescription": "Tot ce ai nevoie pentru a-ți stăpâni jocul.",
+  "paywallUnlimitedHandLogging": "Înregistrare nelimitată de mâini",
+  "paywallFullSessionHistory": "Istoric complet al sesiunilor",
+  "paywallAiHandAnalysis": "Analiză AI a mâinilor",
+  "paywallExportHandsCsv": "Exportă mâinile în CSV",
+  "paywallProMonthly": "19,99 $/lună",
+  "paywallProYearly": "sau 199,99 $/an. Economisești cca 25%**",
+  "paywallStartFreeTrial": "Începe proba gratuită de 7 zile",
+  "paywallEliteTier": "Elite",
+  "paywallEliteDescription": "Du-ți jocul la nivelul următor.",
+  "paywallEverythingInProElite": "Tot ce include Pro",
+  "paywallEliteFeature1": "Profilare avansată a adversarilor",
+  "paywallEliteFeature2": "Analize detaliate ale sesiunilor",
+  "paywallEliteFeature3": "Suport prioritar",
+  "paywallEliteMonthly": "29,99 $/lună",
+  "paywallEliteYearly": "sau 199,99 $/an. Economisești cca 25%**",
+  "paywallGetElite": "Obține Elite",
+  "paywallClubTier": "Club",
+  "paywallClubDescription": "Pentru jocuri acasă, cluburi și săli live.",
+  "paywallEverythingInPro": "Tot ce include Pro",
+  "paywallClubManagement": "Administrare club și roluri de membri",
+  "paywallLiveDealerVoice": "Înregistrare vocală live pentru dealer",
+  "paywallMultiTableEvents": "Evenimente multi-masă cu clasamente",
+  "paywallClubMonthly": "39,99 $/lună",
+  "paywallClubYearly": "sau 199,99 $/an. Economisești cca 25%**",
+  "paywallGetClub": "Obține Club",
+  "paywallDisclaimer": "Abonamentele se reînnoiesc automat. Ți se va percepe prețul afișat dacă nu anulezi cu cel puțin 24 de ore înainte de sfârșitul perioadei. Poți anula oricând din setările contului.",
+  "paywallTerms": "Termeni",
+  "paywallPrivacy": "Confidențialitate",
+  "paywallPurchasesRestored": "Achiziții restaurate",
+  "paywallNoPreviousPurchases": "Nu s-au găsit achiziții anterioare",
+  "paywallWelcomePro": "Bine ai venit la Pro!",
+  "paywallPurchaseFailed": "Achiziția a eșuat. Încearcă din nou.",
+  "paywallSubscriptionUnavailable": "Opțiunile de abonament nu sunt disponibile. Încearcă din nou.",
+  "paywallMonthly": "Lunar",
+  "paywallAnnual": "Anual",
+  "paywallAnnualSave": "Anual (Economisești ~35%)",
+  "introGameSetup": "Configurare joc",
+  "introConfigureSession": "Configurează-ți sesiunea",
+  "introSmallBlind": "Small Blind",
+  "introBigBlind": "Big Blind",
+  "introPlayers": "Jucători",
+  "introGameType": "Tip de joc",
+  "introBbAnte": "BB Ante",
+  "introBbAnteDescription": "Activează regula big blind ante",
+  "introStartGame": "ÎNCEPE JOCUL",
+  "introStartingSession": "Se pornește sesiunea ta de poker...",
+  "introEnterField": "Introdu {title}",
+  "@introEnterField": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "introEnterAmount": "Introdu suma",
+  "introPleaseEnterValidNumber": "Introdu un număr pozitiv valid",
+  "introRingGame": "Ring Game",
+  "introMultiTable": "Multi-masă",
+  "invitationTitle": "Invitații la club",
+  "invitationNoPending": "Nicio invitație în așteptare",
+  "invitationYouWillSeeHere": "Aici vei vedea invitațiile de la cluburi",
+  "invitationGoBack": "Înapoi",
+  "invitationFailedToLoad": "Încărcarea invitațiilor a eșuat: {error}",
+  "@invitationFailedToLoad": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "invitationJoinedAs": "Te-ai alăturat clubului {clubName} ca {role}",
+  "@invitationJoinedAs": {
+    "placeholders": {
+      "clubName": {
+        "type": "String"
+      },
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "invitationFailedToAccept": "Acceptarea invitației a eșuat: {error}",
+  "@invitationFailedToAccept": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "invitationDeclined": "Invitație refuzată",
+  "invitationFailedToDecline": "Refuzarea invitației a eșuat: {error}",
+  "@invitationFailedToDecline": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "invitationUnknownClub": "Club necunoscut",
+  "invitationInvitedBy": "Invitat de {name}",
+  "@invitationInvitedBy": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "invitationExpiresDate": "Expiră {date}",
+  "@invitationExpiresDate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "invitationExpired": "Expirată",
+  "invitationExpiresInDays": "în {days} zi(le)",
+  "@invitationExpiresInDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "invitationExpiresInHours": "în {hours} oră(e)",
+  "@invitationExpiresInHours": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "invitationExpiresSoon": "în curând",
+  "invitationDeclineButton": "Refuză",
+  "invitationAcceptButton": "Acceptă",
+  "notificationTitle": "Notificări",
+  "notificationToday": "Astăzi",
+  "notificationYesterday": "Ieri",
+  "notificationThisWeek": "Săptămâna aceasta",
+  "notificationEarlier": "Mai devreme",
+  "notificationMarkAllRead": "Marchează-le pe toate ca citite",
+  "notificationMarkAsRead": "Marchează ca citită",
+  "notificationNoNotifications": "Nicio notificare",
+  "notificationEvents": "Evenimente",
+  "notificationRsvp": "RSVP",
+  "notificationClubs": "Cluburi",
+  "notificationInvitations": "Invitații",
+  "notificationSeats": "Locuri",
+  "notificationSupport": "Suport",
+  "notificationClubNotFound": "Clubul nu a fost găsit",
+  "notificationEventNotFound": "Evenimentul nu a fost găsit",
+  "notificationError": "Eroare: {error}",
+  "@notificationError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationErrorLoadingEvent": "Eroare la încărcarea evenimentului: {error}",
+  "@notificationErrorLoadingEvent": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationFailedToLoadClub": "Încărcarea clubului a eșuat: {error}",
+  "@notificationFailedToLoadClub": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationClubInvitation": "Invitație la club",
+  "notificationInvitedToJoin": "Ai fost invitat să te alături",
+  "notificationInvitationDeclined": "Invitație refuzată",
+  "notificationNotAuthenticated": "Neautentificat",
+  "notificationInvitationAccepted": "Invitație acceptată",
+  "notificationAcceptedMessage": "{name} a acceptat invitația de a se alătura clubului {clubName}.",
+  "@notificationAcceptedMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "clubName": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationInvitationDeclinedTitle": "Invitație refuzată",
+  "notificationDeclinedMessage": "{name} a refuzat invitația de a se alătura clubului {clubName}.",
+  "@notificationDeclinedMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "clubName": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationRequestResolved": "Solicitare rezolvată",
+  "notificationRequestClosed": "Solicitare închisă",
+  "notificationResponse": "Răspuns",
+  "calendarTitle": "Calendar de poker",
+  "calendarNewEvent": "Eveniment nou",
+  "calendarEventType": "Tip eveniment",
+  "calendarEventTitle": "Titlu",
+  "calendarLocation": "Locație",
+  "calendarBuyInAmount": "Sumă buy-in",
+  "calendarEventDateTime": "Data și ora evenimentului",
+  "calendarStarts": "Începe",
+  "calendarSelectDate": "Selectează data:",
+  "calendarReset": "Resetează",
+  "calendarSun": "DUM",
+  "calendarMon": "LUN",
+  "calendarTue": "MAR",
+  "calendarWed": "MIE",
+  "calendarThu": "JOI",
+  "calendarFri": "VIN",
+  "calendarSat": "SÂM",
+  "calendarNoRecentEvents": "Niciun eveniment recent",
+  "calendarAddFirstEvent": "Adaugă primul tău eveniment de poker!",
+  "calendarAddNewEvent": "Adaugă eveniment nou",
+  "calendarSelectYear": "Selectează anul",
+  "calendarEditEvent": "Editează evenimentul",
+  "calendarDeleteEvent": "Șterge evenimentul",
+  "calendarTournament": "Turneu",
+  "calendarCashGame": "Cash Game",
+  "calendarPrivateGame": "Joc privat",
+  "calendarOnline": "Online",
+  "calendarFailedToCreateEvent": "Crearea evenimentului a eșuat: {error}",
+  "@calendarFailedToCreateEvent": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "calendarFailedToUpdateEvent": "Actualizarea evenimentului a eșuat: {error}",
+  "@calendarFailedToUpdateEvent": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "calendarFailedToDeleteEvent": "Ștergerea evenimentului a eșuat",
+  "calendarClubNotFound": "Clubul nu a fost găsit",
+  "calendarEventNotFound": "Evenimentul nu a fost găsit",
+  "calendarFailedToLoadEvent": "Încărcarea evenimentului a eșuat: {error}",
+  "@calendarFailedToLoadEvent": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "calendarDeleteConfirmTitle": "Ștergi {title}?",
+  "@calendarDeleteConfirmTitle": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "calendarDeleteConfirmMessage": "Sigur vrei să ștergi \"{title}\"?\nAceastă acțiune nu poate fi anulată.",
+  "@calendarDeleteConfirmMessage": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionAnalyticsTitle": "Analiza sesiunii",
+  "sessionAnalyticsHandsLogged": "{count} mâini înregistrate",
+  "@sessionAnalyticsHandsLogged": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sessionAnalyticsDeleteTitle": "Ștergi sesiunea?",
+  "sessionAnalyticsDeleteMessage": "Această acțiune va șterge definitiv sesiunea, inclusiv tot istoricul mâinilor, datele graficului de stack și rapoartele de analiză AI. Această acțiune nu poate fi anulată.",
+  "sessionAnalyticsDeleted": "Sesiune ștearsă",
+  "sessionAnalyticsFailedToDelete": "Ștergerea sesiunii a eșuat",
+  "sessionAnalyticsExportSession": "Exportă sesiunea",
+  "sessionAnalyticsExportConfirm": "Exporți {count} mâini către {email}?",
+  "@sessionAnalyticsExportConfirm": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionAnalyticsExport": "Exportă",
+  "sessionAnalyticsExportSent": "Export trimis către {email}",
+  "@sessionAnalyticsExportSent": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionAnalyticsExportFailed": "Exportul a eșuat: {error}",
+  "@sessionAnalyticsExportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionAnalyticsNoEmailFound": "Nu s-a găsit nicio adresă de email. Autentifică-te cu un cont de email.",
+  "sessionAnalyticsPokerSession": "Sesiune de poker",
+  "sessionAnalyticsTotalInvested": "Total investit",
+  "sessionAnalyticsFinalStack": "Stack final",
+  "sessionAnalyticsCashout": "Cashout",
+  "sessionAnalyticsProfitLoss": "Profit/Pierdere",
+  "sessionAnalyticsProfit": "Profit",
+  "sessionAnalyticsLoss": "Pierdere",
+  "sessionAnalyticsNotAvailableFull": "Indisponibil",
+  "sessionAnalyticsAvgGrowth": "Creștere medie",
+  "sessionAnalyticsHourlyRate": "Rată orară",
+  "sessionAnalyticsFinished": "Încheiat",
+  "sessionAnalyticsDuration": "Durată",
+  "sessionAnalyticsRebuys": "Rebuy-uri",
+  "sessionAnalyticsAddons": "Add-on-uri",
+  "sessionAnalyticsStackChart": "Grafic stack",
+  "sessionAnalyticsNoStackHistory": "Niciun istoric de stack disponibil",
+  "sessionAnalyticsStackTrackedFuture": "Modificările de stack vor fi urmărite în sesiunile viitoare",
+  "sessionAnalyticsViewLoggedHands": "Vezi mâinile înregistrate",
+  "sessionAnalyticsStart": "Start",
+  "sessionAnalyticsRebuy": "Rebuy",
+  "sessionAnalyticsEnd": "Final",
+  "seatSetupTitle": "Configurare loc",
+  "seatSetupManagePlayers": "Gestionează jucătorii",
+  "seatSetupClickToConfig": "Atinge un loc pentru a-l configura. Trage butonul pentru poziție",
+  "seatSetupButtonLocked": "Buton blocat - mână în desfășurare",
+  "seatSetupUpdatePlayerInfo": "Actualizează informațiile jucătorului",
+  "seatSetupEmpty": "Liber",
+  "seatSetupThisIsMySeat": "Acesta e locul meu",
+  "seatSetupPlayerName": "Nume jucător",
+  "seatSetupBuyInAmount": "Sumă Buy-in ($)",
+  "seatSetupStartingChips": "Jetoane inițiale",
+  "seatSetupSaveAsOpponent": "Salvezi \"{name}\" ca adversar?",
+  "@seatSetupSaveAsOpponent": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "seatSetupOpponentSaved": "Adversar salvat!",
+  "seatSetupFailedToSave": "Salvarea a eșuat: {error}",
+  "@seatSetupFailedToSave": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "seatSetupNoData": "Fără date",
+  "seatSetupStartSession": "Începe sesiunea",
+  "seatSetupSaveChanges": "Salvează modificările",
+  "seatSetupPleaseSelectSeat": "Te rugăm să-ți selectezi locul",
+  "seatSetupSeatNumber": "Loc {number}",
+  "@seatSetupSeatNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "seatSetupPlayerDefault": "Jucător {number}",
+  "@seatSetupPlayerDefault": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "handReviewTitle": "Analiza mâinii",
+  "handReviewYourHoleCards": "Cărțile tale",
+  "handReviewOptional": "(opțional)",
+  "handReviewQuickTags": "Etichete rapide",
+  "handReviewTagBluff": "Bluff",
+  "handReviewTagValue": "Value",
+  "handReviewTagMistake": "Greșeală",
+  "handReviewTagCooler": "Cooler",
+  "handReviewTagHeroCall": "Hero Call",
+  "handReviewTagExploit": "Exploit",
+  "handReviewNotes": "Notițe",
+  "handReviewNotesHint": "Adaugă o notiță despre această mână...",
+  "handReviewSaveHand": "Salvează mâna",
+  "handReviewSkip": "Omite",
+  "handReviewDuplicateCardError": "Nu poți selecta aceeași carte de două ori!",
+  "handReviewSelectBothOrNone": "Selectează ambele cărți sau lasă-le pe amândouă goale",
+  "holeCardsTitle": "Cărțile tale",
+  "holeCardsSubtitle": "Hole Cards",
+  "holeCardsWinnerBadge": "CÂȘTIGĂTOR",
+  "holeCardsSave": "Salvează",
+  "holeCardsSkip": "Omite",
+  "holeCardsSkipAllRemaining": "Omite tot restul",
+  "holeCardsDuplicateCardError": "Nu poți selecta aceeași carte de două ori!",
+  "holeCardsSelectBothOrSkip": "Selectează ambele cărți sau omite pentru a continua",
+  "holeCardsClearAll": "Șterge tot",
+  "showdownTitle": "Showdown",
+  "showdownEnterOpponentCards": "Introdu cărțile adversarilor la showdown:",
+  "showdownPlayerLabel": "Jucător {seatNumber}",
+  "@showdownPlayerLabel": {
+    "placeholders": {
+      "seatNumber": {
+        "type": "int"
+      }
+    }
+  },
+  "showdownCard1": "Cartea 1",
+  "showdownCard2": "Cartea 2",
+  "showdownClear": "Șterge",
+  "showdownWinner": "Câștigător:",
+  "showdownHandDescriptionLabel": "Descrierea mâinii (opțional)",
+  "showdownHandDescriptionHint": "ex.: \"Straight flush\", \"Full house cu ași peste popi\"",
+  "showdownSkip": "Omite",
+  "showdownSave": "Salvează",
+  "showdownSelectCard": "Selectează cartea",
+  "tableManagementSectionTitle": "MASĂ",
+  "tableManagementPlayersCount": "{count} jucători",
+  "@tableManagementPlayersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "tableManagementDealerButton": "Buton dealer",
+  "tableManagementAddPlayer": "Adaugă jucător",
+  "tableManagementYouSuffix": "{name} (Tu)",
+  "@tableManagementYouSuffix": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "tableManagementAdjustStack": "Ajustează stack-ul",
+  "tableManagementRebuy": "Rebuy",
+  "tableManagementRemove": "Elimină",
+  "tableManagementAdjustStackTitle": "Ajustează stack-ul",
+  "tableManagementEnterStackAmount": "Introdu valoarea stack-ului",
+  "tableManagementRebuyTitle": "Rebuy",
+  "tableManagementRebuyAmountHint": "Suma de rebuy de adăugat",
+  "tableManagementAdd": "Adaugă",
+  "tableManagementRemovePlayerTitle": "Elimini jucătorul?",
+  "tableManagementRemovePlayerMessage": "Elimini {playerName} de la masă?",
+  "@tableManagementRemovePlayerMessage": {
+    "placeholders": {
+      "playerName": {
+        "type": "String"
+      }
+    }
+  },
+  "tableManagementAddPlayerSeatTitle": "Adaugă jucător — Locul {seatNumber}",
+  "@tableManagementAddPlayerSeatTitle": {
+    "placeholders": {
+      "seatNumber": {
+        "type": "int"
+      }
+    }
+  },
+  "tableManagementThisIsMe": "Acesta sunt eu",
+  "tableManagementNameLabel": "Nume",
+  "tableManagementSearchOrEnterName": "Caută sau introdu numele",
+  "tableManagementSaveAsOpponent": "Salvează \"{name}\" ca adversar",
+  "@tableManagementSaveAsOpponent": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "tableManagementSavedAsOpponent": "{name} salvat ca adversar",
+  "@tableManagementSavedAsOpponent": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "tableManagementStartingStack": "Stack inițial",
+  "tableManagementStackAmountHint": "Valoarea stack-ului",
+  "tableManagementMoveMeHere": "Mută-mă aici",
+  "tableManagementSeatLabel": "Locul {seatNumber}",
+  "@tableManagementSeatLabel": {
+    "placeholders": {
+      "seatNumber": {
+        "type": "int"
+      }
+    }
+  },
+  "seatConfigRemove": "Elimină",
+  "seatConfigRemoveMe": "Elimină-mă de pe acest loc",
+  "seatConfigThisIsMe": "Acesta sunt eu",
+  "seatConfigNameLabel": "Nume",
+  "seatConfigSearchOrEnterName": "Caută sau introdu numele",
+  "seatConfigSaveAsOpponent": "Salvează \"{name}\" ca adversar",
+  "@seatConfigSaveAsOpponent": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "seatConfigSavedAsOpponent": "{name} salvat ca adversar",
+  "@seatConfigSavedAsOpponent": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "seatConfigSeatTitle": "Locul {seatNumber}",
+  "@seatConfigSeatTitle": {
+    "placeholders": {
+      "seatNumber": {
+        "type": "int"
+      }
+    }
+  },
+  "seatConfigStackLabel": "Stack",
+  "seatConfigUpdateButton": "Actualizează",
+  "seatConfigAddPlayerButton": "Adaugă jucător",
+  "seatManagementSetupSeats": "Configurare locuri",
+  "seatManagementManagePlayers": "Gestionează jucătorii",
+  "seatManagementChooseSeatSubtitle": "Alege-ți locul și configurează masa",
+  "seatManagementUpdatePlayerSubtitle": "Actualizează informațiile jucătorului",
+  "seatManagementButtonPosition": "Poziția butonului",
+  "seatManagementSeatLabel": "Locul {seatNumber}",
+  "@seatManagementSeatLabel": {
+    "placeholders": {
+      "seatNumber": {
+        "type": "int"
+      }
+    }
+  },
+  "seatManagementEmpty": "Liber",
+  "seatManagementActive": "Activ",
+  "seatManagementPlayerNameLabel": "Nume jucător",
+  "seatManagementEnterPlayerName": "Introdu numele jucătorului",
+  "seatManagementBuyInAmountCash": "Sumă Buy-in ($)",
+  "seatManagementStartingChips": "Jetoane inițiale",
+  "seatManagementSaveOpponentTitle": "Salvezi adversarul?",
+  "seatManagementSaveOpponentMessage": "Vrei să salvezi \"{name}\" în lista ta de adversari pentru urmărire pe viitor?",
+  "@seatManagementSaveOpponentMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "seatManagementNotNow": "Nu acum",
+  "seatManagementSaveAsOpponentPrompt": "Salvezi \"{name}\" ca adversar?",
+  "@seatManagementSaveAsOpponentPrompt": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "seatManagementOpponentSavedSuccess": "Adversarul \"{name}\" a fost salvat cu succes!",
+  "@seatManagementOpponentSavedSuccess": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "seatManagementFailedToSaveOpponent": "Salvarea adversarului a eșuat: {error}",
+  "@seatManagementFailedToSaveOpponent": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "seatManagementStartSession": "Începe sesiunea",
+  "seatManagementSaveChanges": "Salvează modificările",
+  "seatManagementSelectYourSeat": "Te rugăm să-ți selectezi locul",
+  "inviteMemberTitle": "Invită membru",
+  "inviteMemberEmailLabel": "ADRESĂ DE EMAIL",
+  "inviteMemberEmailHint": "Introdu adresa de email",
+  "inviteMemberEmailRequired": "Te rugăm să introduci o adresă de email",
+  "inviteMemberEmailInvalid": "Te rugăm să introduci o adresă de email validă",
+  "inviteMemberRoleLabel": "ROL",
+  "inviteMemberRoleDealer": "Dealer",
+  "inviteMemberRoleAdmin": "Admin",
+  "inviteMemberSendInvite": "Trimite invitația",
+  "inviteMemberAlreadyMember": "{displayName} este deja membru în {clubName}",
+  "@inviteMemberAlreadyMember": {
+    "placeholders": {
+      "displayName": {
+        "type": "String"
+      },
+      "clubName": {
+        "type": "String"
+      }
+    }
+  },
+  "inviteMemberAddedNotificationTitle": "Ai fost adăugat într-un club!",
+  "inviteMemberAddedNotificationBody": "{inviterName} te-a adăugat în \"{clubName}\" ca {role}.",
+  "@inviteMemberAddedNotificationBody": {
+    "placeholders": {
+      "inviterName": {
+        "type": "String"
+      },
+      "clubName": {
+        "type": "String"
+      },
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "inviteMemberAddedSuccessTitle": "Membru adăugat!",
+  "inviteMemberAddedSuccessMessage": "{displayName} a fost adăugat în {clubName} ca {role}.",
+  "@inviteMemberAddedSuccessMessage": {
+    "placeholders": {
+      "displayName": {
+        "type": "String"
+      },
+      "clubName": {
+        "type": "String"
+      },
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "inviteMemberInvitationSentTitle": "Invitație trimisă!",
+  "inviteMemberInvitationSentMessage": "Un email de invitație a fost trimis către {email}. După ce își creează contul, va putea intra în {clubName}.",
+  "@inviteMemberInvitationSentMessage": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      },
+      "clubName": {
+        "type": "String"
+      }
+    }
+  },
+  "inviteMemberError": "Eroare: {error}",
+  "@inviteMemberError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "inviteMemberRoleAnAdmin": "admin",
+  "inviteMemberRoleADealer": "dealer",
+  "registerClubTitle": "Înregistrează club",
+  "registerClubNameLabel": "Numele clubului",
+  "registerClubNamePlaceholder": "ex.: Lucky Aces Poker Club",
+  "registerClubNameRequired": "Te rugăm să introduci numele clubului",
+  "registerClubAddressLabel": "Adresă",
+  "registerClubAddressPlaceholder": "ex.: Str. Principală 123, Oraș, Țară",
+  "registerClubAddressRequired": "Te rugăm să introduci adresa clubului",
+  "registerClubPhoneLabel": "Număr de telefon",
+  "registerClubPhonePlaceholder": "ex.: +40 721 123 456",
+  "registerClubPhoneRequired": "Te rugăm să introduci un număr de telefon",
+  "registerClubAdminEmailLabel": "Email admin club",
+  "registerClubAdminEmailPlaceholder": "ex.: admin@clubulmeu.com",
+  "registerClubAdminEmailRequired": "Te rugăm să introduci emailul adminului",
+  "registerClubAdminEmailInvalid": "Te rugăm să introduci un email valid",
+  "registerClubInfoMessage": "Această persoană va fi notificată când clubul este aprobat și va deveni proprietarul clubului.",
+  "registerClubSubmitRequest": "Trimite cererea",
+  "registerClubFailedToSubmit": "Trimiterea cererii a eșuat: {error}",
+  "@registerClubFailedToSubmit": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "registerClubSuccessTitle": "Cerere trimisă!",
+  "registerClubSuccessMessage": "Cererea ta de înregistrare a clubului a fost trimisă. Te vom notifica la {email} după ce este analizată.",
+  "@registerClubSuccessMessage": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "registerClubGotIt": "Am înțeles",
+  "loggingModeChooseMode": "Alege modul",
+  "loggingModeFullTitle": "Mod de înregistrare",
+  "loggingModeFullSubtitle": "Urmărire completă a sesiunii",
+  "loggingModeFullFeature1": "Urmărire sesiuni cu mai multe mâini",
+  "loggingModeFullFeature2": "Statistici în timp real",
+  "loggingModeFullFeature3": "Istoric detaliat al mâinilor",
+  "loggingModeFullFeature4": "Analize de sesiune",
+  "loggingModeFeatures": "Funcții",
+  "loggingModeStart": "Start",
+  "earningsChartAllTimeEarnings": "Câștiguri totale",
+  "earningsChartSinceDate": "Din {date}",
+  "@earningsChartSinceDate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "earningsChartTournament": "Turneu",
+  "earningsChartCash": "Cash",
+  "earningsChartNoData": "Încă nu există date despre câștiguri",
+  "earningsChartNoDataSubtitle": "Finalizează câteva sesiuni pentru a-ți vedea graficul câștigurilor",
+  "earningsChartMtt": "MTT",
+  "opponentHandsTitle": "Istoric mâini",
+  "opponentHandsCount": "{count} mâini",
+  "@opponentHandsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "opponentHandsLoading": "Se încarcă istoricul mâinilor...",
+  "opponentHandsError": "A apărut o eroare",
+  "opponentHandsRetry": "Reîncearcă",
+  "opponentHandsNoHandsTitle": "Nicio mână găsită",
+  "opponentHandsNoHandsSubtitle": "Nu ai jucat încă nicio mână\ncu {name}.",
+  "@opponentHandsNoHandsSubtitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "opponentHandsOppWon": "ADV A CÂȘTIGAT",
+  "opponentHandsYou": "Tu",
+  "opponentHandsPot": "Pot {amount}",
+  "@opponentHandsPot": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "opponentHandsUnknownSession": "Sesiune necunoscută",
+  "clubDashboardLive": "Live",
+  "clubDashboardUpcoming": "Viitoare",
+  "clubDashboardPast": "Trecute",
+  "clubDashboardNoLiveEvents": "Niciun eveniment live",
+  "clubDashboardNoUpcomingEvents": "Niciun eveniment viitor",
+  "clubDashboardNoPastEvents": "Niciun eveniment trecut",
+  "clubDashboardAdmin": "Admin",
+  "clubDashboardCreateEventHint": "Apasă butonul de mai jos pentru a crea unul",
+  "clubDashboardCheckBackLater": "Revino mai târziu pentru evenimente noi",
+  "clubDashboardEventsWillAppear": "Evenimentele vor apărea aici când încep",
+  "clubDashboardPastEventsWillAppear": "Evenimentele încheiate vor apărea aici",
+  "clubDashboardCashGameStakes": "Cash Game {stakes}",
+  "@clubDashboardCashGameStakes": {
+    "placeholders": {
+      "stakes": {
+        "type": "String"
+      }
+    }
+  },
+  "clubDashboardCash": "Cash",
+  "clubDashboardTables": "Mese",
+  "clubDashboardStakes": "Mize",
+  "clubDashboardPlayingCount": "{count} joacă",
+  "@clubDashboardPlayingCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "clubDashboardMemberCount": "{count} membri",
+  "@clubDashboardMemberCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "clubSettingsTitle": "Setări club",
+  "clubSettingsClubInfo": "Informații club",
+  "clubSettingsClubName": "Numele clubului",
+  "clubSettingsAddress": "Adresă",
+  "clubSettingsPhone": "Telefon",
+  "clubSettingsDescription": "Descriere",
+  "clubSettingsSaveChanges": "Salvează modificările",
+  "clubSettingsInfoSaved": "Informațiile clubului au fost salvate",
+  "clubSettingsErrorSaving": "Eroare la salvare: {error}",
+  "@clubSettingsErrorSaving": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "clubSettingsNoTablesYet": "Nicio masă încă",
+  "clubSettingsAddTableHint": "Adaugă o masă pentru a începe",
+  "clubSettingsErrorLoading": "Eroare la încărcarea datelor: {error}",
+  "@clubSettingsErrorLoading": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "eventEditTitle": "Editează evenimentul",
+  "eventNewTitle": "Eveniment nou",
+  "eventNoTablesAssigned": "Nicio masă atribuită",
+  "eventNoTablesAssignedDesc": "Nicio masă nu este atribuită acestui eveniment. Te rugăm să revii și să atribui mai întâi mesele.",
+  "eventGoBack": "Înapoi",
+  "eventContinue": "Continuă",
+  "eventNameOptional": "Numele evenimentului (opțional)",
+  "eventNameLabel": "Numele evenimentului",
+  "eventStakesHint": "Mize (ex. 1/2)",
+  "eventBuyInAmount": "Suma buy-in",
+  "eventMinBuyIn": "Min Buy-in ($)",
+  "eventStartingStack": "Stack inițial",
+  "eventGameType": "Tip de joc",
+  "eventTournament": "Turneu",
+  "eventCashGame": "Cash Game",
+  "eventDateAndTime": "Data și ora evenimentului",
+  "eventStarts": "Începe",
+  "eventTables": "Mese",
+  "eventDeselectAll": "Deselectează tot",
+  "eventSelectAll": "Selectează tot",
+  "eventAllTablesInUse": "Toate mesele sunt folosite de evenimente în desfășurare",
+  "eventNoTablesConfigured": "Nicio masă configurată încă",
+  "eventDescriptionLabel": "Descriere",
+  "eventNotifyMembers": "Notifică membrii",
+  "eventNotifyMembersSubtitle": "Trimite notificare tuturor membrilor clubului",
+  "eventDeleteEvent": "Șterge evenimentul",
+  "eventDeleteConfirmTitle": "Ștergi evenimentul?",
+  "eventDeleteConfirmBody": "Acest lucru va șterge definitiv evenimentul și toate datele asociate. Acțiunea nu poate fi anulată.",
+  "eventDeleteFailed": "Ștergerea evenimentului a eșuat: {error}",
+  "@eventDeleteFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "eventAttendeesTitle": "Participanți",
+  "eventAttendeesGoing": "Participă ({count})",
+  "@eventAttendeesGoing": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "eventAttendeesMaybe": "Poate ({count})",
+  "@eventAttendeesMaybe": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "eventAttendeesNo": "Nu ({count})",
+  "@eventAttendeesNo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "eventAttendeesNoConfirmed": "Nimeni nu a confirmat încă",
+  "eventAttendeesNoMaybes": "Niciun răspuns \"poate\"",
+  "eventAttendeesNoDeclines": "Niciun refuz",
+  "eventDetailLiveNow": "Evenimentul este acum LIVE!",
+  "eventDetailEnded": "Evenimentul s-a încheiat",
+  "eventDetailCancelled": "Evenimentul a fost anulat",
+  "eventDetailPaused": "Evenimentul este în pauză",
+  "eventDetailStatusUpdated": "Statusul evenimentului a fost actualizat",
+  "eventDetailRemovedFromCalendar": "Evenimentul a fost eliminat din calendarul tău",
+  "eventDetailRsvpGoing": "Particip",
+  "eventDetailRsvpMaybe": "Poate",
+  "eventDetailRsvpCantGo": "Nu pot",
+  "eventDetailRsvpFailed": "Actualizarea RSVP a eșuat: {error}",
+  "@eventDetailRsvpFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "eventDetailCantStartTitle": "Evenimentul nu poate începe",
+  "eventDetailCantStartBody": "Nicio masă nu este atribuită acestui eveniment. Te rugăm să adaugi mai întâi mesele.",
+  "eventDetailStarted": "Evenimentul a început!",
+  "eventDetailStartFailed": "Pornirea evenimentului a eșuat: {error}",
+  "@eventDetailStartFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "eventDetailFinishTitle": "Închei evenimentul?",
+  "eventDetailCancelTitle": "Anulezi evenimentul?",
+  "eventDetailFinishBody": "Acest lucru va încheia toate mesele active și va finaliza clasamentul.",
+  "eventDetailCancelBody": "Acest lucru va notifica toți membrii și va anula evenimentul.",
+  "eventDetailFinishButton": "Încheie evenimentul",
+  "eventDetailCancelButton": "Anulează evenimentul",
+  "eventDetailKeepEvent": "Păstrează evenimentul",
+  "eventDetailLiveBadge": "LIVE ACUM",
+  "eventDetailCancelledBadge": "ANULAT",
+  "eventDetailCompletedBadge": "ÎNCHEIAT",
+  "eventDetailUpcomingBadge": "URMEAZĂ",
+  "eventDetailLocation": "Locație",
+  "eventDetailBuyIn": "Buy-in",
+  "eventDetailStakes": "Mize",
+  "eventDetailStartingStack": "Stack inițial",
+  "eventDetailAbout": "DESPRE",
+  "eventDetailAddedToCalendar": "Eveniment adăugat în calendarul tău!",
+  "eventDetailCalendarFailed": "Adăugarea în calendar a eșuat: {error}",
+  "@eventDetailCalendarFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "eventManagementEventsTitle": "Evenimente",
+  "eventManagementNewEvent": "Eveniment nou",
+  "eventManagementNoEvents": "Niciun eveniment",
+  "eventManagementNoEventsSubtitle": "Creează un eveniment pentru a urmări clasamentele live",
+  "eventManagementActiveEvents": "Evenimente active",
+  "eventManagementPastEvents": "Evenimente trecute",
+  "eventManagementErrorLoading": "Eroare la încărcarea evenimentelor: {error}",
+  "@eventManagementErrorLoading": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "eventManagementNoTables": "Nu există mese disponibile. Creează mai întâi mese.",
+  "eventManagementCreated": "Evenimentul \"{name}\" a fost creat",
+  "@eventManagementCreated": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "eventManagementCreateFailed": "Crearea evenimentului a eșuat: {error}",
+  "@eventManagementCreateFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "eventManagementEndEvent": "Încheie evenimentul",
+  "eventManagementEndConfirm": "Sigur vrei să închei \"{name}\"?",
+  "@eventManagementEndConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "eventManagementEnded": "Evenimentul \"{name}\" s-a încheiat",
+  "@eventManagementEnded": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "eventManagementEndFailed": "Încheierea evenimentului a eșuat: {error}",
+  "@eventManagementEndFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "eventManagementLinkCopied": "Link copiat în clipboard",
+  "eventManagementShare": "Distribuie",
+  "eventManagementPause": "Pauză",
+  "eventManagementResume": "Reia",
+  "eventManagementEnd": "Încheie",
+  "eventManagementCreateEvent": "Creează eveniment",
+  "eventManagementEventNameHint": "ex.: Turneul de vineri seara",
+  "eventManagementSelectTables": "Selectează mesele",
+  "eventManagementTableNumber": "Masa {number}",
+  "@eventManagementTableNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "eventManagementPublicEvent": "Eveniment public",
+  "eventManagementPublicSubtitle": "Oricine poate vedea clasamentul",
+  "eventManagementAccessCode": "Cod de acces (opțional)",
+  "eventManagementAccessCodeSubtitle": "Pentru distribuire către anumiți utilizatori",
+  "eventManagementEnterName": "Introdu un nume pentru eveniment",
+  "eventManagementSelectTable": "Selectează cel puțin o masă",
+  "eventManagementPublic": "Public",
+  "eventManagementPrivate": "Privat",
+  "adminEventTablesSummary": "{count} mese • {occupied} ocupate • {open} libere",
+  "@adminEventTablesSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "occupied": {
+        "type": "int"
+      },
+      "open": {
+        "type": "int"
+      }
+    }
+  },
+  "adminEventTablesAddTable": "Adaugă masă",
+  "adminEventTablesNoTables": "Nu există mese disponibile de adăugat",
+  "adminEventTablesCloseConfirm": "Închizi {tableName}?",
+  "@adminEventTablesCloseConfirm": {
+    "placeholders": {
+      "tableName": {
+        "type": "String"
+      }
+    }
+  },
+  "adminEventTablesCloseWithPlayers": "Astfel, {count} jucător(i) vor fi mutați pe lista de așteptare, iar masa va fi eliminată din acest eveniment.",
+  "@adminEventTablesCloseWithPlayers": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "adminEventTablesCloseEmpty": "Astfel, masa va fi eliminată din acest eveniment.",
+  "adminEventTablesCloseButton": "Închide masa",
+  "adminEventTablesTableAdded": "{tableName} a fost adăugată la eveniment",
+  "@adminEventTablesTableAdded": {
+    "placeholders": {
+      "tableName": {
+        "type": "String"
+      }
+    }
+  },
+  "adminEventTablesClosedWithWaitlist": "{tableName} închisă. {count} jucător(i) mutați pe lista de așteptare.",
+  "@adminEventTablesClosedWithWaitlist": {
+    "placeholders": {
+      "tableName": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "adminEventTablesClosed": "{tableName} închisă.",
+  "@adminEventTablesClosed": {
+    "placeholders": {
+      "tableName": {
+        "type": "String"
+      }
+    }
+  },
+  "adminEventTablesNoWaitlist": "Nimeni pe lista de așteptare",
+  "adminEventTablesWaitlistCount": "{count} pe lista de așteptare",
+  "@adminEventTablesWaitlistCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "adminEventTablesWaitlistNext": "Următorul: {name}",
+  "@adminEventTablesWaitlistNext": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "adminEventTablesWaitlist": "Listă de așteptare",
+  "adminEventTablesNotified": "Notificat",
+  "adminEventTablesNotify": "Notifică",
+  "adminEventTablesSeat": "Așază",
+  "adminEventTablesSeatAt": "{tableName} ({count} libere)",
+  "@adminEventTablesSeatAt": {
+    "placeholders": {
+      "tableName": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "adminEventTablesNoEmptySeats": "Nu există locuri libere la această masă",
+  "adminEventTablesPlayerSeated": "{name} a fost așezat la {tableName}",
+  "@adminEventTablesPlayerSeated": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "tableName": {
+        "type": "String"
+      }
+    }
+  },
+  "adminEventTablesPlayerNotified": "{name} a fost notificat",
+  "@adminEventTablesPlayerNotified": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "adminTableSeatPlayer": "Așază jucător",
+  "adminTableFromWaitlist": "De pe lista de așteptare",
+  "adminTableWaitlistNextIs": "{name} este următorul",
+  "@adminTableWaitlistNextIs": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "adminTableClubMember": "Membru al clubului",
+  "adminTableSearchMembers": "Caută membri existenți",
+  "adminTableWalkUpPlayer": "Jucător ocazional",
+  "adminTableAddByName": "Adaugă după nume",
+  "adminTableSelectMember": "Selectează membru",
+  "adminTableSearch": "Caută...",
+  "adminTablePlayerName": "Numele jucătorului",
+  "adminTableWaitingForApproval": "Așteaptă aprobarea pentru locul #{seatNumber}",
+  "@adminTableWaitingForApproval": {
+    "placeholders": {
+      "seatNumber": {
+        "type": "int"
+      }
+    }
+  },
+  "adminTableReject": "Respinge",
+  "adminTableApprove": "Aprobă",
+  "adminTableRemove": "Elimină",
+  "adminTableSeatNumber": "Loc #{seatNumber}",
+  "@adminTableSeatNumber": {
+    "placeholders": {
+      "seatNumber": {
+        "type": "int"
+      }
+    }
+  },
+  "adminTableNoEmptySeats": "Nu există locuri libere",
+  "adminTableSeatPlayerName": "Așază pe {name}",
+  "@adminTableSeatPlayerName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "adminTableSelectSeat": "Selectează un loc:",
+  "adminTablePlayerSeated": "{name} a fost așezat",
+  "@adminTablePlayerSeated": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "adminTableAlreadySeated": "{name} este deja așezat la {location}",
+  "@adminTableAlreadySeated": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "location": {
+        "type": "String"
+      }
+    }
+  },
+  "adminTablePlayerApproved": "{name} a fost aprobat",
+  "@adminTablePlayerApproved": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "adminTablePlayerRejected": "Jucător respins",
+  "adminTablePlayerRemoved": "Jucător eliminat",
+  "adminTableWaitlistInCount": "{count} pe lista de așteptare",
+  "@adminTableWaitlistInCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "adminTableWaitlistNextName": "Următorul: {name}",
+  "@adminTableWaitlistNextName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "adminTableNotifiedName": "{name} a fost notificat",
+  "@adminTableNotifiedName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "clubCashGameStakes": "Cash Game {stakes}",
+  "@clubCashGameStakes": {
+    "placeholders": {
+      "stakes": {
+        "type": "String"
+      }
+    }
+  },
+  "clubCashGameTablesSummary": "{count} mese · {occupied} ocupate · {open} libere",
+  "@clubCashGameTablesSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "occupied": {
+        "type": "int"
+      },
+      "open": {
+        "type": "int"
+      }
+    }
+  },
+  "clubCashGameTableNumber": "Masa {number}",
+  "@clubCashGameTableNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "clubCashGameNoTables": "Nu există mese în acest grup",
+  "clubCashGameFailedToLoad": "Încărcarea meselor a eșuat: {error}",
+  "@clubCashGameFailedToLoad": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "clubCashGameAlreadySeated": "Ești deja așezat la o masă",
+  "clubCashGameSeatAvailable": "Există un loc liber pentru tine, prezintă-te la înregistrare",
+  "clubCashGameJoinedWaitlist": "Te-ai înscris pe lista de așteptare pe poziția #{position}",
+  "@clubCashGameJoinedWaitlist": {
+    "placeholders": {
+      "position": {
+        "type": "int"
+      }
+    }
+  },
+  "clubCashGameJoinFailed": "Înscrierea pe lista de așteptare a eșuat: {error}",
+  "@clubCashGameJoinFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "clubCashGameLeftWaitlist": "Ai părăsit lista de așteptare",
+  "clubCashGameLeaveFailed": "Părăsirea listei de așteptare a eșuat: {error}",
+  "@clubCashGameLeaveFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "clubCashGameViewWaitlist": "Vezi lista de așteptare",
+  "clubCashGameInWaitlist": "Pe lista de așteptare",
+  "clubCashGameInWaitlistPosition": "Pe lista de așteptare · #{position}",
+  "@clubCashGameInWaitlistPosition": {
+    "placeholders": {
+      "position": {
+        "type": "int"
+      }
+    }
+  },
+  "clubCashGameJoinWaitlist": "Înscrie-te pe lista de așteptare",
+  "clubCashGameLeaveWaitlistConfirm": "Părăsești lista de așteptare?",
+  "clubCashGameLosePosition": "Îți vei pierde poziția actuală.",
+  "clubCashGameKeep": "Păstrează",
+  "clubCashGameLeave": "Părăsește",
+  "clubCashGameRefreshFailed": "Mesele nu au putut fi actualizate: {error}",
+  "@clubCashGameRefreshFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "clubCashGameWaitlistTitle": "Listă de așteptare",
+  "clubCashGameNotified": "{name} a fost notificat",
+  "@clubCashGameNotified": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "clubCashGameNotifyFailed": "Notificarea a eșuat: {error}",
+  "@clubCashGameNotifyFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "clubCashGameCouldNotLoad": "Lista de așteptare nu a putut fi încărcată",
+  "clubCashGameNoOneOnWaitlist": "Nimeni pe lista de așteptare",
+  "clubCashGamePlayer": "Jucător",
+  "clubCashGameNotifiedStatus": "Notificat • {time}",
+  "@clubCashGameNotifiedStatus": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "clubCashGameJoinedTime": "Înscris {time}",
+  "@clubCashGameJoinedTime": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "clubCashGameJustNow": "chiar acum",
+  "clubCashGameMinutesAgo": "acum {count}m",
+  "@clubCashGameMinutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "clubCashGameHoursAgo": "acum {count}h",
+  "@clubCashGameHoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "clubCashGameDaysAgo": "acum {count}z",
+  "@clubCashGameDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "clubCashGameAddTable": "Adaugă masă",
+  "clubCashGameNewTableName": "Numele noii mese (opțional)",
+  "clubCashGameAdd": "Adaugă",
+  "clubCashGameAddedToGroup": "{tableName} a fost adăugată la grup",
+  "@clubCashGameAddedToGroup": {
+    "placeholders": {
+      "tableName": {
+        "type": "String"
+      }
+    }
+  },
+  "clubCashGameAddFailed": "Adăugarea mesei a eșuat: {error}",
+  "@clubCashGameAddFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "clubCashGameAttachFailed": "Atașarea mesei a eșuat: {error}",
+  "@clubCashGameAttachFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "clubCashGameAvailableTables": "Mese disponibile",
+  "clubCashGameInUseByOther": "Folosite de alte evenimente",
+  "clubCashGameNoOtherTables": "Încă nu există alte mese în acest club",
+  "clubCashGameInUseBy": "Folosită de {eventName}",
+  "@clubCashGameInUseBy": {
+    "placeholders": {
+      "eventName": {
+        "type": "String"
+      }
+    }
+  },
+  "clubCashGameSeats": "Locuri {count}",
+  "@clubCashGameSeats": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "memberEventTablesSummary": "{count} mese • {occupied} ocupate • {open} libere",
+  "@memberEventTablesSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "occupied": {
+        "type": "int"
+      },
+      "open": {
+        "type": "int"
+      }
+    }
+  },
+  "memberEventJoinedWaitlist": "Te-ai înscris pe lista de așteptare pe poziția #{position}",
+  "@memberEventJoinedWaitlist": {
+    "placeholders": {
+      "position": {
+        "type": "int"
+      }
+    }
+  },
+  "memberEventJoinFailed": "Înscrierea pe lista de așteptare a eșuat: {error}",
+  "@memberEventJoinFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "memberEventLeftWaitlist": "Ai părăsit lista de așteptare",
+  "memberEventLeaveFailed": "Părăsirea listei de așteptare a eșuat: {error}",
+  "@memberEventLeaveFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "memberEventWaitlistPosition": "Poziția #{position} pe lista de așteptare",
+  "@memberEventWaitlistPosition": {
+    "placeholders": {
+      "position": {
+        "type": "int"
+      }
+    }
+  },
+  "memberEventTotalWaiting": "{count} în așteptare în total",
+  "@memberEventTotalWaiting": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "memberEventLeaveWaitlist": "Părăsește lista de așteptare",
+  "memberEventJoinWaitlistWithCount": "Înscrie-te pe lista de așteptare ({count} în așteptare)",
+  "@memberEventJoinWaitlistWithCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "memberEventJoinWaitlist": "Înscrie-te pe lista de așteptare",
+  "memberEventAllTablesFull": "Toate mesele sunt pline",
+  "dealerHomeTitle": "Mod Dealer",
+  "dealerHomeNoClubs": "Niciun club găsit",
+  "dealerHomeNoClubsOwnerHint": "Creează primul tău club pentru a începe.",
+  "dealerHomeNoClubsMemberHint": "Nu ești încă membru al niciunui club.\nCere unui proprietar de club să te invite.",
+  "dealerHomeCreateClub": "Creează club",
+  "dealerHomeDealer": "Dealer",
+  "dealerHomeClubCount": "{count} cluburi",
+  "@dealerHomeClubCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dealerHomeActiveSessions": "Sesiuni active",
+  "dealerHomeClubs": "Cluburi",
+  "dealerHomeTables": "Mese",
+  "dealerHomeAddTable": "Adaugă masă",
+  "dealerHomeTableNameLabel": "Numele mesei",
+  "dealerHomeTableNameHint": "ex.: Masa 1, Masa principală",
+  "dealerHomeTableAdded": "Masa \"{name}\" a fost adăugată la {clubName}!",
+  "@dealerHomeTableAdded": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "clubName": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerHomeAddTableFailed": "Adăugarea mesei a eșuat: {error}",
+  "@dealerHomeAddTableFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerHomeClubName": "Numele clubului",
+  "dealerHomeCreate": "Creează",
+  "dealerHomeClubCreated": "Clubul \"{name}\" a fost creat cu succes!",
+  "@dealerHomeClubCreated": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerHomeClubCreateFailed": "Crearea clubului a eșuat: {error}",
+  "@dealerHomeClubCreateFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerHomeNoTables": "Nu există mese în acest club",
+  "dealerHomeActiveHand": "Activ - Mâna #{number}",
+  "@dealerHomeActiveHand": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "dealerHomeInactive": "Inactiv",
+  "dealerHomeResume": "Reia",
+  "dealerHomeStart": "Începe",
+  "dealerHomeSessionSettings": "Setări sesiune",
+  "dealerHomeSmallBlind": "Small Blind",
+  "dealerHomeBigBlind": "Big Blind",
+  "dealerHomeBBAnte": "BB Ante",
+  "dealerHomeGameType": "Tip de joc",
+  "dealerHomeCash": "Cash",
+  "dealerHomeTournament": "Turneu",
+  "dealerHomeButtonPosition": "Poziția butonului",
+  "dealerHomeStartSession": "Începe sesiunea",
+  "dealerHomeCouldNotFind": "Clubul sau masa nu au fost găsite",
+  "dealerHomeStartFailed": "Pornirea sesiunii a eșuat: {error}",
+  "@dealerHomeStartFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerHomeErrorLoading": "Eroare la încărcarea datelor: {error}",
+  "@dealerHomeErrorLoading": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerHomeTableCount": "{count} mese",
+  "@dealerHomeTableCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dealerTableFailedStartHand": "Pornirea mâinii a eșuat: {error}",
+  "@dealerTableFailedStartHand": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableChopSummary": "Chop: {winners} împart {amount}",
+  "@dealerTableChopSummary": {
+    "placeholders": {
+      "winners": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableWins": "{name} câștigă {amount}",
+  "@dealerTableWins": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTablePotChopped": "Pot împărțit între {names}",
+  "@dealerTablePotChopped": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableFailedCompleteHand": "Finalizarea mâinii a eșuat: {error}",
+  "@dealerTableFailedCompleteHand": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTablePlayerBusted": "{name} a fost eliminat!",
+  "@dealerTablePlayerBusted": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableNoChipsRemaining": "Locul {seatNumber} nu mai are jetoane.\nSumă rebuy: {amount}",
+  "@dealerTableNoChipsRemaining": {
+    "placeholders": {
+      "seatNumber": {
+        "type": "int"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableRemovePlayer": "Elimină jucătorul",
+  "dealerTableRebuy": "Rebuy",
+  "dealerTableRebuysFor": "{name} face rebuy pentru {amount}",
+  "@dealerTableRebuysFor": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableFinishesIn": "{name} termină pe locul {position}",
+  "@dealerTableFinishesIn": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "position": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableEndSessionTitle": "Închei sesiunea?",
+  "dealerTableEndSessionBody": "Sigur vrei să închei această sesiune?",
+  "dealerTableEnd": "Încheie",
+  "dealerTableDealerChange": "Schimbare de dealer",
+  "dealerTableDealerChangeBody": "Sesiunea va fi pusă pe pauză, iar alt dealer poate scana codul QR al mesei pentru a continua de unde ai rămas.",
+  "dealerTableDealerChangePreserve": "Toți jucătorii, blindurile și starea jocului vor fi păstrate.",
+  "dealerTableDealerChangeResume": "Poți relua această sesiune și tu, mai târziu.",
+  "dealerTableHandOff": "Predă masa",
+  "dealerTableSessionPaused": "Sesiune pe pauză. Alt dealer poate prelua acum.",
+  "dealerTablePauseFailed": "Punerea pe pauză a sesiunii a eșuat: {error}",
+  "@dealerTablePauseFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableEventCancelled": "Eveniment anulat",
+  "dealerTableEventFinished": "Eveniment încheiat",
+  "dealerTableEventCancelledBody": "Administratorul clubului a anulat acest eveniment. Toate sesiunile au fost salvate.",
+  "dealerTableEventFinishedBody": "Administratorul clubului a încheiat acest eveniment. Toate sesiunile au fost salvate.",
+  "dealerTableSessionEnded": "Sesiune încheiată",
+  "dealerTableSessionEndedBody": "Această sesiune a fost încheiată. Toate datele au fost salvate.",
+  "dealerTableLeaveTitle": "Părăsești masa de dealer?",
+  "dealerTableLeaveActiveHand": "O mână este în desfășurare. Dacă pleci acum, înregistrarea poate fi afectată.",
+  "dealerTableLeaveInactive": "Sesiunea rămâne activă. Poți reveni oricând.",
+  "dealerTableAutoCorrection": "Corectat automat \"{detected}\" → \"{corrected}\"",
+  "@dealerTableAutoCorrection": {
+    "placeholders": {
+      "detected": {
+        "type": "String"
+      },
+      "corrected": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableApprovePlayer": "Aprobi {name}?",
+  "@dealerTableApprovePlayer": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableStartingChipStack": "Stack inițial de jetoane",
+  "dealerTablePlayerRejected": "{name} a fost respins",
+  "@dealerTablePlayerRejected": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableRejectFailed": "Respingerea a eșuat: {error}",
+  "@dealerTableRejectFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTablePlayerJoined": "{name} s-a alăturat cu {amount}",
+  "@dealerTablePlayerJoined": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableApproveFailed": "Aprobarea a eșuat: {error}",
+  "@dealerTableApproveFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableChipStack": "Stack de jetoane",
+  "dealerTableSave": "Salvează",
+  "liveSessionHand": "MÂNĂ",
+  "liveSessionPot": "POT",
+  "liveSessionStatus": "STATUS",
+  "liveSessionLive": "LIVE",
+  "liveSessionWaiting": "ÎN AȘTEPTARE",
+  "liveSessionWinnerSummary": "{winner} câștigă ${amount}",
+  "@liveSessionWinnerSummary": {
+    "placeholders": {
+      "winner": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "liveSessionSessionEnded": "Sesiune încheiată",
+  "liveSessionSessionEndedBody": "Dealerul a încheiat această sesiune.",
+  "liveSessionLeaveTitle": "Părăsești masa?",
+  "liveSessionLeaveBody": "Sigur vrei să părăsești această masă?",
+  "liveSessionLeave": "Părăsește",
+  "liveSessionLeaveFailed": "Părăsirea a eșuat: {error}",
+  "@liveSessionLeaveFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "liveSessionLeaveTooltip": "Părăsește masa",
+  "liveSessionSeat": "Loc {number}",
+  "@liveSessionSeat": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "liveSessionYourSeat": "Locul tău",
+  "liveSessionStack": "Stack: {amount}",
+  "@liveSessionStack": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "liveSessionWaitingForDealer": "Se așteaptă dealerul...",
+  "liveSessionOffline": "OFFLINE",
+  "liveSessionRecentActions": "Acțiuni recente",
+  "liveSessionWaitingForAction": "Se așteaptă o acțiune...",
+  "liveSessionD": "D",
+  "qrScanTitle": "Scanează QR-ul mesei",
+  "qrScanInvalidCode": "Cod QR invalid. Scanează un cod QR valid al unei mese de poker.",
+  "qrScanError": "Eroare la procesarea codului QR: {error}",
+  "@qrScanError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "qrScanInstructions": "Îndreaptă camera spre codul QR de pe masă pentru a te alătura",
+  "clubRequestsTitle": "Cereri de club",
+  "clubRequestsAll": "Toate",
+  "clubRequestsPending": "În așteptare",
+  "clubRequestsApproved": "Aprobate",
+  "clubRequestsRejected": "Respinse",
+  "clubRequestsApproveTitle": "Aprobă cererea",
+  "clubRequestsApproveBody": "Sigur vrei să aprobi \"{name}\"? Se va crea un club nou, iar tu vei fi adăugat ca administrator.",
+  "@clubRequestsApproveBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "clubRequestsRejectTitle": "Respinge cererea",
+  "clubRequestsRejectBody": "Oferă un motiv pentru respingerea \"{name}\":",
+  "@clubRequestsRejectBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "clubRequestsRejectHint": "Motivul respingerii...",
+  "clubRequestsApproveButton": "Aprobă",
+  "clubRequestsRejectButton": "Respinge",
+  "clubRequestsApproved2": "{name} a fost aprobat!",
+  "@clubRequestsApproved2": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "clubRequestsRejected2": "{name} a fost respins.",
+  "@clubRequestsRejected2": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "clubRequestsNoRequests": "Nicio cerere",
+  "clubRequestsPendingBadge": "ÎN AȘTEPTARE",
+  "clubRequestsApprovedBadge": "APROBAT",
+  "clubRequestsRejectedBadge": "RESPINS",
+  "clubRequestsAddress": "Adresă",
+  "clubRequestsPhone": "Telefon",
+  "clubRequestsAdminEmail": "Email administrator",
+  "clubRequestsRequestedBy": "Solicitat de",
+  "clubRequestsRequesterEmail": "Email solicitant",
+  "clubRequestsRequestedAt": "Solicitat la",
+  "clubRequestsReviewedAt": "Revizuit la",
+  "clubRequestsRejectionReason": "Motivul respingerii:",
+  "supportRequestsTitle": "Cereri de asistență",
+  "supportRequestsAll": "Toate",
+  "supportRequestsPending": "În așteptare",
+  "supportRequestsClosed": "Închise",
+  "supportRequestsResolveTitle": "Rezolvă cererea",
+  "supportRequestsResolveBody": "Răspuns opțional către utilizator:",
+  "supportRequestsResponseHint": "Răspuns (opțional)...",
+  "supportRequestsResolve": "Rezolvă",
+  "supportRequestsResolved": "Cerere rezolvată",
+  "supportRequestsRejectTitle": "Respinge cererea",
+  "supportRequestsRejectBody": "Motivul respingerii:",
+  "supportRequestsRejectHint": "Motiv...",
+  "supportRequestsReject": "Respinge",
+  "supportRequestsRejected": "Cerere respinsă",
+  "supportRequestsNoRequests": "Nicio cerere",
+  "supportRequestsPendingBadge": "ÎN AȘTEPTARE",
+  "supportRequestsResolvedBadge": "REZOLVAT",
+  "supportRequestsRejectedBadge": "RESPINS",
+  "supportRequestsCategory": "Categorie",
+  "supportRequestsUser": "Utilizator",
+  "supportRequestsEmail": "Email",
+  "supportRequestsSubmitted": "Trimis",
+  "supportRequestsDescription": "Descriere",
+  "supportRequestsAdminResponse": "Răspunsul administratorului",
+  "supportRequestsBugReport": "Raport de eroare",
+  "supportRequestsFeatureRequest": "Cerere de funcționalitate",
+  "supportRequestsAccountIssue": "Problemă de cont",
+  "debugHandViewerTitle": "Vizualizator de mâini (Debug)",
+  "debugHandViewerSessionName": "Numele sesiunii",
+  "debugHandViewerHandNumbers": "Numerele mâinilor (separate prin virgulă, ex.: 27,28)",
+  "debugHandViewerFetchData": "Preia datele",
+  "debugHandViewerCopied": "Copiat în clipboard",
+  "debugHandViewerNoData": "Nicio dată încă. Introdu numele sesiunii și apasă Preia datele.",
+  "navDrawerSettings": "Setări",
+  "navDrawerRegisterClub": "Înregistrează club",
+  "navDrawerHelpSupport": "Ajutor și asistență",
+  "navDrawerLogOut": "Deconectare",
+  "navDrawerUpgrade": "Upgrade",
+  "navDrawerUserFallback": "Utilizator",
+  "navDrawerStatistics": "Statistici",
+  "navDrawerEvents": "Evenimente",
+  "navDrawerBankroll": "Bankroll",
+  "navDrawerClubs": "Cluburi",
+  "navDrawerNoClubsYet": "Niciun club încă",
+  "navDrawerMemberCount": "{count} membri",
+  "@navDrawerMemberCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "navDrawerRoleAdmin": "Admin",
+  "navDrawerRoleDealer": "Dealer",
+  "navDrawerRoleMember": "Membru",
+  "navDrawerVersion": "Versiunea 1.0.0",
+  "navDrawerLastLoginToday": "Ultima autentificare: Astăzi",
+  "navDrawerNoEarningsTitle": "Încă nu există date despre câștiguri",
+  "navDrawerNoEarningsBody": "Adaugă mai întâi câteva rezultate de sesiune pentru a vedea graficul câștigurilor. Poți adăuga rezultate din pagina Profil.",
+  "navDrawerSignOutTitle": "Deconectare",
+  "navDrawerSignOutMessage": "Sigur vrei să te deconectezi?",
+  "navDrawerSignOut": "Deconectare",
+  "multiPotMainPot": "Pot principal",
+  "multiPotSidePot": "Side Pot {index}",
+  "@multiPotSidePot": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "multiPotPlayerFallback": "Jucător {id}",
+  "@multiPotPlayerFallback": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "multiPotMainPotWinner": "câștigătorul potului principal",
+  "multiPotEligibleFromPrevious": "eligibil din potul anterior",
+  "multiPotAutoAwarded": "Atribuit automat lui {name} ({reason})",
+  "@multiPotAutoAwarded": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "multiPotChoppedPot": "Pot împărțit",
+  "multiPotSingleWinner": "Un singur câștigător",
+  "multiPotSelectAllWinners": "Selectează toți câștigătorii:",
+  "multiPotSelectTheWinner": "Selectează câștigătorul:",
+  "multiPotSelectWinnersTitle": "Selectează câștigătorii",
+  "multiPotMultiplePots": "Mai multe poturi - selectează câștigătorul pentru fiecare pot",
+  "winnerSelectionWhoChopped": "Cine a împărțit acest pot?",
+  "winnerSelectionWhoWon": "Cine a câștigat această mână?",
+  "winnerSelectionChoppedPot": "Pot împărțit",
+  "winnerSelectionIndividualShares": "Părți individuale:",
+  "winnerSelectionSelectAllWinners": "Selectează toți câștigătorii:",
+  "winnerSelectionTapTheWinner": "Atinge câștigătorul:",
+  "winnerSelectionLongPressHint": "Apasă lung pentru pot împărțit",
+  "winnerSelectionConfirmChop": "Confirmă împărțirea",
+  "winnerSelectionConfirmWinner": "Confirmă câștigătorul",
+  "winnerSelectionBackToSingle": "Înapoi la un singur câștigător",
+  "boardCardsCards": "Cărți",
+  "boardCardsCard": "Carte",
+  "allInBoardTitle": "Cărți pe board la All-In",
+  "raiseSnapReleaseToType": "Eliberează la Min pentru a tasta",
+  "slidingNotificationHeader": "NOTIFICARE",
+  "eventSuccessTitle": "Super! Evenimentul tău este acum în calendar.",
+  "eventSuccessSubtitle": "Îl poți edita sau elimina oricând",
+  "eventSuccessGoToCalendar": "Mergi la calendar",
+  "eventSuccessAddAnother": "Adaugă alt eveniment",
+  "subscriptionSuccessTitle": "Acum ești {tier}!",
+  "@subscriptionSuccessTitle": {
+    "placeholders": {
+      "tier": {
+        "type": "String"
+      }
+    }
+  },
+  "subscriptionSuccessSubtitle": "Planul tău {tier} este activ. Bucură-te de noile funcții!",
+  "@subscriptionSuccessSubtitle": {
+    "placeholders": {
+      "tier": {
+        "type": "String"
+      }
+    }
+  },
+  "subscriptionSuccessCta": "Începe să explorezi",
+  "stackChartNoData": "Încă nu există date",
+  "stackChartStart": "Start",
+  "stackChartRebuy": "Rebuy",
+  "stackChartEnd": "Final",
+  "stackChartTitle": "Grafic stack",
+  "stackChartAvgGrowth": "Creștere medie",
+  "stackChartDuration": "Durată",
+  "stackChartProfitLoss": "P/L",
+  "actionGridSelectAction": "Selectează acțiunea",
+  "pokerTablePlayerFallback": "Jucător",
+  "loadingDefault": "Se încarcă...",
+  "forgotPasswordFailedSendCode": "Trimiterea codului a eșuat. Încearcă din nou.",
+  "forgotPasswordNewCodeSent": "Un cod nou a fost trimis pe e-mailul tău.",
+  "forgotPasswordFailedResend": "Retrimiterea codului a eșuat.",
+  "forgotPasswordEnterFullCode": "Introdu codul complet de 6 cifre.",
+  "forgotPasswordInvalidCode": "Cod invalid sau expirat. Încearcă din nou.",
+  "forgotPasswordResetSuccess": "Parola a fost resetată cu succes! Autentifică-te.",
+  "forgotPasswordResetTitle": "Resetează parola",
+  "forgotPasswordResetSubtitle": "Introdu adresa de e-mail pentru a primi un link de resetare",
+  "forgotPasswordSendLink": "Trimite linkul de resetare",
+  "forgotPasswordLinkSubtitle": "Am trimis un link de resetare a parolei la {email}. Deschide-l pentru a seta o parolă nouă, apoi autentifică-te.",
+  "forgotPasswordResendLink": "Retrimite linkul",
+  "forgotPasswordLinkSent": "Linkul de resetare a fost trimis.",
+  "forgotPasswordBackToSignIn": "Înapoi la autentificare",
+  "forgotPasswordCheckEmail": "Verifică-ți e-mailul",
+  "forgotPasswordSetNewPassword": "Setează o parolă nouă",
+  "forgotPasswordSetNewSubtitle": "Alege o parolă puternică pentru contul tău",
+  "forgotPasswordEmail": "E-mail",
+  "forgotPasswordEnterEmail": "Introdu e-mailul",
+  "forgotPasswordValidEmail": "Introdu un e-mail valid",
+  "forgotPasswordSendCode": "Trimite codul",
+  "forgotPasswordVerifyCode": "Verifică codul",
+  "forgotPasswordResendCode": "Retrimite codul",
+  "forgotPasswordResendIn": "Retrimite în {time}",
+  "@forgotPasswordResendIn": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "forgotPasswordNewPassword": "Parolă nouă",
+  "forgotPasswordEnterPassword": "Introdu o parolă",
+  "forgotPasswordMinLength": "Parola trebuie să aibă cel puțin 6 caractere",
+  "forgotPasswordConfirm": "Confirmă parola",
+  "forgotPasswordConfirmRequired": "Te rugăm să confirmi parola",
+  "forgotPasswordMismatch": "Parolele nu coincid",
+  "forgotPasswordResetButton": "Resetează parola",
+  "onboardingTrackTitle": "URMĂREȘTE\nFIECARE MÂNĂ",
+  "onboardingTrackSubtitle": "Înregistrează acțiuni, cărți de pe board și rezultate pentru fiecare mână jucată — live sau după sesiune.",
+  "onboardingKnowTitle": "CUNOAȘTE-ȚI\nJOCUL",
+  "onboardingKnowSubtitle": "VPIP, PFR, 3-Bet, C-Bet și altele — vezi cum evoluează statisticile tale în timp real.",
+  "onboardingClubsTitle": "JOACĂ ÎN\nCLUBURI",
+  "onboardingClubsSubtitle": "Participă la evenimente live, vezi clasamentele și urmărește-ți adversarii de-a lungul sesiunilor.",
+  "dealerTableEnterStartingStack": "Introdu stack-ul inițial",
+  "dealerTableNoPendingRequests": "Nicio cerere de alăturare în așteptare",
+  "dealerTablePendingJoinRequests": "Cereri de alăturare în așteptare",
+  "dealerTableUnknown": "Necunoscut",
+  "dealerTableSeatNumber": "Locul {number}",
+  "@dealerTableSeatNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "dealerTableReview": "Verifică",
+  "dealerTableSmallBlind": "Small Blind",
+  "dealerTableBigBlind": "Big Blind",
+  "dealerTableNewBlindsNote": "Noile blinduri se vor aplica de la următoarea mână.",
+  "dealerTableSmallMustBeLess": "Small blind-ul trebuie să fie mai mic decât big blind-ul",
+  "dealerTableBlindsMustBePositive": "Blindurile trebuie să fie mai mari decât 0",
+  "dealerTableBlindsUpdated": "Blinduri actualizate la {sb}/{bb}",
+  "@dealerTableBlindsUpdated": {
+    "placeholders": {
+      "sb": {
+        "type": "String"
+      },
+      "bb": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableFailedUpdateBlinds": "Actualizarea blindurilor a eșuat: {error}",
+  "@dealerTableFailedUpdateBlinds": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableFailedMoveButton": "Mutarea butonului a eșuat: {error}",
+  "@dealerTableFailedMoveButton": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTablePending": "ÎN AȘTEPTARE",
+  "dealerTableConnectionLost": "Conexiune pierdută",
+  "dealerTableReconnecting": "Se încearcă reconectarea...",
+  "dealerTableReconnect": "Reconectează",
+  "dealerTableResetHandTitle": "Resetezi mâna?",
+  "dealerTableResetHandBody": "Toate acțiunile au fost anulate. Vrei să începi o mână nouă?",
+  "dealerTableKeepCurrent": "Păstrează actuala",
+  "dealerTableNewHand": "Mână nouă",
+  "dealerTableHandReset": "Mână resetată - gata pentru o mână nouă",
+  "dealerTableAddPlayerToSeat": "Adaugă jucător la locul {number}",
+  "@dealerTableAddPlayerToSeat": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "dealerTableSearchUser": "Caută utilizator",
+  "dealerTableManualEntry": "Introducere manuală",
+  "dealerTableSearchByName": "Caută după nume",
+  "dealerTableTypeToSearch": "Tastează pentru a căuta utilizatori...",
+  "dealerTableNoUsersFound": "Niciun utilizator găsit. Încearcă introducerea manuală.",
+  "dealerTablePlayerNameLabel": "Nume jucător",
+  "dealerTableEnterPlayerName": "Introdu numele jucătorului",
+  "dealerTableAddPlayer": "Adaugă jucător",
+  "dealerTableEndSession": "Încheie sesiunea",
+  "dealerTableUpdatedStack": "Stack-ul lui {name} actualizat la {amount}",
+  "@dealerTableUpdatedStack": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableFailedUpdateStack": "Actualizarea stack-ului a eșuat: {error}",
+  "@dealerTableFailedUpdateStack": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableSittingAtSeat": "Acum joci la locul {number}",
+  "@dealerTableSittingAtSeat": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "dealerTableFailedSitAt": "Așezarea la masă a eșuat: {error}",
+  "@dealerTableFailedSitAt": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableFailedAddPlayer": "Adăugarea jucătorului a eșuat: {error}",
+  "@dealerTableFailedAddPlayer": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableFailedRemovePlayer": "Eliminarea jucătorului a eșuat: {error}",
+  "@dealerTableFailedRemovePlayer": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "eventDetailEventType": "Tip eveniment",
+  "eventDetailSeated": "Așezat",
+  "eventDetailAreYouGoing": "PARTICIPI?",
+  "eventDetailAddedToCalendarBtn": "Adăugat în calendar",
+  "eventDetailAddToCalendarBtn": "Adaugă în calendar",
+  "eventDetailWhosGoing": "Cine vine",
+  "eventDetailSeeAll": "Vezi tot",
+  "eventDetailStartDealing": "Începe să împarți",
+  "eventDetailViewLiveRankings": "Vezi clasamentul live",
+  "eventDetailNotSeatedAtTable": "Momentan nu ești așezat la nicio masă",
+  "eventDetailNotSeatedInEvent": "Nu ești așezat în acest eveniment",
+  "eventDetailErrorFindingSeat": "Eroare la găsirea locului tău: {error}",
+  "@eventDetailErrorFindingSeat": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "eventDetailReturnToSeat": "Înapoi la locul meu",
+  "eventDetailViewFinalStandings": "Vezi clasamentul final",
+  "eventDetailManageTables": "Gestionează mesele",
+  "eventDetailManageTable": "Gestionează masa",
+  "eventDetailSeeAvailability": "Vezi disponibilitatea",
+  "eventDetailYoureSeated": "Ești așezat",
+  "eventDetailNoTablesAssigned": "Nicio masă atribuită acestui eveniment",
+  "eventDetailStartEvent": "Începe evenimentul",
+  "eventDetailFinish": "Finalizează",
+  "eventDetailFailedFinishCancel": "Nu s-a putut {action} evenimentul: {error}",
+  "@eventDetailFailedFinishCancel": {
+    "placeholders": {
+      "action": {
+        "type": "String"
+      },
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "homeTableSeatInfo": "Masa {table}, Locul #{seat}",
+  "@homeTableSeatInfo": {
+    "placeholders": {
+      "table": {
+        "type": "String"
+      },
+      "seat": {
+        "type": "String"
+      }
+    }
+  },
+  "homeRequestResolved": "Cerere rezolvată",
+  "homeRequestClosed": "Cerere închisă",
+  "homeResponse": "Răspuns",
+  "homeErrorGeneric": "Eroare: {error}",
+  "@homeErrorGeneric": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "homeErrorLoadingEvent": "Eroare la încărcarea evenimentului: {error}",
+  "@homeErrorLoadingEvent": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "homeFailedLoadEvent": "Încărcarea evenimentului a eșuat: {error}",
+  "@homeFailedLoadEvent": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "homeFailedUpdateEvent": "Actualizarea evenimentului a eșuat: {error}",
+  "@homeFailedUpdateEvent": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "homeErrorDeletingEvent": "Eroare la ștergerea evenimentului: {error}",
+  "@homeErrorDeletingEvent": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "homeTournament": "Turneu",
+  "homeCashGame": "Cash Game",
+  "commonErrorGeneric": "Eroare: {error}",
+  "@commonErrorGeneric": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "commonLeave": "Părăsește",
+  "commonAccept": "Acceptă",
+  "commonLoadingHands": "Se încarcă mâinile...",
+  "sessionHistoryButtonPosition": "Poziția butonului: {position}",
+  "@sessionHistoryButtonPosition": {
+    "placeholders": {
+      "position": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionHistoryPlayerCount": "Număr de jucători: {count}",
+  "@sessionHistoryPlayerCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionHistoryStartTime": "Ora de început: {time}",
+  "@sessionHistoryStartTime": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionHistoryPreflop": "Preflop:",
+  "sessionHistoryFlop": "Flop:",
+  "sessionHistoryTurn": "Turn:",
+  "sessionHistoryRiver": "River:",
+  "sessionHistorySyncFailed": "Sincronizarea a eșuat: {error}",
+  "@sessionHistorySyncFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionHistoryClearFailed": "Ștergerea sesiunilor a eșuat: {error}",
+  "@sessionHistoryClearFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationsClubNotFound": "Clubul nu a fost găsit",
+  "notificationsAccept": "Acceptă",
+  "notificationsInvitationAccepted": "Invitație acceptată",
+  "notificationsInvitationDeclined": "Invitație refuzată",
+  "notificationsInvitationDeclinedMsg": "Invitație refuzată",
+  "notificationsEventNotFound": "Evenimentul nu a fost găsit",
+  "notificationsFailedLoadClub": "Încărcarea clubului a eșuat: {error}",
+  "@notificationsFailedLoadClub": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationsErrorLoadingEvent": "Eroare la încărcarea evenimentului: {error}",
+  "@notificationsErrorLoadingEvent": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "invitationsFailedLoad": "Încărcarea invitațiilor a eșuat: {error}",
+  "@invitationsFailedLoad": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "invitationsFailedAccept": "Acceptarea invitației a eșuat: {error}",
+  "@invitationsFailedAccept": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "invitationsDeclined": "Invitație refuzată",
+  "invitationsFailedDecline": "Refuzarea invitației a eșuat: {error}",
+  "@invitationsFailedDecline": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "clubSettingsTableAdded": "Masă adăugată",
+  "clubSettingsTableDeleted": "Masă ștearsă",
+  "clubSettingsQrRegenerated": "Coduri QR regenerate",
+  "clubSettingsErrorPdf": "Eroare la generarea PDF-ului: {error}",
+  "@clubSettingsErrorPdf": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "clubDashboardActiveDealers": "Dealeri activi",
+  "clubDashboardPendingInvitations": "Invitații în așteptare",
+  "clubDashboardDealerEmailHint": "dealer@example.com",
+  "clubDashboardInvitationSent": "Invitație trimisă către {email}",
+  "@clubDashboardInvitationSent": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "clubDashboardFailedSendInvite": "Trimiterea invitației a eșuat: {error}",
+  "@clubDashboardFailedSendInvite": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "clubDashboardFailedCancelInvite": "Anularea invitației a eșuat: {error}",
+  "@clubDashboardFailedCancelInvite": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "eventManagementClubEvents": "Evenimentele {name}",
+  "@eventManagementClubEvents": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "eventManagementFailedUpdate": "Actualizarea evenimentului a eșuat: {error}",
+  "@eventManagementFailedUpdate": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "profileCash": "Cash",
+  "profileTournament": "Turneu",
+  "profileDevTools": "Dev Tools",
+  "profilePremiumOverride": "Suprascriere Premium",
+  "profileUsingRealStatus": "Se folosește statusul real: {status}",
+  "@profileUsingRealStatus": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "profileOverridden": "Suprascris: {status}",
+  "@profileOverridden": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "profileResetToReal": "Resetează la statusul real",
+  "profileVersion": "Versiunea 1.0",
+  "profileLastLogin": "Ultima autentificare {date}",
+  "@profileLastLogin": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "pokerHandFailedEndSession": "Încheierea sesiunii a eșuat: {error}",
+  "@pokerHandFailedEndSession": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "pokerHandFailedSaveSession": "Salvarea sesiunii a eșuat: {error}",
+  "@pokerHandFailedSaveSession": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "pokerHandRebuyAdded": "Rebuy adăugat: ${amount} (Stack: {stack})",
+  "@pokerHandRebuyAdded": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "stack": {
+        "type": "String"
+      }
+    }
+  },
+  "pokerHandEndSession": "Încheie sesiunea",
+  "pokerHandRebuyAmountDollar": "Sumă Rebuy ($)",
+  "pokerHandRebuyChips": "Jetoane Rebuy",
+  "seatSetupFailedSave": "Salvarea a eșuat: {error}",
+  "@seatSetupFailedSave": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "seatSetupSelectYourSeat": "Selectează-ți locul",
+  "authExpLinkGoogleTitle": "Conectează contul Google",
+  "authExpPassword": "Parolă",
+  "authExpLinkAccount": "Conectează contul",
+  "playerSessionYourHoleCards": "Cărțile tale din mână",
+  "playerSessionSeat": "LOC",
+  "playerSessionStack": "STACK",
+  "playerSessionPot": "POT",
+  "playerSessionNotesHint": "Adaugă notițe despre această mână...",
+  "dealerQrScanInvalidCode": "Cod QR invalid. Scanează un cod QR de masă valid.",
+  "dealerQrScanWrongClub": "Această masă aparține altui club.",
+  "dealerQrScanTableNotFound": "Masa nu a fost găsită. Scanează un cod QR de masă valid.",
+  "dealerQrScanError": "Eroare la procesarea codului QR: {error}",
+  "@dealerQrScanError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerQrScanFailedStart": "Pornirea sesiunii a eșuat: {error}",
+  "@dealerQrScanFailedStart": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerQrScanTakingOver": "Preiei de la {name}",
+  "@dealerQrScanTakingOver": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerQrScanHandsPlayed": "Mâini jucate",
+  "dealerQrScanBlinds": "Blinduri",
+  "dealerQrScanPlayers": "Jucători",
+  "dealerQrScanFailedResume": "Reluarea sesiunii a eșuat: {error}",
+  "@dealerQrScanFailedResume": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "usernameSetupLabel": "Nume de utilizator",
+  "stackChartScreenAvgGrowth": "Creștere medie",
+  "stackChartScreenDuration": "Durată",
+  "stackChartScreenProfitLoss": "P/L",
+  "stackChartScreenStack": "Stack",
+  "sessionHandsLoading": "Se încarcă mâinile...",
+  "createEventDefaultCashGame": "Cash Game {stakes}",
+  "@createEventDefaultCashGame": {
+    "placeholders": {
+      "stakes": {
+        "type": "String"
+      }
+    }
+  },
+  "createEventDefaultCashGameNoStakes": "Cash Game",
+  "eventDashboardTvMode": "Mod afișare TV",
+  "tableSelectionTitle": "Selectează masa",
+  "tableSelectionAdminSubtitle": "Alege o masă de gestionat",
+  "tableSelectionMemberSubtitle": "Alege o masă pentru a vedea disponibilitatea",
+  "tableSelectionNoTables": "Nicio masă disponibilă",
+  "tableSelectionOpenSeats": "{count} libere",
+  "@tableSelectionOpenSeats": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "tableSelectionSeated": "{occupied}/9 așezați",
+  "@tableSelectionSeated": {
+    "placeholders": {
+      "occupied": {
+        "type": "int"
+      }
+    }
+  },
+  "monthJan": "Ian",
+  "monthFeb": "Feb",
+  "monthMar": "Mar",
+  "monthApr": "Apr",
+  "monthMay": "Mai",
+  "monthJun": "Iun",
+  "monthJul": "Iul",
+  "monthAug": "Aug",
+  "monthSep": "Sep",
+  "monthOct": "Oct",
+  "monthNov": "Noi",
+  "monthDec": "Dec",
+  "weekdaySun": "Dum",
+  "weekdayMon": "Lun",
+  "weekdayTue": "Mar",
+  "weekdayWed": "Mie",
+  "weekdayThu": "Joi",
+  "weekdayFri": "Vin",
+  "weekdaySat": "Sâm",
+  "opponentsErrorGeneric": "Eroare: {error}",
+  "@opponentsErrorGeneric": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "opponentsErrorDeleting": "Eroare la ștergerea adversarului: {error}",
+  "@opponentsErrorDeleting": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "opponentsErrorClearing": "Eroare la ștergerea adversarilor: {error}",
+  "@opponentsErrorClearing": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "onboardingReadTitle": "CITEȘTE JOCUL\nCA UN PRO",
+  "onboardingReadSubtitle": "Creează un cont pentru a începe să-ți urmărești parcursul în poker.",
+  "onboardingCreateAccount": "Creează cont",
+  "onboardingLogIn": "Autentificare",
+  "onboardingSkip": "Omite",
+  "onboardingFinalTable": "Final Table",
+  "authExpSignUpTitle": "Înregistrare",
+  "authExpLogInTitle": "Autentifică-te în contul tău",
+  "authExpSignUpSubtitle": "Creează un cont pentru a continua",
+  "authExpLogInSubtitle": "Introdu e-mailul și parola pentru a te autentifica",
+  "authExpName": "Nume",
+  "authExpEmail": "E-mail",
+  "authExpEnterName": "Introdu numele",
+  "authExpNameMinLength": "Numele trebuie să aibă cel puțin 2 caractere",
+  "authExpEnterEmail": "Introdu e-mailul",
+  "authExpValidEmail": "Introdu un e-mail valid",
+  "authExpEnterPassword": "Introdu parola",
+  "authExpPasswordMinLength": "Parola trebuie să aibă cel puțin 6 caractere",
+  "authExpBySigningUp": "Prin înregistrare, ești de acord cu ",
+  "authExpTermsOfService": "Termenii serviciului",
+  "authExpAnd": "\nși ",
+  "authExpPrivacyPolicy": "Politica de confidențialitate",
+  "authExpCreateAccount": "Creează cont",
+  "authExpAlreadyHaveAccount": "Ai deja un cont? ",
+  "authExpSignIn": "Autentifică-te",
+  "authExpForgotPassword": "Ai uitat parola?",
+  "authExpDontHaveAccount": "Nu ai un cont? ",
+  "authExpSignUp": "Înregistrează-te",
+  "authExpOr": "sau",
+  "authExpContinueGoogle": "Continuă cu Google",
+  "authExpLinkGoogleMessage": "Există deja un cont cu {email}. Introdu parola pentru a-ți conecta contul Google.",
+  "@authExpLinkGoogleMessage": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "forgotPasswordCodeSubtitle": "Introdu codul de 6 cifre trimis la {email}",
+  "@forgotPasswordCodeSubtitle": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "usernameSetupChangeTitle": "Schimbă-ți numele de utilizator",
+  "usernameSetupChooseTitle": "Alege-ți numele de utilizator",
+  "usernameSetupSubtitle": "Așa te vor cunoaște ceilalți jucători la masă",
+  "usernameSetupRequired": "Numele de utilizator este obligatoriu",
+  "usernameSetupCheckingAvailability": "Se verifică disponibilitatea…",
+  "usernameSetupAvailable": "Disponibil!",
+  "usernameSetupAlreadyTaken": "Deja folosit",
+  "usernameSetupCurrentUsername": "Acesta este numele tău de utilizator actual",
+  "usernameSetupCouldNotCheck": "Nu s-a putut verifica disponibilitatea",
+  "usernameSetupJustTaken": "Numele de utilizator tocmai a fost luat. Încearcă altul.",
+  "usernameSetupRulesHint": "3–20 de caractere · litere, cifre, underscore",
+  "usernameSetupUpdateButton": "Actualizează numele de utilizator",
+  "usernameSetupClaimButton": "Revendică numele de utilizator",
+  "usernameSetupSkip": "Omite deocamdată",
+  "sessionHandsTitle": "Sesiune",
+  "sessionHandsHandsLogged": "{count} mâini înregistrate",
+  "@sessionHandsHandsLogged": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sessionHandsError": "Eroare",
+  "sessionHandsNoHandsTitle": "Nicio mână înregistrată",
+  "sessionHandsNoHandsSubtitle": "Această sesiune nu are încă mâini înregistrate.",
+  "sessionHandsWon": "CÂȘTIGAT",
+  "sessionHandsActions": "{count} acțiuni",
+  "@sessionHandsActions": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sessionHandsPot": "Pot",
+  "stackChartScreenTitle": "Grafic Stack",
+  "stackChartScreenPokerSession": "Sesiune de poker",
+  "notificationsScreenTitle": "Notificări",
+  "notificationsScreenToday": "Astăzi",
+  "notificationsScreenMarkAllAsRead": "Marchează toate ca citite",
+  "notificationsScreenMarkAsRead": "Marchează ca citită",
+  "notificationsScreenNoNotifications": "Nicio notificare",
+  "notificationsScreenClubInvitation": "Invitație la club",
+  "notificationsScreenInvitedToJoin": "Ai fost invitat să te alături",
+  "notificationsScreenDecline": "Refuză",
+  "notificationsScreenNotAuthenticated": "Neautentificat",
+  "notificationsScreenRequestResolved": "Cerere rezolvată",
+  "notificationsScreenRequestClosed": "Cerere închisă",
+  "notificationsScreenResponse": "Răspuns",
+  "notificationsScreenEvents": "Evenimente",
+  "notificationsScreenRsvp": "RSVP",
+  "notificationsScreenClubs": "Cluburi",
+  "notificationsScreenInvitations": "Invitații",
+  "notificationsScreenSeats": "Locuri",
+  "notificationsScreenSupport": "Asistență",
+  "notifEventCreatedTitle": "Eveniment nou: {eventName}",
+  "@notifEventCreatedTitle": {
+    "placeholders": {
+      "eventName": {
+        "type": "String"
+      }
+    }
+  },
+  "notifEventCreatedBody": "{date}",
+  "@notifEventCreatedBody": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "notifEventUpdatedTitle": "Eveniment actualizat: {eventName}",
+  "@notifEventUpdatedTitle": {
+    "placeholders": {
+      "eventName": {
+        "type": "String"
+      }
+    }
+  },
+  "notifEventUpdatedBody": "{clubName} a actualizat detaliile evenimentului",
+  "@notifEventUpdatedBody": {
+    "placeholders": {
+      "clubName": {
+        "type": "String"
+      }
+    }
+  },
+  "notifEventCancelledTitle": "Eveniment anulat: {eventName}",
+  "@notifEventCancelledTitle": {
+    "placeholders": {
+      "eventName": {
+        "type": "String"
+      }
+    }
+  },
+  "notifEventCancelledBody": "{clubName} a anulat evenimentul programat pentru {date}",
+  "@notifEventCancelledBody": {
+    "placeholders": {
+      "clubName": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "notifEventStartingTitle": "{eventName} începe într-o oră!",
+  "@notifEventStartingTitle": {
+    "placeholders": {
+      "eventName": {
+        "type": "String"
+      }
+    }
+  },
+  "notifEventStartingBody": "Evenimentul {clubName} este pe cale să înceapă",
+  "@notifEventStartingBody": {
+    "placeholders": {
+      "clubName": {
+        "type": "String"
+      }
+    }
+  },
+  "notifEventStartedTitle": "{eventName} este acum LIVE!",
+  "@notifEventStartedTitle": {
+    "placeholders": {
+      "eventName": {
+        "type": "String"
+      }
+    }
+  },
+  "notifEventStartedBody": "Evenimentul {clubName} a început - intră acum ca spectator",
+  "@notifEventStartedBody": {
+    "placeholders": {
+      "clubName": {
+        "type": "String"
+      }
+    }
+  },
+  "notifSeatAvailableTitle": "Loc liber: {eventName}",
+  "@notifSeatAvailableTitle": {
+    "placeholders": {
+      "eventName": {
+        "type": "String"
+      }
+    }
+  },
+  "notifSeatAvailableBody": "Un loc este acum disponibil la {clubName}! Deschide aplicația pentru a-ți ocupa locul.",
+  "@notifSeatAvailableBody": {
+    "placeholders": {
+      "clubName": {
+        "type": "String"
+      }
+    }
+  },
+  "notifMemberRsvpTitle": "RSVP: {memberName}",
+  "@notifMemberRsvpTitle": {
+    "placeholders": {
+      "memberName": {
+        "type": "String"
+      }
+    }
+  },
+  "notifMemberRsvpBody": "{memberName} a răspuns \"{rsvpStatus}\" la {eventName}",
+  "@notifMemberRsvpBody": {
+    "placeholders": {
+      "memberName": {
+        "type": "String"
+      },
+      "rsvpStatus": {
+        "type": "String"
+      },
+      "eventName": {
+        "type": "String"
+      }
+    }
+  },
+  "notifNewClubRequestTitle": "Cerere nouă de club",
+  "notifNewClubRequestBody": "A fost trimisă o nouă cerere de înregistrare a unui club",
+  "notifClubApprovedTitle": "Club aprobat",
+  "notifClubApprovedBody": "Clubul tău a fost aprobat!",
+  "notifClubRejectedTitle": "Club respins",
+  "notifClubRejectedBody": "Cererea ta de club a fost respinsă",
+  "notifMemberInvitedTitle": "Invitație la club",
+  "notifMemberInvitedBody": "Ai fost invitat să te alături unui club",
+  "notifInvitationAcceptedTitle": "Invitație acceptată",
+  "notifInvitationAcceptedBody": "{memberName} a acceptat invitația",
+  "@notifInvitationAcceptedBody": {
+    "placeholders": {
+      "memberName": {
+        "type": "String"
+      }
+    }
+  },
+  "notifInvitationDeclinedTitle": "Invitație refuzată",
+  "notifInvitationDeclinedBody": "{memberName} a refuzat invitația",
+  "@notifInvitationDeclinedBody": {
+    "placeholders": {
+      "memberName": {
+        "type": "String"
+      }
+    }
+  },
+  "notifSupportRequestTitle": "Cerere de asistență",
+  "notifSupportRequestBody": "A fost trimisă o nouă cerere de asistență",
+  "notifSupportUpdatedTitle": "Actualizare asistență",
+  "notifSupportUpdatedBody": "Cererea ta de asistență a fost actualizată",
+  "notifTypeEventCreated": "Eveniment nou",
+  "notifTypeEventUpdated": "Eveniment actualizat",
+  "notifTypeEventCancelled": "Eveniment anulat",
+  "notifTypeEventStarting": "Evenimentul începe în curând",
+  "notifTypeEventStarted": "Eveniment început",
+  "notifTypeMemberRsvp": "RSVP membru",
+  "notifTypeNewClubRequest": "Cerere nouă de club",
+  "notifTypeClubApproved": "Club aprobat",
+  "notifTypeClubRejected": "Club respins",
+  "notifTypeMemberInvited": "Invitație la club",
+  "notifTypeInvitationAccepted": "Invitație acceptată",
+  "notifTypeInvitationDeclined": "Invitație refuzată",
+  "notifTypeSeatAvailable": "Loc disponibil",
+  "notifTypeSupportRequest": "Cerere de asistență",
+  "notifTypeSupportUpdated": "Actualizare asistență",
+  "invitationsScreenTitle": "Invitații la club",
+  "invitationsScreenNoPending": "Nicio invitație în așteptare",
+  "invitationsScreenYouWillSee": "Aici vei vedea invitațiile de la cluburi",
+  "invitationsScreenGoBack": "Înapoi",
+  "invitationsScreenUnknownClub": "Club necunoscut",
+  "invitationsScreenInvitedBy": "Invitat de {name}",
+  "@invitationsScreenInvitedBy": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "invitationsScreenExpires": "Expiră {date}",
+  "@invitationsScreenExpires": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "invitationsScreenExpired": "Expirată",
+  "invitationsScreenExpiresInDays": "peste {days} zi(le)",
+  "@invitationsScreenExpiresInDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "invitationsScreenExpiresInHours": "peste {hours} oră(ore)",
+  "@invitationsScreenExpiresInHours": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "invitationsScreenExpiresSoon": "în curând",
+  "invitationsScreenDecline": "Refuză",
+  "invitationsScreenAccept": "Acceptă",
+  "invitationsScreenJoinedAs": "Te-ai alăturat clubului {clubName} ca {role}",
+  "@invitationsScreenJoinedAs": {
+    "placeholders": {
+      "clubName": {
+        "type": "String"
+      },
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "profilePremium": "Premium",
+  "profileFree": "Gratuit",
+  "dealerTableStartNewHand": "Începe o mână nouă",
+  "dealerTableStartSessionBtn": "Începe sesiunea",
+  "dealerTableNeedTwoPlayers": "Sunt necesari cel puțin 2 jucători pentru a începe",
+  "dealerTableAddTestPlayers": "Adaugă jucători de test",
+  "dealerTableAddedTestPlayers": "{count} jucători de test adăugați",
+  "@dealerTableAddedTestPlayers": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dealerTableRolledBack": "Revenit la {street}",
+  "@dealerTableRolledBack": {
+    "placeholders": {
+      "street": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableUndoneAction": "Anulat: {playerName} {action}",
+  "@dealerTableUndoneAction": {
+    "placeholders": {
+      "playerName": {
+        "type": "String"
+      },
+      "action": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableScanToJoin": "Scanează pentru a ocupa acest loc",
+  "dealerTableOccupiedDot": "Ocupat · ",
+  "dealerTableEmptyLabel": "Liber",
+  "dealerTableOccupiedLabel": "Ocupat",
+  "dealerTableSelectedLabel": "Selectat",
+  "dealerTableSelectSeatLabel": "SELECTEAZĂ LOCUL",
+  "dealerTableBetAmountDialog": "Suma Bet",
+  "dealerTableRaiseToDialog": "Raise la",
+  "dealerTablePausedLabel": "În pauză",
+  "dealerTableListeningLabel": "Ascultă",
+  "dealerTableResumeVoiceTooltip": "Reia vocea",
+  "dealerTablePauseVoiceTooltip": "Întrerupe vocea",
+  "dealerTableVoiceOffLabel": "Voce oprită",
+  "dealerTableCalibratingLabel": "Se calibrează...",
+  "dealerTableCalibrationPrompt": "Te rugăm să anunți: \"Masa [număr], dealer [nume]\"",
+  "dealerTableDealerLockedMsg": "Dealer fixat: {name} la masa {table}",
+  "@dealerTableDealerLockedMsg": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "table": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableNoSpeakersMsg": "Nu s-a detectat niciun vorbitor - te rugăm să vorbești clar",
+  "dealerTableSayTableDealerMsg": "Te rugăm să spui: \"Masa [număr], dealer [nume]\"",
+  "dealerTableConnectionLostRecovery": "Conexiune pierdută - se încearcă recuperarea...",
+  "dealerTableConnectionTimeout": "Conexiune expirată - este necesară recalibrarea",
+  "dealerTableConnectionRecovered": "Conexiune restabilită!",
+  "dealerTableActionHeldMsg": "Acțiune reținută",
+  "dealerTableFailedStartStreaming": "Streamingul nu a putut porni - verifică conexiunea la server și microfonul",
+  "dealerTableFailedStartVoice": "Vocea nu a putut porni: {error}",
+  "@dealerTableFailedStartVoice": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableAddPlayerActionLabel": "Adaugă jucător",
+  "dealerTableSeatAnotherPlayer": "Așază alt jucător aici",
+  "dealerTableSitHereLabel": "Așază-te aici",
+  "dealerTableJoinAsDealerPlayer": "Intră în joc ca dealer-jucător",
+  "dealerTableDealerFallback": "Dealer",
+  "dealerTableUpdatedStackMsg": "Stack-ul lui {name} actualizat la {amount}",
+  "@dealerTableUpdatedStackMsg": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableFailedUpdateStackMsg": "Actualizarea stack-ului a eșuat: {error}",
+  "@dealerTableFailedUpdateStackMsg": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableSittingAtSeatMsg": "Acum joci la locul {number}",
+  "@dealerTableSittingAtSeatMsg": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "dealerTableFailedSitMsg": "Așezarea la masă a eșuat: {error}",
+  "@dealerTableFailedSitMsg": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableFailedAddPlayerMsg": "Adăugarea jucătorului a eșuat: {error}",
+  "@dealerTableFailedAddPlayerMsg": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableRemovedFromSeat": "{name} a fost eliminat de la locul {seat}",
+  "@dealerTableRemovedFromSeat": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "seat": {
+        "type": "int"
+      }
+    }
+  },
+  "dealerTableFailedRemoveMsg": "Eliminarea jucătorului a eșuat: {error}",
+  "@dealerTableFailedRemoveMsg": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "eventDetailDateAndTime": "Data și ora",
+  "eventDetailTableSeatInfo": "Masa {table}, locul #{seat}",
+  "@eventDetailTableSeatInfo": {
+    "placeholders": {
+      "table": {
+        "type": "String"
+      },
+      "seat": {
+        "type": "int"
+      }
+    }
+  },
+  "eventDetailYoureSeatedGoodLuck": "Ești așezat, mult noroc!",
+  "eventDetailHomeGame": "Joc acasă",
+  "clubDashboardDateLabel": "Data",
+  "clubDashboardUnknownLabel": "Necunoscut",
+  "clubDashboardActiveLabel": "Activ",
+  "clubDashboardIdleLabel": "Inactiv",
+  "clubDashboardInvitedTimeAgo": "Invitat {time}",
+  "@clubDashboardInvitedTimeAgo": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "clubDashboardPendingLabel": "În așteptare",
+  "clubDashboardNoDealersYet": "Niciun dealer încă",
+  "clubDashboardInviteDealersHint": "Invită dealeri să te ajute la gestionarea meselor",
+  "clubDashboardInviteDealer": "Invită dealer",
+  "clubDashboardInviteDealerBody": "Introdu adresa de e-mail a dealerului pe care vrei să-l inviți.",
+  "clubDashboardSendInvitationBtn": "Trimite invitația",
+  "clubDashboardInvitationSentTo": "Invitație trimisă la {email}",
+  "@clubDashboardInvitationSentTo": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "clubDashboardFailedSendInvitationMsg": "Trimiterea invitației a eșuat: {error}",
+  "@clubDashboardFailedSendInvitationMsg": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "clubDashboardCancelInvitationTitle": "Anulezi invitația?",
+  "clubDashboardCancelInvitationBody": "Anulezi invitația pentru {email}?",
+  "@clubDashboardCancelInvitationBody": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "clubDashboardKeepBtn": "Păstrează",
+  "clubDashboardCancelInvitationBtn": "Anulează invitația",
+  "clubDashboardFailedCancelMsg": "Anularea invitației a eșuat: {error}",
+  "@clubDashboardFailedCancelMsg": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "clubSettingsMembers": "Membri ({count})",
+  "@clubSettingsMembers": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "clubSettingsNoMembersFound": "Niciun membru găsit",
+  "clubSettingsRoleOwner": "Proprietar",
+  "clubSettingsRoleAdmin": "Admin",
+  "clubSettingsRoleDealer": "Dealer",
+  "clubSettingsRolePlayer": "Jucător",
+  "clubSettingsTableAddedMsg": "Masă adăugată",
+  "clubSettingsEditTableTitle": "Editează masa",
+  "clubSettingsDeleteTableTitle": "Ștergi masa?",
+  "clubSettingsDeleteTableBody": "Sigur vrei să ștergi \"{name}\"? Această acțiune nu poate fi anulată.",
+  "@clubSettingsDeleteTableBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "clubSettingsTableDeletedMsg": "Masă ștearsă",
+  "clubSettingsDealerScanHint": "Dealerii scanează acest cod pentru a începe o sesiune la această masă",
+  "clubSettingsRegenerateBtn": "Regenerează",
+  "clubSettingsAppQrCodes": "Coduri QR aplicație",
+  "clubSettingsShareWithPlayers": "Distribuie jucătorilor pentru a descărca aplicația",
+  "clubSettingsDownloadPdf": "Descarcă PDF",
+  "clubSettingsDownloadFinalTable": "Descarcă aplicația Final Table",
+  "clubSettingsScanQrToGetStarted": "Scanează codul QR pentru dispozitivul tău ca să începi",
+  "clubSettingsScanToStartSession": "Scanează acest cod QR pentru a începe o sesiune",
+  "clubSettingsForDealersOnly": "Doar pentru dealeri",
+  "clubSettingsTableDefault": "Masa {number}",
+  "@clubSettingsTableDefault": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "eventManagementFailedUpdateEvent": "Actualizarea evenimentului a eșuat: {error}",
+  "@eventManagementFailedUpdateEvent": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "adminTableThisWillMoveMsg": "Aceasta va muta {count} jucător(i) pe lista de așteptare și va elimina masa din acest eveniment.",
+  "@adminTableThisWillMoveMsg": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "adminTableThisWillRemoveMsg": "Aceasta va elimina masa din acest eveniment.",
+  "adminTableClosedWithWaitlistMsg": "{table} închisă. {count} jucător(i) mutați pe lista de așteptare.",
+  "@adminTableClosedWithWaitlistMsg": {
+    "placeholders": {
+      "table": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "adminTableClosedMsg": "{table} închisă.",
+  "@adminTableClosedMsg": {
+    "placeholders": {
+      "table": {
+        "type": "String"
+      }
+    }
+  },
+  "adminTableEmptyLabel": "Goală",
+  "adminTableTableFallback": "Masă",
+  "adminTableTableNumberLabel": "Masa {number}",
+  "@adminTableTableNumberLabel": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "homePendingInvitationsMsg": "Ai {count} invitație(i) la club în așteptare.",
+  "@homePendingInvitationsMsg": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "homeEventFallback": "Eveniment",
+  "homePokerFallback": "Poker",
+  "homeUserFallback": "Utilizator",
+  "homeSeatInfoStr": "Locul #{seat}  •  {chipStack}",
+  "@homeSeatInfoStr": {
+    "placeholders": {
+      "seat": {
+        "type": "int"
+      },
+      "chipStack": {
+        "type": "String"
+      }
+    }
+  },
+  "pokerHandYouLabel": "Tu",
+  "pokerHandMovingToTable": "Te muți la o altă masă. Stack-ul tău ({stack}) va fi păstrat. Ceilalți jucători vor fi șterși.",
+  "@pokerHandMovingToTable": {
+    "placeholders": {
+      "stack": {
+        "type": "String"
+      }
+    }
+  },
+  "pokerHandActiveSessionMsg": "Ai o sesiune activă cu {count} mână(mâini) înregistrate. Ce vrei să faci?",
+  "@pokerHandActiveSessionMsg": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pokerHandUnknownLabel": "Necunoscut",
+  "pokerHandFoldAction": "Fold",
+  "pokerHandRaiseAction": "Raise",
+  "pokerHandBetAction": "Bet",
+  "pokerHandAllInAction": "All-In",
+  "pokerHandAllPlayersAllIn": "Toți jucătorii sunt all-in - se împart cărțile rămase",
+  "pokerHandWaitingForCards": "Se așteaptă împărțirea cărților",
+  "pokerHandBettingComplete": "Pariuri încheiate - pregătit pentru următorul street",
+  "pokerHandSeatFallback": "Locul {id}",
+  "@pokerHandSeatFallback": {
+    "placeholders": {
+      "id": {
+        "type": "int"
+      }
+    }
+  },
+  "pokerHandPlayerFallback": "Jucătorul {id}",
+  "@pokerHandPlayerFallback": {
+    "placeholders": {
+      "id": {
+        "type": "int"
+      }
+    }
+  },
+  "pokerHandChooseOption": "Alege o opțiune:",
+  "pokerHandLeaveBtn": "Părăsește",
+  "pokerHandConfirmBtn": "Confirmă",
+  "pokerHandCurrentlyHaveRemaining": "În prezent mai ai {stack}.",
+  "@pokerHandCurrentlyHaveRemaining": {
+    "placeholders": {
+      "stack": {
+        "type": "String"
+      }
+    }
+  },
+  "opponentsColorRed": "Roșu",
+  "opponentsColorLightBlue": "Albastru deschis",
+  "opponentsColorGreen": "Verde",
+  "opponentsColorOrange": "Portocaliu",
+  "opponentsColorPurple": "Mov",
+  "opponentsColorTeal": "Turcoaz",
+  "opponentsColorPink": "Roz",
+  "opponentsColorIndigo": "Indigo",
+  "opponentsFailedToLoad": "Încărcarea adversarilor a eșuat: {error}",
+  "@opponentsFailedToLoad": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "opponentDetailFoldTo3Bet": "Fold to 3-Bet",
+  "opponentDetailStealLabel": "Steal",
+  "opponentDetailCheckRaiseLabel": "Check/Raise",
+  "playerSessionBluff": "Bluff",
+  "playerSessionValue": "Value",
+  "playerSessionMistake": "Greșeală",
+  "playerSessionCooler": "Cooler",
+  "playerSessionHeroCall": "Hero Call",
+  "playerSessionExploit": "Exploit",
+  "playerSessionToughSpot": "Situație dificilă",
+  "playerSessionEasyFold": "Fold ușor",
+  "playerSessionEndedTitle": "Sesiune încheiată",
+  "playerSessionEndedBody": "Dealerul a încheiat această sesiune.",
+  "playerSessionRemovedTitle": "Eliminat de la masă",
+  "playerSessionRemovedBody": "Ai fost eliminat de la masă de către dealer.",
+  "playerSessionYouWon": "Ai câștigat {amount}!",
+  "@playerSessionYouWon": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "playerSessionSeatWins": "Locul {seat} câștigă {amount}",
+  "@playerSessionSeatWins": {
+    "placeholders": {
+      "seat": {
+        "type": "int"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "playerSessionYourHoleCardsTitle": "Cărțile tale",
+  "playerSessionConnecting": "Se conectează...",
+  "playerSessionGoBackBtn": "Înapoi",
+  "playerSessionHoleCardsLabel": "Cărți proprii",
+  "playerSessionEditBtn": "Editează",
+  "playerSessionAddBtn": "Adaugă",
+  "playerSessionBoardLabel": "Board",
+  "playerSessionNoCardsDealt": "Nicio carte împărțită",
+  "playerSessionWaitingForAction": "Se așteaptă acțiunea...",
+  "playerSessionActionsLabel": "Acțiuni",
+  "playerSessionYouLabel": "Tu",
+  "playerSessionSeatFallback": "Locul {seat}",
+  "@playerSessionSeatFallback": {
+    "placeholders": {
+      "seat": {
+        "type": "int"
+      }
+    }
+  },
+  "playerSessionNotesHintText": "Adaugă note despre această mână...",
+  "playerSessionHandHistoryLabel": "Istoric mâini",
+  "playerSessionNoCompletedHands": "Nicio mână finalizată încă",
+  "playerSessionWonAmount": "Câștigat {amount}",
+  "@playerSessionWonAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "playerSessionLostLabel": "Pierdut",
+  "playerSessionDealerChangeTitle": "Schimbare de dealer",
+  "playerSessionWaitingForDealer": "Se așteaptă preluarea de către noul dealer...",
+  "playerSessionHandUpdated": "Mâna #{number} actualizată",
+  "@playerSessionHandUpdated": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "playerSessionErrorSaving": "Eroare la salvare: {error}",
+  "@playerSessionErrorSaving": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "playerSessionEditHand": "Editează mâna #{number}",
+  "@playerSessionEditHand": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "playerSessionViewDetails": "Vezi detalii",
+  "playerSessionTapToAddHoleCards": "Atinge pentru a adăuga cărțile proprii",
+  "playerSessionSaveChanges": "Salvează modificările",
+  "playerSessionLeaveTableTitle": "Părăsești masa?",
+  "playerSessionLeaveTableBody": "Sigur vrei să părăsești această masă?",
+  "playerSessionFailedLeave": "Părăsirea mesei a eșuat: {error}",
+  "@playerSessionFailedLeave": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "playerSessionTableSession": "Sesiune la masă",
+  "playerSessionHandNumber": "Mâna #{number}",
+  "@playerSessionHandNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "playerSessionUnknownDealer": "Necunoscut",
+  "playerSessionNotAuthenticated": "Neautentificat",
+  "dealerQrScanSessionSettings": "Setări sesiune",
+  "dealerQrScanTableNameLabel": "Masa: {name}",
+  "@dealerQrScanTableNameLabel": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerQrScanEventNameLabel": "Eveniment: {name}",
+  "@dealerQrScanEventNameLabel": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerQrScanBlindsLabel": "Blinduri",
+  "dealerQrScanSmallBlindLabel": "Small Blind",
+  "dealerQrScanBigBlindLabel": "Big Blind",
+  "dealerQrScanStartDealingBtn": "Începe să împarți",
+  "dealerQrScanResumeSessionTitle": "Reia sesiunea",
+  "dealerQrScanTakingOverFrom": "Preiei de la {name}",
+  "@dealerQrScanTakingOverFrom": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerQrScanHandsPlayedLabel": "Mâini jucate",
+  "dealerQrScanBlindsInfoLabel": "Blinduri",
+  "dealerQrScanPlayersLabel": "Jucători",
+  "dealerQrScanResumeBtn": "Reia",
+  "dealerQrScanTableNotAssigned": "Masă neatribuită",
+  "dealerQrScanEventTablesLabel": "Mesele evenimentului:",
+  "dealerQrScanNoTablesAssigned": "Nicio masă atribuită",
+  "dealerQrScanThisTableId": "ID-ul acestei mese:",
+  "dealerQrScanCorrectQrUrl": "URL-ul corect al codului QR:",
+  "dealerQrScanScanTableQrTitle": "Scanează QR-ul mesei",
+  "dealerQrScanScanInstructions": "Scanează codul QR al mesei pentru a începe să împarți",
+  "eventDashboardTournamentOnBreak": "Turneu în pauză",
+  "eventDashboardLiveLabel": "Live",
+  "eventDashboardLocalLabel": "Local",
+  "eventDashboardDisconnectedLabel": "Deconectat",
+  "eventDashboardPlayersLabel": "Jucători",
+  "eventDashboardTablesLabel": "Mese",
+  "eventDashboardTotalChipsLabel": "Total jetoane",
+  "eventDashboardAvgStackLabel": "Stack mediu",
+  "eventDashboardChipLeaderLabel": "Chip Leader",
+  "eventDashboardNoRankingsYet": "Niciun clasament încă",
+  "eventDashboardRankingsWillAppear": "Clasamentul va apărea pe măsură ce jucătorii se alătură meselor",
+  "eventDashboardTableSeatLabel": "{table} - Locul {seat}",
+  "@eventDashboardTableSeatLabel": {
+    "placeholders": {
+      "table": {
+        "type": "String"
+      },
+      "seat": {
+        "type": "int"
+      }
+    }
+  },
+  "eventDashboardPlayerFallback": "Jucătorul {id}",
+  "@eventDashboardPlayerFallback": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "commonNA": "N/A",
+  "sessionHistoryFailedLoad": "Nu s-au putut încărca sesiunile: {error}",
+  "@sessionHistoryFailedLoad": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionHistoryCash": "Cash",
+  "sessionHistoryTournament": "Turneu",
+  "sessionHistorySessionId": "Sesiunea {id}...",
+  "@sessionHistorySessionId": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionHistorySeatWithPosition": "Locul {seat} ({position})",
+  "@sessionHistorySeatWithPosition": {
+    "placeholders": {
+      "seat": {
+        "type": "String"
+      },
+      "position": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionHistorySeat": "Locul {seat}",
+  "@sessionHistorySeat": {
+    "placeholders": {
+      "seat": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionHistorySyncCompleted": "Sincronizare finalizată",
+  "sessionHistoryFullHistory": "Istoric complet al sesiunilor",
+  "sessionHandsRetry": "Reîncearcă",
+  "stackChartScreenStart": "Start",
+  "stackChartScreenRebuy": "Rebuy",
+  "stackChartScreenEnd": "Final",
+  "seatSetupDone": "Gata",
+  "seatSetupCancel": "Anulează",
+  "authConnectionIssue": "Problemă de conexiune",
+  "authConnectionIssueBody": "Nu ne-am putut conecta la servere.\nVerifică-ți conexiunea la internet\nși încearcă din nou.",
+  "authTryAgain": "Încearcă din nou",
+  "redeemInvitationTitle": "Folosește invitația",
+  "redeemEnterCode": "Introdu codul de invitație",
+  "redeemCodeDescription": "Introdu codul de 8 caractere primit de la un administrator de club pentru a te alătura clubului.",
+  "redeemJoinClub": "Alătură-te clubului",
+  "redeemWelcome": "Bine ai venit!",
+  "redeemJoinedAs": "Te-ai alăturat clubului {clubName} ca {role}",
+  "@redeemJoinedAs": {
+    "placeholders": {
+      "clubName": {
+        "type": "String"
+      },
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "redeemContinue": "Continuă",
+  "supportBugReport": "Raportare eroare",
+  "supportFeatureRequest": "Solicitare funcționalitate",
+  "supportAccountIssue": "Problemă cu contul",
+  "supportOther": "Altele",
+  "supportFillAllFields": "Te rugăm să completezi toate câmpurile",
+  "supportSubmitted": "Cererea de asistență a fost trimisă cu succes",
+  "supportFailedSubmit": "Trimiterea a eșuat: {error}",
+  "@supportFailedSubmit": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "supportTitle": "Ajutor și asistență",
+  "supportSubmitButton": "Trimite",
+  "supportCategoryLabel": "Categorie",
+  "supportSubjectLabel": "Subiect",
+  "supportDescriptionLabel": "Descriere",
+  "supportSubjectHint": "Rezumat scurt al problemei",
+  "supportDescriptionHint": "Descrie problema în detaliu...",
+  "calendarEventLocation": "Locație",
+  "calendarEventBuyIn": "Sumă buy-in",
+  "calendarEventEdit": "Editează",
+  "calendarEventDelete": "Șterge evenimentul",
+  "calendarEventDeleteConfirm": "Ștergi {title}?",
+  "@calendarEventDeleteConfirm": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "calendarEventDeleteBody": "Sigur vrei să ștergi \"{title}\"?\nAceastă acțiune nu poate fi anulată.",
+  "@calendarEventDeleteBody": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "calendarEventDeleteButton": "Șterge",
+  "clubInfoTitle": "Informații club",
+  "clubInfoMembersCount": "Membri ({count})",
+  "@clubInfoMembersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "clubInfoNoMembers": "Nu s-au găsit membri",
+  "finalStandingsNoData": "Niciun clasament disponibil",
+  "finalStandingsNoDataHint": "Este posibil ca acest eveniment să nu aibă clasamente înregistrate",
+  "finalStandingsEmpty": "Niciun clasament înregistrat",
+  "finalStandingsTitle": "Clasament final",
+  "finalStandingsPlayers": "Jucători",
+  "finalStandingsCompleted": "Finalizat",
+  "liveRankingsTitle": "Clasamente live",
+  "liveRankingsEliminated": "Jucători eliminați",
+  "liveRankingsWaiting": "Se așteaptă jucătorii",
+  "liveRankingsWaitingHint": "Clasamentele vor apărea după ce jucătorii se așază la masă",
+  "liveRankingsError": "Eroare la încărcarea clasamentelor",
+  "liveRankingsTryAgain": "Încearcă din nou",
+  "leaderboardPlayers": "Jucători",
+  "leaderboardTotalChips": "Total jetoane",
+  "leaderboardWaiting": "Se așteaptă jucătorii...",
+  "leaderboardChipLeader": "Chip leader: {name}",
+  "@leaderboardChipLeader": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerQrScanBbAnte": "BB Ante",
+  "mainDealerOnClub": "Acum ești dealer la {clubName}",
+  "@mainDealerOnClub": {
+    "placeholders": {
+      "clubName": {
+        "type": "String"
+      }
+    }
+  },
+  "raiseSnapMin": "Min",
+  "raiseSnapPot": "Pot",
+  "raiseSnapAllIn": "All-In",
+  "sessionHistoryPlayerWins": "Jucătorul {playerId} câștigă:",
+  "@sessionHistoryPlayerWins": {
+    "placeholders": {
+      "playerId": {
+        "type": "int"
+      }
+    }
+  },
+  "inviteClubAdminFallback": "Administrator club",
+  "pokerHandBetRange": "Min: {min} · Max: {max}",
+  "@pokerHandBetRange": {
+    "placeholders": {
+      "min": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "pokerHandAmountBetween": "Suma trebuie să fie între {min} și {max}",
+  "@pokerHandAmountBetween": {
+    "placeholders": {
+      "min": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableBlindsLabel": "BLINDURI",
+  "dealerTableAnteLabel": "ANTE {amount}",
+  "@dealerTableAnteLabel": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTablePotLabel": "POT",
+  "dealerTableCheckLabel": "CHECK",
+  "dealerTablePlayerToAct": "{playerName} la rând ({stack})",
+  "@dealerTablePlayerToAct": {
+    "placeholders": {
+      "playerName": {
+        "type": "String"
+      },
+      "stack": {
+        "type": "String"
+      }
+    }
+  },
+  "eventDashboardOnBreakBadge": "ÎN PAUZĂ",
+  "eventDetailAdminActions": "ACȚIUNI ADMIN",
+  "playerSessionHandNotesLabel": "NOTIȚE MÂNĂ",
+  "playerSessionTagsLabel": "ETICHETE",
+  "playerSessionNotesLabel": "NOTIȚE",
+  "playerSessionHoleCardsUpperLabel": "HOLE CARDS",
+  "qrJoinDeclined": "Cererea ta de alăturare a fost refuzată",
+  "qrJoinFailed": "Nu s-a putut ocupa locul: {error}",
+  "@qrJoinFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "qrJoinTable": "Alătură-te mesei",
+  "qrJoinLoading": "Se încarcă informațiile mesei...",
+  "qrJoinError": "Ceva n-a mers bine",
+  "qrJoinGoBack": "Înapoi",
+  "qrJoinSeatOccupied": "Este posibil ca acest loc să fie deja ocupat. Alăturarea va înlocui jucătorul actual.",
+  "qrJoinWaitingDealer": "Se așteaptă dealerul",
+  "qrJoinRequestSent": "Cererea ta de a ocupa Locul {seatNumber} a fost trimisă.",
+  "@qrJoinRequestSent": {
+    "placeholders": {
+      "seatNumber": {
+        "type": "int"
+      }
+    }
+  },
+  "qrJoinDealerApproval": "Dealerul îți va seta stack-ul de jetoane și va aproba alăturarea.",
+  "qrJoinCancelRequest": "Anulează cererea",
+  "qrJoinRequestButton": "Solicită alăturarea",
+  "onboardingSkipTour": "Omite turul",
+  "onboardingWelcomeTitle": "Bine ai venit la\nFinal Table",
+  "onboardingWelcomeBody": "Hai să facem un tur rapid ca să începi.\n\nPoți relua oricând acest tur din\nProfil → Setări → Bază de cunoștințe.",
+  "onboardingLetsGo": "Să începem",
+  "onboardingGotIt": "Am înțeles",
+  "onboardingNext": "Următorul",
+  "onboardingStartLoggingTitle": "Începe înregistrarea",
+  "onboardingStartLoggingBody": "Apasă butonul + pentru a începe să înregistrezi o mână.",
+  "onboardingFullModeTitle": "Mod de înregistrare",
+  "onboardingFullModeBody": "Urmărește mâinile tale și ale adversarilor pe parcursul sesiunii. Înregistrează ce contează pentru tine — perfect pentru analiza de după.",
+  "onboardingSessionSetupTitle": "Detalii sesiune",
+  "onboardingSessionSetupBody": "Aici poți seta numele sesiunii, tipul de joc, blindurile, suma de buy-in și stack-ul de start.",
+  "onboardingTableSetupTitle": "Configurează-ți masa",
+  "onboardingTableSetupBody": "Așază-te pe un loc împreună cu cel puțin un adversar pentru a începe. Ai nevoie de minimum 2 jucători pentru a porni o sesiune. Trage butonul de dealer (D) pentru a seta poziția butonului.",
+  "onboardingSeatOpenTitle": "Loc liber",
+  "onboardingSeatOpenBody": "Comută pentru a marca un loc ca ocupat sau liber. Locurile libere sunt sărite în timpul mâinii.",
+  "onboardingThisIsMySeatTitle": "Acesta e locul meu",
+  "onboardingThisIsMySeatBody": "Apasă aici dacă acesta e locul tău. Îți completează automat numele și îți urmărește statisticile personale.",
+  "onboardingPlayerNameTitle": "Nume jucător",
+  "onboardingPlayerNameBody": "Scrie un nume sau alege dintre adversarii salvați. Adversarii salvați acumulează statistici de-a lungul sesiunilor.",
+  "onboardingSaveOpponentTitle": "Salvează adversarul",
+  "onboardingSaveOpponentBody": "Salvează-ți adversarul dacă joci des cu el. Lasă numele gol dacă nu îl cunoști — FT îl va numi Player + numărul locului.",
+  "onboardingDealerButtonTitle": "Butonul de dealer",
+  "onboardingDealerButtonBody": "Trage-l pe locul cu poziția dealerului. El determină blindurile și ordinea de acțiune.",
+  "onboardingViewSessionsTitle": "Sesiunile tale sunt aici",
+  "onboardingViewSessionsBody": "Apasă pictograma Sesiuni pentru a vedea sesiunea pe care tocmai ai jucat-o.",
+  "onboardingSessionHistoryCardTitle": "Sesiunea pe care tocmai ai jucat-o",
+  "onboardingSessionHistoryCardBody": "Aceasta este sesiunea ta de tutorial — apasă pe ea oricând pentru a vedea fiecare mână.",
+  "onboardingHandListTitle": "Fiecare mână, salvată",
+  "onboardingHandListBody": "Apasă aici pentru a deschide mâinile înregistrate în această sesiune. Poți apăsa și pe punctele graficului de stack pentru a vedea un tooltip și a naviga direct la acea mână.",
+  "onboardingHandCardTitle": "Mâna ta înregistrată",
+  "onboardingHandCardBody": "Apasă pe o mână pentru a vedea reluarea completă a acțiunilor, street cu street.",
+  "onboardingHandToolsTitle": "Instrumente pentru mâini",
+  "onboardingHandToolsBody": "Comută sumele în big blinds (BB), exportă sau distribuie mâna și marcheaz-o cu stea pentru a-ți salva favoritele — totul de aici. Poți de asemenea glisa spre stânga pe acest ecran pentru a răsfoi mâinile.",
+  "onboardingAiAnalysisTitle": "Analiză AI a mâinii",
+  "onboardingAiAnalysisBody": "Primește coaching instant pentru această mână — prima analiză e din partea noastră. Apasă butonul!",
+  "sessionTutorialBadge": "Tutorial",
+  "introGetStarted": "Începe",
+  "linkAccountTitle": "Joci ca invitat",
+  "linkAccountBody": "Creează un cont gratuit pentru a-ți păstra datele în siguranță pe toate dispozitivele.",
+  "linkAccountSuccess": "Cont creat — datele tale sunt acum salvate.",
+  "linkAccountConflictTitle": "Contul există deja",
+  "linkAccountConflictBody": "Acest cont există deja. Te conectezi la el în schimb? Datele tale de invitat nu vor fi transferate.",
+  "anonSignOutWarning": "Ești conectat ca invitat. Deconectarea va șterge definitiv accesul la sesiunile și mâinile tale.",
+  "paywallAccountReady": "Cont creat! Acum poți finaliza achiziția.",
+  "onboardingAllSetTitle": "Totul e pregătit!",
+  "onboardingAllSetBody": "Ești gata să începi să-ți urmărești sesiunile de poker.",
+  "onboardingLetsPlay": "Să jucăm",
+  "onboardingStepOf": "Pasul {step} din {total}",
+  "@onboardingStepOf": {
+    "placeholders": {
+      "step": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "guidedGestureGuideTitle": "Ghid de gesturi",
+  "guidedGestureGuideBody": "Apasă această pictogramă oricând pentru a revedea ghidul de gesturi.",
+  "guidedSkipButtonTitle": "Butonul Omite",
+  "guidedSkipButtonBody": "Dacă omiți o mână, acest buton mută butonul de dealer la următorul jucător. Reține că stack-urile vor fi desincronizate — le poți actualiza în Gestionare jucători.",
+  "guidedGameMenuTitle": "Meniul jocului",
+  "guidedGameMenuBody": "Acest meniu are opțiuni utile. Hai să vedem o setare importantă.",
+  "guidedGameSettingsTitle": "Setările jocului",
+  "guidedGameSettingsBody": "Aici poți schimba blindurile în timpul sesiunii — util la turnee, când nivelurile cresc.",
+  "guidedEndSessionTitle": "Încheie sesiunea",
+  "guidedEndSessionBody": "Apasă acest meniu și selectează \"Încheie sesiunea\" pentru a-ți salva rezultatele.",
+  "guidedEndSessionHubBody": "Apasă aici pentru a încheia sesiunea și a-ți revedea rezultatele.",
+  "guidedReviewHandTitle": "Revizuiește mâna",
+  "guidedReviewHandBody": "Introdu hole cards și eventuale notițe.",
+  "guidedHandCompleteTitle": "Mână completă!",
+  "guidedHandCompleteBody": "Bravo! Tocmai ai înregistrat prima ta mână.",
+  "guidedSkip": "Omite",
+  "guidedYourTurn": "E rândul tău!",
+  "guidedOpenThePotTitle": "Deschide potul",
+  "guidedBetOnceBody": "Acest jucător face bet.",
+  "guidedFoldTitle": "Fold",
+  "guidedFoldBody": "Acest jucător face fold.",
+  "guidedCallTitle": "Call",
+  "guidedCallBody": "Acest jucător face call.",
+  "guidedCheckTitle": "Check",
+  "guidedCheckBody": "Acest jucător face check.",
+  "guidedGestureFold": "Glisează la stânga sau la dreapta",
+  "guidedGestureCheck": "Apasă",
+  "guidedGestureCall": "Apasă",
+  "guidedGestureBet": "Apasă și trage în sus ↑",
+  "guidedGestureRaise": "Apasă și trage în sus ↑",
+  "guidedGestureManualBet": "Bet manual: apasă și trage în jos ↓",
+  "guidedActionFold": "Fold",
+  "guidedActionCheck": "Check",
+  "guidedActionCall": "Call",
+  "guidedActionBet": "Bet",
+  "guidedActionRaise": "Raise",
+  "guidedDealFlopTitle": "Selectează flop-ul",
+  "guidedDealFlopBody": "Trage un rang peste o culoare sau apasă pe rang și apoi pe culoare pentru a selecta o carte. Apasă pe o carte selectată pentru a o elimina. Alege 3 cărți pentru flop.",
+  "guidedDealTurnTitle": "Împarte turn-ul",
+  "guidedDealTurnBody": "Selectează 1 carte pentru turn.",
+  "guidedDealRiverTitle": "Împarte river-ul",
+  "guidedDealRiverBody": "Selectează 1 carte pentru river.",
+  "guidedStackRingTitle": "Interval de stack",
+  "guidedStackRingBody": "Ține apăsat locul unui jucător pentru a deschide inelul de stack, rotește degetul pentru a alege mărimea stack-ului — eliberează pentru a aplica.",
+  "guidedTableButtonTitle": "Gestionează masa",
+  "guidedTableButtonBody": "Apasă acest buton pentru a gestiona jucătorii, a actualiza stack-urile, a schimba locurile sau a muta butonul de dealer.",
+  "guidedBlindsPillTitle": "Blinduri",
+  "guidedBlindsPillBody": "Apasă aici pentru a actualiza oricând nivelurile blindurilor — util când nivelurile turneului cresc.",
+  "guidedNextHandTitle": "Mâna următoare",
+  "guidedNextHandBody": "Apasă aici pentru a sări peste mâna curentă dacă nu ai jucat-o sau nu vrei să o înregistrezi — mută butonul de dealer la următorul jucător.",
+  "guidedInfoButtonTitle": "Ghid de gesturi",
+  "guidedInfoButtonBody": "Apasă acest buton oricând pentru a vedea toate gesturile disponibile pentru înregistrarea acțiunilor.",
+  "guidedSessionInfoTitle": "Detalii sesiune",
+  "guidedSessionInfoBody": "Super! Apasă aici pentru a deschide detaliile sesiunii — continuăm acolo.",
+  "guidedAddOnTitle": "Add-on-uri și rebuy-uri",
+  "guidedAddOnBody": "Gestionează-ți add-on-urile și rebuy-urile aici.",
+  "guidedUpdateStackTitle": "Actualizează stack-ul",
+  "guidedUpdateStackBody": "Actualizează-ți stack-ul manual și ia notițe rapide. Ele vor apărea pe graficul tău de stack.",
+  "guidedStackChartTitle": "Grafic de stack",
+  "guidedStackChartBody": "Apasă pe orice punct pentru a vedea cum te-ai descurcat în timpul sesiunii.",
+  "guidedStopSessionTitle": "Finalizează sesiunea",
+  "guidedStopSessionBody": "Apasă butonul de stop pentru a-ți finaliza sesiunea — apoi îți arătăm unde este salvată.",
+  "guidedTableIntroTitle": "Planșa de joc",
+  "guidedTableIntroBody": "Aceasta este planșa ta de joc — aici faci toate acțiunile. Fold: glisează la stânga sau la dreapta. Check / Call: apasă. Bet / Raise: apasă și trage în sus. Sumă de bet manuală: apasă și trage în jos. Hai să înregistrăm prima mână!",
+  "guidedUndoTitle": "Anulează oricând",
+  "guidedUndoBody": "Ai greșit? Apasă Anulează ultima acțiune pentru a reveni la mutarea anterioară — potul și stack-urile sunt restaurate și ele.",
+  "guidedSessionInfoFinishTitle": "Încheiere",
+  "guidedSessionInfoFinishBody": "Gata de final? Apasă aici pentru a deschide detaliile sesiunii și a încheia.",
+  "guidedDetailsBackTitle": "Înapoi la masă",
+  "guidedDetailsBackBody": "Apasă aici pentru a reveni și a înregistra încă o mână.",
+  "guidedLogOneMoreTitle": "Înregistrează încă o mână",
+  "guidedLogOneMoreBody": "Hai, înregistrează încă o mână — joac-o singur de data asta.\n\nApropo, poți muta oricând manual butonul dacă omiți înregistrarea unor mâini. Încearcă acum, înainte de a doua ta mână!",
+  "guidedCurrentStackTitle": "Stack curent",
+  "guidedCurrentStackBody": "Acesta este stack-ul tău live — se actualizează de fiecare dată când înregistrezi o mână.",
+  "guidedTourCompleteTitle": "Acesta a fost turul!",
+  "guidedTourCompleteBody": "Bucură-te de experiența Final Table 🎉",
+  "onboardingBankrollCardTitle": "Bankroll-ul tău",
+  "onboardingBankrollCardBody": "Apasă \"Bankroll total\" pentru a-ți introduce bankroll-ul curent și a seta un obiectiv. Urmărește-ți progresul în timp!",
+  "kbStatsTitle": "Statisticile tale",
+  "kbClubsTitle": "Cluburi și evenimente",
+  "kbStatsIntro": "Final Table urmărește 7 metrici de bază din poker pentru a te ajuta să-ți înțelegi și să-ți îmbunătățești jocul.",
+  "kbClubsIntro": "Cluburile te conectează cu sala ta locală de poker și îți permit să urmărești jocurile live.",
+  "kbVpipName": "VPIP",
+  "kbVpipFullName": "Voluntarily Put $ In Pot",
+  "kbVpipDescription": "Cât de des intri voluntar într-un pot (excluzând postarea blindurilor). Un VPIP mare înseamnă că joci multe mâini; un VPIP mic înseamnă că ești selectiv.",
+  "kbPfrName": "PFR",
+  "kbPfrFullName": "Preflop Raise",
+  "kbPfrDescription": "Cât de des faci raise înainte de flop. Diferența dintre VPIP și PFR arată cât de des faci limp sau cold-call.",
+  "kbThreeBetName": "3-Bet",
+  "kbThreeBetFullName": "Procentaj Three-Bet",
+  "kbThreeBetDescription": "Cât de des faci re-raise peste open raise-ul unui adversar preflop. Un 3-bet% mai mare indică un stil preflop agresiv.",
+  "kbFoldTo3BetName": "Fold to 3-Bet",
+  "kbFoldTo3BetFullName": "Fold to Three-Bet",
+  "kbFoldTo3BetDescription": "Cât de des faci fold după ce ai făcut raise și primești un 3-bet. Dacă e prea des, adversarii te pot exploata cu 3-bet-uri light.",
+  "kbCBetName": "C-Bet",
+  "kbCBetFullName": "Continuation Bet",
+  "kbCBetDescription": "Cât de des faci bet pe flop după ce ai fost ultimul agresor preflop. O mutare standard care arată forță.",
+  "kbStealName": "Steal",
+  "kbStealFullName": "Tentativă de Blind Steal",
+  "kbStealDescription": "Cât de des faci open-raise din poziție târzie (CO, BTN, SB) când potul e nedeschis, cu scopul de a lua blindurile.",
+  "kbCheckRaiseName": "Check-Raise",
+  "kbCheckRaiseFullName": "Check-Raise pe flop",
+  "kbCheckRaiseDescription": "Cât de des faci check și apoi raise pe flop. O mutare înșelătoare care poate prinde în capcană adversarii agresivi.",
+  "kbLiveEventsTitle": "Evenimente live",
+  "kbLiveEventsDescription": "Managerii cluburilor creează evenimente cu mai multe mese. Alătură-te unui eveniment pentru a face parte din clasamentele live.",
+  "kbLiveRankingsTitle": "Clasamente live",
+  "kbLiveRankingsDescription": "Vezi în timp real pe ce loc ești în timpul evenimentelor. Clasamentele se actualizează după fiecare mână.",
+  "kbOpponentTrackingTitle": "Urmărirea adversarilor",
+  "kbOpponentTrackingDescription": "Jucătorii pe care îi înfrunți la club sunt urmăriți automat. Salvează adversarii pentru a construi profiluri detaliate.",
+  "kbQrSeatTitle": "Atribuire loc prin QR",
+  "kbQrSeatDescription": "Scanează un cod QR la masa ta pentru a te alătura instant sesiunii. Mâinile tale sunt urmărite automat de dealer.",
+  "kbDealerLoggingTitle": "Înregistrare asistată de dealer",
+  "kbDealerLoggingDescription": "Dealerii folosesc comenzi vocale pentru a înregistra acțiunile întregii mese. Jucătorii nu trebuie să introducă nimic manual.",
+  "kbSessionStatsTitle": "Statistici de sesiune",
+  "kbSessionStatsDescription": "După fiecare sesiune, vezi profitul/pierderea și cum s-au schimbat statisticile tale. Fiecare mână este înregistrată.",
+  "qrJoinTableInfo": "INFO MASĂ",
+  "qrJoinSeat": "Locul {number}",
+  "@qrJoinSeat": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "qrJoinTableFallback": "Masă",
+  "qrJoinClubLabel": "Club",
+  "qrJoinTableLabel": "Masă",
+  "qrJoinSeatLabel": "Loc",
+  "qrJoinStatusLabel": "Stare",
+  "qrJoinActiveGame": "Joc activ",
+  "qrJoinWaitingStatus": "În așteptare",
+  "dealerQrTablesAssigned": "Mese atribuite acestui eveniment: {count}",
+  "@dealerQrTablesAssigned": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dealerQrTableNotAssigned": "{tableName} nu este atribuită acestui eveniment.",
+  "@dealerQrTableNotAssigned": {
+    "placeholders": {
+      "tableName": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTablePlayerAdded": "{playerName} a fost adăugat la Locul {seatNumber}",
+  "@dealerTablePlayerAdded": {
+    "placeholders": {
+      "playerName": {
+        "type": "String"
+      },
+      "seatNumber": {
+        "type": "int"
+      }
+    }
+  },
+  "memberTableSeatedOpen": "{seated} așezați  •  {open} libere",
+  "@memberTableSeatedOpen": {
+    "placeholders": {
+      "seated": {
+        "type": "int"
+      },
+      "open": {
+        "type": "int"
+      }
+    }
+  },
+  "memberTablePlayer": "Jucător",
+  "memberTableEmpty": "Liber",
+  "memberTableFallback": "Masă",
+  "homeEventTypeTournament": "Turneu",
+  "homeEventTypeCashGame": "Cash Game",
+  "homeEventTypeHomeGame": "Home Game",
+  "homeEventTypeOnline": "Online",
+  "bankrollSheetTitle": "Adaugă rezultat",
+  "bankrollSheetEditSection": "Editează bankroll-ul",
+  "bankrollSheetGoalLabel": "Obiectiv bankroll",
+  "bankrollSheetCurrentLabel": "Bankroll curent",
+  "bankrollSheetGoalUpdated": "Obiectiv actualizat",
+  "bankrollSheetBankrollUpdated": "Bankroll actualizat",
+  "sessionEndResultTitle": "Rezultatul sesiunii",
+  "sessionEndTournamentTitle": "Rezultatul turneului",
+  "sessionEndProfit": "Profit",
+  "sessionEndLoss": "Pierdere",
+  "sessionEndApply": "Aplică",
+  "sessionEndSkip": "Omite",
+  "sessionEndFinishingPosition": "Poziție finală",
+  "sessionEndFieldSize": "Total intrări",
+  "sessionEndPrizeWon": "Premiu câștigat",
+  "sessionEndTotalInvested": "Total investit",
+  "sessionEndCalculatedProfit": "Profit calculat: {amount}",
+  "@sessionEndCalculatedProfit": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "onboardingWelcomeSubtitle": "Partenerul tău personal de poker pentru înregistrarea mâinilor, urmărirea statisticilor și îmbunătățirea jocului.",
+  "onboardingNicknameTitle": "Să începem prin a-ți alege porecla",
+  "onboardingNicknameSubtitle": "Poți comuta între nume și poreclă și o poți schimba oricând dorești.",
+  "onboardingCurrencyTitle": "Selectează moneda",
+  "onboardingCurrencySubtitle": "Buy-in-urile, cash-out-urile și statisticile o vor folosi. O poți schimba oricând din Setări.",
+  "onboardingGameTypeTitle": "Alege tipul de joc",
+  "onboardingGameTypeSubtitle": "Îți vom adapta experiența în funcție de ce joci. Ești jucător de cash, jucător de turnee sau ambele?",
+  "onboardingGameTypeCash": "Cash Game",
+  "onboardingGameTypeTournament": "Turneu (MTT)",
+  "onboardingGameTypeBoth": "Mix din ambele",
+  "onboardingJourneyTitle": "Unde te afli în călătoria ta în poker?",
+  "onboardingJourneySubtitle": "Asta ne ajută să-ți personalizăm experiența.",
+  "onboardingJourneyBeginner": "Începător",
+  "onboardingJourneyFun": "Joc pentru distracție",
+  "onboardingJourneyRegular": "Jucător constant",
+  "onboardingJourneyPro": "Pro",
+  "onboardingMonthlySessionsTitle": "Câte sesiuni joci pe lună?",
+  "onboardingMonthlySessionsSubtitle": "Rotește roata pentru a selecta sesiunile tale lunare.",
+  "onboardingMonthlySessionsUnit": "sesiuni / lună",
+  "onboardingPurposeTitle": "Care este scopul tău principal în utilizarea Final Table?",
+  "onboardingPurposeSubtitle": "Selectează tot ce se aplică.",
+  "onboardingPurposeLogging": "Înregistrarea mâinilor",
+  "onboardingPurposeBankroll": "Urmărirea bankroll-ului",
+  "onboardingPurposeOpponents": "Analiza adversarilor",
+  "onboardingPurposeActions": "Înregistrarea fiecărei acțiuni pentru analiză ulterioară",
+  "onboardingPurposeStudying": "Studierea spoturilor",
+  "onboardingPurposeSharing": "Partajarea istoricului mâinilor cu prietenii",
+  "onboardingPurposeAi": "Analiză cu AI",
+  "onboardingPurposeExport": "Exportarea mâinilor în instrumente GTO",
+  "onboardingPurposeStacks": "Urmărirea stack-urilor în turnee",
+  "onboardingContinue": "Continuă",
+  "onboardingGetStarted": "Începe",
+  "onboardingSkipNickname": "Omite deocamdată",
+  "drillTitle": "Exerciții de antrenament",
+  "drillSaveLineup": "Salvează lineup-ul",
+  "drillSaveLineupHint": "ex.: jocul de acasă de marți",
+  "drillDeleteLineup": "Șterge lineup-ul",
+  "drillDeleteLineupMessage": "Elimini \"{name}\" din lineup-urile salvate?",
+  "@drillDeleteLineupMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "drillSavedLineups": "LINEUP-URI SALVATE",
+  "drillTable": "MASĂ",
+  "drillSeats": "LOCURI",
+  "drillSeatsInstruction": "Atinge un loc pentru a atribui un adversar sau pentru a te muta.",
+  "drillSaveThisLineup": "Salvează acest lineup",
+  "drillStartDrill": "Începe exercițiul",
+  "drillPlayers": "Jucători",
+  "drillStackDepth": "Adâncime stack",
+  "drillFormat": "Format",
+  "drillFormatCash": "Cash",
+  "drillFormatAnte": "MTT · Ante",
+  "drillScouting": "SCOUTING",
+  "drillYou": "Tu",
+  "drillSeatNumber": "Locul {seat}",
+  "@drillSeatNumber": {
+    "placeholders": {
+      "seat": {
+        "type": "int"
+      }
+    }
+  },
+  "drillPremiumTitle": "Antrenează-te împotriva adversarilor tăi reali",
+  "drillPremiumDescription": "Așază la masă jucătorii cu care chiar joci, exersează spoturi preflop împotriva unor boți care joacă cu tendințele lor măsurate și primește feedback bazat pe exploit la fiecare decizie.",
+  "drillUpgradeToPremium": "Treci la Premium",
+  "drillSearchOpponents": "Caută adversari",
+  "drillThisIsMe": "Acesta sunt eu",
+  "drillMoveYourSeatHere": "Mută-ți locul aici",
+  "drillGenericBot": "Bot generic",
+  "drillBalancedRegular": "Regular echilibrat",
+  "drillHandNumber": "Mâna #{number}",
+  "@drillHandNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "drillHandedLabel": "{stack}BB · {players} jucători",
+  "@drillHandedLabel": {
+    "placeholders": {
+      "stack": {
+        "type": "int"
+      },
+      "players": {
+        "type": "int"
+      }
+    }
+  },
+  "drillPot": "POT",
+  "drillWalkedNote": "Toți au dat fold — câștigi blindurile.",
+  "drillWonUncontestedNote": "Toți au dat fold — iei potul ({pot}BB).",
+  "@drillWonUncontestedNote": {
+    "placeholders": {
+      "pot": {
+        "type": "String"
+      }
+    }
+  },
+  "drillReachedFlopNote": "Mâna ajunge la flop — exercițiul preflop este complet.",
+  "drillHandOverNote": "Mâna s-a încheiat.",
+  "drillCorrect": "CORECT",
+  "drillClose": "APROAPE",
+  "drillMistake": "GREȘEALĂ",
+  "drillYouChose": "· ai ales {action}",
+  "@drillYouChose": {
+    "placeholders": {
+      "action": {
+        "type": "String"
+      }
+    }
+  },
+  "drillTopPercent": "top {percent}%",
+  "@drillTopPercent": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "drillLineupChanges": "Acest lineup schimbă jocul: GTO alege {gto}, exploit alege {exploit}",
+  "@drillLineupChanges": {
+    "placeholders": {
+      "gto": {
+        "type": "String"
+      },
+      "exploit": {
+        "type": "String"
+      }
+    }
+  },
+  "drillGto": "GTO",
+  "drillExploit": "EXPLOIT",
+  "drillContinue": "Continuă",
+  "drillGotIt": "Am înțeles",
+  "drillRaiseTo": "Raise la:",
+  "drillJam": "JAM",
+  "drillPotLabel": "Pot {pot}BB",
+  "@drillPotLabel": {
+    "placeholders": {
+      "pot": {
+        "type": "String"
+      }
+    }
+  },
+  "drillToCall": "{amount}BB pentru call",
+  "@drillToCall": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "drillFold": "FOLD",
+  "drillCheck": "CHECK",
+  "drillCall": "CALL",
+  "drillRaise": "RAISE",
+  "drillNextHand": "Mâna următoare",
+  "drillSummaryTitle": "Rezumatul exercițiului",
+  "drillAccuracy": "Acuratețe",
+  "drillDecisions": "Decizii",
+  "drillCorrectLabel": "Corecte",
+  "drillCloseLabel": "Aproape",
+  "drillMistakes": "Greșeli",
+  "drillWhereYouLeaked": "UNDE AI AVUT LEAK-URI",
+  "drillMistakeDetail": "{handClass} · {position} · ai ales {heroAction}, corect era {recommendedAction}",
+  "@drillMistakeDetail": {
+    "placeholders": {
+      "handClass": {
+        "type": "String"
+      },
+      "position": {
+        "type": "String"
+      },
+      "heroAction": {
+        "type": "String"
+      },
+      "recommendedAction": {
+        "type": "String"
+      }
+    }
+  },
+  "drillKeepDrilling": "Continuă antrenamentul",
+  "drillEndDrill": "Încheie exercițiul",
+  "drillActionSb": "SB 0.5",
+  "drillActionBb": "BB 1",
+  "drillActionFold": "FOLD",
+  "drillActionCheck": "CHECK",
+  "drillActionLimp": "LIMP",
+  "drillActionCall": "CALL {amount}",
+  "@drillActionCall": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "drillActionRaise": "RAISE {amount}",
+  "@drillActionRaise": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "drillAction3bet": "3-BET {amount}",
+  "@drillAction3bet": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "drillAction4bet": "4-BET {amount}",
+  "@drillAction4bet": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "drillActionJam": "JAM {amount}",
+  "@drillActionJam": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "rangeCash": "Cash",
+  "rangeTourney": "Turneu",
+  "rangeAllStacks": "Toate stack-urile",
+  "rangeStackDepth": "Adâncime stack",
+  "rangeAllPositions": "Toate",
+  "rangeAllSpots": "Toate spoturile",
+  "rangeRfi": "RFI",
+  "rangeVsRaise": "vs Raise",
+  "rangeHandsLogged": "{count} / 169 mâini înregistrate",
+  "@rangeHandsLogged": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "rangeSyncingHistory": "Se sincronizează istoricul mâinilor tale…",
+  "rangePreflopHeader": "RANGE PREFLOP — CONSTRUIT DIN MÂINILE TALE ÎNREGISTRATE",
+  "rangeEmptyHint": "Graficul tău preflop se construiește singur: înregistrează mâini și introdu-ți hole cards, iar fiecare mână de start se completează cu felul în care ai jucat-o efectiv înainte de flop.",
+  "rangeSpotsCount": "{count} {count, plural, =1{spot} other{spoturi}} preflop",
+  "@rangeSpotsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "rangeRfiSuffix": " · RFI",
+  "rangeVsRaiseSuffix": " · vs raise",
+  "rangeRaised": "Raise",
+  "rangeRaisedLabel": "Raise",
+  "rangeCalled": "Call",
+  "rangeChecked": "Check",
+  "rangeFolded": "Fold",
+  "rangeAllIn": "All-in",
+  "rangeCalledLimped": "Call / limp",
+  "rangeToday": "Azi",
+  "rangeYesterday": "Ieri",
+  "rangeDaysAgo": "acum {days} zile",
+  "@rangeDaysAgo": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "rangeWeeksAgo": "acum {weeks} săpt.",
+  "@rangeWeeksAgo": {
+    "placeholders": {
+      "weeks": {
+        "type": "int"
+      }
+    }
+  },
+  "rangeMonthsAgo": "acum {months} luni",
+  "@rangeMonthsAgo": {
+    "placeholders": {
+      "months": {
+        "type": "int"
+      }
+    }
+  },
+  "rangeYearsAgo": "acum {years} ani",
+  "@rangeYearsAgo": {
+    "placeholders": {
+      "years": {
+        "type": "int"
+      }
+    }
+  },
+  "rangeWonBB": "+ {bb} BB",
+  "@rangeWonBB": {
+    "placeholders": {
+      "bb": {
+        "type": "int"
+      }
+    }
+  },
+  "rangeLostBB": "– {bb} BB",
+  "@rangeLostBB": {
+    "placeholders": {
+      "bb": {
+        "type": "int"
+      }
+    }
+  },
+  "rangeScoutingTitle": "{name} · Raport de scouting",
+  "@rangeScoutingTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "rangeShowdownBias": "Mâinile arătate tind spre value și spre mâini plătite până la capăt — îți arată ce conține range-ul și forma lui, nu întregul range.",
+  "rangeNoShowdowns": "Înregistrează câteva mâini până la showdown cu cărțile acestui adversar introduse, iar range-ul lui va începe să se completeze aici.",
+  "rangePremium": "Premium",
+  "rangeStrong": "Puternic",
+  "rangeMedium": "Mediu",
+  "rangeWeak": "Slab",
+  "profileSettings": "Setări profil",
+  "profileEditName": "Editează numele",
+  "profileYourName": "Numele tău",
+  "profileEditEmail": "Editează emailul",
+  "profileEditEmailHint": "Modificarea emailului necesită re-autentificarea contului. Contactează suportul pentru a-ți schimba emailul.",
+  "profileChangePassword": "Schimbă parola",
+  "profilePasswordMask": "***********",
+  "profileContactSupport": "Contactează suportul",
+  "profileShareFeedback": "Împărtășește-ți feedbackul",
+  "profileEmailUpdates": "Actualizări pe email",
+  "profileFollowUs": "Urmărește @finaltable",
+  "profileEdit": "Editează",
+  "profileEditUsername": "Editează numele de utilizator",
+  "profileUsernameHint": "nume de utilizator",
+  "profileInsteadOfName": "în locul numelui tău în evenimente și la înregistrarea mâinilor",
+  "profileUsernameTaken": "Numele de utilizator este deja folosit",
+  "profileFixUsernameError": "Corectează eroarea numelui de utilizator înainte de a salva",
+  "profileUsernameUnavailable": "Numele de utilizator nu mai este disponibil",
+  "profileSavedSuccessfully": "Salvat cu succes",
+  "profileDeleteAccount": "Șterge contul",
+  "profileDeleteAccountMessage": "Aceasta îți va șterge definitiv contul și toate datele asociate. Această acțiune nu poate fi anulată.\n\nDacă ai un abonament activ, te rugăm să-l anulezi mai întâi din setările dispozitivului.",
+  "profileChangePasswordTitle": "Schimbă parola",
+  "profileChangePasswordMessage": "Îți vom trimite un link de resetare a parolei pe adresa ta de email.",
+  "profileChangeEmailTitle": "Schimbă emailul",
+  "profileResetEmailSent": "Email de resetare a parolei trimis la {email}",
+  "@profileResetEmailSent": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "profileResetEmailFailed": "Trimiterea emailului de resetare a eșuat",
+  "profileSendResetEmail": "Trimite email de resetare",
+  "settingsGeneral": "General",
+  "settingsClubs": "Cluburi",
+  "settingsBankroll": "Bankroll",
+  "settingsRegisterClub": "Înregistrează un club",
+  "settingsChooseLanguage": "Alege limba",
+  "settingsMoreLanguagesLater": "Mai multe limbi vor fi anunțate ulterior",
+  "settingsChoose": "Alege",
+  "settingsChooseCurrency": "Alege moneda",
+  "settingsMoreCurrenciesLater": "Mai multe monede vor fi anunțate ulterior",
+  "settingsNoClubs": "Niciun club",
+  "settingsNoClubsYet": "Încă niciun club",
+  "settingsNoClubsHint": "Înregistrează sau alătură-te unui club pentru a le vedea aici.",
+  "settingsRegisterAClub": "Înregistrează un club",
+  "settingsYourClubs": "Cluburile tale",
+  "settingsChooseTour": "Alege ce tur vrei să revezi",
+  "settingsAbout": "Despre",
+  "settingsPending": "{count} în așteptare",
+  "@settingsPending": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsGetPlus": "Obține Final Table Plus",
+  "settingsGetPlusSubtitle": "Înregistrează mai multe mâini și analiză AI",
+  "settingsPlusActiveTitle": "Final Table {tier}",
+  "@settingsPlusActiveTitle": {
+    "placeholders": {
+      "tier": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsPlusActiveSubtitle": "Ești pe planul {tier}",
+  "@settingsPlusActiveSubtitle": {
+    "placeholders": {
+      "tier": {
+        "type": "String"
+      }
+    }
+  },
+  "statsHandsLogged": "Mâini înregistrate",
+  "statsVpip": "VPIP",
+  "statsPfr": "PFR",
+  "stats3Bet": "3-Bet",
+  "statsCBet": "C-Bet",
+  "statsSteal": "Steal",
+  "statsCheckRaise": "Check-Raise",
+  "statsRanges": "Range-uri",
+  "statsStats": "Statistici",
+  "loggingChoose": "Alege",
+  "loggingTrainingDrills": "Exerciții de antrenament",
+  "loggingTrainingDrillsSubtitle": "Exersează spoturi preflop împotriva adversarilor tăi reali",
+  "loggingTrainingDrillsFeature1": "Exerciții preflop",
+  "loggingTrainingDrillsFeature2": "Range-uri GTO",
+  "loggingTrainingDrillsFeature3": "Bazat pe adversari",
+  "loggingPro": "PRO",
+  "opponentsEnterName": "Introdu numele",
+  "opponentsAddNotes": "Adaugă notițe",
+  "opponentsNoNotesAdded": "Nicio notiță adăugată",
+  "opponentsDeleteOpponent": "Șterge adversarul",
+  "seatManagePlayers": "Gestionează jucătorii",
+  "seatUpdatePlayerInfo": "Actualizează informațiile jucătorului",
+  "seatStartSession": "Începe sesiunea",
+  "seatSaveChanges": "Salvează modificările",
+  "seatYou": "Tu",
+  "seatKeep": "Păstrează",
+  "seatMove": "Mută",
+  "tableManageTitle": "Masă",
+  "tableButtonOnEmpty": "Button pe un loc gol",
+  "handPlayerLabel": "Jucător ",
+  "handBbLabel": "BB",
+  "handRaiseLabel": "RAISE",
+  "handBetLabel": "BET",
+  "handFoldLabel": "FOLD",
+  "handRaiseAction": "Raise",
+  "handBetAction": "Bet",
+  "handOnlyOneRemaining": "Mâna se încheie: rămâne un singur jucător",
+  "handSessionTitle": "Sesiune",
+  "settingsSkipHandScouting": "Scouting pentru mâini sărite",
+  "settingsSkipHandScoutingDesc": "Urmărește acțiunile adversarilor când dai fold preflop",
+  "skipScoutTitle": "Ce s-a întâmplat?",
+  "skipScoutNoRaise": "Nimeni nu a dat raise",
+  "skipScoutSkip": "Omite",
+  "paywallNotNow": "Nu acum",
+  "paywallFreeTrialBadge14": "Probă gratuită 14 zile",
+  "freeTierHandLimitTitle": "Limită de mâini atinsă",
+  "freeTierHandLimitFree": "Conturile Free pot înregistra până la {free} mâini pe sesiune. Treci la Pro pentru {pro} mâini sau la Elite pentru nelimitat.",
+  "@freeTierHandLimitFree": {
+    "placeholders": {
+      "free": {
+        "type": "int"
+      },
+      "pro": {
+        "type": "int"
+      }
+    }
+  },
+  "freeTierHandLimitPro": "Conturile Pro pot înregistra până la {pro} mâini pe sesiune. Treci la Elite pentru înregistrare nelimitată de mâini.",
+  "@freeTierHandLimitPro": {
+    "placeholders": {
+      "pro": {
+        "type": "int"
+      }
+    }
+  },
+  "freeTierOpponentLimitTitle": "Limită de adversari atinsă",
+  "freeTierOpponentLimitFree": "Conturile Free pot salva până la {free} profiluri de adversari. Treci la Pro pentru {pro} sau la Elite pentru nelimitat.",
+  "@freeTierOpponentLimitFree": {
+    "placeholders": {
+      "free": {
+        "type": "int"
+      },
+      "pro": {
+        "type": "int"
+      }
+    }
+  },
+  "freeTierOpponentLimitPro": "Conturile Pro pot salva până la {pro} profiluri de adversari. Treci la Elite pentru adversari nelimitați.",
+  "@freeTierOpponentLimitPro": {
+    "placeholders": {
+      "pro": {
+        "type": "int"
+      }
+    }
+  },
+  "freeTierUpgrade": "Fă upgrade",
+  "freeTierNotNow": "Nu acum",
+  "quotaMonthlyLimitTitle": "Limită lunară atinsă",
+  "quotaAiLimitElite": "Ai folosit toate cele {max} analize AI luna aceasta. Cota ta se resetează luna viitoare.",
+  "@quotaAiLimitElite": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "quotaAiLimitPro": "Ai folosit toate cele {max} analize AI luna aceasta (limita Pro). Treci la Elite pentru {elite} analize/lună.",
+  "@quotaAiLimitPro": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      },
+      "elite": {
+        "type": "int"
+      }
+    }
+  },
+  "quotaExportLimitTitle": "Limită de exporturi atinsă",
+  "quotaExportLimitPro": "Ai folosit toate cele {max} exporturi luna aceasta (limita Pro). Treci la Elite pentru exporturi nelimitate.",
+  "@quotaExportLimitPro": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "quotaSessionExportLimitPro": "Ai folosit toate cele {max} exporturi de sesiuni luna aceasta (limita Pro). Treci la Elite pentru exporturi nelimitate.",
+  "@quotaSessionExportLimitPro": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "quotaUpgradeToElite": "Treci la Elite",
+  "quotaOk": "OK",
+  "statsLockedTitle": "Fă upgrade pentru a debloca",
+  "statsLockedSubtitle": "Această secțiune este disponibilă de la Pro în sus.",
+  "statsLockedUpgrade": "Fă upgrade",
+  "paywallBestValue": "CEA MAI BUNĂ OFERTĂ",
+  "paywallWelcomeElite": "Bun venit la Elite!",
+  "paywallWelcomeClub": "Bun venit la Club!",
+  "paywallStartWithPro": "Începe cu Pro",
+  "paywallGetEliteAction": "Obține Elite",
+  "paywallGetClubAction": "Obține Club",
+  "paywallCurrentPlan": "Planul curent",
+  "paywallProFeature1": "50 de mâini pe sesiune",
+  "paywallProFeature2": "Istoric sesiuni de 90 de zile",
+  "paywallProFeature3": "30 de profiluri de adversari",
+  "paywallProFeature4": "20 de analize AI / lună",
+  "paywallProFeature5": "30 de exporturi / lună",
+  "paywallEliteFeature4": "Înregistrare nelimitată de mâini",
+  "paywallEliteFeature5": "Istoric complet al sesiunilor",
+  "paywallEliteFeature6": "Adversari nelimitați",
+  "paywallEliteFeature7": "50 de analize AI / lună",
+  "paywallEliteFeature8": "Exporturi nelimitate",
+  "paywallClubFeature1": "Tot ce include Elite",
+  "paywallClubFeature2": "Creează și administrează propriul club",
+  "paywallClubFeature3": "Invită dealeri și gestionează membrii",
+  "paywallClubFeature4": "Găzduiește evenimente cu mese multiple și clasamente live",
+  "profileTierOverride": "Suprascriere nivel abonament",
+  "profileTierOverrideSubtitleReal": "Real: {tier}",
+  "@profileTierOverrideSubtitleReal": {
+    "placeholders": {
+      "tier": {
+        "type": "String"
+      }
+    }
+  },
+  "profileTierOverrideSubtitleActive": "Suprascriere: {tier}",
+  "@profileTierOverrideSubtitleActive": {
+    "placeholders": {
+      "tier": {
+        "type": "String"
+      }
+    }
+  },
+  "profileTierFree": "free",
+  "profileTierPro": "Pro",
+  "profileTierElite": "Elite",
+  "profileTierClub": "Club",
+  "authExpContinueApple": "Continuă cu Apple",
+  "authExpLinkAppleTitle": "Leagă contul Apple",
+  "authExpLinkAppleMessage": "Există deja un cont cu {email}. Introdu parola pentru a-ți lega contul Apple.",
+  "@authExpLinkAppleMessage": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionDetailsLogAHand": "Înregistrează o mână",
+  "setupTableOptionalHint": "Așază cel puțin 2 jucători pentru a începe sesiunea",
+  "onboardingSessionDetailsHubTitle": "Centrul sesiunii tale",
+  "onboardingSessionDetailsHubBody": "Urmărește-ți stack-ul, gestionează rebuy-urile și add-on-urile și verifică-ți progresul sesiunii aici.",
+  "onboardingHubMenuTitle": "Meniul sesiunii",
+  "onboardingHubMenuBody": "Folosește acest meniu pentru rebuy-uri, add-on-uri și pentru a încheia sesiunea.",
+  "onboardingHubLogHandTitle": "Începe înregistrarea",
+  "onboardingHubLogHandBody": "Atinge aici pentru a înregistra prima ta mână. Ne întoarcem aici după aceea ca să vedem graficul stack-ului tău.",
+  "guidedAddOpponentsTitle": "Adaugă-ți adversarii",
+  "guidedAddOpponentsBody": "Atinge acest loc gol pentru a adăuga un adversar. Dă-i un nume și setează-i stack-ul — poți adăuga mai mulți oricând.",
+  "guidedHandTwoTitle": "Încă o mână",
+  "guidedHandTwoBody": "Acum e rândul tău să exersezi! Încearcă să înregistrezi această mână folosind gesturile pe care tocmai le-ai învățat. Te vom ghida pe parcurs.",
+  "guidedReturnToDetailsTitle": "Verifică-ți progresul",
+  "guidedReturnToDetailsBody": "Atinge aici pentru a te întoarce și a vedea graficul stack-ului tău.",
+  "guidedStackChartReturnTitle": "Graficul stack-ului tău",
+  "guidedStackChartReturnBody": "Iată progresul stack-ului tău. Fiecare punct este o mână înregistrată — atinge orice punct pentru detalii.",
+  "guidedStackAdjustTitle": "Ajustează stack-ul lor",
+  "guidedStackAdjustBody": "Apasă lung pe locul unui jucător pentru a activa inelul de stack. Rotește degetul pentru a selecta dimensiunea stack-ului, apoi eliberează.",
+  "sessionDetailsEndSession": "Încheie sesiunea",
+  "sessionDetailsLeaveConfirmTitle": "Părăsești sesiunea?",
+  "sessionDetailsLeaveConfirmBody": "Sesiunea ta este încă activă. Vrei să o închei?",
+  "pokerHandChangeTableDiscardMessage": "Ai o mână în desfășurare. Schimbarea mesei o va anula — nimic din această mână nu va fi salvat.",
+  "pokerHandDiscardAndChangeTable": "Renunță și schimbă masa",
+  "handShownCardsDialogTitle": "Cărți arătate",
+  "handRecordShownCards": "Înregistrează cărțile arătate",
+  "handShownCardsWhoShowed": "Cine și-a arătat cărțile?",
+  "paywallPriceYearly": "{price}/an",
+  "paywallPriceMonthly": "{price}/lună",
+  "paywallOrPriceMonthly": "sau {price}/lună",
+  "paywallOrPriceYearly": "sau {price}/an"
+}

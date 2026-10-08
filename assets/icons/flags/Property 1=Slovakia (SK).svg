@@ -1,0 +1,16 @@
+<svg width="80" height="60" viewBox="0 0 80 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g clip-path="url(#clip0_slovakia_sk)">
+<path fill-rule="evenodd" clip-rule="evenodd" d="M0 0H80V60H0V0Z" fill="#EE1C25"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M0 0H80V40H0V0Z" fill="#0B4EA2"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M0 0H80V20H0V0Z" fill="#FFFFFF"/>
+<path d="M18 14H42V34C42 42 34.5 46.5 30 48C25.5 46.5 18 42 18 34V14Z" fill="#EE1C25"/>
+<path d="M18 14H42V34C42 42 34.5 46.5 30 48C25.5 46.5 18 42 18 34V14Z" stroke="#FFFFFF" stroke-width="1.6"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M28.4 17H31.6V21.4H35.6V24.6H31.6V27.4H37.6V30.6H31.6V38H28.4V30.6H22.4V27.4H28.4V24.6H24.4V21.4H28.4V17Z" fill="#FFFFFF"/>
+<path d="M21.5 40.5C22.5 38.5 24.5 37.6 26 38.6C27 36.8 29 36.2 30 37.4C31 36.2 33 36.8 34 38.6C35.5 37.6 37.5 38.5 38.5 40.5C36.5 44 32.8 46.2 30 47.2C27.2 46.2 23.5 44 21.5 40.5Z" fill="#0B4EA2"/>
+</g>
+<defs>
+<clipPath id="clip0_slovakia_sk">
+<rect width="80" height="60" fill="white"/>
+</clipPath>
+</defs>
+</svg>

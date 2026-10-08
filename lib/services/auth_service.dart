@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
@@ -12,11 +11,13 @@ import '../models/account_type.dart';
 import 'app_data_cache.dart';
 import 'currency_service.dart';
 import 'fcm_service.dart';
+import 'locale_service.dart';
 import 'logger_service.dart';
 import 'partner_grant_service.dart';
 import 'subscription_service.dart';
 import 'username_service.dart';
 import 'display_identity_service.dart';
+import 'analytics_service.dart';
 
 /// Thrown when Google sign-in detects an existing email/password account.
 /// The UI should catch this and show a password dialog to link accounts.
@@ -70,6 +71,12 @@ class AuthService {
   static Future<void> prefetchUserDocument() async {
     final uid = currentUser?.uid;
     if (uid == null) return;
+    // Invalidate any previous snapshot SYNCHRONOUSLY, before the network
+    // read. The static survives '/' resets (splash → gate), so a consumer
+    // racing this fetch must fall back to a fresh Firestore read rather
+    // than see data captured before the latest flag writes — a stale
+    // hasCompletedOnboarding:false here made onboarding repeat.
+    clearPrefetchedUserDoc();
     try {
       final doc = await _firestore.collection('users').doc(uid).get();
       if (doc.exists) {
@@ -77,7 +84,7 @@ class AuthService {
         _prefetchedUserId = uid;
       }
     } catch (e) {
-      debugPrint('prefetchUserDocument error: $e');
+      unawaited(LoggerService.error('prefetchUserDocument error', e));
     }
   }
 
@@ -299,13 +306,13 @@ class AuthService {
         email: email,
         password: password,
       );
-      debugPrint('User signed in: ${credential.user?.email}');
+      unawaited(LoggerService.debug('User signed in: ${credential.user?.email}'));
 
       // Ensure user document exists (backfill for users registered before this feature)
       if (credential.user != null) {
-        debugPrint('Calling ensureUserDocument after sign in...');
+        unawaited(LoggerService.debug('Calling ensureUserDocument after sign in...'));
         await ensureUserDocument();
-        debugPrint('ensureUserDocument completed');
+        unawaited(LoggerService.debug('ensureUserDocument completed'));
 
         // Set user context for observability
         unawaited(LoggerService.setUserId(credential.user!.uid));
@@ -373,7 +380,7 @@ class AuthService {
         unawaited(_setupFcmInBackground());
       }
 
-      debugPrint('User registered: ${credential.user?.email}');
+      unawaited(LoggerService.debug('User registered: ${credential.user?.email}'));
       return credential;
     } on FirebaseAuthException catch (e) {
       await LoggerService.error('Registration error', e);
@@ -386,7 +393,7 @@ class AuthService {
 
   // Create or update user document in Firestore
   static Future<void> _createUserDocument(String uid, String displayName, String email) async {
-    debugPrint('Creating user document: uid=$uid, displayName=$displayName, email=$email');
+    unawaited(LoggerService.debug('Creating user document: uid=$uid, displayName=$displayName, email=$email'));
     try {
       await _firestore.collection('users').doc(uid).set({
         'uid': uid,
@@ -398,7 +405,13 @@ class AuthService {
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
-      debugPrint('User document created successfully for $uid');
+      final provider = _auth.currentUser?.isAnonymous == true
+          ? 'anonymous'
+          : (_auth.currentUser?.providerData.isNotEmpty == true
+              ? _auth.currentUser!.providerData.first.providerId
+              : 'password');
+      AnalyticsService.capture('signup', {'method': provider});
+      unawaited(LoggerService.debug('User document created successfully for $uid'));
     } catch (e) {
       await LoggerService.error('Error creating user document', e, StackTrace.current);
       // Don't throw - user registration should still succeed
@@ -408,9 +421,9 @@ class AuthService {
   // Ensure current user has a document (for existing users who registered before this feature)
   static Future<void> ensureUserDocument() async {
     final user = currentUser;
-    debugPrint('ensureUserDocument called, user=${user?.uid}, displayName=${user?.displayName}');
+    unawaited(LoggerService.debug('ensureUserDocument called, user=${user?.uid}, displayName=${user?.displayName}'));
     if (user == null) {
-      debugPrint('ensureUserDocument: No current user, returning');
+      unawaited(LoggerService.debug('ensureUserDocument: No current user, returning'));
       return;
     }
 
@@ -419,12 +432,12 @@ class AuthService {
       // during startup — the same doc was already fetched in SplashScreen).
       final prefetched = consumePrefetchedUserDoc();
       if (prefetched != null) {
-        debugPrint('ensureUserDocument: Using prefetched doc, skipping read');
+        unawaited(LoggerService.debug('ensureUserDocument: Using prefetched doc, skipping read'));
         return; // Doc exists (prefetch only stores non-null data)
       }
 
       final doc = await _firestore.collection('users').doc(user.uid).get();
-      debugPrint('ensureUserDocument: Document exists=${doc.exists}');
+      unawaited(LoggerService.debug('ensureUserDocument: Document exists=${doc.exists}'));
       if (!doc.exists) {
         await _createUserDocument(
           user.uid,
@@ -432,7 +445,7 @@ class AuthService {
           user.email ?? '',
         );
       } else {
-        debugPrint('ensureUserDocument: Document already exists, skipping creation');
+        unawaited(LoggerService.debug('ensureUserDocument: Document already exists, skipping creation'));
       }
     } catch (e) {
       await LoggerService.error('ensureUserDocument error', e, StackTrace.current);
@@ -472,8 +485,8 @@ class AuthService {
   // Sign out
   static Future<void> signOut() async {
     try {
-      debugPrint('📍 LOGOUT: signOut() called');
-      debugPrint('📍 LOGOUT: Stack trace: ${StackTrace.current}');
+      unawaited(LoggerService.debug('📍 LOGOUT: signOut() called'));
+      unawaited(LoggerService.debug('📍 LOGOUT: Stack trace: ${StackTrace.current}'));
 
       _isExplicitLogout = true;  // Mark as explicit logout
 
@@ -488,6 +501,10 @@ class AuthService {
       UsernameService.clearCache();
       DisplayIdentityService.clearCache();
       AppDataCache.clearAll();  // Clear all in-memory cached data
+      // Audit M3: the splash-era user-doc snapshot must not survive into a
+      // same-session re-login — a stale hasSetUsername:false replays
+      // onboarding for the re-logged-in user.
+      clearPrefetchedUserDoc();
 
       // Clear user-data SharedPreferences keys that aren't user-scoped
       try {
@@ -509,7 +526,7 @@ class AuthService {
       await _auth.signOut();
       // Sign out of Google so account picker appears next time
       try { await _googleSignIn.signOut(); } catch (_) {}
-      debugPrint('User signed out');
+      unawaited(LoggerService.debug('User signed out'));
     } catch (e) {
       _isExplicitLogout = false;  // Reset on error
       await LoggerService.error('Sign out error', e, StackTrace.current);
@@ -803,7 +820,7 @@ class AuthService {
       DisplayIdentityService.clearCache();
     } catch (e) {
       // Non-fatal: a cosmetic repair must never block sign-in.
-      debugPrint('Apple display-name repair skipped: $e');
+      unawaited(LoggerService.warning('Apple display-name repair skipped: $e'));
     }
   }
 
@@ -848,7 +865,7 @@ class AuthService {
       }
       await FCMService.subscribeToUserClubs();
     } catch (e) {
-      debugPrint('FCM setup failed (background): $e');
+      unawaited(LoggerService.warning('FCM setup failed (background): $e'));
     }
   }
 
@@ -858,16 +875,31 @@ class AuthService {
       await FCMService.unsubscribeFromAllClubs();
       await FCMService.removeToken();
     } catch (e) {
-      debugPrint('FCM cleanup failed (background): $e');
+      unawaited(LoggerService.warning('FCM cleanup failed (background): $e'));
     }
   }
   
   // Send password reset email
   static Future<void> sendPasswordReset(String email) async {
     try {
+      // Localize Firebase's email (and the lang= param on the reset link,
+      // which the finaltable.io/reset_password page reads). Null = app
+      // follows the system locale; let Firebase fall back to its default.
+      final locale = LocaleService.currentLocaleCode;
+      if (locale != null) {
+        await _auth.setLanguageCode(locale);
+      }
       await _auth.sendPasswordResetEmail(email: email);
-      debugPrint('Password reset email sent to: $email');
+      unawaited(LoggerService.debug('Password reset email sent to: $email'));
     } on FirebaseAuthException catch (e) {
+      // Anti-enumeration: an unknown email must look identical to success,
+      // or the reset screen becomes an account-existence oracle. (Firebase
+      // projects with email-enumeration protection return success silently;
+      // this covers projects/SDK paths that still surface the code.)
+      if (e.code == 'user-not-found') {
+        unawaited(LoggerService.debug('Password reset: unknown email, reported as sent'));
+        return;
+      }
       await LoggerService.error('Password reset error', e);
       throw _getAuthException(e);
     } catch (e) {
@@ -972,7 +1004,7 @@ class AuthService {
       } catch (_) {}
 
       await currentUser?.delete();
-      debugPrint('User account deleted');
+      unawaited(LoggerService.debug('User account deleted'));
     } on FirebaseAuthException catch (e) {
       await LoggerService.error('Account deletion error', e);
       throw _getAuthException(e);
@@ -988,7 +1020,7 @@ class AuthService {
       await currentUser?.updateDisplayName(displayName);
       await currentUser?.updatePhotoURL(photoURL);
       await currentUser?.reload();
-      debugPrint('Profile updated successfully');
+      unawaited(LoggerService.debug('Profile updated successfully'));
     } catch (e) {
       await LoggerService.error('Profile update error', e, StackTrace.current);
       throw 'Failed to update profile. Please try again.';
@@ -1002,7 +1034,7 @@ class AuthService {
   static Future<void> sendEmailVerification() async {
     try {
       await currentUser?.sendEmailVerification();
-      debugPrint('Email verification sent');
+      unawaited(LoggerService.debug('Email verification sent'));
     } catch (e) {
       await LoggerService.error('Email verification error', e, StackTrace.current);
       throw 'Failed to send verification email. Please try again.';

@@ -1,10 +1,13 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:ui' as ui;
 import 'package:http/http.dart' as http;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../config/env_config.dart';
 import 'auth_service.dart';
+import 'locale_service.dart';
 import 'logger_service.dart';
+import 'analytics_service.dart';
 
 class AIAnalyzerService {
   static String get _apiKey => EnvConfig.aiApiKey;
@@ -12,6 +15,49 @@ class AIAnalyzerService {
 
   /// Analyze a poker hand using the backend AI service.
   /// Redirects to analyzeHandFull for full Claude analysis.
+  /// Locales the backend can generate analysis in (mirrors the app's 11).
+  static const _analysisLanguages = {
+    'en', 'de', 'es', 'fr', 'it', 'pl', 'pt', 'ro', 'ru', 'sk', 'uk'
+  };
+
+  /// The language the analysis should be written in: the in-app selection,
+  /// else the device locale, else English.
+  static String get analysisLanguage {
+    final code = LocaleService.currentLocaleCode ??
+        ui.PlatformDispatcher.instance.locale.languageCode;
+    return _analysisLanguages.contains(code) ? code : 'en';
+  }
+
+  /// The reader's experience level for the analysis prose, derived from the
+  /// onboarding survey (users/{uid}.onboardingData.pokerJourney):
+  /// beginner/fun → 'beginner' (advanced terms explained inline),
+  /// pro → 'advanced' (denser, full vocabulary assumed),
+  /// regular/missing/error → null (standard voice, current behavior).
+  static Future<String?> _fetchExperienceLevel() async {
+    try {
+      final uid = AuthService.currentUser?.uid;
+      if (uid == null) return null;
+      final doc = await _firestore
+          .collection('users')
+          .doc(uid)
+          .get()
+          .timeout(const Duration(seconds: 3));
+      final journey =
+          (doc.data()?['onboardingData'] as Map<String, dynamic>?)?['pokerJourney'];
+      switch (journey) {
+        case 'beginner':
+        case 'fun':
+          return 'beginner';
+        case 'pro':
+          return 'advanced';
+        default:
+          return null;
+      }
+    } catch (_) {
+      return null; // fall back to the standard voice
+    }
+  }
+
   static Future<Map<String, dynamic>> analyzeHand({
     required String handId,
     required Map<String, dynamic> handData,
@@ -28,9 +74,14 @@ class AIAnalyzerService {
     Map<String, dynamic>? opponentContext,
   }) async {
     try {
+      final experienceLevel = await _fetchExperienceLevel();
       final requestBody = {
         'handId': handId,
         'handData': handData,
+        // Analysis prose is generated natively in the app's language.
+        'language': analysisLanguage,
+        // Voice matched to the onboarding survey's experience answer.
+        if (experienceLevel != null) 'experienceLevel': experienceLevel,
         if (opponentContext != null && opponentContext.isNotEmpty)
           'opponentContext': opponentContext,
       };
@@ -49,6 +100,12 @@ class AIAnalyzerService {
 
       if (response.statusCode == 200) {
         final responseJson = jsonDecode(response.body) as Map<String, dynamic>;
+        AnalyticsService.capture('ai_analysis_used');
+        // Carried through so saveAnalysis can persist the voice this
+        // analysis was written in (mirrors the 'language' field).
+        if (experienceLevel != null) {
+          responseJson['experienceLevel'] = experienceLevel;
+        }
         await LoggerService.info('🎲 Full analysis complete');
         return responseJson;
       } else {
@@ -233,6 +290,9 @@ class AIAnalyzerService {
           'streetBreakdown': analysis['streetBreakdown'],
           'exploitativeTip': analysis['exploitativeTip'],
           'processingTimeMs': analysis['processingTimeMs'],
+          'language': analysisLanguage,
+          if (analysis['experienceLevel'] != null)
+            'experienceLevel': analysis['experienceLevel'],
           'analyzedAt': FieldValue.serverTimestamp(),
         },
       });

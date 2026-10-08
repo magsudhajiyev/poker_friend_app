@@ -45,6 +45,7 @@ class Currency {
     Currency(code: 'CHF', symbol: 'CHF', name: 'Swiss Franc', flag: '🇨🇭', flagAsset: 'assets/icons/flags/Property 1=Switzerland.svg', position: SymbolPosition.suffix),
     Currency(code: 'ILS', symbol: '₪', name: 'Israeli Shekel', flag: '🇮🇱', flagAsset: 'assets/icons/flags/Property 1=Israli.svg'),
     Currency(code: 'UAH', symbol: '₴', name: 'Ukrainian Hryvnia', flag: '🇺🇦', flagAsset: 'assets/icons/flags/Property 1=ukraine.svg'),
+    Currency(code: 'RON', symbol: 'lei', name: 'Romanian Leu', flag: '🇷🇴', flagAsset: 'assets/icons/flags/Property 1=Romania (RO).svg', position: SymbolPosition.suffix),
     Currency(code: 'ARS', symbol: 'ARS', name: 'Argentine Peso', flag: '🇦🇷', flagAsset: 'assets/icons/flags/Property 1=Argentina.svg', decimalPlaces: 0),
   ];
 
