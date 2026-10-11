@@ -52,6 +52,7 @@ class FeatureFlagService {
 
   static const String trainingDrills = 'training_drills';
   static const String aiHandAnalysis = 'ai_hand_analysis';
+  static const String leakDetector = 'leak_detector';
 
   static const List<FeatureFlag> all = [
     FeatureFlag(
@@ -66,6 +67,13 @@ class FeatureFlagService {
       'Per-hand AI analysis button on hand details. Kill-switch for backend '
       'outages.',
       defaultMode: FlagMode.on,
+    ),
+    FeatureFlag(
+      leakDetector,
+      'Leak Detector',
+      'Frequency-leak report (overfolding vs river bets, fold-to-3-bet, '
+      'BB defense...) in the navigation drawer. Phase 1 experiment.',
+      defaultMode: FlagMode.adminOnly,
     ),
   ];
 

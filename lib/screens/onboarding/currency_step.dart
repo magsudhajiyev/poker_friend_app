@@ -332,7 +332,7 @@ class _SearchFieldState extends State<_SearchField> {
                 height: 22 / 15,
               ),
               decoration: InputDecoration(
-                hintText: 'Search...',
+                hintText: AppLocalizations.of(context).commonSearch,
                 hintStyle: AppTypography.ibm(
                   color: AppColors.textSecondary,
                   fontSize: 15,

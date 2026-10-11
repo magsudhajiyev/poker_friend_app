@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../services/auth_service.dart';
 import '../services/firebase_service.dart';
 import '../services/user_stats_service.dart';
+import '../services/stats_calculator.dart';
 
 /// Service to verify stats calculations by logging all data to console
 class StatsVerificationService {
@@ -153,10 +154,11 @@ class StatsVerificationService {
             }
           }
 
-          // Check for 3-bet using correct logic:
-          // 3-bet = hero raised AFTER seeing an opponent's raise
+          // Check for 3-bet (2nd voluntary raise preflop) via the canonical
+          // detector so audit values match the live stats path.
           if (didPlay) {
-            didThreeBet = _didPlayerThreeBet(actions, ourSeat);
+            didThreeBet = StatsCalculator.didPlayerThreeBet(
+                List<Map<String, dynamic>>.from(actions), ourSeat);
           }
 
           // Update counters
@@ -303,31 +305,6 @@ class StatsVerificationService {
     final match = calculated == database;
     final icon = match ? '✅' : '❌';
     debugPrint('$icon $label: Calculated=$calculated, Database=$database ${match ? "" : "⚠️ MISMATCH!"}');
-  }
-
-  /// Detect if player made a 3-bet (re-raised AFTER seeing an opponent's raise)
-  static bool _didPlayerThreeBet(List<dynamic> actions, int playerSeatNumber) {
-    bool sawOpponentRaise = false;
-
-    for (final action in actions) {
-      final street = action['street']?.toString().toLowerCase() ?? '';
-      if (street != 'preflop') continue;
-
-      final playerId = action['player'] as int?;
-      final actionType = action['action']?.toString().toLowerCase() ?? '';
-
-      // Only look at raise actions
-      if (actionType != 'raise') continue;
-
-      if (playerId != playerSeatNumber) {
-        // Opponent raised
-        sawOpponentRaise = true;
-      } else if (sawOpponentRaise) {
-        // Hero raised AFTER seeing an opponent raise = 3-bet
-        return true;
-      }
-    }
-    return false;
   }
 
   /// Check if database values show a double-counting pattern

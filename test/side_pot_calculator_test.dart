@@ -167,12 +167,14 @@ void main() {
       players.add(PlayerState(playerId: 5, isActive: true, hasFolded: false, currentStack: 19450, betThisRound: 550));
       final sidePots2 = SidePotCalculator.calculateSidePots(players);
 
-      // Layer locked at the 200 all-in + active money above it
+      // Layer locked at the 200 all-in + active money above it.
+      // HL-7: pending live players (SB/BB yet to act) are eligible — they
+      // will either match the level or fold out on the next recalc.
       expect(sidePots2.length, 2);
       expect(sidePots2[0].amount, 403); // 1 + 2 + 200 + 200
-      expect(sidePots2[0].eligiblePlayers, [3, 5]);
+      expect(sidePots2[0].eligiblePlayers, [1, 2, 3, 5]);
       expect(sidePots2[1].amount, 350); // raiser's active money above 200
-      expect(sidePots2[1].eligiblePlayers, [5]);
+      expect(sidePots2[1].eligiblePlayers, [1, 2, 5]);
 
       final total = sidePots2.fold<double>(0, (sum, pot) => sum + pot.amount);
       expect(total, 753);

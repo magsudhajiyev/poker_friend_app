@@ -26,7 +26,6 @@ import '../widgets/session_end_bankroll_sheet.dart';
 import '../widgets/session_summary_card.dart';
 import '../widgets/multi_pot_winner_dialog.dart';
 import '../widgets/seat_config_sheet.dart';
-import '../widgets/skip_hand_scouting_sheet.dart';
 import '../design_system/components/overlays/event_success_popup.dart';
 import '../design_system/components/overlays/sliding_notification.dart';
 import '../design_system/components/pickers/card_keyboard.dart';
@@ -308,16 +307,6 @@ class DesignPreviewScreen extends StatelessWidget {
                     isActive: true,
                     defaultStack: 1000,
                     onSave: ({required name, required stack, required isHero, required isActive}) {},
-                  );
-                }),
-                const SizedBox(height: 8),
-                _devButton('SkipHandScoutingSheet', const Color(0xFF6B9FFF), () {
-                  SkipHandScoutingSheet.show(
-                    context: context,
-                    playerNames: {1: 'Hero', 2: 'Villain 1', 3: 'Villain 2', 4: 'Villain 3', 5: 'Villain 4'},
-                    activeSeats: {1, 2, 3, 4, 5},
-                    heroSeat: 1,
-                    buttonPosition: 3,
                   );
                 }),
                 const SizedBox(height: 8),
@@ -1346,16 +1335,6 @@ class DesignPreviewScreen extends StatelessWidget {
                 const SizedBox(height: 8),
 
                 // 5. Skip / review
-                _devButton('SkipHandScoutingSheet', const Color(0xFFF6B26B), () {
-                  SkipHandScoutingSheet.show(
-                    context: context,
-                    playerNames: {1: 'Hero', 2: 'Villain 1', 3: 'Villain 2', 4: 'Villain 3', 5: 'Villain 4'},
-                    activeSeats: {1, 2, 3, 4, 5},
-                    heroSeat: 1,
-                    buttonPosition: 3,
-                  );
-                }),
-                const SizedBox(height: 8),
                 _devButton('HandReviewDialog', const Color(0xFFF6B26B), () {
                   showDialog(
                     context: context,

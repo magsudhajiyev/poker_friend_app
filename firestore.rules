@@ -13,7 +13,11 @@ service cloud.firestore {
 
     // Helper function to check if user is the super admin
     function isSuperAdmin() {
-      return request.auth != null && request.auth.token.email == 'magsud94@gmail.com';
+      // email_verified guard (audit B10): without it, registering an
+      // unverified account with this email would grant full admin.
+      return request.auth != null &&
+        request.auth.token.email == 'magsud94@gmail.com' &&
+        request.auth.token.email_verified == true;
     }
 
     // FCM tokens - users can only manage their own tokens
@@ -22,11 +26,19 @@ service cloud.firestore {
         (resource == null || resource.data.userId == request.auth.uid || request.resource.data.userId == request.auth.uid);
     }
 
-    // User notifications - users can read/update/delete their own, authenticated can create
+    // User notifications - users can read/update/delete their own.
+    // Create stays open to authenticated users (club invitations create
+    // docs FOR the invitee) but content is size/type-capped (audit B6
+    // partial mitigation — full fix is moving sends server-side).
     match /user_notifications/{notificationId} {
       allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
       allow update: if isAuthenticated() && resource.data.userId == request.auth.uid;
-      allow create: if isAuthenticated();
+      allow create: if isAuthenticated() &&
+        request.resource.data.userId is string &&
+        (!('title' in request.resource.data) ||
+          (request.resource.data.title is string && request.resource.data.title.size() <= 200)) &&
+        (!('body' in request.resource.data) ||
+          (request.resource.data.body is string && request.resource.data.body.size() <= 500));
       allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
     }
 
@@ -36,54 +48,87 @@ service cloud.firestore {
       allow write: if isSuperAdmin();
     }
 
-    // Users collection - public read, owner or superAdmin write
+    // Fields on users/{uid} that only the RevenueCat webhook (Admin SDK,
+    // bypasses rules) or the super admin may write. Owners must NOT be able
+    // to set their own tier — it gates the paid social features.
+    function touchesTierFields() {
+      return request.resource.data.diff(
+        resource == null ? {} : resource.data
+      ).affectedKeys().hasAny(
+        ['subscriptionTier', 'subscriptionTierExpiresAt', 'tierSyncedAt']
+      );
+    }
+
+    // Users collection - authenticated read (audit B8: was public — email
+    // scraping), owner or superAdmin write; tier mirror fields are
+    // owner-immutable (see touchesTierFields). Delete MUST be its own
+    // clause: touchesTierFields reads request.resource.data, which is
+    // undefined on deletes — a combined `write` rule errors → denies and
+    // breaks account deletion (found in social-feed security review).
     match /users/{userId} {
-      allow read: if true;
-      allow write: if isOwner(userId) || isSuperAdmin();
+      allow read: if isAuthenticated();
+      allow create, update: if isSuperAdmin() ||
+        (isOwner(userId) && !touchesTierFields());
+      allow delete: if isOwner(userId) || isSuperAdmin();
     }
 
-    // User stats - only owner can read/write
+    // User stats - owner or superAdmin can read, only owner can write
     match /user_stats/{userId} {
-      allow read, write: if isOwner(userId);
+      allow read: if isOwner(userId) || isSuperAdmin();
+      allow write: if isOwner(userId);
     }
 
-    // Poker sessions - only owner can read/write
+    // Poker sessions - owner/participants can read, superAdmin can read all
     match /poker_sessions/{sessionId} {
-      allow read: if isAuthenticated() &&
+      allow read: if isSuperAdmin() || (isAuthenticated() &&
         (resource.data.userId == request.auth.uid ||
-         (resource.data.participantIds != null && request.auth.uid in resource.data.participantIds));
+         (resource.data.participantIds != null && request.auth.uid in resource.data.participantIds)));
       allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
       allow update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
 
-      // Hands subcollection inherits session access
+      // Hands subcollection inherits session access (audit B7: was open to
+      // any authenticated user — others' hole cards readable/tamperable).
+      // Owner logs hands; live-session participants only read.
       match /poker_hands/{handId} {
-        allow read, write: if isAuthenticated();
+        function sessionData() {
+          return get(/databases/$(database)/documents/poker_sessions/$(sessionId)).data;
+        }
+        allow read: if isSuperAdmin() || (isAuthenticated() &&
+          (sessionData().userId == request.auth.uid ||
+           (sessionData().participantIds != null &&
+            request.auth.uid in sessionData().participantIds)));
+        allow write: if isAuthenticated() &&
+          sessionData().userId == request.auth.uid;
       }
     }
 
-    // Session results - only owner can read/write
+    // Session results - owner or superAdmin can read, only owner can write
     match /session_results/{resultId} {
-      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow read: if isSuperAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
       allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
       allow update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
     }
 
-    // Opponents - only owner can read/write
+    // Opponents - owner or superAdmin can read, only owner can write
     match /opponents/{opponentId} {
-      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow read: if isSuperAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
       allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
       allow update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
     }
 
-    // Opponent stats - authenticated users (linked to opponents via app logic)
+    // Opponent stats - owner of the opponent profile only (audit B7: was
+    // open to any authenticated user). Stats docs are only ever written for
+    // saved opponents, whose profile doc exists first.
     match /opponent_stats/{opponentId} {
-      allow read, write: if isAuthenticated();
+      allow read, write: if isSuperAdmin() || (isAuthenticated() &&
+        get(/databases/$(database)/documents/opponents/$(opponentId)).data.userId == request.auth.uid);
     }
 
-    // Dealers collection
+    // Dealers collection. Super admin writes others' docs during club-request
+    // approval (_addClubToDealer runs as the approving admin, not the owner).
     match /dealers/{userId} {
       allow read: if isAuthenticated();
-      allow write: if isOwner(userId);
+      allow write: if isOwner(userId) || isSuperAdmin();
     }
 
     // Dealer sessions - participants can read, creator can write
@@ -105,19 +150,57 @@ service cloud.firestore {
         (resource.data.playerId == request.auth.uid || resource.data.dealerId == request.auth.uid);
     }
 
-    // Clubs - readable by all authenticated, writable by members
+    // Clubs - readable by all authenticated, writable by owner. Super admin
+    // updates during club-request approval (club is created with the
+    // REQUESTER as ownerId, then the approving admin sets address/phone/QR).
     match /clubs/{clubId} {
       allow read: if isAuthenticated();
       allow create: if isAuthenticated();
-      allow update, delete: if isAuthenticated() && resource.data.ownerId == request.auth.uid;
+      allow update, delete: if isSuperAdmin() ||
+        (isAuthenticated() && resource.data.ownerId == request.auth.uid);
 
-      // Club members subcollection
+      function isClubOwner() {
+        return isAuthenticated() &&
+          get(/databases/$(database)/documents/clubs/$(clubId)).data.ownerId == request.auth.uid;
+      }
+
+      // Dealer/admin ACTOR gate via the uid-keyed dealers/{uid} doc (member
+      // docs have random ids, so an actor's club role can't be looked up
+      // directly). dealers docs are self-writable (redemption needs it), so
+      // this raises the bar rather than being tamper-proof — the complete
+      // fix is server-side (Cloud Function) invitation redemption (B5).
+      function isClubStaff() {
+        return isAuthenticated() &&
+          exists(/databases/$(database)/documents/dealers/$(request.auth.uid)) &&
+          get(/databases/$(database)/documents/dealers/$(request.auth.uid))
+            .data.get('clubIds', []).hasAny([clubId]);
+      }
+
+      // Club members subcollection. Docs are created with RANDOM ids by
+      // every code path; the user is identified by the userId FIELD (the
+      // old `memberId == request.auth.uid` self-clause never matched).
       match /members/{memberId} {
         allow read: if isAuthenticated();
-        allow create: if isAuthenticated();
-        allow update, delete: if isAuthenticated() &&
-          (memberId == request.auth.uid ||
-           get(/databases/$(database)/documents/clubs/$(clubId)).data.ownerId == request.auth.uid);
+        // Audit B5: nobody mints an 'owner' member doc except the club
+        // owner or super admin (was: any authenticated user, any role).
+        // Self-create with a non-owner role keeps invitation redemption
+        // and QR seat self-join working for shipped clients; club staff
+        // may seat OTHER users as plain players (dealer mode).
+        allow create: if isSuperAdmin() || isClubOwner() ||
+          (isAuthenticated() &&
+            request.resource.data.userId == request.auth.uid &&
+            request.resource.data.role in ['player', 'dealer', 'admin']) ||
+          (isClubStaff() && request.resource.data.role == 'player');
+        // Role changes stay owner-only; a member may edit their own doc
+        // (matched by userId field) as long as the role is untouched.
+        allow update: if isSuperAdmin() || isClubOwner() ||
+          (isAuthenticated() &&
+            resource.data.userId == request.auth.uid &&
+            request.resource.data.role == resource.data.role);
+        // Owner removes members; a member may remove THEMSELVES (leave
+        // club) — by userId field, which the old id-based clause intended.
+        allow delete: if isSuperAdmin() || isClubOwner() ||
+          (isAuthenticated() && resource.data.userId == request.auth.uid);
       }
 
       // Club tables
@@ -143,6 +226,51 @@ service cloud.firestore {
         allow create: if isAuthenticated();
         allow update, delete: if false;
       }
+
+      // Club invitations (fix 2026-08-06: this subcollection had NO rules
+      // after the launch-night hardening — the entire invite flow was
+      // silently permission-denied). Hardened for audit B5: was open
+      // read/write to any authenticated user.
+      match /invitations/{invitationId} {
+        allow read: if isAuthenticated();
+        // Only club staff invite; never for the 'owner' role; invitedBy
+        // must be the actor (delete/resend authorization keys off it).
+        allow create: if isSuperAdmin() ||
+          ((isClubOwner() || isClubStaff()) &&
+            request.resource.data.invitedBy == request.auth.uid &&
+            request.resource.data.status == 'pending' &&
+            request.resource.data.role in ['player', 'dealer', 'admin']);
+        // The INVITEE accepts/declines their own invitation (email is
+        // stored lowercased at create), touching only the status fields.
+        allow update: if isSuperAdmin() ||
+          (isAuthenticated() &&
+            resource.data.email == request.auth.token.email.lower() &&
+            request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly(['status', 'acceptedAt', 'declinedAt']) &&
+            request.resource.data.status in ['accepted', 'declined']);
+        // The inviter cancels/resends; the owner cleans up anything.
+        allow delete: if isSuperAdmin() || isClubOwner() ||
+          (isAuthenticated() && resource.data.invitedBy == request.auth.uid);
+      }
+    }
+
+    // Collection-group read for invitations — getPendingInvitations()
+    // queries across all clubs by (email, status); the nested rule above
+    // does not cover collection-group scope.
+    match /{path=**}/invitations/{invitationId} {
+      allow read: if isAuthenticated();
+    }
+
+    // Personal calendar events (Home "upcoming events" — fix 2026-08-06:
+    // no rules block existed, so every Home load logged permission-denied
+    // and the feature silently showed nothing). Owner-only.
+    match /poker_events/{eventId} {
+      allow read: if isSuperAdmin() ||
+        (isAuthenticated() && resource.data.userId == request.auth.uid);
+      allow create: if isAuthenticated() &&
+        request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAuthenticated() &&
+        resource.data.userId == request.auth.uid;
     }
 
     // Shared hands - public read for web viewer, authenticated create, admin delete
@@ -204,6 +332,154 @@ service cloud.firestore {
     // Inbox status (read/archive/delete state) - admin dashboard only
     match /inbox_status/{docId} {
       allow read, write: if isSuperAdmin();
+    }
+
+    // App admins registry - authenticated users read (to check their own admin
+    // status via isAppAdmin()); only super admin provisions/removes admins.
+    match /app_admins/{adminId} {
+      allow read: if isAuthenticated();
+      allow write: if isSuperAdmin();
+    }
+
+    // Club registration requests - user submits their own, super admin reviews.
+    match /club_requests/{requestId} {
+      allow create: if isAuthenticated() &&
+        request.resource.data.requestedBy == request.auth.uid;
+      allow read: if isSuperAdmin() ||
+        (isAuthenticated() && resource.data.requestedBy == request.auth.uid);
+      allow update, delete: if isSuperAdmin();
+    }
+
+    // Support requests - user submits, super admin reads/manages in dashboard.
+    match /support_requests/{requestId} {
+      allow create: if isAuthenticated();
+      allow read, update, delete: if isSuperAdmin();
+    }
+
+    // ── Social feed (docs/social-feed-spec.md) — PAID-ONLY feature ──
+
+    // Tier mirrored onto users/{uid} by the revenuecatWebhook function.
+    function hasMirroredPaidTier() {
+      return exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid))
+          .data.get('subscriptionTier', 'free') in ['pro', 'elite', 'club'] &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid))
+          .data.get('subscriptionTierExpiresAt', timestamp.value(0)) > request.time;
+    }
+
+    // Admin-granted tiers qualify too. A grant without expiresAt is
+    // permanent (mirrors PartnerGrantService client logic).
+    function hasActivePartnerGrant() {
+      return exists(/databases/$(database)/documents/partner_grants/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/partner_grants/$(request.auth.uid))
+          .data.get('status', '') == 'active' &&
+        (!('expiresAt' in get(/databases/$(database)/documents/partner_grants/$(request.auth.uid)).data) ||
+          get(/databases/$(database)/documents/partner_grants/$(request.auth.uid))
+            .data.expiresAt > request.time);
+    }
+
+    function hasSocialAccess() {
+      return isAuthenticated() &&
+        (hasMirroredPaidTier() || hasActivePartnerGrant());
+    }
+
+    // Follow graph. Doc id is '{followerId}_{followedId}' so a relationship
+    // is a single addressable doc (no queries needed for isFollowing).
+    match /follows/{followId} {
+      // Involved parties only — follower lists are not public in v1.
+      // get: authorize by doc ID, not resource.data — isFollowing() reads
+      // docs that may not exist, and resource is null then (live bug
+      // 2026-08-05: permission-denied on every not-yet-followed check).
+      allow get: if isAuthenticated() &&
+        (followId.split('_')[0] == request.auth.uid ||
+         followId.split('_')[1] == request.auth.uid);
+      allow list: if isAuthenticated() &&
+        (resource.data.followerId == request.auth.uid ||
+         resource.data.followedId == request.auth.uid);
+      allow create: if hasSocialAccess() &&
+        request.resource.data.followerId == request.auth.uid &&
+        request.resource.data.followedId is string &&
+        // No underscores: composite '{follower}_{followed}' ids must split
+        // into exactly two segments or the get-rule authorization skews
+        // (review finding; Firebase uids never contain '_').
+        request.resource.data.followedId.matches('[^_]+') &&
+        request.resource.data.followedId != request.auth.uid &&
+        followId == request.auth.uid + '_' + request.resource.data.followedId &&
+        !exists(/databases/$(database)/documents/blocks/$(request.resource.data.followedId + '_' + request.auth.uid));
+      allow update: if false;
+      // Follower unfollows; followed removes an unwanted follower.
+      allow delete: if isAuthenticated() &&
+        (resource.data.followerId == request.auth.uid ||
+         resource.data.followedId == request.auth.uid);
+    }
+
+    // True when the requester follows [ownerId] (single-doc existence
+    // check via the composite id — no query needed).
+    function isFollowerOf(ownerId) {
+      return exists(/databases/$(database)/documents/follows/$(request.auth.uid + '_' + ownerId));
+    }
+
+    // Sanitized, delay-stamped feed of a shared session (spec D6). Written
+    // ONLY by the owner (client dual-write); read by paid followers. The
+    // raw poker_sessions data is never follower-readable — only these
+    // sanitized copies, and hands/stack only once visibleAt has passed or
+    // the session ended (D5: recap unlocks everything).
+    match /feed_sessions/{sessionId} {
+      allow read: if isAuthenticated() &&
+        (resource.data.userId == request.auth.uid ||
+         (hasSocialAccess() && isFollowerOf(resource.data.userId)));
+      // Publishing is part of the PAID feature (spec D9): tier-gated
+      // server-side, not just in the setup-screen UI (review finding).
+      allow create: if hasSocialAccess() &&
+        request.resource.data.userId == request.auth.uid &&
+        request.resource.data.shareMode in ['no_cards', 'cards'];
+      allow update, delete: if isAuthenticated() &&
+        resource.data.userId == request.auth.uid;
+
+      function feedOwner() {
+        return get(/databases/$(database)/documents/feed_sessions/$(sessionId)).data.userId;
+      }
+      function feedEnded() {
+        return get(/databases/$(database)/documents/feed_sessions/$(sessionId)).data.get('status', '') == 'ended';
+      }
+
+      // ONE policy for both delayed subcollections (feed_hands, feed_stack)
+      // — a wildcard so the delay rule cannot silently diverge between them
+      // (review finding). visibleAt is REQUIRED and type-checked at write
+      // time; reads default a missing visibleAt to far-future (fail closed,
+      // not fail-error) so a malformed doc can never break recap access.
+      match /{feedChild}/{entryId} {
+        allow read: if isAuthenticated() &&
+          (feedOwner() == request.auth.uid ||
+           (hasSocialAccess() && isFollowerOf(feedOwner()) &&
+            (feedEnded() ||
+             request.time >= resource.data.get('visibleAt', timestamp.date(9999, 1, 1)))));
+        allow create, update: if hasSocialAccess() &&
+          feedOwner() == request.auth.uid &&
+          request.resource.data.visibleAt is timestamp;
+        // Owner cleanup (session delete cascades here; children first,
+        // then the parent — feedOwner() needs the parent alive).
+        allow delete: if isAuthenticated() && feedOwner() == request.auth.uid;
+      }
+    }
+
+    // Blocks. Doc id is '{blockerId}_{blockedId}'. Existence alone denies
+    // the blocked user's future follow creates (checked above); the client
+    // also deletes both follow directions when blocking.
+    match /blocks/{blockId} {
+      // get by doc ID (missing docs have null resource — see follows note).
+      allow get: if isAuthenticated() &&
+        blockId.split('_')[0] == request.auth.uid;
+      allow list: if isAuthenticated() &&
+        resource.data.blockerId == request.auth.uid;
+      allow create: if isAuthenticated() &&
+        request.resource.data.blockerId == request.auth.uid &&
+        request.resource.data.blockedId is string &&
+        request.resource.data.blockedId != request.auth.uid &&
+        blockId == request.auth.uid + '_' + request.resource.data.blockedId;
+      allow update: if false;
+      allow delete: if isAuthenticated() &&
+        resource.data.blockerId == request.auth.uid;
     }
   }
 }

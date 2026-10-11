@@ -1,12 +1,14 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
 import 'dart:async';
 import 'dart:io';
-import 'package:purchases_flutter/purchases_flutter.dart';
+import 'package:purchases_flutter/purchases_flutter.dart' show Offering, Offerings, Package, PackageType;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../config/env_config.dart';
 import 'logger_service.dart';
 import 'partner_grant_service.dart';
+import 'revenuecat_client.dart';
+import 'subscription_logic.dart' as logic;
+import 'analytics_service.dart';
 
 /// Service for managing subscriptions via RevenueCat
 ///
@@ -26,11 +28,26 @@ class SubscriptionService {
   static const String eliteEntitlement = 'elite';
   static const String clubEntitlement = 'club';
 
+  /// The RevenueCat SDK wrapper. Swappable in tests via [debugSetClient].
+  static RevenueCatClient _client = LiveRevenueCatClient();
+
+  /// Test-only: inject a fake client. Resets initialization state.
+  @visibleForTesting
+  static void debugSetClient(RevenueCatClient client) {
+    _client = client;
+    _isInitialized = false;
+    _isPremium = _isElite = _isClub = false;
+    _proEntitlements = TierEntitlements.empty;
+    _purchasedTierOverride = null;
+    _debugTierOverride = null;
+    _offerings = null;
+  }
+
   // Cached subscription state
   static bool _isPremium = false;
   static bool _isElite = false;
   static bool _isClub = false;
-  static CustomerInfo? _customerInfo;
+  static TierEntitlements _proEntitlements = TierEntitlements.empty;
   static Offerings? _offerings;
   static bool _isInitialized = false;
 
@@ -58,23 +75,20 @@ class SubscriptionService {
   /// The user's actual tier from RevenueCat entitlements (no debug override).
   /// If a purchase was just completed, that tier takes precedence until
   /// entitlements from RevenueCat catch up (handles sandbox cancellation lag).
-  static String get currentTier {
-    if (_purchasedTierOverride != null) return _purchasedTierOverride!;
-    return _isClub ? 'club' : _isElite ? 'elite' : _isPremium ? 'pro' : 'free';
-  }
+  static String get currentTier => logic.resolveCurrentTier(
+        proActive: _isPremium,
+        eliteActive: _isElite,
+        clubActive: _isClub,
+        purchasedOverride: _purchasedTierOverride,
+      );
 
   /// Effective tier — applies debug override first, then partner grant.
   /// Partner grant only wins if it provides a HIGHER tier than RevenueCat.
-  static String get _effectiveTier {
-    if (_debugTierOverride != null) return _debugTierOverride!;
-    final rcTier = currentTier;
-    final partnerTier = PartnerGrantService.partnerTier;
-    if (partnerTier == null) return rcTier;
-    const tierRank = {'free': 0, 'pro': 1, 'elite': 2, 'club': 3};
-    return (tierRank[partnerTier] ?? 0) > (tierRank[rcTier] ?? 0)
-        ? partnerTier
-        : rcTier;
-  }
+  static String get _effectiveTier => logic.resolveEffectiveTier(
+        rcTier: currentTier,
+        debugOverride: _debugTierOverride,
+        partnerTier: PartnerGrantService.partnerTier,
+      );
 
   /// True for any paid tier (Pro, Elite, Club). Backwards-compatible with all
   /// existing callsites that check `SubscriptionService.isPremium`.
@@ -89,6 +103,11 @@ class SubscriptionService {
 
   /// True only for Club tier.
   static bool get isClub => _effectiveTier == 'club';
+
+  /// Public read-only view of the effective tier ('free'|'pro'|'elite'|'club').
+  /// Applies the debug override and partner grant, unlike [currentTier] which is
+  /// raw RevenueCat. Use this for UI that should reflect simulated/granted tiers.
+  static String get effectiveTier => _effectiveTier;
 
   // ---------------------------------------------------------------------------
   // Debug override (tier-based)
@@ -157,33 +176,26 @@ class SubscriptionService {
   static List<Package> get availablePackages =>
       defaultOffering?.availablePackages ?? [];
 
-  /// Look up a package by its identifier in the default offering.
-  /// Custom package identifiers (elite_monthly, club_annual, etc.) are only
-  /// accessible this way — NOT via the .monthly/.annual convenience getters.
-  /// Returns null if the package doesn't exist on the current platform.
+  /// Look up a package by its identifier in the default offering. Matching
+  /// (exact + pro alias + store-product-id fallback) lives in the pure,
+  /// tested [logic.matchPackageId]. Returns null if not found on this platform.
   static Package? packageById(String identifier) {
     final packages = defaultOffering?.availablePackages ?? [];
-    // Try exact RC package identifier match first
-    for (final p in packages) {
-      if (p.identifier == identifier) return p;
-    }
-    // Fallback: match by store product identifier.
-    // Store IDs use colons (e.g. 'pro:monthly') while lookup keys use
-    // underscores (e.g. 'pro_monthly'), so normalize to compare.
-    final normalized = identifier.replaceAll('_', ':');
-    for (final p in packages) {
-      if (p.storeProduct.identifier == normalized) return p;
-    }
-    return null;
+    final refs = packages
+        .map((p) => logic.PackageRef(p.identifier, p.storeProduct.identifier))
+        .toList();
+    final i = logic.matchPackageId(identifier, refs);
+    return i >= 0 ? packages[i] : null;
   }
 
   // Package identifier constants — must match RevenueCat dashboard
-  static const String pkgProMonthly   = r'$rc_monthly';
-  static const String pkgProAnnual    = r'$rc_annual';
-  static const String pkgEliteMonthly = 'elite_monthly';
-  static const String pkgEliteAnnual  = 'elite_annual';
-  static const String pkgClubMonthly  = 'club_monthly';
-  static const String pkgClubAnnual   = 'club_annual';
+  // (re-exported from subscription_logic so existing callers keep working).
+  static const String pkgProMonthly = logic.kPkgProMonthly;
+  static const String pkgProAnnual = logic.kPkgProAnnual;
+  static const String pkgEliteMonthly = logic.kPkgEliteMonthly;
+  static const String pkgEliteAnnual = logic.kPkgEliteAnnual;
+  static const String pkgClubMonthly = logic.kPkgClubMonthly;
+  static const String pkgClubAnnual = logic.kPkgClubAnnual;
 
   // ---------------------------------------------------------------------------
   // Lifecycle
@@ -192,8 +204,10 @@ class SubscriptionService {
   /// Whether the service has been initialized
   static bool get isInitialized => _isInitialized;
 
-  /// Current customer info from RevenueCat
-  static CustomerInfo? get customerInfo => _customerInfo;
+  /// The current 'pro' entitlement snapshot (active flag, whether it's a
+  /// promotional grant, and its expiry) — used by the launch-promo flow.
+  /// Null-safe: returns the last snapshot, [TierEntitlements.empty] until set.
+  static TierEntitlements get proEntitlement => _proEntitlements;
 
   /// Available subscription offerings
   static Offerings? get offerings => _offerings;
@@ -217,22 +231,8 @@ class SubscriptionService {
         return;
       }
 
-      final configuration = PurchasesConfiguration(apiKey);
-      await Purchases.configure(configuration);
-
-      // Listen for customer info updates (subscription changes)
-      Purchases.addCustomerInfoUpdateListener((customerInfo) {
-        _updatePremiumStatus(customerInfo);
-      });
-
-      // Get initial customer info
-      _customerInfo = await Purchases.getCustomerInfo();
-      _updatePremiumStatus(_customerInfo!);
-
-      // Fetch offerings
-      await fetchOfferings();
-
-      _isInitialized = true;
+      await _client.configure(apiKey);
+      await _configuredInit();
       await LoggerService.info('✅ RevenueCat initialized - Tier: $currentTier');
     } catch (e) {
       await LoggerService.error('❌ RevenueCat initialization failed: $e');
@@ -241,25 +241,55 @@ class SubscriptionService {
     }
   }
 
-  /// Update premium status from customer info
-  static void _updatePremiumStatus(CustomerInfo customerInfo) {
-    _customerInfo = customerInfo;
+  /// The post-configure init flow, shared by [initialize] and the test entry.
+  ///
+  /// NOTE: preserves the original ordering exactly — `fetchOfferings()` runs
+  /// while `_isInitialized` is still false, so it no-ops here (offerings load
+  /// on the paywall's later explicit call). This is a pre-existing quirk kept
+  /// intentionally so this refactor introduces zero behavior change; fixing it
+  /// (init before fetch) is a separate follow-up.
+  static Future<void> _configuredInit() async {
+    // Listen for customer info updates (subscription changes)
+    _client.addCustomerInfoUpdateListener(_updatePremiumStatus);
+    // Get initial entitlements
+    _updatePremiumStatus(await _client.getEntitlements());
+    // Fetch offerings (no-ops until _isInitialized — see note above)
+    await fetchOfferings();
+    _isInitialized = true;
+  }
+
+  /// Test-only: initialize with an already-injected fake client, skipping the
+  /// Platform/env-key gate that isn't available in the VM test environment.
+  @visibleForTesting
+  static Future<void> debugInitializeWithClient(RevenueCatClient client) async {
+    _client = client;
+    _isInitialized = false;
+    _purchasedTierOverride = null;
+    _debugTierOverride = null;
+    await client.configure('test-key');
+    await _configuredInit();
+  }
+
+  /// Update premium status from an entitlement snapshot.
+  static void _updatePremiumStatus(TierEntitlements ents) {
+    _proEntitlements = ents;
     final prevTier = currentTier;
-    _isPremium = customerInfo.entitlements.all[premiumEntitlement]?.isActive ?? false;
-    _isElite = customerInfo.entitlements.all[eliteEntitlement]?.isActive ?? false;
-    _isClub = customerInfo.entitlements.all[clubEntitlement]?.isActive ?? false;
+    _isPremium = ents.proActive;
+    _isElite = ents.eliteActive;
+    _isClub = ents.clubActive;
 
     // Clear the purchased-tier override once entitlements match or exceed it.
     // e.g. after buying Pro: override='pro', entitlements show pro=active → clear.
-    if (_purchasedTierOverride != null) {
-      final entitlementTier = _isClub ? 'club' : _isElite ? 'elite' : _isPremium ? 'pro' : 'free';
-      // Clear when entitlements have caught up to the purchased tier or higher
-      const tierRank = {'free': 0, 'pro': 1, 'elite': 2, 'club': 3};
-      final overrideRank = tierRank[_purchasedTierOverride] ?? 0;
-      final entitlementRank = tierRank[entitlementTier] ?? 0;
-      if (entitlementRank >= overrideRank) {
-        _purchasedTierOverride = null;
-      }
+    final entitlementTier = logic.resolveCurrentTier(
+      proActive: _isPremium,
+      eliteActive: _isElite,
+      clubActive: _isClub,
+    );
+    if (logic.shouldClearPurchaseOverride(
+      purchasedOverride: _purchasedTierOverride,
+      entitlementTier: entitlementTier,
+    )) {
+      _purchasedTierOverride = null;
     }
 
     // Notify listeners on any tier change (not just free/paid)
@@ -279,11 +309,10 @@ class SubscriptionService {
   static Future<void> refreshOnResume() async {
     if (!_isInitialized) return;
     try {
-      await Purchases.invalidateCustomerInfoCache();
+      await _client.invalidateCustomerInfoCache();
       // Clear purchase override so fresh entitlements are authoritative
       _purchasedTierOverride = null;
-      final info = await Purchases.getCustomerInfo();
-      _updatePremiumStatus(info);
+      _updatePremiumStatus(await _client.getEntitlements());
     } catch (e) {
       // Non-fatal: cached state stays until next successful fetch
     }
@@ -300,8 +329,7 @@ class SubscriptionService {
     if (!_isInitialized) return false;
 
     try {
-      _customerInfo = await Purchases.getCustomerInfo();
-      _updatePremiumStatus(_customerInfo!);
+      _updatePremiumStatus(await _client.getEntitlements());
       return _isPremium;
     } catch (e) {
       await LoggerService.error('❌ Failed to check premium status: $e');
@@ -314,7 +342,7 @@ class SubscriptionService {
     if (!_isInitialized) return null;
 
     try {
-      _offerings = await Purchases.getOfferings();
+      _offerings = await _client.getOfferings();
       await LoggerService.info('📦 Fetched ${_offerings?.all.length ?? 0} offerings');
       return _offerings;
     } catch (e) {
@@ -328,68 +356,51 @@ class SubscriptionService {
   static Future<bool> purchasePackage(Package package) async {
     if (!_isInitialized) return false;
 
-    try {
-      await LoggerService.info('Purchasing package: ${package.identifier}');
-      unawaited(LoggerService.logEvent('purchase_start', parameters: {
+    await LoggerService.info('Purchasing package: ${package.identifier}');
+    unawaited(LoggerService.logEvent('purchase_start', parameters: {
+      'package_id': package.identifier,
+    }));
+
+    final outcome = await _client.purchasePackage(package);
+
+    if (outcome.cancelled) {
+      await LoggerService.info('Purchase cancelled by user');
+      unawaited(LoggerService.logEvent('purchase_cancelled', parameters: {
         'package_id': package.identifier,
       }));
-
-      final result = await Purchases.purchasePackage(package);
-
-      // Determine the purchased tier from the package identifier and apply
-      // it immediately — entitlements from RevenueCat may still show a
-      // previously-cancelled higher tier as active (sandbox lag).
-      final pid = package.identifier;
-      final String purchasedTier;
-      if (pid == pkgClubMonthly || pid == pkgClubAnnual) {
-        purchasedTier = 'club';
-      } else if (pid == pkgEliteMonthly || pid == pkgEliteAnnual) {
-        purchasedTier = 'elite';
-      } else {
-        purchasedTier = 'pro';
-      }
-      _purchasedTierOverride = purchasedTier;
-      _updatePremiumStatus(result);
-
-      if (isPremium) {
-        await LoggerService.info('Purchase successful - Tier: $currentTier');
-        unawaited(LoggerService.logEvent('purchase_success', parameters: {
-          'package_id': package.identifier,
-          'tier': currentTier,
-        }));
-        unawaited(LoggerService.setUserProperties(tier: currentTier));
-        return true;
-      } else {
-        await LoggerService.warning('Purchase completed but premium not activated');
-        return false;
-      }
-    } on PurchasesErrorCode catch (e) {
-      if (e == PurchasesErrorCode.purchaseCancelledError) {
-        await LoggerService.info('Purchase cancelled by user');
-        unawaited(LoggerService.logEvent('purchase_cancelled', parameters: {
-          'package_id': package.identifier,
-        }));
-      } else {
-        await LoggerService.error('Purchase failed', e, StackTrace.current);
-        unawaited(LoggerService.logEvent('purchase_error', parameters: {
-          'package_id': package.identifier,
-          'error': e.toString(),
-        }));
-      }
-      return false;
-    } catch (e) {
-      // RevenueCat throws PlatformException for user cancellations
-      if (e is PlatformException &&
-          (e.details is Map && e.details['userCancelled'] == true)) {
-        await LoggerService.info('Purchase cancelled by user');
-        unawaited(LoggerService.logEvent('purchase_cancelled', parameters: {
-          'package_id': package.identifier,
-        }));
-      } else {
-        await LoggerService.error('Purchase error', e, StackTrace.current);
-      }
       return false;
     }
+    if (outcome.error != null || outcome.entitlements == null) {
+      await LoggerService.error(
+          'Purchase failed', outcome.error, StackTrace.current);
+      unawaited(LoggerService.logEvent('purchase_error', parameters: {
+        'package_id': package.identifier,
+        'error': outcome.error?.toString() ?? 'no entitlements',
+      }));
+      return false;
+    }
+
+    // Apply the purchased tier immediately — entitlements from RevenueCat may
+    // still show a previously-cancelled higher tier as active (sandbox lag).
+    _purchasedTierOverride =
+        logic.tierForPurchasedPackageId(package.identifier);
+    _updatePremiumStatus(outcome.entitlements!);
+
+    if (isPremium) {
+      await LoggerService.info('Purchase successful - Tier: $currentTier');
+      AnalyticsService.capture('subscribed', {
+        'package_id': package.identifier,
+        'tier': currentTier,
+      });
+      unawaited(LoggerService.logEvent('purchase_success', parameters: {
+        'package_id': package.identifier,
+        'tier': currentTier,
+      }));
+      unawaited(LoggerService.setUserProperties(tier: currentTier));
+      return true;
+    }
+    await LoggerService.warning('Purchase completed but premium not activated');
+    return false;
   }
 
   /// Restore previous purchases
@@ -401,8 +412,7 @@ class SubscriptionService {
       await LoggerService.info('Restoring purchases...');
       unawaited(LoggerService.logEvent('restore_start'));
 
-      final customerInfo = await Purchases.restorePurchases();
-      _updatePremiumStatus(customerInfo);
+      _updatePremiumStatus(await _client.restorePurchases());
 
       if (isPremium) {
         await LoggerService.info('Purchases restored - Tier: $currentTier');
@@ -426,8 +436,7 @@ class SubscriptionService {
     if (!_isInitialized) return;
 
     try {
-      final result = await Purchases.logIn(userId);
-      _updatePremiumStatus(result.customerInfo);
+      _updatePremiumStatus(await _client.logIn(userId));
       await LoggerService.info('✅ RevenueCat user logged in: $userId');
     } catch (e) {
       await LoggerService.error('❌ RevenueCat login failed: $e');
@@ -448,8 +457,7 @@ class SubscriptionService {
     if (!_isInitialized) return;
 
     try {
-      final customerInfo = await Purchases.logOut();
-      _updatePremiumStatus(customerInfo);
+      _updatePremiumStatus(await _client.logOut());
       await LoggerService.info('✅ RevenueCat user logged out');
     } catch (e) {
       await LoggerService.error('❌ RevenueCat logout failed: $e');

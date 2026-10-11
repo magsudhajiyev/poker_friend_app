@@ -32,58 +32,104 @@ void main() {
     });
 
     group('3-Bet Detection', () {
-      // 3-bet = the 3rd raise preflop
-      // 1st raise = open, 2nd raise = re-raise, 3rd raise = 3-bet
+      // 3-bet = the 2nd VOLUNTARY raise preflop.
+      // Blinds are forced (not raises). 1st voluntary raise = the open,
+      // 2nd voluntary raise = 3-bet, 3rd = 4-bet.
 
       group('didPlayerThreeBet', () {
-        test('returns true when player makes the 3rd raise', () {
-          // P3 opens (1st), P4 raises (2nd), P5 raises (3rd = 3-bet)
+        test('re-raise over an open IS a 3-bet (headline)', () {
+          // P3 opens (1st voluntary raise), P4 re-raises (2nd = 3-bet).
           final actions = [
             ...MockHandActions.blindsOnly(),
-            MockHandActions.raise(3, 6.0),   // 1st raise (open)
-            MockHandActions.raise(4, 18.0),  // 2nd raise
-            MockHandActions.raise(5, 50.0),  // 3rd raise = 3-bet
+            MockHandActions.raise(3, 6.0),   // open (1st raise)
+            MockHandActions.raise(4, 18.0),  // 3-bet (2nd raise)
           ];
 
-          expect(StatsCalculator.didPlayerThreeBet(actions, 5), isTrue);
-          expect(StatsCalculator.didPlayerThreeBet(actions, 3), isFalse);
-          expect(StatsCalculator.didPlayerThreeBet(actions, 4), isFalse);
+          expect(StatsCalculator.didPlayerThreeBet(actions, 4), isTrue);  // 3-bettor
+          expect(StatsCalculator.didPlayerThreeBet(actions, 3), isFalse); // opener
         });
 
-        test('returns false when player makes only the 2nd raise (not a 3-bet)', () {
-          // P3 opens (1st), P4 raises (2nd) — this is just a raise, not 3-bet
+        test('the 3rd voluntary raise is a 4-bet, not a 3-bet', () {
+          // P3 opens (1st), P4 3-bets (2nd), P5 4-bets (3rd).
           final actions = [
             ...MockHandActions.blindsOnly(),
-            MockHandActions.raise(3, 6.0),   // 1st raise
-            MockHandActions.raise(4, 18.0),  // 2nd raise — NOT a 3-bet
+            MockHandActions.raise(3, 6.0),   // open
+            MockHandActions.raise(4, 18.0),  // 3-bet
+            MockHandActions.raise(5, 50.0),  // 4-bet
           ];
 
-          expect(StatsCalculator.didPlayerThreeBet(actions, 4), isFalse);
+          expect(StatsCalculator.didPlayerThreeBet(actions, 4), isTrue);  // 3-bet
+          expect(StatsCalculator.didPlayerThreeBet(actions, 5), isFalse); // 4-bet, not 3-bet
+          expect(StatsCalculator.didPlayerThreeBet(actions, 3), isFalse); // opener
+        });
+
+        test('opener who re-raises after being 3-bet is 4-betting, not 3-betting', () {
+          // P3 opens (1st), P4 3-bets (2nd), P3 4-bets (3rd).
+          final actions = [
+            ...MockHandActions.blindsOnly(),
+            MockHandActions.raise(3, 6.0),   // open
+            MockHandActions.raise(4, 18.0),  // 3-bet by P4
+            MockHandActions.raise(3, 50.0),  // 4-bet by P3
+          ];
+
+          expect(StatsCalculator.didPlayerThreeBet(actions, 4), isTrue);  // P4 3-bet
+          expect(StatsCalculator.didPlayerThreeBet(actions, 3), isFalse); // P3 4-bet
+        });
+
+        test('returns false when the pot is only opened (no re-raise)', () {
+          final actions = [
+            ...MockHandActions.blindsOnly(),
+            MockHandActions.raise(3, 6.0),   // open only
+            MockHandActions.call(4, 6.0),    // flat call
+          ];
+
           expect(StatsCalculator.didPlayerThreeBet(actions, 3), isFalse);
+          expect(StatsCalculator.didPlayerThreeBet(actions, 4), isFalse);
         });
 
         test('returns false when hero open-raises with no prior raise', () {
           final actions = [
             ...MockHandActions.blindsOnly(),
             MockHandActions.fold(3),
-            MockHandActions.raise(4, 6.0), // Hero opens, 1st raise
+            MockHandActions.raise(4, 6.0), // hero opens (1st raise)
           ];
 
           expect(StatsCalculator.didPlayerThreeBet(actions, 4), isFalse);
         });
 
-        test('returns false when hero calls instead of 3-betting', () {
+        test('returns false when hero calls the open instead of 3-betting', () {
           final actions = [
             ...MockHandActions.blindsOnly(),
-            MockHandActions.raise(3, 6.0),  // 1st raise
-            MockHandActions.raise(4, 18.0), // 2nd raise
-            MockHandActions.call(5, 18.0),  // Hero calls
+            MockHandActions.raise(3, 6.0),  // open
+            MockHandActions.call(4, 6.0),   // hero flats
+          ];
+
+          expect(StatsCalculator.didPlayerThreeBet(actions, 4), isFalse);
+        });
+
+        test('returns false when hero folds to the open', () {
+          final actions = [
+            ...MockHandActions.blindsOnly(),
+            MockHandActions.raise(3, 6.0),  // open
+            MockHandActions.fold(4),        // hero folds to open
+          ];
+
+          expect(StatsCalculator.didPlayerThreeBet(actions, 4), isFalse);
+        });
+
+        test('returns false for a player who folds after someone else 3-bets', () {
+          // P3 opens (1st), P4 3-bets (2nd), P5 folds — P5 did not 3-bet.
+          final actions = [
+            ...MockHandActions.blindsOnly(),
+            MockHandActions.raise(3, 6.0),
+            MockHandActions.raise(4, 18.0),
+            MockHandActions.fold(5),
           ];
 
           expect(StatsCalculator.didPlayerThreeBet(actions, 5), isFalse);
         });
 
-        test('ignores non-preflop raises', () {
+        test('ignores non-preflop raises (flop bet-raise is not a preflop 3-bet)', () {
           final actions = [
             ...MockHandActions.blindsOnly(),
             MockHandActions.call(3, 2.0),
@@ -96,123 +142,85 @@ void main() {
           expect(StatsCalculator.didPlayerThreeBet(actions, 4), isFalse);
         });
 
-        test('original opener who 4-bets is not 3-betting', () {
-          // P3 opens (1st), P4 raises (2nd), P3 raises again (3rd = 3-bet by P3)
-          // Wait — P3 made the 3rd raise, so P3 IS the 3-bettor here
+        test('all-in as the 2nd voluntary raise IS a 3-bet', () {
           final actions = [
             ...MockHandActions.blindsOnly(),
-            MockHandActions.raise(3, 6.0),   // 1st raise
-            MockHandActions.raise(4, 18.0),  // 2nd raise
-            MockHandActions.raise(3, 50.0),  // 3rd raise = 3-bet by P3
+            MockHandActions.raise(3, 6.0),   // open
+            {'player': 4, 'action': 'all-in', 'street': 'preflop', 'amount': 100.0}, // 3-bet jam
           ];
 
-          expect(StatsCalculator.didPlayerThreeBet(actions, 3), isTrue); // P3 made 3rd raise
-          expect(StatsCalculator.didPlayerThreeBet(actions, 4), isFalse); // P4 made 2nd raise
+          expect(StatsCalculator.didPlayerThreeBet(actions, 4), isTrue);
         });
 
-        test('handles 4-bet and 5-bet scenario correctly', () {
-          // P3 opens (1st), P4 raises (2nd), P3 raises (3rd=3-bet), P4 raises (4th=4-bet)
+        test('all-in as the open (1st raise) is NOT a 3-bet', () {
           final actions = [
             ...MockHandActions.blindsOnly(),
-            MockHandActions.raise(3, 6.0),    // 1st raise
-            MockHandActions.raise(4, 18.0),   // 2nd raise
-            MockHandActions.raise(3, 50.0),   // 3rd raise = 3-bet
-            MockHandActions.raise(4, 120.0),  // 4th raise = 4-bet
+            {'player': 3, 'action': 'all-in', 'street': 'preflop', 'amount': 100.0}, // open jam
           ];
 
-          expect(StatsCalculator.didPlayerThreeBet(actions, 3), isTrue);  // 3-bet
-          expect(StatsCalculator.didPlayerThreeBet(actions, 4), isFalse); // 4-bet, not 3-bet
-        });
-
-        test('returns true for correct player in multiway 3-bet pot', () {
-          // UTG opens (1st), MP raises (2nd), CO raises (3rd = 3-bet)
-          final actions = [
-            ...MockHandActions.blindsOnly(),
-            MockHandActions.raise(3, 6.0, position: 'UTG'),   // 1st raise
-            MockHandActions.raise(4, 18.0, position: 'MP'),   // 2nd raise
-            MockHandActions.raise(5, 50.0, position: 'CO'),   // 3rd raise = 3-bet
-            MockHandActions.fold(6, position: 'BTN'),
-            MockHandActions.call(3, 44.0),                    // UTG calls
-          ];
-
-          expect(StatsCalculator.didPlayerThreeBet(actions, 5), isTrue);   // CO 3-bet
-          expect(StatsCalculator.didPlayerThreeBet(actions, 3), isFalse);  // UTG opened
-          expect(StatsCalculator.didPlayerThreeBet(actions, 4), isFalse);  // MP 2nd raise
-        });
-
-        test('returns false when hero folds after seeing raises', () {
-          final actions = [
-            ...MockHandActions.blindsOnly(),
-            MockHandActions.raise(3, 6.0),   // 1st
-            MockHandActions.raise(4, 18.0),  // 2nd
-            MockHandActions.fold(5),         // Hero folds instead of 3-betting
-          ];
-
-          expect(StatsCalculator.didPlayerThreeBet(actions, 5), isFalse);
-        });
-
-        test('all-in as 3rd raise is a 3-bet', () {
-          final actions = [
-            ...MockHandActions.blindsOnly(),
-            MockHandActions.raise(3, 6.0),   // 1st raise
-            MockHandActions.raise(4, 18.0),  // 2nd raise
-            {'player': 5, 'action': 'all-in', 'street': 'preflop', 'amount': 100.0}, // 3rd = 3-bet
-          ];
-
-          expect(StatsCalculator.didPlayerThreeBet(actions, 5), isTrue);
-        });
-
-        test('limp-raise sequence: raise after limper raise is 2nd raise not 3-bet', () {
-          // UTG limps, BTN raises (1st raise), UTG re-raises (2nd raise)
-          // Only 2 raises total — no 3-bet happened
-          final actions = [
-            ...MockHandActions.blindsOnly(),
-            MockHandActions.call(3, 2.0, position: 'UTG'),   // UTG limps
-            MockHandActions.raise(6, 8.0, position: 'BTN'),  // BTN raises (1st raise)
-            MockHandActions.raise(3, 24.0, position: 'UTG'), // UTG re-raises (2nd raise)
-          ];
-
-          expect(StatsCalculator.didPlayerThreeBet(actions, 6), isFalse); // 1st raise
-          expect(StatsCalculator.didPlayerThreeBet(actions, 3), isFalse); // 2nd raise, not 3-bet
-        });
-
-        test('limp-raise with 3rd raise IS a 3-bet', () {
-          // UTG limps, BTN raises (1st), UTG re-raises (2nd), BTN raises (3rd = 3-bet)
-          final actions = [
-            ...MockHandActions.blindsOnly(),
-            MockHandActions.call(3, 2.0, position: 'UTG'),
-            MockHandActions.raise(6, 8.0, position: 'BTN'),  // 1st raise
-            MockHandActions.raise(3, 24.0, position: 'UTG'), // 2nd raise
-            MockHandActions.raise(6, 70.0, position: 'BTN'), // 3rd raise = 3-bet
-          ];
-
-          expect(StatsCalculator.didPlayerThreeBet(actions, 6), isTrue);
           expect(StatsCalculator.didPlayerThreeBet(actions, 3), isFalse);
+        });
+
+        test('multiway: MP 3-bets over UTG open, CO 4-bets', () {
+          final actions = [
+            ...MockHandActions.blindsOnly(),
+            MockHandActions.raise(3, 6.0, position: 'UTG'),   // open (1st)
+            MockHandActions.raise(4, 18.0, position: 'MP'),   // 3-bet (2nd)
+            MockHandActions.raise(5, 50.0, position: 'CO'),   // 4-bet (3rd)
+            MockHandActions.fold(6, position: 'BTN'),
+          ];
+
+          expect(StatsCalculator.didPlayerThreeBet(actions, 4), isTrue);  // MP 3-bet
+          expect(StatsCalculator.didPlayerThreeBet(actions, 5), isFalse); // CO 4-bet
+          expect(StatsCalculator.didPlayerThreeBet(actions, 3), isFalse); // UTG opener
+        });
+
+        test('limp then raise: the first raise over a limp is the open, not a 3-bet', () {
+          // UTG limps (a call, not a raise), BTN raises = the OPEN (1st voluntary
+          // raise). A limp does not make the raise a 3-bet.
+          final actions = [
+            ...MockHandActions.blindsOnly(),
+            MockHandActions.call(3, 2.0, position: 'UTG'),   // limp
+            MockHandActions.raise(6, 8.0, position: 'BTN'),  // open (1st raise)
+          ];
+
+          expect(StatsCalculator.didPlayerThreeBet(actions, 6), isFalse); // open, not 3-bet
+        });
+
+        test('limp, open, re-raise: the re-raise over the open IS the 3-bet', () {
+          // UTG limps, BTN raises (open = 1st raise), UTG re-raises (3-bet = 2nd raise).
+          final actions = [
+            ...MockHandActions.blindsOnly(),
+            MockHandActions.call(3, 2.0, position: 'UTG'),   // limp
+            MockHandActions.raise(6, 8.0, position: 'BTN'),  // open (1st raise)
+            MockHandActions.raise(3, 24.0, position: 'UTG'), // 3-bet (2nd raise)
+          ];
+
+          expect(StatsCalculator.didPlayerThreeBet(actions, 3), isTrue);  // UTG 3-bet
+          expect(StatsCalculator.didPlayerThreeBet(actions, 6), isFalse); // BTN opened
         });
       });
 
       group('hadThreeBetOpportunity', () {
-        test('returns true when player can make 3rd raise (2 raises already happened)', () {
-          // P3 opens (1st), P4 raises (2nd), P5 acts after — can 3-bet
+        test('player acting after just the open HAD a 3-bet opportunity (cold-3bet spot)', () {
+          // P3 opens (1st raise), P4 acts next — could 3-bet.
           final actions = [
             ...MockHandActions.blindsOnly(),
-            MockHandActions.raise(3, 6.0),   // 1st raise
-            MockHandActions.raise(4, 18.0),  // 2nd raise
-            MockHandActions.fold(5),         // P5 acts after 2 raises
+            MockHandActions.raise(3, 6.0),   // open (1 raise)
+            MockHandActions.fold(4),         // P4 declines
           ];
 
-          expect(StatsCalculator.hadThreeBetOpportunity(actions, 5), isTrue);
+          expect(StatsCalculator.hadThreeBetOpportunity(actions, 4), isTrue);
         });
 
-        test('returns false when only 1 raise happened before player acts', () {
-          // P3 opens (1st raise only), P4 acts — only 1 raise, can raise but not 3-bet
+        test('taking the 3-bet counts as having the opportunity', () {
           final actions = [
             ...MockHandActions.blindsOnly(),
-            MockHandActions.raise(3, 6.0),   // 1st raise only
-            MockHandActions.call(4, 6.0),    // P4 acts after 1 raise
+            MockHandActions.raise(3, 6.0),   // open
+            MockHandActions.raise(4, 18.0),  // P4 3-bets
           ];
 
-          expect(StatsCalculator.hadThreeBetOpportunity(actions, 4), isFalse);
+          expect(StatsCalculator.hadThreeBetOpportunity(actions, 4), isTrue);
         });
 
         test('returns false when player acts before any raise', () {
@@ -236,28 +244,14 @@ void main() {
           expect(StatsCalculator.hadThreeBetOpportunity(actions, 4), isFalse);
         });
 
-        test('opener has 3-bet opportunity when facing 2nd raise', () {
-          // P3 opens (1st), P4 raises (2nd), action back to P3 — P3 can 3-bet
+        test('opener facing a 3-bet is in 4-bet territory, NOT a 3-bet opportunity', () {
+          // P3 opens (1st), P4 3-bets (2nd), action back to P3 — 2 raises already,
+          // so P3 would be 4-betting, not 3-betting.
           final actions = [
             ...MockHandActions.blindsOnly(),
-            MockHandActions.raise(3, 6.0),   // 1st raise by P3
-            MockHandActions.raise(4, 18.0),  // 2nd raise by P4
-            MockHandActions.call(3, 12.0),   // P3 acts after 2 total raises — can 3-bet
-          ];
-
-          // 2 total raises happened when P3 acts again → 3-bet opportunity
-          expect(StatsCalculator.hadThreeBetOpportunity(actions, 3), isTrue);
-        });
-
-        test('no 3-bet opportunity when 3+ raises already happened (4-bet territory)', () {
-          // P3 opens (1st), P4 raises (2nd), P5 raises (3rd = 3-bet)
-          // When P3 acts again, 3 raises already happened — this is 4-bet opp, not 3-bet
-          final actions = [
-            ...MockHandActions.blindsOnly(),
-            MockHandActions.raise(3, 6.0),   // 1st raise
-            MockHandActions.raise(4, 18.0),  // 2nd raise
-            MockHandActions.raise(5, 50.0),  // 3rd raise = 3-bet
-            MockHandActions.fold(3),         // P3 acts after 3 raises — 4-bet territory
+            MockHandActions.raise(3, 6.0),   // open
+            MockHandActions.raise(4, 18.0),  // 3-bet
+            MockHandActions.fold(3),         // P3 acts after 2 raises (4-bet spot)
           ];
 
           expect(StatsCalculator.hadThreeBetOpportunity(actions, 3), isFalse);
@@ -267,32 +261,18 @@ void main() {
 
     group('Fold to 3-Bet Detection', () {
       group('facedThreeBet', () {
-        test('returns true when hero opens, someone raises, someone 3-bets', () {
-          // Hero opens (1st), P4 raises (2nd), P5 raises (3rd = 3-bet)
-          // Hero raised earlier and now faces the 3-bet
+        test('opener who gets 3-bet faced a 3-bet', () {
+          // Hero opens (1st raise), P4 3-bets (2nd raise).
           final actions = [
             ...MockHandActions.blindsOnly(),
-            MockHandActions.raise(3, 6.0),   // Hero opens
-            MockHandActions.raise(4, 18.0),  // 2nd raise
-            MockHandActions.raise(5, 50.0),  // 3rd raise = 3-bet
+            MockHandActions.raise(3, 6.0),   // hero opens
+            MockHandActions.raise(4, 18.0),  // 3-bet
           ];
 
           expect(StatsCalculator.facedThreeBet(actions, 3), isTrue);
         });
 
-        test('returns true when hero re-raises and opponent 3-bets', () {
-          // P3 opens (1st), Hero raises (2nd), P3 raises (3rd = 3-bet)
-          final actions = [
-            ...MockHandActions.blindsOnly(),
-            MockHandActions.raise(3, 6.0),    // 1st raise
-            MockHandActions.raise(4, 18.0),   // Hero 2nd raise
-            MockHandActions.raise(3, 50.0),   // 3rd raise = 3-bet
-          ];
-
-          expect(StatsCalculator.facedThreeBet(actions, 4), isTrue);
-        });
-
-        test('returns false when hero raises and all fold', () {
+        test('returns false when hero opens and everyone folds', () {
           final actions = [
             ...MockHandActions.blindsOnly(),
             MockHandActions.raise(3, 6.0),
@@ -303,106 +283,87 @@ void main() {
           expect(StatsCalculator.facedThreeBet(actions, 3), isFalse);
         });
 
-        test('returns false when hero calls instead of raising', () {
+        test('returns false when hero limps (did not open) then someone raises', () {
           final actions = [
             ...MockHandActions.blindsOnly(),
-            MockHandActions.call(3, 2.0),
-            MockHandActions.raise(4, 8.0),
+            MockHandActions.call(3, 2.0),   // hero limps
+            MockHandActions.raise(4, 8.0),  // open by someone else
           ];
 
           expect(StatsCalculator.facedThreeBet(actions, 3), isFalse);
         });
 
-        test('returns false when only 2 raises happen (no 3-bet)', () {
-          // P3 opens (1st), P4 raises (2nd) — only 2 raises, no 3-bet
+        test('returns false when only the hero raised (self re-raise not counted)', () {
+          // Only hero ever raises — no opponent 3-bet against them.
           final actions = [
             ...MockHandActions.blindsOnly(),
-            MockHandActions.raise(3, 6.0),   // 1st raise by hero
-            MockHandActions.raise(4, 18.0),  // 2nd raise — not a 3-bet yet
+            MockHandActions.raise(3, 6.0),   // hero opens
+            MockHandActions.call(4, 6.0),
           ];
 
           expect(StatsCalculator.facedThreeBet(actions, 3), isFalse);
         });
 
-        test('returns false when hero did not raise', () {
+        test('returns false when hero never raised', () {
           final actions = [
             ...MockHandActions.blindsOnly(),
-            MockHandActions.raise(3, 6.0),
-            MockHandActions.raise(4, 18.0),
-            MockHandActions.raise(5, 50.0), // 3-bet happened but hero (P6) never raised
+            MockHandActions.raise(3, 6.0),   // open by P3
+            MockHandActions.raise(4, 18.0),  // 3-bet by P4
           ];
 
-          expect(StatsCalculator.facedThreeBet(actions, 6), isFalse);
+          expect(StatsCalculator.facedThreeBet(actions, 6), isFalse); // P6 never acted/raised
         });
       });
 
       group('didFoldTo3Bet', () {
-        test('returns true when hero opens, faces 3-bet, then folds', () {
-          // P3 opens (1st), P4 raises (2nd), P5 3-bets (3rd), P3 folds
+        test('returns true when hero opens, faces a 3-bet, then folds', () {
+          // Hero opens (1st), P4 3-bets (2nd), hero folds.
           final actions = [
             ...MockHandActions.blindsOnly(),
-            MockHandActions.raise(3, 6.0),   // Hero opens
-            MockHandActions.raise(4, 18.0),  // 2nd raise
-            MockHandActions.raise(5, 50.0),  // 3rd raise = 3-bet
-            MockHandActions.fold(3),         // Hero folds to 3-bet
+            MockHandActions.raise(3, 6.0),   // hero opens
+            MockHandActions.raise(4, 18.0),  // 3-bet
+            MockHandActions.fold(3),         // hero folds to 3-bet
           ];
 
           expect(StatsCalculator.didFoldTo3Bet(actions, 3), isTrue);
         });
 
-        test('returns true when hero re-raises, opponent 3-bets, hero folds', () {
-          // P3 opens (1st), Hero raises (2nd), P3 3-bets (3rd), Hero folds
+        test('returns false when hero faces the 3-bet but calls', () {
           final actions = [
             ...MockHandActions.blindsOnly(),
-            MockHandActions.raise(3, 6.0),   // 1st raise
-            MockHandActions.raise(4, 18.0),  // Hero 2nd raise
-            MockHandActions.raise(3, 50.0),  // 3rd raise = 3-bet
-            MockHandActions.fold(4),         // Hero folds
-          ];
-
-          expect(StatsCalculator.didFoldTo3Bet(actions, 4), isTrue);
-        });
-
-        test('returns false when hero faces 3-bet but calls', () {
-          final actions = [
-            ...MockHandActions.blindsOnly(),
-            MockHandActions.raise(3, 6.0),
-            MockHandActions.raise(4, 18.0),
-            MockHandActions.raise(5, 50.0),  // 3-bet
-            MockHandActions.call(3, 44.0),   // Hero calls
+            MockHandActions.raise(3, 6.0),   // hero opens
+            MockHandActions.raise(4, 18.0),  // 3-bet
+            MockHandActions.call(3, 12.0),   // hero calls
           ];
 
           expect(StatsCalculator.didFoldTo3Bet(actions, 3), isFalse);
         });
 
-        test('returns false when hero faces 3-bet but 4-bets', () {
+        test('returns false when hero faces the 3-bet and 4-bets', () {
           final actions = [
             ...MockHandActions.blindsOnly(),
-            MockHandActions.raise(3, 6.0),   // Hero opens
-            MockHandActions.raise(4, 18.0),  // 2nd raise
-            MockHandActions.raise(5, 50.0),  // 3rd = 3-bet
-            MockHandActions.raise(3, 120.0), // Hero 4-bets
+            MockHandActions.raise(3, 6.0),   // hero opens
+            MockHandActions.raise(4, 18.0),  // 3-bet
+            MockHandActions.raise(3, 50.0),  // hero 4-bets
           ];
 
           expect(StatsCalculator.didFoldTo3Bet(actions, 3), isFalse);
         });
 
-        test('returns false when hero folds without facing 3-bet', () {
+        test('returns false when hero folds to just the open (no 3-bet)', () {
+          final actions = [
+            ...MockHandActions.blindsOnly(),
+            MockHandActions.raise(3, 6.0),   // open only
+            MockHandActions.fold(4),         // hero folds to the open, not a 3-bet
+          ];
+
+          expect(StatsCalculator.didFoldTo3Bet(actions, 4), isFalse);
+        });
+
+        test('returns false when hero folds preflop with no raise at all', () {
           final actions = [
             ...MockHandActions.blindsOnly(),
             MockHandActions.fold(3),
-          ];
-
-          expect(StatsCalculator.didFoldTo3Bet(actions, 3), isFalse);
-        });
-
-        test('returns false when only 2 raises and hero folds', () {
-          // Only 2 raises — no 3-bet happened
-          final actions = [
-            ...MockHandActions.blindsOnly(),
-            MockHandActions.raise(3, 6.0),   // Hero opens
-            MockHandActions.raise(4, 18.0),  // 2nd raise (not 3-bet)
-            MockHandActions.fold(3),         // Hero folds to 2nd raise
           ];
 
           expect(StatsCalculator.didFoldTo3Bet(actions, 3), isFalse);
@@ -1163,13 +1124,16 @@ void main() {
       });
 
       test('handles case insensitivity for action types', () {
+        // P1 opens (1st raise), P2 3-bets (2nd raise), P3 4-bets (3rd raise) —
+        // regardless of casing on action/street.
         final actions = [
           {'player': 1, 'action': 'RAISE', 'street': 'PREFLOP', 'amount': 6.0},
           {'player': 2, 'action': 'Raise', 'street': 'Preflop', 'amount': 18.0},
           {'player': 3, 'action': 'raise', 'street': 'preflop', 'amount': 50.0},
         ];
 
-        expect(StatsCalculator.didPlayerThreeBet(actions, 3), isTrue);
+        expect(StatsCalculator.didPlayerThreeBet(actions, 2), isTrue);  // 2nd raise = 3-bet
+        expect(StatsCalculator.didPlayerThreeBet(actions, 3), isFalse); // 3rd raise = 4-bet
       });
 
       test('handles player seat that does not exist in actions', () {
@@ -1182,26 +1146,37 @@ void main() {
         expect(StatsCalculator.hadThreeBetOpportunity(actions, 99), isFalse);
       });
 
-      test('all-in as 3rd raise is detected as 3-bet', () {
+      test('all-in as the 2nd voluntary raise is detected as a 3-bet', () {
         final actions = [
           ...MockHandActions.blindsOnly(),
-          MockHandActions.raise(3, 6.0),   // 1st raise
-          MockHandActions.raise(4, 18.0),  // 2nd raise
-          {'player': 5, 'action': 'all-in', 'street': 'preflop', 'amount': 100.0}, // 3rd = 3-bet
+          MockHandActions.raise(3, 6.0),   // open (1st raise)
+          {'player': 4, 'action': 'all-in', 'street': 'preflop', 'amount': 100.0}, // 3-bet (2nd raise)
         ];
 
-        expect(StatsCalculator.didPlayerThreeBet(actions, 5), isTrue);
+        expect(StatsCalculator.didPlayerThreeBet(actions, 4), isTrue);
       });
 
-      test('all-in as open should NOT give 3-bet opportunity (only 1 raise)', () {
+      test('all-in as the 3rd voluntary raise is a 4-bet, not a 3-bet', () {
         final actions = [
           ...MockHandActions.blindsOnly(),
-          {'player': 3, 'action': 'all-in', 'street': 'preflop', 'amount': 100.0}, // 1st raise
+          MockHandActions.raise(3, 6.0),   // open
+          MockHandActions.raise(4, 18.0),  // 3-bet
+          {'player': 5, 'action': 'all-in', 'street': 'preflop', 'amount': 100.0}, // 4-bet jam
+        ];
+
+        expect(StatsCalculator.didPlayerThreeBet(actions, 5), isFalse); // 4-bet
+        expect(StatsCalculator.didPlayerThreeBet(actions, 4), isTrue);  // 3-bet
+      });
+
+      test('all-in as the open gives the next player a 3-bet opportunity', () {
+        final actions = [
+          ...MockHandActions.blindsOnly(),
+          {'player': 3, 'action': 'all-in', 'street': 'preflop', 'amount': 100.0}, // open (1st raise)
           MockHandActions.fold(4),
         ];
 
-        // Only 1 raise happened, so no 3-bet opportunity
-        expect(StatsCalculator.hadThreeBetOpportunity(actions, 4), isFalse);
+        // 1 raise (the open) happened → the next player HAD a 3-bet opportunity.
+        expect(StatsCalculator.hadThreeBetOpportunity(actions, 4), isTrue);
       });
 
       test('all-in on flop should count for c-bet if last preflop aggressor', () {
@@ -1228,27 +1203,28 @@ void main() {
         expect(StatsCalculator.didCbet(actions, 3), isTrue);
       });
 
-      test('multiple players with 3-bet opportunity after 2 raises', () {
-        // P3 opens (1st), P4 raises (2nd) — everyone after has 3-bet opportunity
+      test('3-bet opportunity exists only right after the open (1 raise)', () {
+        // UTG opens (1st raise), MP 3-bets (2nd raise) — after that it's 4-bet
+        // territory, so later players did NOT have a 3-bet opportunity.
         final actions = [
           ...MockHandActions.blindsOnly(),
-          MockHandActions.raise(3, 6.0, position: 'UTG'),  // 1st raise
-          MockHandActions.raise(4, 18.0, position: 'MP'),  // 2nd raise
+          MockHandActions.raise(3, 6.0, position: 'UTG'),  // open (1st raise)
+          MockHandActions.raise(4, 18.0, position: 'MP'),  // 3-bet (2nd raise)
           MockHandActions.fold(5, position: 'CO'),
           MockHandActions.fold(6, position: 'BTN'),
           MockHandActions.fold(1, position: 'SB'),
           MockHandActions.fold(2, position: 'BB'),
         ];
 
-        // P3 only saw 1 raise by others
+        // UTG never faced the open before acting → no 3-bet opportunity.
         expect(StatsCalculator.hadThreeBetOpportunity(actions, 3), isFalse);
-        // P4 is the 2nd raiser, saw only 1 raise by others
-        expect(StatsCalculator.hadThreeBetOpportunity(actions, 4), isFalse);
-        // P5, P6, P1, P2 all saw 2 raises by others — they had 3-bet opportunity
-        expect(StatsCalculator.hadThreeBetOpportunity(actions, 5), isTrue);
-        expect(StatsCalculator.hadThreeBetOpportunity(actions, 6), isTrue);
-        expect(StatsCalculator.hadThreeBetOpportunity(actions, 1), isTrue);
-        expect(StatsCalculator.hadThreeBetOpportunity(actions, 2), isTrue);
+        // MP acted after exactly 1 raise (the open) → HAD a 3-bet opportunity (took it).
+        expect(StatsCalculator.hadThreeBetOpportunity(actions, 4), isTrue);
+        // CO/BTN/SB/BB acted after 2 raises (open + 3-bet) → 4-bet spot, NOT a 3-bet opp.
+        expect(StatsCalculator.hadThreeBetOpportunity(actions, 5), isFalse);
+        expect(StatsCalculator.hadThreeBetOpportunity(actions, 6), isFalse);
+        expect(StatsCalculator.hadThreeBetOpportunity(actions, 1), isFalse);
+        expect(StatsCalculator.hadThreeBetOpportunity(actions, 2), isFalse);
 
         // None of them 3-bet
         expect(StatsCalculator.didPlayerThreeBet(actions, 5), isFalse);

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/typography.dart';
 import '../design_system/constants/decorations.dart';
+import '../design_system/tokens/ft_tokens.g.dart';
 
 /// Legacy no-op transition — kept for the (rare) case a caller wants
 /// an explicit instant swap. New screens should not use this.
@@ -40,6 +41,9 @@ class AppTheme {
           TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
         },
       ),
+      // Final Table v3 colour tokens (FtColors.of(context)). The app ships
+      // Dark; screens adopt these one by one during the redesign.
+      extensions: const <ThemeExtension<dynamic>>[FtColors.dark],
       // Set IBM Plex Sans as the default font family
       fontFamily: AppTypography.ibm().fontFamily,
       colorScheme: ColorScheme.fromSeed(

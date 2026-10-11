@@ -40,6 +40,7 @@ import '../../design_system/constants/decorations.dart';
 import '../../design_system/components/dialogs/app_dialog.dart';
 import '../../design_system/components/dialogs/dialog_action_bar.dart';
 import '../../utils/user_facing_error.dart';
+import '../../utils/decimal_input.dart';
 // Removed: showdown_dialog - dealers don't enter player hole cards
 // Players enter their own hole cards on their devices
 
@@ -1909,7 +1910,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                   ),
                   const SizedBox(width: 11),
                   GestureDetector(
-                    onTap: () => Navigator.pop(context, double.tryParse(controller.text)),
+                    onTap: () => Navigator.pop(context, parseDecimal(controller.text)),
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
                       decoration: BoxDecoration(
@@ -2129,7 +2130,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
-                    final stack = double.tryParse(controller.text);
+                    final stack = parseDecimal(controller.text);
                     if (stack != null && stack > 0) {
                       Navigator.pop(dialogContext, stack);
                     }
@@ -2569,7 +2570,8 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
         title: Text(AppLocalizations.of(context).dealerTableEnterStartingStack, style: const TextStyle(color: Colors.white)),
         content: TextField(
           controller: controller,
-          keyboardType: TextInputType.number,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          inputFormatters: [DecimalInputFormatter()],
           autofocus: true,
           style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
           textAlign: TextAlign.center,
@@ -2582,7 +2584,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
             ),
           ),
           onSubmitted: (value) {
-            final parsed = double.tryParse(value);
+            final parsed = parseDecimal(value);
             if (parsed != null && parsed > 0) {
               Navigator.pop(context, parsed);
             }
@@ -2595,7 +2597,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
           ),
           ElevatedButton(
             onPressed: () {
-              final parsed = double.tryParse(controller.text);
+              final parsed = parseDecimal(controller.text);
               if (parsed != null && parsed > 0) {
                 Navigator.pop(context, parsed);
               }
@@ -3119,10 +3121,10 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                           const SizedBox(height: 8),
                           TextField(
                             controller: smallBlindController,
-                            keyboardType: TextInputType.number,
+                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
                             textAlign: TextAlign.center,
                             style: AppTypography.ibm(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w500),
-                            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                            inputFormatters: [DecimalInputFormatter()],
                             decoration: InputDecoration(
                               isDense: true,
                               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -3150,10 +3152,10 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                           const SizedBox(height: 8),
                           TextField(
                             controller: bigBlindController,
-                            keyboardType: TextInputType.number,
+                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
                             textAlign: TextAlign.center,
                             style: AppTypography.ibm(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w500),
-                            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                            inputFormatters: [DecimalInputFormatter()],
                             decoration: InputDecoration(
                               isDense: true,
                               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -3189,8 +3191,8 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                   const SizedBox(width: 11),
                   GestureDetector(
                     onTap: () {
-                      final newSmallBlind = double.tryParse(smallBlindController.text) ?? _smallBlind;
-                      final newBigBlind = double.tryParse(bigBlindController.text) ?? _bigBlind;
+                      final newSmallBlind = parseDecimal(smallBlindController.text) ?? _smallBlind;
+                      final newBigBlind = parseDecimal(bigBlindController.text) ?? _bigBlind;
 
                       if (newSmallBlind >= newBigBlind) {
                         ScaffoldMessenger.of(context).showSnackBar(
@@ -5573,7 +5575,8 @@ class _UserSearchDialogState extends State<_UserSearchDialog> {
             // Chip stack field
             TextField(
               controller: _stackController,
-              keyboardType: TextInputType.number,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              inputFormatters: [DecimalInputFormatter()],
               style: const TextStyle(color: Colors.white),
               decoration: InputDecoration(
                 labelText: AppLocalizations.of(context).dealerTableStartingChipStack,
@@ -5603,7 +5606,7 @@ class _UserSearchDialogState extends State<_UserSearchDialog> {
 
   bool _canSubmit() {
     final name = _searchController.text.trim();
-    final stack = double.tryParse(_stackController.text);
+    final stack = parseDecimal(_stackController.text);
 
     if (name.isEmpty || stack == null || stack <= 0) return false;
 
@@ -5615,7 +5618,7 @@ class _UserSearchDialogState extends State<_UserSearchDialog> {
 
   void _submit() {
     final name = _searchController.text.trim();
-    final stack = double.tryParse(_stackController.text);
+    final stack = parseDecimal(_stackController.text);
 
     if (name.isEmpty || stack == null || stack <= 0) return;
 

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -14,6 +15,7 @@ import '../l10n/app_localizations.dart';
 import '../services/auth_service.dart';
 import '../services/subscription_service.dart';
 import '../services/locale_service.dart';
+import '../services/feature_flag_service.dart';
 import '../services/currency_service.dart';
 import '../services/skip_hand_scouting_service.dart';
 import '../services/username_service.dart';
@@ -35,6 +37,7 @@ import 'club/club_dashboard_screen.dart';
 import 'admin/club_requests_screen.dart';
 import 'admin/support_requests_screen.dart';
 import 'admin/notification_tester_screen.dart';
+import 'leak_detector_screen.dart';
 import '../widgets/register_club_dialog.dart';
 import '../design_system/constants/typography.dart';
 import '../design_system/constants/decorations.dart';
@@ -53,6 +56,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   int _pendingSupportCount = 0;
   List<Club> _clubs = [];
   bool _scoutingEnabled = false;
+  StreamSubscription<bool>? _premiumSub;
 
   static const _bg = AppColors.bgPrimary;
   static const _surface = AppColors.bgSurface;
@@ -64,6 +68,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void initState() {
     super.initState();
     _loadData();
+    // Refresh the subscription banner when the tier changes (purchase,
+    // restore, or a simulated override).
+    _premiumSub = SubscriptionService.premiumStatusStream.listen((_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _premiumSub?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadData() async {
@@ -104,9 +119,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
       case 'en': return 'English';
       case 'es': return 'Español';
       case 'fr': return 'Français';
+      case 'it': return 'Italiano';
       case 'pl': return 'Polski';
       case 'pt': return 'Português';
+      case 'ro': return 'Română';
       case 'ru': return 'Русский';
+      case 'sk': return 'Slovenčina';
+      case 'uk': return 'Українська';
       default: return code;
     }
   }
@@ -169,9 +188,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
     (code: 'de',  label: 'Deutsch',        flagAsset: 'assets/icons/Property 1=Germany (DE).svg'),
     (code: 'es',  label: 'Español',        flagAsset: 'assets/icons/Property 1=Spain (ES).svg'),
     (code: 'fr',  label: 'Français',       flagAsset: 'assets/icons/Property 1=France (FR).svg'),
+    (code: 'it',  label: 'Italiano',       flagAsset: 'assets/icons/Property 1=Italy (IT).svg'),
     (code: 'pl',  label: 'Polski',         flagAsset: 'assets/icons/Property 1=Poland (PL).svg'),
     (code: 'pt',  label: 'Português',      flagAsset: 'assets/icons/Property 1=Portugal (PT).svg'),
+    (code: 'ro',  label: 'Română',         flagAsset: 'assets/icons/Property 1=Romania (RO).svg'),
     (code: 'ru',  label: 'Русский',        flagAsset: 'assets/icons/Property 1=Russia (RU).svg'),
+    (code: 'sk',  label: 'Slovenčina',     flagAsset: 'assets/icons/Property 1=Slovakia (SK).svg'),
+    (code: 'uk',  label: 'Українська',     flagAsset: 'assets/icons/Property 1=ukraine.svg'),
   ];
 
   void _showLanguagePicker() {
@@ -912,6 +935,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         title: l10n.settingsBankroll,
                         onTap: _navigateToBankroll,
                       ),
+                      // Leak Detector — feature-flagged phase-1 experiment;
+                      // English-only until GA, matching the flag gating.
+                      if (FeatureFlagService.isEnabled(FeatureFlagService.leakDetector))
+                        _buildRow(
+                          icon: const Icon(Icons.plumbing, color: AppColors.contentInactive, size: 24),
+                          title: 'Leak Detector',
+                          onTap: () => Navigator.push(context, MaterialPageRoute(
+                              builder: (_) => const LeakDetectorScreen())),
+                        ),
                       _buildRow(
                         icon: const Icon(Icons.add_circle_outline_rounded, color: AppColors.contentInactive, size: 24),
                         title: l10n.settingsRegisterClub,
@@ -928,18 +960,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         title: l10n.settingsCurrency,
                         subtitle: '${CurrencyService.current.name} (${CurrencyService.symbol})',
                         onTap: _showCurrencyPicker,
+                        // Currency is the last row when hand scouting is hidden
+                        // (scouting is gated behind the Training Drills flag).
+                        isLast: !FeatureFlagService.isEnabled(FeatureFlagService.trainingDrills),
                       ),
-                      _buildToggleRow(
-                        icon: const Icon(Icons.visibility_outlined, color: AppColors.contentInactive, size: 24),
-                        title: l10n.settingsSkipHandScouting,
-                        subtitle: l10n.settingsSkipHandScoutingDesc,
-                        value: _scoutingEnabled,
-                        onChanged: (v) async {
-                          await SkipHandScoutingService.setEnabled(v);
-                          setState(() => _scoutingEnabled = v);
-                        },
-                        isLast: true,
-                      ),
+                      // Hand scouting shares the Training Drills feature flag.
+                      if (FeatureFlagService.isEnabled(FeatureFlagService.trainingDrills))
+                        _buildToggleRow(
+                          icon: const Icon(Icons.visibility_outlined, color: AppColors.contentInactive, size: 24),
+                          title: l10n.settingsSkipHandScouting,
+                          subtitle: l10n.settingsSkipHandScoutingDesc,
+                          value: _scoutingEnabled,
+                          onChanged: (v) async {
+                            await SkipHandScoutingService.setEnabled(v);
+                            setState(() => _scoutingEnabled = v);
+                          },
+                          isLast: true,
+                        ),
                     ],
                   ),
                   const SizedBox(height: 16),
@@ -1037,9 +1074,39 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   // ── Sub-widgets ─────────────────────────────────────────────────────────────
 
+  /// Localized tier name for the user's effective plan, or null if free.
+  String? _activePlanLabel(AppLocalizations l10n) {
+    switch (SubscriptionService.effectiveTier) {
+      case 'club':
+        return l10n.profileTierClub;
+      case 'elite':
+        return l10n.profileTierElite;
+      case 'pro':
+        return l10n.profileTierPro;
+      default:
+        return null;
+    }
+  }
+
   Widget _buildSubscriptionBanner() {
+    final l10n = AppLocalizations.of(context);
+    final plan = _activePlanLabel(l10n);
+    final isSubscribed = plan != null;
+
+    // Subscribed: show the active plan name. Free: show the upgrade prompt.
+    final title = isSubscribed ? l10n.settingsPlusActiveTitle(plan) : l10n.settingsGetPlus;
+    final subtitle = isSubscribed ? l10n.settingsPlusActiveSubtitle(plan) : l10n.settingsGetPlusSubtitle;
+
+    // When subscribed, open the paywall pre-selected + scrolled to the current
+    // plan (0=Pro, 1=Elite, 2=Club) instead of defaulting to Pro.
+    const tierIndex = {'pro': 0, 'elite': 1, 'club': 2};
+    final preselected = tierIndex[SubscriptionService.effectiveTier];
+
     return GestureDetector(
-      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PaywallScreen())),
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => PaywallScreen(preselectedTier: preselected)),
+      ),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(color: _surface, borderRadius: BorderRadius.circular(AppDecorations.radiusLg)),
@@ -1060,9 +1127,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(AppLocalizations.of(context).settingsGetPlus,
+                  Text(title,
                       style: AppTypography.ibm(fontSize: 17, fontWeight: FontWeight.w600, color: Colors.white, letterSpacing: 0)),
-                  Text(AppLocalizations.of(context).settingsGetPlusSubtitle,
+                  Text(subtitle,
                       style: AppTypography.ibm(fontSize: 15, fontWeight: FontWeight.w500, color: _secondary)),
                 ],
               ),

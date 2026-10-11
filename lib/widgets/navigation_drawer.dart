@@ -273,9 +273,10 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
     );
   }
 
-  /// Returns the subscription pill label based on the current tier.
+  /// Returns the subscription pill label based on the effective tier
+  /// (reflects debug/simulated overrides and partner grants, not just RevenueCat).
   String _subscriptionPillLabel(AppLocalizations l10n) {
-    switch (SubscriptionService.currentTier) {
+    switch (SubscriptionService.effectiveTier) {
       case 'club':  return l10n.profileTierClub;
       case 'elite': return l10n.profileTierElite;
       case 'pro':   return l10n.profileTierPro;
@@ -310,9 +311,12 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
           GestureDetector(
             onTap: () {
               Navigator.pop(context);
+              // When subscribed, preselect + scroll to the current plan.
+              const tierIndex = {'pro': 0, 'elite': 1, 'club': 2};
+              final preselected = tierIndex[SubscriptionService.effectiveTier];
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const PaywallScreen()),
+                MaterialPageRoute(builder: (context) => PaywallScreen(preselectedTier: preselected)),
               );
             },
             child: Container(

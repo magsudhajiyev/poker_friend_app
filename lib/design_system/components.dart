@@ -60,6 +60,7 @@ export 'components/app_toggle.dart';
 export 'components/overlays/sliding_notification.dart';
 export 'components/overlays/raise_snap_overlay.dart';
 export 'components/overlays/event_success_popup.dart';
+export 'components/overlays/subscription_success_popup.dart';
 
 // Pickers
 export 'components/pickers/card_keyboard.dart';
@@ -77,3 +78,6 @@ export 'components/tabs/app_tab_selector.dart';
 // Chips
 export 'components/chips/info_chip_dark.dart';
 export 'components/chips/player_chip.dart';
+
+// Final Table v3 components (redesign).
+export 'components/v3/v3.dart';

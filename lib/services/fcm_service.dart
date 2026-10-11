@@ -4,16 +4,19 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'auth_service.dart';
+import 'logger_service.dart';
 
 /// Background message handler - must be a top-level function
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   // Handle background messages
   // Note: This runs in a separate isolate, so we can't access app state
-  debugPrint('FCM: Background message received: ${message.messageId}');
-  debugPrint('FCM: Title: ${message.notification?.title}');
-  debugPrint('FCM: Body: ${message.notification?.body}');
-  debugPrint('FCM: Data: ${message.data}');
+  if (kDebugMode) {
+    debugPrint('FCM: Background message received: ${message.messageId}');
+    debugPrint('FCM: Title: ${message.notification?.title}');
+    debugPrint('FCM: Body: ${message.notification?.body}');
+    debugPrint('FCM: Data: ${message.data}');
+  }
 }
 
 /// Service for managing Firebase Cloud Messaging (FCM) push notifications
@@ -69,9 +72,9 @@ class FCMService {
       }
 
       _isInitialized = true;
-      debugPrint('FCM: Service initialized successfully');
+      unawaited(LoggerService.debug('FCM: Service initialized successfully'));
     } catch (e) {
-      debugPrint('FCM: Initialization failed: $e');
+      unawaited(LoggerService.error('FCM: Initialization failed', e));
     }
   }
 
@@ -87,17 +90,17 @@ class FCMService {
         provisional: false,
         sound: true,
       ).timeout(_fcmTimeout, onTimeout: () {
-        debugPrint('FCM: Permission request timed out');
+        unawaited(LoggerService.warning('FCM: Permission request timed out'));
         throw TimeoutException('Permission request timed out');
       });
 
       final isAuthorized = settings.authorizationStatus == AuthorizationStatus.authorized ||
                            settings.authorizationStatus == AuthorizationStatus.provisional;
 
-      debugPrint('FCM: Permission status: ${settings.authorizationStatus}');
+      unawaited(LoggerService.debug('FCM: Permission status: ${settings.authorizationStatus}'));
       return isAuthorized;
     } catch (e) {
-      debugPrint('FCM: Permission request failed: $e');
+      unawaited(LoggerService.error('FCM: Permission request failed', e));
       return false;
     }
   }
@@ -110,7 +113,7 @@ class FCMService {
         final apnsToken = await _messaging.getAPNSToken()
             .timeout(_fcmTimeout, onTimeout: () => null);
         if (apnsToken == null) {
-          debugPrint('FCM: APNs token not available yet');
+          unawaited(LoggerService.debug('FCM: APNs token not available yet'));
           return null;
         }
       }
@@ -118,13 +121,13 @@ class FCMService {
       _currentToken = await _messaging.getToken()
           .timeout(_fcmTimeout, onTimeout: () => null);
       if (_currentToken != null) {
-        debugPrint('FCM: Token retrieved: ${_currentToken?.substring(0, 20)}...');
+        unawaited(LoggerService.debug('FCM: Token retrieved: ${_currentToken?.substring(0, 20)}...'));
       } else {
-        debugPrint('FCM: getToken timed out or returned null');
+        unawaited(LoggerService.warning('FCM: getToken timed out or returned null'));
       }
       return _currentToken;
     } catch (e) {
-      debugPrint('FCM: Failed to get token: $e');
+      unawaited(LoggerService.error('FCM: Failed to get token', e));
       return null;
     }
   }
@@ -139,7 +142,7 @@ class FCMService {
 
   /// Handle token refresh
   static void _onTokenRefresh(String token) {
-    debugPrint('FCM: Token refreshed');
+    unawaited(LoggerService.debug('FCM: Token refreshed'));
     _currentToken = token;
     storeToken(token);
   }
@@ -148,7 +151,7 @@ class FCMService {
   static Future<void> storeToken(String token) async {
     final userId = AuthService.userId;
     if (userId == null) {
-      debugPrint('FCM: Cannot store token - no user logged in');
+      unawaited(LoggerService.debug('FCM: Cannot store token - no user logged in'));
       return;
     }
 
@@ -168,9 +171,9 @@ class FCMService {
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
 
-      debugPrint('FCM: Token stored for user $userId');
+      unawaited(LoggerService.debug('FCM: Token stored for user $userId'));
     } catch (e) {
-      debugPrint('FCM: Failed to store token: $e');
+      unawaited(LoggerService.error('FCM: Failed to store token', e));
     }
   }
 
@@ -184,10 +187,10 @@ class FCMService {
           .doc(_currentToken)
           .delete();
 
-      debugPrint('FCM: Token removed');
+      unawaited(LoggerService.debug('FCM: Token removed'));
       _currentToken = null;
     } catch (e) {
-      debugPrint('FCM: Failed to remove token: $e');
+      unawaited(LoggerService.error('FCM: Failed to remove token', e));
     }
   }
 
@@ -201,7 +204,7 @@ class FCMService {
 
       return snapshot.docs.map((doc) => doc['token'] as String).toList();
     } catch (e) {
-      debugPrint('FCM: Failed to get tokens for user: $e');
+      unawaited(LoggerService.error('FCM: Failed to get tokens for user', e));
       return [];
     }
   }
@@ -228,17 +231,17 @@ class FCMService {
 
       return allTokens;
     } catch (e) {
-      debugPrint('FCM: Failed to get tokens for users: $e');
+      unawaited(LoggerService.error('FCM: Failed to get tokens for users', e));
       return [];
     }
   }
 
   /// Handle foreground message
   static void _handleForegroundMessage(RemoteMessage message) {
-    debugPrint('FCM: Foreground message received');
-    debugPrint('FCM: Title: ${message.notification?.title}');
-    debugPrint('FCM: Body: ${message.notification?.body}');
-    debugPrint('FCM: Data: ${message.data}');
+    unawaited(LoggerService.debug('FCM: Foreground message received'));
+    unawaited(LoggerService.debug('FCM: Title: ${message.notification?.title}'));
+    unawaited(LoggerService.debug('FCM: Body: ${message.notification?.body}'));
+    unawaited(LoggerService.debug('FCM: Data: ${message.data}'));
 
     // Call the foreground message callback if set
     onForegroundMessage?.call(message);
@@ -246,8 +249,8 @@ class FCMService {
 
   /// Handle notification tap (deep linking)
   static void _handleNotificationTap(RemoteMessage message) {
-    debugPrint('FCM: Notification tapped');
-    debugPrint('FCM: Data: ${message.data}');
+    unawaited(LoggerService.debug('FCM: Notification tapped'));
+    unawaited(LoggerService.debug('FCM: Data: ${message.data}'));
 
     // Call the notification tap callback if set
     onNotificationTap?.call(message.data);
@@ -276,11 +279,11 @@ class FCMService {
     try {
       await _messaging.subscribeToTopic(topic)
           .timeout(_fcmTimeout, onTimeout: () {
-        debugPrint('FCM: Subscribe to $topic timed out');
+        unawaited(LoggerService.warning('FCM: Subscribe to $topic timed out'));
       });
-      debugPrint('FCM: Subscribed to topic: $topic');
+      unawaited(LoggerService.debug('FCM: Subscribed to topic: $topic'));
     } catch (e) {
-      debugPrint('FCM: Failed to subscribe to topic: $e');
+      unawaited(LoggerService.error('FCM: Failed to subscribe to topic', e));
     }
   }
 
@@ -289,11 +292,11 @@ class FCMService {
     try {
       await _messaging.unsubscribeFromTopic(topic)
           .timeout(_fcmTimeout, onTimeout: () {
-        debugPrint('FCM: Unsubscribe from $topic timed out');
+        unawaited(LoggerService.warning('FCM: Unsubscribe from $topic timed out'));
       });
-      debugPrint('FCM: Unsubscribed from topic: $topic');
+      unawaited(LoggerService.debug('FCM: Unsubscribed from topic: $topic'));
     } catch (e) {
-      debugPrint('FCM: Failed to unsubscribe from topic: $e');
+      unawaited(LoggerService.error('FCM: Failed to unsubscribe from topic', e));
     }
   }
 
@@ -334,13 +337,13 @@ class FCMService {
       await Future.wait(
         clubIds.map((clubId) => subscribeToClub(clubId)),
       ).timeout(const Duration(seconds: 10), onTimeout: () {
-        debugPrint('FCM: Bulk subscribe timed out');
+        unawaited(LoggerService.warning('FCM: Bulk subscribe timed out'));
         return [];
       });
 
-      debugPrint('FCM: Subscribed to ${clubIds.length} club topics');
+      unawaited(LoggerService.debug('FCM: Subscribed to ${clubIds.length} club topics'));
     } catch (e) {
-      debugPrint('FCM: Failed to subscribe to user clubs: $e');
+      unawaited(LoggerService.error('FCM: Failed to subscribe to user clubs', e));
     }
   }
 
@@ -363,13 +366,13 @@ class FCMService {
       await Future.wait(
         clubIds.map((clubId) => unsubscribeFromClub(clubId)),
       ).timeout(const Duration(seconds: 10), onTimeout: () {
-        debugPrint('FCM: Bulk unsubscribe timed out');
+        unawaited(LoggerService.warning('FCM: Bulk unsubscribe timed out'));
         return [];
       });
 
-      debugPrint('FCM: Unsubscribed from ${clubIds.length} club topics');
+      unawaited(LoggerService.debug('FCM: Unsubscribed from ${clubIds.length} club topics'));
     } catch (e) {
-      debugPrint('FCM: Failed to unsubscribe from clubs: $e');
+      unawaited(LoggerService.error('FCM: Failed to unsubscribe from clubs', e));
     }
   }
 }
