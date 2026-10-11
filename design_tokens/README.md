@@ -1,5 +1,9 @@
 # Design tokens — Final Table v3
 
+- `tokens.json` — token values (source for the generated Flutter tokens)
+- `guidelines/` — the design system rules: overview, table-side UX, poker conventions, writing, governance, Figma audit, token standards, component specs
+- `AI_GUIDE.md` — the short version AI assistants follow (Cursor loads it via `.cursor/rules/final-table-design.mdc`)
+
 `tokens.json` is the source of truth for the v3 redesign. It is exported from
 the Final Table design system, which is synced from the Figma file
 [finaltable_v3](https://www.figma.com/design/jSjfO86nt4bd9Vhkc9q7d9/finaltable_v3).
