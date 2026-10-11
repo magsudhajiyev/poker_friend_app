@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import '../config/env_config.dart';
 import 'pokerstars_export_service.dart';
 
 /// Service for exporting a full session as PokerStars hand history + stats summary.
@@ -12,8 +13,9 @@ class SessionExportService {
 
   static const String _baseUrl =
       'https://poker-friend-engine.onrender.com/api/v1/export';
-  static const String _apiKey =
-      'oCx_2Be-_wkxXGa_cacuG4Dm0--sglzSSddJD46bibI';
+  // Never hardcode the backend key in source — it lives in .env
+  // (same key the AI analyzer uses; backend validates one key list).
+  static String get _apiKey => EnvConfig.aiApiKey;
 
   /// Export a full session via backend email.
   ///

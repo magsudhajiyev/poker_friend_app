@@ -12,6 +12,7 @@ import '../models/currency.dart';
 import '../services/app_data_cache.dart';
 import '../services/bankroll_service.dart';
 import '../services/currency_service.dart';
+import '../utils/decimal_input.dart';
 
 /// Full-screen bankroll edit page — Figma node 1940:18321.
 ///
@@ -81,8 +82,8 @@ class _BankrollEditScreenState extends State<BankrollEditScreen> {
   Future<void> _save() async {
     if (_isSaving) return;
     setState(() => _isSaving = true);
-    final newBankroll = double.tryParse(_bankrollController.text);
-    final newGoal = double.tryParse(_goalController.text);
+    final newBankroll = parseDecimal(_bankrollController.text);
+    final newGoal = parseDecimal(_goalController.text);
     if (newBankroll != null) {
       await BankrollService.setCurrentBankroll(newBankroll);
     }
@@ -202,6 +203,7 @@ class _EditableRow extends StatelessWidget {
             controller: controller,
             keyboardType:
                 const TextInputType.numberWithOptions(decimal: true),
+            inputFormatters: [DecimalInputFormatter()],
             textAlign: TextAlign.right,
             cursorColor: AppColors.accentSecondary,
             style: AppTypography.ibm(

@@ -1,0 +1,5475 @@
+{
+  "@@locale": "uk",
+  "navHome": "Головна",
+  "navOpponents": "Суперники",
+  "navSessions": "Сесії",
+  "navProfile": "Профіль",
+  "commonCancel": "Скасувати",
+  "commonConfirm": "Підтвердити",
+  "commonDelete": "Видалити",
+  "commonError": "Помилка",
+  "commonLoading": "Завантаження...",
+  "commonSave": "Зберегти",
+  "commonRetry": "Повторити",
+  "commonDone": "Готово",
+  "commonOk": "OK",
+  "commonYes": "Так",
+  "commonNo": "Ні",
+  "commonBack": "Назад",
+  "commonSearch": "Пошук",
+  "commonNoData": "Немає даних",
+  "commonClose": "Закрити",
+  "commonNotAvailable": "Н/Д",
+  "commonApply": "Застосувати",
+  "commonUpdate": "Оновити",
+  "commonClear": "Очистити",
+  "commonToday": "Сьогодні",
+  "statsTitle": "Статистика",
+  "statsSubtitle": "Розширена аналітика",
+  "statsHandsPlayed": "Зіграно роздач",
+  "statsFoldTo3Bet": "Fold на 3-Bet",
+  "statsWinRate": "Відсоток перемог",
+  "statsSessionStatistics": "Статистика сесій",
+  "statsSessions": "Сесії",
+  "statsTotalTime": "Загальний час",
+  "statsAvgSession": "Середня сесія",
+  "statsPlayToSee": "Зіграйте сесії, щоб побачити статистику часу",
+  "statsGeneral": "Загальне",
+  "statsCash": "Кеш",
+  "statsTournament": "Турнір",
+  "statsTotalBuyIn": "Загальний Buy-In",
+  "statsTotalCashOut": "Загальний Cash-Out",
+  "statsNetProfit": "Чистий прибуток",
+  "statsItm": "ITM%",
+  "statsAvgFinish": "Середнє місце",
+  "statsBestFinish": "Найкраще місце",
+  "statsRoi": "ROI%",
+  "statsFinalTables": "Фінальні столи",
+  "statsAvgBuyIn": "Середній Buy-In",
+  "statsAvgFieldSize": "Середній розмір поля",
+  "statsHourlyRate": "Ставка за годину",
+  "statsHourlyRateNotAvailable": "Доступно після 60 хв відстеження",
+  "errorNoConnection": "Немає підключення до інтернету. Перевірте мережу та спробуйте ще раз.",
+  "errorTimeout": "Час очікування запиту вичерпано. Спробуйте ще раз.",
+  "errorServer": "Щось пішло не так з нашого боку. Спробуйте ще раз за кілька хвилин.",
+  "errorNotAuthorized": "У вас немає дозволу на цю дію. Спробуйте увійти ще раз.",
+  "errorGeneric": "Щось пішло не так. Спробуйте ще раз.",
+  "statsBBPerHour": "BB / година",
+  "statsLoadingMessage": "Завантаження статистики...",
+  "statsFetchingMessage": "Отримання статистики користувача...",
+  "statsFailedToLoad": "Не вдалося завантажити статистику: {error}",
+  "@statsFailedToLoad": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsTitle": "Меню",
+  "settingsLanguage": "Мова",
+  "settingsLanguageSubtitle": "Оберіть мову застосунку",
+  "settingsLanguageSystem": "Системна за замовчуванням",
+  "settingsCurrency": "Валюта",
+  "settingsKnowledgeBase": "БАЗА ЗНАНЬ",
+  "settingsGuidedTour": "Ознайомчий тур",
+  "settingsGuidedTourSubtitle": "Переглянути ознайомчі тури знову",
+  "settingsFullLoggingTour": "Тур повного логування",
+  "settingsFullLoggingTourSubtitle": "Повний процес відстеження сесії",
+  "settingsUnderstandingStats": "Розуміння вашої статистики",
+  "settingsUnderstandingStatsSubtitle": "Дізнайтеся, що означає кожен показник",
+  "settingsClubsEvents": "Клуби та події",
+  "settingsClubsEventsSubtitle": "Як працює гра в клубі",
+  "settingsLegal": "ПРАВОВА ІНФОРМАЦІЯ",
+  "settingsTermsOfService": "Умови використання",
+  "settingsTermsOfServiceSubtitle": "Переглянути умови використання",
+  "settingsPrivacyPolicy": "Політика конфіденційності",
+  "settingsPrivacyPolicySubtitle": "Переглянути політику конфіденційності",
+  "settingsAdmin": "АДМІНІСТРУВАННЯ",
+  "settingsClubRequests": "Запити клубів",
+  "settingsClubRequestsSubtitle": "Керування запитами на реєстрацію",
+  "settingsSupportRequests": "Запити підтримки",
+  "settingsSupportRequestsSubtitle": "Керування зверненнями до підтримки",
+  "settingsNotificationTester": "Тестування сповіщень",
+  "settingsNotificationTesterSubtitle": "Перегляд усіх варіантів сповіщень",
+  "profileUpgrade": "Оновити план",
+  "profileUsername": "Ім'я користувача",
+  "profileNotSet": "Не встановлено",
+  "profileChange": "Змінити",
+  "profileSetUsername": "Встановити ім'я користувача",
+  "profileUseNicknameInGames": "Використовувати нікнейм в іграх",
+  "profileUseNicknameDescription": "Показувати @{username} замість вашого імені в подіях і логуванні роздач",
+  "@profileUseNicknameDescription": {
+    "placeholders": {
+      "username": {
+        "type": "String"
+      }
+    }
+  },
+  "profileBankrollGoal": "Ціль банкролу",
+  "profileUpdateGoal": "Оновити ціль",
+  "profileCurrentBankroll": "Поточний банкрол",
+  "profileUpdateBankroll": "Оновити банкрол",
+  "profileAddSessionResult": "Додати результат сесії",
+  "profileSessionResultHint": "Введіть додатне число для виграшів, від'ємне — для програшів",
+  "profileAddResult": "Додати результат",
+  "profileGoalUpdatedSuccess": "Ціль успішно оновлено!",
+  "profileErrorUpdatingGoal": "Помилка оновлення цілі",
+  "profileBankrollUpdatedSuccess": "Банкрол успішно оновлено!",
+  "profileErrorUpdatingBankroll": "Помилка оновлення банкролу",
+  "profileSessionResultAdded": "Результат сесії додано!",
+  "profileErrorAddingResult": "Помилка додавання результату сесії",
+  "profilePleaseEnterValidAmount": "Введіть коректну суму",
+  "profileLogOut": "Вийти",
+  "profileSignOut": "Вийти",
+  "profileSignOutConfirmation": "Ви впевнені, що хочете вийти?",
+  "sessionHistoryTitle": "Історія сесій",
+  "sessionLast30Days": "Останні 30 днів",
+  "sessionUpgradeForFullHistory": "Оновіть план для повної історії",
+  "sessionLoadingMessage": "Завантаження сесій...",
+  "sessionNoSessions": "Немає сесій {gameType}",
+  "@sessionNoSessions": {
+    "placeholders": {
+      "gameType": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionPlayToSee": "Зіграйте кілька роздач {gameType},\\nщоб побачити результати",
+  "@sessionPlayToSee": {
+    "placeholders": {
+      "gameType": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionLive": "Наживо",
+  "sessionPlayersCount": "{count} гравців",
+  "@sessionPlayersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sessionSyncingToCloud": "Синхронізація з хмарою...",
+  "sessionClearAllTitle": "Очистити всі сесії?",
+  "sessionClearAllDescription": "Це назавжди видалить усі покерні сесії та роздачі як з Firebase, так і з локального сховища.",
+  "sessionClearAllWarning": "Цю дію не можна скасувати!",
+  "sessionClearAll": "Очистити все",
+  "sessionClearedSuccessfully": "Усі сесії успішно очищено",
+  "sessionHandDetails": "Деталі роздачі #{handNumber}",
+  "@sessionHandDetails": {
+    "placeholders": {
+      "handNumber": {
+        "type": "int"
+      }
+    }
+  },
+  "sessionYourCards": "Ваші карти:",
+  "sessionBoardCards": "Карти на столі:",
+  "sessionPotByStreet": "Банк за вулицями:",
+  "sessionActions": "Дії:",
+  "sessionNoActionsRecorded": "Дій не записано",
+  "sessionNoCardsRecorded": "Карт не записано",
+  "sessionFinalPot": "Фінальний банк:",
+  "sessionChoppedPot": "Розділений банк ({count} переможців):",
+  "@sessionChoppedPot": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sessionWinnerNotAvailable": "Інформація про переможця недоступна",
+  "opponentsTitle": "Суперники",
+  "opponentsCountFree": "{count}/{max} безкоштовно",
+  "@opponentsCountFree": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "opponentsCountPremium": "{count} відстежуваних гравців",
+  "@opponentsCountPremium": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "opponentsSearchHint": "Пошук суперників...",
+  "opponentsLoadingMessage": "Завантаження суперників...",
+  "opponentsNoResults": "Немає результатів",
+  "opponentsEmptyTitle": "Ще немає суперників",
+  "opponentsEmptySubtitle": "Додайте суперників, щоб відстежувати їхній стиль гри та статистику",
+  "opponentsEmptySearchSubtitle": "Спробуйте інший запит",
+  "opponentsAddButton": "Додати суперника",
+  "opponentsLastSeen": "Востаннє бачено: {date}",
+  "@opponentsLastSeen": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "opponentsHands": "Роздачі",
+  "opponentsEditMenu": "Редагувати суперника",
+  "opponentsDeleteMenu": "Видалити суперника",
+  "opponentsAddDialogTitle": "Додати суперника",
+  "opponentsEditDialogTitle": "Редагувати суперника",
+  "opponentsNameHint": "Ім'я суперника",
+  "opponentsNotesHint": "Нотатки (необов'язково)",
+  "opponentsPickColor": "Оберіть колір",
+  "opponentsAddedSuccess": "Суперника успішно додано",
+  "opponentAlreadyExists": "Суперник з ім'ям «{name}» вже існує",
+  "@opponentAlreadyExists": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "opponentsUpdatedSuccess": "Суперника успішно оновлено",
+  "opponentsDeleteConfirmTitle": "Видалити суперника?",
+  "opponentsDeleteConfirmMessage": "Ви впевнені, що хочете видалити «{name}»?\\nЦю дію не можна скасувати",
+  "@opponentsDeleteConfirmMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "opponentsDeletedSuccess": "Суперника успішно видалено",
+  "opponentsAnalyticsTitle": "Аналітика суперників",
+  "opponentsAnalyticsTotalLabel": "Усього суперників",
+  "opponentsAnalyticsHandsTracked": "Усього відстежено роздач",
+  "opponentsAnalyticsAverage": "Середня к-сть роздач/суперник",
+  "opponentsAnalyticsMostPlayed": "Найчастіший суперник",
+  "opponentsAnalyticsDistribution": "Розподіл типів гравців:",
+  "opponentsClearAllTitle": "Очистити всіх суперників?",
+  "opponentsClearAllMessage": "Це назавжди видалить усі дані про суперників. Цю дію не можна скасувати!",
+  "opponentsClearAllButton": "Очистити все",
+  "opponentsClearedSuccess": "Усіх суперників очищено",
+  "setupSessionSetup": "Налаштування сесії",
+  "setupSessionName": "Назва сесії",
+  "setupSessionNameHint": "напр., «Вечірній покер у п'ятницю»",
+  "setupGameType": "Тип гри",
+  "setupCashGame": "Кеш-гра",
+  "setupTournament": "Турнір",
+  "setupSmallBlind": "Small Blind",
+  "setupBigBlind": "Big Blind",
+  "setupBuyInAmount": "Сума Buy-in",
+  "setupEnterAmount": "Введіть суму",
+  "setupStartingStackEqualsBuyIn": "Початковий стек дорівнює вашому buy-in.",
+  "setupStartingStack": "Початковий стек",
+  "setupEnterChipStack": "Введіть стек фішок",
+  "setupMustBeAtLeastBigBlind": "Має бути не менше Big Blind ({bigBlind})",
+  "@setupMustBeAtLeastBigBlind": {
+    "placeholders": {
+      "bigBlind": {
+        "type": "int"
+      }
+    }
+  },
+  "setupBbAnte": "BB Ante",
+  "setupTableSection": "СТІЛ",
+  "setupTableInstructions": "Торкніться місця, щоб додати гравця.\\nПеретягніть кнопку, щоб призначити дилера.",
+  "setupStartSession": "Почати сесію",
+  "setupMe": "Я",
+  "setupPlayerSeat": "Гравець {seatNumber}",
+  "@setupPlayerSeat": {
+    "placeholders": {
+      "seatNumber": {
+        "type": "int"
+      }
+    }
+  },
+  "setupHero": "Hero",
+  "homeLoadingPokerData": "Завантаження ваших покерних даних...",
+  "homeWelcomeBack": "З поверненням",
+  "homeNoActiveSessions": "Немає активних сесій",
+  "homeLiveSessions": "Сесії наживо",
+  "homeClubNotFound": "Клуб не знайдено",
+  "homeEventNotFound": "Подію не знайдено",
+  "homeRecentActivity": "Нещодавня активність",
+  "homeWinRate": "Відсоток перемог",
+  "homeHours": "Годин",
+  "homePlayStyle": "Стиль гри",
+  "homePlayStyleTooltip": "Ваш стиль гри буде визначено після логування 50 префлоп-роздач.",
+  "homeBankroll": "Банкрол",
+  "homeBankrollOfGoal": "{current} з {goal}",
+  "@homeBankrollOfGoal": {
+    "placeholders": {
+      "current": {
+        "type": "String"
+      },
+      "goal": {
+        "type": "String"
+      }
+    }
+  },
+  "homeAmountLeft": "Залишилось {amount}",
+  "@homeAmountLeft": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "homeEarnings": "Прибуток",
+  "homeNetProfitWeek": "Чистий прибуток / тижд. · {week}",
+  "@homeNetProfitWeek": {
+    "placeholders": {
+      "week": {
+        "type": "String"
+      }
+    }
+  },
+  "homeAvgAmount": "Сер. {amount}",
+  "@homeAvgAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "homeNoEarningsDataYet": "Даних про прибуток ще немає",
+  "homeRecentSessions": "Останні сесії",
+  "homeViewAll": "Переглянути всі",
+  "homeNoRecentSessions": "Немає останніх сесій",
+  "homeStartFirstSession": "Розпочніть свою першу покерну сесію!",
+  "homeAddNew": "Додати",
+  "homeUpcomingEvents": "Найближчі події",
+  "homeNoRecentEvents": "Немає останніх подій",
+  "homeAddFirstEvent": "Додайте свою першу покерну подію!",
+  "homePlayersCount": "{count} гравців",
+  "@homePlayersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "homeGoingCount": "{count} йдуть",
+  "@homeGoingCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "homePrivateGame": "Приватна гра",
+  "homeHomeGame": "Домашня гра",
+  "homeOnline": "Онлайн",
+  "homeEditEvent": "Редагувати подію",
+  "homeDeleteEvent": "Видалити подію",
+  "homeEventName": "Назва події",
+  "homeLocationVenue": "Місце проведення",
+  "homeBuyInAmount": "Сума бай-іну",
+  "homeSelectDate": "Оберіть дату:",
+  "homeSaveChanges": "Зберегти зміни",
+  "homeDeleteEventConfirm": "Видалити {eventName}?",
+  "@homeDeleteEventConfirm": {
+    "placeholders": {
+      "eventName": {
+        "type": "String"
+      }
+    }
+  },
+  "homeDeleteEventDescription": "Ви впевнені, що хочете видалити «{eventName}»?",
+  "@homeDeleteEventDescription": {
+    "placeholders": {
+      "eventName": {
+        "type": "String"
+      }
+    }
+  },
+  "homeEventDeletedSuccessfully": "Подію успішно видалено",
+  "homeClubInvitation": "Запрошення до клубу",
+  "homeYouveBeenInvitedToJoin": "Вас запросили приєднатися до",
+  "homeDecline": "Відхилити",
+  "homeAccept": "Прийняти",
+  "homeInvitationDeclined": "Запрошення відхилено",
+  "homeInvitationAccepted": "Запрошення прийнято",
+  "homeClubInvitations": "Запрошення до клубу",
+  "homeLater": "Пізніше",
+  "homeViewInvitations": "Переглянути запрошення",
+  "homeNoEarningsDataTitle": "Даних про прибуток ще немає",
+  "homeNoEarningsDataDescription": "Спершу додайте кілька результатів сесій, щоб побачити графік прибутку. Ви можете додати результати на сторінці профілю.",
+  "handHandNumber": "Роздача №{number}",
+  "@handHandNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "handFreeCounter": "{used}/{max} безкоштовно",
+  "@handFreeCounter": {
+    "placeholders": {
+      "used": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "handAvgPill": "сер. {ratio}",
+  "@handAvgPill": {
+    "placeholders": {
+      "ratio": {
+        "type": "String"
+      }
+    }
+  },
+  "handNextHand": "Наступна роздача",
+  "handFoldedToMe": "Всі зробили Fold переді мною",
+  "handUndoLastAction": "Скасувати останню дію",
+  "handAllInHand": "ALL-IN РОЗДАЧА",
+  "handPot": "Банк",
+  "handStack": "Стек",
+  "handToAct": "Хід",
+  "handToActYou": "Ви",
+  "handStopSessionTitle": "Зупинити сесію?",
+  "handStopSessionMessage": "Ви впевнені, що хочете зупинити цю сесію? Усі роздачі буде збережено.",
+  "handStop": "Зупинити",
+  "handChangeTable": "Змінити стіл",
+  "handBlinds": "Blinds",
+  "handTakesEffectNextHand": "Набуде чинності з наступної роздачі",
+  "handLeaveSession": "Вийти із сесії?",
+  "handSaveAndExit": "Зберегти й вийти",
+  "handDiscardAndExit": "Скасувати й вийти",
+  "handInProgress": "Роздача триває",
+  "handDiscardCurrentHand": "Ви ведете активну роздачу. Скасувати її й повернутися назад?",
+  "handDiscardHand": "Скасувати роздачу",
+  "handAdjustStack": "Змінити стек",
+  "handEnterStackAmount": "Введіть розмір стека",
+  "handGestureGuide": "Посібник із жестів",
+  "handManagePlayers": "Керувати гравцями",
+  "handStopSession": "Зупинити сесію",
+  "handRebuy": "Rebuy",
+  "handGestures": "Жести",
+  "handGestureTap": "Торкання",
+  "handGestureCheckCall": "Check / Call",
+  "handGestureSwipeOut": "Свайп убік",
+  "handGestureSwipeUp": "Натисніть і потягніть угору",
+  "handGestureBetRaise": "Bet / Raise",
+  "handStreetComplete": "Вулицю завершено",
+  "handWinsThePot": "виграє банк",
+  "handHandComplete": "Роздачу завершено",
+  "handTapToContinue": "Торкніться, щоб продовжити",
+  "handRaiseAmount": "Сума Raise",
+  "handBetAmount": "Сума Bet",
+  "handPleaseEnterValidNumber": "Введіть коректне число",
+  "handConfirmRebuy": "Підтвердити Rebuy",
+  "handRebuyReplaceStack": "Rebuy замінить ваш поточний стек. Ви впевнені, що хочете продовжити?",
+  "handProceed": "Продовжити",
+  "handEnterRebuyDetails": "Введіть деталі Rebuy для турніру",
+  "handRebuyAmount": "Сума Rebuy",
+  "handNewStackSize": "Новий розмір стека",
+  "handChipCountAfterRebuy": "Кількість фішок після Rebuy",
+  "handSessionInfo": "Інформація про сесію",
+  "handTotalInvested": "Усього інвестовано: {amount}",
+  "@handTotalInvested": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "handRebuysCount": "Rebuy: {count}",
+  "@handRebuysCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "handAddRebuy": "Додати Rebuy",
+  "handPleaseEnterValidAmounts": "Введіть коректні суми",
+  "handHandInProgress": "Роздача триває",
+  "handHandInProgressMessage": "Роздача триває. Перехід до наступної роздачі скасує всі дії та відновить стеки гравців.",
+  "handMoveToNextHand": "Перейти до наступної роздачі",
+  "handMainPot": "Основний",
+  "handSidePot": "Побічний {index}",
+  "@handSidePot": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "handPokerSession": "Покерна сесія",
+  "handActionsHandNumber": "Роздача №{number}",
+  "@handActionsHandNumber": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "handActionsPosition": "Позиція: {position}",
+  "@handActionsPosition": {
+    "placeholders": {
+      "position": {
+        "type": "String"
+      }
+    }
+  },
+  "handActionsShareHand": "Поділитися роздачею",
+  "handActionsShowHoleCards": "Показати кишенькові карти",
+  "handActionsShowHoleCardsSubtitle": "Ваші карти будуть видимі за спільним посиланням",
+  "handActionsHideHoleCards": "Приховати кишенькові карти",
+  "handActionsHideHoleCardsSubtitle": "Ваші карти будуть приховані за спільним посиланням",
+  "handActionsShareMessage": "Погляньте на цю роздачу у Final Table!",
+  "handActionsShareSubject": "Покерна роздача №{number}",
+  "@handActionsShareSubject": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "handActionsFailedToShareHand": "Не вдалося поділитися роздачею",
+  "handActionsGeneratingExport": "Створення експорту для PokerStars...",
+  "handActionsExportedSuccessfully": "Роздачу №{number} успішно експортовано!",
+  "@handActionsExportedSuccessfully": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "handActionsFailedToExport": "Не вдалося експортувати роздачу: {error}",
+  "@handActionsFailedToExport": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "handActionsMissingHeroCards": "Немає карт героя",
+  "handActionsMissingHeroCardsMessage": "Для AI-аналізу потрібні записані кишенькові карти. Цю роздачу неможливо проаналізувати, оскільки карти героя відсутні.",
+  "handActionsYourCards": "Ваші карти",
+  "handActionsOpponentCards": "Карти суперника",
+  "handActionsPlayerSeat": "Гравець {id}",
+  "@handActionsPlayerSeat": {
+    "placeholders": {
+      "id": {
+        "type": "int"
+      }
+    }
+  },
+  "handActionsPot": "БАНК",
+  "handActionsBlinds": "BLINDS",
+  "handActionsWinner": "ПЕРЕМОЖЕЦЬ",
+  "handActionsPlayersCount": "{count} гравців",
+  "@handActionsPlayersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "handActionsActionSummary": "Підсумок дій",
+  "handActionsPreflop": "PREFLOP",
+  "handActionsBoard": "БОРД",
+  "handActionsPlayer": "ГРАВЕЦЬ",
+  "handActionsStack": "СТЕК",
+  "handActionsAction": "ДІЯ",
+  "handActionsAmount": "СУМА",
+  "handActionsYou": "Ви",
+  "handActionsAllIn": "ALL-IN",
+  "handActionsNotes": "Нотатки",
+  "handActionsAnalyzingHand": "Аналіз роздачі...",
+  "handActionsHeroCardsMissing": "Немає карт героя",
+  "handActionsUnlockAiAnalysis": "Розблокувати AI-аналіз",
+  "handActionsAnalysisComplete": "Аналіз завершено",
+  "handActionsAiAnalyzerBeta": "AI-аналізатор (бета)",
+  "handActionsAnalysisFailed": "Не вдалося виконати аналіз",
+  "handActionsAiAnalysis": "AI-аналіз",
+  "handActionsStreetByStreetBreakdown": "Розбір по вулицях",
+  "handActionsAnalysisCompletedIn": "Аналіз завершено за {time} с",
+  "@handActionsAnalysisCompletedIn": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "handActionsFailedToUpdateStar": "Не вдалося оновити статус зірки",
+  "handActionsPotAmount": "Банк: {amount}",
+  "@handActionsPotAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "opponentDetailHandsTracked": "Відстежено роздач: {count}",
+  "@opponentDetailHandsTracked": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "opponentDetailNoDataYet": "Даних ще немає",
+  "opponentDetailHands": "Роздачі",
+  "opponentDetailLastSeen": "Востаннє бачили:",
+  "opponentDetailNotes": "Нотатки",
+  "opponentDetailEditOpponent": "Редагувати суперника",
+  "opponentDetailDeleteOpponent": "Видалити суперника",
+  "opponentDetailStatistics": "Статистика",
+  "opponentDetailNoStatisticsAvailable": "Статистика недоступна",
+  "opponentDetailStatsDisclaimer": "Статистика базується лише на роздачах, які ви записали разом. VPIP не відстежується, оскільки неспостережувані Fold завищували б його.",
+  "opponentDetailAggressionFreq": "Агресія %",
+  "opponentDetailShowdownPercent": "Showdown %",
+  "opponentDetailHandHistory": "Історія роздач",
+  "opponentDetailViewAllHands": "Переглянути всі роздачі, зіграні з цим суперником",
+  "opponentDetailViewHandHistory": "Переглянути історію роздач",
+  "opponentDetailNoHandsFound": "Роздач не знайдено",
+  "opponentDetailNoHandsMessage": "Ви ще не зіграли жодної роздачі з «{name}»",
+  "@opponentDetailNoHandsMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "opponentDetailOpponentName": "Ім'я суперника",
+  "opponentDetailNotesOptional": "Нотатки (необов'язково)",
+  "opponentDetailPickColor": "Оберіть колір",
+  "opponentDetailColorRed": "Червоний",
+  "opponentDetailColorLightBlue": "Блакитний",
+  "opponentDetailColorGreen": "Зелений",
+  "opponentDetailColorOrange": "Помаранчевий",
+  "opponentDetailColorPurple": "Фіолетовий",
+  "opponentDetailColorTeal": "Бірюзовий",
+  "opponentDetailColorPink": "Рожевий",
+  "opponentDetailColorIndigo": "Індиго",
+  "opponentDetailUpdatedSuccessfully": "Суперника успішно оновлено",
+  "opponentDetailDeleteConfirmTitle": "Видалити суперника?",
+  "opponentDetailDeleteConfirmMessage": "Ви впевнені, що хочете видалити «{name}»?\\nЦю дію не можна скасувати",
+  "@opponentDetailDeleteConfirmMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "opponentDetailDeletedSuccessfully": "Суперника успішно видалено",
+  "opponentDetailErrorDeleting": "Помилка видалення суперника: {error}",
+  "@opponentDetailErrorDeleting": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "individualSessionCreatedLocally": "Сесію створено локально. Її буде синхронізовано з хмарою, коли з'явиться з'єднання.",
+  "individualUpdateCurrentStack": "Оновити поточний стек",
+  "individualCurrentStack": "Поточний стек:",
+  "individualSetNewTotal": "Встановити новий підсумок",
+  "individualEnterNewTotalStack": "Введіть новий загальний стек",
+  "individualAddSubtractAmount": "Додати/відняти суму",
+  "individualAmount": "Сума",
+  "individualSetTotal": "Встановити підсумок",
+  "individualNoteLabel": "Нотатка (необов'язково)",
+  "individualNoteHint": "напр. Виграв великий банк з AA",
+  "individualTableAvgHint": "Середнє за столом (необов'язково)",
+  "individualUpdateBlinds": "Оновити Blinds",
+  "individualSmallBlind": "Small Blind",
+  "individualBigBlind": "Big Blind",
+  "individualBbMode": "Режим BB",
+  "individualCurrentStackLabel": "Поточний стек",
+  "individualSessionInfo": "Інформація про сесію",
+  "individualStartingStack": "Початковий стек",
+  "individualInitialBuyIn": "Початковий бай-ін",
+  "individualRebuys": "Rebuy",
+  "individualTotalInvested": "Усього інвестовано",
+  "individualBlindsLabel": "Blinds",
+  "individualHandsLogged": "Записано роздач",
+  "individualLogAHand": "Записати роздачу",
+  "individualGoBackToHand": "Повернутися до роздачі",
+  "individualStackChart": "Графік стека",
+  "individualCompleteHandToSee": "Завершіть роздачу, щоб побачити динаміку вашого стека",
+  "individualStopSessionTitle": "Зупинити сесію?",
+  "individualStopSessionMessage": "Ви впевнені, що хочете зупинити цю сесію? Усі роздачі буде збережено.",
+  "individualStop": "Зупинити",
+  "individualConfirmRebuy": "Підтвердити ребай",
+  "individualRebuyCurrentStack": "Зараз у вас залишилося {stack}.",
+  "@individualRebuyCurrentStack": {
+    "placeholders": {
+      "stack": {
+        "type": "String"
+      }
+    }
+  },
+  "individualRebuyReplaceMessage": "Ребай замінить ваш поточний стек. Ви впевнені, що хочете продовжити?",
+  "individualProceedWithRebuy": "Виконати ребай",
+  "individualAddOn": "Add-on",
+  "individualAddOnDescription": "Введіть суму add-on, щоб збільшити загальні вкладення",
+  "individualAddOnAmount": "Сума add-on",
+  "individualAddOnConfirm": "Додати",
+  "individualAddOnDescriptionTournament": "Введіть ціну add-on та отримані фішки",
+  "individualAddOnPrice": "Ціна add-on",
+  "individualAddOnChips": "Отримані фішки",
+  "individualRebuy": "Ребай",
+  "individualEnterRebuyAmount": "Введіть суму ребаю (стек дорівнюватиме сумі ребаю)",
+  "individualEnterRebuyAmountAndStack": "Введіть суму ребаю та новий розмір стека",
+  "individualRebuyAmount": "Сума ребаю",
+  "individualNewStackSize": "Новий розмір стека",
+  "individualChipCountAfterRebuy": "Кількість фішок після ребаю",
+  "individualTotalInvestedAmount": "Усього вкладено: ${amount}",
+  "@individualTotalInvestedAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "individualCurrentStackAmount": "Поточний стек: {stack}",
+  "@individualCurrentStackAmount": {
+    "placeholders": {
+      "stack": {
+        "type": "String"
+      }
+    }
+  },
+  "individualRebuysCount": "Ребаї: {count}",
+  "@individualRebuysCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "individualAddRebuy": "Додати ребай",
+  "individualPleaseEnterValidRebuy": "Будь ласка, введіть коректну суму ребаю",
+  "individualPleaseEnterValidStack": "Будь ласка, введіть коректний розмір стека",
+  "individualRebuyAddedSimple": "Ребай додано: ${amount}",
+  "@individualRebuyAddedSimple": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "individualRebuyAddedWithStack": "Ребай додано: ${amount} (Стек: {stack})",
+  "@individualRebuyAddedWithStack": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "stack": {
+        "type": "String"
+      }
+    }
+  },
+  "authWelcome": "Ласкаво просимо до Final Table",
+  "authSignIn": "Увійти",
+  "authRegister": "Зареєструватися",
+  "authEmail": "Email",
+  "authPassword": "Пароль",
+  "authDisplayName": "Ім'я",
+  "authConfirmPassword": "Підтвердіть пароль",
+  "authPleaseEnterEmail": "Будь ласка, введіть ваш email",
+  "authPleaseEnterValidEmail": "Будь ласка, введіть коректний email",
+  "authPleaseEnterPassword": "Будь ласка, введіть ваш пароль",
+  "authPleaseEnterName": "Будь ласка, введіть ваше ім'я",
+  "authNameMinLength": "Ім'я має містити щонайменше 2 символи",
+  "authPleaseEnterAPassword": "Будь ласка, введіть пароль",
+  "authPasswordMinLength": "Пароль має містити щонайменше 6 символів",
+  "authPleaseConfirmPassword": "Будь ласка, підтвердіть пароль",
+  "authPasswordsDoNotMatch": "Паролі не збігаються",
+  "authCreateAccount": "Створити акаунт",
+  "authForgotPassword": "Забули пароль?",
+  "authResetPassword": "Скинути пароль",
+  "authResetPasswordMessage": "Введіть свою email-адресу, щоб отримати посилання для скидання пароля.",
+  "authSendResetLink": "Надіслати посилання",
+  "authPasswordResetSent": "Лист для скидання пароля надіслано!",
+  "paywallRestore": "Відновити",
+  "paywallTitle": "FINAL TABLE PREMIUM",
+  "paywallAvailablePlans": "Доступні плани",
+  "paywallStepLabel": "Крок 1 з 2",
+  "paywallChooseYourPlan": "Оберіть свій план",
+  "paywallUpgradeOrCancel": "Оновлюйте або скасовуйте будь-коли",
+  "paywallContinue": "Продовжити",
+  "paywallUnlockFeature": "Розблокувати {featureName}",
+  "@paywallUnlockFeature": {
+    "placeholders": {
+      "featureName": {
+        "type": "String"
+      }
+    }
+  },
+  "paywallGoPremium": "Перейти на Premium",
+  "paywallFeatureSubtitle": "Ця функція входить до Final Table Premium. Оберіть план, що відповідає вашому стилю гри.",
+  "paywallGeneralSubtitle": "Розблокуйте все, що пропонує Final Table. Записуйте більше роздач, аналізуйте свою гру, керуйте своїм клубом.",
+  "paywallProTier": "Pro",
+  "paywallFreeTrialBadge": "7 днів безкоштовно",
+  "promoFreeMonthBadge": "1 МІСЯЦЬ БЕЗКОШТОВНО",
+  "promoWelcomeTitle": "Подарунок від нас 🎁",
+  "promoWelcomeBody": "Насолоджуйтесь місяцем Pro за наш рахунок! Доступ Pro вже активовано у вашому акаунті.",
+  "promoWelcomeBodyPre": "Насолоджуйтесь ",
+  "promoWelcomeBodyBold": "місяцем Pro",
+  "promoWelcomeBodyPost": " за наш рахунок! Доступ Pro вже активовано у вашому акаунті.",
+  "promoCongratsTitle": "Вітаємо!",
+  "promoCongratsBody": "Ваш безкоштовний місяць Pro активовано — успіхів!",
+  "promoNotifWarnTitle": "Ваш безкоштовний місяць Pro скоро закінчиться",
+  "promoNotifWarnBody": "Залишився лише 1 день безкоштовного доступу Pro.",
+  "promoNotifEndedTitle": "Ваш безкоштовний місяць Pro завершився",
+  "promoNotifEndedBody": "Зберігайте перевагу — переходьте на Pro будь-коли.",
+  "paywallProDescription": "Усе необхідне, щоб опанувати свою гру.",
+  "paywallUnlimitedHandLogging": "Необмежений запис роздач",
+  "paywallFullSessionHistory": "Повна історія сесій",
+  "paywallAiHandAnalysis": "AI-аналіз роздач",
+  "paywallExportHandsCsv": "Експорт роздач у CSV",
+  "paywallProMonthly": "$19.99/місяць",
+  "paywallProYearly": "або $199.99/рік. Заощаджуйте близько 25%**",
+  "paywallStartFreeTrial": "Почати 7-денний безкоштовний період",
+  "paywallEliteTier": "Elite",
+  "paywallEliteDescription": "Виведіть свою гру на новий рівень.",
+  "paywallEverythingInProElite": "Усе з Pro",
+  "paywallEliteFeature1": "Розширене профілювання суперників",
+  "paywallEliteFeature2": "Детальна аналітика сесій",
+  "paywallEliteFeature3": "Пріоритетна підтримка",
+  "paywallEliteMonthly": "$29.99/місяць",
+  "paywallEliteYearly": "або $199.99/рік. Заощаджуйте близько 25%**",
+  "paywallGetElite": "Отримати Elite",
+  "paywallClubTier": "Club",
+  "paywallClubDescription": "Для домашніх ігор, клубів та живих майданчиків.",
+  "paywallEverythingInPro": "Усе з Pro",
+  "paywallClubManagement": "Керування клубом та ролі учасників",
+  "paywallLiveDealerVoice": "Голосовий запис живого дилера",
+  "paywallMultiTableEvents": "Багатостолові події з рейтингами",
+  "paywallClubMonthly": "$39.99/місяць",
+  "paywallClubYearly": "або $199.99/рік. Заощаджуйте близько 25%**",
+  "paywallGetClub": "Отримати Club",
+  "paywallDisclaimer": "Підписки поновлюються автоматично. З вас буде стягнено вказану ціну, якщо ви не скасуєте підписку щонайменше за 24 години до завершення періоду. Скасувати можна будь-коли в налаштуваннях акаунта.",
+  "paywallTerms": "Умови",
+  "paywallPrivacy": "Конфіденційність",
+  "paywallPurchasesRestored": "Покупки відновлено",
+  "paywallNoPreviousPurchases": "Попередніх покупок не знайдено",
+  "paywallWelcomePro": "Ласкаво просимо до Pro!",
+  "paywallPurchaseFailed": "Не вдалося здійснити покупку. Спробуйте ще раз.",
+  "paywallSubscriptionUnavailable": "Варіанти підписки недоступні. Спробуйте ще раз.",
+  "paywallMonthly": "Щомісяця",
+  "paywallAnnual": "Щороку",
+  "paywallAnnualSave": "Щороку (Заощадьте ~35%)",
+  "introGameSetup": "Налаштування гри",
+  "introConfigureSession": "Налаштуйте свою сесію",
+  "introSmallBlind": "Small Blind",
+  "introBigBlind": "Big Blind",
+  "introPlayers": "Гравці",
+  "introGameType": "Тип гри",
+  "introBbAnte": "BB Ante",
+  "introBbAnteDescription": "Увімкнути правило BB Ante",
+  "introStartGame": "ПОЧАТИ ГРУ",
+  "introStartingSession": "Запуск вашої покерної сесії...",
+  "introEnterField": "Введіть {title}",
+  "@introEnterField": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "introEnterAmount": "Введіть суму",
+  "introPleaseEnterValidNumber": "Будь ласка, введіть коректне додатне число",
+  "introRingGame": "Кеш-гра",
+  "introMultiTable": "Багатостолова",
+  "invitationTitle": "Запрошення до клубу",
+  "invitationNoPending": "Немає очікуючих запрошень",
+  "invitationYouWillSeeHere": "Тут ви побачите запрошення від клубів",
+  "invitationGoBack": "Назад",
+  "invitationFailedToLoad": "Не вдалося завантажити запрошення: {error}",
+  "@invitationFailedToLoad": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "invitationJoinedAs": "Ви приєдналися до {clubName} як {role}",
+  "@invitationJoinedAs": {
+    "placeholders": {
+      "clubName": {
+        "type": "String"
+      },
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "invitationFailedToAccept": "Не вдалося прийняти запрошення: {error}",
+  "@invitationFailedToAccept": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "invitationDeclined": "Запрошення відхилено",
+  "invitationFailedToDecline": "Не вдалося відхилити запрошення: {error}",
+  "@invitationFailedToDecline": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "invitationUnknownClub": "Невідомий клуб",
+  "invitationInvitedBy": "Запросив {name}",
+  "@invitationInvitedBy": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "invitationExpiresDate": "Діє до {date}",
+  "@invitationExpiresDate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "invitationExpired": "Термін дії минув",
+  "invitationExpiresInDays": "через {days} дн.",
+  "@invitationExpiresInDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "invitationExpiresInHours": "через {hours} год.",
+  "@invitationExpiresInHours": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "invitationExpiresSoon": "незабаром",
+  "invitationDeclineButton": "Відхилити",
+  "invitationAcceptButton": "Прийняти",
+  "notificationTitle": "Сповіщення",
+  "notificationToday": "Сьогодні",
+  "notificationYesterday": "Учора",
+  "notificationThisWeek": "Цього тижня",
+  "notificationEarlier": "Раніше",
+  "notificationMarkAllRead": "Позначити всі як прочитані",
+  "notificationMarkAsRead": "Позначити як прочитане",
+  "notificationNoNotifications": "Немає сповіщень",
+  "notificationEvents": "Події",
+  "notificationRsvp": "Відповідь",
+  "notificationClubs": "Клуби",
+  "notificationInvitations": "Запрошення",
+  "notificationSeats": "Місця",
+  "notificationSupport": "Підтримка",
+  "notificationClubNotFound": "Клуб не знайдено",
+  "notificationEventNotFound": "Подію не знайдено",
+  "notificationError": "Помилка: {error}",
+  "@notificationError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationErrorLoadingEvent": "Помилка завантаження події: {error}",
+  "@notificationErrorLoadingEvent": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationFailedToLoadClub": "Не вдалося завантажити клуб: {error}",
+  "@notificationFailedToLoadClub": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationClubInvitation": "Запрошення до клубу",
+  "notificationInvitedToJoin": "Вас запросили приєднатися до",
+  "notificationInvitationDeclined": "Запрошення відхилено",
+  "notificationNotAuthenticated": "Не автентифіковано",
+  "notificationInvitationAccepted": "Запрошення прийнято",
+  "notificationAcceptedMessage": "{name} прийняв запрошення приєднатися до {clubName}.",
+  "@notificationAcceptedMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "clubName": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationInvitationDeclinedTitle": "Запрошення відхилено",
+  "notificationDeclinedMessage": "{name} відхилив запрошення приєднатися до {clubName}.",
+  "@notificationDeclinedMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "clubName": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationRequestResolved": "Запит вирішено",
+  "notificationRequestClosed": "Запит закрито",
+  "notificationResponse": "Відповідь",
+  "calendarTitle": "Покерний календар",
+  "calendarNewEvent": "Нова подія",
+  "calendarEventType": "Тип події",
+  "calendarEventTitle": "Назва",
+  "calendarLocation": "Місце",
+  "calendarBuyInAmount": "Сума бай-іну",
+  "calendarEventDateTime": "Дата та час події",
+  "calendarStarts": "Початок",
+  "calendarSelectDate": "Оберіть дату:",
+  "calendarReset": "Скинути",
+  "calendarSun": "НД",
+  "calendarMon": "ПН",
+  "calendarTue": "ВТ",
+  "calendarWed": "СР",
+  "calendarThu": "ЧТ",
+  "calendarFri": "ПТ",
+  "calendarSat": "СБ",
+  "calendarNoRecentEvents": "Немає нещодавніх подій",
+  "calendarAddFirstEvent": "Додайте свою першу покерну подію!",
+  "calendarAddNewEvent": "Додати нову подію",
+  "calendarSelectYear": "Оберіть рік",
+  "calendarEditEvent": "Редагувати подію",
+  "calendarDeleteEvent": "Видалити подію",
+  "calendarTournament": "Турнір",
+  "calendarCashGame": "Кеш-гра",
+  "calendarPrivateGame": "Приватна гра",
+  "calendarOnline": "Онлайн",
+  "calendarFailedToCreateEvent": "Не вдалося створити подію: {error}",
+  "@calendarFailedToCreateEvent": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "calendarFailedToUpdateEvent": "Не вдалося оновити подію: {error}",
+  "@calendarFailedToUpdateEvent": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "calendarFailedToDeleteEvent": "Не вдалося видалити подію",
+  "calendarClubNotFound": "Клуб не знайдено",
+  "calendarEventNotFound": "Подію не знайдено",
+  "calendarFailedToLoadEvent": "Не вдалося завантажити подію: {error}",
+  "@calendarFailedToLoadEvent": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "calendarDeleteConfirmTitle": "Видалити {title}?",
+  "@calendarDeleteConfirmTitle": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "calendarDeleteConfirmMessage": "Ви впевнені, що хочете видалити «{title}»?\nЦю дію не можна скасувати.",
+  "@calendarDeleteConfirmMessage": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionAnalyticsTitle": "Аналітика сесії",
+  "sessionAnalyticsHandsLogged": "Записано роздач: {count}",
+  "@sessionAnalyticsHandsLogged": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sessionAnalyticsDeleteTitle": "Видалити сесію?",
+  "sessionAnalyticsDeleteMessage": "Це назавжди видалить цю сесію разом з усією історією роздач, даними графіка стеку та звітами AI-аналізу. Цю дію не можна скасувати.",
+  "sessionAnalyticsDeleted": "Сесію видалено",
+  "sessionAnalyticsFailedToDelete": "Не вдалося видалити сесію",
+  "sessionAnalyticsExportSession": "Експортувати сесію",
+  "sessionAnalyticsExportConfirm": "Експортувати {count} роздач на {email}?",
+  "@sessionAnalyticsExportConfirm": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionAnalyticsExport": "Експорт",
+  "sessionAnalyticsExportSent": "Експорт надіслано на {email}",
+  "@sessionAnalyticsExportSent": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionAnalyticsExportFailed": "Помилка експорту: {error}",
+  "@sessionAnalyticsExportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionAnalyticsNoEmailFound": "Email не знайдено. Будь ласка, увійдіть за допомогою облікового запису з електронною поштою.",
+  "sessionAnalyticsPokerSession": "Покерна сесія",
+  "sessionAnalyticsTotalInvested": "Усього вкладено",
+  "sessionAnalyticsFinalStack": "Фінальний стек",
+  "sessionAnalyticsCashout": "Виплата",
+  "sessionAnalyticsProfitLoss": "Прибуток/Збиток",
+  "sessionAnalyticsProfit": "Прибуток",
+  "sessionAnalyticsLoss": "Збиток",
+  "sessionAnalyticsNotAvailableFull": "Недоступно",
+  "sessionAnalyticsAvgGrowth": "Середнє зростання",
+  "sessionAnalyticsHourlyRate": "Погодинна ставка",
+  "sessionAnalyticsFinished": "Місце",
+  "sessionAnalyticsDuration": "Тривалість",
+  "sessionAnalyticsRebuys": "Ребаї",
+  "sessionAnalyticsAddons": "Аддони",
+  "sessionAnalyticsStackChart": "Графік стеку",
+  "sessionAnalyticsNoStackHistory": "Історія стеку недоступна",
+  "sessionAnalyticsStackTrackedFuture": "Зміни стеку відстежуватимуться в наступних сесіях",
+  "sessionAnalyticsViewLoggedHands": "Переглянути записані роздачі",
+  "sessionAnalyticsStart": "Старт",
+  "sessionAnalyticsRebuy": "Ребай",
+  "sessionAnalyticsEnd": "Кінець",
+  "seatSetupTitle": "Налаштування місця",
+  "seatSetupManagePlayers": "Керування гравцями",
+  "seatSetupClickToConfig": "Натисніть місце, щоб налаштувати. Перетягніть Button на позицію",
+  "seatSetupButtonLocked": "Button заблоковано — триває роздача",
+  "seatSetupUpdatePlayerInfo": "Оновити інформацію про гравця",
+  "seatSetupEmpty": "Порожньо",
+  "seatSetupThisIsMySeat": "Це моє місце",
+  "seatSetupPlayerName": "Ім’я гравця",
+  "seatSetupBuyInAmount": "Сума бай-іну ($)",
+  "seatSetupStartingChips": "Початкові фішки",
+  "seatSetupSaveAsOpponent": "Зберегти «{name}» як суперника?",
+  "@seatSetupSaveAsOpponent": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "seatSetupOpponentSaved": "Суперника збережено!",
+  "seatSetupFailedToSave": "Не вдалося зберегти: {error}",
+  "@seatSetupFailedToSave": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "seatSetupNoData": "Немає даних",
+  "seatSetupStartSession": "Почати сесію",
+  "seatSetupSaveChanges": "Зберегти зміни",
+  "seatSetupPleaseSelectSeat": "Будь ласка, оберіть своє місце",
+  "seatSetupSeatNumber": "Місце {number}",
+  "@seatSetupSeatNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "seatSetupPlayerDefault": "Гравець {number}",
+  "@seatSetupPlayerDefault": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "handReviewTitle": "Огляд роздачі",
+  "handReviewYourHoleCards": "Ваші карти",
+  "handReviewOptional": "(необов’язково)",
+  "handReviewQuickTags": "Швидкі теги",
+  "handReviewTagBluff": "Блеф",
+  "handReviewTagValue": "На велью",
+  "handReviewTagMistake": "Помилка",
+  "handReviewTagCooler": "Кулер",
+  "handReviewTagHeroCall": "Hero Call",
+  "handReviewTagExploit": "Експлойт",
+  "handReviewNotes": "Нотатки",
+  "handReviewNotesHint": "Додайте нотатку про цю роздачу...",
+  "handReviewSaveHand": "Зберегти роздачу",
+  "handReviewSkip": "Пропустити",
+  "handReviewDuplicateCardError": "Не можна обрати одну й ту саму карту двічі!",
+  "handReviewSelectBothOrNone": "Будь ласка, оберіть обидві карти або залиште обидві порожніми",
+  "holeCardsTitle": "Ваші карти",
+  "holeCardsSubtitle": "Кишенькові карти",
+  "holeCardsWinnerBadge": "ПЕРЕМОЖЕЦЬ",
+  "holeCardsSave": "Зберегти",
+  "holeCardsSkip": "Пропустити",
+  "holeCardsSkipAllRemaining": "Пропустити всі решту",
+  "holeCardsDuplicateCardError": "Не можна обрати одну й ту саму карту двічі!",
+  "holeCardsSelectBothOrSkip": "Будь ласка, оберіть обидві карти або пропустіть, щоб продовжити",
+  "holeCardsClearAll": "Очистити все",
+  "showdownTitle": "Showdown",
+  "showdownEnterOpponentCards": "Введіть карти суперника на Showdown:",
+  "showdownPlayerLabel": "Гравець {seatNumber}",
+  "@showdownPlayerLabel": {
+    "placeholders": {
+      "seatNumber": {
+        "type": "int"
+      }
+    }
+  },
+  "showdownCard1": "Карта 1",
+  "showdownCard2": "Карта 2",
+  "showdownClear": "Очистити",
+  "showdownWinner": "Переможець:",
+  "showdownHandDescriptionLabel": "Опис комбінації (необов’язково)",
+  "showdownHandDescriptionHint": "напр., «Стрит-флеш», «Фул-хаус тузи на королях»",
+  "showdownSkip": "Пропустити",
+  "showdownSave": "Зберегти",
+  "showdownSelectCard": "Оберіть карту",
+  "tableManagementSectionTitle": "СТІЛ",
+  "tableManagementPlayersCount": "Гравців: {count}",
+  "@tableManagementPlayersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "tableManagementDealerButton": "Dealer Button",
+  "tableManagementAddPlayer": "Додати гравця",
+  "tableManagementYouSuffix": "{name} (Ви)",
+  "@tableManagementYouSuffix": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "tableManagementAdjustStack": "Змінити стек",
+  "tableManagementRebuy": "Ребай",
+  "tableManagementRemove": "Видалити",
+  "tableManagementAdjustStackTitle": "Змінити стек",
+  "tableManagementEnterStackAmount": "Введіть розмір стеку",
+  "tableManagementRebuyTitle": "Ребай",
+  "tableManagementRebuyAmountHint": "Сума ребаю для додавання",
+  "tableManagementAdd": "Додати",
+  "tableManagementRemovePlayerTitle": "Видалити гравця?",
+  "tableManagementRemovePlayerMessage": "Видалити {playerName} зі столу?",
+  "@tableManagementRemovePlayerMessage": {
+    "placeholders": {
+      "playerName": {
+        "type": "String"
+      }
+    }
+  },
+  "tableManagementAddPlayerSeatTitle": "Додати гравця — Місце {seatNumber}",
+  "@tableManagementAddPlayerSeatTitle": {
+    "placeholders": {
+      "seatNumber": {
+        "type": "int"
+      }
+    }
+  },
+  "tableManagementThisIsMe": "Це я",
+  "tableManagementNameLabel": "Ім’я",
+  "tableManagementSearchOrEnterName": "Знайдіть або введіть ім’я",
+  "tableManagementSaveAsOpponent": "Зберегти «{name}» як суперника",
+  "@tableManagementSaveAsOpponent": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "tableManagementSavedAsOpponent": "{name} збережено як суперника",
+  "@tableManagementSavedAsOpponent": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "tableManagementStartingStack": "Початковий стек",
+  "tableManagementStackAmountHint": "Розмір стеку",
+  "tableManagementMoveMeHere": "Перемістити мене сюди",
+  "tableManagementSeatLabel": "Місце {seatNumber}",
+  "@tableManagementSeatLabel": {
+    "placeholders": {
+      "seatNumber": {
+        "type": "int"
+      }
+    }
+  },
+  "seatConfigRemove": "Видалити",
+  "seatConfigRemoveMe": "Прибрати мене з цього місця",
+  "seatConfigThisIsMe": "Це я",
+  "seatConfigNameLabel": "Ім’я",
+  "seatConfigSearchOrEnterName": "Знайдіть або введіть ім’я",
+  "seatConfigSaveAsOpponent": "Зберегти «{name}» як суперника",
+  "@seatConfigSaveAsOpponent": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "seatConfigSavedAsOpponent": "{name} збережено як суперника",
+  "@seatConfigSavedAsOpponent": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "seatConfigSeatTitle": "Місце {seatNumber}",
+  "@seatConfigSeatTitle": {
+    "placeholders": {
+      "seatNumber": {
+        "type": "int"
+      }
+    }
+  },
+  "seatConfigStackLabel": "Стек",
+  "seatConfigUpdateButton": "Оновити",
+  "seatConfigAddPlayerButton": "Додати гравця",
+  "seatManagementSetupSeats": "Налаштування місць",
+  "seatManagementManagePlayers": "Керування гравцями",
+  "seatManagementChooseSeatSubtitle": "Оберіть своє місце та налаштуйте стіл",
+  "seatManagementUpdatePlayerSubtitle": "Оновити інформацію про гравця",
+  "seatManagementButtonPosition": "Позиція Button",
+  "seatManagementSeatLabel": "Місце {seatNumber}",
+  "@seatManagementSeatLabel": {
+    "placeholders": {
+      "seatNumber": {
+        "type": "int"
+      }
+    }
+  },
+  "seatManagementEmpty": "Порожньо",
+  "seatManagementActive": "Активне",
+  "seatManagementPlayerNameLabel": "Ім’я гравця",
+  "seatManagementEnterPlayerName": "Введіть ім’я гравця",
+  "seatManagementBuyInAmountCash": "Сума бай-іну ($)",
+  "seatManagementStartingChips": "Початкові фішки",
+  "seatManagementSaveOpponentTitle": "Зберегти суперника?",
+  "seatManagementSaveOpponentMessage": "Бажаєте зберегти «{name}» у своєму списку суперників для подальшого відстеження?",
+  "@seatManagementSaveOpponentMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "seatManagementNotNow": "Не зараз",
+  "seatManagementSaveAsOpponentPrompt": "Зберегти «{name}» як суперника?",
+  "@seatManagementSaveAsOpponentPrompt": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "seatManagementOpponentSavedSuccess": "Суперника «{name}» успішно збережено!",
+  "@seatManagementOpponentSavedSuccess": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "seatManagementFailedToSaveOpponent": "Не вдалося зберегти суперника: {error}",
+  "@seatManagementFailedToSaveOpponent": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "seatManagementStartSession": "Почати сесію",
+  "seatManagementSaveChanges": "Зберегти зміни",
+  "seatManagementSelectYourSeat": "Будь ласка, оберіть своє місце",
+  "inviteMemberTitle": "Запросити учасника",
+  "inviteMemberEmailLabel": "EMAIL-АДРЕСА",
+  "inviteMemberEmailHint": "Введіть email-адресу",
+  "inviteMemberEmailRequired": "Будь ласка, введіть email-адресу",
+  "inviteMemberEmailInvalid": "Будь ласка, введіть дійсну email-адресу",
+  "inviteMemberRoleLabel": "РОЛЬ",
+  "inviteMemberRoleDealer": "Дилер",
+  "inviteMemberRoleAdmin": "Адміністратор",
+  "inviteMemberSendInvite": "Надіслати запрошення",
+  "inviteMemberAlreadyMember": "{displayName} вже є учасником {clubName}",
+  "@inviteMemberAlreadyMember": {
+    "placeholders": {
+      "displayName": {
+        "type": "String"
+      },
+      "clubName": {
+        "type": "String"
+      }
+    }
+  },
+  "inviteMemberAddedNotificationTitle": "Вас додано до клубу!",
+  "inviteMemberAddedNotificationBody": "{inviterName} додав вас до «{clubName}» як {role}.",
+  "@inviteMemberAddedNotificationBody": {
+    "placeholders": {
+      "inviterName": {
+        "type": "String"
+      },
+      "clubName": {
+        "type": "String"
+      },
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "inviteMemberAddedSuccessTitle": "Учасника додано!",
+  "inviteMemberAddedSuccessMessage": "{displayName} додано до {clubName} як {role}.",
+  "@inviteMemberAddedSuccessMessage": {
+    "placeholders": {
+      "displayName": {
+        "type": "String"
+      },
+      "clubName": {
+        "type": "String"
+      },
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "inviteMemberInvitationSentTitle": "Запрошення надіслано!",
+  "inviteMemberInvitationSentMessage": "Email із запрошенням надіслано на {email}. Щойно вони зареєструються, вони зможуть приєднатися до {clubName}.",
+  "@inviteMemberInvitationSentMessage": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      },
+      "clubName": {
+        "type": "String"
+      }
+    }
+  },
+  "inviteMemberError": "Помилка: {error}",
+  "@inviteMemberError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "inviteMemberRoleAnAdmin": "адміністратора",
+  "inviteMemberRoleADealer": "дилера",
+  "registerClubTitle": "Реєстрація клубу",
+  "registerClubNameLabel": "Назва клубу",
+  "registerClubNamePlaceholder": "напр., Lucky Aces Poker Club",
+  "registerClubNameRequired": "Будь ласка, введіть назву клубу",
+  "registerClubAddressLabel": "Адреса",
+  "registerClubAddressPlaceholder": "напр., вул. Головна 123, місто, країна",
+  "registerClubAddressRequired": "Будь ласка, введіть адресу клубу",
+  "registerClubPhoneLabel": "Номер телефону",
+  "registerClubPhonePlaceholder": "напр., +1 555-123-4567",
+  "registerClubPhoneRequired": "Будь ласка, введіть номер телефону",
+  "registerClubAdminEmailLabel": "Email адміністратора клубу",
+  "registerClubAdminEmailPlaceholder": "напр., admin@myclub.com",
+  "registerClubAdminEmailRequired": "Будь ласка, введіть email адміністратора",
+  "registerClubAdminEmailInvalid": "Будь ласка, введіть дійсний email",
+  "registerClubInfoMessage": "Ця особа отримає сповіщення, коли клуб буде затверджено, і стане власником клубу.",
+  "registerClubSubmitRequest": "Надіслати запит",
+  "registerClubFailedToSubmit": "Не вдалося надіслати запит: {error}",
+  "@registerClubFailedToSubmit": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "registerClubSuccessTitle": "Запит надіслано!",
+  "registerClubSuccessMessage": "Ваш запит на реєстрацію клубу надіслано. Ми повідомимо вас на {email}, щойно його розглянуть.",
+  "@registerClubSuccessMessage": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "registerClubGotIt": "Зрозуміло",
+  "loggingModeChooseMode": "Оберіть режим",
+  "loggingModeFullTitle": "Режим логування",
+  "loggingModeFullSubtitle": "Повне відстеження сесії",
+  "loggingModeFullFeature1": "Відстеження сесії з багатьма роздачами",
+  "loggingModeFullFeature2": "Статистика в реальному часі",
+  "loggingModeFullFeature3": "Детальна історія роздач",
+  "loggingModeFullFeature4": "Аналітика сесії",
+  "loggingModeFeatures": "Можливості",
+  "loggingModeStart": "Старт",
+  "earningsChartAllTimeEarnings": "Заробіток за весь час",
+  "earningsChartSinceDate": "З {date}",
+  "@earningsChartSinceDate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "earningsChartTournament": "Турнір",
+  "earningsChartCash": "Кеш",
+  "earningsChartNoData": "Поки що немає даних про заробіток",
+  "earningsChartNoDataSubtitle": "Завершіть кілька сесій, щоб побачити графік заробітку",
+  "earningsChartMtt": "MTT",
+  "opponentHandsTitle": "Історія роздач",
+  "opponentHandsCount": "{count} роздач",
+  "@opponentHandsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "opponentHandsLoading": "Завантаження історії роздач…",
+  "opponentHandsError": "Щось пішло не так",
+  "opponentHandsRetry": "Повторити",
+  "opponentHandsNoHandsTitle": "Роздач не знайдено",
+  "opponentHandsNoHandsSubtitle": "Ви ще не зіграли жодної роздачі\\nз {name}.",
+  "@opponentHandsNoHandsSubtitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "opponentHandsOppWon": "СУПЕРНИК ВИГРАВ",
+  "opponentHandsYou": "Ви",
+  "opponentHandsPot": "Банк {amount}",
+  "@opponentHandsPot": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "opponentHandsUnknownSession": "Невідома сесія",
+  "clubDashboardLive": "Наживо",
+  "clubDashboardUpcoming": "Майбутні",
+  "clubDashboardPast": "Минулі",
+  "clubDashboardNoLiveEvents": "Немає подій наживо",
+  "clubDashboardNoUpcomingEvents": "Немає майбутніх подій",
+  "clubDashboardNoPastEvents": "Немає минулих подій",
+  "clubDashboardAdmin": "Адмін",
+  "clubDashboardCreateEventHint": "Натисніть кнопку нижче, щоб створити",
+  "clubDashboardCheckBackLater": "Завітайте пізніше по нові події",
+  "clubDashboardEventsWillAppear": "Події з’являться тут, коли розпочнуться",
+  "clubDashboardPastEventsWillAppear": "Завершені події з’являться тут",
+  "clubDashboardCashGameStakes": "Кеш-гра {stakes}",
+  "@clubDashboardCashGameStakes": {
+    "placeholders": {
+      "stakes": {
+        "type": "String"
+      }
+    }
+  },
+  "clubDashboardCash": "Кеш",
+  "clubDashboardTables": "Столи",
+  "clubDashboardStakes": "Ставки",
+  "clubDashboardPlayingCount": "{count} грають",
+  "@clubDashboardPlayingCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "clubDashboardMemberCount": "{count} учасників",
+  "@clubDashboardMemberCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "clubSettingsTitle": "Налаштування клубу",
+  "clubSettingsClubInfo": "Інформація про клуб",
+  "clubSettingsClubName": "Назва клубу",
+  "clubSettingsAddress": "Адреса",
+  "clubSettingsPhone": "Телефон",
+  "clubSettingsDescription": "Опис",
+  "clubSettingsSaveChanges": "Зберегти зміни",
+  "clubSettingsInfoSaved": "Інформацію про клуб збережено",
+  "clubSettingsErrorSaving": "Помилка збереження: {error}",
+  "@clubSettingsErrorSaving": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "clubSettingsNoTablesYet": "Столів ще немає",
+  "clubSettingsAddTableHint": "Додайте стіл, щоб почати",
+  "clubSettingsErrorLoading": "Помилка завантаження даних: {error}",
+  "@clubSettingsErrorLoading": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "eventEditTitle": "Редагувати подію",
+  "eventNewTitle": "Нова подія",
+  "eventNoTablesAssigned": "Столи не призначено",
+  "eventNoTablesAssignedDesc": "До цієї події не призначено жодного столу. Поверніться назад і спершу призначте столи.",
+  "eventGoBack": "Назад",
+  "eventContinue": "Продовжити",
+  "eventNameOptional": "Назва події (необов’язково)",
+  "eventNameLabel": "Назва події",
+  "eventStakesHint": "Ставки (напр. 1/2)",
+  "eventBuyInAmount": "Сума buy-in",
+  "eventMinBuyIn": "Мін. buy-in ($)",
+  "eventStartingStack": "Стартовий стек",
+  "eventGameType": "Тип гри",
+  "eventTournament": "Турнір",
+  "eventCashGame": "Кеш-гра",
+  "eventDateAndTime": "Дата й час події",
+  "eventStarts": "Початок",
+  "eventTables": "Столи",
+  "eventDeselectAll": "Зняти всі",
+  "eventSelectAll": "Обрати всі",
+  "eventAllTablesInUse": "Усі столи зайняті активними подіями",
+  "eventNoTablesConfigured": "Столів ще не налаштовано",
+  "eventDescriptionLabel": "Опис",
+  "eventNotifyMembers": "Сповістити учасників",
+  "eventNotifyMembersSubtitle": "Надіслати сповіщення всім учасникам клубу",
+  "eventDeleteEvent": "Видалити подію",
+  "eventDeleteConfirmTitle": "Видалити подію?",
+  "eventDeleteConfirmBody": "Це назавжди видалить цю подію та всі пов’язані з нею дані. Цю дію не можна скасувати.",
+  "eventDeleteFailed": "Не вдалося видалити подію: {error}",
+  "@eventDeleteFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "eventAttendeesTitle": "Учасники",
+  "eventAttendeesGoing": "Йдуть ({count})",
+  "@eventAttendeesGoing": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "eventAttendeesMaybe": "Можливо ({count})",
+  "@eventAttendeesMaybe": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "eventAttendeesNo": "Ні ({count})",
+  "@eventAttendeesNo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "eventAttendeesNoConfirmed": "Ще ніхто не підтвердив",
+  "eventAttendeesNoMaybes": "Немає «можливо»",
+  "eventAttendeesNoDeclines": "Немає відмов",
+  "eventDetailLiveNow": "Подія тепер НАЖИВО!",
+  "eventDetailEnded": "Подія завершилася",
+  "eventDetailCancelled": "Подію скасовано",
+  "eventDetailPaused": "Подію призупинено",
+  "eventDetailStatusUpdated": "Статус події оновлено",
+  "eventDetailRemovedFromCalendar": "Подію вилучено з вашого календаря",
+  "eventDetailRsvpGoing": "Йду",
+  "eventDetailRsvpMaybe": "Можливо",
+  "eventDetailRsvpCantGo": "Не можу",
+  "eventDetailRsvpFailed": "Не вдалося оновити відповідь: {error}",
+  "@eventDetailRsvpFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "eventDetailCantStartTitle": "Не вдається розпочати подію",
+  "eventDetailCantStartBody": "До цієї події не призначено жодного столу. Спершу додайте столи.",
+  "eventDetailStarted": "Подію розпочато!",
+  "eventDetailStartFailed": "Не вдалося розпочати подію: {error}",
+  "@eventDetailStartFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "eventDetailFinishTitle": "Завершити подію?",
+  "eventDetailCancelTitle": "Скасувати подію?",
+  "eventDetailFinishBody": "Це завершить усі активні столи та зафіксує підсумкові позиції.",
+  "eventDetailCancelBody": "Це сповістить усіх учасників і скасує подію.",
+  "eventDetailFinishButton": "Завершити подію",
+  "eventDetailCancelButton": "Скасувати подію",
+  "eventDetailKeepEvent": "Залишити подію",
+  "eventDetailLiveBadge": "НАЖИВО",
+  "eventDetailCancelledBadge": "СКАСОВАНО",
+  "eventDetailCompletedBadge": "ЗАВЕРШЕНО",
+  "eventDetailUpcomingBadge": "МАЙБУТНЯ",
+  "eventDetailLocation": "Місце",
+  "eventDetailBuyIn": "Buy-in",
+  "eventDetailStakes": "Ставки",
+  "eventDetailStartingStack": "Стартовий стек",
+  "eventDetailAbout": "ПРО ПОДІЮ",
+  "eventDetailAddedToCalendar": "Подію додано до вашого календаря!",
+  "eventDetailCalendarFailed": "Не вдалося додати до календаря: {error}",
+  "@eventDetailCalendarFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "eventManagementEventsTitle": "Події",
+  "eventManagementNewEvent": "Нова подія",
+  "eventManagementNoEvents": "Немає подій",
+  "eventManagementNoEventsSubtitle": "Створіть подію, щоб відстежувати рейтинг наживо",
+  "eventManagementActiveEvents": "Активні події",
+  "eventManagementPastEvents": "Минулі події",
+  "eventManagementErrorLoading": "Помилка завантаження подій: {error}",
+  "@eventManagementErrorLoading": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "eventManagementNoTables": "Немає доступних столів. Спершу створіть столи.",
+  "eventManagementCreated": "Подію «{name}» створено",
+  "@eventManagementCreated": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "eventManagementCreateFailed": "Не вдалося створити подію: {error}",
+  "@eventManagementCreateFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "eventManagementEndEvent": "Завершити подію",
+  "eventManagementEndConfirm": "Ви впевнені, що хочете завершити «{name}»?",
+  "@eventManagementEndConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "eventManagementEnded": "Подію «{name}» завершено",
+  "@eventManagementEnded": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "eventManagementEndFailed": "Не вдалося завершити подію: {error}",
+  "@eventManagementEndFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "eventManagementLinkCopied": "Посилання скопійовано в буфер обміну",
+  "eventManagementShare": "Поділитися",
+  "eventManagementPause": "Пауза",
+  "eventManagementResume": "Продовжити",
+  "eventManagementEnd": "Завершити",
+  "eventManagementCreateEvent": "Створити подію",
+  "eventManagementEventNameHint": "напр., Турнір п’ятничного вечора",
+  "eventManagementSelectTables": "Обрати столи",
+  "eventManagementTableNumber": "Стіл {number}",
+  "@eventManagementTableNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "eventManagementPublicEvent": "Публічна подія",
+  "eventManagementPublicSubtitle": "Кожен може переглянути таблицю лідерів",
+  "eventManagementAccessCode": "Код доступу (необов’язково)",
+  "eventManagementAccessCodeSubtitle": "Для обміну з певними користувачами",
+  "eventManagementEnterName": "Введіть назву події",
+  "eventManagementSelectTable": "Оберіть щонайменше один стіл",
+  "eventManagementPublic": "Публічна",
+  "eventManagementPrivate": "Приватна",
+  "adminEventTablesSummary": "{count} столів • {occupied} за столом • {open} вільних",
+  "@adminEventTablesSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "occupied": {
+        "type": "int"
+      },
+      "open": {
+        "type": "int"
+      }
+    }
+  },
+  "adminEventTablesAddTable": "Додати стіл",
+  "adminEventTablesNoTables": "Немає доступних столів для додавання",
+  "adminEventTablesCloseConfirm": "Закрити {tableName}?",
+  "@adminEventTablesCloseConfirm": {
+    "placeholders": {
+      "tableName": {
+        "type": "String"
+      }
+    }
+  },
+  "adminEventTablesCloseWithPlayers": "Це перемістить {count} гравця(-ів) до списку очікування та вилучить стіл із цієї події.",
+  "@adminEventTablesCloseWithPlayers": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "adminEventTablesCloseEmpty": "Це вилучить стіл із цієї події.",
+  "adminEventTablesCloseButton": "Закрити стіл",
+  "adminEventTablesTableAdded": "{tableName} додано до події",
+  "@adminEventTablesTableAdded": {
+    "placeholders": {
+      "tableName": {
+        "type": "String"
+      }
+    }
+  },
+  "adminEventTablesClosedWithWaitlist": "{tableName} закрито. {count} гравця(-ів) переміщено до списку очікування.",
+  "@adminEventTablesClosedWithWaitlist": {
+    "placeholders": {
+      "tableName": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "adminEventTablesClosed": "{tableName} закрито.",
+  "@adminEventTablesClosed": {
+    "placeholders": {
+      "tableName": {
+        "type": "String"
+      }
+    }
+  },
+  "adminEventTablesNoWaitlist": "У списку очікування нікого немає",
+  "adminEventTablesWaitlistCount": "{count} у списку очікування",
+  "@adminEventTablesWaitlistCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "adminEventTablesWaitlistNext": "Наступний: {name}",
+  "@adminEventTablesWaitlistNext": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "adminEventTablesWaitlist": "Список очікування",
+  "adminEventTablesNotified": "Сповіщено",
+  "adminEventTablesNotify": "Сповістити",
+  "adminEventTablesSeat": "Посадити",
+  "adminEventTablesSeatAt": "{tableName} ({count} вільних)",
+  "@adminEventTablesSeatAt": {
+    "placeholders": {
+      "tableName": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "adminEventTablesNoEmptySeats": "На цьому столі немає вільних місць",
+  "adminEventTablesPlayerSeated": "{name} посаджено за {tableName}",
+  "@adminEventTablesPlayerSeated": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "tableName": {
+        "type": "String"
+      }
+    }
+  },
+  "adminEventTablesPlayerNotified": "Сповіщено {name}",
+  "@adminEventTablesPlayerNotified": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "adminTableSeatPlayer": "Посадити гравця",
+  "adminTableFromWaitlist": "Зі списку очікування",
+  "adminTableWaitlistNextIs": "Наступний — {name}",
+  "@adminTableWaitlistNextIs": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "adminTableClubMember": "Учасник клубу",
+  "adminTableSearchMembers": "Пошук серед наявних учасників",
+  "adminTableWalkUpPlayer": "Гравець без реєстрації",
+  "adminTableAddByName": "Додати за іменем",
+  "adminTableSelectMember": "Обрати учасника",
+  "adminTableSearch": "Пошук…",
+  "adminTablePlayerName": "Ім’я гравця",
+  "adminTableWaitingForApproval": "Очікування схвалення для приєднання до місця №{seatNumber}",
+  "@adminTableWaitingForApproval": {
+    "placeholders": {
+      "seatNumber": {
+        "type": "int"
+      }
+    }
+  },
+  "adminTableReject": "Відхилити",
+  "adminTableApprove": "Схвалити",
+  "adminTableRemove": "Вилучити",
+  "adminTableSeatNumber": "Місце №{seatNumber}",
+  "@adminTableSeatNumber": {
+    "placeholders": {
+      "seatNumber": {
+        "type": "int"
+      }
+    }
+  },
+  "adminTableNoEmptySeats": "Немає вільних місць",
+  "adminTableSeatPlayerName": "Посадити {name}",
+  "@adminTableSeatPlayerName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "adminTableSelectSeat": "Оберіть місце:",
+  "adminTablePlayerSeated": "{name} посаджено",
+  "@adminTablePlayerSeated": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "adminTableAlreadySeated": "{name} вже сидить за {location}",
+  "@adminTableAlreadySeated": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "location": {
+        "type": "String"
+      }
+    }
+  },
+  "adminTablePlayerApproved": "{name} схвалено",
+  "@adminTablePlayerApproved": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "adminTablePlayerRejected": "Гравця відхилено",
+  "adminTablePlayerRemoved": "Гравця вилучено",
+  "adminTableWaitlistInCount": "{count} у списку очікування",
+  "@adminTableWaitlistInCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "adminTableWaitlistNextName": "Наступний: {name}",
+  "@adminTableWaitlistNextName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "adminTableNotifiedName": "Сповіщено {name}",
+  "@adminTableNotifiedName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "clubCashGameStakes": "Кеш-гра {stakes}",
+  "@clubCashGameStakes": {
+    "placeholders": {
+      "stakes": {
+        "type": "String"
+      }
+    }
+  },
+  "clubCashGameTablesSummary": "{count} столів · {occupied} за столом · {open} вільних",
+  "@clubCashGameTablesSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "occupied": {
+        "type": "int"
+      },
+      "open": {
+        "type": "int"
+      }
+    }
+  },
+  "clubCashGameTableNumber": "Стіл {number}",
+  "@clubCashGameTableNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "clubCashGameNoTables": "У цій групі немає столів",
+  "clubCashGameFailedToLoad": "Не вдалося завантажити столи: {error}",
+  "@clubCashGameFailedToLoad": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "clubCashGameAlreadySeated": "Ви вже сидите за столом",
+  "clubCashGameSeatAvailable": "Для вас є вільне місце, підійдіть до реєстрації",
+  "clubCashGameJoinedWaitlist": "Приєдналися до списку очікування на позиції №{position}",
+  "@clubCashGameJoinedWaitlist": {
+    "placeholders": {
+      "position": {
+        "type": "int"
+      }
+    }
+  },
+  "clubCashGameJoinFailed": "Не вдалося приєднатися до списку очікування: {error}",
+  "@clubCashGameJoinFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "clubCashGameLeftWaitlist": "Ви покинули список очікування",
+  "clubCashGameLeaveFailed": "Не вдалося покинути список очікування: {error}",
+  "@clubCashGameLeaveFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "clubCashGameViewWaitlist": "Переглянути список очікування",
+  "clubCashGameInWaitlist": "У списку очікування",
+  "clubCashGameInWaitlistPosition": "У черзі · #{position}",
+  "@clubCashGameInWaitlistPosition": {
+    "placeholders": {
+      "position": {
+        "type": "int"
+      }
+    }
+  },
+  "clubCashGameJoinWaitlist": "Стати в чергу",
+  "clubCashGameLeaveWaitlistConfirm": "Вийти з черги?",
+  "clubCashGameLosePosition": "Ви втратите своє поточне місце в черзі.",
+  "clubCashGameKeep": "Залишитися",
+  "clubCashGameLeave": "Вийти",
+  "clubCashGameRefreshFailed": "Не вдалося оновити столи: {error}",
+  "@clubCashGameRefreshFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "clubCashGameWaitlistTitle": "Черга",
+  "clubCashGameNotified": "{name} отримав(ла) сповіщення",
+  "@clubCashGameNotified": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "clubCashGameNotifyFailed": "Не вдалося сповістити: {error}",
+  "@clubCashGameNotifyFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "clubCashGameCouldNotLoad": "Не вдалося завантажити чергу",
+  "clubCashGameNoOneOnWaitlist": "У черзі нікого немає",
+  "clubCashGamePlayer": "Гравець",
+  "clubCashGameNotifiedStatus": "Сповіщено • {time}",
+  "@clubCashGameNotifiedStatus": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "clubCashGameJoinedTime": "Приєднався {time}",
+  "@clubCashGameJoinedTime": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "clubCashGameJustNow": "щойно",
+  "clubCashGameMinutesAgo": "{count} хв тому",
+  "@clubCashGameMinutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "clubCashGameHoursAgo": "{count} год тому",
+  "@clubCashGameHoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "clubCashGameDaysAgo": "{count} дн тому",
+  "@clubCashGameDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "clubCashGameAddTable": "Додати стіл",
+  "clubCashGameNewTableName": "Назва нового столу (необов'язково)",
+  "clubCashGameAdd": "Додати",
+  "clubCashGameAddedToGroup": "{tableName} додано до групи",
+  "@clubCashGameAddedToGroup": {
+    "placeholders": {
+      "tableName": {
+        "type": "String"
+      }
+    }
+  },
+  "clubCashGameAddFailed": "Не вдалося додати стіл: {error}",
+  "@clubCashGameAddFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "clubCashGameAttachFailed": "Не вдалося прикріпити стіл: {error}",
+  "@clubCashGameAttachFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "clubCashGameAvailableTables": "Доступні столи",
+  "clubCashGameInUseByOther": "Використовується іншими подіями",
+  "clubCashGameNoOtherTables": "У цьому клубі поки що немає інших столів",
+  "clubCashGameInUseBy": "Використовується подією {eventName}",
+  "@clubCashGameInUseBy": {
+    "placeholders": {
+      "eventName": {
+        "type": "String"
+      }
+    }
+  },
+  "clubCashGameSeats": "Місць: {count}",
+  "@clubCashGameSeats": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "memberEventTablesSummary": "{count} столів • {occupied} зайнято • {open} вільно",
+  "@memberEventTablesSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "occupied": {
+        "type": "int"
+      },
+      "open": {
+        "type": "int"
+      }
+    }
+  },
+  "memberEventJoinedWaitlist": "Ви стали в чергу на місце #{position}",
+  "@memberEventJoinedWaitlist": {
+    "placeholders": {
+      "position": {
+        "type": "int"
+      }
+    }
+  },
+  "memberEventJoinFailed": "Не вдалося стати в чергу: {error}",
+  "@memberEventJoinFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "memberEventLeftWaitlist": "Ви вийшли з черги",
+  "memberEventLeaveFailed": "Не вдалося вийти з черги: {error}",
+  "@memberEventLeaveFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "memberEventWaitlistPosition": "Місце #{position} у черзі",
+  "@memberEventWaitlistPosition": {
+    "placeholders": {
+      "position": {
+        "type": "int"
+      }
+    }
+  },
+  "memberEventTotalWaiting": "Усього очікує: {count}",
+  "@memberEventTotalWaiting": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "memberEventLeaveWaitlist": "Вийти з черги",
+  "memberEventJoinWaitlistWithCount": "Стати в чергу ({count} очікує)",
+  "@memberEventJoinWaitlistWithCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "memberEventJoinWaitlist": "Стати в чергу",
+  "memberEventAllTablesFull": "Усі столи заповнені",
+  "dealerHomeTitle": "Режим дилера",
+  "dealerHomeNoClubs": "Клубів не знайдено",
+  "dealerHomeNoClubsOwnerHint": "Створіть свій перший клуб, щоб почати.",
+  "dealerHomeNoClubsMemberHint": "Ви поки що не є учасником жодного клубу.\nПопросіть власника клубу запросити вас.",
+  "dealerHomeCreateClub": "Створити клуб",
+  "dealerHomeDealer": "Дилер",
+  "dealerHomeClubCount": "{count} клубів",
+  "@dealerHomeClubCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dealerHomeActiveSessions": "Активні сесії",
+  "dealerHomeClubs": "Клуби",
+  "dealerHomeTables": "Столи",
+  "dealerHomeAddTable": "Додати стіл",
+  "dealerHomeTableNameLabel": "Назва столу",
+  "dealerHomeTableNameHint": "напр., Стіл 1, Головний стіл",
+  "dealerHomeTableAdded": "Стіл «{name}» додано до {clubName}!",
+  "@dealerHomeTableAdded": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "clubName": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerHomeAddTableFailed": "Не вдалося додати стіл: {error}",
+  "@dealerHomeAddTableFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerHomeClubName": "Назва клубу",
+  "dealerHomeCreate": "Створити",
+  "dealerHomeClubCreated": "Клуб «{name}» успішно створено!",
+  "@dealerHomeClubCreated": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerHomeClubCreateFailed": "Не вдалося створити клуб: {error}",
+  "@dealerHomeClubCreateFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerHomeNoTables": "У цьому клубі немає столів",
+  "dealerHomeActiveHand": "Активний — роздача #{number}",
+  "@dealerHomeActiveHand": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "dealerHomeInactive": "Неактивний",
+  "dealerHomeResume": "Продовжити",
+  "dealerHomeStart": "Почати",
+  "dealerHomeSessionSettings": "Налаштування сесії",
+  "dealerHomeSmallBlind": "Small Blind",
+  "dealerHomeBigBlind": "Big Blind",
+  "dealerHomeBBAnte": "BB Ante",
+  "dealerHomeGameType": "Тип гри",
+  "dealerHomeCash": "Cash",
+  "dealerHomeTournament": "Турнір",
+  "dealerHomeButtonPosition": "Позиція баттона",
+  "dealerHomeStartSession": "Почати сесію",
+  "dealerHomeCouldNotFind": "Не вдалося знайти клуб або стіл",
+  "dealerHomeStartFailed": "Не вдалося почати сесію: {error}",
+  "@dealerHomeStartFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerHomeErrorLoading": "Помилка завантаження даних: {error}",
+  "@dealerHomeErrorLoading": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerHomeTableCount": "{count} столів",
+  "@dealerHomeTableCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dealerTableFailedStartHand": "Не вдалося почати роздачу: {error}",
+  "@dealerTableFailedStartHand": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableChopSummary": "Chop: {winners} ділять {amount}",
+  "@dealerTableChopSummary": {
+    "placeholders": {
+      "winners": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableWins": "{name} виграє {amount}",
+  "@dealerTableWins": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTablePotChopped": "Банк поділено між {names}",
+  "@dealerTablePotChopped": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableFailedCompleteHand": "Не вдалося завершити роздачу: {error}",
+  "@dealerTableFailedCompleteHand": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTablePlayerBusted": "{name} вибув(ла)!",
+  "@dealerTablePlayerBusted": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableNoChipsRemaining": "У місця {seatNumber} не залишилося фішок.\nСума rebuy: {amount}",
+  "@dealerTableNoChipsRemaining": {
+    "placeholders": {
+      "seatNumber": {
+        "type": "int"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableRemovePlayer": "Видалити гравця",
+  "dealerTableRebuy": "Rebuy",
+  "dealerTableRebuysFor": "{name} робить rebuy на {amount}",
+  "@dealerTableRebuysFor": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableFinishesIn": "{name} посідає {position} місце",
+  "@dealerTableFinishesIn": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "position": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableEndSessionTitle": "Завершити сесію?",
+  "dealerTableEndSessionBody": "Ви впевнені, що хочете завершити цю сесію?",
+  "dealerTableEnd": "Завершити",
+  "dealerTableDealerChange": "Зміна дилера",
+  "dealerTableDealerChangeBody": "Сесію буде призупинено, і інший дилер зможе відсканувати QR-код столу, щоб продовжити з того місця, де ви зупинилися.",
+  "dealerTableDealerChangePreserve": "Усі гравці, блайнди та стан гри буде збережено.",
+  "dealerTableDealerChangeResume": "Ви також можете продовжити цю сесію самостійно пізніше.",
+  "dealerTableHandOff": "Передати",
+  "dealerTableSessionPaused": "Сесію призупинено. Тепер її може продовжити інший дилер.",
+  "dealerTablePauseFailed": "Не вдалося призупинити сесію: {error}",
+  "@dealerTablePauseFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableEventCancelled": "Подію скасовано",
+  "dealerTableEventFinished": "Подію завершено",
+  "dealerTableEventCancelledBody": "Адміністратор клубу скасував цю подію. Усі сесії збережено.",
+  "dealerTableEventFinishedBody": "Адміністратор клубу завершив цю подію. Усі сесії збережено.",
+  "dealerTableSessionEnded": "Сесію завершено",
+  "dealerTableSessionEndedBody": "Цю сесію завершено. Усі дані збережено.",
+  "dealerTableLeaveTitle": "Залишити стіл дилера?",
+  "dealerTableLeaveActiveHand": "Зараз триває роздача. Якщо вийти зараз, це може порушити логування.",
+  "dealerTableLeaveInactive": "Сесія залишається активною. Ви можете повернутися будь-коли.",
+  "dealerTableAutoCorrection": "Автовиправлено «{detected}» → «{corrected}»",
+  "@dealerTableAutoCorrection": {
+    "placeholders": {
+      "detected": {
+        "type": "String"
+      },
+      "corrected": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableApprovePlayer": "Схвалити {name}?",
+  "@dealerTableApprovePlayer": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableStartingChipStack": "Початковий стек фішок",
+  "dealerTablePlayerRejected": "{name} відхилено",
+  "@dealerTablePlayerRejected": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableRejectFailed": "Не вдалося відхилити: {error}",
+  "@dealerTableRejectFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTablePlayerJoined": "{name} приєднався зі стеком {amount}",
+  "@dealerTablePlayerJoined": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableApproveFailed": "Не вдалося схвалити: {error}",
+  "@dealerTableApproveFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableChipStack": "Стек фішок",
+  "dealerTableSave": "Зберегти",
+  "liveSessionHand": "РОЗДАЧА",
+  "liveSessionPot": "БАНК",
+  "liveSessionStatus": "СТАТУС",
+  "liveSessionLive": "НАЖИВО",
+  "liveSessionWaiting": "ОЧІКУВАННЯ",
+  "liveSessionWinnerSummary": "{winner} виграє ${amount}",
+  "@liveSessionWinnerSummary": {
+    "placeholders": {
+      "winner": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "liveSessionSessionEnded": "Сесію завершено",
+  "liveSessionSessionEndedBody": "Дилер завершив цю сесію.",
+  "liveSessionLeaveTitle": "Залишити стіл?",
+  "liveSessionLeaveBody": "Ви впевнені, що хочете залишити цей стіл?",
+  "liveSessionLeave": "Вийти",
+  "liveSessionLeaveFailed": "Не вдалося вийти: {error}",
+  "@liveSessionLeaveFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "liveSessionLeaveTooltip": "Залишити стіл",
+  "liveSessionSeat": "Місце {number}",
+  "@liveSessionSeat": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "liveSessionYourSeat": "Ваше місце",
+  "liveSessionStack": "Стек: {amount}",
+  "@liveSessionStack": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "liveSessionWaitingForDealer": "Очікування дилера...",
+  "liveSessionOffline": "ОФЛАЙН",
+  "liveSessionRecentActions": "Останні дії",
+  "liveSessionWaitingForAction": "Очікування дії...",
+  "liveSessionD": "D",
+  "qrScanTitle": "Сканувати QR столу",
+  "qrScanInvalidCode": "Недійсний QR-код. Відскануйте дійсний QR-код покерного столу.",
+  "qrScanError": "Помилка обробки QR-коду: {error}",
+  "@qrScanError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "qrScanInstructions": "Наведіть камеру на QR-код на столі, щоб приєднатися",
+  "clubRequestsTitle": "Заявки клубів",
+  "clubRequestsAll": "Усі",
+  "clubRequestsPending": "В очікуванні",
+  "clubRequestsApproved": "Схвалено",
+  "clubRequestsRejected": "Відхилено",
+  "clubRequestsApproveTitle": "Схвалити заявку",
+  "clubRequestsApproveBody": "Ви впевнені, що хочете схвалити «{name}»? Це створить новий клуб і додасть вас як адміністратора.",
+  "@clubRequestsApproveBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "clubRequestsRejectTitle": "Відхилити заявку",
+  "clubRequestsRejectBody": "Вкажіть причину відхилення «{name}»:",
+  "@clubRequestsRejectBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "clubRequestsRejectHint": "Причина відхилення...",
+  "clubRequestsApproveButton": "Схвалити",
+  "clubRequestsRejectButton": "Відхилити",
+  "clubRequestsApproved2": "{name} схвалено!",
+  "@clubRequestsApproved2": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "clubRequestsRejected2": "{name} відхилено.",
+  "@clubRequestsRejected2": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "clubRequestsNoRequests": "Немає заявок",
+  "clubRequestsPendingBadge": "В ОЧІКУВАННІ",
+  "clubRequestsApprovedBadge": "СХВАЛЕНО",
+  "clubRequestsRejectedBadge": "ВІДХИЛЕНО",
+  "clubRequestsAddress": "Адреса",
+  "clubRequestsPhone": "Телефон",
+  "clubRequestsAdminEmail": "Email адміністратора",
+  "clubRequestsRequestedBy": "Заявник",
+  "clubRequestsRequesterEmail": "Email заявника",
+  "clubRequestsRequestedAt": "Дата заявки",
+  "clubRequestsReviewedAt": "Дата розгляду",
+  "clubRequestsRejectionReason": "Причина відхилення:",
+  "supportRequestsTitle": "Звернення до підтримки",
+  "supportRequestsAll": "Усі",
+  "supportRequestsPending": "В очікуванні",
+  "supportRequestsClosed": "Закриті",
+  "supportRequestsResolveTitle": "Вирішити звернення",
+  "supportRequestsResolveBody": "Необов'язкова відповідь користувачу:",
+  "supportRequestsResponseHint": "Відповідь (необов'язково)...",
+  "supportRequestsResolve": "Вирішити",
+  "supportRequestsResolved": "Звернення вирішено",
+  "supportRequestsRejectTitle": "Відхилити звернення",
+  "supportRequestsRejectBody": "Причина відхилення:",
+  "supportRequestsRejectHint": "Причина...",
+  "supportRequestsReject": "Відхилити",
+  "supportRequestsRejected": "Звернення відхилено",
+  "supportRequestsNoRequests": "Немає звернень",
+  "supportRequestsPendingBadge": "В ОЧІКУВАННІ",
+  "supportRequestsResolvedBadge": "ВИРІШЕНО",
+  "supportRequestsRejectedBadge": "ВІДХИЛЕНО",
+  "supportRequestsCategory": "Категорія",
+  "supportRequestsUser": "Користувач",
+  "supportRequestsEmail": "Email",
+  "supportRequestsSubmitted": "Надіслано",
+  "supportRequestsDescription": "Опис",
+  "supportRequestsAdminResponse": "Відповідь адміністратора",
+  "supportRequestsBugReport": "Повідомлення про помилку",
+  "supportRequestsFeatureRequest": "Запит функції",
+  "supportRequestsAccountIssue": "Проблема з обліковим записом",
+  "debugHandViewerTitle": "Перегляд роздач (дебаг)",
+  "debugHandViewerSessionName": "Назва сесії",
+  "debugHandViewerHandNumbers": "Номери роздач (через кому, напр., 27,28)",
+  "debugHandViewerFetchData": "Отримати дані",
+  "debugHandViewerCopied": "Скопійовано в буфер обміну",
+  "debugHandViewerNoData": "Даних поки немає. Введіть назву сесії та натисніть «Отримати дані».",
+  "navDrawerSettings": "Налаштування",
+  "navDrawerRegisterClub": "Зареєструвати клуб",
+  "navDrawerHelpSupport": "Довідка і підтримка",
+  "navDrawerLogOut": "Вийти",
+  "navDrawerUpgrade": "Оновити план",
+  "navDrawerUserFallback": "Користувач",
+  "navDrawerStatistics": "Статистика",
+  "navDrawerEvents": "Події",
+  "navDrawerBankroll": "Банкрол",
+  "navDrawerClubs": "Клуби",
+  "navDrawerNoClubsYet": "Клубів поки немає",
+  "navDrawerMemberCount": "Учасників: {count}",
+  "@navDrawerMemberCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "navDrawerRoleAdmin": "Адміністратор",
+  "navDrawerRoleDealer": "Дилер",
+  "navDrawerRoleMember": "Учасник",
+  "navDrawerVersion": "Версія 1.0.0",
+  "navDrawerLastLoginToday": "Останній вхід: сьогодні",
+  "navDrawerNoEarningsTitle": "Даних про виграші ще немає",
+  "navDrawerNoEarningsBody": "Спочатку додайте кілька результатів сесій, щоб побачити графік виграшів. Ви можете додати результати на сторінці профілю.",
+  "navDrawerSignOutTitle": "Вихід",
+  "navDrawerSignOutMessage": "Ви впевнені, що хочете вийти?",
+  "navDrawerSignOut": "Вийти",
+  "multiPotMainPot": "Основний банк",
+  "multiPotSidePot": "Бічний банк {index}",
+  "@multiPotSidePot": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "multiPotPlayerFallback": "Гравець {id}",
+  "@multiPotPlayerFallback": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "multiPotMainPotWinner": "переможець основного банку",
+  "multiPotEligibleFromPrevious": "має право на попередній банк",
+  "multiPotAutoAwarded": "Автоматично присуджено гравцю {name} ({reason})",
+  "@multiPotAutoAwarded": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "multiPotChoppedPot": "Розділений банк",
+  "multiPotSingleWinner": "Один переможець",
+  "multiPotSelectAllWinners": "Виберіть усіх переможців:",
+  "multiPotSelectTheWinner": "Виберіть переможця:",
+  "multiPotSelectWinnersTitle": "Вибір переможців",
+  "multiPotMultiplePots": "Кілька банків — виберіть переможця для кожного банку",
+  "winnerSelectionWhoChopped": "Хто розділив цей банк?",
+  "winnerSelectionWhoWon": "Хто виграв цю роздачу?",
+  "winnerSelectionChoppedPot": "Розділений банк",
+  "winnerSelectionIndividualShares": "Окремі частки:",
+  "winnerSelectionSelectAllWinners": "Виберіть усіх переможців:",
+  "winnerSelectionTapTheWinner": "Торкніться переможця:",
+  "winnerSelectionLongPressHint": "Утримуйте для розділеного банку",
+  "winnerSelectionConfirmChop": "Підтвердити розділ",
+  "winnerSelectionConfirmWinner": "Підтвердити переможця",
+  "winnerSelectionBackToSingle": "Назад до одного переможця",
+  "boardCardsCards": "Карти",
+  "boardCardsCard": "Карта",
+  "allInBoardTitle": "Карти борду при All-in",
+  "raiseSnapReleaseToType": "Відпустіть на мінімумі, щоб ввести",
+  "slidingNotificationHeader": "СПОВІЩЕННЯ",
+  "eventSuccessTitle": "Чудово! Вашу подію додано до календаря.",
+  "eventSuccessSubtitle": "Ви можете змінити або видалити її будь-коли",
+  "eventSuccessGoToCalendar": "Перейти до календаря",
+  "eventSuccessAddAnother": "Додати ще одну подію",
+  "subscriptionSuccessTitle": "Тепер у вас {tier}!",
+  "@subscriptionSuccessTitle": {
+    "placeholders": {
+      "tier": {
+        "type": "String"
+      }
+    }
+  },
+  "subscriptionSuccessSubtitle": "Ваш план {tier} активний. Насолоджуйтесь новими функціями!",
+  "@subscriptionSuccessSubtitle": {
+    "placeholders": {
+      "tier": {
+        "type": "String"
+      }
+    }
+  },
+  "subscriptionSuccessCta": "Почати знайомство",
+  "stackChartNoData": "Даних поки немає",
+  "stackChartStart": "Старт",
+  "stackChartRebuy": "Ребай",
+  "stackChartEnd": "Кінець",
+  "stackChartTitle": "Графік стеку",
+  "stackChartAvgGrowth": "Середній приріст",
+  "stackChartDuration": "Тривалість",
+  "stackChartProfitLoss": "Прибуток/Збиток",
+  "actionGridSelectAction": "Виберіть дію",
+  "pokerTablePlayerFallback": "Гравець",
+  "loadingDefault": "Завантаження…",
+  "forgotPasswordFailedSendCode": "Не вдалося надіслати код. Спробуйте ще раз.",
+  "forgotPasswordNewCodeSent": "Новий код надіслано на вашу пошту.",
+  "forgotPasswordFailedResend": "Не вдалося повторно надіслати код.",
+  "forgotPasswordEnterFullCode": "Введіть повний 6-значний код.",
+  "forgotPasswordInvalidCode": "Недійсний або прострочений код. Спробуйте ще раз.",
+  "forgotPasswordResetSuccess": "Пароль успішно скинуто! Будь ласка, увійдіть.",
+  "forgotPasswordResetTitle": "Скинути пароль",
+  "forgotPasswordResetSubtitle": "Введіть свою електронну пошту, щоб отримати посилання для скидання пароля",
+  "forgotPasswordSendLink": "Надіслати посилання для скидання",
+  "forgotPasswordLinkSubtitle": "Ми надіслали посилання для скидання пароля на {email}. Відкрийте його, встановіть новий пароль і увійдіть.",
+  "forgotPasswordResendLink": "Надіслати посилання ще раз",
+  "forgotPasswordLinkSent": "Посилання для скидання надіслано.",
+  "forgotPasswordBackToSignIn": "Повернутися до входу",
+  "forgotPasswordCheckEmail": "Перевірте свою пошту",
+  "forgotPasswordSetNewPassword": "Встановити новий пароль",
+  "forgotPasswordSetNewSubtitle": "Виберіть надійний пароль для свого облікового запису",
+  "forgotPasswordEmail": "Пошта",
+  "forgotPasswordEnterEmail": "Введіть свою пошту",
+  "forgotPasswordValidEmail": "Введіть дійсну адресу пошти",
+  "forgotPasswordSendCode": "Надіслати код",
+  "forgotPasswordVerifyCode": "Підтвердити код",
+  "forgotPasswordResendCode": "Надіслати код повторно",
+  "forgotPasswordResendIn": "Надіслати повторно через {time}",
+  "@forgotPasswordResendIn": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "forgotPasswordNewPassword": "Новий пароль",
+  "forgotPasswordEnterPassword": "Введіть пароль",
+  "forgotPasswordMinLength": "Пароль має містити щонайменше 6 символів",
+  "forgotPasswordConfirm": "Підтвердьте пароль",
+  "forgotPasswordConfirmRequired": "Будь ласка, підтвердьте пароль",
+  "forgotPasswordMismatch": "Паролі не збігаються",
+  "forgotPasswordResetButton": "Скинути пароль",
+  "onboardingTrackTitle": "ЗАПИСУЙ КОЖНУ\\nРОЗДАЧУ",
+  "onboardingTrackSubtitle": "Записуйте дії, карти борду та результати кожної роздачі, яку ви граєте — наживо або після сесії.",
+  "onboardingKnowTitle": "ЗНАЙ СВОЮ\\nГРУ",
+  "onboardingKnowSubtitle": "VPIP, PFR, 3-Bet, C-Bet та інше — спостерігайте за розвитком статистики в реальному часі.",
+  "onboardingClubsTitle": "ГРАЙ У\\nКЛУБАХ",
+  "onboardingClubsSubtitle": "Приєднуйтесь до живих подій, дивіться рейтинги та відстежуйте своїх суперників у різних сесіях.",
+  "dealerTableEnterStartingStack": "Введіть початковий стек",
+  "dealerTableNoPendingRequests": "Немає запитів на приєднання",
+  "dealerTablePendingJoinRequests": "Запити на приєднання",
+  "dealerTableUnknown": "Невідомо",
+  "dealerTableSeatNumber": "Місце {number}",
+  "@dealerTableSeatNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "dealerTableReview": "Переглянути",
+  "dealerTableSmallBlind": "Small Blind",
+  "dealerTableBigBlind": "Big Blind",
+  "dealerTableNewBlindsNote": "Нові блайнди застосуються з наступної роздачі.",
+  "dealerTableSmallMustBeLess": "Small blind має бути меншим за big blind",
+  "dealerTableBlindsMustBePositive": "Блайнди мають бути більшими за 0",
+  "dealerTableBlindsUpdated": "Блайнди оновлено до {sb}/{bb}",
+  "@dealerTableBlindsUpdated": {
+    "placeholders": {
+      "sb": {
+        "type": "String"
+      },
+      "bb": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableFailedUpdateBlinds": "Не вдалося оновити блайнди: {error}",
+  "@dealerTableFailedUpdateBlinds": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableFailedMoveButton": "Не вдалося перемістити баттон: {error}",
+  "@dealerTableFailedMoveButton": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTablePending": "В ОЧІКУВАННІ",
+  "dealerTableConnectionLost": "З'єднання втрачено",
+  "dealerTableReconnecting": "Спроба повторного підключення…",
+  "dealerTableReconnect": "Підключитися знову",
+  "dealerTableResetHandTitle": "Скинути роздачу?",
+  "dealerTableResetHandBody": "Усі дії скасовано. Бажаєте розпочати нову роздачу?",
+  "dealerTableKeepCurrent": "Залишити поточну",
+  "dealerTableNewHand": "Нова роздача",
+  "dealerTableHandReset": "Роздачу скинуто — готово до нової роздачі",
+  "dealerTableAddPlayerToSeat": "Додати гравця на місце {number}",
+  "@dealerTableAddPlayerToSeat": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "dealerTableSearchUser": "Пошук користувача",
+  "dealerTableManualEntry": "Ручне введення",
+  "dealerTableSearchByName": "Пошук за іменем",
+  "dealerTableTypeToSearch": "Почніть вводити для пошуку користувачів…",
+  "dealerTableNoUsersFound": "Користувачів не знайдено. Спробуйте ручне введення.",
+  "dealerTablePlayerNameLabel": "Ім'я гравця",
+  "dealerTableEnterPlayerName": "Введіть ім'я гравця",
+  "dealerTableAddPlayer": "Додати гравця",
+  "dealerTableEndSession": "Завершити сесію",
+  "dealerTableUpdatedStack": "Стек гравця {name} оновлено до {amount}",
+  "@dealerTableUpdatedStack": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableFailedUpdateStack": "Не вдалося оновити стек: {error}",
+  "@dealerTableFailedUpdateStack": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableSittingAtSeat": "Тепер ви граєте на місці {number}",
+  "@dealerTableSittingAtSeat": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "dealerTableFailedSitAt": "Не вдалося сісти за стіл: {error}",
+  "@dealerTableFailedSitAt": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableFailedAddPlayer": "Не вдалося додати гравця: {error}",
+  "@dealerTableFailedAddPlayer": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableFailedRemovePlayer": "Не вдалося видалити гравця: {error}",
+  "@dealerTableFailedRemovePlayer": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "eventDetailEventType": "Тип події",
+  "eventDetailSeated": "За столом",
+  "eventDetailAreYouGoing": "ВИ БУДЕТЕ?",
+  "eventDetailAddedToCalendarBtn": "Додано до календаря",
+  "eventDetailAddToCalendarBtn": "Додати до календаря",
+  "eventDetailWhosGoing": "Хто буде",
+  "eventDetailSeeAll": "Переглянути всіх",
+  "eventDetailStartDealing": "Почати роздачу",
+  "eventDetailViewLiveRankings": "Дивитися живі рейтинги",
+  "eventDetailNotSeatedAtTable": "Наразі ви не сидите за жодним столом",
+  "eventDetailNotSeatedInEvent": "Ви не за столом у цій події",
+  "eventDetailErrorFindingSeat": "Помилка пошуку вашого місця: {error}",
+  "@eventDetailErrorFindingSeat": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "eventDetailReturnToSeat": "Повернутися на своє місце",
+  "eventDetailViewFinalStandings": "Переглянути фінальні результати",
+  "eventDetailManageTables": "Керувати столами",
+  "eventDetailManageTable": "Керувати столом",
+  "eventDetailSeeAvailability": "Переглянути наявність місць",
+  "eventDetailYoureSeated": "Ви за столом",
+  "eventDetailNoTablesAssigned": "Для цієї події не призначено столів",
+  "eventDetailStartEvent": "Розпочати подію",
+  "eventDetailFinish": "Завершити",
+  "eventDetailFailedFinishCancel": "Не вдалося {action} подію: {error}",
+  "@eventDetailFailedFinishCancel": {
+    "placeholders": {
+      "action": {
+        "type": "String"
+      },
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "homeTableSeatInfo": "Стіл {table}, місце №{seat}",
+  "@homeTableSeatInfo": {
+    "placeholders": {
+      "table": {
+        "type": "String"
+      },
+      "seat": {
+        "type": "String"
+      }
+    }
+  },
+  "homeRequestResolved": "Запит вирішено",
+  "homeRequestClosed": "Запит закрито",
+  "homeResponse": "Відповідь",
+  "homeErrorGeneric": "Помилка: {error}",
+  "@homeErrorGeneric": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "homeErrorLoadingEvent": "Помилка завантаження події: {error}",
+  "@homeErrorLoadingEvent": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "homeFailedLoadEvent": "Не вдалося завантажити подію: {error}",
+  "@homeFailedLoadEvent": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "homeFailedUpdateEvent": "Не вдалося оновити подію: {error}",
+  "@homeFailedUpdateEvent": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "homeErrorDeletingEvent": "Помилка видалення події: {error}",
+  "@homeErrorDeletingEvent": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "homeTournament": "Турнір",
+  "homeCashGame": "Кеш-гра",
+  "commonErrorGeneric": "Помилка: {error}",
+  "@commonErrorGeneric": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "commonLeave": "Вийти",
+  "commonAccept": "Прийняти",
+  "commonLoadingHands": "Завантаження роздач…",
+  "sessionHistoryButtonPosition": "Позиція баттона: {position}",
+  "@sessionHistoryButtonPosition": {
+    "placeholders": {
+      "position": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionHistoryPlayerCount": "Кількість гравців: {count}",
+  "@sessionHistoryPlayerCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionHistoryStartTime": "Час початку: {time}",
+  "@sessionHistoryStartTime": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionHistoryPreflop": "Preflop:",
+  "sessionHistoryFlop": "Flop:",
+  "sessionHistoryTurn": "Turn:",
+  "sessionHistoryRiver": "River:",
+  "sessionHistorySyncFailed": "Помилка синхронізації: {error}",
+  "@sessionHistorySyncFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionHistoryClearFailed": "Не вдалося очистити сесії: {error}",
+  "@sessionHistoryClearFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationsClubNotFound": "Клуб не знайдено",
+  "notificationsAccept": "Прийняти",
+  "notificationsInvitationAccepted": "Запрошення прийнято",
+  "notificationsInvitationDeclined": "Запрошення відхилено",
+  "notificationsInvitationDeclinedMsg": "Запрошення відхилено",
+  "notificationsEventNotFound": "Подію не знайдено",
+  "notificationsFailedLoadClub": "Не вдалося завантажити клуб: {error}",
+  "@notificationsFailedLoadClub": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationsErrorLoadingEvent": "Помилка завантаження події: {error}",
+  "@notificationsErrorLoadingEvent": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "invitationsFailedLoad": "Не вдалося завантажити запрошення: {error}",
+  "@invitationsFailedLoad": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "invitationsFailedAccept": "Не вдалося прийняти запрошення: {error}",
+  "@invitationsFailedAccept": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "invitationsDeclined": "Запрошення відхилено",
+  "invitationsFailedDecline": "Не вдалося відхилити запрошення: {error}",
+  "@invitationsFailedDecline": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "clubSettingsTableAdded": "Стіл додано",
+  "clubSettingsTableDeleted": "Стіл видалено",
+  "clubSettingsQrRegenerated": "QR-коди перегенеровано",
+  "clubSettingsErrorPdf": "Помилка створення PDF: {error}",
+  "@clubSettingsErrorPdf": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "clubDashboardActiveDealers": "Активні дилери",
+  "clubDashboardPendingInvitations": "Запрошення в очікуванні",
+  "clubDashboardDealerEmailHint": "dealer@example.com",
+  "clubDashboardInvitationSent": "Запрошення надіслано на {email}",
+  "@clubDashboardInvitationSent": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "clubDashboardFailedSendInvite": "Не вдалося надіслати запрошення: {error}",
+  "@clubDashboardFailedSendInvite": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "clubDashboardFailedCancelInvite": "Не вдалося скасувати запрошення: {error}",
+  "@clubDashboardFailedCancelInvite": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "eventManagementClubEvents": "Події {name}",
+  "@eventManagementClubEvents": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "eventManagementFailedUpdate": "Не вдалося оновити подію: {error}",
+  "@eventManagementFailedUpdate": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "profileCash": "Кеш",
+  "profileTournament": "Турнір",
+  "profileDevTools": "Інструменти розробника",
+  "profilePremiumOverride": "Перевизначення Premium",
+  "profileUsingRealStatus": "Використовується справжній статус: {status}",
+  "@profileUsingRealStatus": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "profileOverridden": "Перевизначено: {status}",
+  "@profileOverridden": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "profileResetToReal": "Скинути до справжнього статусу",
+  "profileVersion": "Версія 1.0",
+  "profileLastLogin": "Останній вхід {date}",
+  "@profileLastLogin": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "pokerHandFailedEndSession": "Не вдалося завершити сесію: {error}",
+  "@pokerHandFailedEndSession": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "pokerHandFailedSaveSession": "Не вдалося зберегти сесію: {error}",
+  "@pokerHandFailedSaveSession": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "pokerHandRebuyAdded": "Ребай додано: ${amount} (Стек: {stack})",
+  "@pokerHandRebuyAdded": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "stack": {
+        "type": "String"
+      }
+    }
+  },
+  "pokerHandEndSession": "Завершити сесію",
+  "pokerHandRebuyAmountDollar": "Сума ребаю ($)",
+  "pokerHandRebuyChips": "Фішки ребаю",
+  "seatSetupFailedSave": "Не вдалося зберегти: {error}",
+  "@seatSetupFailedSave": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "seatSetupSelectYourSeat": "Будь ласка, оберіть своє місце",
+  "authExpLinkGoogleTitle": "Прив’язати акаунт Google",
+  "authExpPassword": "Пароль",
+  "authExpLinkAccount": "Прив’язати акаунт",
+  "playerSessionYourHoleCards": "Ваші кишенькові карти",
+  "playerSessionSeat": "МІСЦЕ",
+  "playerSessionStack": "СТЕК",
+  "playerSessionPot": "БАНК",
+  "playerSessionNotesHint": "Додайте нотатки про цю роздачу...",
+  "dealerQrScanInvalidCode": "Недійсний QR-код. Будь ласка, відскануйте дійсний QR-код столу.",
+  "dealerQrScanWrongClub": "Цей стіл належить іншому клубу.",
+  "dealerQrScanTableNotFound": "Стіл не знайдено. Будь ласка, відскануйте дійсний QR-код столу.",
+  "dealerQrScanError": "Помилка обробки QR-коду: {error}",
+  "@dealerQrScanError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerQrScanFailedStart": "Не вдалося розпочати сесію: {error}",
+  "@dealerQrScanFailedStart": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerQrScanTakingOver": "Перехоплення від {name}",
+  "@dealerQrScanTakingOver": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerQrScanHandsPlayed": "Зіграно роздач",
+  "dealerQrScanBlinds": "Blinds",
+  "dealerQrScanPlayers": "Гравці",
+  "dealerQrScanFailedResume": "Не вдалося відновити сесію: {error}",
+  "@dealerQrScanFailedResume": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "usernameSetupLabel": "Ім’я користувача",
+  "stackChartScreenAvgGrowth": "Середнє зростання",
+  "stackChartScreenDuration": "Тривалість",
+  "stackChartScreenProfitLoss": "П/З",
+  "stackChartScreenStack": "Стек",
+  "sessionHandsLoading": "Завантаження роздач...",
+  "createEventDefaultCashGame": "Кеш-гра {stakes}",
+  "@createEventDefaultCashGame": {
+    "placeholders": {
+      "stakes": {
+        "type": "String"
+      }
+    }
+  },
+  "createEventDefaultCashGameNoStakes": "Кеш-гра",
+  "eventDashboardTvMode": "Режим показу на ТВ",
+  "tableSelectionTitle": "Оберіть стіл",
+  "tableSelectionAdminSubtitle": "Оберіть стіл для керування",
+  "tableSelectionMemberSubtitle": "Оберіть стіл, щоб переглянути доступність",
+  "tableSelectionNoTables": "Немає доступних столів",
+  "tableSelectionOpenSeats": "{count} вільно",
+  "@tableSelectionOpenSeats": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "tableSelectionSeated": "{occupied}/9 зайнято",
+  "@tableSelectionSeated": {
+    "placeholders": {
+      "occupied": {
+        "type": "int"
+      }
+    }
+  },
+  "monthJan": "Січ",
+  "monthFeb": "Лют",
+  "monthMar": "Бер",
+  "monthApr": "Кві",
+  "monthMay": "Тра",
+  "monthJun": "Чер",
+  "monthJul": "Лип",
+  "monthAug": "Сер",
+  "monthSep": "Вер",
+  "monthOct": "Жов",
+  "monthNov": "Лис",
+  "monthDec": "Гру",
+  "weekdaySun": "Нд",
+  "weekdayMon": "Пн",
+  "weekdayTue": "Вт",
+  "weekdayWed": "Ср",
+  "weekdayThu": "Чт",
+  "weekdayFri": "Пт",
+  "weekdaySat": "Сб",
+  "opponentsErrorGeneric": "Помилка: {error}",
+  "@opponentsErrorGeneric": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "opponentsErrorDeleting": "Помилка видалення опонента: {error}",
+  "@opponentsErrorDeleting": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "opponentsErrorClearing": "Помилка очищення опонентів: {error}",
+  "@opponentsErrorClearing": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "onboardingReadTitle": "ЧИТАЙ ГРУ\\nЯК ПРОФЕСІОНАЛ",
+  "onboardingReadSubtitle": "Створіть акаунт, щоб почати відстежувати свій покерний шлях.",
+  "onboardingCreateAccount": "Створити акаунт",
+  "onboardingLogIn": "Увійти",
+  "onboardingSkip": "Пропустити",
+  "onboardingFinalTable": "Final Table",
+  "authExpSignUpTitle": "Реєстрація",
+  "authExpLogInTitle": "Увійдіть у свій акаунт",
+  "authExpSignUpSubtitle": "Створіть акаунт, щоб продовжити",
+  "authExpLogInSubtitle": "Введіть email і пароль, щоб увійти",
+  "authExpName": "Ім’я",
+  "authExpEmail": "Email",
+  "authExpEnterName": "Будь ласка, введіть своє ім’я",
+  "authExpNameMinLength": "Ім’я має містити щонайменше 2 символи",
+  "authExpEnterEmail": "Будь ласка, введіть свій email",
+  "authExpValidEmail": "Будь ласка, введіть дійсний email",
+  "authExpEnterPassword": "Будь ласка, введіть свій пароль",
+  "authExpPasswordMinLength": "Пароль має містити щонайменше 6 символів",
+  "authExpBySigningUp": "Реєструючись, ви погоджуєтесь з ",
+  "authExpTermsOfService": "Умовами використання",
+  "authExpAnd": "\\nта ",
+  "authExpPrivacyPolicy": "Політикою конфіденційності",
+  "authExpCreateAccount": "Створити акаунт",
+  "authExpAlreadyHaveAccount": "Вже маєте акаунт? ",
+  "authExpSignIn": "Увійти",
+  "authExpForgotPassword": "Забули пароль?",
+  "authExpDontHaveAccount": "Немає акаунта? ",
+  "authExpSignUp": "Зареєструватися",
+  "authExpOr": "або",
+  "authExpContinueGoogle": "Продовжити з Google",
+  "authExpLinkGoogleMessage": "Акаунт з {email} уже існує. Введіть пароль, щоб прив’язати ваш акаунт Google.",
+  "@authExpLinkGoogleMessage": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "forgotPasswordCodeSubtitle": "Введіть 6-значний код, надісланий на {email}",
+  "@forgotPasswordCodeSubtitle": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "usernameSetupChangeTitle": "Змініть ім’я користувача",
+  "usernameSetupChooseTitle": "Оберіть ім’я користувача",
+  "usernameSetupSubtitle": "Так інші гравці впізнаватимуть вас за столом",
+  "usernameSetupRequired": "Ім’я користувача обов’язкове",
+  "usernameSetupCheckingAvailability": "Перевірка доступності…",
+  "usernameSetupAvailable": "Доступне!",
+  "usernameSetupAlreadyTaken": "Уже зайняте",
+  "usernameSetupCurrentUsername": "Це ваше поточне ім’я користувача",
+  "usernameSetupCouldNotCheck": "Не вдалося перевірити доступність",
+  "usernameSetupJustTaken": "Ім’я користувача щойно зайняли. Спробуйте інше.",
+  "usernameSetupRulesHint": "3–20 символів · літери, цифри, підкреслення",
+  "usernameSetupUpdateButton": "Оновити ім’я користувача",
+  "usernameSetupClaimButton": "Закріпити ім’я користувача",
+  "usernameSetupSkip": "Пропустити поки що",
+  "sessionHandsTitle": "Сесія",
+  "sessionHandsHandsLogged": "Записано роздач: {count}",
+  "@sessionHandsHandsLogged": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sessionHandsError": "Помилка",
+  "sessionHandsNoHandsTitle": "Немає записаних роздач",
+  "sessionHandsNoHandsSubtitle": "У цій сесії ще немає записаних роздач.",
+  "sessionHandsWon": "ВИГРАВ",
+  "sessionHandsActions": "{count} дій",
+  "@sessionHandsActions": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sessionHandsPot": "Банк",
+  "stackChartScreenTitle": "Графік стеку",
+  "stackChartScreenPokerSession": "Покерна сесія",
+  "notificationsScreenTitle": "Сповіщення",
+  "notificationsScreenToday": "Сьогодні",
+  "notificationsScreenMarkAllAsRead": "Позначити всі як прочитані",
+  "notificationsScreenMarkAsRead": "Позначити як прочитане",
+  "notificationsScreenNoNotifications": "Немає сповіщень",
+  "notificationsScreenClubInvitation": "Запрошення до клубу",
+  "notificationsScreenInvitedToJoin": "Вас запросили приєднатися до",
+  "notificationsScreenDecline": "Відхилити",
+  "notificationsScreenNotAuthenticated": "Не автентифіковано",
+  "notificationsScreenRequestResolved": "Запит вирішено",
+  "notificationsScreenRequestClosed": "Запит закрито",
+  "notificationsScreenResponse": "Відповідь",
+  "notificationsScreenEvents": "Події",
+  "notificationsScreenRsvp": "Відповідь на запрошення",
+  "notificationsScreenClubs": "Клуби",
+  "notificationsScreenInvitations": "Запрошення",
+  "notificationsScreenSeats": "Місця",
+  "notificationsScreenSupport": "Підтримка",
+  "notifEventCreatedTitle": "Нова подія: {eventName}",
+  "@notifEventCreatedTitle": {
+    "placeholders": {
+      "eventName": {
+        "type": "String"
+      }
+    }
+  },
+  "notifEventCreatedBody": "{date}",
+  "@notifEventCreatedBody": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "notifEventUpdatedTitle": "Подію оновлено: {eventName}",
+  "@notifEventUpdatedTitle": {
+    "placeholders": {
+      "eventName": {
+        "type": "String"
+      }
+    }
+  },
+  "notifEventUpdatedBody": "{clubName} оновив деталі події",
+  "@notifEventUpdatedBody": {
+    "placeholders": {
+      "clubName": {
+        "type": "String"
+      }
+    }
+  },
+  "notifEventCancelledTitle": "Подію скасовано: {eventName}",
+  "@notifEventCancelledTitle": {
+    "placeholders": {
+      "eventName": {
+        "type": "String"
+      }
+    }
+  },
+  "notifEventCancelledBody": "{clubName} скасував подію, заплановану на {date}",
+  "@notifEventCancelledBody": {
+    "placeholders": {
+      "clubName": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "notifEventStartingTitle": "{eventName} починається за 1 годину!",
+  "@notifEventStartingTitle": {
+    "placeholders": {
+      "eventName": {
+        "type": "String"
+      }
+    }
+  },
+  "notifEventStartingBody": "Подія {clubName} ось-ось розпочнеться",
+  "@notifEventStartingBody": {
+    "placeholders": {
+      "clubName": {
+        "type": "String"
+      }
+    }
+  },
+  "notifEventStartedTitle": "{eventName} уже НАЖИВО!",
+  "@notifEventStartedTitle": {
+    "placeholders": {
+      "eventName": {
+        "type": "String"
+      }
+    }
+  },
+  "notifEventStartedBody": "Подія {clubName} розпочалася — приєднуйтесь, щоб спостерігати",
+  "@notifEventStartedBody": {
+    "placeholders": {
+      "clubName": {
+        "type": "String"
+      }
+    }
+  },
+  "notifSeatAvailableTitle": "Звільнилося місце: {eventName}",
+  "@notifSeatAvailableTitle": {
+    "placeholders": {
+      "eventName": {
+        "type": "String"
+      }
+    }
+  },
+  "notifSeatAvailableBody": "У {clubName} з’явилося вільне місце! Відкрийте застосунок, щоб зайняти його.",
+  "@notifSeatAvailableBody": {
+    "placeholders": {
+      "clubName": {
+        "type": "String"
+      }
+    }
+  },
+  "notifMemberRsvpTitle": "Відповідь: {memberName}",
+  "@notifMemberRsvpTitle": {
+    "placeholders": {
+      "memberName": {
+        "type": "String"
+      }
+    }
+  },
+  "notifMemberRsvpBody": "{memberName} відповів «{rsvpStatus}» на {eventName}",
+  "@notifMemberRsvpBody": {
+    "placeholders": {
+      "memberName": {
+        "type": "String"
+      },
+      "rsvpStatus": {
+        "type": "String"
+      },
+      "eventName": {
+        "type": "String"
+      }
+    }
+  },
+  "notifNewClubRequestTitle": "Новий запит на клуб",
+  "notifNewClubRequestBody": "Надіслано новий запит на реєстрацію клубу",
+  "notifClubApprovedTitle": "Клуб схвалено",
+  "notifClubApprovedBody": "Ваш клуб схвалено!",
+  "notifClubRejectedTitle": "Клуб відхилено",
+  "notifClubRejectedBody": "Ваш запит на клуб відхилено",
+  "notifMemberInvitedTitle": "Запрошення до клубу",
+  "notifMemberInvitedBody": "Вас запросили приєднатися до клубу",
+  "notifInvitationAcceptedTitle": "Запрошення прийнято",
+  "notifInvitationAcceptedBody": "{memberName} прийняв запрошення",
+  "@notifInvitationAcceptedBody": {
+    "placeholders": {
+      "memberName": {
+        "type": "String"
+      }
+    }
+  },
+  "notifInvitationDeclinedTitle": "Запрошення відхилено",
+  "notifInvitationDeclinedBody": "{memberName} відхилив запрошення",
+  "@notifInvitationDeclinedBody": {
+    "placeholders": {
+      "memberName": {
+        "type": "String"
+      }
+    }
+  },
+  "notifSupportRequestTitle": "Запит до підтримки",
+  "notifSupportRequestBody": "Надіслано новий запит до підтримки",
+  "notifSupportUpdatedTitle": "Оновлення підтримки",
+  "notifSupportUpdatedBody": "Ваш запит до підтримки оновлено",
+  "notifTypeEventCreated": "Нова подія",
+  "notifTypeEventUpdated": "Подію оновлено",
+  "notifTypeEventCancelled": "Подію скасовано",
+  "notifTypeEventStarting": "Подія скоро розпочнеться",
+  "notifTypeEventStarted": "Подія розпочалася",
+  "notifTypeMemberRsvp": "Відповідь учасника",
+  "notifTypeNewClubRequest": "Новий запит на клуб",
+  "notifTypeClubApproved": "Клуб схвалено",
+  "notifTypeClubRejected": "Клуб відхилено",
+  "notifTypeMemberInvited": "Запрошення до клубу",
+  "notifTypeInvitationAccepted": "Запрошення прийнято",
+  "notifTypeInvitationDeclined": "Запрошення відхилено",
+  "notifTypeSeatAvailable": "Доступне місце",
+  "notifTypeSupportRequest": "Запит до підтримки",
+  "notifTypeSupportUpdated": "Оновлення підтримки",
+  "invitationsScreenTitle": "Запрошення до клубу",
+  "invitationsScreenNoPending": "Немає активних запрошень",
+  "invitationsScreenYouWillSee": "Тут ви побачите запрошення від клубів",
+  "invitationsScreenGoBack": "Назад",
+  "invitationsScreenUnknownClub": "Невідомий клуб",
+  "invitationsScreenInvitedBy": "Запросив(ла) {name}",
+  "@invitationsScreenInvitedBy": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "invitationsScreenExpires": "Дійсне до {date}",
+  "@invitationsScreenExpires": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "invitationsScreenExpired": "Термін минув",
+  "invitationsScreenExpiresInDays": "через {days} дн.",
+  "@invitationsScreenExpiresInDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "invitationsScreenExpiresInHours": "через {hours} год.",
+  "@invitationsScreenExpiresInHours": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "invitationsScreenExpiresSoon": "незабаром",
+  "invitationsScreenDecline": "Відхилити",
+  "invitationsScreenAccept": "Прийняти",
+  "invitationsScreenJoinedAs": "Ви приєдналися до {clubName} як {role}",
+  "@invitationsScreenJoinedAs": {
+    "placeholders": {
+      "clubName": {
+        "type": "String"
+      },
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "profilePremium": "Преміум",
+  "profileFree": "Безкоштовний",
+  "dealerTableStartNewHand": "Почати нову роздачу",
+  "dealerTableStartSessionBtn": "Почати сесію",
+  "dealerTableNeedTwoPlayers": "Для початку потрібно щонайменше 2 гравці",
+  "dealerTableAddTestPlayers": "Додати тестових гравців",
+  "dealerTableAddedTestPlayers": "Додано тестових гравців: {count}",
+  "@dealerTableAddedTestPlayers": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dealerTableRolledBack": "Повернуто до {street}",
+  "@dealerTableRolledBack": {
+    "placeholders": {
+      "street": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableUndoneAction": "Скасовано: {playerName} {action}",
+  "@dealerTableUndoneAction": {
+    "placeholders": {
+      "playerName": {
+        "type": "String"
+      },
+      "action": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableScanToJoin": "Скануйте, щоб зайняти це місце",
+  "dealerTableOccupiedDot": "Зайнято · ",
+  "dealerTableEmptyLabel": "Вільно",
+  "dealerTableOccupiedLabel": "Зайнято",
+  "dealerTableSelectedLabel": "Вибрано",
+  "dealerTableSelectSeatLabel": "ВИБЕРІТЬ МІСЦЕ",
+  "dealerTableBetAmountDialog": "Розмір Bet",
+  "dealerTableRaiseToDialog": "Raise до",
+  "dealerTablePausedLabel": "Призупинено",
+  "dealerTableListeningLabel": "Слухаю",
+  "dealerTableResumeVoiceTooltip": "Відновити голос",
+  "dealerTablePauseVoiceTooltip": "Призупинити голос",
+  "dealerTableVoiceOffLabel": "Голос вимкнено",
+  "dealerTableCalibratingLabel": "Калібрування...",
+  "dealerTableCalibrationPrompt": "Будь ласка, оголосіть: «Стіл [номер], дилер [ім'я]»",
+  "dealerTableDealerLockedMsg": "Дилера зафіксовано: {name} за столом {table}",
+  "@dealerTableDealerLockedMsg": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "table": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableNoSpeakersMsg": "Мовців не виявлено — говоріть чіткіше",
+  "dealerTableSayTableDealerMsg": "Будь ласка, скажіть: «Стіл [номер], дилер [ім'я]»",
+  "dealerTableConnectionLostRecovery": "З'єднання втрачено — спроба відновлення...",
+  "dealerTableConnectionTimeout": "Час очікування з'єднання вичерпано — потрібне повторне калібрування",
+  "dealerTableConnectionRecovered": "З'єднання відновлено!",
+  "dealerTableActionHeldMsg": "Дію призупинено",
+  "dealerTableFailedStartStreaming": "Не вдалося почати трансляцію — перевірте з'єднання із сервером і мікрофон",
+  "dealerTableFailedStartVoice": "Не вдалося запустити голос: {error}",
+  "@dealerTableFailedStartVoice": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableAddPlayerActionLabel": "Додати гравця",
+  "dealerTableSeatAnotherPlayer": "Посадити сюди іншого гравця",
+  "dealerTableSitHereLabel": "Сісти тут",
+  "dealerTableJoinAsDealerPlayer": "Приєднатися до гри як дилер-гравець",
+  "dealerTableDealerFallback": "Дилер",
+  "dealerTableUpdatedStackMsg": "Стек гравця {name} оновлено до {amount}",
+  "@dealerTableUpdatedStackMsg": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableFailedUpdateStackMsg": "Не вдалося оновити стек: {error}",
+  "@dealerTableFailedUpdateStackMsg": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableSittingAtSeatMsg": "Тепер ви граєте на місці {number}",
+  "@dealerTableSittingAtSeatMsg": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "dealerTableFailedSitMsg": "Не вдалося сісти за стіл: {error}",
+  "@dealerTableFailedSitMsg": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableFailedAddPlayerMsg": "Не вдалося додати гравця: {error}",
+  "@dealerTableFailedAddPlayerMsg": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableRemovedFromSeat": "{name} прибрано з місця {seat}",
+  "@dealerTableRemovedFromSeat": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "seat": {
+        "type": "int"
+      }
+    }
+  },
+  "dealerTableFailedRemoveMsg": "Не вдалося прибрати гравця: {error}",
+  "@dealerTableFailedRemoveMsg": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "eventDetailDateAndTime": "Дата й час",
+  "eventDetailTableSeatInfo": "Стіл {table}, місце №{seat}",
+  "@eventDetailTableSeatInfo": {
+    "placeholders": {
+      "table": {
+        "type": "String"
+      },
+      "seat": {
+        "type": "int"
+      }
+    }
+  },
+  "eventDetailYoureSeatedGoodLuck": "Ви за столом, удачі!",
+  "eventDetailHomeGame": "Домашня гра",
+  "clubDashboardDateLabel": "Дата",
+  "clubDashboardUnknownLabel": "Невідомо",
+  "clubDashboardActiveLabel": "Активний",
+  "clubDashboardIdleLabel": "Неактивний",
+  "clubDashboardInvitedTimeAgo": "Запрошено {time}",
+  "@clubDashboardInvitedTimeAgo": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "clubDashboardPendingLabel": "Очікує",
+  "clubDashboardNoDealersYet": "Дилерів ще немає",
+  "clubDashboardInviteDealersHint": "Запросіть дилерів, щоб допомогти керувати вашими столами",
+  "clubDashboardInviteDealer": "Запросити дилера",
+  "clubDashboardInviteDealerBody": "Введіть електронну адресу дилера, якого хочете запросити.",
+  "clubDashboardSendInvitationBtn": "Надіслати запрошення",
+  "clubDashboardInvitationSentTo": "Запрошення надіслано на {email}",
+  "@clubDashboardInvitationSentTo": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "clubDashboardFailedSendInvitationMsg": "Не вдалося надіслати запрошення: {error}",
+  "@clubDashboardFailedSendInvitationMsg": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "clubDashboardCancelInvitationTitle": "Скасувати запрошення?",
+  "clubDashboardCancelInvitationBody": "Скасувати запрошення для {email}?",
+  "@clubDashboardCancelInvitationBody": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "clubDashboardKeepBtn": "Залишити",
+  "clubDashboardCancelInvitationBtn": "Скасувати запрошення",
+  "clubDashboardFailedCancelMsg": "Не вдалося скасувати запрошення: {error}",
+  "@clubDashboardFailedCancelMsg": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "clubSettingsMembers": "Учасники ({count})",
+  "@clubSettingsMembers": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "clubSettingsNoMembersFound": "Учасників не знайдено",
+  "clubSettingsRoleOwner": "Власник",
+  "clubSettingsRoleAdmin": "Адміністратор",
+  "clubSettingsRoleDealer": "Дилер",
+  "clubSettingsRolePlayer": "Гравець",
+  "clubSettingsTableAddedMsg": "Стіл додано",
+  "clubSettingsEditTableTitle": "Редагувати стіл",
+  "clubSettingsDeleteTableTitle": "Видалити стіл?",
+  "clubSettingsDeleteTableBody": "Ви впевнені, що хочете видалити «{name}»? Цю дію не можна скасувати.",
+  "@clubSettingsDeleteTableBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "clubSettingsTableDeletedMsg": "Стіл видалено",
+  "clubSettingsDealerScanHint": "Дилери сканують це, щоб почати сесію за цим столом",
+  "clubSettingsRegenerateBtn": "Згенерувати заново",
+  "clubSettingsAppQrCodes": "QR-коди застосунку",
+  "clubSettingsShareWithPlayers": "Поділіться з гравцями, щоб вони завантажили застосунок",
+  "clubSettingsDownloadPdf": "Завантажити PDF",
+  "clubSettingsDownloadFinalTable": "Завантажте застосунок Final Table",
+  "clubSettingsScanQrToGetStarted": "Відскануйте QR-код для вашого пристрою, щоб почати",
+  "clubSettingsScanToStartSession": "Відскануйте цей QR-код, щоб почати сесію",
+  "clubSettingsForDealersOnly": "Лише для дилерів",
+  "clubSettingsTableDefault": "Стіл {number}",
+  "@clubSettingsTableDefault": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "eventManagementFailedUpdateEvent": "Не вдалося оновити подію: {error}",
+  "@eventManagementFailedUpdateEvent": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "adminTableThisWillMoveMsg": "Це перемістить гравців ({count}) до списку очікування та вилучить стіл із цієї події.",
+  "@adminTableThisWillMoveMsg": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "adminTableThisWillRemoveMsg": "Це вилучить стіл із цієї події.",
+  "adminTableClosedWithWaitlistMsg": "{table} закрито. Гравців переміщено до списку очікування: {count}.",
+  "@adminTableClosedWithWaitlistMsg": {
+    "placeholders": {
+      "table": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "adminTableClosedMsg": "{table} закрито.",
+  "@adminTableClosedMsg": {
+    "placeholders": {
+      "table": {
+        "type": "String"
+      }
+    }
+  },
+  "adminTableEmptyLabel": "Вільно",
+  "adminTableTableFallback": "Стіл",
+  "adminTableTableNumberLabel": "Стіл {number}",
+  "@adminTableTableNumberLabel": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "homePendingInvitationsMsg": "У вас є активні запрошення до клубу: {count}.",
+  "@homePendingInvitationsMsg": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "homeEventFallback": "Подія",
+  "homePokerFallback": "Покер",
+  "homeUserFallback": "Користувач",
+  "homeSeatInfoStr": "Місце №{seat}  •  {chipStack}",
+  "@homeSeatInfoStr": {
+    "placeholders": {
+      "seat": {
+        "type": "int"
+      },
+      "chipStack": {
+        "type": "String"
+      }
+    }
+  },
+  "pokerHandYouLabel": "Ви",
+  "pokerHandMovingToTable": "Перехід за інший стіл. Ваш стек ({stack}) буде перенесено. Інших гравців буде очищено.",
+  "@pokerHandMovingToTable": {
+    "placeholders": {
+      "stack": {
+        "type": "String"
+      }
+    }
+  },
+  "pokerHandActiveSessionMsg": "У вас є активна сесія із записаними роздачами: {count}. Що ви хочете зробити?",
+  "@pokerHandActiveSessionMsg": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pokerHandUnknownLabel": "Невідомо",
+  "pokerHandFoldAction": "Fold",
+  "pokerHandRaiseAction": "Raise",
+  "pokerHandBetAction": "Bet",
+  "pokerHandAllInAction": "All-in",
+  "pokerHandAllPlayersAllIn": "Усі гравці all-in — роздаємо решту карт",
+  "pokerHandWaitingForCards": "Очікування роздачі карт",
+  "pokerHandBettingComplete": "Торги завершено — готові до наступної вулиці",
+  "pokerHandSeatFallback": "Місце {id}",
+  "@pokerHandSeatFallback": {
+    "placeholders": {
+      "id": {
+        "type": "int"
+      }
+    }
+  },
+  "pokerHandPlayerFallback": "Гравець {id}",
+  "@pokerHandPlayerFallback": {
+    "placeholders": {
+      "id": {
+        "type": "int"
+      }
+    }
+  },
+  "pokerHandChooseOption": "Виберіть варіант:",
+  "pokerHandLeaveBtn": "Вийти",
+  "pokerHandConfirmBtn": "Підтвердити",
+  "pokerHandCurrentlyHaveRemaining": "Зараз у вас залишилося {stack}.",
+  "@pokerHandCurrentlyHaveRemaining": {
+    "placeholders": {
+      "stack": {
+        "type": "String"
+      }
+    }
+  },
+  "opponentsColorRed": "Червоний",
+  "opponentsColorLightBlue": "Блакитний",
+  "opponentsColorGreen": "Зелений",
+  "opponentsColorOrange": "Помаранчевий",
+  "opponentsColorPurple": "Фіолетовий",
+  "opponentsColorTeal": "Бірюзовий",
+  "opponentsColorPink": "Рожевий",
+  "opponentsColorIndigo": "Індиго",
+  "opponentsFailedToLoad": "Не вдалося завантажити суперників: {error}",
+  "@opponentsFailedToLoad": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "opponentDetailFoldTo3Bet": "Fold to 3-Bet",
+  "opponentDetailStealLabel": "Steal",
+  "opponentDetailCheckRaiseLabel": "Check-Raise",
+  "playerSessionBluff": "Блеф",
+  "playerSessionValue": "Value",
+  "playerSessionMistake": "Помилка",
+  "playerSessionCooler": "Кулер",
+  "playerSessionHeroCall": "Hero Call",
+  "playerSessionExploit": "Експлойт",
+  "playerSessionToughSpot": "Складна ситуація",
+  "playerSessionEasyFold": "Простий Fold",
+  "playerSessionEndedTitle": "Сесію завершено",
+  "playerSessionEndedBody": "Дилер завершив цю сесію.",
+  "playerSessionRemovedTitle": "Прибрано зі столу",
+  "playerSessionRemovedBody": "Дилер прибрав вас зі столу.",
+  "playerSessionYouWon": "Ви виграли {amount}!",
+  "@playerSessionYouWon": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "playerSessionSeatWins": "Місце {seat} виграє {amount}",
+  "@playerSessionSeatWins": {
+    "placeholders": {
+      "seat": {
+        "type": "int"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "playerSessionYourHoleCardsTitle": "Ваші карманні карти",
+  "playerSessionConnecting": "Підключення...",
+  "playerSessionGoBackBtn": "Назад",
+  "playerSessionHoleCardsLabel": "Карманні карти",
+  "playerSessionEditBtn": "Редагувати",
+  "playerSessionAddBtn": "Додати",
+  "playerSessionBoardLabel": "Борд",
+  "playerSessionNoCardsDealt": "Карти не роздано",
+  "playerSessionWaitingForAction": "Очікування дії...",
+  "playerSessionActionsLabel": "Дії",
+  "playerSessionYouLabel": "Ви",
+  "playerSessionSeatFallback": "Місце {seat}",
+  "@playerSessionSeatFallback": {
+    "placeholders": {
+      "seat": {
+        "type": "int"
+      }
+    }
+  },
+  "playerSessionNotesHintText": "Додайте нотатки про цю роздачу...",
+  "playerSessionHandHistoryLabel": "Історія роздач",
+  "playerSessionNoCompletedHands": "Завершених роздач ще немає",
+  "playerSessionWonAmount": "Виграно {amount}",
+  "@playerSessionWonAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "playerSessionLostLabel": "Програно",
+  "playerSessionDealerChangeTitle": "Зміна дилера",
+  "playerSessionWaitingForDealer": "Очікування, поки новий дилер перейме керування...",
+  "playerSessionHandUpdated": "Роздачу №{number} оновлено",
+  "@playerSessionHandUpdated": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "playerSessionErrorSaving": "Помилка збереження: {error}",
+  "@playerSessionErrorSaving": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "playerSessionEditHand": "Редагувати роздачу №{number}",
+  "@playerSessionEditHand": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "playerSessionViewDetails": "Переглянути деталі",
+  "playerSessionTapToAddHoleCards": "Торкніться, щоб додати карманні карти",
+  "playerSessionSaveChanges": "Зберегти зміни",
+  "playerSessionLeaveTableTitle": "Залишити стіл?",
+  "playerSessionLeaveTableBody": "Ви впевнені, що хочете залишити цей стіл?",
+  "playerSessionFailedLeave": "Не вдалося вийти: {error}",
+  "@playerSessionFailedLeave": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "playerSessionTableSession": "Сесія за столом",
+  "playerSessionHandNumber": "Роздача №{number}",
+  "@playerSessionHandNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "playerSessionUnknownDealer": "Невідомо",
+  "playerSessionNotAuthenticated": "Не автентифіковано",
+  "dealerQrScanSessionSettings": "Налаштування сесії",
+  "dealerQrScanTableNameLabel": "Стіл: {name}",
+  "@dealerQrScanTableNameLabel": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerQrScanEventNameLabel": "Подія: {name}",
+  "@dealerQrScanEventNameLabel": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerQrScanBlindsLabel": "Blinds",
+  "dealerQrScanSmallBlindLabel": "Small Blind",
+  "dealerQrScanBigBlindLabel": "Big Blind",
+  "dealerQrScanStartDealingBtn": "Почати роздачу",
+  "dealerQrScanResumeSessionTitle": "Відновити сесію",
+  "dealerQrScanTakingOverFrom": "Переймаєте від {name}",
+  "@dealerQrScanTakingOverFrom": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerQrScanHandsPlayedLabel": "Зіграно роздач",
+  "dealerQrScanBlindsInfoLabel": "Blinds",
+  "dealerQrScanPlayersLabel": "Гравці",
+  "dealerQrScanResumeBtn": "Продовжити",
+  "dealerQrScanTableNotAssigned": "Стіл не призначено",
+  "dealerQrScanEventTablesLabel": "Столи події:",
+  "dealerQrScanNoTablesAssigned": "Немає призначених столів",
+  "dealerQrScanThisTableId": "ID цього столу:",
+  "dealerQrScanCorrectQrUrl": "Правильна URL-адреса QR-коду:",
+  "dealerQrScanScanTableQrTitle": "Сканувати QR столу",
+  "dealerQrScanScanInstructions": "Відскануйте QR-код столу, щоб почати роздачу",
+  "eventDashboardTournamentOnBreak": "Перерва в турнірі",
+  "eventDashboardLiveLabel": "Наживо",
+  "eventDashboardLocalLabel": "Локально",
+  "eventDashboardDisconnectedLabel": "Відключено",
+  "eventDashboardPlayersLabel": "Гравці",
+  "eventDashboardTablesLabel": "Столи",
+  "eventDashboardTotalChipsLabel": "Усього фішок",
+  "eventDashboardAvgStackLabel": "Середній стек",
+  "eventDashboardChipLeaderLabel": "Лідер за фішками",
+  "eventDashboardNoRankingsYet": "Рейтингів ще немає",
+  "eventDashboardRankingsWillAppear": "Рейтинги з'являться, коли гравці приєднаються до столів",
+  "eventDashboardTableSeatLabel": "{table} — Місце {seat}",
+  "@eventDashboardTableSeatLabel": {
+    "placeholders": {
+      "table": {
+        "type": "String"
+      },
+      "seat": {
+        "type": "int"
+      }
+    }
+  },
+  "eventDashboardPlayerFallback": "Гравець {id}",
+  "@eventDashboardPlayerFallback": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "commonNA": "Н/Д",
+  "sessionHistoryFailedLoad": "Не вдалося завантажити сесії: {error}",
+  "@sessionHistoryFailedLoad": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionHistoryCash": "Кеш",
+  "sessionHistoryTournament": "Турнір",
+  "sessionHistorySessionId": "Сесія {id}...",
+  "@sessionHistorySessionId": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionHistorySeatWithPosition": "Місце {seat} ({position})",
+  "@sessionHistorySeatWithPosition": {
+    "placeholders": {
+      "seat": {
+        "type": "String"
+      },
+      "position": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionHistorySeat": "Місце {seat}",
+  "@sessionHistorySeat": {
+    "placeholders": {
+      "seat": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionHistorySyncCompleted": "Синхронізацію завершено",
+  "sessionHistoryFullHistory": "Повна історія сесій",
+  "sessionHandsRetry": "Повторити",
+  "stackChartScreenStart": "Початок",
+  "stackChartScreenRebuy": "Rebuy",
+  "stackChartScreenEnd": "Кінець",
+  "seatSetupDone": "Готово",
+  "seatSetupCancel": "Скасувати",
+  "authConnectionIssue": "Проблема зі з'єднанням",
+  "authConnectionIssueBody": "Не вдалося підключитися до наших серверів.\\nПеревірте підключення до інтернету\\nі спробуйте ще раз.",
+  "authTryAgain": "Спробувати ще раз",
+  "redeemInvitationTitle": "Активувати запрошення",
+  "redeemEnterCode": "Введіть код запрошення",
+  "redeemCodeDescription": "Введіть 8-символьний код, отриманий від адміністратора клубу, щоб приєднатися до нього.",
+  "redeemJoinClub": "Приєднатися до клубу",
+  "redeemWelcome": "Ласкаво просимо!",
+  "redeemJoinedAs": "Ви приєдналися до {clubName} як {role}",
+  "@redeemJoinedAs": {
+    "placeholders": {
+      "clubName": {
+        "type": "String"
+      },
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "redeemContinue": "Продовжити",
+  "supportBugReport": "Повідомлення про помилку",
+  "supportFeatureRequest": "Пропозиція функції",
+  "supportAccountIssue": "Проблема з акаунтом",
+  "supportOther": "Інше",
+  "supportFillAllFields": "Будь ласка, заповніть усі поля",
+  "supportSubmitted": "Запит до підтримки успішно надіслано",
+  "supportFailedSubmit": "Не вдалося надіслати: {error}",
+  "@supportFailedSubmit": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "supportTitle": "Довідка та підтримка",
+  "supportSubmitButton": "Надіслати",
+  "supportCategoryLabel": "Категорія",
+  "supportSubjectLabel": "Тема",
+  "supportDescriptionLabel": "Опис",
+  "supportSubjectHint": "Короткий опис проблеми",
+  "supportDescriptionHint": "Опишіть проблему детально...",
+  "calendarEventLocation": "Місце",
+  "calendarEventBuyIn": "Сума бай-іну",
+  "calendarEventEdit": "Редагувати",
+  "calendarEventDelete": "Видалити подію",
+  "calendarEventDeleteConfirm": "Видалити {title}?",
+  "@calendarEventDeleteConfirm": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "calendarEventDeleteBody": "Ви впевнені, що хочете видалити «{title}»?\\nЦю дію не можна скасувати.",
+  "@calendarEventDeleteBody": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "calendarEventDeleteButton": "Видалити",
+  "clubInfoTitle": "Про клуб",
+  "clubInfoMembersCount": "Учасники ({count})",
+  "@clubInfoMembersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "clubInfoNoMembers": "Учасників не знайдено",
+  "finalStandingsNoData": "Немає доступних результатів",
+  "finalStandingsNoDataHint": "Можливо, для цієї події не записано результатів",
+  "finalStandingsEmpty": "Результатів не записано",
+  "finalStandingsTitle": "Підсумкові результати",
+  "finalStandingsPlayers": "Гравці",
+  "finalStandingsCompleted": "Завершено",
+  "liveRankingsTitle": "Рейтинги наживо",
+  "liveRankingsEliminated": "Вибулі гравці",
+  "liveRankingsWaiting": "Очікування гравців",
+  "liveRankingsWaitingHint": "Рейтинги з'являться, щойно гравці займуть місця",
+  "liveRankingsError": "Помилка завантаження рейтингів",
+  "liveRankingsTryAgain": "Спробувати ще раз",
+  "leaderboardPlayers": "Гравці",
+  "leaderboardTotalChips": "Усього фішок",
+  "leaderboardWaiting": "Очікування гравців...",
+  "leaderboardChipLeader": "Лідер за фішками: {name}",
+  "@leaderboardChipLeader": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerQrScanBbAnte": "BB Ante",
+  "mainDealerOnClub": "Тепер ви дилер у клубі {clubName}",
+  "@mainDealerOnClub": {
+    "placeholders": {
+      "clubName": {
+        "type": "String"
+      }
+    }
+  },
+  "raiseSnapMin": "Мін.",
+  "raiseSnapPot": "Pot",
+  "raiseSnapAllIn": "All-In",
+  "sessionHistoryPlayerWins": "Гравець {playerId} виграє:",
+  "@sessionHistoryPlayerWins": {
+    "placeholders": {
+      "playerId": {
+        "type": "int"
+      }
+    }
+  },
+  "inviteClubAdminFallback": "Адміністратор клубу",
+  "pokerHandBetRange": "Мін.: {min} · Макс.: {max}",
+  "@pokerHandBetRange": {
+    "placeholders": {
+      "min": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "pokerHandAmountBetween": "Сума має бути між {min} та {max}",
+  "@pokerHandAmountBetween": {
+    "placeholders": {
+      "min": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableBlindsLabel": "БЛАЙНДИ",
+  "dealerTableAnteLabel": "ANTE {amount}",
+  "@dealerTableAnteLabel": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTablePotLabel": "POT",
+  "dealerTableCheckLabel": "CHECK",
+  "dealerTablePlayerToAct": "Хід гравця {playerName} ({stack})",
+  "@dealerTablePlayerToAct": {
+    "placeholders": {
+      "playerName": {
+        "type": "String"
+      },
+      "stack": {
+        "type": "String"
+      }
+    }
+  },
+  "eventDashboardOnBreakBadge": "ПЕРЕРВА",
+  "eventDetailAdminActions": "ДІЇ АДМІНІСТРАТОРА",
+  "playerSessionHandNotesLabel": "НОТАТКИ ДО РОЗДАЧІ",
+  "playerSessionTagsLabel": "ТЕГИ",
+  "playerSessionNotesLabel": "НОТАТКИ",
+  "playerSessionHoleCardsUpperLabel": "КАРМАННІ КАРТИ",
+  "qrJoinDeclined": "Ваш запит на приєднання відхилено",
+  "qrJoinFailed": "Не вдалося зайняти місце: {error}",
+  "@qrJoinFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "qrJoinTable": "Приєднатися до столу",
+  "qrJoinLoading": "Завантаження інформації про стіл...",
+  "qrJoinError": "Щось пішло не так",
+  "qrJoinGoBack": "Назад",
+  "qrJoinSeatOccupied": "Це місце, можливо, вже зайняте. Приєднання замінить поточного гравця.",
+  "qrJoinWaitingDealer": "Очікування дилера",
+  "qrJoinRequestSent": "Ваш запит на місце {seatNumber} надіслано.",
+  "@qrJoinRequestSent": {
+    "placeholders": {
+      "seatNumber": {
+        "type": "int"
+      }
+    }
+  },
+  "qrJoinDealerApproval": "Дилер встановить ваш стек фішок і підтвердить приєднання.",
+  "qrJoinCancelRequest": "Скасувати запит",
+  "qrJoinRequestButton": "Надіслати запит",
+  "onboardingSkipTour": "Пропустити тур",
+  "onboardingWelcomeTitle": "Ласкаво просимо до\\nFinal Table",
+  "onboardingWelcomeBody": "Пройдімо швидкий тур, щоб ви могли почати.\\n\\nВи завжди можете повторити цей тур у\\nПрофіль → Налаштування → База знань.",
+  "onboardingLetsGo": "Почнімо",
+  "onboardingGotIt": "Зрозуміло",
+  "onboardingNext": "Далі",
+  "onboardingStartLoggingTitle": "Почніть логування",
+  "onboardingStartLoggingBody": "Натисніть кнопку +, щоб почати логувати роздачу.",
+  "onboardingFullModeTitle": "Режим логування",
+  "onboardingFullModeBody": "Відстежуйте свої роздачі та роздачі суперників протягом усієї сесії. Логуйте те, що важливо для вас — ідеально для подальшого аналізу.",
+  "onboardingSessionSetupTitle": "Деталі сесії",
+  "onboardingSessionSetupBody": "Тут ви можете встановити назву сесії, тип гри, блайнди, суму бай-іну та початковий стек.",
+  "onboardingTableSetupTitle": "Налаштуйте свій стіл",
+  "onboardingTableSetupBody": "Розсадіть себе та щонайменше одного суперника, щоб почати. Для старту сесії потрібно мінімум 2 гравці. Перетягніть кнопку дилера (D), щоб встановити позицію баттона.",
+  "onboardingSeatOpenTitle": "Вільне місце",
+  "onboardingSeatOpenBody": "Перемикайте, щоб позначити місце як зайняте чи вільне. Вільні місця пропускаються під час роздачі.",
+  "onboardingThisIsMySeatTitle": "Це моє місце",
+  "onboardingThisIsMySeatBody": "Натисніть тут, якщо це ваше місце. Воно автоматично заповнить ваше ім'я та відстежуватиме вашу особисту статистику.",
+  "onboardingPlayerNameTitle": "Ім'я гравця",
+  "onboardingPlayerNameBody": "Введіть ім'я або оберіть із збережених суперників. Збережені суперники відстежують статистику між сесіями.",
+  "onboardingSaveOpponentTitle": "Зберегти суперника",
+  "onboardingSaveOpponentBody": "Збережіть суперника, якщо ви граєте з ним регулярно. Залиште ім'я порожнім, якщо ви його не знаєте — FT назве його «Гравець + номер місця».",
+  "onboardingDealerButtonTitle": "Кнопка дилера",
+  "onboardingDealerButtonBody": "Перетягніть її на місце з позицією дилера. Вона визначає блайнди та порядок ходів.",
+  "onboardingViewSessionsTitle": "Ваші сесії живуть тут",
+  "onboardingViewSessionsBody": "Натисніть іконку «Сесії», щоб побачити сесію, яку ви щойно зіграли.",
+  "onboardingSessionHistoryCardTitle": "Сесія, яку ви щойно зіграли",
+  "onboardingSessionHistoryCardBody": "Це ваша навчальна сесія — натисніть її будь-коли, щоб побачити кожну роздачу.",
+  "onboardingHandListTitle": "Кожна роздача збережена",
+  "onboardingHandListBody": "Натисніть тут, щоб відкрити роздачі, які ви залогували в цій сесії. Ви також можете натискати точки на графіку стека, щоб побачити підказку та перейти до конкретної роздачі.",
+  "onboardingHandCardTitle": "Ваша залогована роздача",
+  "onboardingHandCardBody": "Натисніть роздачу, щоб побачити повний повтор дій, вулиця за вулицею.",
+  "onboardingHandToolsTitle": "Інструменти роздачі",
+  "onboardingHandToolsBody": "Перемикайте суми на big blinds (BB), експортуйте чи діліться роздачею та додавайте зірочку, щоб зберегти улюблені — усе звідси. Ви також можете гортати цей екран вліво, щоб переглядати свої роздачі.",
+  "onboardingAiAnalysisTitle": "AI-аналіз роздачі",
+  "onboardingAiAnalysisBody": "Отримайте миттєвий коучинг щодо цієї роздачі — перший аналіз за наш рахунок. Натисніть кнопку!",
+  "sessionTutorialBadge": "Навчання",
+  "introGetStarted": "Почати",
+  "linkAccountTitle": "Ви граєте як гість",
+  "linkAccountBody": "Створіть безкоштовний акаунт, щоб зберегти дані на всіх пристроях.",
+  "linkAccountSuccess": "Акаунт створено — ваші дані тепер збережено в резервній копії.",
+  "linkAccountConflictTitle": "Акаунт уже існує",
+  "linkAccountConflictBody": "Цей акаунт уже існує. Увійти до нього натомість? Ваші гостьові дані не будуть перенесені.",
+  "anonSignOutWarning": "Ви увійшли як гість. Вихід назавжди видалить доступ до ваших сесій і роздач.",
+  "paywallAccountReady": "Акаунт створено! Тепер ви можете завершити покупку.",
+  "onboardingAllSetTitle": "Усе готово!",
+  "onboardingAllSetBody": "Ви готові почати відстежувати свої покерні сесії.",
+  "onboardingLetsPlay": "Граймо",
+  "onboardingStepOf": "Крок {step} з {total}",
+  "@onboardingStepOf": {
+    "placeholders": {
+      "step": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "guidedGestureGuideTitle": "Гід із жестів",
+  "guidedGestureGuideBody": "Натисніть цю іконку будь-коли, щоб знову побачити гід із жестів.",
+  "guidedSkipButtonTitle": "Кнопка пропуску",
+  "guidedSkipButtonBody": "Якщо ви пропускаєте роздачу, ця кнопка переміщує кнопку дилера до наступного гравця. Майте на увазі, що стеки будуть неузгоджені — ви можете оновити їх у «Керування гравцями».",
+  "guidedGameMenuTitle": "Меню гри",
+  "guidedGameMenuBody": "У цьому меню є корисні опції. Погляньмо на одне важливе налаштування.",
+  "guidedGameSettingsTitle": "Налаштування гри",
+  "guidedGameSettingsBody": "Тут ви можете змінювати блайнди посеред сесії — корисно для турнірів, коли рівні зростають.",
+  "guidedEndSessionTitle": "Завершіть сесію",
+  "guidedEndSessionBody": "Натисніть це меню та оберіть «Завершити сесію», щоб зберегти результати.",
+  "guidedEndSessionHubBody": "Натисніть тут, щоб завершити сесію та переглянути результати.",
+  "guidedReviewHandTitle": "Перегляд роздачі",
+  "guidedReviewHandBody": "Введіть свої карманні карти та будь-які нотатки.",
+  "guidedHandCompleteTitle": "Роздачу завершено!",
+  "guidedHandCompleteBody": "Чудова робота! Ви щойно залогували свою першу роздачу.",
+  "guidedSkip": "Пропустити",
+  "guidedYourTurn": "Ваш хід!",
+  "guidedOpenThePotTitle": "Відкрийте банк",
+  "guidedBetOnceBody": "Цей гравець робить Bet.",
+  "guidedFoldTitle": "Fold",
+  "guidedFoldBody": "Цей гравець робить Fold.",
+  "guidedCallTitle": "Call",
+  "guidedCallBody": "Цей гравець робить Call.",
+  "guidedCheckTitle": "Check",
+  "guidedCheckBody": "Цей гравець робить Check.",
+  "guidedGestureFold": "Проведіть вліво або вправо",
+  "guidedGestureCheck": "Натисніть",
+  "guidedGestureCall": "Натисніть",
+  "guidedGestureBet": "Утримуйте й потягніть угору ↑",
+  "guidedGestureRaise": "Утримуйте й потягніть угору ↑",
+  "guidedGestureManualBet": "Ручний Bet: утримуйте й потягніть униз ↓",
+  "guidedActionFold": "Fold",
+  "guidedActionCheck": "Check",
+  "guidedActionCall": "Call",
+  "guidedActionBet": "Bet",
+  "guidedActionRaise": "Raise",
+  "guidedDealFlopTitle": "Оберіть Flop",
+  "guidedDealFlopBody": "Перетягніть ранг на масть або торкніться рангу, а потім масті, щоб обрати карту. Торкніться обраної карти, щоб прибрати її. Виберіть 3 карти для флопу.",
+  "guidedDealTurnTitle": "Роздайте Turn",
+  "guidedDealTurnBody": "Виберіть 1 карту для терну.",
+  "guidedDealRiverTitle": "Роздайте River",
+  "guidedDealRiverBody": "Виберіть 1 карту для риверу.",
+  "guidedStackRingTitle": "Діапазон стеку",
+  "guidedStackRingBody": "Утримуйте місце гравця, щоб відкрити кільце стека, поверніть палець, щоб вибрати розмір, і відпустіть, щоб застосувати.",
+  "guidedTableButtonTitle": "Керування столом",
+  "guidedTableButtonBody": "Торкніться цієї кнопки, щоб керувати гравцями, оновлювати стеки, змінювати розсадку або переміщувати кнопку дилера.",
+  "guidedBlindsPillTitle": "Blinds",
+  "guidedBlindsPillBody": "Торкніться тут, щоб оновити рівні блайндів будь-коли — зручно, коли рівні турніру зростають.",
+  "guidedNextHandTitle": "Наступна роздача",
+  "guidedNextHandBody": "Торкніться, щоб пропустити поточну роздачу, якщо ви її не грали або не хочете логувати — кнопка дилера перейде до наступного гравця.",
+  "guidedInfoButtonTitle": "Довідка по жестах",
+  "guidedInfoButtonBody": "Торкніться цієї кнопки будь-коли, щоб побачити всі доступні жести керування для логування дій.",
+  "guidedSessionInfoTitle": "Деталі сесії",
+  "guidedSessionInfoBody": "Чудово! Торкніться тут, щоб відкрити деталі вашої сесії — продовжимо там.",
+  "guidedAddOnTitle": "Add-Ons та Rebuys",
+  "guidedAddOnBody": "Керуйте своїми add-ons та rebuys тут.",
+  "guidedUpdateStackTitle": "Оновити стек",
+  "guidedUpdateStackBody": "Оновлюйте свій стек вручну та робіть швидкі нотатки. Вони з'являться на вашому графіку стеку.",
+  "guidedStackChartTitle": "Графік стеку",
+  "guidedStackChartBody": "Торкніться будь-якої точки, щоб побачити, як ви грали протягом сесії.",
+  "guidedStopSessionTitle": "Завершіть сесію",
+  "guidedStopSessionBody": "Торкніться кнопки зупинки, щоб завершити сесію — потім ми покажемо, де вона збережена.",
+  "guidedTableIntroTitle": "Робоче поле",
+  "guidedTableIntroBody": "Це ваше робоче поле — де ви виконуєте всі дії. Fold: проведіть ліворуч або праворуч. Check / Call: торкніться. Bet / Raise: натисніть і потягніть вгору. Ручна сума ставки: натисніть і потягніть вниз. Залогуймо першу роздачу!",
+  "guidedUndoTitle": "Скасуйте будь-коли",
+  "guidedUndoBody": "Помилилися? Торкніться «Скасувати останню дію», щоб повернути свій останній хід — банк і стеки також відновляться.",
+  "guidedSessionInfoFinishTitle": "Завершення",
+  "guidedSessionInfoFinishBody": "Готові завершити? Торкніться тут, щоб відкрити деталі сесії та завершити.",
+  "guidedDetailsBackTitle": "Назад до столу",
+  "guidedDetailsBackBody": "Торкніться тут, щоб повернутися та залогувати ще одну роздачу.",
+  "guidedLogOneMoreTitle": "Залогуйте ще одну роздачу",
+  "guidedLogOneMoreBody": "Уперед — залогуйте ще одну роздачу, розіграйте її самі.\\n\\nДо речі, ви завжди можете вручну перемістити кнопку, якщо пропускаєте логування деяких роздач. Спробуйте зараз, перш ніж логувати другу роздачу!",
+  "guidedCurrentStackTitle": "Поточний стек",
+  "guidedCurrentStackBody": "Це ваш актуальний стек — він оновлюється щоразу, коли ви логуєте роздачу.",
+  "guidedTourCompleteTitle": "Ось і вся екскурсія!",
+  "guidedTourCompleteBody": "Насолоджуйтесь Final Table 🎉",
+  "onboardingBankrollCardTitle": "Ваш банкрол",
+  "onboardingBankrollCardBody": "Торкніться «Загальний банкрол», щоб ввести свій поточний банкрол і встановити ціль. Відстежуйте свій прогрес із часом!",
+  "kbStatsTitle": "Ваша статистика",
+  "kbClubsTitle": "Клуби та події",
+  "kbStatsIntro": "Final Table відстежує 7 ключових покерних метрик, щоб допомогти вам зрозуміти та покращити вашу гру.",
+  "kbClubsIntro": "Клуби дозволяють вам з'єднатися з місцевим покерним румом і відстежувати живі ігри.",
+  "kbVpipName": "VPIP",
+  "kbVpipFullName": "Voluntarily Put $ In Pot",
+  "kbVpipDescription": "Як часто ви добровільно входите в банк (не рахуючи постановки блайндів). Високий VPIP означає, що ви граєте багато рук; низький VPIP означає, що ви селективні.",
+  "kbPfrName": "PFR",
+  "kbPfrFullName": "Preflop Raise",
+  "kbPfrDescription": "Як часто ви робите Raise до флопу. Розрив між VPIP та PFR показує, як часто ви лімпите або робите cold-call.",
+  "kbThreeBetName": "3-Bet",
+  "kbThreeBetFullName": "Three-Bet Percentage",
+  "kbThreeBetDescription": "Як часто ви робите re-raise на open raise суперника на префлопі. Вищий 3-Bet% свідчить про агресивний префлоп-стиль.",
+  "kbFoldTo3BetName": "Fold to 3-Bet",
+  "kbFoldTo3BetFullName": "Fold to Three-Bet",
+  "kbFoldTo3BetDescription": "Як часто ви робите Fold після рейзу, зіткнувшись із 3-Bet. Якщо занадто часто, суперники можуть експлуатувати вас, роблячи 3-Bet легко.",
+  "kbCBetName": "C-Bet",
+  "kbCBetFullName": "Continuation Bet",
+  "kbCBetDescription": "Як часто ви робите Bet на флопі, будучи останнім агресором на префлопі. Стандартний хід, що демонструє силу.",
+  "kbStealName": "Steal",
+  "kbStealFullName": "Blind Steal Attempt",
+  "kbStealDescription": "Як часто ви робите open-raise з пізньої позиції (CO, BTN, SB), коли банк ще не відкрито, прагнучи забрати блайнди.",
+  "kbCheckRaiseName": "Check-Raise",
+  "kbCheckRaiseFullName": "Flop Check-Raise",
+  "kbCheckRaiseDescription": "Як часто ви робите Check, а потім Raise на флопі. Оманливий хід, що може спіймати агресивних суперників.",
+  "kbLiveEventsTitle": "Живі події",
+  "kbLiveEventsDescription": "Менеджери клубів створюють події з кількома столами. Приєднайтеся до події, щоб бути частиною живого рейтингу.",
+  "kbLiveRankingsTitle": "Живий рейтинг",
+  "kbLiveRankingsDescription": "Дивіться, на якому ви місці в реальному часі під час подій. Рейтинг оновлюється після кожної роздачі.",
+  "kbOpponentTrackingTitle": "Відстеження суперників",
+  "kbOpponentTrackingDescription": "Гравці, з якими ви граєте в клубі, відстежуються автоматично. Зберігайте суперників, щоб створювати детальні профілі.",
+  "kbQrSeatTitle": "Розсадка за QR-кодом",
+  "kbQrSeatDescription": "Відскануйте QR-код за вашим столом, щоб миттєво приєднатися до сесії. Ваші роздачі відстежуються автоматично дилером.",
+  "kbDealerLoggingTitle": "Логування за допомогою дилера",
+  "kbDealerLoggingDescription": "Дилери використовують голосові команди, щоб логувати дії для всього столу. Від гравців не потрібне ручне введення.",
+  "kbSessionStatsTitle": "Статистика сесії",
+  "kbSessionStatsDescription": "Після кожної сесії дивіться свій прибуток/збиток і як змінилася ваша статистика. Кожна роздача записується.",
+  "qrJoinTableInfo": "ІНФО ПРО СТІЛ",
+  "qrJoinSeat": "Місце {number}",
+  "@qrJoinSeat": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "qrJoinTableFallback": "Стіл",
+  "qrJoinClubLabel": "Клуб",
+  "qrJoinTableLabel": "Стіл",
+  "qrJoinSeatLabel": "Місце",
+  "qrJoinStatusLabel": "Статус",
+  "qrJoinActiveGame": "Активна гра",
+  "qrJoinWaitingStatus": "Очікування",
+  "dealerQrTablesAssigned": "{count} стіл(-ів) призначено цій події",
+  "@dealerQrTablesAssigned": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dealerQrTableNotAssigned": "{tableName} не призначено цій події.",
+  "@dealerQrTableNotAssigned": {
+    "placeholders": {
+      "tableName": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTablePlayerAdded": "{playerName} додано на місце {seatNumber}",
+  "@dealerTablePlayerAdded": {
+    "placeholders": {
+      "playerName": {
+        "type": "String"
+      },
+      "seatNumber": {
+        "type": "int"
+      }
+    }
+  },
+  "memberTableSeatedOpen": "{seated} за столом  •  {open} вільних",
+  "@memberTableSeatedOpen": {
+    "placeholders": {
+      "seated": {
+        "type": "int"
+      },
+      "open": {
+        "type": "int"
+      }
+    }
+  },
+  "memberTablePlayer": "Гравець",
+  "memberTableEmpty": "Порожньо",
+  "memberTableFallback": "Стіл",
+  "homeEventTypeTournament": "Турнір",
+  "homeEventTypeCashGame": "Кеш-гра",
+  "homeEventTypeHomeGame": "Домашня гра",
+  "homeEventTypeOnline": "Онлайн",
+  "bankrollSheetTitle": "Додати результат",
+  "bankrollSheetEditSection": "Редагувати банкрол",
+  "bankrollSheetGoalLabel": "Ціль банкролу",
+  "bankrollSheetCurrentLabel": "Поточний банкрол",
+  "bankrollSheetGoalUpdated": "Ціль оновлено",
+  "bankrollSheetBankrollUpdated": "Банкрол оновлено",
+  "sessionEndResultTitle": "Результат сесії",
+  "sessionEndTournamentTitle": "Результат турніру",
+  "sessionEndProfit": "Прибуток",
+  "sessionEndLoss": "Збиток",
+  "sessionEndApply": "Застосувати",
+  "sessionEndSkip": "Пропустити",
+  "sessionEndFinishingPosition": "Фінішна позиція",
+  "sessionEndFieldSize": "Усього учасників",
+  "sessionEndPrizeWon": "Виграний приз",
+  "sessionEndTotalInvested": "Усього вкладено",
+  "sessionEndCalculatedProfit": "Розрахований прибуток: {amount}",
+  "@sessionEndCalculatedProfit": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "onboardingWelcomeSubtitle": "Ваш персональний покерний помічник для логування рук, відстеження статистики та покращення гри.",
+  "onboardingNicknameTitle": "Почнімо з вибору вашого нікнейму",
+  "onboardingNicknameSubtitle": "Ви можете перемикатися між своїм ім'ям і нікнеймом та змінювати його будь-коли.",
+  "onboardingCurrencyTitle": "Оберіть валюту",
+  "onboardingCurrencySubtitle": "Buy-in, кешаути та статистика використовуватимуть її. Ви можете змінити її будь-коли в Налаштуваннях.",
+  "onboardingGameTypeTitle": "Оберіть тип гри",
+  "onboardingGameTypeSubtitle": "Ми налаштуємо ваш досвід залежно від того, у що ви граєте. Ви кеш-гравець, турнірний гравець чи граєте змішано?",
+  "onboardingGameTypeCash": "Кеш-гра",
+  "onboardingGameTypeTournament": "Турнір (MTT)",
+  "onboardingGameTypeBoth": "Змішано",
+  "onboardingJourneyTitle": "На якому етапі ви у своєму покерному шляху?",
+  "onboardingJourneySubtitle": "Це допоможе нам персоналізувати ваш досвід.",
+  "onboardingJourneyBeginner": "Початківець",
+  "onboardingJourneyFun": "Граю для задоволення",
+  "onboardingJourneyRegular": "Регулярний гравець",
+  "onboardingJourneyPro": "Профі",
+  "onboardingMonthlySessionsTitle": "Скільки сесій ви граєте на місяць?",
+  "onboardingMonthlySessionsSubtitle": "Прокрутіть колесо, щоб обрати кількість сесій на місяць.",
+  "onboardingMonthlySessionsUnit": "сесій / місяць",
+  "onboardingPurposeTitle": "Яка ваша головна мета використання Final Table?",
+  "onboardingPurposeSubtitle": "Оберіть усі відповідні варіанти.",
+  "onboardingPurposeLogging": "Логування рук",
+  "onboardingPurposeBankroll": "Відстеження банкролу",
+  "onboardingPurposeOpponents": "Аналіз суперників",
+  "onboardingPurposeActions": "Логування кожної дії для подальшого аналізу",
+  "onboardingPurposeStudying": "Вивчення спотів",
+  "onboardingPurposeSharing": "Ділитися історіями рук із друзями",
+  "onboardingPurposeAi": "Аналіз за допомогою AI",
+  "onboardingPurposeExport": "Експорт рук у GTO-інструменти",
+  "onboardingPurposeStacks": "Відстеження розмірів стеків у турнірах",
+  "onboardingContinue": "Продовжити",
+  "onboardingGetStarted": "Почати",
+  "onboardingSkipNickname": "Пропустити поки що",
+  "drillTitle": "Тренувальні вправи",
+  "drillSaveLineup": "Зберегти склад",
+  "drillSaveLineupHint": "напр. домашня гра у вівторок",
+  "drillDeleteLineup": "Видалити склад",
+  "drillDeleteLineupMessage": "Прибрати «{name}» зі збережених складів?",
+  "@drillDeleteLineupMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "drillSavedLineups": "ЗБЕРЕЖЕНІ СКЛАДИ",
+  "drillTable": "СТІЛ",
+  "drillSeats": "МІСЦЯ",
+  "drillSeatsInstruction": "Торкніться місця, щоб призначити суперника або пересунути себе.",
+  "drillSaveThisLineup": "Зберегти цей склад",
+  "drillStartDrill": "Почати вправу",
+  "drillPlayers": "Гравці",
+  "drillStackDepth": "Глибина стеку",
+  "drillFormat": "Формат",
+  "drillFormatCash": "Кеш",
+  "drillFormatAnte": "MTT · Ante",
+  "drillScouting": "СКАУТИНГ",
+  "drillYou": "Ви",
+  "drillSeatNumber": "Місце {seat}",
+  "@drillSeatNumber": {
+    "placeholders": {
+      "seat": {
+        "type": "int"
+      }
+    }
+  },
+  "drillPremiumTitle": "Тренуйтеся проти своїх реальних суперників",
+  "drillPremiumDescription": "Розсадіть гравців, з якими ви справді граєте, відпрацьовуйте префлоп-споти проти ботів, що грають за їхніми виміряними тенденціями, і отримуйте зворотний зв'язок на основі експлойтів для кожного рішення.",
+  "drillUpgradeToPremium": "Оновити до Premium",
+  "drillSearchOpponents": "Пошук суперників",
+  "drillThisIsMe": "Це я",
+  "drillMoveYourSeatHere": "Пересунути своє місце сюди",
+  "drillGenericBot": "Звичайний бот",
+  "drillBalancedRegular": "Збалансований регуляр",
+  "drillHandNumber": "Рука №{number}",
+  "@drillHandNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "drillHandedLabel": "{stack}BB · {players} гравців",
+  "@drillHandedLabel": {
+    "placeholders": {
+      "stack": {
+        "type": "int"
+      },
+      "players": {
+        "type": "int"
+      }
+    }
+  },
+  "drillPot": "БАНК",
+  "drillWalkedNote": "Усі зробили Fold — ви виграєте блайнди.",
+  "drillWonUncontestedNote": "Усі зробили Fold — ви забираєте банк ({pot}BB).",
+  "@drillWonUncontestedNote": {
+    "placeholders": {
+      "pot": {
+        "type": "String"
+      }
+    }
+  },
+  "drillReachedFlopNote": "Рука йде на Flop — префлоп-вправу завершено.",
+  "drillHandOverNote": "Руку завершено.",
+  "drillCorrect": "ПРАВИЛЬНО",
+  "drillClose": "БЛИЗЬКО",
+  "drillMistake": "ПОМИЛКА",
+  "drillYouChose": "· ви обрали {action}",
+  "@drillYouChose": {
+    "placeholders": {
+      "action": {
+        "type": "String"
+      }
+    }
+  },
+  "drillTopPercent": "топ {percent}%",
+  "@drillTopPercent": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "drillLineupChanges": "Цей склад змінює гру: GTO {gto}s, exploit {exploit}s",
+  "@drillLineupChanges": {
+    "placeholders": {
+      "gto": {
+        "type": "String"
+      },
+      "exploit": {
+        "type": "String"
+      }
+    }
+  },
+  "drillGto": "GTO",
+  "drillExploit": "EXPLOIT",
+  "drillContinue": "Продовжити",
+  "drillGotIt": "Зрозуміло",
+  "drillRaiseTo": "Raise до:",
+  "drillJam": "JAM",
+  "drillPotLabel": "Банк {pot}BB",
+  "@drillPotLabel": {
+    "placeholders": {
+      "pot": {
+        "type": "String"
+      }
+    }
+  },
+  "drillToCall": "{amount}BB для Call",
+  "@drillToCall": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "drillFold": "FOLD",
+  "drillCheck": "CHECK",
+  "drillCall": "CALL",
+  "drillRaise": "RAISE",
+  "drillNextHand": "Наступна роздача",
+  "drillSummaryTitle": "Підсумок тренування",
+  "drillAccuracy": "Точність",
+  "drillDecisions": "Рішення",
+  "drillCorrectLabel": "Правильно",
+  "drillCloseLabel": "Близько",
+  "drillMistakes": "Помилки",
+  "drillWhereYouLeaked": "ДЕ ВИ ВТРАЧАЄТЕ",
+  "drillMistakeDetail": "{handClass} · {position} · ви обрали {heroAction}, правильно було {recommendedAction}",
+  "@drillMistakeDetail": {
+    "placeholders": {
+      "handClass": {
+        "type": "String"
+      },
+      "position": {
+        "type": "String"
+      },
+      "heroAction": {
+        "type": "String"
+      },
+      "recommendedAction": {
+        "type": "String"
+      }
+    }
+  },
+  "drillKeepDrilling": "Продовжити тренування",
+  "drillEndDrill": "Завершити тренування",
+  "drillActionSb": "SB 0.5",
+  "drillActionBb": "BB 1",
+  "drillActionFold": "FOLD",
+  "drillActionCheck": "CHECK",
+  "drillActionLimp": "LIMP",
+  "drillActionCall": "CALL {amount}",
+  "@drillActionCall": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "drillActionRaise": "RAISE {amount}",
+  "@drillActionRaise": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "drillAction3bet": "3-BET {amount}",
+  "@drillAction3bet": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "drillAction4bet": "4-BET {amount}",
+  "@drillAction4bet": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "drillActionJam": "JAM {amount}",
+  "@drillActionJam": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "rangeCash": "Кеш",
+  "rangeTourney": "Турнір",
+  "rangeAllStacks": "Усі стеки",
+  "rangeStackDepth": "Глибина стеку",
+  "rangeAllPositions": "Усі",
+  "rangeAllSpots": "Усі споти",
+  "rangeRfi": "RFI",
+  "rangeVsRaise": "vs Raise",
+  "rangeHandsLogged": "Записано роздач: {count} / 169",
+  "@rangeHandsLogged": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "rangeSyncingHistory": "Синхронізація історії роздач…",
+  "rangePreflopHeader": "PREFLOP-ДІАПАЗОН — НА ОСНОВІ ВАШИХ ЗАПИСАНИХ РОЗДАЧ",
+  "rangeEmptyHint": "Ваша preflop-таблиця будується сама: записуйте роздачі та вводьте свої карти, і кожна стартова рука заповнюється тим, як ви насправді її розіграли до флопу.",
+  "rangeSpotsCount": "{count} preflop {count, plural, =1{спот} other{спотів}}",
+  "@rangeSpotsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "rangeRfiSuffix": " · RFI",
+  "rangeVsRaiseSuffix": " · vs raise",
+  "rangeRaised": "Raise",
+  "rangeRaisedLabel": "Raise",
+  "rangeCalled": "Call",
+  "rangeChecked": "Check",
+  "rangeFolded": "Fold",
+  "rangeAllIn": "All-in",
+  "rangeCalledLimped": "Call / limp",
+  "rangeToday": "Сьогодні",
+  "rangeYesterday": "Вчора",
+  "rangeDaysAgo": "{days} дн. тому",
+  "@rangeDaysAgo": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "rangeWeeksAgo": "{weeks} тиж. тому",
+  "@rangeWeeksAgo": {
+    "placeholders": {
+      "weeks": {
+        "type": "int"
+      }
+    }
+  },
+  "rangeMonthsAgo": "{months} міс. тому",
+  "@rangeMonthsAgo": {
+    "placeholders": {
+      "months": {
+        "type": "int"
+      }
+    }
+  },
+  "rangeYearsAgo": "{years} р. тому",
+  "@rangeYearsAgo": {
+    "placeholders": {
+      "years": {
+        "type": "int"
+      }
+    }
+  },
+  "rangeWonBB": "В {bb} BB",
+  "@rangeWonBB": {
+    "placeholders": {
+      "bb": {
+        "type": "int"
+      }
+    }
+  },
+  "rangeLostBB": "– {bb} BB",
+  "@rangeLostBB": {
+    "placeholders": {
+      "bb": {
+        "type": "int"
+      }
+    }
+  },
+  "rangeScoutingTitle": "{name} · Розвідданні",
+  "@rangeScoutingTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "rangeShowdownBias": "Показані руки зміщені до value та зіграних до кінця рук — вони показують, що є в діапазоні та його форму, а не весь діапазон.",
+  "rangeNoShowdowns": "Зіграйте кілька роздач до Showdown із введеними картами цього суперника, і його діапазон почне заповнюватися тут.",
+  "rangePremium": "Преміум",
+  "rangeStrong": "Сильні",
+  "rangeMedium": "Середні",
+  "rangeWeak": "Слабкі",
+  "profileSettings": "Налаштування профілю",
+  "profileEditName": "Змінити ім’я",
+  "profileYourName": "Ваше ім’я",
+  "profileEditEmail": "Змінити email",
+  "profileEditEmailHint": "Зміна email вимагає повторної автентифікації акаунта. Зверніться до підтримки, щоб змінити email.",
+  "profileChangePassword": "Змінити пароль",
+  "profilePasswordMask": "***********",
+  "profileContactSupport": "Зв’язатися з підтримкою",
+  "profileShareFeedback": "Поділитися відгуком",
+  "profileEmailUpdates": "Email-розсилка",
+  "profileFollowUs": "Підписатися на @finaltable",
+  "profileEdit": "Змінити",
+  "profileEditUsername": "Змінити ім’я користувача",
+  "profileUsernameHint": "ім’я користувача",
+  "profileInsteadOfName": "замість вашого імені в подіях і записі роздач",
+  "profileUsernameTaken": "Ім’я користувача вже зайняте",
+  "profileFixUsernameError": "Виправте помилку в імені користувача перед збереженням",
+  "profileUsernameUnavailable": "Ім’я користувача більше недоступне",
+  "profileSavedSuccessfully": "Успішно збережено",
+  "profileDeleteAccount": "Видалити акаунт",
+  "profileDeleteAccountMessage": "Це назавжди видалить ваш акаунт і всі пов’язані дані. Цю дію неможливо скасувати.\\n\\nЯкщо у вас є активна підписка, спершу скасуйте її в налаштуваннях пристрою.",
+  "profileChangePasswordTitle": "Змінити пароль",
+  "profileChangePasswordMessage": "Ми надішлемо посилання для скидання пароля на вашу email-адресу.",
+  "profileChangeEmailTitle": "Змінити email",
+  "profileResetEmailSent": "Лист для скидання пароля надіслано на {email}",
+  "@profileResetEmailSent": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "profileResetEmailFailed": "Не вдалося надіслати лист для скидання",
+  "profileSendResetEmail": "Надіслати лист для скидання",
+  "settingsGeneral": "Загальні",
+  "settingsClubs": "Клуби",
+  "settingsBankroll": "Банкрол",
+  "settingsRegisterClub": "Зареєструвати клуб",
+  "settingsChooseLanguage": "Оберіть мову",
+  "settingsMoreLanguagesLater": "Про нові мови буде оголошено пізніше",
+  "settingsChoose": "Обрати",
+  "settingsChooseCurrency": "Оберіть валюту",
+  "settingsMoreCurrenciesLater": "Про нові валюти буде оголошено пізніше",
+  "settingsNoClubs": "Немає клубів",
+  "settingsNoClubsYet": "Клубів ще немає",
+  "settingsNoClubsHint": "Зареєструйте або приєднайтеся до клубу, щоб побачити їх тут.",
+  "settingsRegisterAClub": "Зареєструвати клуб",
+  "settingsYourClubs": "Ваші клуби",
+  "settingsChooseTour": "Оберіть, який тур повторити",
+  "settingsAbout": "Про застосунок",
+  "settingsPending": "{count} в очікуванні",
+  "@settingsPending": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsGetPlus": "Отримати Final Table Plus",
+  "settingsGetPlusSubtitle": "Більше записаних роздач та AI-аналіз",
+  "settingsPlusActiveTitle": "Final Table {tier}",
+  "@settingsPlusActiveTitle": {
+    "placeholders": {
+      "tier": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsPlusActiveSubtitle": "У вас план {tier}",
+  "@settingsPlusActiveSubtitle": {
+    "placeholders": {
+      "tier": {
+        "type": "String"
+      }
+    }
+  },
+  "statsHandsLogged": "Записано роздач",
+  "statsVpip": "VPIP",
+  "statsPfr": "PFR",
+  "stats3Bet": "3-Bet",
+  "statsCBet": "C-Bet",
+  "statsSteal": "Steal",
+  "statsCheckRaise": "Check-Raise",
+  "statsRanges": "Діапазони",
+  "statsStats": "Статистика",
+  "loggingChoose": "Обрати",
+  "loggingTrainingDrills": "Тренувальні вправи",
+  "loggingTrainingDrillsSubtitle": "Тренуйте preflop-споти проти ваших реальних суперників",
+  "loggingTrainingDrillsFeature1": "Preflop-вправи",
+  "loggingTrainingDrillsFeature2": "GTO-діапазони",
+  "loggingTrainingDrillsFeature3": "На основі суперників",
+  "loggingPro": "PRO",
+  "opponentsEnterName": "Введіть ім’я",
+  "opponentsAddNotes": "Додати нотатки",
+  "opponentsNoNotesAdded": "Нотаток немає",
+  "opponentsDeleteOpponent": "Видалити суперника",
+  "seatManagePlayers": "Керувати гравцями",
+  "seatUpdatePlayerInfo": "Оновити інформацію про гравця",
+  "seatStartSession": "Почати сесію",
+  "seatSaveChanges": "Зберегти зміни",
+  "seatYou": "Ви",
+  "seatKeep": "Залишити",
+  "seatMove": "Перемістити",
+  "tableManageTitle": "Стіл",
+  "tableButtonOnEmpty": "Button на порожньому місці",
+  "handPlayerLabel": "Гравець ",
+  "handBbLabel": "BB",
+  "handRaiseLabel": "RAISE",
+  "handBetLabel": "BET",
+  "handFoldLabel": "FOLD",
+  "handRaiseAction": "Raise",
+  "handBetAction": "Bet",
+  "handOnlyOneRemaining": "Роздача завершена: залишився лише один гравець",
+  "handSessionTitle": "Сесія",
+  "settingsSkipHandScouting": "Пропустити розвідку роздачі",
+  "settingsSkipHandScoutingDesc": "Відстежуйте дії суперників, коли ви робите Fold на preflop",
+  "skipScoutTitle": "Що сталося?",
+  "skipScoutNoRaise": "Ніхто не робив Raise",
+  "skipScoutSkip": "Пропустити",
+  "paywallNotNow": "Не зараз",
+  "paywallFreeTrialBadge14": "14 днів безкоштовно",
+  "freeTierHandLimitTitle": "Досягнуто ліміту роздач",
+  "freeTierHandLimitFree": "Безкоштовні акаунти можуть записувати до {free} роздач за сесію. Перейдіть на Pro для {pro} роздач або на Elite для необмеженої кількості.",
+  "@freeTierHandLimitFree": {
+    "placeholders": {
+      "free": {
+        "type": "int"
+      },
+      "pro": {
+        "type": "int"
+      }
+    }
+  },
+  "freeTierHandLimitPro": "Акаунти Pro можуть записувати до {pro} роздач за сесію. Перейдіть на Elite для необмеженого запису роздач.",
+  "@freeTierHandLimitPro": {
+    "placeholders": {
+      "pro": {
+        "type": "int"
+      }
+    }
+  },
+  "freeTierOpponentLimitTitle": "Досягнуто ліміту суперників",
+  "freeTierOpponentLimitFree": "Безкоштовні акаунти можуть зберігати до {free} профілів суперників. Перейдіть на Pro для {pro} або на Elite для необмеженої кількості.",
+  "@freeTierOpponentLimitFree": {
+    "placeholders": {
+      "free": {
+        "type": "int"
+      },
+      "pro": {
+        "type": "int"
+      }
+    }
+  },
+  "freeTierOpponentLimitPro": "Акаунти Pro можуть зберігати до {pro} профілів суперників. Перейдіть на Elite для необмеженої кількості суперників.",
+  "@freeTierOpponentLimitPro": {
+    "placeholders": {
+      "pro": {
+        "type": "int"
+      }
+    }
+  },
+  "freeTierUpgrade": "Оновити",
+  "freeTierNotNow": "Не зараз",
+  "quotaMonthlyLimitTitle": "Досягнуто місячного ліміту",
+  "quotaAiLimitElite": "Ви використали всі {max} AI-аналізи цього місяця. Ваша квота оновиться наступного місяця.",
+  "@quotaAiLimitElite": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "quotaAiLimitPro": "Ви використали всі {max} AI-аналізи цього місяця (ліміт Pro). Перейдіть на Elite для {elite} аналізів/місяць.",
+  "@quotaAiLimitPro": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      },
+      "elite": {
+        "type": "int"
+      }
+    }
+  },
+  "quotaExportLimitTitle": "Досягнуто ліміту експорту",
+  "quotaExportLimitPro": "Ви використали всі {max} експорти цього місяця (ліміт Pro). Перейдіть на Elite для необмеженого експорту.",
+  "@quotaExportLimitPro": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "quotaSessionExportLimitPro": "Ви використали всі {max} експорти сесій цього місяця (ліміт Pro). Перейдіть на Elite для необмеженого експорту.",
+  "@quotaSessionExportLimitPro": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "quotaUpgradeToElite": "Перейти на Elite",
+  "quotaOk": "OK",
+  "statsLockedTitle": "Оновіть, щоб розблокувати",
+  "statsLockedSubtitle": "Цей розділ доступний на Pro та вище.",
+  "statsLockedUpgrade": "Оновити",
+  "paywallBestValue": "НАЙВИГІДНІШЕ",
+  "paywallWelcomeElite": "Вітаємо в Elite!",
+  "paywallWelcomeClub": "Вітаємо в Club!",
+  "paywallStartWithPro": "Почати з Pro",
+  "paywallGetEliteAction": "Отримати Elite",
+  "paywallGetClubAction": "Отримати Club",
+  "paywallCurrentPlan": "Поточний план",
+  "paywallProFeature1": "50 роздач за сесію",
+  "paywallProFeature2": "90 днів історії сесій",
+  "paywallProFeature3": "30 профілів суперників",
+  "paywallProFeature4": "20 AI-аналізів / місяць",
+  "paywallProFeature5": "30 експортів / місяць",
+  "paywallEliteFeature4": "Необмежений запис роздач",
+  "paywallEliteFeature5": "Уся історія сесій",
+  "paywallEliteFeature6": "Необмежена кількість суперників",
+  "paywallEliteFeature7": "50 AI-аналізів / місяць",
+  "paywallEliteFeature8": "Необмежений експорт",
+  "paywallClubFeature1": "Усе з Elite",
+  "paywallClubFeature2": "Створюйте та керуйте власним клубом",
+  "paywallClubFeature3": "Запрошуйте дилерів і керуйте учасниками",
+  "paywallClubFeature4": "Проводьте багатостолові події з живими рейтингами",
+  "profileTierOverride": "Перевизначення рівня підписки",
+  "profileTierOverrideSubtitleReal": "Справжній: {tier}",
+  "@profileTierOverrideSubtitleReal": {
+    "placeholders": {
+      "tier": {
+        "type": "String"
+      }
+    }
+  },
+  "profileTierOverrideSubtitleActive": "Перевизначення: {tier}",
+  "@profileTierOverrideSubtitleActive": {
+    "placeholders": {
+      "tier": {
+        "type": "String"
+      }
+    }
+  },
+  "profileTierFree": "free",
+  "profileTierPro": "Pro",
+  "profileTierElite": "Elite",
+  "profileTierClub": "Club",
+  "authExpContinueApple": "Продовжити з Apple",
+  "authExpLinkAppleTitle": "Прив’язати Apple ID",
+  "authExpLinkAppleMessage": "Обліковий запис із {email} вже існує. Введіть пароль, щоб прив’язати ваш обліковий запис Apple.",
+  "@authExpLinkAppleMessage": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionDetailsLogAHand": "Записати руку",
+  "setupTableOptionalHint": "Посадіть щонайменше 2 гравців, щоб почати сесію",
+  "onboardingSessionDetailsHubTitle": "Центр вашої сесії",
+  "onboardingSessionDetailsHubBody": "Тут ви можете відстежувати свій стек, керувати rebuy та add-on і переглядати прогрес сесії.",
+  "onboardingHubMenuTitle": "Меню сесії",
+  "onboardingHubMenuBody": "Використовуйте це меню для rebuy, add-on і щоб завершити сесію.",
+  "onboardingHubLogHandTitle": "Почати запис",
+  "onboardingHubLogHandBody": "Натисніть тут, щоб записати вашу першу руку. Після цього ми повернемося сюди, щоб подивитися графік вашого стека.",
+  "guidedAddOpponentsTitle": "Додайте опонентів",
+  "guidedAddOpponentsBody": "Натисніть це вільне місце, щоб додати опонента. Дайте йому ім’я та встановіть стек — ви завжди зможете додати більше пізніше.",
+  "guidedHandTwoTitle": "Ще одна рука",
+  "guidedHandTwoBody": "Тепер ваша черга потренуватися! Спробуйте записати цю руку за допомогою жестів, які ви щойно вивчили. Ми вас проведемо.",
+  "guidedReturnToDetailsTitle": "Перевірте свій прогрес",
+  "guidedReturnToDetailsBody": "Натисніть тут, щоб повернутися й переглянути графік вашого стека.",
+  "guidedStackChartReturnTitle": "Графік вашого стека",
+  "guidedStackChartReturnBody": "Ось прогрес вашого стека. Кожна крапка — це записана рука; натисніть будь-яку точку, щоб побачити деталі.",
+  "guidedStackAdjustTitle": "Змініть їхній стек",
+  "guidedStackAdjustBody": "Натисніть і утримуйте місце гравця, щоб активувати кільце стека. Обертайте палець, щоб обрати розмір стека, а потім відпустіть.",
+  "sessionDetailsEndSession": "Завершити сесію",
+  "sessionDetailsLeaveConfirmTitle": "Покинути сесію?",
+  "sessionDetailsLeaveConfirmBody": "Ваша сесія все ще активна. Бажаєте завершити її?",
+  "pokerHandChangeTableDiscardMessage": "У вас триває роздача. Зміна столу скасує її — нічого з цієї роздачі не буде збережено.",
+  "pokerHandDiscardAndChangeTable": "Скасувати та змінити стіл",
+  "handShownCardsDialogTitle": "Показані карти",
+  "handRecordShownCards": "Записати показані карти",
+  "handShownCardsWhoShowed": "Хто показав карти?",
+  "paywallPriceYearly": "{price}/рік",
+  "paywallPriceMonthly": "{price}/міс.",
+  "paywallOrPriceMonthly": "або {price}/міс.",
+  "paywallOrPriceYearly": "або {price}/рік"
+}

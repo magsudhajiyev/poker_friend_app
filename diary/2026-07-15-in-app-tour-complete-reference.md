@@ -39,8 +39,13 @@ PHASE 4 — Hand Logging (Guided Hand)
     5. Board cards dialog (flop/turn/river)
     6. Hole cards dialog → opponent cards
     7. "Hand Complete!" message (2s)
-    8. Post-hand coach marks: Blinds pill → Next Hand button → Undo button
+    8. Post-hand coach marks: Stack ring (hold an opponent's seat) →
+       Blinds pill → Next Hand button → Undo button
        (skip button hidden on undo step to avoid overlap)
+       [2026-07-23: stack-ring step moved here from an unreliable mid-hand
+        trigger that targeted a StackRangeCircle widget which never rendered
+        during the guided hand — overlay param stackRingKey replaced by an
+        opponentSeatKey resolver]
     9. "Practice" prompt — log one more hand
 
   Hand 2:
@@ -55,6 +60,17 @@ PHASE 4 — Hand Logging (Guided Hand)
     7. User taps back → PokerHandScreen
     8. End session menu tour (spotlight 3-dot menu → "Stop Session")
     9. User ends session → popUntil(route.isFirst) back to MainShell
+
+[2026-07-23 funnel change — sign-up-first]
+  New-user order: intro → SIGN UP (AuthScreenExperimental register mode; guest
+  creation removed) → startup gate routes 'onboarding_full' → OnboardingFlow
+  (nickname + survey) → Home → tour auto-starts (hasSeenOnboarding false) →
+  phases 0-6 → finishOnboardingTour (non-guest): markSeen + bankroll pending +
+  postTourWrapUpPending → reset '/' → Home runs the tour's FINAL beats:
+  BankrollCardTour (bankroll step) → showPostTourWrapUp ("you're done" dialog
+  → once-ever paywall). Guest branch (stray sessions only) unchanged: inline
+  dialog → completeGuestSignup chain. AuthWrapper sends ALL anonymous
+  sessions to GuestSignupGate.
 
 PHASE 5 — Session Result (Home Screen)
   OnboardingState.notifier listener detects phase 5 on HomeScreen

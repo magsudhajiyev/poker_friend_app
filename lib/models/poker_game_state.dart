@@ -250,6 +250,16 @@ class PokerGameState {
     }
   }
 
+  /// Recompute preflop action order + effective blind seats after a
+  /// PRE-ACTION seat change (HL-1: a player seated after the BB before
+  /// anyone acted must become the new UTG). No-op once betting is underway
+  /// or postflop — mid-hand seat changes are deferred to the next hand.
+  void recalculateActionOrder() {
+    if (currentRound == BettingRound.preflop && !bettingRoundComplete) {
+      _setInitialActionOrder();
+    }
+  }
+
   void _setInitialActionOrder() {
 
     List<int> activePlayers = getActivePlayers();
@@ -556,10 +566,16 @@ class PokerGameState {
         if (currentRound == BettingRound.preflop) {
           return false;
         }
-        // Post-flop: can bet if no one has bet this round
-        return !hasBetThisRound;
-      
+        // Post-flop: can bet if no one has bet this round (and has chips)
+        return !hasBetThisRound && player.currentStack > 0;
+
       case PlayerAction.raise:
+        // HL-8b: a raise must be able to EXCEED the current bet. A player
+        // whose whole stack can't cover the call has only fold / all-in
+        // call — offering "raise" produced illegal below-the-bet raises.
+        if (player.currentStack + player.betThisRound <= currentBet) {
+          return false;
+        }
         // Preflop: can always raise (since BB is always a "bet")
         if (currentRound == BettingRound.preflop) {
           return true;
@@ -713,7 +729,15 @@ class PokerGameState {
         double minBet = getMinimumBet();
         // For all-in, max bet is current stack + what they've already bet this round
         double maxTotalBet = player.currentStack + player.betThisRound;
-        double betAmount = amount.clamp(minBet, maxTotalBet);
+
+        // If player is short-stacked (can't meet min bet), allow all-in for
+        // whatever they have — clamp(min, max) throws when min > max.
+        double betAmount;
+        if (maxTotalBet < minBet) {
+          betAmount = maxTotalBet; // Short stack all-in
+        } else {
+          betAmount = amount.clamp(minBet, maxTotalBet);
+        }
         
         // Calculate additional amount beyond what player has already bet this round
         double additionalAmount = betAmount - player.betThisRound;
@@ -1906,9 +1930,16 @@ class SidePotCalculator {
       }
 
       if (potAmount > 0) {
-        // Players eligible for this pot: live players who covered the level
+        // Players eligible for this pot: live players who covered the level,
+        // PLUS live players still able to act (not all-in). Mid-betting-round
+        // a pending player hasn't matched the top yet but will either call
+        // (covering the level) or fold (dropping out on the next recalc) —
+        // excluding them produced pots their own chips were in but they
+        // "couldn't win" (HL-7). At showdown, after uncalled-bet returns,
+        // every live non-all-in player has matched the top, so this clause
+        // changes nothing there.
         final eligiblePlayers = livePlayers
-            .where((p) => contributionOf(p) >= level)
+            .where((p) => !p.isAllIn || contributionOf(p) >= level)
             .map((p) => p.playerId)
             .toList()
           ..sort();

@@ -15,7 +15,7 @@ class FormDrawer extends StatelessWidget {
   final VoidCallback onSave;
   final VoidCallback? onClose;
   final Widget body;
-  final double heightFraction;
+  final double? heightFraction;
   final Color backgroundColor;
   final double borderRadius;
   final bool showBorderDecoration;
@@ -43,7 +43,7 @@ class FormDrawer extends StatelessWidget {
     required VoidCallback onSave,
     required Widget body,
     VoidCallback? onClose,
-    double heightFraction = 0.9,
+    double? heightFraction = 0.9,
     Color backgroundColor = Colors.black,
     double borderRadius = 32,
     bool showBorderDecoration = true,

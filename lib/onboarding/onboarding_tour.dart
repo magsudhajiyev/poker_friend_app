@@ -1,4 +1,9 @@
+import 'dart:async';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart' show User;
 import 'package:flutter/material.dart';
+import '../services/revenuecat_client.dart' show TierEntitlements;
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/typography.dart';
@@ -9,9 +14,13 @@ import '../screens/paywall_screen.dart';
 import '../screens/auth_screen_experimental.dart';
 import '../screens/onboarding/onboarding_flow.dart';
 import '../services/auth_service.dart';
+import '../services/notification_service.dart';
+import '../services/subscription_service.dart';
 import 'onboarding_prefs.dart';
 import 'onboarding_state.dart';
+import 'promo_reminder_logic.dart';
 import '../design_system/constants/decorations.dart';
+import '../services/analytics_service.dart';
 
 // ---------------------------------------------------------------------------
 // Shared helpers
@@ -37,9 +46,7 @@ TutorialCoachMark createOnboardingCoachMark({
     alignSkip: Alignment.bottomCenter,
     skipWidget: Padding(
       padding: EdgeInsets.only(
-          left: 24,
-          right: 24,
-          bottom: MediaQuery.of(context).padding.bottom),
+          left: 24, right: 24, bottom: MediaQuery.of(context).padding.bottom),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -65,9 +72,15 @@ TutorialCoachMark createOnboardingCoachMark({
       OnboardingState.cancel();
       OnboardingPrefs.markOnboardingSeen();
       if (!wasReplay) {
-        // Don't push the paywall from mid-tour contexts — the next Home
-        // visit shows it once via the pending flag
+        // Kill-safety first: if the app dies before the paywall below gets
+        // shown, the next Home visit recovers it via the pending flag.
         OnboardingPrefs.setPostTourPaywallPending();
+        // Then show the paywall right away, over whatever screen the skip
+        // happened on (launch-promo variant included when the free month
+        // is live). Small delay lets the overlay dismiss cleanly.
+        Future.delayed(const Duration(milliseconds: 350), () {
+          if (context.mounted) maybeShowPostTourPaywall(context);
+        });
       }
       onSkip?.call();
       return true;
@@ -76,7 +89,8 @@ TutorialCoachMark createOnboardingCoachMark({
   );
 }
 
-Widget buildWelcomeCard({required VoidCallback onNext, required BuildContext context}) {
+Widget buildWelcomeCard(
+    {required VoidCallback onNext, required BuildContext context}) {
   final l10n = AppLocalizations.of(context);
   return Container(
     padding: const EdgeInsets.all(28),
@@ -266,12 +280,13 @@ class HomeTour {
             align: ContentAlign.custom,
             customPosition: CustomTargetContentPosition(
               top: MediaQueryData.fromView(
-                WidgetsBinding.instance.platformDispatcher.views.first,
-              ).size.height *
+                    WidgetsBinding.instance.platformDispatcher.views.first,
+                  ).size.height *
                   0.3,
             ),
             builder: (context, controller) {
-              return buildWelcomeCard(onNext: () => controller.next(), context: context);
+              return buildWelcomeCard(
+                  onNext: () => controller.next(), context: context);
             },
           ),
         ],
@@ -287,7 +302,8 @@ class HomeTour {
           shape: ShapeLightFocus.Circle,
           paddingFocus: 8,
           contents: [
-            centeredTooltipContent((context, controller) {
+            centeredTooltipContent(
+              (context, controller) {
                 final l10n = AppLocalizations.of(context);
                 return buildTooltip(
                   title: l10n.onboardingStartLoggingTitle,
@@ -351,7 +367,8 @@ class LoggingModeTour {
           radius: AppDecorations.radiusXl,
           paddingFocus: 4,
           contents: [
-            centeredTooltipContent((context, controller) {
+            centeredTooltipContent(
+              (context, controller) {
                 final l10n = AppLocalizations.of(context);
                 return buildTooltip(
                   title: l10n.onboardingFullModeTitle,
@@ -410,8 +427,8 @@ class SessionSetupTour {
             align: ContentAlign.custom,
             customPosition: CustomTargetContentPosition(
               top: MediaQueryData.fromView(
-                WidgetsBinding.instance.platformDispatcher.views.first,
-              ).size.height *
+                    WidgetsBinding.instance.platformDispatcher.views.first,
+                  ).size.height *
                   0.3,
             ),
             builder: (context, controller) {
@@ -530,7 +547,8 @@ class SeatDialogTour {
           radius: 12,
           paddingFocus: 8,
           contents: [
-            centeredTooltipContent((context, controller) {
+            centeredTooltipContent(
+              (context, controller) {
                 final l10n = AppLocalizations.of(context);
                 return buildTooltip(
                   title: l10n.onboardingSeatOpenTitle,
@@ -554,7 +572,8 @@ class SeatDialogTour {
           radius: 12,
           paddingFocus: 8,
           contents: [
-            centeredTooltipContent((context, controller) {
+            centeredTooltipContent(
+              (context, controller) {
                 final l10n = AppLocalizations.of(context);
                 return buildTooltip(
                   title: l10n.onboardingThisIsMySeatTitle,
@@ -578,7 +597,8 @@ class SeatDialogTour {
           radius: 12,
           paddingFocus: 4,
           contents: [
-            centeredTooltipContent((context, controller) {
+            centeredTooltipContent(
+              (context, controller) {
                 final l10n = AppLocalizations.of(context);
                 return buildTooltip(
                   title: l10n.onboardingPlayerNameTitle,
@@ -602,7 +622,8 @@ class SeatDialogTour {
           radius: 8,
           paddingFocus: 4,
           contents: [
-            centeredTooltipContent((context, controller) {
+            centeredTooltipContent(
+              (context, controller) {
                 final l10n = AppLocalizations.of(context);
                 return buildTooltip(
                   title: l10n.onboardingSaveOpponentTitle,
@@ -659,7 +680,8 @@ class ButtonTokenTour {
           shape: ShapeLightFocus.Circle,
           paddingFocus: 16,
           contents: [
-            centeredTooltipContent((context, controller) {
+            centeredTooltipContent(
+              (context, controller) {
                 final l10n = AppLocalizations.of(context);
                 return buildTooltip(
                   title: l10n.onboardingDealerButtonTitle,
@@ -706,8 +728,10 @@ class ButtonTokenTour {
 /// only now do we ask them to create an account (hard gate), answer the
 /// onboarding questions, and see the paywall. A user who already had an account
 /// before the tour keeps the original behavior (dialog → paywall → Home).
-Future<void> finishOnboardingTour(BuildContext context,
-    {bool showPaywall = true}) async {
+Future<void> finishOnboardingTour(BuildContext context) async {
+  if (!OnboardingState.isReplay) {
+    AnalyticsService.capture('tour_completed');
+  }
   OnboardingState.complete();
   OnboardingPrefs.markOnboardingSeen();
   OnboardingPrefs.setBankrollTourPending();
@@ -721,6 +745,235 @@ Future<void> finishOnboardingTour(BuildContext context,
     await OnboardingPrefs.setPostTourSignupRequired();
   }
 
+  if (isGuest) {
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => _OnboardingCompleteDialog(
+        onDone: () {},
+      ),
+    );
+    if (!context.mounted) return;
+    // Required sign-up → questions → paywall → Home (same chain used on relaunch).
+    await completeGuestSignup(context);
+    return;
+  }
+
+  // Non-guest: the tour's final beats — bankroll step → "you're done" dialog
+  // → paywall — run ON Home (the bankroll card lives there). Persist the
+  // pending flag first so an app kill can't lose the wrap-up, then reset to
+  // Home where HomeScreen picks it up (bankroll tip → showPostTourWrapUp).
+  await OnboardingPrefs.setPostTourWrapUpPending();
+  if (!context.mounted) return;
+  Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
+}
+
+/// Launch promo detection: true when this user was auto-granted the free Pro
+/// month at sign-up (users-doc marker written by the grantFreeMonthOnSignup
+/// Cloud Function) AND the RevenueCat 'pro' entitlement is actually live.
+/// Also schedules the courtesy expiry reminders. Any failure → false, which
+/// just means the normal paywall — never a broken state.
+Future<bool> _detectLaunchPromo(BuildContext context) async {
+  try {
+    final user = AuthService.currentUser;
+    final uid = user?.uid;
+    if (uid == null) return false;
+    final usersRef = FirebaseFirestore.instance.collection('users').doc(uid);
+    var granted = (await usersRef.get()).data()?['freeMonthGranted'] == true;
+
+    // Audit H4: the grant function needs a cold start + two RevenueCat
+    // calls before the marker lands — a fast user can reach the paywall
+    // first. Retry briefly, but ONLY when it could possibly matter (fresh
+    // account + promo toggle ON), so ordinary users pay zero extra latency.
+    if (!granted && _accountMinutesOld(user) < 15 && await _promoToggleOn()) {
+      for (var i = 0; i < 2 && !granted; i++) {
+        await Future.delayed(const Duration(milliseconds: 1500));
+        granted = (await usersRef.get()).data()?['freeMonthGranted'] == true;
+      }
+    }
+    if (!granted) return false;
+
+    // Confirm the grant landed in RevenueCat (expiry lives on RC's servers —
+    // the client never computes it). Timeout guards the post-tour flow
+    // against a hung network call (audit H2).
+    await SubscriptionService.refreshOnResume()
+        .timeout(const Duration(seconds: 6));
+    final ent = SubscriptionService.proEntitlement;
+    if (!ent.proActive) return false;
+
+    if (context.mounted) _schedulePromoReminders(context, ent);
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
+double _accountMinutesOld(User? user) {
+  final created = user?.metadata.creationTime;
+  if (created == null) return double.infinity;
+  return DateTime.now().difference(created).inSeconds / 60.0;
+}
+
+Future<bool> _promoToggleOn() async {
+  try {
+    final doc = await FirebaseFirestore.instance
+        .collection('app_config')
+        .doc('promotions')
+        .get();
+    return doc.data()?['freeMonthOnSignup'] == true;
+  } catch (_) {
+    return false;
+  }
+}
+
+/// Heal-on-open resync of the free-month expiry reminders ("1 day left" +
+/// "has ended"). Local notifications are only as good as their scheduling
+/// moment — if the app died before the post-tour paywall scheduled them,
+/// they'd never fire. Called from Home on startup; idempotent (fixed
+/// notification ids, cancelled before rescheduling). Cancels the reminders
+/// outright when the promo is no longer the active entitlement (expired, or
+/// superseded by a PAID subscription — a "free month ends tomorrow" reminder
+/// would be wrong either way).
+Future<void> syncPromoExpiryReminders(BuildContext context) async {
+  try {
+    final uid = AuthService.currentUser?.uid;
+    if (uid == null) return;
+    final doc =
+        await FirebaseFirestore.instance.collection('users').doc(uid).get();
+
+    // Audit H1: on cold starts this sync can run BEFORE RevenueCat init has
+    // populated entitlements. Unknown state must be a no-op — treating it as
+    // "inactive" cancelled valid, already-scheduled reminders. The pure
+    // decision lives in promo_reminder_logic.dart (unit tested). "Loaded" =
+    // the service has been initialized (empty snapshot until then).
+    final ent = SubscriptionService.proEntitlement;
+    final action = promoReminderAction(
+      markerSet: doc.data()?['freeMonthGranted'] == true,
+      customerInfoLoaded: SubscriptionService.isInitialized,
+      entitlementActive: ent.proActive,
+      entitlementIsPromotional: ent.proIsPromotional == true,
+    );
+    switch (action) {
+      case PromoReminderAction.schedule:
+        if (context.mounted) _schedulePromoReminders(context, ent);
+      case PromoReminderAction.cancel:
+        await NotificationService.cancelPromoExpiryReminders();
+      case PromoReminderAction.none:
+        break;
+    }
+  } catch (_) {}
+}
+
+void _schedulePromoReminders(BuildContext context, TierEntitlements entitlement) {
+  final expiresAt = DateTime.tryParse(entitlement.proExpirationIso ?? '');
+  if (expiresAt == null) return;
+  final l10n = AppLocalizations.of(context);
+  unawaited(NotificationService.schedulePromoExpiryReminders(
+    expiresAt: expiresAt.toLocal(),
+    warnTitle: l10n.promoNotifWarnTitle,
+    warnBody: l10n.promoNotifWarnBody,
+    endedTitle: l10n.promoNotifEndedTitle,
+    endedBody: l10n.promoNotifEndedBody,
+  ));
+}
+
+/// Shows the post-tour paywall AT MOST ONCE EVER — shared by the tour
+/// completion wrap-up, the skip paths (coach-mark skip + mid-hand skip), and
+/// Home's deferred-pending recovery. Applies the launch-promo variant
+/// (celebration dialog + "1 MONTH FREE" badge on Pro monthly) when the free
+/// Pro month is live. Clears the deferred-pending flag since the paywall is
+/// being handled now.
+bool _postTourPaywallInFlight = false;
+
+Future<void> maybeShowPostTourPaywall(BuildContext context) async {
+  // Reentrancy guard (audit H2): two near-simultaneous callers both passing
+  // the read-then-write flag check would stack two paywalls.
+  if (_postTourPaywallInFlight) return;
+  _postTourPaywallInFlight = true;
+  try {
+    if (await OnboardingPrefs.wasPostTourPaywallShown()) return;
+    if (!context.mounted) return;
+    // Detect BEFORE burning the once-ever flag (audit H2): detection is
+    // network work — if it hangs/dies here, the user keeps their one
+    // paywall chance (the pending flag recovery on Home still works).
+    final launchPromo = await _detectLaunchPromo(context);
+    if (!context.mounted) return;
+    await OnboardingPrefs.markPostTourPaywallShown();
+    await OnboardingPrefs.clearPostTourPaywallPending();
+    if (!context.mounted) return;
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (_) => PaywallScreen(showSkip: true, launchPromo: launchPromo),
+      ),
+    );
+  } finally {
+    _postTourPaywallInFlight = false;
+  }
+}
+
+/// Launch-promo congratulations, shown once on Home after the user taps
+/// "Got it" on the free-month gift dialog (the paywall resets to '/' and
+/// Home consumes the pending flag).
+Future<void> showPromoCongratsDialog(BuildContext context) async {
+  final l10n = AppLocalizations.of(context);
+  await showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (ctx) => AppDialog(
+      showCloseButton: false,
+      barrierDismissible: false,
+      // Full width so the column centers within the dialog (AppDialog's
+      // internal layout is start-aligned).
+      body: SizedBox(
+        width: double.infinity,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.celebration_outlined,
+              color: AppColors.accentPrimary,
+              size: 48,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              l10n.promoCongratsTitle,
+              style: AppTypography.ibm(
+                color: AppColors.textPrimary,
+                fontSize: 24,
+                fontWeight: FontWeight.w700,
+                height: 1.3,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              l10n.promoCongratsBody,
+              style: AppTypography.ibm(
+                color: AppColors.textSecondary,
+                fontSize: 15,
+                height: 1.44,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+      actions: DialogActionBar.single(
+        cancelLabel: l10n.commonDone,
+        onCancel: () {},
+      ),
+    ),
+  );
+}
+
+/// Post-tour wrap-up, run on Home AFTER the bankroll-card step: the
+/// "you're done" completion dialog, then the skippable paywall (at most
+/// once ever).
+Future<void> showPostTourWrapUp(BuildContext context) async {
+  await OnboardingPrefs.clearPostTourWrapUpPending();
+  if (!context.mounted) return;
+
   await showDialog(
     context: context,
     barrierDismissible: false,
@@ -730,26 +983,7 @@ Future<void> finishOnboardingTour(BuildContext context,
   );
   if (!context.mounted) return;
 
-  if (isGuest) {
-    // Required sign-up → questions → paywall → Home (same chain used on relaunch).
-    await completeGuestSignup(context);
-    return;
-  }
-
-  // Non-guest: skippable paywall (at most once ever), then Home.
-  if (showPaywall && !(await OnboardingPrefs.wasPostTourPaywallShown())) {
-    await OnboardingPrefs.markPostTourPaywallShown();
-    if (!context.mounted) return;
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        fullscreenDialog: true,
-        builder: (_) => const PaywallScreen(showSkip: true),
-      ),
-    );
-  }
-
-  if (!context.mounted) return;
-  Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
+  await maybeShowPostTourPaywall(context);
 }
 
 /// The mandatory guest sign-up chain: hard-gate sign-up → onboarding questions
@@ -791,16 +1025,7 @@ Future<void> completeGuestSignup(BuildContext context) async {
     if (!context.mounted) return;
 
     // 3. Skippable paywall (at most once ever).
-    if (!(await OnboardingPrefs.wasPostTourPaywallShown())) {
-      await OnboardingPrefs.markPostTourPaywallShown();
-      if (!context.mounted) return;
-      await Navigator.of(context).push(
-        MaterialPageRoute(
-          fullscreenDialog: true,
-          builder: (_) => const PaywallScreen(showSkip: true),
-        ),
-      );
-    }
+    await maybeShowPostTourPaywall(context);
   }
 
   if (!context.mounted) return;
@@ -866,7 +1091,8 @@ class SessionResultTour {
           radius: 12,
           paddingFocus: 8,
           contents: [
-            centeredTooltipContent((context, controller) {
+            centeredTooltipContent(
+              (context, controller) {
                 final l10n = AppLocalizations.of(context);
                 return buildTooltip(
                   title: l10n.onboardingViewSessionsTitle,
@@ -929,7 +1155,8 @@ class SessionHistoryTour {
           radius: 12,
           paddingFocus: 4,
           contents: [
-            centeredTooltipContent((context, controller) {
+            centeredTooltipContent(
+              (context, controller) {
                 final l10n = AppLocalizations.of(context);
                 return buildTooltip(
                   title: l10n.onboardingSessionHistoryCardTitle,
@@ -995,8 +1222,8 @@ class HandListTour {
               align: ContentAlign.custom,
               customPosition: CustomTargetContentPosition(
                 top: MediaQueryData.fromView(
-                  WidgetsBinding.instance.platformDispatcher.views.first,
-                ).size.height *
+                      WidgetsBinding.instance.platformDispatcher.views.first,
+                    ).size.height *
                     0.12,
               ),
               builder: (context, controller) {
@@ -1024,7 +1251,8 @@ class HandListTour {
           radius: 26,
           paddingFocus: 4,
           contents: [
-            centeredTooltipContent((context, controller) {
+            centeredTooltipContent(
+              (context, controller) {
                 final l10n = AppLocalizations.of(context);
                 return buildTooltip(
                   title: l10n.onboardingHandListTitle,
@@ -1083,7 +1311,8 @@ class HandCardTour {
           radius: 12,
           paddingFocus: 4,
           contents: [
-            centeredTooltipContent((context, controller) {
+            centeredTooltipContent(
+              (context, controller) {
                 final l10n = AppLocalizations.of(context);
                 return buildTooltip(
                   title: l10n.onboardingHandCardTitle,
@@ -1151,7 +1380,8 @@ class HandToolsTour {
         radius: 24,
         paddingFocus: 4,
         contents: [
-          centeredTooltipContent((context, controller) {
+          centeredTooltipContent(
+            (context, controller) {
               final l10n = AppLocalizations.of(context);
               return buildTooltip(
                 title: l10n.onboardingHandToolsTitle,
@@ -1200,7 +1430,8 @@ class AiAnalysisTour {
           radius: 16,
           paddingFocus: 4,
           contents: [
-            centeredTooltipContent((context, controller) {
+            centeredTooltipContent(
+              (context, controller) {
                 final l10n = AppLocalizations.of(context);
                 return buildTooltip(
                   title: l10n.onboardingAiAnalysisTitle,
@@ -1246,36 +1477,42 @@ class _OnboardingCompleteDialog extends StatelessWidget {
     return AppDialog(
       showCloseButton: false,
       barrierDismissible: false,
-      body: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(
-            Icons.check_circle_outline,
-            color: AppColors.accentPrimary,
-            size: 48,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            l10n.guidedTourCompleteTitle,
-            style: AppTypography.ibm(
-              color: AppColors.textPrimary,
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-              height: 1.3,
+      // Full width so the column centers within the dialog — AppDialog's
+      // internal layout is start-aligned and would park intrinsic-width
+      // content on the left.
+      body: SizedBox(
+        width: double.infinity,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.check_circle_outline,
+              color: AppColors.accentPrimary,
+              size: 48,
             ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 12),
-          Text(
-            l10n.guidedTourCompleteBody,
-            style: AppTypography.ibm(
-              color: AppColors.textSecondary,
-              fontSize: 15,
-              height: 1.44,
+            const SizedBox(height: 16),
+            Text(
+              l10n.guidedTourCompleteTitle,
+              style: AppTypography.ibm(
+                color: AppColors.textPrimary,
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                height: 1.3,
+              ),
+              textAlign: TextAlign.center,
             ),
-            textAlign: TextAlign.center,
-          ),
-        ],
+            const SizedBox(height: 12),
+            Text(
+              l10n.guidedTourCompleteBody,
+              style: AppTypography.ibm(
+                color: AppColors.textSecondary,
+                fontSize: 15,
+                height: 1.44,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
       ),
       actions: DialogActionBar.single(
         cancelLabel: l10n.commonDone,
@@ -1292,7 +1529,11 @@ class _OnboardingCompleteDialog extends StatelessWidget {
 class BankrollCardTour {
   final GlobalKey bankrollCardKey;
 
-  BankrollCardTour({required this.bankrollCardKey});
+  /// Invoked when the tip is finished OR skipped — Home chains the post-tour
+  /// wrap-up (completion dialog + paywall) from here.
+  final VoidCallback? onDone;
+
+  BankrollCardTour({required this.bankrollCardKey, this.onDone});
 
   void show(BuildContext context) {
     if (bankrollCardKey.currentContext == null) return;
@@ -1305,7 +1546,8 @@ class BankrollCardTour {
         radius: 16,
         paddingFocus: 4,
         contents: [
-          centeredTooltipContent((context, controller) {
+          centeredTooltipContent(
+            (context, controller) {
               final l10n = AppLocalizations.of(context);
               return buildTooltip(
                 title: l10n.onboardingBankrollCardTitle,
@@ -1326,14 +1568,34 @@ class BankrollCardTour {
       opacityShadow: 0.85,
       paddingFocus: 12,
       hideSkip: true,
-      onFinish: () => OnboardingPrefs.clearBankrollTourPending(),
+      onFinish: () {
+        OnboardingPrefs.clearBankrollTourPending();
+        onDone?.call();
+      },
       onSkip: () {
         OnboardingPrefs.clearBankrollTourPending();
+        onDone?.call();
         return true;
       },
     );
     coach.show(context: context);
   }
+}
+
+/// Axis-aligned GLOBAL rect for [key]'s render box honoring EVERY ancestor
+/// transform. tutorial_coach_mark's keyTarget path computes
+/// `localToGlobal(Offset.zero) & size`, which mis-places the spotlight for
+/// targets inside rotated subtrees (the poker table is a RotatedBox(3) and
+/// every seat a RotatedBox(1)). Passing an explicit TargetPosition computed
+/// via the full transform chain spotlights the true on-screen rect.
+TargetPosition? transformedTargetPosition(GlobalKey key, {double inflate = 0}) {
+  final box = key.currentContext?.findRenderObject() as RenderBox?;
+  if (box == null || !box.attached) return null;
+  final rect = MatrixUtils.transformRect(
+    box.getTransformTo(null),
+    Offset.zero & box.size,
+  ).inflate(inflate);
+  return TargetPosition(rect.size, rect.topLeft);
 }
 
 /// Bottom-of-tour progress bar — thin `accentPrimary` fill + "Step X of Y"

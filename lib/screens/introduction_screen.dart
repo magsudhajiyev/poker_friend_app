@@ -15,6 +15,7 @@ import '../design_system/components/app_text_field.dart';
 import '../design_system/components/app_toggle.dart';
 import '../design_system/components/dialogs/app_dialog.dart';
 import '../design_system/components/dialogs/dialog_action_bar.dart';
+import '../utils/decimal_input.dart';
 
 class IntroductionScreen extends StatefulWidget {
   const IntroductionScreen({super.key});
@@ -340,7 +341,8 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
         controller: controller,
         label: title,
         hint: l10n.introEnterAmount,
-        keyboardType: TextInputType.number,
+        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+        inputFormatters: [DecimalInputFormatter()],
         autofocus: true,
       ),
       actions: DialogActionBar(
@@ -348,7 +350,7 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
         confirmColor: AppColors.accentPrimary,
         confirmTextColor: AppColors.textInverse,
         onConfirm: () {
-          final value = double.tryParse(controller.text);
+          final value = parseDecimal(controller.text);
           if (value != null && value > 0) {
             onChanged(value);
           } else {

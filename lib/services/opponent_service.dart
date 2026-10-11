@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'dart:convert';
+import 'package:crypto/crypto.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -8,6 +9,15 @@ import 'firebase_service.dart';
 import 'local_storage_service.dart';
 import 'opponent_stats_service.dart';
 import 'app_data_cache.dart';
+
+/// Thrown when a manual "add opponent" would collide with an existing
+/// opponent of the same (normalized) name for the current user.
+class DuplicateOpponentException implements Exception {
+  final Opponent existing;
+  DuplicateOpponentException(this.existing);
+  @override
+  String toString() => 'DuplicateOpponentException(${existing.name})';
+}
 
 /// Service for managing opponent data in both Firebase and local storage
 class OpponentService {
@@ -25,11 +35,36 @@ class OpponentService {
   static String? get _userId => _auth.currentUser?.uid;
 
   /// Save or update opponent in both Firebase and local storage.
-  /// Returns the saved opponent (may be an existing one if duplicate name detected).
-  static Future<Opponent> saveOpponent(Opponent opponent) async {
-    // Duplicate check: case-insensitive name match (skip if same ID = update)
+  ///
+  /// Names are normalized (trimmed, internal whitespace collapsed) and
+  /// uniqueness is enforced **per user** two ways:
+  ///  1. A pre-check reuses an existing same-name opponent.
+  ///  2. New opponents are written to a **deterministic** document ID derived
+  ///     from `userId + normalizedName`, so two racing saves of the same name
+  ///     land on the same doc (idempotent upsert) instead of creating dups.
+  ///
+  /// [throwOnDuplicate] — when true (manual "Add opponent" flows), a same-name
+  /// collision throws [DuplicateOpponentException] so the UI can show an error
+  /// instead of silently reusing. Inline/seat flows leave it false and reuse.
+  ///
+  /// Returns the saved opponent (may be an existing one if duplicate detected
+  /// and [throwOnDuplicate] is false).
+  static Future<Opponent> saveOpponent(
+    Opponent opponent, {
+    bool throwOnDuplicate = false,
+  }) async {
+    // Normalize the display name before anything touches storage.
+    opponent = opponent.copyWith(name: _normalizeName(opponent.name));
+
+    // Duplicate check: case-insensitive name match (skip if same ID = update).
+    // Offline, findOpponentByName falls back to the local list and may miss a
+    // Firestore-only opponent — but the deterministic doc id below still makes
+    // the eventual sync merge onto the same doc, so no duplicate is created.
     final existing = await findOpponentByName(opponent.name);
     if (existing != null && existing.id != opponent.id) {
+      if (throwOnDuplicate) {
+        throw DuplicateOpponentException(existing);
+      }
       return existing; // Silently return existing opponent
     }
 
@@ -47,6 +82,24 @@ class OpponentService {
     await _saveOpponentToLocal(opponent);
     AppDataCache.markOpponentsDirty();
     return opponent;
+  }
+
+  /// Normalize an opponent name for storage and comparison: trim ends and
+  /// collapse any internal whitespace runs to a single space. Keeps original
+  /// casing for display (comparison lower-cases separately).
+  static String _normalizeName(String name) =>
+      name.trim().replaceAll(RegExp(r'\s+'), ' ');
+
+  /// Deterministic per-user document ID for a new opponent. Same user + same
+  /// normalized name (any casing/spacing) always maps to the same ID, so a
+  /// racing double-create becomes an idempotent merge instead of a duplicate.
+  static String _deterministicDocId(String userId, String name) {
+    final key = '${userId}_${_normalizeName(name).toLowerCase()}';
+    final digest = sha1.convert(utf8.encode(key));
+    // Prefix must NOT be one that _isTempId treats as temporary, otherwise a
+    // later save (rename / updateLastSeen / sync) would re-route through the
+    // create branch and orphan the existing doc.
+    return 'oppid_$digest';
   }
 
   /// Get all opponents from Firebase with fallback to local storage
@@ -152,9 +205,13 @@ class OpponentService {
       await _opponentsCollection.doc(opponent.id).set(data, SetOptions(merge: true));
       return opponent.id;
     } else {
-      // Create new Firebase document (temp or empty ID)
-      final docRef = await _opponentsCollection.add(data);
-      return docRef.id;
+      // Create new opponent at a DETERMINISTIC per-user id derived from the
+      // name. Using set(merge:true) instead of add() makes creation idempotent:
+      // two racing saves of the same name write to the same doc rather than
+      // producing duplicate auto-id documents.
+      final docId = _deterministicDocId(userId, opponent.name);
+      await _opponentsCollection.doc(docId).set(data, SetOptions(merge: true));
+      return docId;
     }
   }
 

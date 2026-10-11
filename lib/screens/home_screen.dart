@@ -39,7 +39,6 @@ import '../design_system/components/chart_reveal_clip.dart';
 import '../design_system/components/buttons/secondary_pill_button.dart';
 import '../onboarding/onboarding_tour.dart';
 import '../onboarding/onboarding_prefs.dart';
-import 'paywall_screen.dart';
 import '../onboarding/onboarding_state.dart';
 import '../onboarding/onboarding_progress_bar.dart';
 import '../design_system/design_system.dart';
@@ -76,6 +75,7 @@ import '../services/display_identity_service.dart';
 import '../services/logger_service.dart';
 import '../l10n/app_localizations.dart';
 import '../utils/user_facing_error.dart';
+import '../services/analytics_service.dart';
 
 /// Home screen
 class HomeScreen extends StatefulWidget {
@@ -158,6 +158,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     _setupSeatListener();
     _scheduleOnboardingTour();
     OnboardingState.notifier.addListener(_onOnboardingChanged);
+    // Free-month expiry reminders: re-derive the local notification schedule
+    // every session ("1 day left" must fire even if the one-time scheduling
+    // at the post-tour paywall was missed). Idempotent; no-op for non-promo
+    // users. Post-frame so RC customerInfo from startup init is available.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) unawaited(syncPromoExpiryReminders(context));
+    });
   }
 
   void _scheduleOnboardingTour() async {
@@ -184,26 +191,26 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     final seen = await OnboardingPrefs.hasSeenOnboarding();
     if (!mounted) return;
     if (seen) {
-      // Tour skipped mid-way earlier — show the deferred post-tour paywall
-      // once, then never again
-      if (await OnboardingPrefs.isPostTourPaywallPending()) {
-        await OnboardingPrefs.clearPostTourPaywallPending();
-        final shown = await OnboardingPrefs.wasPostTourPaywallShown();
-        if (!shown && mounted) {
-          await OnboardingPrefs.markPostTourPaywallShown();
-          if (mounted) {
-            await Navigator.push(
-              context,
-              MaterialPageRoute(
-                fullscreenDialog: true,
-                builder: (_) => const PaywallScreen(showSkip: true),
-              ),
-            );
-          }
-        }
+      // Launch promo: "Got it" on the gift dialog reset to Home with this
+      // flag pending — congratulate once, before any other Home overlay.
+      if (await OnboardingPrefs.isPromoCongratsPending()) {
+        await OnboardingPrefs.clearPromoCongratsPending();
+        AnalyticsService.capture('promo_redeemed');
+        if (!mounted) return;
+        await showPromoCongratsDialog(context);
+        if (!mounted) return;
       }
 
-      // Post-tour bankroll card tip — shown once after completing the tour
+      // Tour skipped earlier and the app died before the immediate paywall
+      // could show — recover the deferred post-tour paywall once (launch
+      // promo variant included), then never again.
+      if (await OnboardingPrefs.isPostTourPaywallPending()) {
+        await OnboardingPrefs.clearPostTourPaywallPending();
+        if (mounted) await maybeShowPostTourPaywall(context);
+      }
+
+      // Post-tour bankroll card tip — the tour's LAST step, chained into
+      // the wrap-up ("you're done" dialog + paywall) when one is pending.
       if (await OnboardingPrefs.isBankrollTourPending()) {
         if (!mounted) return;
         // Wait for bankroll card to render
@@ -213,8 +220,18 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           if (_bankrollCardKey.currentContext != null) break;
         }
         if (mounted && _bankrollCardKey.currentContext != null) {
-          BankrollCardTour(bankrollCardKey: _bankrollCardKey).show(context);
+          BankrollCardTour(
+            bankrollCardKey: _bankrollCardKey,
+            onDone: _tourBankrollSetupThenWrapUp,
+          ).show(context);
+        } else {
+          // Card never rendered — don't strand the wrap-up.
+          await _maybeShowTourWrapUp();
         }
+      } else if (await OnboardingPrefs.isPostTourWrapUpPending()) {
+        // Bankroll tip already done (or app killed between the two) —
+        // resume the wrap-up on its own.
+        await _maybeShowTourWrapUp();
       }
       return;
     }
@@ -231,6 +248,36 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     OnboardingState.start();
     setState(() {}); // refresh to show progress bar
     HomeTour(fabKey: fabKey).show(context);
+  }
+
+  /// Tour's bankroll step, interactive: after the card tip, open the
+  /// bankroll editor and WAIT for the user to save; re-render the saved
+  /// values, then show the finishing step ("you're done" + paywall).
+  Future<void> _tourBankrollSetupThenWrapUp() async {
+    if (!mounted) return;
+    final saved = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => BankrollEditScreen(
+          initialBankroll: currentBankroll,
+          initialGoal: bankrollGoal,
+        ),
+      ),
+    );
+    if (!mounted) return;
+    if (saved == true) {
+      _loadData(); // render the freshly saved bankroll behind the dialog
+      await Future.delayed(const Duration(milliseconds: 600));
+      if (!mounted) return;
+    }
+    await _maybeShowTourWrapUp();
+  }
+
+  /// Post-tour wrap-up: "you're done" dialog + once-ever paywall, chained
+  /// after the bankroll-card step (the tour's final beat).
+  Future<void> _maybeShowTourWrapUp() async {
+    if (!await OnboardingPrefs.isPostTourWrapUpPending()) return;
+    if (!mounted) return;
+    await showPostTourWrapUp(context);
   }
 
   void _loadBankrollVisibility() async {
@@ -2377,6 +2424,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           ((p['cash'] as num?)?.toDouble() ?? 0.0),
     );
 
+    // The earnings card aggregates the CURRENT week (Mon–Sun), so label the
+    // net profit with that week's range.
+    final now = DateTime.now();
+    final monday = now.subtract(Duration(days: now.weekday - 1));
+    final sunday = monday.add(const Duration(days: 6));
+    final weekLabel =
+        '${DateFormat('MMM d').format(monday)} – ${DateFormat('MMM d').format(sunday)}';
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 16),
       child: Column(
@@ -2415,7 +2470,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Net Profit',
+                      l10n.homeNetProfitWeek(weekLabel),
                       style: AppTypography.ibm(
                         fontSize: 11,
                         fontWeight: FontWeight.w400,
@@ -2444,7 +2499,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 ),
                 const SizedBox(height: 24),
                 GestureDetector(
-                  onTap: () => _showNoEarningsDataModal(),
+                  onTap: () => _navigateToEarningsChart(),
                   child: SizedBox(
                     height: 167,
                     child: earningsChartData.isEmpty
@@ -2517,7 +2572,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   ),
                   const SizedBox(height: 32),
                   SecondaryPillButton(
-                    label: 'Ok',
+                    label: AppLocalizations.of(ctx).commonOk,
                     onTap: () => Navigator.of(ctx).pop(),
                   ),
                 ],
@@ -2593,13 +2648,18 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             sideTitles: SideTitles(
               showTitles: true,
               interval: yInterval,
-              reservedSize: 45,
+              reservedSize: 48,
               getTitlesWidget: (value, meta) {
                 if (meta.axisPosition == 0 || meta.axisPosition == meta.parentAxisSize) {
                   return const SizedBox.shrink();
                 }
+                // Compact form (e.g. "$ 1.7K") keeps large values on one line
+                // — full formatCash adds decimals and wraps in the reserved gap.
                 return Text(
-                  CurrencyService.formatCash(value),
+                  CurrencyService.formatCompact(value),
+                  maxLines: 1,
+                  softWrap: false,
+                  overflow: TextOverflow.visible,
                   style: AppTypography.mono(
                     color: Colors.white.withValues(alpha: 0.45),
                     fontSize: 11,
@@ -4707,8 +4767,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
     final style = result['style'] ?? 'Balanced';
     if (style == 'Unknown') {
+      // The "N/50" progress format is ONLY the count-up to the 50-hand
+      // minimum. 'Unknown' with a full sample (e.g. zeroed stats doc) must
+      // not render as "762/50".
       final count = handsPlayed ?? 0;
-      return '$count/50';
+      if (count < PlayStyleDetector.minHandsForReliableStats) {
+        return '$count/${PlayStyleDetector.minHandsForReliableStats}';
+      }
+      return PlayStyleDetector.getStyleAbbreviation(style); // 'N/A'
     }
     return PlayStyleDetector.getStyleAbbreviation(style);
   }

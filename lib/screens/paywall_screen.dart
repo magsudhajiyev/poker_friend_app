@@ -1,17 +1,26 @@
+import 'dart:async';
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../l10n/app_localizations.dart';
 import '../design_system/components/buttons/back_button_circle.dart';
+import '../design_system/components/dialogs/app_dialog.dart';
+import '../design_system/components/dialogs/dialog_action_bar.dart';
+import '../design_system/components/success_check_overlay.dart';
+import '../design_system/components/overlays/subscription_success_popup.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/spacing.dart';
 import '../design_system/constants/typography.dart';
+import '../onboarding/onboarding_prefs.dart';
 import '../services/subscription_service.dart';
 import '../services/auth_service.dart';
+import '../services/logger_service.dart';
 import '../design_system/constants/decorations.dart';
 import 'auth_screen_experimental.dart';
+import '../services/analytics_service.dart';
 
 /// Paywall screen showing subscription plan selection.
 ///
@@ -23,24 +32,45 @@ class PaywallScreen extends StatefulWidget {
   final bool showSkip;
   final int? preselectedTier;
 
+  /// Launch-promo variant: the user was just auto-granted 1 month of free Pro
+  /// (RevenueCat promotional entitlement). Shows a celebratory dialog on open
+  /// and presents Pro monthly with a "1 MONTH FREE" badge.
+  final bool launchPromo;
+
+  /// Debug-only: when true, tapping Continue simulates a successful purchase
+  /// (via a debug tier override) instead of hitting RevenueCat, so the full
+  /// post-purchase success flow can be exercised. No-op in release builds.
+  final bool mockPurchase;
+
   const PaywallScreen({
     super.key,
     this.featureName,
     this.showSkip = false,
     this.preselectedTier,
+    this.launchPromo = false,
+    this.mockPurchase = false,
   });
 
   static Future<bool?> show(
     BuildContext context, {
     String? featureName,
     int? preselectedTier,
+    bool launchPromo = false,
+    bool mockPurchase = false,
   }) {
+    AnalyticsService.capture('paywall_opened', {
+      if (featureName != null) 'feature': featureName,
+      if (preselectedTier != null) 'preselected_tier': preselectedTier,
+      'launch_promo': launchPromo,
+    });
     return Navigator.of(context).push<bool>(
       MaterialPageRoute(
         fullscreenDialog: true,
         builder: (context) => PaywallScreen(
           featureName: featureName,
           preselectedTier: preselectedTier,
+          launchPromo: launchPromo,
+          mockPurchase: mockPurchase,
         ),
       ),
     );
@@ -57,12 +87,126 @@ class _PaywallScreenState extends State<PaywallScreen> {
   bool _isRestoring = false;
   Offering? _offering;
 
+  final ScrollController _scrollController = ScrollController();
+  // Keys on each plan card so we can scroll the preselected one into view.
+  final List<GlobalKey> _planCardKeys = List.generate(3, (_) => GlobalKey());
+
   @override
   void initState() {
     super.initState();
     _offering = SubscriptionService.currentOffering;
     if (_offering == null) {
       _fetchOfferings();
+    }
+    // Preselect a tier (e.g. the user's current plan) and scroll it into
+    // view after first layout, instead of defaulting to Pro at the top.
+    final pre = widget.preselectedTier;
+    if (pre != null && pre >= 0 && pre <= 2) {
+      _selectedPlanIndex = pre;
+      if (pre != 0) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _scrollSelectedIntoView();
+        });
+      }
+    }
+    if (widget.launchPromo) {
+      _selectedPlanIndex = 0;
+      _isAnnual = false;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _showPromoWelcomeDialog();
+      });
+    }
+  }
+
+  /// Launch-promo celebration: the free Pro month was already granted
+  /// server-side; this dialog just announces it over the paywall.
+  Future<void> _showPromoWelcomeDialog() {
+    final l10n = AppLocalizations.of(context);
+    return showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AppDialog(
+        showCloseButton: false,
+        barrierDismissible: false,
+        // Full width so the column centers within the dialog (AppDialog's
+        // internal layout is start-aligned).
+        body: SizedBox(
+          width: double.infinity,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.card_giftcard,
+                color: AppColors.accentPrimary,
+                size: 48,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                l10n.promoWelcomeTitle,
+                style: AppTypography.ibm(
+                  color: AppColors.textPrimary,
+                  fontSize: 24,
+                  fontWeight: FontWeight.w700,
+                  height: 1.3,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              Text.rich(
+                TextSpan(
+                  children: [
+                    TextSpan(text: l10n.promoWelcomeBodyPre),
+                    TextSpan(
+                      text: l10n.promoWelcomeBodyBold,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    TextSpan(text: l10n.promoWelcomeBodyPost),
+                  ],
+                ),
+                style: AppTypography.ibm(
+                  color: AppColors.textSecondary,
+                  fontSize: 15,
+                  height: 1.44,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+        actions: DialogActionBar.single(
+          cancelLabel: l10n.onboardingGotIt,
+          // "Got it" ends the promo funnel: leave the paywall entirely and
+          // land on Home, where the congratulations dialog shows once
+          // (pending flag persisted FIRST so an app kill can't lose it).
+          onCancel: () async {
+            await OnboardingPrefs.setPromoCongratsPending();
+            if (!mounted) return;
+            Navigator.of(context)
+                .pushNamedAndRemoveUntil('/', (route) => false);
+          },
+        ),
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _scrollSelectedIntoView() {
+    final ctx = _planCardKeys[_selectedPlanIndex].currentContext;
+    if (ctx != null) {
+      Scrollable.ensureVisible(
+        ctx,
+        duration: const Duration(milliseconds: 450),
+        curve: Curves.easeOutCubic,
+        alignment: 0.1, // near the top of the viewport
+      );
     }
   }
 
@@ -97,6 +241,21 @@ class _PaywallScreenState extends State<PaywallScreen> {
       );
     }
 
+    // Debug-only mock purchase: skip RevenueCat, set a debug tier override so
+    // the effective tier flips, and run the same success flow.
+    if (widget.mockPurchase && !kReleaseMode) {
+      setState(() => _isPurchasing = true);
+      try {
+        final tier = ['pro', 'elite', 'club'][_selectedPlanIndex];
+        await SubscriptionService.setDebugTierOverride(tier);
+        if (!mounted) return;
+        await _showPurchaseSuccess(_tierLabel(_selectedPlanIndex, l10n));
+      } finally {
+        if (mounted) setState(() => _isPurchasing = false);
+      }
+      return;
+    }
+
     // Get the appropriate package via product ID lookup
     final tierIds = [
       ['pro_monthly', 'pro_annual'],
@@ -104,18 +263,22 @@ class _PaywallScreenState extends State<PaywallScreen> {
       ['club_monthly', 'club_annual'],
     ];
     final ids = tierIds[_selectedPlanIndex];
-    final package = SubscriptionService.packageById(
-        _isAnnual ? ids[1] : ids[0]);
-    debugPrint('📦 Paywall: offering=$_offering, isAnnual=$_isAnnual, package=${package?.identifier}');
+    final package =
+        SubscriptionService.packageById(_isAnnual ? ids[1] : ids[0]);
+    unawaited(LoggerService.debug(
+        '📦 Paywall: offering=$_offering, isAnnual=$_isAnnual, package=${package?.identifier}'));
     if (package == null) {
       // Try fetching offerings one more time before giving up
       await SubscriptionService.fetchOfferings();
+      if (!mounted) return;
       _offering = SubscriptionService.currentOffering;
-      final retryPackage = SubscriptionService.packageById(
-          _isAnnual ? ids[1] : ids[0]);
-      debugPrint('📦 Paywall retry: offering=$_offering, package=${retryPackage?.identifier}');
+      final retryPackage =
+          SubscriptionService.packageById(_isAnnual ? ids[1] : ids[0]);
+      unawaited(LoggerService.debug(
+          '📦 Paywall retry: offering=$_offering, package=${retryPackage?.identifier}'));
       if (retryPackage != null) {
-        if (mounted) setState(() {});
+        if (!mounted) return; // disposed during the fetch — don't recurse
+        setState(() {});
         // Re-run with the now-available package
         return _onContinue();
       }
@@ -134,13 +297,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
       final success = await SubscriptionService.purchasePackage(package);
       if (!mounted) return;
       if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.paywallWelcomePro),
-            duration: const Duration(seconds: 2),
-          ),
-        );
-        Navigator.of(context).pop(true);
+        await _showPurchaseSuccess(_tierLabel(_selectedPlanIndex, l10n));
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -154,6 +311,42 @@ class _PaywallScreenState extends State<PaywallScreen> {
     }
   }
 
+  /// Localized tier name for the given plan index (0=Pro, 1=Elite, 2=Club).
+  String _tierLabel(int index, AppLocalizations l10n) {
+    switch (index) {
+      case 2:
+        return l10n.profileTierClub;
+      case 1:
+        return l10n.profileTierElite;
+      default:
+        return l10n.profileTierPro;
+    }
+  }
+
+  /// Localized label for the user's current effective tier (used on restore,
+  /// where the specific plan index isn't known).
+  String _effectiveTierLabel(AppLocalizations l10n) {
+    switch (SubscriptionService.effectiveTier) {
+      case 'club':
+        return l10n.profileTierClub;
+      case 'elite':
+        return l10n.profileTierElite;
+      default:
+        return l10n.profileTierPro;
+    }
+  }
+
+  /// Plays the post-purchase success flow: a green checkmark animation, then a
+  /// titled confirmation card, then pops the paywall (returning true). Must be
+  /// awaited before the pop — the paywall's Overlay is gone once the route pops.
+  Future<void> _showPurchaseSuccess(String tierLabel) async {
+    await SuccessCheckOverlay.show(context);
+    if (!mounted) return;
+    await SubscriptionSuccessPopup.show(context, tierLabel: tierLabel);
+    if (!mounted) return;
+    Navigator.of(context).pop(true);
+  }
+
   Future<void> _onRestore() async {
     final l10n = AppLocalizations.of(context);
     setState(() => _isRestoring = true);
@@ -161,13 +354,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
       final success = await SubscriptionService.restorePurchases();
       if (!mounted) return;
       if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.paywallPurchasesRestored),
-            duration: const Duration(seconds: 2),
-          ),
-        );
-        Navigator.of(context).pop(true);
+        await _showPurchaseSuccess(_effectiveTierLabel(l10n));
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -197,6 +384,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
               children: [
                 // Scroll region — pads top so content clears the blurred bar.
                 SingleChildScrollView(
+                  controller: _scrollController,
                   padding: EdgeInsets.only(
                     top: topBarHeight + AppSpacing.xl,
                     left: AppSpacing.md,
@@ -244,57 +432,57 @@ class _PaywallScreenState extends State<PaywallScreen> {
             children: [
               SizedBox(
                 height: 44,
-            child: Stack(
-              children: [
-                // Back button — hidden when the Skip button is shown
-                // (onboarding paywall), kept for feature-gate paywalls so they
-                // stay dismissible.
-                if (!widget.showSkip)
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Padding(
-                      padding: const EdgeInsets.only(left: AppSpacing.md),
-                      child: BackButtonCircle(
-                        onPressed: () => Navigator.of(context).pop(),
-                      ),
-                    ),
-                  ),
-                Center(
-                  child: Text(
-                    l10n.paywallAvailablePlans,
-                    style: AppTypography.ibm(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w600,
-                      height: 22 / 17,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-                // Skip affordance — only when the paywall is dismissible
-                // (post-tour onboarding). Pops with no purchase.
-                if (widget.showSkip)
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: GestureDetector(
-                      onTap: () => Navigator.of(context).pop(),
-                      child: Padding(
-                        padding: EdgeInsets.only(right: AppSpacing.md),
-                        child: Text(
-                          l10n.onboardingSkip,
-                          style: AppTypography.ibm(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
+                child: Stack(
+                  children: [
+                    // Back button — hidden when the Skip button is shown
+                    // (onboarding paywall), kept for feature-gate paywalls so they
+                    // stay dismissible.
+                    if (!widget.showSkip)
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: AppSpacing.md),
+                          child: BackButtonCircle(
+                            onPressed: () => Navigator.of(context).pop(),
                           ),
                         ),
                       ),
+                    Center(
+                      child: Text(
+                        l10n.paywallAvailablePlans,
+                        style: AppTypography.ibm(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w600,
+                          height: 22 / 17,
+                          color: Colors.white,
+                        ),
+                      ),
                     ),
-                  ),
-              ],
-            ),
+                    // Skip affordance — only when the paywall is dismissible
+                    // (post-tour onboarding). Pops with no purchase.
+                    if (widget.showSkip)
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: GestureDetector(
+                          onTap: () => Navigator.of(context).pop(),
+                          child: Padding(
+                            padding: EdgeInsets.only(right: AppSpacing.md),
+                            child: Text(
+                              l10n.onboardingSkip,
+                              style: AppTypography.ibm(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
         ),
       ),
     );
@@ -436,78 +624,90 @@ class _PaywallScreenState extends State<PaywallScreen> {
   String _tierPrimaryPrice(String monthlyId, String annualId,
       AppLocalizations l10n, String monthlyFallback, String annualFallback) {
     if (_isAnnual) {
-      return '${_priceOf(annualId, annualFallback)}/year';
+      return l10n.paywallPriceYearly(_priceOf(annualId, annualFallback));
     }
-    return '${_priceOf(monthlyId, monthlyFallback)}/month';
+    return l10n.paywallPriceMonthly(_priceOf(monthlyId, monthlyFallback));
   }
 
   /// Secondary price line (the smaller "or …" alternate period).
   String _tierSecondaryPrice(String monthlyId, String annualId,
       AppLocalizations l10n, String monthlyFallback, String annualFallback) {
     if (_isAnnual) {
-      return 'or ${_priceOf(monthlyId, monthlyFallback)}/month';
+      return l10n.paywallOrPriceMonthly(_priceOf(monthlyId, monthlyFallback));
     }
-    return 'or ${_priceOf(annualId, annualFallback)}/year';
+    return l10n.paywallOrPriceYearly(_priceOf(annualId, annualFallback));
   }
 
   Widget _buildPlanCards(AppLocalizations l10n) {
     return Column(
       children: [
-        _PlanCard(
-          tierLabel: l10n.paywallProTier,
-          tagline: l10n.paywallProDescription,
-          primaryPrice: _tierPrimaryPrice(
-              'pro_monthly', 'pro_annual', l10n, '\$19.99', '\$159.99'),
-          secondaryPrice: _tierSecondaryPrice(
-              'pro_monthly', 'pro_annual', l10n, '\$19.99', '\$159.99'),
-          features: [
-            l10n.paywallProFeature1,
-            l10n.paywallProFeature2,
-            l10n.paywallProFeature3,
-            l10n.paywallProFeature4,
-            l10n.paywallProFeature5,
-          ],
-          showTrialBadge: true,
-          trialBadgeText: l10n.paywallFreeTrialBadge,
-          isSelected: _selectedPlanIndex == 0,
-          onTap: () => setState(() => _selectedPlanIndex = 0),
+        KeyedSubtree(
+          key: _planCardKeys[0],
+          child: _PlanCard(
+            tierLabel: l10n.paywallProTier,
+            tagline: l10n.paywallProDescription,
+            primaryPrice: _tierPrimaryPrice(
+                'pro_monthly', 'pro_annual', l10n, '\$19.99', '\$159.99'),
+            secondaryPrice: _tierSecondaryPrice(
+                'pro_monthly', 'pro_annual', l10n, '\$19.99', '\$159.99'),
+            features: [
+              l10n.paywallProFeature1,
+              l10n.paywallProFeature2,
+              l10n.paywallProFeature3,
+              l10n.paywallProFeature4,
+              l10n.paywallProFeature5,
+            ],
+            // Free-trial badge removed — no introductory offers are configured
+            // in the stores. Only the launch-promo gift badge remains.
+            showTrialBadge: widget.launchPromo,
+            trialBadgeText:
+                widget.launchPromo ? l10n.promoFreeMonthBadge : null,
+            isSelected: _selectedPlanIndex == 0,
+            onTap: () => setState(() => _selectedPlanIndex = 0),
+          ),
         ),
         const SizedBox(height: 16),
-        _PlanCard(
-          tierLabel: l10n.paywallEliteTier,
-          tagline: l10n.paywallEliteDescription,
-          primaryPrice: _tierPrimaryPrice(
-              'elite_monthly', 'elite_annual', l10n, '\$24.99', '\$189.99'),
-          secondaryPrice: _tierSecondaryPrice(
-              'elite_monthly', 'elite_annual', l10n, '\$24.99', '\$189.99'),
-          features: [
-            l10n.paywallEliteFeature4,
-            l10n.paywallEliteFeature5,
-            l10n.paywallEliteFeature6,
-            l10n.paywallEliteFeature7,
-            l10n.paywallEliteFeature8,
-          ],
-          showTrialBadge: false,
-          isSelected: _selectedPlanIndex == 1,
-          onTap: () => setState(() => _selectedPlanIndex = 1),
+        KeyedSubtree(
+          key: _planCardKeys[1],
+          child: _PlanCard(
+            tierLabel: l10n.paywallEliteTier,
+            tagline: l10n.paywallEliteDescription,
+            primaryPrice: _tierPrimaryPrice(
+                'elite_monthly', 'elite_annual', l10n, '\$24.99', '\$189.99'),
+            secondaryPrice: _tierSecondaryPrice(
+                'elite_monthly', 'elite_annual', l10n, '\$24.99', '\$189.99'),
+            features: [
+              l10n.paywallEliteFeature4,
+              l10n.paywallEliteFeature5,
+              l10n.paywallEliteFeature6,
+              l10n.paywallEliteFeature7,
+              l10n.paywallEliteFeature8,
+            ],
+            showTrialBadge: false,
+            isSelected: _selectedPlanIndex == 1,
+            onTap: () => setState(() => _selectedPlanIndex = 1),
+          ),
         ),
         const SizedBox(height: 16),
-        _PlanCard(
-          tierLabel: l10n.paywallClubTier,
-          tagline: l10n.paywallClubDescription,
-          primaryPrice: _tierPrimaryPrice(
-              'club_monthly', 'club_annual', l10n, '\$59.99', '\$449.99'),
-          secondaryPrice: _tierSecondaryPrice(
-              'club_monthly', 'club_annual', l10n, '\$59.99', '\$449.99'),
-          features: [
-            l10n.paywallClubFeature1,
-            l10n.paywallClubManagement,
-            l10n.paywallLiveDealerVoice,
-            l10n.paywallMultiTableEvents,
-          ],
-          showTrialBadge: false,
-          isSelected: _selectedPlanIndex == 2,
-          onTap: () => setState(() => _selectedPlanIndex = 2),
+        KeyedSubtree(
+          key: _planCardKeys[2],
+          child: _PlanCard(
+            tierLabel: l10n.paywallClubTier,
+            tagline: l10n.paywallClubDescription,
+            primaryPrice: _tierPrimaryPrice(
+                'club_monthly', 'club_annual', l10n, '\$59.99', '\$449.99'),
+            secondaryPrice: _tierSecondaryPrice(
+                'club_monthly', 'club_annual', l10n, '\$59.99', '\$449.99'),
+            features: [
+              l10n.paywallClubFeature1,
+              l10n.paywallClubManagement,
+              l10n.paywallLiveDealerVoice,
+              l10n.paywallMultiTableEvents,
+            ],
+            showTrialBadge: false,
+            isSelected: _selectedPlanIndex == 2,
+            onTap: () => setState(() => _selectedPlanIndex = 2),
+          ),
         ),
       ],
     );
@@ -556,7 +756,8 @@ class _PaywallScreenState extends State<PaywallScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             GestureDetector(
-              onTap: () => launchUrl(Uri.parse('https://www.finaltable.io/terms')),
+              onTap: () =>
+                  launchUrl(Uri.parse('https://www.finaltable.io/terms')),
               child: Text(
                 l10n.paywallTerms,
                 style: AppTypography.ibm(
@@ -580,7 +781,8 @@ class _PaywallScreenState extends State<PaywallScreen> {
               ),
             ),
             GestureDetector(
-              onTap: () => launchUrl(Uri.parse('https://www.finaltable.io/privacy')),
+              onTap: () =>
+                  launchUrl(Uri.parse('https://www.finaltable.io/privacy')),
               child: Text(
                 l10n.paywallPrivacy,
                 style: AppTypography.ibm(
@@ -712,7 +914,8 @@ class _PlanCard extends StatelessWidget {
                     ),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
+                      borderRadius:
+                          BorderRadius.circular(AppDecorations.radiusFull),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,

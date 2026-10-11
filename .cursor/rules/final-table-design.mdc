@@ -1,0 +1,18 @@
+---
+description: Final Table v3 design system — tokens, components and UI rules for any Flutter UI work
+globs: lib/**/*.dart
+alwaysApply: false
+---
+
+Before writing or changing UI, read @design_tokens/AI_GUIDE.md and follow it.
+Full rules: @design_tokens/guidelines/00-overview.md and the other files in
+design_tokens/guidelines/. Component specs: @design_tokens/guidelines/07-components.md.
+
+Non-negotiables:
+- v3 code uses only Ft* tokens: context.ftColors, FtTextStyles, FtSpacing, FtRadius, FtSize — no Color(0x…), AppColors, GoogleFonts or numeric paddings.
+- Use v3 widgets from lib/design_system/components/v3/ (FtButton, …); build a missing one there first.
+- Never mix v3 and old App* styling on one screen.
+- 44pt tap targets; one prominent green action per screen; results signed with + / − (U+2212).
+- Dark and Light must both work; strings via AppLocalizations.
+- Finish with flutter analyze, flutter test test/design_system/, python3 tool/design_lint.py.
+- Each change on its own branch from design_v2, PR into design_v2 — never push to design_v2 or main.
