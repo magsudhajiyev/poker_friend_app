@@ -10,7 +10,7 @@ The v3 component set from Figma `finaltable_v3`. Each entry is the spec to build
 | SectionHeader | `276:130` | not built yet |
 | SessionCard | `387:274` | not built yet |
 | ProgressBar | `251:3652` | not built yet |
-| Bankroll | `251:3529` | not built yet |
+| Bankroll | `251:3529` (figure), `639:3151` (Bankroll Card) | not built yet |
 | TabBar | `251:1718` | not built yet |
 | Chip | `612:2581` | not built yet |
 | ColorSwatch | `612:2634` | not built yet |
@@ -19,6 +19,8 @@ The v3 component set from Figma `finaltable_v3`. Each entry is the spec to build
 Also in Figma, not specified here yet: Toolbar nav and sheet variants, Text Field, Radio Button, Toggle, Tabs, Alerts, Sheets, Search Input, List items, Grabber, Flags.
 
 ## Button
+
+States: Enabled, Pressed (Bordered Prominent only — `button-primary-bg-pressed`; other styles press with a 97% scale), Disabled.
 
 Pill button in four styles and three sizes — the file's `Button` set (Size × Style × Destructive × State).
 
@@ -63,6 +65,8 @@ Track `fill-secondary`, fill `accent-primary` (3.5:1 Light, 9.2:1 Dark), both `r
 
 ## Bankroll
 
+In Figma the full hero card is the **Bankroll Card** set (`Goal=Set`, `Goal=None`), which nests the Bankroll figure (`State=Visible/Hidden/Empty`), the progress indicator and the "Edit bankroll" button.
+
 Home hero card: bankroll figure, goal, progress and an Edit action, with a privacy toggle that blurs the figure — the file's `Bankroll` (Visible · Hidden · Empty).
 
 Card `bg-secondary` with a `separator-opaque` border and `radius-2xl`. The figure is the `display` text style; the empty-state labels are `label-tertiary`. The edit button is a Small prominent `Button` labelled "Edit bankroll".
@@ -90,3 +94,11 @@ Swatch fills are the `tag-*` primitives (data colours, same in both themes); the
 The Phosphor glyphs used in the file, single-ink and coloured by `currentColor`.
 
 Colour icons with `icon-*` tokens on the parent. `chevron` is the 1.5px stroked caret used at the end of rows. GameController and Numpad (stat tiles) are not included yet.
+
+## Home stat tiles
+
+The four tiles in Home's Recent Activity rows bind `stat-tile-play-style`, `stat-tile-sessions`, `stat-tile-win-rate` and `stat-tile-hours` (Flutter: `statTilePlayStyle`…). They are illustration colours, same in both themes except Win Rate, which follows `accent-primary`. They carry no status meaning — Hours is red but is not a loss.
+
+## Tab bar glass
+
+The tab bar and its "+" button use `tab-bar-glass` (3%) and `tab-bar-glass-strong` (5%). The alpha is part of the token, so apply them at full opacity — don't add an opacity on top.

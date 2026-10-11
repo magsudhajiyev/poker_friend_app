@@ -36,7 +36,7 @@ Final Table is a live poker tracker for iOS: log a hand in three gestures, not t
 
 ## Components
 
-`Button` (4 styles × 3 sizes × destructive × enabled), `IconButton`, `TopBar`, `SectionHeader`, `SessionCard`, `ProgressBar`, `Bankroll`, `TabBar`, `Chip` and `ColorSwatch` are specified in `07-components.md`, with their Flutter status.
+`Button` (4 styles × 3 sizes × destructive × enabled/pressed/disabled), `IconButton`, `TopBar`, `SectionHeader`, `SessionCard`, `ProgressBar`, `Bankroll`, `TabBar`, `Chip` and `ColorSwatch` are specified in `07-components.md`, with their Flutter status.
 
 Components read **component tokens**, not semantic ones: `button-*` (26, per style × destructive × disabled, with `-label` and `-icon`), `textfield-*`, `toggle-*` and `focus-ring`. Each one aliases a semantic token, so retheming a component means repointing its tokens, never editing the component. New components get their own group the same way.
 

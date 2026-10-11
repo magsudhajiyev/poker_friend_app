@@ -48,13 +48,19 @@ White on the red `accent-danger` fill was 3.2:1 (Dark) / 3.6:1 (Light). New `tex
 - The "Log your first session" banner is hidden on Home/Filled.
 - **Documentation** page: the Color tokens doc now reads live variables (swatches bound per mode), its counts, ramps and "don't flip" list are current, and gaps 01 and 03 are marked resolved. The Button spec's 46px note is marked resolved.
 
+### 11 Oct 2026
+- **Button**: new `State=Pressed` for Bordered Prominent (Small, Medium, Large), filled with `button-primary-bg-pressed`. Other styles press with a 97% scale in code.
+- **Bankroll Card**: the Home hero card (figure, goal progress, "Edit bankroll") is now a component set on the Bankroll page, `Goal=Set` and `Goal=None`. Both Home screens use instances. Goal=Set moved from `fill-primary` to `bg-secondary`, matching Goal=None and the rule for hero blocks.
+- **Stat tiles**: the four Home tiles bind new `stat-tile-*` tokens: Play Style `blue-400` (was #4879ff), Sessions `tag-purple` (was #a148ff), Win Rate `accent-primary`, Hours `tag-red` (was #ff4848).
+- **Tab bar glass**: the two Home tab bars rendered as solid white pills. Their glass fills had lost the 3%/5% opacity when the old library bindings were swapped. New tokens `tab-bar-glass` and `tab-bar-glass-strong` carry the alpha themselves, so the look no longer depends on a layer opacity. The glass outline now binds `separator-opaque` (was raw #292929).
+- **Logo**: the wordmark's green square on Home bound `brand-mark` again (an instance override had made it raw).
+- **Layer names**: 242 default names (`Frame 1321315649`, `Group 2`) across 15 pages now describe their content (`Win Rate row`, `Content stack`, `Glyph`).
+- **Documentation page**: colour table and counts updated (115 Color variables), pressed-state gap marked resolved.
+
 ## Open — need a decision
 
 1. **Purple glow** behind the status bar on Home/Filled (`#4c00a9` ellipse + a `#142635` 11% tint) is outside the palette and missing on Home/Empty. Keep it as a brand moment (then make it a token) or remove it?
-2. **Stat tile colours** on Home (blue, purple, green, red tiles) are raw hex. Fine as illustration colours, or should they map to `accent-*`?
-3. **App icon ground** is `#101014` (blue-black), not `gray/900`. Intentional for the App Store icon?
-4. **Small (26pt) and Medium (37pt) buttons** are below the 44pt iOS minimum. Keep for off-table use with an enlarged hit area in code, or raise them?
-5. **Three background roles collapse in Light** (`bg/secondary`, `bg/grouped/primary`, `bg/grouped/tertiary` are all gray/100) — from the file's own Documentation page.
-6. **Hover/pressed tokens exist but the Button set has no Pressed state.**
-7. **Home Bankroll blocks are detached frames**, not instances of the `Bankroll` component.
-8. **Default layer names** (`Frame 1321315649`) remain throughout.
+2. **App icon ground** is `#101014` (blue-black), not `gray/900`. Intentional for the App Store icon?
+3. **Small (26pt) and Medium (37pt) buttons** are below the 44pt iOS minimum. In code, `FtButton` already keeps a 44pt hit area around them; decide whether to also raise them visually.
+4. **Three background roles collapse in Light** (`bg/secondary`, `bg/grouped/primary`, `bg/grouped/tertiary` are all gray/100) — from the file's own Documentation page.
+5. **Button loading state** — none yet, for buttons that wait on the network.

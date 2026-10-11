@@ -10,7 +10,8 @@ Source:  design_tokens/tokens.json — exported from the Final Table design
 Output:  lib/design_system/tokens/ft_tokens.g.dart
 
 Colours become an `FtColors` ThemeExtension with a `dark` and a `light`
-instance; primitives stay private so screens can only pick semantic or
+instance (a token may also hold a literal #RRGGBBAA when its alpha is part of
+the design, e.g. tab-bar-glass); primitives stay private so screens can only pick semantic or
 component tokens. Deprecated `misc-*` aliases are skipped (they never
 existed in Dart).
 """
@@ -140,7 +141,11 @@ def build():
         for x in sem:
             ref = x["value"][mode]
             prim = resolve(ref, mode)
-            assert prim in prims, (x["name"], ref)
+            if prim not in prims:
+                # A literal colour (e.g. #fafafa08: alpha baked into the token).
+                assert re.fullmatch(r"#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?", prim), (x["name"], ref)
+                w(f"    {camel(x['name'])}: {hex_color(prim)},\n")
+                continue
             via = "" if ref == "{" + prim + "}" else f" // via {ref[1:-1]}"
             w(f"    {camel(x['name'])}: _P.{camel(prim)},{via}\n")
         w("  );\n\n")

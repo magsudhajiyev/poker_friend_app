@@ -213,6 +213,12 @@ class FtColors extends ThemeExtension<FtColors> {
     required this.toggleThumb,
     required this.toggleThumbShadow,
     required this.toggleStateLabel,
+    required this.tabBarGlass,
+    required this.tabBarGlassStrong,
+    required this.statTilePlayStyle,
+    required this.statTileSessions,
+    required this.statTileWinRate,
+    required this.statTileHours,
   });
 
   /// Brand green for fills and shapes only — progress fills, toggles, radios, selection, stat tiles (3:1 non-text minimum: 3.5:1+ Light, 9.2:1+ Dark). Not for text: green text uses `text-accent`. Text on it is `text-on-accent` (black).
@@ -542,6 +548,24 @@ class FtColors extends ThemeExtension<FtColors> {
   /// Off-state accessibility label ring (iOS On/Off labels). Aliases `icon-tertiary`.
   final Color toggleStateLabel;
 
+  /// Tab bar glass wash — `label-primary` at 3% (`opacity-glass`). The alpha lives in the token, so the layer needs no extra opacity.
+  final Color tabBarGlass;
+
+  /// Tab bar "+" button glass — `label-primary` at 5% (`opacity-glass-strong`).
+  final Color tabBarGlassStrong;
+
+  /// Home stat tile behind the Play Style glyph. Illustration colour, same in both themes.
+  final Color statTilePlayStyle;
+
+  /// Home stat tile behind the Sessions glyph. Illustration colour, same in both themes.
+  final Color statTileSessions;
+
+  /// Home stat tile behind the Win Rate glyph. Follows `accent-primary`.
+  final Color statTileWinRate;
+
+  /// Home stat tile behind the Hours glyph. Illustration colour, same in both themes — not a loss or danger signal.
+  final Color statTileHours;
+
   /// The Dark theme.
   static const FtColors dark = FtColors(
     accentPrimary: _P.green500,
@@ -653,6 +677,12 @@ class FtColors extends ThemeExtension<FtColors> {
     toggleThumb: _P.gray50,
     toggleThumbShadow: _P.baseBlack,
     toggleStateLabel: _P.gray400, // via icon-tertiary
+    tabBarGlass: Color(0x08FAFAFA),
+    tabBarGlassStrong: Color(0x0DFAFAFA),
+    statTilePlayStyle: _P.blue400,
+    statTileSessions: _P.tagPurple,
+    statTileWinRate: _P.green500, // via accent-primary
+    statTileHours: _P.tagRed,
   );
 
   /// The Light theme.
@@ -766,6 +796,12 @@ class FtColors extends ThemeExtension<FtColors> {
     toggleThumb: _P.baseWhite,
     toggleThumbShadow: _P.gray400,
     toggleStateLabel: _P.gray500, // via icon-tertiary
+    tabBarGlass: Color(0x080C0C0C),
+    tabBarGlassStrong: Color(0x0D0C0C0C),
+    statTilePlayStyle: _P.blue400,
+    statTileSessions: _P.tagPurple,
+    statTileWinRate: _P.green700, // via accent-primary
+    statTileHours: _P.tagRed,
   );
 
   /// The tokens for the current theme; falls back to [dark].
@@ -883,6 +919,12 @@ class FtColors extends ThemeExtension<FtColors> {
     Color? toggleThumb,
     Color? toggleThumbShadow,
     Color? toggleStateLabel,
+    Color? tabBarGlass,
+    Color? tabBarGlassStrong,
+    Color? statTilePlayStyle,
+    Color? statTileSessions,
+    Color? statTileWinRate,
+    Color? statTileHours,
   }) {
     return FtColors(
       accentPrimary: accentPrimary ?? this.accentPrimary,
@@ -994,6 +1036,12 @@ class FtColors extends ThemeExtension<FtColors> {
       toggleThumb: toggleThumb ?? this.toggleThumb,
       toggleThumbShadow: toggleThumbShadow ?? this.toggleThumbShadow,
       toggleStateLabel: toggleStateLabel ?? this.toggleStateLabel,
+      tabBarGlass: tabBarGlass ?? this.tabBarGlass,
+      tabBarGlassStrong: tabBarGlassStrong ?? this.tabBarGlassStrong,
+      statTilePlayStyle: statTilePlayStyle ?? this.statTilePlayStyle,
+      statTileSessions: statTileSessions ?? this.statTileSessions,
+      statTileWinRate: statTileWinRate ?? this.statTileWinRate,
+      statTileHours: statTileHours ?? this.statTileHours,
     );
   }
 
@@ -1110,6 +1158,12 @@ class FtColors extends ThemeExtension<FtColors> {
       toggleThumb: Color.lerp(toggleThumb, other.toggleThumb, t)!,
       toggleThumbShadow: Color.lerp(toggleThumbShadow, other.toggleThumbShadow, t)!,
       toggleStateLabel: Color.lerp(toggleStateLabel, other.toggleStateLabel, t)!,
+      tabBarGlass: Color.lerp(tabBarGlass, other.tabBarGlass, t)!,
+      tabBarGlassStrong: Color.lerp(tabBarGlassStrong, other.tabBarGlassStrong, t)!,
+      statTilePlayStyle: Color.lerp(statTilePlayStyle, other.statTilePlayStyle, t)!,
+      statTileSessions: Color.lerp(statTileSessions, other.statTileSessions, t)!,
+      statTileWinRate: Color.lerp(statTileWinRate, other.statTileWinRate, t)!,
+      statTileHours: Color.lerp(statTileHours, other.statTileHours, t)!,
     );
   }
 }
