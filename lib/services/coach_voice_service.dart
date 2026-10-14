@@ -282,16 +282,31 @@ class CoachVoiceService {
   }
 
   /// Rewrites poker notation into words the voice can say naturally:
-  /// 'A5s' → 'ace five suited', 'AKo' → 'ace king offsuit', 'QQ' →
-  /// 'pocket queens', '2.5BB' → '2.5 big blinds', '24%' →
+  /// 'A5s' → 'ace five suited', 'AKo' → 'ace king offsuit',
+  /// '72 off' / '72 offsuit' → 'seven two offsuit' (not "seventy-two"),
+  /// 'QQ' → 'pocket queens', '2.5BB' → '2.5 big blinds', '24%' →
   /// 'twenty-four percent'. Everything else passes through untouched.
   static String speakable(String text) {
+    // Pre-pass: a rank pair written with a SPACED or WORDED suffix —
+    // '72 off', '72 offsuit', 'T9 suited', 'A5 off', even '72o suited'
+    // (redundant) — is folded into the glued class ('72o' / 'T9s') so the
+    // main pass below says "seven two offsuit", not "seventy-two off".
+    // Without this a bare digit pair like '72' reads as "seventy-two".
+    var out = text.replaceAllMapped(
+      RegExp(
+          r'\b([AKQJT2-9])([AKQJT2-9])[so]?\s+(suited|offsuit|off|suit)\b',
+          caseSensitive: false),
+      (m) {
+        final glued = m[3]!.toLowerCase().startsWith('s') ? 's' : 'o';
+        return '${m[1]}${m[2]}$glued';
+      },
+    );
     // Hand classes. Guards: a number before '%', a decimal, or a BB size
     // is NOT a hand ('24%' once became 'two four percent'). A bare
     // digit pair with two DIFFERENT digits is a plain number, not a hand
     // — real digit hands carry an s/o suffix ('72o') or equal digits
     // ('22' = pocket twos).
-    var out = text.replaceAllMapped(
+    out = out.replaceAllMapped(
       RegExp(r'\b([AKQJT2-9])([AKQJT2-9])(s|o)?\b(?!%|\.\d|\s?BB\b)'),
       (m) {
         final bothDigits = RegExp(r'\d').hasMatch(m[1]!) &&

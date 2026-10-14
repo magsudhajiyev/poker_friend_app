@@ -170,6 +170,27 @@ void main() {
           'raise to 22 big blinds');
     });
 
+    test('spaced/worded suffix folds into the hand (no "seventy-two")', () {
+      // '72 off' once read as "seventy-two off" — the writer's natural
+      // English must still speak as two ranks.
+      expect(CoachVoiceService.speakable('fold 72 off from the CO'),
+          'fold seven two offsuit from the CO');
+      expect(CoachVoiceService.speakable('72 offsuit is trash'),
+          'seven two offsuit is trash');
+      expect(CoachVoiceService.speakable('T9 suited flats'),
+          'ten nine suited flats');
+      expect(CoachVoiceService.speakable('A5 off is a fold'),
+          'ace five offsuit is a fold');
+      // Redundant glued+word collapses, not doubled.
+      expect(CoachVoiceService.speakable('jam 72o offsuit'),
+          'jam seven two offsuit');
+      // Ordinary English with 'off' is untouched (no rank pair precedes it).
+      expect(CoachVoiceService.speakable('that paid off nicely'),
+          'that paid off nicely');
+      expect(CoachVoiceService.speakable('take the night off'),
+          'take the night off');
+    });
+
     test('rank-x shorthand gets the rank name', () {
       expect(CoachVoiceService.speakable('A-x suited 3-bets here'),
           'ace-x suited 3-bets here');
