@@ -60,12 +60,18 @@ class SessionSummaryData {
 class SessionSummaryCard extends StatefulWidget {
   final SessionSummaryData data;
 
-  const SessionSummaryCard({super.key, required this.data});
+  /// Optional widget below the card, OUTSIDE the shareable RepaintBoundary
+  /// (e.g. the session leak chip — personal coaching never ships in the
+  /// shared PNG).
+  final Widget? footer;
+
+  const SessionSummaryCard({super.key, required this.data, this.footer});
 
   /// Show the summary card as a dialog. Returns when user closes it.
   static Future<void> show({
     required BuildContext context,
     required SessionSummaryData data,
+    Widget? footer,
   }) async {
     await showGeneralDialog(
       context: context,
@@ -86,7 +92,7 @@ class SessionSummaryCard extends StatefulWidget {
       pageBuilder: (context, anim, secondaryAnim) {
         return Material(
           type: MaterialType.transparency,
-          child: SessionSummaryCard(data: data),
+          child: SessionSummaryCard(data: data, footer: footer),
         );
       },
     );
@@ -154,6 +160,8 @@ class _SessionSummaryCardState extends State<SessionSummaryCard> {
                 child: _buildCardContent(),
               ),
             ),
+            if (widget.footer != null)
+              SizedBox(width: cardWidth, child: widget.footer),
             const SizedBox(height: 20),
             // Action buttons
             SizedBox(

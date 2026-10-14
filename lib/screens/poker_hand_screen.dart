@@ -32,6 +32,7 @@ import '../design_system/components/modals/confirm_dialog.dart';
 import '../widgets/seat_config_sheet.dart';
 import '../widgets/poker_table_widget.dart';
 import '../design_system/components/overlays/raise_snap_overlay.dart';
+import '../widgets/session_leak_chip.dart';
 import '../widgets/session_summary_card.dart';
 import '../widgets/winner_selection_dialog.dart';
 import '../widgets/multi_pot_winner_dialog.dart';
@@ -6642,8 +6643,16 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       prizeWon = null;
     }
 
+    // Session leak check: per-session feedback hook into the Leak Detector
+    // (tutorial sessions excluded like everywhere else in the pipeline).
+    final leakChipSessionId =
+        !sessionManager.isTutorialSession ? sessionManager.sessionId : null;
+
     await SessionSummaryCard.show(
       context: context,
+      footer: leakChipSessionId != null
+          ? SessionLeakChip(sessionId: leakChipSessionId)
+          : null,
       data: SessionSummaryData(
         sessionName: widget.sessionName ?? sessionManager.sessionName ?? l10n.handSessionTitle,
         gameType: widget.gameType,

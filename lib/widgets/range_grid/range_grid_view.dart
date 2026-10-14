@@ -23,7 +23,21 @@ import '../../design_system/constants/decorations.dart';
 /// cards are logged, sliced by game type, position and stack range. Only
 /// preflop decisions are considered — postflop play never affects a cell.
 class RangeGridView extends StatefulWidget {
-  const RangeGridView({super.key});
+  /// Optional initial filters so other screens (e.g. a Leak Detector
+  /// finding) can open the grid pre-focused on a spot. All of them map
+  /// 1:1 onto the normal filter bar — the user can change them freely.
+  final String? initialPosGroup; // 'EP'|'MP'|'CO'|'BTN'|'SB'|'BB'
+  final String? initialScenario; // 'rfi' | 'vs_raise'
+  final String? initialStackBucket; // StackRange.name
+  final String initialGameType; // 'cash' | 'tournament'
+
+  const RangeGridView({
+    super.key,
+    this.initialPosGroup,
+    this.initialScenario,
+    this.initialStackBucket,
+    this.initialGameType = 'cash',
+  });
 
   @override
   State<RangeGridView> createState() => _RangeGridViewState();
@@ -62,6 +76,15 @@ class _RangeGridViewState extends State<RangeGridView>
   @override
   void initState() {
     super.initState();
+    // Seed injected filters (deep links from leak findings). Mirrors the
+    // scenario bar's coupling: the RFI view is the raise/fold chart view.
+    _gameType = widget.initialGameType;
+    _posGroup = widget.initialPosGroup;
+    _stackBucket = widget.initialStackBucket;
+    _scenario = widget.initialScenario;
+    if (_scenario == 'rfi') {
+      _visibleActions = {'raise', 'fold'};
+    }
     _load();
     _syncCloudHistory();
   }

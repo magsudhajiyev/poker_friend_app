@@ -11,7 +11,9 @@ import '../../constants/typography.dart';
 /// the finger.
 ///
 /// Motion polish:
-/// - `Curves.easeOutCubic` on the pill translation for an iOS-style settle.
+/// - Pill position is LINEAR in the controller value: drags track the
+///   finger 1:1 and `animateTo` already eases. (An extra curve here breaks
+///   3+ tabs — the intermediate stops land between slots.)
 /// - Subtle drop shadow on the active pill so it lifts off the surface as
 ///   it moves.
 /// - Labels lerp `textSecondary → textPrimary` and scale 0.96 → 1.00 based
@@ -34,9 +36,7 @@ class AnimatedSegmentedTabs extends StatelessWidget {
       builder: (context, _) {
         final t = controller.animation!.value
             .clamp(0.0, (labels.length - 1).toDouble());
-        final pillT = Curves.easeOutCubic.transform(
-          t / (labels.length - 1),
-        );
+        final pillT = t / (labels.length - 1);
         return Container(
           padding: const EdgeInsets.all(2),
           decoration: BoxDecoration(

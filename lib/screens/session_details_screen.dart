@@ -16,6 +16,7 @@ import '../design_system/components/app_toggle.dart';
 import '../models/hand_state_machine.dart';
 import '../widgets/stack_growth_chart.dart';
 import '../widgets/session_end_bankroll_sheet.dart';
+import '../widgets/session_leak_chip.dart';
 import '../widgets/session_summary_card.dart';
 import '../l10n/app_localizations.dart';
 import '../services/currency_service.dart';
@@ -1284,6 +1285,11 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
 
         await SessionSummaryCard.show(
           context: context,
+          // Per-session leak feedback (hidden for tutorial sessions; the
+          // chip also self-gates on the leak_detector feature flag).
+          footer: !sm.isTutorialSession && sm.sessionId != null
+              ? SessionLeakChip(sessionId: sm.sessionId!)
+              : null,
           data: SessionSummaryData(
             sessionName: widget.sessionName,
             gameType: widget.gameType,
