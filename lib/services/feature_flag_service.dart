@@ -53,6 +53,7 @@ class FeatureFlagService {
   static const String trainingDrills = 'training_drills';
   static const String aiHandAnalysis = 'ai_hand_analysis';
   static const String leakDetector = 'leak_detector';
+  static const String dailyChallenge = 'daily_challenge';
 
   static const List<FeatureFlag> all = [
     FeatureFlag(
@@ -73,6 +74,13 @@ class FeatureFlagService {
       'Leak Detector',
       'Frequency-leak report (overfolding vs river bets, fold-to-3-bet, '
       'BB defense...) in the navigation drawer. Phase 1 experiment.',
+      defaultMode: FlagMode.adminOnly,
+    ),
+    FeatureFlag(
+      dailyChallenge,
+      'Daily Challenge',
+      'Date-seeded daily decision spots graded live by the coach, with '
+      'streaks. Home screen card. Phase 1 experiment.',
       defaultMode: FlagMode.adminOnly,
     ),
   ];

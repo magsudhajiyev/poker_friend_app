@@ -53,6 +53,10 @@ import '../design_system/components/cards/error_state_card.dart';
 import '../services/seat_service.dart';
 import '../services/table_service.dart';
 import '../services/club_notification_service.dart';
+import '../services/feature_flag_service.dart';
+import '../services/daily_challenge_service.dart';
+import '../services/daily_challenge_store.dart';
+import 'training/daily_challenge_screen.dart';
 import '../services/club_service.dart';
 import '../services/event_service.dart';
 import '../models/seat_assignment.dart';
@@ -1639,6 +1643,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         // Recent Activity (Stats Grid)
                         _buildStatsGrid(),
 
+                        // Daily Challenge entry (feature-flagged)
+                        _buildDailyChallengeCard(),
+
                         const SizedBox(height: 32),
 
                         // Earnings Chart
@@ -2413,6 +2420,121 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
 
+
+  /// Daily Challenge entry card (feature-flagged): today's theme, the
+  /// streak flame, and either "Play" or today's score. English-only while
+  /// admin-flagged (Leak Detector precedent).
+  int _dailyChallengeReload = 0;
+
+  Future<(DailyChallengeResult?, DailyChallengeStreaks)>
+      _loadDailyChallengeState(DateTime day) async => (
+            await DailyChallengeStore.resultFor(day),
+            await DailyChallengeStore.streaks(day),
+          );
+
+  Widget _buildDailyChallengeCard() {
+    return ValueListenableBuilder<int>(
+      valueListenable: FeatureFlagService.revision,
+      builder: (context, _, __) {
+        if (!FeatureFlagService.isEnabled(
+            FeatureFlagService.dailyChallenge)) {
+          return const SizedBox.shrink();
+        }
+        final config = DailyChallengeService.configFor(DailyChallengeService.today());
+        return FutureBuilder<(DailyChallengeResult?, DailyChallengeStreaks)>(
+          key: ValueKey('daily_challenge_$_dailyChallengeReload'),
+          future: _loadDailyChallengeState(config.day),
+          builder: (context, snap) {
+            final result = snap.data?.$1;
+            final streak = snap.data?.$2.current ?? 0;
+            final done = result != null;
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(16, 24, 16, 0),
+              child: ScaleTapFeedback(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => const DailyChallengeScreen()),
+                  ).then((_) {
+                    if (mounted) {
+                      setState(() => _dailyChallengeReload++);
+                    }
+                  });
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppColors.bgSurface,
+                    borderRadius:
+                        BorderRadius.circular(AppDecorations.radiusLg),
+                    border: Border.all(
+                        color: done
+                            ? Colors.black
+                            : AppColors.accentPrimary
+                                .withValues(alpha: 0.35)),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: AppColors.accentPrimary
+                              .withValues(alpha: 0.12),
+                        ),
+                        child: Icon(
+                            done
+                                ? Icons.check_rounded
+                                : Icons.bolt_rounded,
+                            size: 22,
+                            color: AppColors.accentPrimary),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Daily Challenge',
+                                style: AppTypography.ibm(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.textPrimary)),
+                            const SizedBox(height: 2),
+                            Text(
+                              done
+                                  ? 'Done · ${result.score == result.score.roundToDouble() ? result.score.round() : result.score}/${result.verdicts.length} today'
+                                  : '${config.theme} · ${config.formatLabel}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppTypography.ibm(
+                                  fontSize: 12,
+                                  color: AppColors.textSecondary),
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (streak > 0) ...[
+                        Text('🔥$streak',
+                            style: AppTypography.mono(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.textPrimary)),
+                        const SizedBox(width: 8),
+                      ],
+                      const Icon(Icons.chevron_right,
+                          size: 20, color: AppColors.textSecondary),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
 
   Widget _buildEarningsCard() {
     final l10n = AppLocalizations.of(context);

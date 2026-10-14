@@ -753,8 +753,8 @@ class DrillGrader {
       heroAction: action,
       recommendedAction: exploit.action,
       explanation: '$lead $headlineReason',
+      headlineReason: headlineReason,
       handTopPercent: play,
-      rangePercent: exploit.rangePct,
       gtoAction: gto.action,
       gtoRangePercent: gto.rangePct,
       gtoReason: gto.reason,
@@ -781,7 +781,27 @@ class DrillGrader {
         result.grade != DrillGrade.correct) {
       return result;
     }
-    if (raiseToBB >= stackBB * 0.9) return result; // jams exempt
+    final isJam = raiseToBB >= stackBB * 0.9;
+    // A jam is only a legitimate play when stacks are shallow enough that
+    // open-jamming is standard (Nash territory, ~<=25BB). Above that, an
+    // open-shove is a gross sizing error, NOT exempt — grading it correct
+    // was the bug (40BB A8o open-jam read as "approved").
+    const jamOkCeilingBB = 25.0;
+    if (isJam) {
+      if (stackBB <= jamOkCeilingBB) return result; // shallow jam = fine
+      final note = 'Way too big — jamming ${stackBB.toStringAsFixed(0)}BB '
+          'risks your whole stack to win the blinds. A standard '
+          '$label around ${idealTo.toStringAsFixed(1)}BB is the play.';
+      result.trace.add('sizing: open-JAM at ${stackBB.toStringAsFixed(0)}BB '
+          '(>$jamOkCeilingBB) vs ideal ${idealTo.toStringAsFixed(1)}BB '
+          '→ demoted to MISTAKE');
+      return result.copyWith(
+        grade: DrillGrade.mistake,
+        explanation: '${result.explanation} $note',
+        headlineReason: '${result.headlineReason} $note',
+        exploitReason: '${result.exploitReason} $note',
+      );
+    }
     final ratio = raiseToBB / idealTo;
     if (ratio >= 0.7 && ratio <= 1.6) return result;
     final note = ratio < 0.7
@@ -792,6 +812,7 @@ class DrillGrader {
     return result.copyWith(
       grade: DrillGrade.ok,
       explanation: '${result.explanation} $note',
+      headlineReason: '${result.headlineReason} $note',
       exploitReason: '${result.exploitReason} $note',
     );
   }

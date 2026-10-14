@@ -1,4 +1,8 @@
+import 'dart:async';
+import 'dart:math';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../../design_system/constants/colors.dart';
@@ -9,7 +13,17 @@ import '../../design_system/components/buttons/app_button.dart';
 import '../../design_system/components/buttons/glassy_icon_button.dart';
 import '../../design_system/components/sheets/app_sheet.dart';
 import '../../models/drill_models.dart';
+import '../../services/analytics_service.dart';
+import '../../services/coach_persona.dart';
+import '../../services/coach_level_resolver.dart';
+import '../../services/coach_voice_service.dart';
+import '../../services/daily_challenge_service.dart';
+import '../../services/daily_coach_lines_service.dart';
 import '../../services/drill_engine.dart';
+import '../../services/drill_insights.dart';
+import '../../services/drill_range_lookup.dart';
+import '../../widgets/coach_mascot.dart';
+import '../../widgets/drill_range_chart_grid.dart';
 import '../../widgets/hand_micro_animations.dart';
 import '../../widgets/poker_table_widget.dart';
 
@@ -23,11 +37,22 @@ class DrillTableScreen extends StatefulWidget {
   final double stackBB;
   final bool anteMode;
 
+  /// Daily Challenge mode: when [challengeConfig] is set, each of the
+  /// [challengeDecisions] spots is a self-contained one-decision hand on
+  /// its OWN per-spot seed (so the hero's action in one spot can never
+  /// change another — the shared-puzzle guarantee). The run pops with the
+  /// `List<DrillDecisionRecord>` and grading is the talking coach. Both
+  /// null = normal endless drill (unchanged).
+  final DailyChallengeConfig? challengeConfig;
+  final int? challengeDecisions;
+
   const DrillTableScreen({
     super.key,
     required this.seats,
     required this.stackBB,
     this.anteMode = false,
+    this.challengeConfig,
+    this.challengeDecisions,
   });
 
   @override
@@ -47,7 +72,7 @@ class _DrillTableScreenState extends State<DrillTableScreen>
   static const _green = AppColors.accentPrimary;
   static const _chipWhite = Color(0xFFCCCCCC);
 
-  late final DrillEngine _engine;
+  late DrillEngine _engine;
   final Set<int> _foldedSeats = {};
   final Map<int, String> _lastAction = {}; // seat -> compact action label
   final List<String> _recentLines = []; // newest last, capped
@@ -67,21 +92,191 @@ class _DrillTableScreenState extends State<DrillTableScreen>
 
   // Maps actual seat number → visual position on the 9-seat oval.
   // Hero is always placed at visual position 5 (bottom center).
-  late final Map<int, int> _visualSeatMap;
+  late Map<int, int> _visualSeatMap;
 
   _Phase _phase = _Phase.handOver;
   DrillHeroTurn? _heroTurn;
   DrillGradeResult? _lastGrade;
   DrillHandUpdate? _lastUpdate;
   bool _showRaiseSizes = false;
-  String _handOverNote = '';
 
   int get _correct =>
       _records.where((r) => r.result.grade == DrillGrade.correct).length;
 
+  bool get _isChallenge => widget.challengeDecisions != null;
+  bool get _challengeDone =>
+      _isChallenge && _records.length >= widget.challengeDecisions!;
+
+  /// Coach voice mute state (challenge mode) — persisted preference.
+  bool _voiceOn = true;
+
+  /// Selected coach persona (challenge mode) — character leads + delivery.
+  CoachPersona _persona = CoachPersonas.grinder;
+
+  /// Player's coaching tier (challenge mode) — picks the AI line variant.
+  CoachLevel _level = CoachLevel.beginner;
+
+  /// AI-generated, level-adapted reason for the CURRENT spot (null until
+  /// fetched, or when none exists → the persona template reason is used).
+  String? _aiLine;
+
+  /// Verdict suspense gate (challenge mode): the badge, colors, mascot
+  /// reaction, haptic, progress dot, typed line and buttons all hold back
+  /// until the coach "finishes evaluating" — i.e. the voice starts (text
+  /// + voice land together), or the voice fails/is muted (grace/cap).
+  bool _verdictRevealed = true;
+  bool _sawVoiceLoading = false;
+  Timer? _revealGrace;
+  Timer? _revealCap;
+
+  /// Card highlight: when the coach line names the hero hand, the hole
+  /// cards glow and the suit symbols grow for a moment. With voice, the
+  /// glow time comes from the CLIP LENGTH × the mention position in the
+  /// SPOKEN text — the glow lands when the coach says the hand. Without
+  /// voice, the typed-text speed gives the time.
+  bool _cardsGlow = false;
+  Timer? _glowOn;
+  Timer? _glowOff;
+  VoidCallback? _glowDurationListener;
+
+  /// Tuned on device: the character-pace estimate fires early against the
+  /// real speech (lead-in intonation, pauses). This lag aligns the glow
+  /// with the spoken hand name.
+  static const int _glowSpeechLagMs = 1000;
+
+  void _scheduleCardGlow(DrillGradeResult grade) {
+    _glowOn?.cancel();
+    _glowOff?.cancel();
+    _removeGlowDurationListener();
+
+    if (CoachVoiceService.speechState.value == CoachSpeechState.speaking) {
+      // Voice path: find the SPOKEN hand phrase ("ace two offsuit") in
+      // the spoken text; speech pace is near-uniform per character.
+      final spoken = CoachVoiceService.lastSpokenText;
+      final phrase = CoachVoiceService.speakable(_engine.heroHandClass);
+      final frac = CoachPersonas.mentionFraction(spoken, phrase);
+      if (frac == null) return;
+      final known = CoachVoiceService.clipDuration.value;
+      if (known != null) {
+        _startGlowTimer(
+            (known.inMilliseconds * frac).round() + _glowSpeechLagMs);
+        return;
+      }
+      // The player reports the duration a moment after playback starts.
+      void onDuration() {
+        final d = CoachVoiceService.clipDuration.value;
+        if (d == null) return;
+        _removeGlowDurationListener();
+        if (mounted && _phase == _Phase.feedback) {
+          _startGlowTimer(
+              (d.inMilliseconds * frac).round() + _glowSpeechLagMs);
+        }
+      }
+
+      _glowDurationListener = onDuration;
+      CoachVoiceService.clipDuration.addListener(onDuration);
+      return;
+    }
+
+    // Text-only path (voice muted or failed): follow the typing.
+    final line = _coachLine(grade);
+    final frac =
+        CoachPersonas.mentionFraction(line, _engine.heroHandClass);
+    if (frac == null) return;
+    final typeMs = (line.length * 18).clamp(300, 1800);
+    _startGlowTimer((typeMs * frac).round());
+  }
+
+  void _startGlowTimer(int delayMs) {
+    _glowOn = Timer(Duration(milliseconds: delayMs), () {
+      if (!mounted || _phase != _Phase.feedback) return;
+      setState(() => _cardsGlow = true);
+      _glowOff = Timer(const Duration(milliseconds: 1600), () {
+        if (mounted) setState(() => _cardsGlow = false);
+      });
+    });
+  }
+
+  void _removeGlowDurationListener() {
+    final l = _glowDurationListener;
+    if (l != null) {
+      CoachVoiceService.clipDuration.removeListener(l);
+      _glowDurationListener = null;
+    }
+  }
+
+  void _onSpeechState() {
+    final state = CoachVoiceService.speechState.value;
+    if (state == CoachSpeechState.loading) {
+      _sawVoiceLoading = true;
+    } else if (state == CoachSpeechState.speaking) {
+      _revealVerdict();
+    } else if (state == CoachSpeechState.idle &&
+        _sawVoiceLoading &&
+        !_verdictRevealed) {
+      _revealVerdict(); // fetch failed or muted mid-flight — show it anyway
+    }
+  }
+
+  void _armVerdictReveal() {
+    _verdictRevealed = false;
+    _sawVoiceLoading =
+        CoachVoiceService.speechState.value == CoachSpeechState.loading;
+    _revealGrace?.cancel();
+    _revealCap?.cancel();
+    // Grace: speak() flips to `loading` a few microtasks after the grade
+    // lands; if it never does (voice muted/disabled), reveal after a
+    // short deliberation beat so the suspense still reads.
+    _revealGrace = Timer(const Duration(milliseconds: 600), () {
+      if (!_sawVoiceLoading &&
+          !_verdictRevealed &&
+          mounted &&
+          CoachVoiceService.speechState.value == CoachSpeechState.idle) {
+        _revealVerdict();
+      }
+    });
+    // Hard cap: a slow fetch never holds the verdict hostage.
+    _revealCap = Timer(const Duration(seconds: 4), () {
+      if (mounted) _revealVerdict();
+    });
+  }
+
+  void _revealVerdict() {
+    if (_verdictRevealed || !mounted) return;
+    final grade = _lastGrade;
+    setState(() => _verdictRevealed = true);
+    if (grade == null) return;
+    _scheduleCardGlow(grade);
+    // Haptics fire AT the reveal — they are a verdict spoiler otherwise.
+    switch (grade.grade) {
+      case DrillGrade.correct:
+        HapticFeedback.mediumImpact();
+      case DrillGrade.ok:
+        HapticFeedback.selectionClick();
+      case DrillGrade.mistake:
+        HapticFeedback.heavyImpact();
+    }
+  }
+
   @override
   void initState() {
     super.initState();
+    if (widget.challengeDecisions != null) {
+      // Deterministic insight rotation: with the seeded engine this makes
+      // coach lines identical across users for the same actions, so the
+      // shared neural-voice cache actually hits.
+      DrillInsights.resetRotation();
+      CoachVoiceService.loadEnabled().then((on) {
+        if (mounted) setState(() => _voiceOn = on);
+      });
+      CoachPersonas.load().then((p) {
+        if (mounted) setState(() => _persona = p);
+      });
+      CoachLevelResolver.resolveForCurrentUser().then((l) {
+        if (mounted) _level = l;
+      });
+      CoachVoiceService.speechState.addListener(_onSpeechState);
+    }
     _engine = DrillEngine(
         seats: widget.seats,
         stackBB: widget.stackBB,
@@ -134,6 +329,15 @@ class _DrillTableScreenState extends State<DrillTableScreen>
 
   @override
   void dispose() {
+    if (_isChallenge) {
+      CoachVoiceService.speechState.removeListener(_onSpeechState);
+      CoachVoiceService.stop();
+    }
+    _revealGrace?.cancel();
+    _revealCap?.cancel();
+    _glowOn?.cancel();
+    _glowOff?.cancel();
+    _removeGlowDurationListener();
     for (final f in _chipFlights) {
       f.controller.dispose();
     }
@@ -157,8 +361,18 @@ class _DrillTableScreenState extends State<DrillTableScreen>
       _actionDelayMs.clear();
       _lastGrade = null;
       _showRaiseSizes = false;
-      _handOverNote = '';
-      _consume(_engine.startHand());
+      final config = widget.challengeConfig;
+      if (config != null) {
+        // Daily Challenge: each spot is its own seeded one-decision hand.
+        // _records.length = how many spots are already done = next index.
+        final (engine, update) =
+            DailyChallengeService.buildSpotEngine(config, _records.length);
+        _engine = engine;
+        _visualSeatMap = _buildVisualSeatMap();
+        _consume(update);
+      } else {
+        _consume(_engine.startHand());
+      }
     });
   }
 
@@ -223,6 +437,14 @@ class _DrillTableScreenState extends State<DrillTableScreen>
         scenario: _heroTurn?.scenario ?? DrillScenario.unopened,
         result: update.grade!,
       ));
+      if (_isChallenge) {
+        // Suspense: everything verdict-colored (badge, tint, mascot
+        // reaction, haptic, dot) holds until the coach "finishes
+        // evaluating" — see _armVerdictReveal/_revealVerdict.
+        _armVerdictReveal();
+        _aiLine = null;
+        _speakCurrentGrade(update.grade!);
+      }
     }
 
     if (update.awaitingHero) {
@@ -232,7 +454,6 @@ class _DrillTableScreenState extends State<DrillTableScreen>
     } else if (update.handComplete) {
       _heroTurn = null;
       _phase = update.grade != null ? _Phase.feedback : _Phase.handOver;
-      _handOverNote = _completionNote(update);
       if (update.heroWalked) {
         // No decision was possible — flow straight into the next hand
         WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -273,6 +494,26 @@ class _DrillTableScreenState extends State<DrillTableScreen>
   }
 
   void _dismissFeedback() {
+    if (_isChallenge) CoachVoiceService.stop();
+    _glowOn?.cancel();
+    _glowOff?.cancel();
+    _removeGlowDurationListener();
+    _cardsGlow = false;
+    // Challenge over: the Nth graded decision was just reviewed — hand the
+    // records back to the Daily Challenge host, whatever state the hand is in.
+    if (_challengeDone) {
+      Navigator.pop(
+          context, List<DrillDecisionRecord>.unmodifiable(_records));
+      return;
+    }
+    // Daily Challenge: exactly ONE graded decision per spot. After
+    // reviewing it, always advance to the next spot's fresh engine — never
+    // resume the same hand (a second decision would mis-align records and
+    // the per-spot seeds; that caused the mid-run black screen).
+    if (_isChallenge) {
+      _nextHand();
+      return;
+    }
     final update = _lastUpdate;
     if (update != null &&
         update.handComplete &&
@@ -289,19 +530,12 @@ class _DrillTableScreenState extends State<DrillTableScreen>
     });
   }
 
-  String _completionNote(DrillHandUpdate update) {
-    if (update.heroWalked) return 'Everyone folded — you win the blinds.';
-    if (update.heroWonUncontested) {
-      return 'Everyone folded — you take it down '
-          '(${update.potBB.toStringAsFixed(1)}BB).';
-    }
-    if (update.reachedFlop) {
-      return 'Hand goes to the flop — preflop drill complete.';
-    }
-    return 'Hand over.';
-  }
-
   Future<void> _confirmExit() async {
+    if (_isChallenge) {
+      // Abandoning mid-run records nothing — the day can be replayed fresh.
+      Navigator.pop(context);
+      return;
+    }
     if (_records.isEmpty) {
       Navigator.pop(context);
       return;
@@ -345,8 +579,10 @@ class _DrillTableScreenState extends State<DrillTableScreen>
             children: [
               _buildHeader(s, l10n),
               Expanded(child: _buildTable(s, l10n)),
-              _buildHeroRow(s),
-              _buildRecentLines(s),
+              // Hero cards now live ON the hero seat, and the hand name +
+              // villain context are folded into the bottom panel — so the
+              // table flows straight into one clean panel instead of three
+              // stacked blocks.
               _buildBottomPanel(s, l10n),
             ],
           ),
@@ -373,7 +609,10 @@ class _DrillTableScreenState extends State<DrillTableScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(l10n.drillHandNumber(_engine.handNumber),
+                Text(
+                    _isChallenge
+                        ? 'Daily Challenge'
+                        : l10n.drillHandNumber(_engine.handNumber),
                     style: AppTypography.ibm(
                         color: AppColors.textPrimary,
                         fontSize: 16 * s,
@@ -387,7 +626,24 @@ class _DrillTableScreenState extends State<DrillTableScreen>
               ],
             ),
           ),
-          if (total > 0)
+          if (_isChallenge)
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // The coach "watches" while it's your turn to act.
+                if (_phase == _Phase.acting)
+                  Padding(
+                    padding: EdgeInsets.only(right: AppSpacing.xxs * s),
+                    child: CoachMascot(
+                      personaId: _persona.id,
+                      expression: CoachExpression.idle,
+                      size: 26 * s,
+                    ),
+                  ),
+                _buildChallengeDots(s),
+              ],
+            )
+          else if (total > 0)
             GestureDetector(
               onTap: _showSummary,
               child: Container(
@@ -413,12 +669,58 @@ class _DrillTableScreenState extends State<DrillTableScreen>
     );
   }
 
+  /// Challenge progress: one dot per decision, chess.com move-list style —
+  /// green/gold/red once graded, outlined for the live spot, dim upcoming.
+  Widget _buildChallengeDots(double s) {
+    final total = widget.challengeDecisions!;
+    // The freshest dot stays uncolored until the coach reveals the verdict
+    // (the dot's color is a spoiler).
+    final coloredCount =
+        _verdictRevealed ? _records.length : _records.length - 1;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (var i = 0; i < total; i++) ...[
+          if (i > 0) SizedBox(width: 5 * s),
+          Container(
+            width: 11 * s,
+            height: 11 * s,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: i < coloredCount
+                  ? switch (_records[i].result.grade) {
+                      DrillGrade.correct => _green,
+                      DrillGrade.ok => _gold,
+                      DrillGrade.mistake => _red,
+                    }
+                  : Colors.transparent,
+              border: i >= coloredCount
+                  ? Border.all(
+                      color: i == coloredCount &&
+                              (_phase == _Phase.acting ||
+                                  !_verdictRevealed)
+                          ? _accent
+                          : AppColors.whiteOverlay(opacity: 0.25),
+                      width: 1.5,
+                    )
+                  : null,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
   // ── Table ───────────────────────────────────────────────────────────
 
-  // Seat fractions — sized so seats + action pills fit inside the dotted grid.
-  // Keep conservative to prevent side-seat pills from overflowing the container.
-  static const _seatW = 0.72;
-  static const _seatH = 0.64;
+  // Seat fractions — the ellipse the pods are centered on. The neon table art
+  // is drawn with BoxFit.contain (ratio 0.725), so the painted oval is
+  // NARROWER than the old stretched SVG; pulling the seat ellipse in (esp.
+  // horizontally) lands each pod ON the rail instead of hanging off the edge,
+  // GGPoker/WPT-style. Side seats drove the old overflow, so width tightens
+  // most.
+  static const _seatW = 0.60;
+  static const _seatH = 0.70;
 
   Widget _buildTable(double s, AppLocalizations l10n) {
     // Build active seat map using visual positions
@@ -513,7 +815,6 @@ class _DrillTableScreenState extends State<DrillTableScreen>
         widget.seats.firstWhere((s) => s.seatNumber == seatNumber);
     final folded = _foldedSeats.contains(seatNumber);
     final action = _lastAction[seatNumber];
-    final position = _engine.positionOf(seatNumber);
     final heroActing = seat.isHero && _phase == _Phase.acting;
     final stackNow = _engine.stackOf(seatNumber);
 
@@ -521,61 +822,49 @@ class _DrillTableScreenState extends State<DrillTableScreen>
         ? '${seat.displayName.substring(0, 7)}…'
         : seat.displayName;
 
-    // Player info pill: name + position·stack, wrapped in a breathing glow
-    // while it's the hero's turn to act.
-    final playerInfo = PulseGlow(
-      enabled: heroActing,
-      color: _accent,
-      borderRadius: BorderRadius.circular(35),
-      child: Container(
-        padding: EdgeInsets.symmetric(
-            horizontal: AppSpacing.xxs * s, vertical: AppSpacing.xxxs * s),
-        decoration: BoxDecoration(
-          color: AppColors.bgSurface,
-          borderRadius: BorderRadius.circular(35),
-          border: Border.all(
-            color: heroActing
-                ? _accent
-                : seat.isHero
-                    ? _accent.withOpacity(0.55)
-                    : AppColors.bgElevated,
-            width: heroActing ? 2 : 1.5,
-          ),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              name,
-              maxLines: 1,
-              style: AppTypography.ibm(
-                color: seat.isHero ? _accent : AppColors.textPrimary,
-                fontSize: 13 * s,
-                fontWeight: FontWeight.w600,
-                height: 1.2,
-              ),
-            ),
-            // Position + live stack (rolls down as chips go in)
-            AnimatedAmountText(
-              value: stackNow,
-              duration: const Duration(milliseconds: 260),
-              formatter: (v) {
-                final stackText =
-                    v <= 0.05 ? 'ALL-IN' : v.toStringAsFixed(1);
-                return position.isEmpty
-                    ? stackText
-                    : '$position · $stackText';
-              },
-              style: AppTypography.mono(
-                color: AppColors.textSecondary,
-                fontSize: 10 * s,
-                height: 1.2,
-              ),
-            ),
-          ],
-        ),
-      ),
+    // Player node — WPT/888-style: a round silhouette avatar sitting ON the
+    // rail, with a compact name + stack plate hanging OUTWARD from the oval
+    // (so it never covers the felt). Position labels (BTN/SB/…) are dropped in
+    // Daily Challenge; the dealer button + blind chips already convey
+    // position and the plate reads cleaner as name + live stack. The whole
+    // node breathes while it's the hero's turn. Top-of-table seats put the
+    // plate ABOVE the avatar; everyone else below.
+    final plateAbove = _chipDirection(visualSeat) == _ChipDir.down;
+    Widget playerInfo = _playerNode(
+      name: name,
+      stack: stackNow,
+      isHero: seat.isHero,
+      heroActing: heroActing,
+      plateAbove: plateAbove,
+      s: s,
     );
+
+    // Hero's hole cards live ON the hero seat (bottom-center), sitting just
+    // above the avatar — so the player's hand reads right where they look to
+    // act, and the bottom panel stays a single clean block (no separate
+    // cards strip). New cards pop in each hand.
+    if (seat.isHero) {
+      playerInfo = Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          PopIn(
+            triggerKey: _engine.handNumber,
+            duration: const Duration(milliseconds: 240),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (var i = 0; i < _engine.heroCards.length; i++) ...[
+                  if (i > 0) SizedBox(width: 3 * s),
+                  _buildCard(_engine.heroCards[i], s),
+                ],
+              ],
+            ),
+          ),
+          SizedBox(height: 3 * s),
+          playerInfo,
+        ],
+      );
+    }
 
     // Action/bet pill — solid base + colored glow so it pops off the felt,
     // entering in its ripple slot (staggered per batch of actions).
@@ -588,7 +877,7 @@ class _DrillTableScreenState extends State<DrillTableScreen>
         duration: const Duration(milliseconds: 200),
         child: Container(
           padding: EdgeInsets.symmetric(
-              horizontal: 7 * s, vertical: 2.5 * s),
+              horizontal: 5.5 * s, vertical: 2 * s),
           decoration: BoxDecoration(
             color: AppColors.bgSurface,
             borderRadius: BorderRadius.circular(
@@ -597,7 +886,7 @@ class _DrillTableScreenState extends State<DrillTableScreen>
             boxShadow: [
               BoxShadow(
                 color: pillColor.withOpacity(0.28),
-                blurRadius: 9,
+                blurRadius: 7,
                 spreadRadius: 0.5,
               ),
             ],
@@ -606,7 +895,7 @@ class _DrillTableScreenState extends State<DrillTableScreen>
             action,
             style: AppTypography.mono(
               color: pillColor,
-              fontSize: 10 * s,
+              fontSize: 9 * s,
               fontWeight: FontWeight.w700,
             ),
           ),
@@ -656,6 +945,120 @@ class _DrillTableScreenState extends State<DrillTableScreen>
         curve: Curves.easeOut,
         scale: folded ? 0.94 : 1.0,
         child: content,
+      ),
+    );
+  }
+
+  /// WPT/888-style player node: a round silhouette avatar + a name/stack
+  /// plate beneath it, with a small chip badge on the avatar. Hero gets an
+  /// accent ring; the acting hero's node breathes. No position label.
+  Widget _playerNode({
+    required String name,
+    required double stack,
+    required bool isHero,
+    required bool heroActing,
+    required bool plateAbove,
+    required double s,
+  }) {
+    final avatarR = 15.0 * s;
+    final ringColor = heroActing
+        ? _accent
+        : isHero
+            ? _accent.withOpacity(0.7)
+            : AppColors.borderOnInverse;
+
+    final avatar = Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Container(
+          width: avatarR * 2,
+          height: avatarR * 2,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: AppColors.bgElevated,
+            border: Border.all(color: ringColor, width: heroActing ? 2 : 1.5),
+          ),
+          child: Icon(
+            Icons.person,
+            size: avatarR * 1.15,
+            color: isHero
+                ? _accent.withOpacity(0.9)
+                : AppColors.textSecondary.withOpacity(0.7),
+          ),
+        ),
+        // Chip badge — small stacked-chip glyph on the avatar's lower-right,
+        // echoing WPT's chip indicator.
+        Positioned(
+          right: -2 * s,
+          bottom: -1 * s,
+          child: Container(
+            padding: EdgeInsets.all(2 * s),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppColors.bgSurface,
+              border: Border.all(color: AppColors.bgPrimary, width: 1),
+            ),
+            child: Icon(Icons.album, size: 7 * s, color: _accent),
+          ),
+        ),
+      ],
+    );
+
+    final plate = Container(
+      constraints: BoxConstraints(maxWidth: 74 * s),
+      padding: EdgeInsets.symmetric(horizontal: 7 * s, vertical: 2.5 * s),
+      decoration: BoxDecoration(
+        color: AppColors.bgSurface.withOpacity(0.92),
+        borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
+        border: Border.all(
+          color: isHero ? _accent.withOpacity(0.55) : AppColors.bgElevated,
+          width: 1,
+        ),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            name,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: AppTypography.ibm(
+              color: isHero ? _accent : AppColors.textPrimary,
+              fontSize: 10 * s,
+              fontWeight: FontWeight.w600,
+              height: 1.1,
+            ),
+          ),
+          AnimatedAmountText(
+            value: stack,
+            duration: const Duration(milliseconds: 260),
+            formatter: (v) =>
+                v <= 0.05 ? 'ALL-IN' : '${v.toStringAsFixed(1)} BB',
+            style: AppTypography.mono(
+              color: AppColors.textSecondary,
+              fontSize: 9 * s,
+              fontWeight: FontWeight.w500,
+              height: 1.1,
+            ),
+          ),
+        ],
+      ),
+    );
+
+    // Avatar overlaps the plate slightly (pod look). Plate hangs outward:
+    // above the avatar for top-of-table seats, below for everyone else. The
+    // node breathes while it's the acting hero's turn.
+    final overlap = Transform.translate(
+      offset: Offset(0, (plateAbove ? 4 : -4) * s),
+      child: plate,
+    );
+    return PulseGlow(
+      enabled: heroActing,
+      color: _accent,
+      borderRadius: BorderRadius.circular(avatarR),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: plateAbove ? [overlap, avatar] : [avatar, overlap],
       ),
     );
   }
@@ -788,51 +1191,35 @@ class _DrillTableScreenState extends State<DrillTableScreen>
     return _accent; // call / limp / check
   }
 
-  // ── Hero strip / recent lines ───────────────────────────────────────
-
-  Widget _buildHeroRow(double s) {
-    return Padding(
-      padding: EdgeInsets.symmetric(
-          horizontal: AppSpacing.md * s, vertical: AppSpacing.xxxs * s),
-      // New hole cards pop in with each hand
-      child: PopIn(
-        triggerKey: _engine.handNumber,
-        duration: const Duration(milliseconds: 240),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            for (final card in _engine.heroCards) ...[
-              _buildCard(card, s),
-              SizedBox(width: 6 * s),
-            ],
-            SizedBox(width: AppSpacing.xxs * s),
-            Text(_engine.heroHandClass,
-                style: AppTypography.mono(
-                    color: AppColors.textPrimary,
-                    fontSize: 17 * s,
-                    fontWeight: FontWeight.w600)),
-            SizedBox(width: AppSpacing.xxs * s),
-            Text(_engine.heroPosition,
-                style: AppTypography.ibm(
-                    color: AppColors.textSecondary,
-                    fontSize: 13 * s)),
-          ],
-        ),
-      ),
-    );
-  }
+  // ── Hero cards (rendered on the hero seat) ──────────────────────────
 
   Widget _buildCard(String card, double s) {
     final suit = card.substring(card.length - 1);
     final rank = card.substring(0, card.length - 1);
     final isRed = suit == '♥' || suit == '♦';
     final color = isRed ? const Color(0xFFD32F2F) : AppColors.textInverse;
-    return Container(
+    // When the coach names the hand, the card glows and the suit symbol
+    // grows — the player's eye goes to the cards the coach talks about.
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeOut,
       width: 34 * s,
       height: 46 * s,
       decoration: BoxDecoration(
         color: AppColors.bgInverse,
         borderRadius: BorderRadius.circular(6 * s),
+        border: _cardsGlow
+            ? Border.all(color: AppColors.accentPrimary, width: 1.5)
+            : null,
+        boxShadow: _cardsGlow
+            ? [
+                BoxShadow(
+                  color: AppColors.accentPrimary.withValues(alpha: 0.65),
+                  blurRadius: 14 * s,
+                  spreadRadius: 1,
+                ),
+              ]
+            : null,
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -842,39 +1229,14 @@ class _DrillTableScreenState extends State<DrillTableScreen>
                   color: color,
                   fontSize: 15 * s,
                   fontWeight: FontWeight.w700)),
-          Text(suit, style: TextStyle(color: color, fontSize: 12 * s)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildRecentLines(double s) {
-    final text = _handOverNote.isNotEmpty
-        ? _handOverNote
-        : _recentLines.isNotEmpty
-            ? _recentLines.last
-            : '';
-    return SizedBox(
-      height: 22 * s,
-      child: Center(
-        child: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 150),
-          child: Text(
-            text,
-            key: ValueKey(text),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: AppTypography.ibm(
-              color: _handOverNote.isNotEmpty
-                  ? _accent.withOpacity(0.85)
-                  : AppColors.textSecondary,
-              fontSize: 13 * s,
-              fontStyle: _handOverNote.isNotEmpty
-                  ? FontStyle.italic
-                  : FontStyle.normal,
-            ),
+          AnimatedScale(
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeOutBack,
+            scale: _cardsGlow ? 1.4 : 1.0,
+            child:
+                Text(suit, style: TextStyle(color: color, fontSize: 12 * s)),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -906,7 +1268,9 @@ class _DrillTableScreenState extends State<DrillTableScreen>
         child: KeyedSubtree(
           key: ValueKey('$_phase|${_records.length}'),
           child: switch (_phase) {
-            _Phase.feedback => _buildFeedback(s, l10n),
+            _Phase.feedback => _isChallenge
+                ? _buildCoachFeedback(s)
+                : _buildFeedback(s, l10n),
             _Phase.acting => _buildActions(s, l10n),
             _Phase.handOver => _buildHandOver(s, l10n),
           },
@@ -1036,6 +1400,347 @@ class _DrillTableScreenState extends State<DrillTableScreen>
           ),
         ],
       ),
+    );
+  }
+
+  /// Fetch the AI reason for this spot (level + coach), then speak the
+  /// composed line. The AI reason comes from the daily cache; on a miss
+  /// (not generated yet, offline) the persona template reason is used.
+  /// The fetch is quick and runs inside the existing "evaluating" beat.
+  Future<void> _speakCurrentGrade(DrillGradeResult grade) async {
+    final spotIndex = _records.length - 1; // this decision's index
+    final ai = await DailyCoachLinesService.lineFor(
+      spotIndex: spotIndex,
+      coachId: _persona.id,
+      level: _level,
+    );
+    if (!mounted || _phase != _Phase.feedback) return;
+    if (ai != null) _aiLine = ai; // _coachLine now uses it
+    // The coach speaks the same line the bubble types out (neural voice
+    // only — quiet when unreachable).
+    CoachVoiceService.speak(_coachLine(grade), coachId: _persona.id);
+  }
+
+  /// The one coach sentence for a grade — typed into the bubble AND spoken
+  /// by the voice (kept identical so eyes and ears agree). The persona
+  /// supplies the character lead; the AI reason (when present) replaces
+  /// the template reason with the level-adapted explanation.
+  String _coachLine(DrillGradeResult grade) =>
+      _persona.compose(grade, _records.length, aiLine: _aiLine);
+
+  void _toggleVoice() {
+    HapticFeedback.selectionClick();
+    setState(() => _voiceOn = !_voiceOn);
+    CoachVoiceService.setEnabled(_voiceOn);
+  }
+
+  /// "Show range": the exact baseline chart this decision was graded
+  /// against, with the hero's hand ringed on it.
+  Future<void> _showRangeSheet() async {
+    final ctx = _engine.lastGradedContext;
+    if (ctx == null) return;
+    HapticFeedback.selectionClick();
+    final chart = DrillRangeLookup.chartFor(ctx);
+    AnalyticsService.capture('daily_challenge_range_viewed', {
+      'scenario': ctx.scenario.name,
+      'position': ctx.positionGroup,
+    });
+    await AppSheet.show<void>(
+      context: context,
+      title: chart.title,
+      scrollable: true,
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              for (final layer in chart.layers) ...[
+                Container(
+                  width: 10,
+                  height: 10,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: switch (layer.kind) {
+                      DrillRangeLayerKind.raise => AppColors.rangeRaise,
+                      DrillRangeLayerKind.call => AppColors.rangeCall,
+                    },
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Text(layer.label,
+                    style: AppTypography.ibm(
+                        fontSize: 12, color: AppColors.textPrimary)),
+                const SizedBox(width: AppSpacing.sm),
+              ],
+              const Spacer(),
+              Container(
+                width: 10,
+                height: 10,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                      color: AppColors.accentPrimary, width: 2),
+                ),
+              ),
+              const SizedBox(width: 4),
+              Text('your hand',
+                  style: AppTypography.ibm(
+                      fontSize: 12, color: AppColors.textSecondary)),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          DrillRangeChartGrid(
+            chart: chart,
+            highlightHand: _engine.heroHandClass,
+          ),
+          const SizedBox(height: AppSpacing.xxs),
+          Text(chart.caption,
+              style: AppTypography.ibm(
+                  fontSize: 11, color: AppColors.textDisabled)),
+          const SizedBox(height: AppSpacing.md),
+        ],
+      ),
+    );
+  }
+
+  /// Daily Challenge feedback: the coach "talks" — verdict badge pops in,
+  /// then the explanation types out in a speech bubble (tap to skip ahead)
+  /// while the voice reads it. English-only while the feature is
+  /// admin-flagged (same as Leak Detector).
+  Widget _buildCoachFeedback(double s) {
+    final grade = _lastGrade!;
+    final (verdictColor, label) = switch (grade.grade) {
+      DrillGrade.correct => (_green, 'BEST MOVE'),
+      DrillGrade.ok => (_gold, 'GOOD'),
+      DrillGrade.mistake => (_red, 'LEAK'),
+    };
+    // Until the coach "finishes evaluating", NOTHING may leak the verdict:
+    // the card stays neutral, the badge reads EVALUATING, the mascot holds
+    // its idle face, and the action buttons wait.
+    final revealed = _verdictRevealed;
+    final color =
+        revealed ? verdictColor : Colors.white.withValues(alpha: 0.45);
+    final line = _coachLine(grade);
+    final isLast = _challengeDone;
+    // The mascot stands ON the feedback box, head breaking its top edge
+    // (game-UI pop-out): the card is pushed down inside a Stack and the
+    // reacting mascot is positioned over its top-left corner.
+    final mascotSize = 62 * s;
+    final mascotPop = 20 * s; // how far the head rises above the card
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 250),
+          width: double.infinity,
+          margin: EdgeInsets.only(top: mascotPop),
+          padding: EdgeInsets.fromLTRB(AppSpacing.sm * s, AppSpacing.xxs * s,
+              AppSpacing.sm * s, AppSpacing.sm * s),
+          decoration: BoxDecoration(
+            color: revealed
+                ? verdictColor.withOpacity(0.08)
+                : Colors.white.withValues(alpha: 0.04),
+            borderRadius:
+                BorderRadius.circular(AppDecorations.radiusLg * s),
+            border: Border.all(
+                color: revealed
+                    ? verdictColor.withOpacity(0.35)
+                    : Colors.white.withValues(alpha: 0.18)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Top row: verdict badge (or EVALUATING) + voice toggle. The
+              // mascot pops out over the left, so clear its width first.
+              Row(
+                children: [
+                  SizedBox(width: mascotSize + AppSpacing.xs * s),
+                  if (revealed)
+                    PopIn(
+                      child: Container(
+                        padding: EdgeInsets.symmetric(
+                            horizontal: AppSpacing.xs * s, vertical: 4 * s),
+                        decoration: BoxDecoration(
+                          color: verdictColor,
+                          borderRadius: BorderRadius.circular(
+                              AppDecorations.pillRadius),
+                        ),
+                        child: Text(label,
+                            style: AppTypography.ibm(
+                                color: AppColors.textInverse,
+                                fontSize: 12 * s,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 1.0)),
+                      ),
+                    )
+                  else
+                    Container(
+                      padding: EdgeInsets.symmetric(
+                          horizontal: AppSpacing.xs * s, vertical: 4 * s),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.10),
+                        borderRadius:
+                            BorderRadius.circular(AppDecorations.pillRadius),
+                      ),
+                      child: Text('EVALUATING…',
+                          style: AppTypography.ibm(
+                              color: AppColors.textSecondary,
+                              fontSize: 12 * s,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 1.0)),
+                    ),
+                  const Spacer(),
+                  GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: _toggleVoice,
+                    child: Icon(
+                      _voiceOn
+                          ? Icons.volume_up_rounded
+                          : Icons.volume_off_rounded,
+                      size: 18 * s,
+                      color: _voiceOn
+                          ? AppColors.accentPrimary
+                          : AppColors.textDisabled,
+                    ),
+                  ),
+                ],
+              ),
+              // Second row: one clean context line — what you did vs the hand
+              // strength. Replaces the old overloaded header (no truncation).
+              Padding(
+                padding: EdgeInsets.only(
+                    left: mascotSize + AppSpacing.xs * s, top: 2 * s),
+                child: Text(
+                  'You ${grade.heroAction} · ${_engine.heroHandClass} · top ${grade.handTopPercent.round()}%',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.mono(
+                      color: AppColors.textSecondary, fontSize: 11 * s),
+                ),
+              ),
+          SizedBox(height: AppSpacing.xs * s),
+          ConstrainedBox(
+            constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.22),
+            child: SingleChildScrollView(
+              child: Stack(
+                children: [
+                  // Invisible full text reserves the final layout so the
+                  // card never jumps when the line reveals.
+                  Opacity(
+                    opacity: 0,
+                    child: Text(line,
+                        style: AppTypography.ibm(
+                            color: AppColors.textPrimary,
+                            fontSize: 14 * s,
+                            height: 1.4)),
+                  ),
+                  if (revealed)
+                    _TypedText(
+                      // Keyed by decision count so each grade retypes.
+                      key: ValueKey('coach_${_records.length}'),
+                      text: line,
+                      style: AppTypography.ibm(
+                          color: AppColors.textPrimary,
+                          fontSize: 14 * s,
+                          height: 1.4),
+                    ),
+                ],
+              ),
+            ),
+          ),
+          SizedBox(height: 10 * s),
+          // Action buttons wait for the verdict too — skipping ahead of
+          // the evaluation would defeat the suspense (max 4s).
+          Opacity(
+            opacity: revealed ? 1 : 0.15,
+            child: IgnorePointer(
+              ignoring: !revealed,
+              child: Row(
+            children: [
+              GestureDetector(
+                onTap: _showRangeSheet,
+                child: Container(
+                  padding: EdgeInsets.symmetric(
+                      horizontal: AppSpacing.md * s,
+                      vertical: AppSpacing.xs * s),
+                  decoration: BoxDecoration(
+                    borderRadius:
+                        BorderRadius.circular(AppDecorations.buttonRadius),
+                    border: Border.all(color: color.withOpacity(0.6)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.grid_on_rounded,
+                          size: 14 * s, color: color),
+                      SizedBox(width: 6 * s),
+                      Text('Show range',
+                          style: AppTypography.ibm(
+                              color: color,
+                              fontSize: 14 * s,
+                              fontWeight: FontWeight.w600)),
+                    ],
+                  ),
+                ),
+              ),
+              SizedBox(width: AppSpacing.xs * s),
+              Expanded(
+                child: GestureDetector(
+                  onTap: _dismissFeedback,
+                  child: Container(
+                    padding:
+                        EdgeInsets.symmetric(vertical: AppSpacing.xs * s),
+                    decoration: BoxDecoration(
+                      color: color,
+                      borderRadius:
+                          BorderRadius.circular(AppDecorations.buttonRadius),
+                    ),
+                    child: Center(
+                      child: Text(
+                        isLast ? 'See my result' : 'Next spot',
+                        style: AppTypography.ibm(
+                            color: AppColors.textInverse,
+                            fontSize: 15 * s,
+                            fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+              ),
+            ),
+          ),
+        ],
+      ),
+        ),
+        // The mascot holds its idle face while evaluating, then reacts
+        // once at the reveal (bounce on BEST, head-shake on LEAK).
+        Positioned(
+          top: 0,
+          left: AppSpacing.sm * s,
+          child: CoachMascot(
+            key: ValueKey('mascot_${_records.length}'),
+            personaId: _persona.id,
+            expression: revealed
+                ? CoachMascot.expressionFor(grade.grade)
+                : CoachExpression.idle,
+            size: mascotSize,
+          ),
+        ),
+        // "Coach is thinking…" dots while the verdict is held back.
+        Positioned(
+          top: 2,
+          left: AppSpacing.sm * s + mascotSize - 6 * s,
+          child: revealed
+              ? const SizedBox.shrink()
+              : _ThinkingDots(
+                  size: 7 * s,
+                  color: Colors.white.withValues(alpha: 0.7)),
+        ),
+      ],
     );
   }
 
@@ -1351,6 +2056,122 @@ class _DrillSummarySheet extends StatelessWidget {
               style: AppTypography.bodyXsMedium(
                   color: AppColors.textSecondary)),
         ],
+      ),
+    );
+  }
+}
+
+/// Three staggered pulsing dots in a tiny speech bubble — the coach
+/// "thinking before speaking" while the voice line is fetched. Mounted
+/// only during [CoachSpeechState.loading], so the animation is bounded by
+/// the fetch (8s + 8s timeouts worst case).
+class _ThinkingDots extends StatefulWidget {
+  final double size; // dot diameter
+  final Color color;
+
+  const _ThinkingDots({required this.size, required this.color});
+
+  @override
+  State<_ThinkingDots> createState() => _ThinkingDotsState();
+}
+
+class _ThinkingDotsState extends State<_ThinkingDots>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _c = AnimationController(
+      vsync: this, duration: const Duration(milliseconds: 900))
+    ..repeat();
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final d = widget.size;
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: d, vertical: d * 0.8),
+      decoration: BoxDecoration(
+        color: AppColors.bgElevated,
+        borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
+        border: Border.all(color: widget.color.withOpacity(0.4)),
+      ),
+      child: AnimatedBuilder(
+        animation: _c,
+        builder: (context, _) => Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (var i = 0; i < 3; i++) ...[
+              if (i > 0) SizedBox(width: d * 0.6),
+              Opacity(
+                opacity: 0.25 +
+                    0.75 *
+                        (0.5 + 0.5 * sin((_c.value * 2 * pi) - i * 0.9)),
+                child: Container(
+                  width: d,
+                  height: d,
+                  decoration: BoxDecoration(
+                      shape: BoxShape.circle, color: widget.color),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// One-shot character-by-character reveal — the coach "speaking" in Daily
+/// Challenge feedback. Tap anywhere on the text to skip to the full line.
+/// No looping animation (battery rule); the controller runs once per text.
+class _TypedText extends StatefulWidget {
+  final String text;
+  final TextStyle style;
+
+  const _TypedText({super.key, required this.text, required this.style});
+
+  @override
+  State<_TypedText> createState() => _TypedTextState();
+}
+
+class _TypedTextState extends State<_TypedText>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    // ~18ms per character, capped so long coach lines don't drag.
+    duration: Duration(
+        milliseconds: (widget.text.length * 18).clamp(300, 1800)),
+  )..forward();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => _controller.value = 1,
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, _) {
+          final chars =
+              (widget.text.length * _controller.value).round();
+          return Stack(
+            children: [
+              // Invisible full text reserves the final layout so the bubble
+              // doesn't grow line-by-line while typing.
+              Opacity(
+                  opacity: 0,
+                  child: Text(widget.text, style: widget.style)),
+              Text(widget.text.substring(0, chars), style: widget.style),
+            ],
+          );
+        },
       ),
     );
   }

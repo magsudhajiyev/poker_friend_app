@@ -6,6 +6,8 @@ import { initializeApp } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
 import { getFirestore, FieldValue, Timestamp } from "firebase-admin/firestore";
 import { getMessaging } from "firebase-admin/messaging";
+import { getStorage } from "firebase-admin/storage";
+import { createHash, randomUUID } from "crypto";
 
 // Initialize Firebase Admin SDK
 initializeApp();
@@ -565,6 +567,154 @@ export const revenuecatWebhook = onRequest(
       res.status(200).send("OK");
     } catch (error) {
       console.error(`Webhook processing failed for ${appUserId}:`, error);
+      res.status(500).send("Internal error");
+    }
+  }
+);
+
+// ─────────────────────────────────────────────────────────────────────────
+// Daily Challenge coach voice — ElevenLabs TTS proxy with Storage caching.
+//
+// The app never holds the ElevenLabs key: signed-in clients POST
+// { text, coach } here, the function synthesizes the line (or serves the
+// cached MP3) and returns a tokened download URL. Clips are cached in
+// Storage keyed by sha256(coach|text) — the daily puzzle is identical for
+// every user, so the first player to hear a line pays for its generation
+// and everyone else streams the cache. Voice casting + delivery settings
+// live HERE (not client-requestable) so the key can't be abused for
+// arbitrary synthesis.
+// ─────────────────────────────────────────────────────────────────────────
+
+const elevenLabsKey = defineSecret("ELEVENLABS_API_KEY");
+
+/** Persona → ElevenLabs premade voice + delivery. All original characters. */
+const COACH_VOICES: Record<
+  string,
+  { voiceId: string; stability: number; similarityBoost: number }
+> = {
+  // Duke — old-school Vegas grinder → "Bill" (wise, mature, old American)
+  grinder: {
+    voiceId: "pqHfZKP75CvOlQylNhV4",
+    stability: 0.45,
+    similarityBoost: 0.8,
+  },
+  // Prof. Vega — dry GTO theorist → "George" (warm, captivating British
+  // storyteller; recast from "Daniel" which read as generic/robotic)
+  professor: {
+    voiceId: "JBFqnCBsd6RMkjVDRZzb",
+    stability: 0.55,
+    similarityBoost: 0.8,
+  },
+  // Nova — high-energy female hype coach → "Laura" (enthusiast, quirky)
+  nova: {
+    voiceId: "FGY2WhTYpPnrIDTdsKH5",
+    stability: 0.3,
+    similarityBoost: 0.8,
+  },
+};
+
+// Coach lines are 1-4 sentences, and the client's notation expansion
+// ("A2o" → "ace two offsuit") grows them further — 400 proved too tight
+// (verbose mistake explanations 400'd and the coach went mute). The
+// client also trims to ~550 at a sentence boundary as a backstop.
+const COACH_TEXT_MAX = 600;
+
+export const coachSpeech = onRequest(
+  // minInstances keeps one instance warm: cold starts added 1-3s to the
+  // first coach line of a session, which reads as the coach "lagging".
+  // Costs a few $/month idle — drop to 0 if the feature is shelved.
+  { secrets: [elevenLabsKey], timeoutSeconds: 30, minInstances: 1 },
+  async (req, res) => {
+    if (req.method !== "POST") {
+      res.status(405).send("Method not allowed");
+      return;
+    }
+
+    // Firebase Auth required — signed-in app users only.
+    const authHeader = req.headers.authorization ?? "";
+    const idToken = authHeader.startsWith("Bearer ")
+      ? authHeader.slice(7)
+      : "";
+    let uid: string;
+    try {
+      uid = (await getAuth().verifyIdToken(idToken)).uid;
+    } catch {
+      res.status(401).send("Unauthorized");
+      return;
+    }
+
+    const text = typeof req.body?.text === "string" ? req.body.text.trim() : "";
+    const coach = typeof req.body?.coach === "string" ? req.body.coach : "";
+    const voice = COACH_VOICES[coach];
+    if (!voice || text.length === 0 || text.length > COACH_TEXT_MAX) {
+      res.status(400).send("Bad request");
+      return;
+    }
+
+    // voiceId is part of the key so RECASTING a coach invalidates that
+    // coach's cached clips (bug 2026-10-14: Vega's recast kept serving
+    // old-voice clips for previously generated lines).
+    const hash = createHash("sha256")
+      .update(`${coach}|${voice.voiceId}|${text}`)
+      .digest("hex");
+    const bucket = getStorage().bucket();
+    const file = bucket.file(`coach_voice/${coach}/${hash}.mp3`);
+
+    const urlFor = (token: string) =>
+      `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/` +
+      `${encodeURIComponent(file.name)}?alt=media&token=${token}`;
+
+    try {
+      // Cache hit: reuse the stored clip's download token.
+      const [exists] = await file.exists();
+      if (exists) {
+        const [meta] = await file.getMetadata();
+        const token = (meta.metadata as Record<string, string> | undefined)?.[
+          "firebaseStorageDownloadTokens"
+        ];
+        if (token) {
+          res.status(200).json({ url: urlFor(token), cached: true });
+          return;
+        }
+        // Clip without a token (shouldn't happen) — fall through, regenerate.
+      }
+
+      const ttsResponse = await fetch(
+        `https://api.elevenlabs.io/v1/text-to-speech/${voice.voiceId}` +
+          `?output_format=mp3_44100_64`,
+        {
+          method: "POST",
+          headers: {
+            "xi-api-key": elevenLabsKey.value(),
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            text,
+            model_id: "eleven_flash_v2_5",
+            voice_settings: {
+              stability: voice.stability,
+              similarity_boost: voice.similarityBoost,
+            },
+          }),
+        }
+      );
+      if (!ttsResponse.ok) {
+        console.error(
+          `ElevenLabs ${ttsResponse.status} for coach=${coach} uid=${uid}`
+        );
+        res.status(502).send("TTS failed");
+        return;
+      }
+
+      const audio = Buffer.from(await ttsResponse.arrayBuffer());
+      const token = randomUUID();
+      await file.save(audio, {
+        contentType: "audio/mpeg",
+        metadata: { metadata: { firebaseStorageDownloadTokens: token } },
+      });
+      res.status(200).json({ url: urlFor(token), cached: false });
+    } catch (error) {
+      console.error(`coachSpeech failed for uid=${uid}:`, error);
       res.status(500).send("Internal error");
     }
   }

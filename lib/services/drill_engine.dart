@@ -99,6 +99,10 @@ class DrillEngine {
   String heroHandClass = '';
   DrillDecisionContext? _pendingContext;
 
+  /// Context of the most recently GRADED hero decision — kept so feedback
+  /// UIs can show the matching baseline range chart ("Show range").
+  DrillDecisionContext? lastGradedContext;
+
   DrillEngine({
     required this.seats,
     required this.stackBB,
@@ -157,6 +161,7 @@ class DrillEngine {
   DrillHandUpdate applyHeroAction(String action, {double? raiseToBB}) {
     final ctx = _pendingContext;
     _pendingContext = null;
+    if (ctx != null) lastGradedContext = ctx;
     final grade = ctx != null
         ? DrillGrader.grade(ctx, action, raiseToBB: raiseToBB)
         : null;

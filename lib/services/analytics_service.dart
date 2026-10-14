@@ -22,6 +22,13 @@ import 'logger_service.dart';
 /// Event vocabulary (fire at the ONE canonical site each):
 ///   signup, tour_completed, hand_logged, session_ended, paywall_opened,
 ///   subscribed, ai_analysis_used, promo_redeemed
+/// Leak Detector (flagged): leak_report_viewed, leak_tab_viewed,
+///   leak_grid_opened, leak_review_queue_opened, leak_goal_set/_fixed/
+///   _cleared, leak_shape_viewed/_grid_opened/_practice_tapped,
+///   leak_session_chip_shown/_tapped
+/// Daily Challenge (flagged): daily_challenge_opened,
+///   daily_challenge_completed, daily_challenge_shared,
+///   daily_challenge_range_viewed, daily_challenge_coach_picked
 /// Plus SDK-automatic: Application Opened/Backgrounded (lifecycle — feeds
 /// the retention chart).
 class AnalyticsService {

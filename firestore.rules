@@ -314,6 +314,14 @@ service cloud.firestore {
       allow write: if isSuperAdmin();
     }
 
+    // Daily Challenge AI coach lines — generated out of band by a
+    // maintainer (tool/gen_coach_lines, Claude API) and written with the
+    // Admin SDK / console. Read-only to clients.
+    match /daily_challenge_lines/{dayKey} {
+      allow read: if isAuthenticated();
+      allow write: if false;
+    }
+
     // Email templates - admin dashboard only
     match /email_templates/{docId} {
       allow read, write: if isSuperAdmin();

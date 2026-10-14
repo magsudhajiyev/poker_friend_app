@@ -97,10 +97,6 @@ class DrillVillainProfile {
   /// Convenience accessor — kept for backward compat / tests.
   static DrillVillainProfile prior({bool anteMode = false}) =>
       anteMode ? mttPrior : cashPrior;
-
-  /// Legacy alias for the cash prior (backward compat with engine startHand).
-  @Deprecated('Use prior() or cashPrior/mttPrior instead')
-  static const prior_legacy = cashPrior;
 }
 
 /// One seat at the drill table.
@@ -300,11 +296,13 @@ class DrillGradeResult {
   final String recommendedAction; // = exploitAction (primary target)
   final String explanation; // verdict lead + exploit reason (for summaries)
 
+  /// The reason half of [explanation] WITHOUT the rotated lead — coach
+  /// personas prepend their own character leads to this ('' on legacy
+  /// construction; fall back to [explanation]).
+  final String headlineReason;
+
   /// Where the dealt hand ranks among all 169 combos (0 = AA, 100 = worst).
   final double handTopPercent;
-
-  /// Kept for back-compat: equals [exploitRangePercent].
-  final double rangePercent;
 
   // ── Dual evaluation ──
   final String gtoAction;
@@ -319,8 +317,8 @@ class DrillGradeResult {
     required this.heroAction,
     required this.recommendedAction,
     required this.explanation,
+    this.headlineReason = '',
     this.handTopPercent = 0,
-    this.rangePercent = 0,
     this.gtoAction = 'fold',
     this.gtoRangePercent = 0,
     this.gtoReason = '',
@@ -341,6 +339,7 @@ class DrillGradeResult {
   DrillGradeResult copyWith({
     DrillGrade? grade,
     String? explanation,
+    String? headlineReason,
     String? exploitReason,
   }) {
     return DrillGradeResult(
@@ -348,8 +347,8 @@ class DrillGradeResult {
       heroAction: heroAction,
       recommendedAction: recommendedAction,
       explanation: explanation ?? this.explanation,
+      headlineReason: headlineReason ?? this.headlineReason,
       handTopPercent: handTopPercent,
-      rangePercent: rangePercent,
       gtoAction: gtoAction,
       gtoRangePercent: gtoRangePercent,
       gtoReason: gtoReason,

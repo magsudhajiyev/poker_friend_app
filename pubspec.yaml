@@ -37,6 +37,7 @@ dependencies:
   timezone: ^0.9.4
   http: ^1.2.0
   share_plus: ^10.1.2
+  audioplayers: ^6.1.0  # Daily Challenge neural coach voice (cached MP3 playback)
   csv: ^6.0.0
   google_fonts: ^6.1.0
   uuid: ^4.3.3
@@ -74,6 +75,7 @@ flutter:
     - assets/icons/
     - "assets/icons/card icons/"
     - assets/icons/flags/
+    - assets/mascots/
     - assets/play_style/
     - "assets/loading screen.aep_AME/"
     - icons/

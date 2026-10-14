@@ -90,3 +90,14 @@ session_*.json
 
 # Play Store listing metadata (uploaded via fastlane supply; not part of the app build)
 android/fastlane/
+tool/daily_lines/
+
+# Marketing render artifacts — large binaries, not app code (keep only the .md sources)
+marketing/*.mp4
+marketing/reel-assets/
+
+# Admin/dev-only Daily Challenge tester — kept out of the shipped tree on purpose
+lib/screens/admin/coach_level_tester_screen.dart
+
+# Temporary Daily Challenge preview harness — local dev entry point only
+lib/preview_drill_table.dart

@@ -200,11 +200,20 @@ class PokerTableWidget extends StatelessWidget {
   }
 
   Widget _buildTableSurface(double width, double height) {
-    return SvgPicture.asset(
-      showLogo ? 'assets/icons/Table.svg' : 'assets/icons/Table_clean.svg',
+    // Neon 3D table render. BoxFit.contain (not fill) preserves the oval's
+    // proportions — the asset is authored at the table ratio (266:367) and
+    // sits on #02050B, so the letterbox margins blend into the app
+    // background. Seat positions are area-fraction based and independent of
+    // this image, so the fit change doesn't move any seats.
+    return SizedBox(
       width: width,
       height: height,
-      fit: BoxFit.fill,
+      child: Image.asset(
+        showLogo
+            ? 'assets/icons/table_neon.png'
+            : 'assets/icons/table_neon_clean.png',
+        fit: BoxFit.contain,
+      ),
     );
   }
 

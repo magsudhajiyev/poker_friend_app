@@ -53,6 +53,7 @@ firebase deploy --only firestore:rules
 ---
 
 ## Project Rules
+- **Language of answers**: Write all answers and results to the user in ASD-STE100 Simplified Technical English. Use short sentences. Use the active voice. Use simple approved words. Give one instruction for each sentence.
 - **DO NOT push to git unless explicitly asked by user**
 - **DO NOT commit unless explicitly asked by user**
 - **Authoritative docs**: `BUG_TRACKER.md` (live status of hand-logging bugs + features in flight), `test/HAND_LOGGING_SPEC.md` (hand-logging behaviour spec + bug diagnoses), `POKER_SEATING_RULES.md` (seating/dead-button rules), `ROADMAP.md` (post-launch work queue incl. HARD Aug 31 2026 Play Billing deadline + deferred security fixes), `SECURITY_AUDIT_2026-07-23.md` (audit findings + per-item status), `BACKLOG.md` (triaged product backlog with stable B#/U#/F#/M#/G# IDs). Check these before touching hand-logging code, and check ROADMAP.md before planning any update.
@@ -121,6 +122,7 @@ Node 20 / TypeScript, firebase-functions v7. Deploy with `npm run deploy` from `
 - `cleanupOldTokens` — daily scheduled FCM token cleanup
 - `notifyFollowersOnSessionStart` — social feed: one FCM topic message (`live_{userId}`) on `feed_sessions` create — no per-follower fan-out
 - `revenuecatWebhook` — mirrors subscription tier onto `users/{uid}` (`subscriptionTier` + `subscriptionTierExpiresAt`) by re-fetching the subscriber from the RC REST API on every event; Firestore rules use the mirror to gate paid features (rules can't see RC entitlements)
+- `coachSpeech` — Daily Challenge neural coach voice: ElevenLabs TTS proxy (key in Secret Manager `ELEVENLABS_API_KEY`, never in the app), Firebase-Auth-gated, caches MP3s in Storage keyed by sha256(voiceId|coach|text) with download tokens; persona→voice casting lives server-side (deployed 2026-10-14)
 
 ### Data Flow
 1. User logs hand actions during gameplay
@@ -158,7 +160,7 @@ Four tiers — check via `SubscriptionService`:
 - **Elite** (`isElite`/`isPremium`): unlimited everything, AI analysis, all history
 - **Club** (`isClub`/`isPremium`): like Elite + club creation rights (owner pays; club members operate freely regardless of their own tier)
 
-Feature gates live in `lib/services/free_tier_limits.dart` (hand/opponent caps) and `lib/services/feature_flag_service.dart` (remote Firestore flags for `training_drills`, `ai_hand_analysis`, `leak_detector`). Use `FreeTierLimits.showHandsLimitDialog()` / `PaywallScreen.show()` for upgrade prompts.
+Feature gates live in `lib/services/free_tier_limits.dart` (hand/opponent caps) and `lib/services/feature_flag_service.dart` (remote Firestore flags for `training_drills`, `ai_hand_analysis`, `leak_detector`, `daily_challenge`). Use `FreeTierLimits.showHandsLimitDialog()` / `PaywallScreen.show()` for upgrade prompts.
 
 **Partner grants** (`lib/services/partner_grant_service.dart`): super-admin can grant users a free tier (Pro/Elite/Club) with expiry (1 week / 1 month / 3 months). `partnerTier` getter returns `null` for expired grants client-side; `init()` awaits the first Firestore snapshot (3s timeout) and must be `await`ed in sign-in paths (not `unawaited`) or the user briefly appears free-tier. Admin UI: `lib/screens/admin/partner_grants_screen.dart`. See `diary/2026-07-08-partner-grants-system.md`.
 
@@ -397,6 +399,9 @@ Frequency-based leak coaching over the player's own hand history. Design doc: `d
 ### 17. LED Range Board (EXPERIMENTAL)
 Physical 13×13 range display (ESP32 + WS2812B), firmware in `hardware/led-range-board/` (`led_range_board.ino`). `lib/services/led_grid_publisher.dart` encodes the range grid into a 1014-char hex payload (3 bytes/cell: raise/call/check/fold shares largest-remainder-normalized to 15, + intensity) and pushes over local HTTP. The wire spec stays 4-action even though the app tracks all-in separately — all-in jams count into the raise share (v0; v1 plan = Firebase RTDB). **Payload spec is shared with the .ino — keep both in sync.** Docs: `docs/features/led-board-live-range.md`, `led-board-gtow-import.md`. Test: `test/services/led_grid_publisher_test.dart`.
 
+### 18. Daily Challenge (feature-flagged: `daily_challenge`)
+Chess.com-style daily ritual: 5 preflop decisions on the drill table, graded move-by-move by a "talking" coach (typed-text bubble + verdict badge + haptic ladder), with streaks and a Wordle-style spoiler-safe share. The spot set is **identical for every user per calendar day** — `DailyChallengeService.configFor(date)` picks a weekday theme (stack depth/table size/format; ≤20BB days grade on Nash) and seeds the drill engine with `Random(yyyymmdd)`. Determinism contract: generic bots only, never the user's real opponents. Layers: `lib/services/daily_challenge_service.dart` (pure config/seed/verdicts/share), `lib/services/daily_challenge_store.dart` (SharedPreferences results + streak math; streak survives a pending today, breaks on a missed day), `lib/screens/training/daily_challenge_screen.dart` (intro/results host), challenge mode on `DrillTableScreen` (`rng` + `challengeDecisions` params), home-screen entry card. Each graded decision also offers **Show range** (engine `lastGradedContext` → pure `DrillRangeLookup.chartFor` mirrors the grader's baseline selection → `drill_range_chart_grid.dart` with the hero hand ringed) and a **speaking coach** with selectable **personas** (`coach_persona.dart`: Duke/Prof. Vega/Nova — original characters only, never real players; character leads wrap the reason, picker on the intro). The voice is **neural only** (no device-TTS fallback): `CoachVoiceService.speak(coachId:)` hits the `coachSpeech` CF (ElevenLabs behind Firebase Auth, Storage + on-device MP3 caching keyed by voiceId|coach|text), stays quiet on failure. Verdict is gated until the voice is ready (text+voice land together); card suits glow when the coach names the hand. One attempt counts per day; abandoning records nothing. The coach also **adapts its tone+depth to the player's experience tier** (beginner/intermediate/advanced): `coach_level_resolver.dart` resolves the tier from real play once the hand sample is meaningful, falling back to the onboarding "poker journey" self-report while the sample is thin (pure functions; the IO wrapper reads Firestore in the caller/CF). The AI teaching line per spot×coach×level comes from `daily_coach_lines_service.dart` (`DailyCoachLinesService.lineFor`, READS `daily_challenge_lines/{dayKey}`, falls back to persona templates on miss). Lines are generated MANUALLY out of band (maintainer/Claude): a gitignored Dart dev tool `tool/daily_lines/print_spots_test.dart` prints a day's spot facts from the real engine, Claude writes the per-coach/per-level lines, and they are stored to `daily_challenge_lines/{dayKey}` (read-only to clients). No in-app upload, no Cloud Function trigger. Each persona renders as a 3D mascot still with a one-shot bounce/head-shake (`lib/widgets/coach_mascot.dart`, assets `assets/mascots/{persona}_{expression}.png`, vector painter fallback). Debug hooks: `CoachLevelResolver.debugOverride` (force a tier) and `DailyChallengeService.debugDayOffset` (shift "today") are in-memory, not persisted, and default to no-ops — the admin "Daily Challenge Tester" screen that drives them is kept out of the shipped tree on purpose. Doc: `docs/features/daily-challenge.md`. Tests: `test/services/daily_challenge_test.dart`, `test/services/drill_range_lookup_test.dart`, `test/services/coach_level_resolver_test.dart`, `test/services/coach_persona_test.dart`.
+
 ---
 
 ## Data Structures
@@ -566,7 +571,7 @@ saveHand() called
 | FCMService | `lib/services/fcm_service.dart` | Push notifications (fire-and-forget!) |
 | DeepLinkService | `lib/services/deep_link_service.dart` | Email invitation deep links |
 | AiAnalyzerService | `lib/services/ai_analyzer_service.dart` | Hand analysis API calls |
-| FeatureFlagService | `lib/services/feature_flag_service.dart` | Global remote feature flags (Firestore `app_config/feature_flags`, super-admin toggles on Profile, offline cache). Gated: training_drills, ai_hand_analysis, leak_detector |
+| FeatureFlagService | `lib/services/feature_flag_service.dart` | Global remote feature flags (Firestore `app_config/feature_flags`, super-admin toggles on Profile, offline cache). Gated: training_drills, ai_hand_analysis, leak_detector, daily_challenge |
 | AnalyticsService | `lib/services/analytics_service.dart` | PostHog product analytics (EU cloud). distinct_id = Firebase uid (matches RevenueCat customer_id — the warehouse join key); identity auto-follows authStateChanges. Event vocabulary lives in the service header — fire each event at ONE canonical site only. All calls fire-and-forget/no-throw; no-op without `POSTHOG_API_KEY` (tests, dev) |
 | PartnerGrantService | `lib/services/partner_grant_service.dart` | Admin-granted free tiers with expiry (see Subscription section) |
 | SkipHandScoutingService | `lib/services/skip_hand_scouting_service.dart` | On/off toggle for live scouting mode |
@@ -821,6 +826,7 @@ Tests are organized in subdirectories mirroring `lib/`:
 - `test/services/subscription_logic_test.dart` + `test/services/subscription_service_test.dart` — tier resolution, purchase overrides, service flow against `FakeRevenueCatClient`
 - `test/services/feed_sanitizer_test.dart` — social feed privacy guarantees (identity/card stripping) — treat failures here as privacy leaks, not glitches
 - `test/services/leak_detector_test.dart`, `test/services/flop_strength_test.dart` — leak detector extraction/bands
+- `test/services/daily_challenge_test.dart` — Daily Challenge shared-puzzle determinism, verdict/score mapping, streak math
 - `test/services/activity_heartbeat_test.dart`, `test/services/led_grid_publisher_test.dart`, `test/short_stack_bet_clamp_test.dart`
 
 ### Testing Checklist

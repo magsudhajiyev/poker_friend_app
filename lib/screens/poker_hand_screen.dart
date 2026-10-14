@@ -1980,8 +1980,12 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         // widget is rotated 270°, so its width fraction controls the
         // screen-vertical axis (availableH) and its height fraction the
         // screen-horizontal axis (availableW).
-        const double seatVisualH = 72.0; // seat pill + name + stack column
-        const double seatVisualW = 60.0; // widest of pill / name badge / stack
+        // Footprint of a player node (numbered avatar + name/stack plate):
+        // avatar ~32 + plate ~26 tall; plate up to ~76 wide. Kept in sync
+        // with _buildHandSeat so the seat ellipse pulls in just enough to
+        // keep every node on the felt/rail without overflowing the edges.
+        const double seatVisualH = 62.0; // avatar + plate column height
+        const double seatVisualW = 78.0; // plate max width
         const double seatEdgePad = 4.0;
         final double fw = availableH > 0
             ? ((availableH - seatVisualH - 2 * seatEdgePad) / availableH)
@@ -2148,14 +2152,19 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       borderColor = AppColors.accentSecondary;
     }
 
-    // Seat number pill — current player's glow "breathes" via the pulse
-    // controller; other states render statically.
+    // Numbered avatar — WPT/888-style round node that sits ON the rail,
+    // showing the SEAT NUMBER (users tap seats + move the dealer button by
+    // number here, so it must stay legible). The current player's ring glow
+    // "breathes" via the pulse controller; other states render statically.
+    const double avatarR = 16.0;
     Widget buildCircle(double glow) => Container(
-          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+          width: avatarR * 2,
+          height: avatarR * 2,
+          alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: AppColors.bgSurface,
-            borderRadius: BorderRadius.circular(35),
-            border: Border.all(color: borderColor, width: 2),
+            shape: BoxShape.circle,
+            color: AppColors.bgElevated,
+            border: Border.all(color: borderColor, width: isCurrentPlayer ? 2.5 : 2),
             boxShadow: isCurrentPlayer
                 ? [
                     BoxShadow(
@@ -2169,8 +2178,8 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
             '$seatNumber',
             style: AppTypography.plexMonoLegacy(
               color: isActive ? AppColors.accentSecondary : AppColors.neutral500,
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
             ),
           ),
         );
@@ -2221,46 +2230,50 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     // Player name
     final displayName = label.isEmpty ? 'P$seatNumber' : (label.length > 7 ? '${label.substring(0, 5)}..' : label);
 
-    // Name badge or text
-    Widget nameWidget;
-    if (label.isNotEmpty && !RegExp(r'^Player\s*\d*$').hasMatch(label)) {
-      nameWidget = Container(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-        decoration: BoxDecoration(
-          color: const Color(0xFF0097D2),
-          borderRadius: BorderRadius.circular(7),
+    // Name + stack plate — WPT/888-style dark pill that hangs below the
+    // avatar (replaces the old off-palette blue name badge). Name on top,
+    // live stack below; the stack rolls smoothly as chips move.
+    final namePlate = Container(
+      constraints: const BoxConstraints(maxWidth: 76),
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+      decoration: BoxDecoration(
+        color: AppColors.bgSurface.withValues(alpha: 0.92),
+        borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
+        border: Border.all(
+          color: isHero
+              ? AppColors.accentPrimary.withValues(alpha: 0.55)
+              : AppColors.bgElevated,
+          width: 1,
         ),
-        child: Text(
-          displayName,
-          style: AppTypography.ibm(
-            fontSize: 10,
-            fontWeight: FontWeight.w500,
-            color: isFolded ? Colors.white60 : Colors.white,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            displayName,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: AppTypography.ibm(
+              color: isFolded
+                  ? Colors.white38
+                  : (isHero ? AppColors.accentPrimary : Colors.white),
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              height: 1.1,
+            ),
           ),
-          maxLines: 1,
-        ),
-      );
-    } else {
-      nameWidget = Text(
-        displayName,
-        style: AppTypography.ibm(
-          color: isFolded ? Colors.white38 : Colors.white,
-          fontSize: 10,
-          fontWeight: FontWeight.w500,
-        ),
-        maxLines: 1,
-      );
-    }
-
-    // Stack amount — rolls smoothly when chips leave/enter the stack
-    final stackWidget = AnimatedAmountText(
-      value: stack,
-      formatter: _formatCompactAmount,
-      duration: const Duration(milliseconds: 350),
-      style: AppTypography.ibm(
-        color: isFolded ? Colors.white38 : AppColors.accentPrimary,
-        fontSize: 11,
-        fontWeight: FontWeight.w500,
+          AnimatedAmountText(
+            value: stack,
+            formatter: _formatCompactAmount,
+            duration: const Duration(milliseconds: 350),
+            style: AppTypography.mono(
+              color: isFolded ? Colors.white38 : AppColors.textSecondary,
+              fontSize: 9,
+              fontWeight: FontWeight.w500,
+              height: 1.1,
+            ),
+          ),
+        ],
       ),
     );
 
@@ -2286,7 +2299,8 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       statusPill = PopIn(triggerKey: pillTrigger, child: statusPill);
     }
 
-    // Player info column (circle + name + stack) — dims smoothly on fold
+    // Player node (avatar + name/stack plate) — dims smoothly on fold. The
+    // plate overlaps the avatar slightly for the compact "pod" look.
     final playerInfo = AnimatedOpacity(
       opacity: (isFolded || isPending) ? 0.55 : 1.0,
       duration: const Duration(milliseconds: 250),
@@ -2295,9 +2309,10 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         mainAxisSize: MainAxisSize.min,
         children: [
           activeCircle,
-          const SizedBox(height: 2),
-          nameWidget,
-          stackWidget,
+          Transform.translate(
+            offset: const Offset(0, -3),
+            child: namePlate,
+          ),
         ],
       ),
     );

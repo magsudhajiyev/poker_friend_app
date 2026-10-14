@@ -1,7 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:poker_logger/models/drill_models.dart';
 import 'package:poker_logger/services/drill_grader.dart';
-import 'package:poker_logger/services/drill_gto_charts.dart';
 
 DrillVillainProfile prof({
   String name = 'V',
@@ -541,6 +540,57 @@ void main() {
       // defendRate = 55*0.08 + 0*0.4 = 4.4
       expect(rate, greaterThanOrEqualTo(3));
       expect(rate, lessThanOrEqualTo(7));
+    });
+  });
+
+  group('open-jam sizing (deep stacks)', () {
+    DrillGradeResult gradeOpen({
+      required String hand,
+      required double stackBB,
+      required double raiseToBB,
+      String pos = 'CO',
+      bool ante = false,
+    }) {
+      final ctx = DrillDecisionContext(
+        handClass: hand,
+        positionGroup: pos,
+        stackBB: stackBB,
+        scenario: DrillScenario.unopened,
+        opener: null,
+        limpers: const [],
+        playersBehind: const [],
+        toCallBB: 0,
+        currentBetBB: 1,
+        potBB: 1.5,
+        raisesBeforeHero: 0,
+        anteMode: ante,
+      );
+      return DrillGrader.grade(ctx, 'raise', raiseToBB: raiseToBB);
+    }
+
+    test('40BB open-SHOVE of A8o from CO is a MISTAKE (the bug)', () {
+      // A8o opens fine, but jamming 40BB to win the blinds is a gross
+      // sizing error — must NOT be graded correct.
+      final r = gradeOpen(hand: 'A8o', stackBB: 40, raiseToBB: 40);
+      expect(r.grade, DrillGrade.mistake);
+      expect(r.explanation.toLowerCase(), contains('too big'));
+    });
+
+    test('40BB standard 2.5BB open of A8o is correct', () {
+      final r = gradeOpen(hand: 'A8o', stackBB: 40, raiseToBB: 2.5);
+      expect(r.grade, DrillGrade.correct);
+    });
+
+    test('15BB open-jam stays legitimate (shallow Nash-ish depth)', () {
+      // At 15BB open-jamming is standard; must not be penalized as a jam.
+      final r = gradeOpen(hand: 'A8o', stackBB: 15, raiseToBB: 15);
+      expect(r.grade, isNot(DrillGrade.mistake),
+          reason: 'shallow jams are a real strategy');
+    });
+
+    test('100BB open-shove of a premium is still a sizing mistake', () {
+      final r = gradeOpen(hand: 'AKs', stackBB: 100, raiseToBB: 100);
+      expect(r.grade, DrillGrade.mistake);
     });
   });
 }
