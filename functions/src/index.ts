@@ -719,3 +719,59 @@ export const coachSpeech = onRequest(
     }
   }
 );
+
+/**
+ * validateLeaderboardEntry — trust-but-verify for the Daily Challenge
+ * leaderboard. The puzzle is identical for everyone per day, so the score is
+ * derivable purely from the submitted `verdicts`. The client writes an
+ * advisory `score`; this function re-derives it and overwrites `score` +
+ * `scoreKey` if they disagree, so no one can post a fake score through the
+ * rules (which only shape-check). Fires on daily-entry create.
+ *
+ * Scoring matches the client (DailyChallengeService.scoreOf): c=1, o=0.5,
+ * anything else=0. A valid run has exactly 5 verdict letters.
+ */
+export const validateLeaderboardEntry = onDocumentCreated(
+  "leaderboard_daily/{dayKey}/entries/{uid}",
+  async (event) => {
+    const snap = event.data;
+    if (!snap) return;
+    const data = snap.data();
+    const verdicts: string = typeof data.verdicts === "string" ? data.verdicts : "";
+
+    // Re-grade from verdicts (the only trusted input).
+    let trueScore = 0;
+    for (const ch of verdicts) {
+      if (ch === "c") trueScore += 1;
+      else if (ch === "o") trueScore += 0.5;
+    }
+    const trueScoreKey = Math.round(trueScore * 10);
+    const truePerfect = verdicts.length === 5 && /^c{5}$/.test(verdicts);
+
+    const clientScore = typeof data.score === "number" ? data.score : -1;
+    const clientKey = typeof data.scoreKey === "number" ? data.scoreKey : -1;
+    const clientPerfect = data.perfect === true;
+
+    const needsFix =
+      clientScore !== trueScore ||
+      clientKey !== trueScoreKey ||
+      clientPerfect !== truePerfect;
+
+    if (!needsFix) return; // client was honest — nothing to do
+
+    try {
+      await snap.ref.update({
+        score: trueScore,
+        scoreKey: trueScoreKey,
+        perfect: truePerfect,
+        validatedAt: FieldValue.serverTimestamp(),
+      });
+      console.log(
+        `Leaderboard: corrected ${event.params.uid} on ${event.params.dayKey} ` +
+          `(${clientScore}->${trueScore})`
+      );
+    } catch (error) {
+      console.error("validateLeaderboardEntry update failed:", error);
+    }
+  }
+);

@@ -101,8 +101,6 @@ class PokerHandScreen extends StatefulWidget {
   State<PokerHandScreen> createState() => _PokerHandScreenState();
 }
 
-enum _ChipDirection { up, down, left, right }
-
 /// One in-flight chip animation, in the table overlay's coordinate space.
 class _ChipFlightEntry {
   final AnimationController controller;
@@ -2080,29 +2078,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     );
   }
 
-  /// Returns the direction the chip pill should be offset from the seat
-  /// to appear "in front of" the player on the table felt.
-  /// After 270° CCW rotation of the vertical widget:
-  ///   Logical 1,9 → bottom of horizontal table → chips go UP
-  ///   Logical 2,3 → right side → chips go LEFT
-  ///   Logical 4,5 → top-right/top → chips go DOWN
-  ///   Logical 6,7 → top-left/left → chips go DOWN
-  ///   Logical 8   → left side → chips go RIGHT
-  _ChipDirection _chipDirection(int logicalSeat) {
-    switch (logicalSeat) {
-      case 1: return _ChipDirection.up;       // bottom center → chips up
-      case 2: return _ChipDirection.right;     // bottom-left → chips right toward center
-      case 3: return _ChipDirection.right;     // left side → chips right toward center
-      case 4: return _ChipDirection.down;      // top-left → chips down
-      case 5: return _ChipDirection.down;      // top center → chips down
-      case 6: return _ChipDirection.down;      // top-right → chips down
-      case 7: return _ChipDirection.left;      // right side → chips left toward center
-      case 8: return _ChipDirection.left;      // bottom-right → chips left toward center
-      case 9: return _ChipDirection.up;        // bottom center → chips up
-      default: return _ChipDirection.up;
-    }
-  }
-
   /// Returns the first empty seat number that isn't the hero's seat.
   int? _firstNonHeroEmptySeat() {
     final heroSeat = sessionManager.ourSeatNumber ?? -1;
@@ -2319,69 +2294,45 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
 
     if (statusPill == null) return playerInfo;
 
-    // Position chip pill toward table center based on seat position.
-    // The pill is rendered with ZERO layout footprint so the seat stays
-    // centered on the player info alone — pills paint over the felt toward
-    // the pot and can never push a seat off the screen edge (and seats no
-    // longer shift when a bet pill appears/disappears).
-    final dir = _chipDirection(seatNumber);
-    switch (dir) {
-      case _ChipDirection.up:
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _zeroFootprintPill(
-              Padding(padding: const EdgeInsets.only(bottom: 4), child: statusPill),
-              Alignment.bottomCenter,
-            ),
-            playerInfo,
-          ],
-        );
-      case _ChipDirection.down:
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            playerInfo,
-            _zeroFootprintPill(
-              Padding(padding: const EdgeInsets.only(top: 4), child: statusPill),
-              Alignment.topCenter,
-            ),
-          ],
-        );
-      case _ChipDirection.left:
-        return Row(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            _zeroFootprintPill(
-              Padding(padding: const EdgeInsets.only(right: 4), child: statusPill),
-              Alignment.centerRight,
-            ),
-            playerInfo,
-          ],
-        );
-      case _ChipDirection.right:
-        return Row(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            playerInfo,
-            _zeroFootprintPill(
-              Padding(padding: const EdgeInsets.only(left: 4), child: statusPill),
-              Alignment.centerLeft,
-            ),
-          ],
-        );
-    }
+    // Place the chip RADIALLY — straight from this seat toward the table
+    // center (the pot) — instead of a coarse up/down/left/right nudge. The
+    // 4-way scheme lumped adjacent seats (e.g. the two blind seats next to
+    // the button) into the same offset, so their chips piled on top of each
+    // other. A per-seat radial vector puts every chip in front of its own
+    // seat, so neighbours fan out naturally.
+    //
+    // The seat renders upright (counter-rotated), so the chip's "toward
+    // centre" direction in its local frame equals the screen-space direction
+    // from the seat to the oval centre. The table is rotated 270° CCW (= 90°
+    // CW), which maps a pre-rotation seat angle α to screen angle α − π/2.
+    final widgetSeat = _logicalSeatToWidget(seatNumber);
+    final double preAngle =
+        PokerTableWidget.getSeatAngle(widgetSeat);
+    final double screenAngle = preAngle - math.pi / 2;
+    // Unit vector from seat toward centre, pushed far enough to clear the
+    // rail and sit on the felt.
+    const double chipRadius = 30.0;
+    final Offset chipOffset = Offset(
+      -chipRadius * math.cos(screenAngle),
+      -chipRadius * math.sin(screenAngle),
+    );
+    return _zeroFootprintPill(
+      Transform.translate(offset: chipOffset, child: statusPill),
+      Alignment.center,
+      overlayOn: playerInfo,
+    );
   }
 
   /// Wraps a bet/status pill so it takes no layout space: the seat's
   /// bounding box stays exactly the player-info column, and the pill paints
   /// outward from the given anchor ([alignment] edge sits on the zero point).
-  Widget _zeroFootprintPill(Widget pill, AlignmentGeometry alignment) {
-    return SizedBox(
-      width: 0,
-      height: 0,
+  /// Overlays [pill] on top of [overlayOn] (the seat node) without affecting
+  /// layout: the seat's bounding box stays exactly the node, and the pill
+  /// floats from the node's centre by whatever Transform it carries. When
+  /// [overlayOn] is null the pill is anchored on a zero-size box (legacy use).
+  Widget _zeroFootprintPill(Widget pill, AlignmentGeometry alignment,
+      {Widget? overlayOn}) {
+    final floating = Positioned.fill(
       child: OverflowBox(
         minWidth: 0,
         minHeight: 0,
@@ -2391,21 +2342,40 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         child: pill,
       ),
     );
+    if (overlayOn == null) {
+      return SizedBox(width: 0, height: 0, child: floating.child);
+    }
+    return Stack(
+      clipBehavior: Clip.none,
+      alignment: Alignment.center,
+      children: [overlayOn, floating],
+    );
   }
 
   Widget _buildStatusPill(String text, Color bgColor, Color textColor, {bool isBold = true}) {
+    // A dark hairline ring + soft drop shadow lift the pill off the neon felt
+    // so small bet/blind chips (e.g. the blue SB/BB chips) stay readable where
+    // they sit near the glowing rail.
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
       decoration: BoxDecoration(
         color: bgColor,
         borderRadius: BorderRadius.circular(AppDecorations.radius20),
+        border: Border.all(color: AppColors.bgPrimary.withValues(alpha: 0.85), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.45),
+            blurRadius: 4,
+            offset: const Offset(0, 1),
+          ),
+        ],
       ),
       child: Text(
         text,
         style: AppTypography.ibm(
           color: textColor,
-          fontSize: 9,
-          fontWeight: isBold ? FontWeight.w600 : FontWeight.w500,
+          fontSize: 10,
+          fontWeight: isBold ? FontWeight.w700 : FontWeight.w600,
         ),
       ),
     );

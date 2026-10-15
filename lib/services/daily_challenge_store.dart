@@ -15,11 +15,17 @@ class DailyChallengeResult {
   /// hand class, position, hero action, recommended action, verdict letter.
   final List<DailySpotSummary> spots;
 
+  /// Total time for the run, first spot shown → last decision, in ms. The
+  /// leaderboard "today" board uses it as the score tiebreaker. 0 for old
+  /// results saved before duration capture existed.
+  final int durationMs;
+
   const DailyChallengeResult({
     required this.dayKey,
     required this.seed,
     required this.verdicts,
     required this.spots,
+    this.durationMs = 0,
   });
 
   double get score => DailyChallengeService.scoreOf(verdicts);
@@ -29,6 +35,7 @@ class DailyChallengeResult {
         'seed': seed,
         'v': verdicts,
         'spots': spots.map((s) => s.toJson()).toList(),
+        if (durationMs > 0) 'ms': durationMs,
       };
 
   factory DailyChallengeResult.fromJson(
@@ -37,6 +44,7 @@ class DailyChallengeResult {
         dayKey: dayKey,
         seed: (json['seed'] as num?)?.toInt() ?? 0,
         verdicts: json['v']?.toString() ?? '',
+        durationMs: (json['ms'] as num?)?.toInt() ?? 0,
         spots: [
           for (final s in (json['spots'] as List? ?? const []))
             if (s is Map) DailySpotSummary.fromJson(s.cast<String, dynamic>()),

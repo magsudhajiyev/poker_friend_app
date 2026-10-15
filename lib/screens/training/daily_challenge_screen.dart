@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -12,14 +14,19 @@ import '../../design_system/constants/spacing.dart';
 import '../../design_system/constants/typography.dart';
 import '../../models/drill_models.dart';
 import '../../services/analytics_service.dart';
+import '../../services/challenge_sound_service.dart';
 import '../../services/coach_persona.dart';
 import '../../services/coach_voice_service.dart';
 import '../../services/daily_challenge_service.dart';
 import '../../services/daily_challenge_store.dart';
 import '../../services/feature_flag_service.dart';
+import '../../services/leaderboard_service.dart';
+import '../../services/username_service.dart';
 import '../../widgets/coach_mascot.dart';
 import '../../widgets/hand_micro_animations.dart';
+import '../username_setup_screen.dart';
 import 'drill_table_screen.dart';
+import 'leaderboard_screen.dart';
 
 /// DAILY CHALLENGE host — the chess.com-style daily ritual around the drill
 /// table: intro (theme + streak + play) → the seeded run on DrillTableScreen
@@ -59,6 +66,7 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> {
     for (final p in CoachPersonas.all) {
       CoachVoiceService.prefetch(p.greeting, coachId: p.id);
     }
+    ChallengeSoundService.loadEnabled();
     AnalyticsService.capture('daily_challenge_opened', {
       'challenge_number': DailyChallengeService.challengeNumber(_config.day),
     });
@@ -84,6 +92,9 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> {
   Future<void> _play() async {
     HapticFeedback.selectionClick();
     CoachVoiceService.stop();
+    // Time the whole run (first spot shown → last decision) for the
+    // leaderboard "today" tiebreaker.
+    final stopwatch = Stopwatch()..start();
     final records = await Navigator.push<List<DrillDecisionRecord>>(
       context,
       MaterialPageRoute(
@@ -96,6 +107,7 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> {
         ),
       ),
     );
+    stopwatch.stop();
     if (records == null ||
         records.length < DailyChallengeService.spotsPerDay) {
       return; // abandoned — nothing recorded, the day stays playable
@@ -108,6 +120,7 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> {
       dayKey: DailyChallengeStore.dayKey(_config.day),
       seed: _config.seed,
       verdicts: verdicts,
+      durationMs: stopwatch.elapsedMilliseconds,
       spots: [
         for (final r in records)
           DailySpotSummary(
@@ -135,6 +148,44 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> {
     if (result.perfect) {
       HapticFeedback.heavyImpact();
       SuccessCheckOverlay.show(context);
+    }
+    // Global leaderboard: automatic participation. Admin day-override runs
+    // never post (the service also guards, but skip the username prompt too).
+    if (DailyChallengeService.debugDayOffset == 0) {
+      _submitToLeaderboard(result, streaks);
+    }
+  }
+
+  /// Ensure the player has a username (prompting the setup screen once if
+  /// not), then submit the run to the global leaderboard. Best-effort: a
+  /// cancelled username prompt or any failure simply skips the write.
+  Future<void> _submitToLeaderboard(
+      DailyChallengeResult result, DailyChallengeStreaks streaks) async {
+    try {
+      var username = await UsernameService.getUsername();
+      if ((username == null || username.trim().isEmpty) && mounted) {
+        username = await Navigator.push<String>(
+          context,
+          MaterialPageRoute(
+            builder: (_) => const UsernameSetupScreen(isChanging: true),
+          ),
+        );
+      }
+      if (username == null || username.trim().isEmpty) return; // declined
+      await LeaderboardService.submit(
+        result: result,
+        streaks: streaks,
+        username: username,
+      );
+      AnalyticsService.capture('daily_challenge_leaderboard_submitted', {
+        'challenge_number':
+            DailyChallengeService.challengeNumber(_config.day),
+        'score': result.score,
+        'streak': streaks.current,
+      });
+      if (mounted) setState(() {}); // refresh any visible board
+    } catch (_) {
+      // Leaderboard must never break the challenge.
     }
   }
 
@@ -263,9 +314,48 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> {
             ),
           ),
         ),
+        const SizedBox(height: AppSpacing.xs),
+        _leaderboardButton(),
       ],
     );
   }
+
+  /// Outlined secondary button that opens the global leaderboard. Shown on
+  /// both the intro and the results view.
+  Widget _leaderboardButton() => GestureDetector(
+        onTap: () {
+          HapticFeedback.selectionClick();
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (_) => LeaderboardScreen(config: _config)),
+          );
+        },
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
+          ),
+          child: Center(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.leaderboard_outlined,
+                    size: 18, color: AppColors.accentPrimary),
+                const SizedBox(width: AppSpacing.xxs),
+                Text('Leaderboard',
+                    style: AppTypography.ibm(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: -0.3,
+                        color: Colors.white)),
+              ],
+            ),
+          ),
+        ),
+      );
 
   /// Coach persona cards — the mascot pops out over the card's top edge
   /// (game-UI style); tap to pick and the coach introduces themself in
@@ -513,6 +603,8 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> {
             ),
           ),
         ),
+        const SizedBox(height: AppSpacing.xs),
+        _leaderboardButton(),
         const SizedBox(height: AppSpacing.sm),
         Center(
           child: Text('Next challenge at midnight',

@@ -322,6 +322,38 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Global Daily Challenge leaderboard. Participation is automatic; a user
+    // writes ONLY their own uid-keyed row. Reads are broad (any signed-in
+    // user sees the boards). The client-sent `score` is advisory — a Cloud
+    // Function re-grades it from `verdicts`; rules only shape-check.
+    // See docs/features/daily-challenge-leaderboard.md.
+    match /leaderboard_daily/{dayKey}/entries/{uid} {
+      allow read: if isAuthenticated();
+      allow create, update: if isOwner(uid)
+        && request.resource.data.uid == uid
+        && request.resource.data.username is string
+        && request.resource.data.username.size() >= 3
+        && request.resource.data.verdicts is string
+        && request.resource.data.verdicts.size() == 5
+        && request.resource.data.score is number;
+      allow delete: if isOwner(uid) || isSuperAdmin();
+    }
+
+    match /leaderboard_streak/{uid} {
+      allow read: if isAuthenticated();
+      allow write: if isOwner(uid)
+        && request.resource.data.uid == uid
+        && request.resource.data.username is string
+        && request.resource.data.username.size() >= 3;
+    }
+
+    // Materialized top-100 snapshots — written ONLY by the aggregation
+    // Cloud Function (Admin SDK bypasses rules). No client writes.
+    match /leaderboard_snapshots/{boardId} {
+      allow read: if isAuthenticated();
+      allow write: if false;
+    }
+
     // Email templates - admin dashboard only
     match /email_templates/{docId} {
       allow read, write: if isSuperAdmin();

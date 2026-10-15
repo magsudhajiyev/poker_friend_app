@@ -39,15 +39,6 @@ class CoachVoiceService {
   static final ValueNotifier<CoachSpeechState> speechState =
       ValueNotifier<CoachSpeechState>(CoachSpeechState.idle);
 
-  /// Duration of the clip that plays now. Null until the player reports
-  /// it. UIs use it to time events to the speech (card highlight).
-  static final ValueNotifier<Duration?> clipDuration =
-      ValueNotifier<Duration?>(null);
-
-  /// The exact text sent to the voice (after notation expansion and
-  /// trimming). Mention timing must search THIS text, not the typed one.
-  static String lastSpokenText = '';
-
   static void _setState(int seq, CoachSpeechState value) {
     // Only the most recent speak() owns the state — a superseded fetch
     // must not stomp the indicator of the line that replaced it.
@@ -64,7 +55,6 @@ class CoachVoiceService {
       final seq = ++_speakSeq;
       await stop0();
       _setState(seq, CoachSpeechState.loading);
-      clipDuration.value = null;
 
       final spoken = _trimForSpeech(speakable(text));
       final file = await _fetchNeuralClip(coachId, spoken);
@@ -75,12 +65,8 @@ class CoachVoiceService {
       _player ??= AudioPlayer()
         ..onPlayerComplete.listen((_) {
           speechState.value = CoachSpeechState.idle;
-        })
-        ..onDurationChanged.listen((d) {
-          clipDuration.value = d;
         });
       await _configurePlayerContext();
-      lastSpokenText = spoken;
       await _player!.play(DeviceFileSource(file.path));
       _setState(seq, CoachSpeechState.speaking);
     } catch (_) {

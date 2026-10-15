@@ -1,7 +1,7 @@
 name: poker_logger
 publish_to: "none"
 description: Final Table - Track your poker hands, stats, and bankroll
-version: 2.1.3+17
+version: 2.1.4+18
 
 
 environment:
@@ -76,6 +76,7 @@ flutter:
     - "assets/icons/card icons/"
     - assets/icons/flags/
     - assets/mascots/
+    - assets/sounds/
     - assets/play_style/
     - "assets/loading screen.aep_AME/"
     - icons/

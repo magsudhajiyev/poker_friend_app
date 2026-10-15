@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:poker_logger/models/drill_models.dart';
-import 'package:poker_logger/services/coach_persona.dart';
 import 'package:poker_logger/services/coach_voice_service.dart';
 import 'package:poker_logger/services/drill_gto_charts.dart';
 import 'package:poker_logger/services/drill_nash_pushfold.dart';
@@ -200,17 +199,6 @@ void main() {
       // Plain words with x stay untouched.
       expect(CoachVoiceService.speakable('a flexible line'),
           'a flexible line');
-    });
-
-    test('spoken hand phrase is findable in the spoken line (glow sync)',
-        () {
-      const line = 'Nah, kid. fold was the move. A2o is too weak here.';
-      final spoken = CoachVoiceService.speakable(line);
-      final phrase = CoachVoiceService.speakable('A2o');
-      expect(phrase, 'ace two offsuit');
-      final frac = CoachPersonas.mentionFraction(spoken, phrase);
-      expect(frac, isNotNull);
-      expect(frac, greaterThan(0.3), reason: 'mention is past the lead');
     });
   });
 }

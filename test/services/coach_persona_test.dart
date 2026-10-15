@@ -116,25 +116,6 @@ void main() {
     });
   });
 
-  group('mentionFraction (card-highlight timing)', () {
-    test('returns the position of the hand mention as a fraction', () {
-      const line = 'Nah, kid. fold was the move. A2o is too weak here.';
-      final frac = CoachPersonas.mentionFraction(line, 'A2o');
-      expect(frac, closeTo(line.indexOf('A2o') / line.length, 0.001));
-    });
-
-    test('returns null when the line does not name the hand', () {
-      expect(
-          CoachPersonas.mentionFraction('Good fold here.', 'A2o'), isNull);
-      expect(CoachPersonas.mentionFraction('', 'A2o'), isNull);
-      expect(CoachPersonas.mentionFraction('A2o opens', ''), isNull);
-    });
-
-    test('mention at the start gives fraction zero', () {
-      expect(CoachPersonas.mentionFraction('QQ is a 3-bet.', 'QQ'), 0.0);
-    });
-  });
-
   group('persistence', () {
     TestWidgetsFlutterBinding.ensureInitialized();
 

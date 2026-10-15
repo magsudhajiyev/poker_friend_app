@@ -147,17 +147,6 @@ class CoachPersonas {
   static CoachPersona byId(String? id) =>
       all.firstWhere((p) => p.id == id, orElse: () => grinder);
 
-  /// Position of the first mention of [handClass] in [line], as a
-  /// fraction (0..1) of the line length. Returns null when the line does
-  /// not name the hand. The card-highlight animation uses this to fire
-  /// when the typed text reaches the mention.
-  static double? mentionFraction(String line, String handClass) {
-    if (handClass.isEmpty || line.isEmpty) return null;
-    final i = line.indexOf(handClass);
-    if (i < 0) return null;
-    return i / line.length;
-  }
-
   static Future<CoachPersona> load() async {
     try {
       final prefs = await SharedPreferences.getInstance();

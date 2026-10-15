@@ -104,6 +104,30 @@ class PokerTableWidget extends StatelessWidget {
 
   // ─── SEAT POSITION MATH ─────────────────────────────────────────
 
+  /// Intrinsic aspect ratio (w / h) of the neon table art
+  /// (assets/icons/table_neon*.png, authored at 266 × 367).
+  static const double _tableAspect = 266.0 / 367.0; // ≈ 0.7248
+
+  /// The table art is drawn with BoxFit.contain, so the PAINTED oval is
+  /// smaller than its [tableWidthFraction] × [tableHeightFraction] box
+  /// whenever the box ratio differs from the art ratio. Seats must sit on
+  /// the painted oval's rail, not the box — this returns the effective seat
+  /// fractions (of [areaSize]) that match the contained oval, so callers
+  /// that don't override seat fractions get rail-aligned seats for free.
+  static (double, double) containedSeatFractions(
+      Size areaSize, double tableWidthFraction, double tableHeightFraction) {
+    final boxW = areaSize.width * tableWidthFraction;
+    final boxH = areaSize.height * tableHeightFraction;
+    if (boxW <= 0 || boxH <= 0) {
+      return (tableWidthFraction, tableHeightFraction);
+    }
+    // BoxFit.contain fits the art inside the box on its tighter axis, keeping
+    // the art's aspect ratio → the painted oval is this size:
+    final double paintedH = math.min(boxH, boxW / _tableAspect);
+    final double paintedW = paintedH * _tableAspect;
+    return (paintedW / areaSize.width, paintedH / areaSize.height);
+  }
+
   /// Compute the center position for a seat (1-indexed) on the ellipse.
   /// [angleOffset] rotates all seats by extra radians (default 0).
   static Offset getSeatPosition(int seatNumber, Size areaSize,
@@ -156,6 +180,14 @@ class PokerTableWidget extends StatelessWidget {
         final tableWidth = constraints.maxWidth * tableWidthFraction;
         final tableHeight = constraints.maxHeight * tableHeightFraction;
 
+        // Seats ride the PAINTED oval's rail. If the caller didn't pin seat
+        // fractions, derive them from the BoxFit.contain oval so seats hug
+        // the visible rail instead of the (larger) layout box.
+        final (containedW, containedH) = containedSeatFractions(
+            areaSize, tableWidthFraction, tableHeightFraction);
+        final double effSeatW = seatWidthFraction ?? containedW;
+        final double effSeatH = seatHeightFraction ?? containedH;
+
         return Stack(
           clipBehavior: Clip.none,
           children: [
@@ -169,8 +201,8 @@ class PokerTableWidget extends StatelessWidget {
               final seatNumber = index + 1;
               final isActive = activeSeatMap[seatNumber] ?? false;
               final position = getSeatPosition(seatNumber, areaSize,
-                  widthFraction: seatWidthFraction ?? tableWidthFraction,
-                  heightFraction: seatHeightFraction ?? tableHeightFraction,
+                  widthFraction: effSeatW,
+                  heightFraction: effSeatH,
                   angleOffset: seatAngleOffset);
 
               if (seatBuilder != null) {
@@ -188,7 +220,7 @@ class PokerTableWidget extends StatelessWidget {
 
             // Dealer button
             if (showDealerButton && buttonPosition != null)
-              _buildDealerButton(areaSize, constraints),
+              _buildDealerButton(areaSize, constraints, effSeatW, effSeatH),
 
             // Center content
             if (centerContent != null)
@@ -418,16 +450,20 @@ class PokerTableWidget extends StatelessWidget {
 
   // ─── DEALER BUTTON ──────────────────────────────────────────────
 
-  Widget _buildDealerButton(Size areaSize, BoxConstraints constraints) {
+  Widget _buildDealerButton(Size areaSize, BoxConstraints constraints,
+      double effSeatW, double effSeatH) {
+    // Anchor on the SAME (contained) ellipse the seats use, then pull the
+    // button well inside toward the felt so it clears the neon rail instead
+    // of overlapping it.
     final position = getSeatPosition(buttonPosition!, areaSize,
-        widthFraction: tableWidthFraction,
-        heightFraction: tableHeightFraction,
+        widthFraction: effSeatW,
+        heightFraction: effSeatH,
         angleOffset: seatAngleOffset);
     final seatAngle = getSeatAngle(buttonPosition!,
         angleOffset: seatAngleOffset);
 
-    // Offset button toward center
-    final buttonOffset = dealerButtonSize * 1.5;
+    // Offset button toward center (enough to sit inside the rail, on felt).
+    final buttonOffset = dealerButtonSize * 2.2;
     final nudge = dealerButtonNudge?.call(buttonPosition!) ?? Offset.zero;
     final buttonOffsetX = -buttonOffset * math.cos(seatAngle) + nudge.dx;
     final buttonOffsetY = -buttonOffset * math.sin(seatAngle) + nudge.dy;

@@ -14,6 +14,7 @@ import '../../design_system/components/buttons/glassy_icon_button.dart';
 import '../../design_system/components/sheets/app_sheet.dart';
 import '../../models/drill_models.dart';
 import '../../services/analytics_service.dart';
+import '../../services/challenge_sound_service.dart';
 import '../../services/coach_persona.dart';
 import '../../services/coach_level_resolver.dart';
 import '../../services/coach_voice_service.dart';
@@ -129,82 +130,6 @@ class _DrillTableScreenState extends State<DrillTableScreen>
   Timer? _revealGrace;
   Timer? _revealCap;
 
-  /// Card highlight: when the coach line names the hero hand, the hole
-  /// cards glow and the suit symbols grow for a moment. With voice, the
-  /// glow time comes from the CLIP LENGTH × the mention position in the
-  /// SPOKEN text — the glow lands when the coach says the hand. Without
-  /// voice, the typed-text speed gives the time.
-  bool _cardsGlow = false;
-  Timer? _glowOn;
-  Timer? _glowOff;
-  VoidCallback? _glowDurationListener;
-
-  /// Tuned on device: the character-pace estimate fires early against the
-  /// real speech (lead-in intonation, pauses). This lag aligns the glow
-  /// with the spoken hand name.
-  static const int _glowSpeechLagMs = 1000;
-
-  void _scheduleCardGlow(DrillGradeResult grade) {
-    _glowOn?.cancel();
-    _glowOff?.cancel();
-    _removeGlowDurationListener();
-
-    if (CoachVoiceService.speechState.value == CoachSpeechState.speaking) {
-      // Voice path: find the SPOKEN hand phrase ("ace two offsuit") in
-      // the spoken text; speech pace is near-uniform per character.
-      final spoken = CoachVoiceService.lastSpokenText;
-      final phrase = CoachVoiceService.speakable(_engine.heroHandClass);
-      final frac = CoachPersonas.mentionFraction(spoken, phrase);
-      if (frac == null) return;
-      final known = CoachVoiceService.clipDuration.value;
-      if (known != null) {
-        _startGlowTimer(
-            (known.inMilliseconds * frac).round() + _glowSpeechLagMs);
-        return;
-      }
-      // The player reports the duration a moment after playback starts.
-      void onDuration() {
-        final d = CoachVoiceService.clipDuration.value;
-        if (d == null) return;
-        _removeGlowDurationListener();
-        if (mounted && _phase == _Phase.feedback) {
-          _startGlowTimer(
-              (d.inMilliseconds * frac).round() + _glowSpeechLagMs);
-        }
-      }
-
-      _glowDurationListener = onDuration;
-      CoachVoiceService.clipDuration.addListener(onDuration);
-      return;
-    }
-
-    // Text-only path (voice muted or failed): follow the typing.
-    final line = _coachLine(grade);
-    final frac =
-        CoachPersonas.mentionFraction(line, _engine.heroHandClass);
-    if (frac == null) return;
-    final typeMs = (line.length * 18).clamp(300, 1800);
-    _startGlowTimer((typeMs * frac).round());
-  }
-
-  void _startGlowTimer(int delayMs) {
-    _glowOn = Timer(Duration(milliseconds: delayMs), () {
-      if (!mounted || _phase != _Phase.feedback) return;
-      setState(() => _cardsGlow = true);
-      _glowOff = Timer(const Duration(milliseconds: 1600), () {
-        if (mounted) setState(() => _cardsGlow = false);
-      });
-    });
-  }
-
-  void _removeGlowDurationListener() {
-    final l = _glowDurationListener;
-    if (l != null) {
-      CoachVoiceService.clipDuration.removeListener(l);
-      _glowDurationListener = null;
-    }
-  }
-
   void _onSpeechState() {
     final state = CoachVoiceService.speechState.value;
     if (state == CoachSpeechState.loading) {
@@ -246,8 +171,8 @@ class _DrillTableScreenState extends State<DrillTableScreen>
     final grade = _lastGrade;
     setState(() => _verdictRevealed = true);
     if (grade == null) return;
-    _scheduleCardGlow(grade);
-    // Haptics fire AT the reveal — they are a verdict spoiler otherwise.
+    // Haptics + sound fire AT the reveal — they are a verdict spoiler
+    // otherwise. Sound is challenge-only (free-play drills stay silent).
     switch (grade.grade) {
       case DrillGrade.correct:
         HapticFeedback.mediumImpact();
@@ -255,6 +180,9 @@ class _DrillTableScreenState extends State<DrillTableScreen>
         HapticFeedback.selectionClick();
       case DrillGrade.mistake:
         HapticFeedback.heavyImpact();
+    }
+    if (_isChallenge) {
+      ChallengeSoundService.playVerdict(grade.grade);
     }
   }
 
@@ -335,9 +263,6 @@ class _DrillTableScreenState extends State<DrillTableScreen>
     }
     _revealGrace?.cancel();
     _revealCap?.cancel();
-    _glowOn?.cancel();
-    _glowOff?.cancel();
-    _removeGlowDurationListener();
     for (final f in _chipFlights) {
       f.controller.dispose();
     }
@@ -495,13 +420,10 @@ class _DrillTableScreenState extends State<DrillTableScreen>
 
   void _dismissFeedback() {
     if (_isChallenge) CoachVoiceService.stop();
-    _glowOn?.cancel();
-    _glowOff?.cancel();
-    _removeGlowDurationListener();
-    _cardsGlow = false;
     // Challenge over: the Nth graded decision was just reviewed — hand the
     // records back to the Daily Challenge host, whatever state the hand is in.
     if (_challengeDone) {
+      ChallengeSoundService.playComplete();
       Navigator.pop(
           context, List<DrillDecisionRecord>.unmodifiable(_records));
       return;
@@ -1198,28 +1120,12 @@ class _DrillTableScreenState extends State<DrillTableScreen>
     final rank = card.substring(0, card.length - 1);
     final isRed = suit == '♥' || suit == '♦';
     final color = isRed ? const Color(0xFFD32F2F) : AppColors.textInverse;
-    // When the coach names the hand, the card glows and the suit symbol
-    // grows — the player's eye goes to the cards the coach talks about.
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 250),
-      curve: Curves.easeOut,
+    return Container(
       width: 34 * s,
       height: 46 * s,
       decoration: BoxDecoration(
         color: AppColors.bgInverse,
         borderRadius: BorderRadius.circular(6 * s),
-        border: _cardsGlow
-            ? Border.all(color: AppColors.accentPrimary, width: 1.5)
-            : null,
-        boxShadow: _cardsGlow
-            ? [
-                BoxShadow(
-                  color: AppColors.accentPrimary.withValues(alpha: 0.65),
-                  blurRadius: 14 * s,
-                  spreadRadius: 1,
-                ),
-              ]
-            : null,
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -1229,13 +1135,7 @@ class _DrillTableScreenState extends State<DrillTableScreen>
                   color: color,
                   fontSize: 15 * s,
                   fontWeight: FontWeight.w700)),
-          AnimatedScale(
-            duration: const Duration(milliseconds: 250),
-            curve: Curves.easeOutBack,
-            scale: _cardsGlow ? 1.4 : 1.0,
-            child:
-                Text(suit, style: TextStyle(color: color, fontSize: 12 * s)),
-          ),
+          Text(suit, style: TextStyle(color: color, fontSize: 12 * s)),
         ],
       ),
     );

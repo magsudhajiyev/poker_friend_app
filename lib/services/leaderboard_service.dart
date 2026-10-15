@@ -1,0 +1,261 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+import 'auth_service.dart';
+import 'daily_challenge_service.dart';
+import 'daily_challenge_store.dart';
+import 'logger_service.dart';
+
+/// Which board a ranking query targets.
+enum LeaderboardBoard { streakCurrent, streakBest, daily }
+
+/// One row on a leaderboard, already resolved for display.
+class LeaderboardEntry {
+  final int rank; // 1-based
+  final String uid;
+  final String username;
+  final int value; // streak count, or score*2 for daily (see valueLabel)
+  final bool isMe;
+
+  /// Daily-only extras (null on streak boards).
+  final double? score; // 0..5
+  final bool perfect;
+  final int? durationMs;
+
+  const LeaderboardEntry({
+    required this.rank,
+    required this.uid,
+    required this.username,
+    required this.value,
+    required this.isMe,
+    this.score,
+    this.perfect = false,
+    this.durationMs,
+  });
+}
+
+/// Global Daily Challenge leaderboard — best-effort client writes plus
+/// read queries for the three boards (current streak, today, all-time best).
+///
+/// Participation is automatic (no opt-in/opt-out, decided 2026-10-15): every
+/// completed challenge with a username writes a row. Writes are
+/// fire-and-forget/no-throw — a leaderboard failure must NEVER break the
+/// challenge, same contract as [FeedPublisher]/FCM/sound.
+///
+/// Trust model: the client-written `score` is advisory; a Cloud Function
+/// re-validates it against `verdicts`. Rules only shape-check (own uid,
+/// username present, verdicts length 5).
+///
+/// Data model (see docs/features/daily-challenge-leaderboard.md):
+///   leaderboard_daily/{dayKey}/entries/{uid}
+///   leaderboard_streak/{uid}
+class LeaderboardService {
+  LeaderboardService._();
+
+  static final FirebaseFirestore _db = FirebaseFirestore.instance;
+
+  static const String _daily = 'leaderboard_daily';
+  static const String _entries = 'entries';
+  static const String _streak = 'leaderboard_streak';
+
+  /// Score (0..5) stored as an int ×10 so the daily board can orderBy it
+  /// (Firestore orders fine on doubles too, but an int key avoids float
+  /// drift when ranking ties). 5.0 → 50, 4.5 → 45.
+  static int scoreKey(double score) => (score * 10).round();
+
+  /// Write this run's rows. Best-effort: logs and swallows all errors.
+  ///
+  /// Skips entirely when the super-admin day-override is active
+  /// ([DailyChallengeService.debugDayOffset] != 0) so test runs never touch
+  /// real standings. Requires a non-empty [username] — the caller ensures one
+  /// first (see the challenge screen's submit flow).
+  static Future<void> submit({
+    required DailyChallengeResult result,
+    required DailyChallengeStreaks streaks,
+    required String username,
+  }) async {
+    if (DailyChallengeService.debugDayOffset != 0) return;
+    final uid = AuthService.currentUser?.uid;
+    if (uid == null || username.trim().isEmpty) return;
+    final name = username.trim();
+
+    try {
+      final dailyRef = _db
+          .collection(_daily)
+          .doc(result.dayKey)
+          .collection(_entries)
+          .doc(uid);
+      await dailyRef.set({
+        'uid': uid,
+        'username': name,
+        'verdicts': result.verdicts,
+        'score': result.score,
+        'scoreKey': scoreKey(result.score),
+        'perfect': result.perfect,
+        'durationMs': result.durationMs,
+        'challengeNumber':
+            DailyChallengeService.challengeNumber(_dayFromKey(result.dayKey)),
+        'submittedAt': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      LoggerService.warning('Leaderboard: daily entry write failed: $e');
+    }
+
+    try {
+      await _db.collection(_streak).doc(uid).set({
+        'uid': uid,
+        'username': name,
+        'currentStreak': streaks.current,
+        'bestStreak': streaks.best,
+        'perfectDays': streaks.perfectDays,
+        'totalPlayed': streaks.totalPlayed,
+        'lastDayKey': result.dayKey,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      LoggerService.warning('Leaderboard: streak row write failed: $e');
+    }
+  }
+
+  /// Top [limit] rows of a board. Returns an empty list on any error — the
+  /// UI shows an empty state rather than crashing.
+  static Future<List<LeaderboardEntry>> top(
+    LeaderboardBoard board, {
+    String? dayKey,
+    int limit = 100,
+  }) async {
+    final me = AuthService.currentUser?.uid;
+    try {
+      final Query<Map<String, dynamic>> query;
+      switch (board) {
+        case LeaderboardBoard.streakCurrent:
+          query = _db
+              .collection(_streak)
+              .where('currentStreak', isGreaterThanOrEqualTo: 1)
+              .orderBy('currentStreak', descending: true)
+              .limit(limit);
+        case LeaderboardBoard.streakBest:
+          query = _db
+              .collection(_streak)
+              .where('bestStreak', isGreaterThanOrEqualTo: 1)
+              .orderBy('bestStreak', descending: true)
+              .limit(limit);
+        case LeaderboardBoard.daily:
+          final key = dayKey ??
+              DailyChallengeStore.dayKey(DailyChallengeService.today());
+          query = _db
+              .collection(_daily)
+              .doc(key)
+              .collection(_entries)
+              .orderBy('scoreKey', descending: true)
+              .orderBy('durationMs', descending: false)
+              .limit(limit);
+      }
+      final snap = await query.get();
+      var rank = 0;
+      return [
+        for (final doc in snap.docs)
+          _entryFromDoc(board, doc.data(), ++rank, me),
+      ];
+    } catch (e) {
+      LoggerService.warning('Leaderboard: top($board) read failed: $e');
+      return const [];
+    }
+  }
+
+  /// The current user's 1-based rank on a board, or null when they have no
+  /// row (never played / no username) or on error. Uses a count() aggregation
+  /// of everyone strictly ahead, so it is correct even outside the top 100.
+  static Future<int?> myRank(LeaderboardBoard board, {String? dayKey}) async {
+    final uid = AuthService.currentUser?.uid;
+    if (uid == null) return null;
+    try {
+      switch (board) {
+        case LeaderboardBoard.streakCurrent:
+        case LeaderboardBoard.streakBest:
+          final field = board == LeaderboardBoard.streakCurrent
+              ? 'currentStreak'
+              : 'bestStreak';
+          final mine = await _db.collection(_streak).doc(uid).get();
+          final myVal = (mine.data()?[field] as num?)?.toInt() ?? 0;
+          if (myVal < 1) return null;
+          final ahead = await _db
+              .collection(_streak)
+              .where(field, isGreaterThan: myVal)
+              .count()
+              .get();
+          return (ahead.count ?? 0) + 1;
+        case LeaderboardBoard.daily:
+          final key = dayKey ??
+              DailyChallengeStore.dayKey(DailyChallengeService.today());
+          final col =
+              _db.collection(_daily).doc(key).collection(_entries);
+          final mine = await col.doc(uid).get();
+          if (!mine.exists) return null;
+          final myScore = (mine.data()?['scoreKey'] as num?)?.toInt() ?? 0;
+          final myMs =
+              (mine.data()?['durationMs'] as num?)?.toInt() ?? 1 << 30;
+          // Strictly better = higher scoreKey, OR same scoreKey & faster.
+          final higher = await col
+              .where('scoreKey', isGreaterThan: myScore)
+              .count()
+              .get();
+          final sameFaster = await col
+              .where('scoreKey', isEqualTo: myScore)
+              .where('durationMs', isLessThan: myMs)
+              .count()
+              .get();
+          return (higher.count ?? 0) + (sameFaster.count ?? 0) + 1;
+      }
+    } catch (e) {
+      LoggerService.warning('Leaderboard: myRank($board) failed: $e');
+      return null;
+    }
+  }
+
+  static LeaderboardEntry _entryFromDoc(LeaderboardBoard board,
+      Map<String, dynamic> d, int rank, String? me) {
+    final uid = d['uid']?.toString() ?? '';
+    final username = (d['username']?.toString().trim().isNotEmpty ?? false)
+        ? d['username'].toString()
+        : 'Player';
+    final isMe = me != null && uid == me;
+    switch (board) {
+      case LeaderboardBoard.streakCurrent:
+        return LeaderboardEntry(
+          rank: rank,
+          uid: uid,
+          username: username,
+          value: (d['currentStreak'] as num?)?.toInt() ?? 0,
+          isMe: isMe,
+        );
+      case LeaderboardBoard.streakBest:
+        return LeaderboardEntry(
+          rank: rank,
+          uid: uid,
+          username: username,
+          value: (d['bestStreak'] as num?)?.toInt() ?? 0,
+          isMe: isMe,
+        );
+      case LeaderboardBoard.daily:
+        return LeaderboardEntry(
+          rank: rank,
+          uid: uid,
+          username: username,
+          value: (d['scoreKey'] as num?)?.toInt() ?? 0,
+          isMe: isMe,
+          score: (d['score'] as num?)?.toDouble() ?? 0,
+          perfect: d['perfect'] == true,
+          durationMs: (d['durationMs'] as num?)?.toInt(),
+        );
+    }
+  }
+
+  static DateTime _dayFromKey(String key) {
+    try {
+      final p = key.split('-').map(int.parse).toList();
+      return DateTime(p[0], p[1], p[2]);
+    } catch (_) {
+      return DailyChallengeService.today();
+    }
+  }
+}

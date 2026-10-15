@@ -28,7 +28,8 @@ import 'logger_service.dart';
 ///   leak_session_chip_shown/_tapped
 /// Daily Challenge (flagged): daily_challenge_opened,
 ///   daily_challenge_completed, daily_challenge_shared,
-///   daily_challenge_range_viewed, daily_challenge_coach_picked
+///   daily_challenge_range_viewed, daily_challenge_coach_picked,
+///   daily_challenge_leaderboard_submitted
 /// Plus SDK-automatic: Application Opened/Backgrounded (lifecycle — feeds
 /// the retention chart).
 class AnalyticsService {
