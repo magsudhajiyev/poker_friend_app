@@ -21,6 +21,8 @@ import '../../services/daily_challenge_service.dart';
 import '../../services/daily_challenge_store.dart';
 import '../../services/feature_flag_service.dart';
 import '../../services/leaderboard_service.dart';
+import '../../services/notification_prefs_service.dart';
+import '../../services/streak_saver_service.dart';
 import '../../services/username_service.dart';
 import '../../widgets/coach_mascot.dart';
 import '../../widgets/hand_micro_animations.dart';
@@ -154,6 +156,14 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> {
     if (DailyChallengeService.debugDayOffset == 0) {
       _submitToLeaderboard(result, streaks);
     }
+    // Streak-saver: settle today's pending reminder (stamps the 2h reward if
+    // it fired) and schedule tomorrow's, in the picked coach's voice. The
+    // service self-guards on flag / prefs / day-override. Fire-and-forget.
+    unawaited(StreakSaverService.onChallengeCompleted(
+      currentStreak: streaks.current,
+      coachId: _persona.id,
+      challengeNumber: DailyChallengeService.challengeNumber(_config.day),
+    ));
   }
 
   /// Ensure the player has a username (prompting the setup screen once if
@@ -465,6 +475,8 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> {
       _justPicked = true;
     });
     CoachPersonas.save(p);
+    // Mirror to the user doc so server engagement pushes can be coach-voiced.
+    unawaited(NotificationPrefsService.saveCoachId(p.id));
     // Audible preview — the coach introduces themself in their real voice.
     CoachVoiceService.speak(p.greeting, coachId: p.id);
     AnalyticsService.capture('daily_challenge_coach_picked', {'coach': p.id});

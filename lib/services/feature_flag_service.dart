@@ -54,6 +54,7 @@ class FeatureFlagService {
   static const String aiHandAnalysis = 'ai_hand_analysis';
   static const String leakDetector = 'leak_detector';
   static const String dailyChallenge = 'daily_challenge';
+  static const String engagementNotifications = 'engagement_notifications';
 
   static const List<FeatureFlag> all = [
     FeatureFlag(
@@ -81,6 +82,14 @@ class FeatureFlagService {
       'Daily Challenge',
       'Date-seeded daily decision spots graded live by the coach, with '
       'streaks. Home screen card. Phase 1 experiment.',
+      defaultMode: FlagMode.adminOnly,
+    ),
+    FeatureFlag(
+      engagementNotifications,
+      'Engagement Notifications',
+      'Coach-voiced streak-saver / leaderboard / comeback pushes + the '
+      'Settings notification preferences. Dark-launch switch for the '
+      'scheduler.',
       defaultMode: FlagMode.adminOnly,
     ),
   ];

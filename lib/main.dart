@@ -13,6 +13,8 @@ import 'design_system/app_scroll_behavior.dart';
 import 'screens/auth_wrapper.dart';
 import 'screens/splash_screen.dart';
 import 'screens/player/player_session_screen.dart';
+import 'screens/training/daily_challenge_screen.dart';
+import 'services/notification_events_service.dart';
 import 'services/notification_service.dart';
 import 'services/fcm_service.dart';
 import 'services/auth_service.dart';
@@ -255,6 +257,13 @@ Future<void> _handleNotificationNavigation(Map<String, dynamic> data) async {
   final eventId = data['eventId'] as String?;
   final type = data['type'] as String?;
 
+  // Engagement push: stamp the open on its event doc regardless of whether
+  // navigation succeeds, then fall through to route to the Daily Challenge.
+  final notifEventId = data['notificationEventId'] as String?;
+  if (action == 'daily_challenge' && notifEventId != null) {
+    unawaited(NotificationEventsService.markOpened(notifEventId, type: type));
+  }
+
   // Need either action or type to determine navigation
   if (action == null && type == null) return;
 
@@ -281,6 +290,11 @@ Future<void> _handleNotificationNavigation(Map<String, dynamic> data) async {
       break;
     case 'view_club_requests':
       _navigateToClubRequests(context);
+      break;
+    case 'daily_challenge':
+      await navigatorKey.currentState?.push(
+        MaterialPageRoute(builder: (_) => const DailyChallengeScreen()),
+      );
       break;
   }
 }
