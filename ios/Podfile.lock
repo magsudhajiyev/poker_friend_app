@@ -1202,6 +1202,9 @@ PODS:
     - PromisesObjC (~> 2.4)
     - PromisesSwift (~> 2.4)
     - RecaptchaInterop (~> 101.0)
+  - audioplayers_darwin (0.0.1):
+    - Flutter
+    - FlutterMacOS
   - BoringSSL-GRPC (0.0.37):
     - BoringSSL-GRPC/Implementation (= 0.0.37)
     - BoringSSL-GRPC/Interface (= 0.0.37)
@@ -1580,15 +1583,15 @@ PODS:
   - PromisesObjC (2.4.1)
   - PromisesSwift (2.4.1):
     - PromisesObjC (= 2.4.1)
-  - purchases_flutter (9.16.1):
+  - purchases_flutter (10.15.2):
     - Flutter
-    - PurchasesHybridCommon (= 17.55.1)
-  - PurchasesHybridCommon (17.55.1):
-    - RevenueCat (= 5.67.1)
+    - PurchasesHybridCommon (= 19.10.0)
+  - PurchasesHybridCommon (19.10.0):
+    - RevenueCat (= 5.94.0)
   - RecaptchaInterop (101.0.0)
   - record_darwin (1.0.0):
     - Flutter
-  - RevenueCat (5.67.1)
+  - RevenueCat (5.94.0)
   - share_plus (0.0.1):
     - Flutter
   - shared_preferences_foundation (0.0.1):
@@ -1613,6 +1616,7 @@ PODS:
 
 DEPENDENCIES:
   - app_links (from `.symlinks/plugins/app_links/ios`)
+  - audioplayers_darwin (from `.symlinks/plugins/audioplayers_darwin/darwin`)
   - cloud_firestore (from `.symlinks/plugins/cloud_firestore/ios`)
   - device_info_plus (from `.symlinks/plugins/device_info_plus/ios`)
   - firebase_analytics (from `.symlinks/plugins/firebase_analytics/ios`)
@@ -1691,6 +1695,8 @@ SPEC REPOS:
 EXTERNAL SOURCES:
   app_links:
     :path: ".symlinks/plugins/app_links/ios"
+  audioplayers_darwin:
+    :path: ".symlinks/plugins/audioplayers_darwin/darwin"
   cloud_firestore:
     :path: ".symlinks/plugins/cloud_firestore/ios"
   device_info_plus:
@@ -1745,6 +1751,7 @@ SPEC CHECKSUMS:
   app_links: 3dbc685f76b1693c66a6d9dd1e9ab6f73d97dc0a
   AppAuth: d4f13a8fe0baf391b2108511793e4b479691fb73
   AppCheckCore: e215d35177a9cf469927863e69c13e220df32a8b
+  audioplayers_darwin: 835ced6edd4c9fc8ebb0a7cc9e294a91d99917d5
   BoringSSL-GRPC: dded2a44897e45f28f08ae87a55ee4bcd19bc508
   cloud_firestore: fdcc87898326e396d6ef6df543acf9b5c2034b95
   CwlCatchException: 7acc161b299a6de7f0a46a6ed741eae2c8b4d75a
@@ -1800,11 +1807,11 @@ SPEC CHECKSUMS:
   posthog_flutter: 555be92d98c387d84567042cfe08bf80343db23d
   PromisesObjC: 752c3227f599e3467650e47ea36f433eeb10c273
   PromisesSwift: 217dea0fd5d2ad65222a109c48698add13cc1c5b
-  purchases_flutter: b44fcb4ff5e68a4dfe53fd0c339683803b04dd2c
-  PurchasesHybridCommon: ecd9d7c586287625f1225b8de5e24c1021502270
+  purchases_flutter: d695b22943fb094b02badf0f5f5a8bd7ab1c035f
+  PurchasesHybridCommon: 4ea84285a799df27db9e4a0cc180d9129e6e9cf2
   RecaptchaInterop: 11e0b637842dfb48308d242afc3f448062325aba
   record_darwin: fb1f375f1d9603714f55b8708a903bbb91ffdb0a
-  RevenueCat: 9357239a9f0978285e68983637b8a602e65c94f0
+  RevenueCat: f381deba42a93e5194104b17a1f653a389d2e215
   share_plus: 50da8cb520a8f0f65671c6c6a99b3617ed10a58a
   shared_preferences_foundation: 7036424c3d8ec98dfe75ff1667cb0cd531ec82bb
   sign_in_with_apple: c5dcc141574c8c54d5ac99dd2163c0c72ad22418
