@@ -849,6 +849,10 @@ const SERVER_COPY: Record<string, { title: string; body: string }[]> = {
     { title: "Today's five are live", body: "A fresh daily challenge just dropped — take your shot." },
     { title: "Your daily challenge is ready", body: "Five new decisions, two minutes. Your coach is waiting." },
   ],
+  lb_milestone: [
+    { title: "🔥 {n}-day streak!", body: "That's a new personal best. Keep it rolling tomorrow." },
+    { title: "Milestone reached: {n} days", body: "You're on a roll — your coach is impressed." },
+  ],
   re_engage: [
     { title: "Your coaches are ready when you are", body: "Pick up where you left off — five quick decisions, no pressure." },
     { title: "The table's still here", body: "A fresh daily challenge is waiting whenever you feel like it." },
@@ -907,11 +911,21 @@ export const scheduleEngagement = onSchedule(
 
         const activeHourUtc = Number(notif.activeHourUtc);
         const tz = Number(notif.tzOffsetMinutes ?? 0);
-        // Land one hour before their usual open, so it's waiting for them.
         const localNow = localHour(utcHourNow, tz);
+
+        // TWO evaluation windows so a daily player who plays early is still
+        // reached (the old single "1h before active hour" window missed them
+        // because they'd already played by then):
+        //   • MORNING (fixed local hour): the "today's five are live" nudge +
+        //     streak-milestone celebration — fires BEFORE they'd play.
+        //   • EVENING (their active hour): the streak-saver + comeback — the
+        //     "it's getting late and you haven't played" moment.
+        const MORNING_HOUR = 10; // local
         const localActive = localHour(activeHourUtc, tz);
-        const target = ((localActive - 1) % 24 + 24) % 24;
-        if (!forced && localNow !== target) continue;
+        const eveningHour = ((localActive - 1) % 24 + 24) % 24;
+        const inMorningWindow = localNow === MORNING_HOUR;
+        const inEveningWindow = localNow === eveningHour;
+        if (!forced && !inMorningWindow && !inEveningWindow) continue;
 
         // Quiet hours (streak-saver is exempt; evaluated per type below).
         const qStart = Number(notif.quietStartLocal ?? 22);
@@ -936,8 +950,14 @@ export const scheduleEngagement = onSchedule(
         // Resolve the eligible moment (priority order; server-reachable set).
         const streakDoc = await db.collection("leaderboard_streak").doc(uid).get();
         const currentStreak = Number(streakDoc.get("currentStreak") || 0);
+        const bestStreak = Number(streakDoc.get("bestStreak") || 0);
         const lastDayKey = String(streakDoc.get("lastDayKey") || "");
         const playedToday = lastDayKey === today;
+        // Milestone = a round-number streak reached today (celebration push).
+        const milestoneHit =
+          playedToday &&
+          [3, 7, 14, 30, 50, 100, 200, 365].includes(currentStreak) &&
+          currentStreak === bestStreak;
 
         const lastActive = doc.get("lastActiveAt") as Timestamp | undefined;
         const lapsedDays = lastActive
@@ -946,25 +966,37 @@ export const scheduleEngagement = onSchedule(
 
         let type: string | null = null;
         if (notif.debugForceSend === true) {
-          // Admin test hook: force a push on the next run regardless of
-          // eligibility. Self-clears below so it fires exactly once.
+          // Admin test hook: force a push regardless of eligibility.
           type = "dc_today_ready";
         } else if (
+          inEveningWindow &&
           notif.streak !== false &&
           currentStreak >= 1 &&
           !playedToday
         ) {
-          type = "dc_streak_risk"; // quiet-hours exempt
+          type = "dc_streak_risk"; // quiet-hours exempt, their active hour
         } else if (
+          !inQuiet &&
+          notif.leaderboard !== false &&
+          milestoneHit
+        ) {
+          // Celebrate a milestone (either window) — positive, for engaged users.
+          type = "lb_milestone";
+        } else if (
+          inMorningWindow &&
           !inQuiet &&
           notif.leaderboard !== false &&
           !playedToday &&
           lapsedDays < 2
         ) {
-          // Active, hasn't played today → gentle "today's five are live".
+          // Morning nudge: today's five are live, before they'd play.
           type = "dc_today_ready";
-        } else if (!inQuiet && notif.reengage !== false && lapsedDays >= 2) {
-          // Lapsed ≥2 days (no activity) → gentle comeback.
+        } else if (
+          !inQuiet &&
+          notif.reengage !== false &&
+          lapsedDays >= 2
+        ) {
+          // Lapsed ≥2 days → gentle comeback (either window).
           type = "re_engage";
         }
         if (!type) continue;
