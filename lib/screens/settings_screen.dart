@@ -1295,11 +1295,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  // ── Engagement notification preferences (flagged, English-only) ──────
+  // ── Engagement notification preferences (flagged) ──────
 
   String _fmtHour(int h) => '${h.toString().padLeft(2, '0')}:00';
 
   Widget _buildNotifSection() {
+    final l10n = AppLocalizations.of(context);
     final p = NotificationPrefsService.current;
     Future<void> save(NotificationPrefs updated) async {
       await NotificationPrefsService.save(updated);
@@ -1312,47 +1313,46 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
 
     return _buildSection(
-      label: 'Notifications',
+      label: l10n.notifSectionTitle,
       children: [
         _buildToggleRow(
           icon: const Icon(Icons.notifications_active_outlined,
               color: AppColors.contentInactive, size: 24),
-          title: 'Daily Challenge notifications',
-          subtitle: 'Master switch for all coach reminders',
+          title: l10n.notifMasterTitle,
+          subtitle: l10n.notifMasterSubtitle,
           value: p.master,
           onChanged: (v) => save(p.copyWith(master: v)),
         ),
         _buildToggleRow(
           icon: const Icon(Icons.local_fire_department_outlined,
               color: AppColors.contentInactive, size: 24),
-          title: 'Streak reminders',
-          subtitle: 'A heads-up before your streak expires',
+          title: l10n.notifStreakTitle,
+          subtitle: l10n.notifStreakSubtitle,
           value: p.streak,
           onChanged: (v) => save(p.copyWith(streak: v)),
         ),
         _buildToggleRow(
           icon: const Icon(Icons.leaderboard_outlined,
               color: AppColors.contentInactive, size: 24),
-          title: 'Leaderboard alerts',
-          subtitle: 'Overtaken or hit a new milestone',
+          title: l10n.notifLeaderboardTitle,
+          subtitle: l10n.notifLeaderboardSubtitle,
           value: p.leaderboard,
           onChanged: (v) => save(p.copyWith(leaderboard: v)),
         ),
         _buildToggleRow(
           icon: const Icon(Icons.waving_hand_outlined,
               color: AppColors.contentInactive, size: 24),
-          title: 'Comeback reminders',
-          subtitle: 'A gentle nudge after a few quiet days',
+          title: l10n.notifReengageTitle,
+          subtitle: l10n.notifReengageSubtitle,
           value: p.reengage,
           onChanged: (v) => save(p.copyWith(reengage: v)),
         ),
         _buildRow(
           icon: const Icon(Icons.bedtime_outlined,
               color: AppColors.contentInactive, size: 24),
-          title: 'Quiet hours',
-          subtitle:
-              '${_fmtHour(p.quietStartLocal)} – ${_fmtHour(p.quietEndLocal)} '
-              '(streak reminders excepted)',
+          title: l10n.notifQuietHoursTitle,
+          subtitle: l10n.notifQuietHoursValue(
+              _fmtHour(p.quietStartLocal), _fmtHour(p.quietEndLocal)),
           onTap: _showQuietHoursPicker,
           isLast: true,
         ),
@@ -1361,6 +1361,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _showQuietHoursPicker() async {
+    final l10n = AppLocalizations.of(context);
     var p = NotificationPrefsService.current;
     await showDialog<void>(
       context: context,
@@ -1393,7 +1394,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             backgroundColor: AppColors.bgSurface,
             shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16)),
-            title: Text('Quiet hours',
+            title: Text(l10n.notifQuietHoursTitle,
                 style: AppTypography.ibm(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
@@ -1402,18 +1403,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'No notifications in this window. Streak reminders are the '
-                  'one exception — they fire only when your streak would die '
-                  'overnight.',
+                  l10n.notifQuietHoursDialogBody,
                   style: AppTypography.ibm(
                       fontSize: 13, color: AppColors.textDisabled),
                 ),
                 const SizedBox(height: 12),
-                hourPicker('From', p.quietStartLocal, (h) {
+                hourPicker(l10n.notifQuietHoursFrom, p.quietStartLocal, (h) {
                   p = p.copyWith(quietStartLocal: h);
                   setLocal(() {});
                 }),
-                hourPicker('Until', p.quietEndLocal, (h) {
+                hourPicker(l10n.notifQuietHoursUntil, p.quietEndLocal, (h) {
                   p = p.copyWith(quietEndLocal: h);
                   setLocal(() {});
                 }),

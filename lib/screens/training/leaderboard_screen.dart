@@ -6,6 +6,7 @@ import '../../design_system/constants/colors.dart';
 import '../../design_system/constants/decorations.dart';
 import '../../design_system/constants/spacing.dart';
 import '../../design_system/constants/typography.dart';
+import '../../l10n/app_localizations.dart';
 import '../../services/daily_challenge_service.dart';
 import '../../services/daily_challenge_store.dart';
 import '../../services/leaderboard_service.dart';
@@ -35,11 +36,17 @@ class _BoardData {
 }
 
 class _LeaderboardScreenState extends State<LeaderboardScreen> {
-  static const _tabs = [
-    (LeaderboardBoard.streakCurrent, 'Streak'),
-    (LeaderboardBoard.daily, 'Today'),
-    (LeaderboardBoard.streakBest, 'Best'),
+  static const _boards = [
+    LeaderboardBoard.streakCurrent,
+    LeaderboardBoard.daily,
+    LeaderboardBoard.streakBest,
   ];
+
+  String _tabLabel(AppLocalizations l10n, LeaderboardBoard b) => switch (b) {
+        LeaderboardBoard.streakCurrent => l10n.leaderboardTabStreak,
+        LeaderboardBoard.daily => l10n.leaderboardTabToday,
+        LeaderboardBoard.streakBest => l10n.leaderboardTabBest,
+      };
 
   // Medal colors for the top three ranks (gold / silver / bronze) — local
   // constants in the sibling-screen style; no design-system token exists.
@@ -54,7 +61,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   /// three pages never overwrite each other's data.
   final Map<LeaderboardBoard, _BoardData> _data = {};
 
-  LeaderboardBoard get _board => _tabs[_tab].$1;
+  LeaderboardBoard get _board => _boards[_tab];
 
   @override
   void initState() {
@@ -102,11 +109,12 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     if (i == _tab) return;
     HapticFeedback.selectionClick();
     setState(() => _tab = i);
-    if (!_data.containsKey(_tabs[i].$1)) _load(_tabs[i].$1);
+    if (!_data.containsKey(_boards[i])) _load(_boards[i]);
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: AppColors.bgPrimary,
       body: SafeArea(
@@ -114,19 +122,19 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
         child: Column(
           children: [
             TopNavBar(
-              title: 'Leaderboard',
-              subtitle: _subtitleFor(_board),
+              title: l10n.dailyChallengeLeaderboard,
+              subtitle: _subtitleFor(l10n, _board),
               onBack: () => Navigator.pop(context),
             ),
             const SizedBox(height: AppSpacing.xs),
-            _segmented(),
+            _segmented(l10n),
             const SizedBox(height: AppSpacing.sm),
             Expanded(
               child: PageView.builder(
                 controller: _pager,
                 onPageChanged: _onPageChanged,
-                itemCount: _tabs.length,
-                itemBuilder: (_, i) => _body(_tabs[i].$1),
+                itemCount: _boards.length,
+                itemBuilder: (_, i) => _body(l10n, _boards[i]),
               ),
             ),
           ],
@@ -135,14 +143,13 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     );
   }
 
-  String _subtitleFor(LeaderboardBoard b) => switch (b) {
-        LeaderboardBoard.streakCurrent => 'Longest active streaks',
-        LeaderboardBoard.daily =>
-          "Today's run — score, then speed",
-        LeaderboardBoard.streakBest => 'All-time best streaks',
+  String _subtitleFor(AppLocalizations l10n, LeaderboardBoard b) => switch (b) {
+        LeaderboardBoard.streakCurrent => l10n.leaderboardSubtitleStreak,
+        LeaderboardBoard.daily => l10n.leaderboardSubtitleToday,
+        LeaderboardBoard.streakBest => l10n.leaderboardSubtitleBest,
       };
 
-  Widget _segmented() => Padding(
+  Widget _segmented(AppLocalizations l10n) => Padding(
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
         child: Container(
           padding: const EdgeInsets.all(4),
@@ -152,7 +159,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
           ),
           child: Row(
             children: [
-              for (var i = 0; i < _tabs.length; i++)
+              for (var i = 0; i < _boards.length; i++)
                 Expanded(
                   child: GestureDetector(
                     onTap: () => _pickTab(i),
@@ -168,7 +175,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                       ),
                       child: Center(
                         child: Text(
-                          _tabs[i].$2,
+                          _tabLabel(l10n, _boards[i]),
                           style: AppTypography.ibm(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
@@ -184,14 +191,14 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
         ),
       );
 
-  Widget _body(LeaderboardBoard board) {
+  Widget _body(AppLocalizations l10n, LeaderboardBoard board) {
     final data = _data[board] ?? const _BoardData();
     if (data.loading) {
       return const Center(
           child: CircularProgressIndicator(color: AppColors.accentPrimary));
     }
     if (data.entries.isEmpty) {
-      return _empty(board);
+      return _empty(l10n, board);
     }
     final showMyRankFooter =
         data.myRank != null && !data.entries.any((e) => e.isMe);
@@ -205,12 +212,12 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
             itemBuilder: (_, i) => _row(board, data.entries[i]),
           ),
         ),
-        if (showMyRankFooter) _myRankFooter(data.myRank!),
+        if (showMyRankFooter) _myRankFooter(l10n, data.myRank!),
       ],
     );
   }
 
-  Widget _empty(LeaderboardBoard board) => Center(
+  Widget _empty(AppLocalizations l10n, LeaderboardBoard board) => Center(
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.xl),
           child: Column(
@@ -221,8 +228,8 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
               const SizedBox(height: AppSpacing.sm),
               Text(
                 board == LeaderboardBoard.daily
-                    ? 'No one has finished today yet.\nBe the first.'
-                    : 'No ranked players yet.\nPlay to get on the board.',
+                    ? l10n.leaderboardEmptyToday
+                    : l10n.leaderboardEmptyStreak,
                 textAlign: TextAlign.center,
                 style: AppTypography.ibm(
                     fontSize: 15, color: AppColors.textSecondary),
@@ -322,7 +329,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     return m > 0 ? '${m}m${r.toString().padLeft(2, '0')}s' : '${r}s';
   }
 
-  Widget _myRankFooter(int rank) => Container(
+  Widget _myRankFooter(AppLocalizations l10n, int rank) => Container(
         width: double.infinity,
         padding: const EdgeInsets.fromLTRB(
             AppSpacing.md, AppSpacing.sm, AppSpacing.md, AppSpacing.xl),
@@ -333,7 +340,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
         ),
         child: Row(
           children: [
-            Text('Your rank',
+            Text(l10n.leaderboardYourRank,
                 style: AppTypography.ibm(
                     fontSize: 14, color: AppColors.textSecondary)),
             const Spacer(),
