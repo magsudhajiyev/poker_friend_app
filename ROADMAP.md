@@ -113,6 +113,21 @@ sent yet, so funnels/retention can't be built and the report's example
 15. Test-suite build-out phases 0-4 from `test/HAND_LOGGING_SPEC.md`
     (mocking deps, SessionManager lifecycle, widget tests).
 
+## Update 4 — Daily Challenge authored hands (code on main 2026-10-21)
+
+Flag `daily_challenge` stays admin-only until ALL of these are done:
+1. Deploy together (by name — never a full functions deploy):
+   `firebase deploy --only functions:validateLeaderboardEntry,firestore:rules`
+   — the deployed CF still scores the old 0..5 sum; the rules file also
+   carries the undeployed B5 club hardening → club smoke test first (item 3).
+2. Author 4 more hands (solver export → `build_tree.js --upload`) and schedule
+   days with `tool/gto_export/schedule_day.js`.
+3. Remove the `default` testing bridge from `assets/authored/days.json`.
+4. Upgrade the ElevenLabs plan (free quota exhausted 2026-10-21) — the coach
+   voice is silent until then.
+5. Run the RevenueCat sandbox matrix (purchases_flutter 10.15.2 / Billing 8.3)
+   before the next store release.
+
 ## Standing constraints (do not regress)
 
 - `session_results` amounts are client-written — never build cross-user
