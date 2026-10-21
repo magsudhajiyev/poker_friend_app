@@ -5499,5 +5499,56 @@
         "type": "String"
       }
     }
-  }
+  },
+  "dailyChallengeTitle": "Daily Challenge",
+  "dailyChallengeRuleGrades": "Il Coach valuta ogni tua mossa mentre la fai",
+  "dailyChallengeRuleSameSpots": "Stessi spot per tutti — confrontati con gli amici",
+  "dailyChallengeRuleStreak": "Gioca ogni giorno per costruire la tua Streak",
+  "dailyChallengeYourCoach": "IL TUO COACH",
+  "dailyChallengePlayToday": "Gioca la challenge di oggi",
+  "dailyChallengeLeaderboard": "Leaderboard",
+  "dailyChallengePerfectDay": "Giornata perfetta! 🏆",
+  "dailyChallengeYourSpots": "I TUOI SPOT",
+  "dailyChallengeShareResult": "Condividi il risultato",
+  "dailyChallengeNextAtMidnight": "Prossima challenge a mezzanotte",
+  "dailyChallengeVerdictBest": "MIGLIORE",
+  "dailyChallengeVerdictGood": "BUONA",
+  "dailyChallengeVerdictLeak": "LEAK",
+  "dailyChallengeStatStreak": "STREAK",
+  "dailyChallengeStatBest": "MIGLIORE",
+  "dailyChallengeStatPerfect": "PERFETTE",
+  "dailyChallengeStatPlayed": "GIOCATE",
+  "leaderboardTabStreak": "Streak",
+  "leaderboardTabToday": "Oggi",
+  "leaderboardTabBest": "Migliore",
+  "leaderboardSubtitleStreak": "Streak attive più lunghe",
+  "leaderboardSubtitleToday": "Partita di oggi — punteggio, poi velocità",
+  "leaderboardSubtitleBest": "Streak migliori di sempre",
+  "leaderboardEmptyToday": "Nessuno ha ancora finito oggi.\nSii il primo.",
+  "leaderboardEmptyStreak": "Ancora nessun giocatore classificato.\nGioca per entrare in classifica.",
+  "leaderboardYourRank": "La tua posizione",
+  "notifSectionTitle": "Notifiche",
+  "notifMasterTitle": "Notifiche Daily Challenge",
+  "notifMasterSubtitle": "Interruttore principale per tutti i promemoria del Coach",
+  "notifStreakTitle": "Promemoria Streak",
+  "notifStreakSubtitle": "Un avviso prima che la tua Streak scada",
+  "notifLeaderboardTitle": "Avvisi Leaderboard",
+  "notifLeaderboardSubtitle": "Superato o nuovo traguardo raggiunto",
+  "notifReengageTitle": "Promemoria di ritorno",
+  "notifReengageSubtitle": "Un piccolo incoraggiamento dopo qualche giorno di inattività",
+  "notifQuietHoursTitle": "Ore di silenzio",
+  "notifQuietHoursValue": "{start} – {end} (promemoria Streak esclusi)",
+  "@notifQuietHoursValue": {
+    "placeholders": {
+      "start": {
+        "type": "String"
+      },
+      "end": {
+        "type": "String"
+      }
+    }
+  },
+  "notifQuietHoursDialogBody": "Nessuna notifica in questo intervallo. I promemoria Streak sono l'unica eccezione — vengono inviati solo quando la tua Streak scadrebbe durante la notte.",
+  "notifQuietHoursFrom": "Dalle",
+  "notifQuietHoursUntil": "Alle"
 }

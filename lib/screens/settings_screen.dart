@@ -17,7 +17,9 @@ import '../services/subscription_service.dart';
 import '../services/locale_service.dart';
 import '../services/feature_flag_service.dart';
 import '../services/currency_service.dart';
+import '../services/notification_prefs_service.dart';
 import '../services/skip_hand_scouting_service.dart';
+import '../services/streak_saver_service.dart';
 import '../services/username_service.dart';
 import '../services/club_service.dart';
 import '../services/session_result_service.dart';
@@ -107,6 +109,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     if (mounted) {
       setState(() => _scoutingEnabled = SkipHandScoutingService.isEnabled);
+    }
+
+    // Engagement-notification prefs (flagged feature) — refresh the cached
+    // copy so the toggles reflect Firestore state.
+    if (FeatureFlagService.isEnabled(
+        FeatureFlagService.engagementNotifications)) {
+      await NotificationPrefsService.load();
+      if (mounted) setState(() {});
     }
   }
 
@@ -979,6 +989,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ),
                     ],
                   ),
+                  // Engagement notifications — flagged experiment;
+                  // English-only until GA, matching the flag gating.
+                  if (FeatureFlagService.isEnabled(
+                      FeatureFlagService.engagementNotifications)) ...[
+                    const SizedBox(height: 16),
+                    _buildNotifSection(),
+                  ],
                   const SizedBox(height: 16),
                   _buildSection(
                     label: l10n.settingsKnowledgeBase,
@@ -1276,6 +1293,155 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ],
       ),
     );
+  }
+
+  // ── Engagement notification preferences (flagged) ──────
+
+  String _fmtHour(int h) => '${h.toString().padLeft(2, '0')}:00';
+
+  Widget _buildNotifSection() {
+    final l10n = AppLocalizations.of(context);
+    final p = NotificationPrefsService.current;
+    Future<void> save(NotificationPrefs updated) async {
+      await NotificationPrefsService.save(updated);
+      // Muting the streak path (directly or via master) must also kill any
+      // already-queued device reminder — it would fire against their wishes.
+      if (!updated.categoryEnabled(NotifCategory.streak)) {
+        await StreakSaverService.cancelPending();
+      }
+      if (mounted) setState(() {});
+    }
+
+    return _buildSection(
+      label: l10n.notifSectionTitle,
+      children: [
+        _buildToggleRow(
+          icon: const Icon(Icons.notifications_active_outlined,
+              color: AppColors.contentInactive, size: 24),
+          title: l10n.notifMasterTitle,
+          subtitle: l10n.notifMasterSubtitle,
+          value: p.master,
+          onChanged: (v) => save(p.copyWith(master: v)),
+        ),
+        _buildToggleRow(
+          icon: const Icon(Icons.local_fire_department_outlined,
+              color: AppColors.contentInactive, size: 24),
+          title: l10n.notifStreakTitle,
+          subtitle: l10n.notifStreakSubtitle,
+          value: p.streak,
+          onChanged: (v) => save(p.copyWith(streak: v)),
+        ),
+        _buildToggleRow(
+          icon: const Icon(Icons.leaderboard_outlined,
+              color: AppColors.contentInactive, size: 24),
+          title: l10n.notifLeaderboardTitle,
+          subtitle: l10n.notifLeaderboardSubtitle,
+          value: p.leaderboard,
+          onChanged: (v) => save(p.copyWith(leaderboard: v)),
+        ),
+        _buildToggleRow(
+          icon: const Icon(Icons.waving_hand_outlined,
+              color: AppColors.contentInactive, size: 24),
+          title: l10n.notifReengageTitle,
+          subtitle: l10n.notifReengageSubtitle,
+          value: p.reengage,
+          onChanged: (v) => save(p.copyWith(reengage: v)),
+        ),
+        _buildRow(
+          icon: const Icon(Icons.bedtime_outlined,
+              color: AppColors.contentInactive, size: 24),
+          title: l10n.notifQuietHoursTitle,
+          subtitle: l10n.notifQuietHoursValue(
+              _fmtHour(p.quietStartLocal), _fmtHour(p.quietEndLocal)),
+          onTap: _showQuietHoursPicker,
+          isLast: true,
+        ),
+      ],
+    );
+  }
+
+  Future<void> _showQuietHoursPicker() async {
+    final l10n = AppLocalizations.of(context);
+    var p = NotificationPrefsService.current;
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setLocal) {
+          Widget hourPicker(String label, int value, ValueChanged<int> onPick) =>
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(label,
+                      style: AppTypography.ibm(
+                          fontSize: 15, color: Colors.white)),
+                  DropdownButton<int>(
+                    value: value,
+                    dropdownColor: AppColors.bgSurface,
+                    style: AppTypography.ibm(
+                        fontSize: 15, color: Colors.white),
+                    items: [
+                      for (var h = 0; h < 24; h++)
+                        DropdownMenuItem(value: h, child: Text(_fmtHour(h))),
+                    ],
+                    onChanged: (v) {
+                      if (v != null) onPick(v);
+                    },
+                  ),
+                ],
+              );
+
+          return AlertDialog(
+            backgroundColor: AppColors.bgSurface,
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16)),
+            title: Text(l10n.notifQuietHoursTitle,
+                style: AppTypography.ibm(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white)),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  l10n.notifQuietHoursDialogBody,
+                  style: AppTypography.ibm(
+                      fontSize: 13, color: AppColors.textDisabled),
+                ),
+                const SizedBox(height: 12),
+                hourPicker(l10n.notifQuietHoursFrom, p.quietStartLocal, (h) {
+                  p = p.copyWith(quietStartLocal: h);
+                  setLocal(() {});
+                }),
+                hourPicker(l10n.notifQuietHoursUntil, p.quietEndLocal, (h) {
+                  p = p.copyWith(quietEndLocal: h);
+                  setLocal(() {});
+                }),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: Text('Cancel',
+                    style: AppTypography.ibm(
+                        fontSize: 15, color: AppColors.textDisabled)),
+              ),
+              TextButton(
+                onPressed: () async {
+                  await NotificationPrefsService.save(p);
+                  if (ctx.mounted) Navigator.pop(ctx);
+                },
+                child: Text('Save',
+                    style: AppTypography.ibm(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.accentPrimary)),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+    if (mounted) setState(() {});
   }
 
   Widget _svgIcon(String path) {

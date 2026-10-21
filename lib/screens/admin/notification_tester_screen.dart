@@ -5,6 +5,8 @@ import '../../models/club_notification.dart';
 import '../../design_system/components/overlays/sliding_notification.dart';
 import '../../design_system/constants/typography.dart';
 import '../../design_system/constants/decorations.dart';
+import '../../services/notification_copy.dart';
+import '../../services/streak_saver_service.dart';
 
 /// Debug screen to preview and trigger all notification types.
 /// Shows both the sliding overlay and how each notification renders
@@ -223,19 +225,27 @@ class NotificationTesterScreen extends StatelessWidget {
 
                 const SizedBox(height: 16),
 
-                // List of all notification types
+                // Engagement notifications (real pipeline) + club-notification
+                // UI previews, in one scroll.
                 Expanded(
-                  child: ListView.separated(
+                  child: ListView(
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
-                    itemCount: _mocks.length,
-                    separatorBuilder: (_, __) => const Divider(
-                      color: AppColors.separatorDark,
-                      height: 1,
-                    ),
-                    itemBuilder: (context, index) {
-                      final mock = _mocks[index];
-                      return _buildMockRow(context, mock);
-                    },
+                    children: [
+                      _buildEngagementSection(context),
+                      const SizedBox(height: 20),
+                      Text('CLUB NOTIFICATION UI',
+                          style: AppTypography.ibm(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textDisabled,
+                              letterSpacing: 1.0)),
+                      const SizedBox(height: 8),
+                      for (final mock in _mocks) ...[
+                        _buildMockRow(context, mock),
+                        const Divider(
+                            color: AppColors.separatorDark, height: 1),
+                      ],
+                    ],
                   ),
                 ),
               ],
@@ -243,6 +253,83 @@ class NotificationTesterScreen extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  /// Engagement-notification testers — these drive the REAL pipeline:
+  /// each fires a tray push NOW, logs a `notification_events` doc (visible on
+  /// the admin Notifications dashboard), and sets it as the pending event so
+  /// completing a Daily Challenge reconciles it into a conversion.
+  Widget _buildEngagementSection(BuildContext context) {
+    const buttons = [
+      ('Streak saver', EngagementNotifType.dcStreakRisk, Icons.local_fire_department),
+      ("Today's ready", EngagementNotifType.dcTodayReady, Icons.auto_awesome),
+      ('Overtaken', EngagementNotifType.lbOvertaken, Icons.trending_down),
+      ('Milestone', EngagementNotifType.lbMilestone, Icons.emoji_events),
+      ('Comeback', EngagementNotifType.reEngage, Icons.waving_hand),
+    ];
+
+    Future<void> fire(BuildContext ctx, EngagementNotifType type, String label) async {
+      final streak = await StreakSaverService.debugCurrentStreak();
+      await StreakSaverService.debugFireNow(
+          type: type, streak: streak < 1 ? 7 : streak);
+      if (ctx.mounted) {
+        ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(
+          content: Text('Fired "$label" — check the tray, then tap it. '
+              'The event is on the admin dashboard.'),
+          duration: const Duration(seconds: 4),
+        ));
+      }
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('ENGAGEMENT PUSH (REAL PIPELINE)',
+            style: AppTypography.ibm(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: AppColors.accentPrimary,
+                letterSpacing: 1.0)),
+        const SizedBox(height: 4),
+        Text('Fires a real push now + logs an event doc. Tap the tray '
+            'notification to test routing + open-stamp; then play today\'s '
+            'challenge to see it convert.',
+            style: AppTypography.ibm(
+                fontSize: 12, color: AppColors.textDisabled, height: 1.4)),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (final (label, type, icon) in buttons)
+              GestureDetector(
+                onTap: () => fire(context, type, label),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceDark,
+                    borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
+                    border: Border.all(
+                        color: AppColors.accentPrimary.withValues(alpha: 0.25)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(icon, size: 16, color: AppColors.accentPrimary),
+                      const SizedBox(width: 8),
+                      Text(label,
+                          style: AppTypography.ibm(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.white)),
+                    ],
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ],
     );
   }
 

@@ -12,6 +12,7 @@ import '../../design_system/constants/colors.dart';
 import '../../design_system/constants/decorations.dart';
 import '../../design_system/constants/spacing.dart';
 import '../../design_system/constants/typography.dart';
+import '../../l10n/app_localizations.dart';
 import '../../models/drill_models.dart';
 import '../../services/analytics_service.dart';
 import '../../services/challenge_sound_service.dart';
@@ -21,6 +22,8 @@ import '../../services/daily_challenge_service.dart';
 import '../../services/daily_challenge_store.dart';
 import '../../services/feature_flag_service.dart';
 import '../../services/leaderboard_service.dart';
+import '../../services/notification_prefs_service.dart';
+import '../../services/streak_saver_service.dart';
 import '../../services/username_service.dart';
 import '../../widgets/coach_mascot.dart';
 import '../../widgets/hand_micro_animations.dart';
@@ -34,8 +37,8 @@ import 'leaderboard_screen.dart';
 /// per-spot verdicts, streaks, share). One attempt counts per calendar day;
 /// abandoning mid-run records nothing.
 ///
-/// Copy is English-only while the feature is admin-flagged (Leak Detector
-/// precedent) — localize before GA.
+/// UI chrome is localized (all 11 locales); coach voice/notification copy
+/// stays English (persona-heavy poker slang).
 class DailyChallengeScreen extends StatefulWidget {
   const DailyChallengeScreen({super.key});
 
@@ -154,6 +157,14 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> {
     if (DailyChallengeService.debugDayOffset == 0) {
       _submitToLeaderboard(result, streaks);
     }
+    // Streak-saver: settle today's pending reminder (stamps the 2h reward if
+    // it fired) and schedule tomorrow's, in the picked coach's voice. The
+    // service self-guards on flag / prefs / day-override. Fire-and-forget.
+    unawaited(StreakSaverService.onChallengeCompleted(
+      currentStreak: streaks.current,
+      coachId: _persona.id,
+      challengeNumber: DailyChallengeService.challengeNumber(_config.day),
+    ));
   }
 
   /// Ensure the player has a username (prompting the setup screen once if
@@ -211,7 +222,7 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> {
         child: Column(
           children: [
             TopNavBar(
-              title: 'Daily Challenge',
+              title: AppLocalizations.of(context).dailyChallengeTitle,
               onBack: () => Navigator.pop(context),
             ),
             Expanded(
@@ -273,16 +284,16 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> {
               _ruleRow(Icons.style_outlined,
                   '${DailyChallengeService.spotsPerDay} decisions, dealt fresh every day'),
               _ruleRow(Icons.record_voice_over_outlined,
-                  'The coach grades every move as you make it'),
+                  AppLocalizations.of(context).dailyChallengeRuleGrades),
               _ruleRow(Icons.public,
-                  'Same spots for everyone — compare with friends'),
+                  AppLocalizations.of(context).dailyChallengeRuleSameSpots),
               _ruleRow(Icons.local_fire_department_outlined,
-                  'Play daily to build your streak'),
+                  AppLocalizations.of(context).dailyChallengeRuleStreak),
             ],
           ),
         ),
         const SizedBox(height: AppSpacing.md),
-        Text('YOUR COACH',
+        Text(AppLocalizations.of(context).dailyChallengeYourCoach,
             style: AppTypography.ibm(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
@@ -305,7 +316,7 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> {
                   BorderRadius.circular(AppDecorations.buttonRadius),
             ),
             child: Center(
-              child: Text("Play today's challenge",
+              child: Text(AppLocalizations.of(context).dailyChallengePlayToday,
                   style: AppTypography.ibm(
                       fontSize: 17,
                       fontWeight: FontWeight.w600,
@@ -345,7 +356,7 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> {
                 const Icon(Icons.leaderboard_outlined,
                     size: 18, color: AppColors.accentPrimary),
                 const SizedBox(width: AppSpacing.xxs),
-                Text('Leaderboard',
+                Text(AppLocalizations.of(context).dailyChallengeLeaderboard,
                     style: AppTypography.ibm(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
@@ -465,6 +476,8 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> {
       _justPicked = true;
     });
     CoachPersonas.save(p);
+    // Mirror to the user doc so server engagement pushes can be coach-voiced.
+    unawaited(NotificationPrefsService.saveCoachId(p.id));
     // Audible preview — the coach introduces themself in their real voice.
     CoachVoiceService.speak(p.greeting, coachId: p.id);
     AnalyticsService.capture('daily_challenge_coach_picked', {'coach': p.id});
@@ -549,7 +562,7 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> {
                   const SizedBox(height: AppSpacing.xxs),
                   Text(
                     result.perfect
-                        ? 'Perfect day! 🏆'
+                        ? AppLocalizations.of(context).dailyChallengePerfectDay
                         : _config.theme,
                     style: AppTypography.ibm(
                         fontSize: 12, color: AppColors.textSecondary),
@@ -562,7 +575,7 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> {
         const SizedBox(height: AppSpacing.md),
         _card(child: _streakRow()),
         const SizedBox(height: AppSpacing.md),
-        Text('YOUR SPOTS',
+        Text(AppLocalizations.of(context).dailyChallengeYourSpots,
             style: AppTypography.ibm(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
@@ -594,7 +607,7 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> {
                   BorderRadius.circular(AppDecorations.buttonRadius),
             ),
             child: Center(
-              child: Text('Share result',
+              child: Text(AppLocalizations.of(context).dailyChallengeShareResult,
                   style: AppTypography.ibm(
                       fontSize: 17,
                       fontWeight: FontWeight.w600,
@@ -607,7 +620,7 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> {
         _leaderboardButton(),
         const SizedBox(height: AppSpacing.sm),
         Center(
-          child: Text('Next challenge at midnight',
+          child: Text(AppLocalizations.of(context).dailyChallengeNextAtMidnight,
               style: AppTypography.ibm(
                   fontSize: 12, color: AppColors.textDisabled)),
         ),
@@ -642,10 +655,11 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> {
   }
 
   Widget _spotRow(int n, DailySpotSummary spot) {
+    final l10n = AppLocalizations.of(context);
     final (color, label) = switch (spot.verdict) {
-      'c' => (AppColors.accentPrimary, 'BEST'),
-      'o' => (_gold, 'GOOD'),
-      _ => (_red, 'LEAK'),
+      'c' => (AppColors.accentPrimary, l10n.dailyChallengeVerdictBest),
+      'o' => (_gold, l10n.dailyChallengeVerdictGood),
+      _ => (_red, l10n.dailyChallengeVerdictLeak),
     };
     return Row(
       children: [
@@ -694,6 +708,7 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> {
   Widget _streakRow() {
     final s = _streaks;
     if (s == null) return const SizedBox.shrink();
+    final l10n = AppLocalizations.of(context);
     Widget stat(String value, String label) => Column(
           children: [
             Text(value,
@@ -712,10 +727,10 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
-        stat('🔥 ${s.current}', 'STREAK'),
-        stat('${s.best}', 'BEST'),
-        stat('${s.perfectDays}', 'PERFECT'),
-        stat('${s.totalPlayed}', 'PLAYED'),
+        stat('🔥 ${s.current}', l10n.dailyChallengeStatStreak),
+        stat('${s.best}', l10n.dailyChallengeStatBest),
+        stat('${s.perfectDays}', l10n.dailyChallengeStatPerfect),
+        stat('${s.totalPlayed}', l10n.dailyChallengeStatPlayed),
       ],
     );
   }

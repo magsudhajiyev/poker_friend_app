@@ -5506,5 +5506,52 @@
         "type": "String"
       }
     }
-  }
+  },
+  "dailyChallengeTitle": "Daily Challenge",
+  "dailyChallengeRuleGrades": "The coach grades every move as you make it",
+  "dailyChallengeRuleSameSpots": "Same spots for everyone — compare with friends",
+  "dailyChallengeRuleStreak": "Play daily to build your streak",
+  "dailyChallengeYourCoach": "YOUR COACH",
+  "dailyChallengePlayToday": "Play today's challenge",
+  "dailyChallengeLeaderboard": "Leaderboard",
+  "dailyChallengePerfectDay": "Perfect day! 🏆",
+  "dailyChallengeYourSpots": "YOUR SPOTS",
+  "dailyChallengeShareResult": "Share result",
+  "dailyChallengeNextAtMidnight": "Next challenge at midnight",
+  "dailyChallengeVerdictBest": "BEST",
+  "dailyChallengeVerdictGood": "GOOD",
+  "dailyChallengeVerdictLeak": "LEAK",
+  "dailyChallengeStatStreak": "STREAK",
+  "dailyChallengeStatBest": "BEST",
+  "dailyChallengeStatPerfect": "PERFECT",
+  "dailyChallengeStatPlayed": "PLAYED",
+  "leaderboardTabStreak": "Streak",
+  "leaderboardTabToday": "Today",
+  "leaderboardTabBest": "Best",
+  "leaderboardSubtitleStreak": "Longest active streaks",
+  "leaderboardSubtitleToday": "Today's run — score, then speed",
+  "leaderboardSubtitleBest": "All-time best streaks",
+  "leaderboardEmptyToday": "No one has finished today yet.\nBe the first.",
+  "leaderboardEmptyStreak": "No ranked players yet.\nPlay to get on the board.",
+  "leaderboardYourRank": "Your rank",
+  "notifSectionTitle": "Notifications",
+  "notifMasterTitle": "Daily Challenge notifications",
+  "notifMasterSubtitle": "Master switch for all coach reminders",
+  "notifStreakTitle": "Streak reminders",
+  "notifStreakSubtitle": "A heads-up before your streak expires",
+  "notifLeaderboardTitle": "Leaderboard alerts",
+  "notifLeaderboardSubtitle": "Overtaken or hit a new milestone",
+  "notifReengageTitle": "Comeback reminders",
+  "notifReengageSubtitle": "A gentle nudge after a few quiet days",
+  "notifQuietHoursTitle": "Quiet hours",
+  "notifQuietHoursValue": "{start} – {end} (streak reminders excepted)",
+  "@notifQuietHoursValue": {
+    "placeholders": {
+      "start": { "type": "String" },
+      "end": { "type": "String" }
+    }
+  },
+  "notifQuietHoursDialogBody": "No notifications in this window. Streak reminders are the one exception — they fire only when your streak would die overnight.",
+  "notifQuietHoursFrom": "From",
+  "notifQuietHoursUntil": "Until"
 }

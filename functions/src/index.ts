@@ -56,6 +56,12 @@ export const sendPushNotification = onDocumentCreated(
     const title = notificationData.title || "Poker Logger";
     const body = notificationData.body || "";
     const data = notificationData.data || {};
+    // Optional coach image (engagement pushes) — shown as the large/expanded
+    // image so the coach appears IN the notification.
+    const imageUrl: string | undefined =
+      typeof notificationData.imageUrl === "string"
+        ? notificationData.imageUrl
+        : undefined;
 
     // Add notification type and IDs to data payload for deep linking
     const payload: { [key: string]: string } = {
@@ -85,6 +91,7 @@ export const sendPushNotification = onDocumentCreated(
       notification: {
         title: title,
         body: body,
+        ...(imageUrl ? { imageUrl } : {}),
       },
       data: payload,
       tokens: tokens,
@@ -94,6 +101,7 @@ export const sendPushNotification = onDocumentCreated(
           priority: "high" as const,
           defaultSound: true,
           defaultVibrateTimings: true,
+          ...(imageUrl ? { imageUrl } : {}),
         },
       },
       apns: {
@@ -101,9 +109,14 @@ export const sendPushNotification = onDocumentCreated(
           aps: {
             badge: 1,
             sound: "default",
+            // Image attachments require a Notification Service Extension on
+            // iOS (contentAvailable alone won't render the image); Android
+            // shows it directly. The coach image is a nice-to-have, so iOS
+            // simply gets the text until/unless the NSE is added.
             contentAvailable: true,
           },
         },
+        ...(imageUrl ? { fcmOptions: { imageUrl } } : {}),
       },
     };
 
@@ -739,6 +752,37 @@ export const validateLeaderboardEntry = onDocumentCreated(
     const data = snap.data();
     const verdicts: string = typeof data.verdicts === "string" ? data.verdicts : "";
 
+    // Reward reconcile: a new leaderboard entry == the user played today.
+    // Stamp the most recent un-played engagement event for this uid with the
+    // 2-hour reward (covers SERVER-sent pushes; device pushes self-reconcile
+    // on-device). Best-effort — never blocks the score validation below.
+    const uid = event.params.uid;
+    try {
+      const pending = await db
+        .collection("notification_events")
+        .where("uid", "==", uid)
+        .orderBy("sentAt", "desc")
+        .limit(5)
+        .get();
+      const nowMs = Date.now();
+      for (const ev of pending.docs) {
+        const d = ev.data();
+        if (d.playedAt || d.cancelled) continue;
+        const sentMs =
+          d.sentAt && typeof d.sentAt.toMillis === "function"
+            ? d.sentAt.toMillis()
+            : 0;
+        const within2h = sentMs > 0 && nowMs - sentMs <= 2 * 60 * 60 * 1000;
+        await ev.ref.update({
+          playedAt: FieldValue.serverTimestamp(),
+          convertedWithin2h: within2h,
+        });
+        break; // only the most recent eligible one
+      }
+    } catch (err) {
+      console.error("engagement reconcile failed:", err);
+    }
+
     // Re-grade from verdicts (the only trusted input).
     let trueScore = 0;
     for (const ch of verdicts) {
@@ -773,5 +817,236 @@ export const validateLeaderboardEntry = onDocumentCreated(
     } catch (error) {
       console.error("validateLeaderboardEntry update failed:", error);
     }
+  }
+);
+
+/* ────────────────────────────────────────────────────────────────────────
+   Engagement send-time scheduler (Phase 2)
+   Hourly job that fires each user's push around THEIR active hour. Reads the
+   send-time signal (users/{uid}.notif.activeHourUtc, written nightly by the
+   web repo's cron-send-times job) + the device tz offset, matches the user's
+   current local hour, applies the Duolingo guardrails, and writes a
+   user_notifications doc (fires FCM via sendPushNotification) + a
+   notification_events doc (dashboard + reward loop).
+   See docs/features/engagement-notifications-plan.md §12.
+   ──────────────────────────────────────────────────────────────────────── */
+
+// Pure local-hour math (mirrors lib/services/send_time_logic.dart).
+function localHour(utcHour: number, tzOffsetMinutes: number): number {
+  const h = Math.floor((utcHour * 60 + tzOffsetMinutes) / 60) % 24;
+  return h < 0 ? h + 24 : h;
+}
+
+// Coach-voiced copy, server-side (mirrors lib/services/notification_copy.dart
+// for the server-reachable moments). Kept intentionally small; the client
+// catalog is the richer source for device-scheduled pushes.
+const SERVER_COPY: Record<string, { title: string; body: string }[]> = {
+  dc_streak_risk: [
+    { title: "Your streak ends tonight", body: "Five quick hands keep your {n}-day streak alive." },
+    { title: "Don't lose your streak", body: "A {n}-day streak is on the line — play today's five before midnight." },
+  ],
+  dc_today_ready: [
+    { title: "Today's five are live", body: "A fresh daily challenge just dropped — take your shot." },
+    { title: "Your daily challenge is ready", body: "Five new decisions, two minutes. Your coach is waiting." },
+  ],
+  lb_milestone: [
+    { title: "🔥 {n}-day streak!", body: "That's a new personal best. Keep it rolling tomorrow." },
+    { title: "Milestone reached: {n} days", body: "You're on a roll — your coach is impressed." },
+  ],
+  re_engage: [
+    { title: "Your coaches are ready when you are", body: "Pick up where you left off — five quick decisions, no pressure." },
+    { title: "The table's still here", body: "A fresh daily challenge is waiting whenever you feel like it." },
+  ],
+};
+
+function pickCopy(type: string, seed: number, streak: number) {
+  const pool = SERVER_COPY[type] || SERVER_COPY["re_engage"];
+  const c = pool[Math.abs(seed) % pool.length];
+  return { title: c.title, body: c.body.replace("{n}", String(streak)) };
+}
+
+// Hosted coach mascots (same files the email template uses) — shown IN the
+// push as the expanded image. Keep in sync with public/email/coach-*.png.
+const COACH_IMAGE_URL: Record<string, string> = {
+  grinder: "https://finaltable.io/email/coach-duke.png",
+  professor: "https://finaltable.io/email/coach-vega.png",
+  nova: "https://finaltable.io/email/coach-nova.png",
+};
+
+// ~10% stable holdout (matches the client hash intent) — measures true lift.
+function isHoldout(uid: string): boolean {
+  let h = 0;
+  for (let i = 0; i < uid.length; i++) h = (h * 31 + uid.charCodeAt(i)) >>> 0;
+  return h % 10 === 0;
+}
+
+const dayKeyUtc = (d: Date) => d.toISOString().slice(0, 10);
+
+export const scheduleEngagement = onSchedule(
+  { schedule: "0 * * * *", timeoutSeconds: 540, memory: "512MiB" },
+  async () => {
+    const utcHourNow = new Date().getUTCHours();
+    const today = dayKeyUtc(new Date());
+
+    // Candidates: users with a computed active hour whose prefs allow pushes.
+    // (A missing notif map = defaults; we require activeHourUtc so we only
+    // target users we have a signal for.)
+    const snap = await db
+      .collection("users")
+      .where("notif.activeHourUtc", ">=", 0)
+      .get();
+
+    let sent = 0;
+    for (const doc of snap.docs) {
+      try {
+        const uid = doc.id;
+        const notif = (doc.get("notif") || {}) as Record<string, unknown>;
+        const master = notif.master !== false;
+        if (!master) continue;
+
+        // Admin test hook bypasses the holdout + the send-time window so a
+        // forced push fires on the very next run, whatever the hour.
+        const forced = notif.debugForceSend === true;
+        if (!forced && isHoldout(uid)) continue;
+
+        const activeHourUtc = Number(notif.activeHourUtc);
+        const tz = Number(notif.tzOffsetMinutes ?? 0);
+        const localNow = localHour(utcHourNow, tz);
+
+        // TWO evaluation windows so a daily player who plays early is still
+        // reached (the old single "1h before active hour" window missed them
+        // because they'd already played by then):
+        //   • MORNING (fixed local hour): the "today's five are live" nudge +
+        //     streak-milestone celebration — fires BEFORE they'd play.
+        //   • EVENING (their active hour): the streak-saver + comeback — the
+        //     "it's getting late and you haven't played" moment.
+        const MORNING_HOUR = 10; // local
+        const localActive = localHour(activeHourUtc, tz);
+        const eveningHour = ((localActive - 1) % 24 + 24) % 24;
+        const inMorningWindow = localNow === MORNING_HOUR;
+        const inEveningWindow = localNow === eveningHour;
+        if (!forced && !inMorningWindow && !inEveningWindow) continue;
+
+        // Quiet hours (streak-saver is exempt; evaluated per type below).
+        const qStart = Number(notif.quietStartLocal ?? 22);
+        const qEnd = Number(notif.quietEndLocal ?? 8);
+        const inQuiet =
+          qStart === qEnd
+            ? false
+            : qStart < qEnd
+            ? localNow >= qStart && localNow < qEnd
+            : localNow >= qStart || localNow < qEnd;
+
+        // One engagement push per user per day.
+        const already = await db
+          .collection("notification_events")
+          .where("uid", "==", uid)
+          .where("dayKey", "==", today)
+          .where("source", "==", "server")
+          .limit(1)
+          .get();
+        if (!forced && !already.empty) continue;
+
+        // Resolve the eligible moment (priority order; server-reachable set).
+        const streakDoc = await db.collection("leaderboard_streak").doc(uid).get();
+        const currentStreak = Number(streakDoc.get("currentStreak") || 0);
+        const bestStreak = Number(streakDoc.get("bestStreak") || 0);
+        const lastDayKey = String(streakDoc.get("lastDayKey") || "");
+        const playedToday = lastDayKey === today;
+        // Milestone = a round-number streak reached today (celebration push).
+        const milestoneHit =
+          playedToday &&
+          [3, 7, 14, 30, 50, 100, 200, 365].includes(currentStreak) &&
+          currentStreak === bestStreak;
+
+        const lastActive = doc.get("lastActiveAt") as Timestamp | undefined;
+        const lapsedDays = lastActive
+          ? (Date.now() - lastActive.toMillis()) / 86400000
+          : 99;
+
+        let type: string | null = null;
+        if (notif.debugForceSend === true) {
+          // Admin test hook: force a push regardless of eligibility.
+          type = "dc_today_ready";
+        } else if (
+          inEveningWindow &&
+          notif.streak !== false &&
+          currentStreak >= 1 &&
+          !playedToday
+        ) {
+          type = "dc_streak_risk"; // quiet-hours exempt, their active hour
+        } else if (
+          !inQuiet &&
+          notif.leaderboard !== false &&
+          milestoneHit
+        ) {
+          // Celebrate a milestone (either window) — positive, for engaged users.
+          type = "lb_milestone";
+        } else if (
+          inMorningWindow &&
+          !inQuiet &&
+          notif.leaderboard !== false &&
+          !playedToday &&
+          lapsedDays < 2
+        ) {
+          // Morning nudge: today's five are live, before they'd play.
+          type = "dc_today_ready";
+        } else if (
+          !inQuiet &&
+          notif.reengage !== false &&
+          lapsedDays >= 2
+        ) {
+          // Lapsed ≥2 days → gentle comeback (either window).
+          type = "re_engage";
+        }
+        if (!type) continue;
+
+        // Clear the one-shot debug flag so it doesn't re-fire every hour.
+        if (notif.debugForceSend === true) {
+          await doc.ref.set(
+            { notif: { debugForceSend: false } },
+            { merge: true }
+          );
+        }
+
+        const coach = String(notif.coachId || "neutral");
+        const copy = pickCopy(type, currentStreak + utcHourNow, currentStreak);
+
+        // Create the event doc first so its id rides in the FCM data payload.
+        const eventRef = db.collection("notification_events").doc();
+        await eventRef.set({
+          uid,
+          type,
+          coach,
+          variantId: 0,
+          source: "server",
+          scheduledHourLocal: localNow,
+          dayKey: today,
+          sentAt: FieldValue.serverTimestamp(),
+          createdAt: FieldValue.serverTimestamp(),
+        });
+
+        // Fire the push via the existing sendPushNotification pipeline.
+        const coachImage = COACH_IMAGE_URL[coach];
+        await db.collection("user_notifications").add({
+          userId: uid,
+          title: copy.title,
+          body: copy.body,
+          type,
+          ...(coachImage ? { imageUrl: coachImage } : {}),
+          data: {
+            action: "daily_challenge",
+            type,
+            notificationEventId: eventRef.id,
+          },
+          createdAt: FieldValue.serverTimestamp(),
+        });
+        sent++;
+      } catch (err) {
+        console.error("scheduleEngagement user error:", err);
+      }
+    }
+
+    console.log(`scheduleEngagement: hour=${utcHourNow} sent=${sent}`);
   }
 );

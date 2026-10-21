@@ -30,6 +30,8 @@ import 'logger_service.dart';
 ///   daily_challenge_completed, daily_challenge_shared,
 ///   daily_challenge_range_viewed, daily_challenge_coach_picked,
 ///   daily_challenge_leaderboard_submitted
+/// Engagement notifications (flagged): notif_scheduled, notif_opened,
+///   notif_converted (play within 2h of the push — the reward signal)
 /// Plus SDK-automatic: Application Opened/Backgrounded (lifecycle — feeds
 /// the retention chart).
 class AnalyticsService {

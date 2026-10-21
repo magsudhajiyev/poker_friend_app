@@ -5,7 +5,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../design_system/constants/colors.dart';
 import '../screens/paywall_screen.dart';
+import '../screens/training/daily_challenge_screen.dart';
 import 'auth_service.dart';
+import 'coach_icon_service.dart';
+import 'streak_saver_service.dart';
 
 class NotificationService {
   static final FlutterLocalNotificationsPlugin _notifications =
@@ -62,6 +65,11 @@ class NotificationService {
           _promoPayloads.contains(launchPayload)) {
         _openPaywallWhenReady();
       }
+      if (launchDetails?.didNotificationLaunchApp == true &&
+          (launchPayload?.startsWith(StreakSaverService.payloadPrefix) ??
+              false)) {
+        _handleEngagementTap(launchPayload!);
+      }
 
       _initialized = true;
       debugPrint('✅ Notification service initialized');
@@ -75,6 +83,39 @@ class NotificationService {
     debugPrint('📲 Notification tapped: ${response.payload}');
     if (_promoPayloads.contains(response.payload)) {
       _openPaywallWhenReady();
+    }
+    final payload = response.payload;
+    if (payload != null &&
+        payload.startsWith(StreakSaverService.payloadPrefix)) {
+      _handleEngagementTap(payload);
+    }
+  }
+
+  /// Engagement push tapped → stamp the open on its event doc and route to
+  /// the Daily Challenge. Same waits/guards as the promo→paywall route.
+  static bool _engagementRoutingInFlight = false;
+
+  static Future<void> _handleEngagementTap(String payload) async {
+    StreakSaverService.onTapped(payload); // fire-and-forget open stamp
+    if (_engagementRoutingInFlight) return;
+    _engagementRoutingInFlight = true;
+    try {
+      for (int i = 0; i < 30; i++) {
+        if (navigatorKey?.currentState != null &&
+            AuthService.currentUser != null) {
+          break;
+        }
+        await Future.delayed(const Duration(milliseconds: 500));
+      }
+      final nav = navigatorKey?.currentState;
+      if (nav == null || AuthService.currentUser == null) return;
+      // Let the startup gate finish routing before pushing on top of it.
+      await Future.delayed(const Duration(milliseconds: 800));
+      await nav.push(
+        MaterialPageRoute(builder: (_) => const DailyChallengeScreen()),
+      );
+    } finally {
+      _engagementRoutingInFlight = false;
     }
   }
 
@@ -332,6 +373,100 @@ class NotificationService {
       await _notifications.cancel(_onboardingReminderId);
     } catch (e) {
       debugPrint('Error cancelling onboarding reminder: $e');
+    }
+  }
+
+  static const int _engagementReminderId = 777001;
+
+  /// Build the notification details for an engagement push, showing the
+  /// coach mascot as the large (emoji-sized) icon when [coachId] resolves to
+  /// one. Falls back to the app launcher icon for the neutral voice.
+  static Future<NotificationDetails> _engagementDetails(String? coachId) async {
+    final coachPath = await CoachIconService.largeIconPath(coachId);
+    final AndroidBitmap<Object> largeIcon = coachPath != null
+        ? FilePathAndroidBitmap(coachPath)
+        : const DrawableResourceAndroidBitmap('@mipmap/ic_launcher');
+    return NotificationDetails(
+      android: AndroidNotificationDetails(
+        'poker_events',
+        'Poker Events',
+        channelDescription: 'Notifications for upcoming poker events',
+        importance: Importance.high,
+        priority: Priority.high,
+        icon: '@drawable/ic_notification',
+        largeIcon: largeIcon,
+        styleInformation: const BigTextStyleInformation(''),
+        color: AppColors.accentPrimary,
+      ),
+      iOS: const DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+      ),
+    );
+  }
+
+  /// Schedule the single engagement reminder (streak-saver). Fixed id =
+  /// idempotent: re-scheduling replaces any queued one. [payload] carries
+  /// `engagement:{type}:{eventId}` for tap routing + the open stamp.
+  /// [coachId] renders the coach mascot as the large icon.
+  static Future<void> scheduleEngagementReminder({
+    required String title,
+    required String body,
+    required DateTime at,
+    required String payload,
+    String? coachId,
+  }) async {
+    try {
+      if (!_initialized) await initialize();
+      await requestPermissions();
+      await _notifications.zonedSchedule(
+        _engagementReminderId,
+        title,
+        body,
+        tz.TZDateTime.from(at, tz.local),
+        await _engagementDetails(coachId),
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+        payload: payload,
+      );
+      debugPrint('✅ Engagement reminder scheduled for $at');
+    } catch (e) {
+      debugPrint('❌ Error scheduling engagement reminder: $e');
+    }
+  }
+
+  /// Cancel the queued engagement reminder (user played / muted the type).
+  static Future<void> cancelEngagementReminder() async {
+    try {
+      await _notifications.cancel(_engagementReminderId);
+    } catch (e) {
+      debugPrint('Error cancelling engagement reminder: $e');
+    }
+  }
+
+  /// Show an engagement push IMMEDIATELY (tester). Scheduling a seconds-away
+  /// notification is unreliable — Android batches inexact alarms — so the
+  /// tester uses show() to exercise the real tap→route→open-stamp path now.
+  static Future<void> showEngagementNow({
+    required String title,
+    required String body,
+    required String payload,
+    String? coachId,
+  }) async {
+    try {
+      if (!_initialized) await initialize();
+      await requestPermissions();
+      await _notifications.show(
+        _engagementReminderId,
+        title,
+        body,
+        await _engagementDetails(coachId),
+        payload: payload,
+      );
+    } catch (e) {
+      debugPrint('Error showing engagement notification: $e');
     }
   }
 
