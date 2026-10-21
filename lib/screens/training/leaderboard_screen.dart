@@ -9,6 +9,7 @@ import '../../design_system/constants/typography.dart';
 import '../../l10n/app_localizations.dart';
 import '../../services/daily_challenge_service.dart';
 import '../../services/daily_challenge_store.dart';
+import '../../services/daily_scoring.dart';
 import '../../services/leaderboard_service.dart';
 
 /// Global Daily Challenge leaderboard. Three boards: current streak
@@ -314,11 +315,9 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
       case LeaderboardBoard.streakBest:
         return '${e.value}🔥';
       case LeaderboardBoard.daily:
-        final score = (e.score ?? 0);
-        final scoreStr =
-            score == score.roundToDouble() ? score.toInt().toString() : score.toString();
+        final scoreStr = '${DailyScoring.formatPct(e.score ?? 0)}%';
         final time = e.durationMs != null ? _fmtTime(e.durationMs!) : '';
-        return time.isEmpty ? '$scoreStr/5' : '$scoreStr/5 · $time';
+        return time.isEmpty ? scoreStr : '$scoreStr · $time';
     }
   }
 

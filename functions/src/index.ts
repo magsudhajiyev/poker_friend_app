@@ -712,8 +712,12 @@ export const coachSpeech = onRequest(
         }
       );
       if (!ttsResponse.ok) {
+        // Log ElevenLabs' own reason (e.g. "quota_exceeded" arrives as a 401,
+        // which looks like a bad key without the body). Truncated; the body
+        // never contains the API key.
+        const reason = (await ttsResponse.text().catch(() => "")).slice(0, 300);
         console.error(
-          `ElevenLabs ${ttsResponse.status} for coach=${coach} uid=${uid}`
+          `ElevenLabs ${ttsResponse.status} for coach=${coach} uid=${uid}: ${reason}`
         );
         res.status(502).send("TTS failed");
         return;
@@ -741,9 +745,39 @@ export const coachSpeech = onRequest(
  * `scoreKey` if they disagree, so no one can post a fake score through the
  * rules (which only shape-check). Fires on daily-entry create.
  *
- * Scoring matches the client (DailyChallengeService.scoreOf): c=1, o=0.5,
- * anything else=0. A valid run has exactly 5 verdict letters.
+ * Scoring mirrors the client's DailyScoring (lib/services/daily_scoring.dart)
+ * — keep both in sync: score = day ACCURACY % (0..100, one decimal).
+ *   decision c=1 / o=0.5 / else 0; hands are '|'-separated (no '|' = one
+ *   hand); hand accuracy = pot-weighted mean
+ *   (weights[] aligned with the letters, floored at 1, missing → 1); day =
+ *   plain mean of hand accuracies. scoreKey = accuracy ×10; perfect = every
+ *   letter 'c'.
  */
+export function dailyAccuracy(verdicts: string, weights: unknown): number {
+  const w: number[] = Array.isArray(weights) ?
+    weights.map((x) => (typeof x === "number" ? x : 1)) :
+    [];
+  // No '|' = ONE hand (single-hand day or legacy RNG run).
+  const hands = verdicts.length === 0 ? [] : verdicts.split("|");
+  if (hands.length === 0) return 0;
+  let offset = 0;
+  let sumAcc = 0;
+  for (const hand of hands) {
+    let sum = 0;
+    let total = 0;
+    for (let i = 0; i < hand.length; i++) {
+      const raw = offset + i < w.length ? w[offset + i] : 1;
+      const weight = raw > 1 ? raw : 1;
+      const ch = hand[i];
+      sum += (ch === "c" ? 1 : ch === "o" ? 0.5 : 0) * weight;
+      total += weight;
+    }
+    sumAcc += hand.length > 0 ? sum / total : 0;
+    offset += hand.length;
+  }
+  return Math.round((sumAcc / hands.length) * 1000) / 10;
+}
+
 export const validateLeaderboardEntry = onDocumentCreated(
   "leaderboard_daily/{dayKey}/entries/{uid}",
   async (event) => {
@@ -783,14 +817,11 @@ export const validateLeaderboardEntry = onDocumentCreated(
       console.error("engagement reconcile failed:", err);
     }
 
-    // Re-grade from verdicts (the only trusted input).
-    let trueScore = 0;
-    for (const ch of verdicts) {
-      if (ch === "c") trueScore += 1;
-      else if (ch === "o") trueScore += 0.5;
-    }
+    // Re-grade from verdicts + pot weights (the only trusted inputs).
+    const trueScore = dailyAccuracy(verdicts, data.weights);
     const trueScoreKey = Math.round(trueScore * 10);
-    const truePerfect = verdicts.length === 5 && /^c{5}$/.test(verdicts);
+    const letters = verdicts.replace(/\|/g, "");
+    const truePerfect = letters.length > 0 && /^c+$/.test(letters);
 
     const clientScore = typeof data.score === "number" ? data.score : -1;
     const clientKey = typeof data.scoreKey === "number" ? data.scoreKey : -1;

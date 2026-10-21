@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import '../models/drill_models.dart';
+import 'daily_scoring.dart';
 import 'drill_engine.dart';
 
 /// DAILY CHALLENGE — the chess.com-style daily ritual: every calendar day,
@@ -181,30 +182,33 @@ class DailyChallengeService {
         DrillGrade.mistake => 'm',
       };
 
-  static double scoreOf(String verdicts) => verdicts.split('').fold(
-      0.0,
-      (sum, v) => sum + switch (v) { 'c' => 1.0, 'o' => 0.5, _ => 0.0 });
+  /// Day score = accuracy % (0..100) — see [DailyScoring].
+  static double scoreOf(String verdicts, [List<double>? weights]) =>
+      DailyScoring.accuracy(verdicts, weights);
 
-  static bool isPerfect(String verdicts) =>
-      verdicts.isNotEmpty && verdicts.split('').every((v) => v == 'c');
+  static bool isPerfect(String verdicts) => DailyScoring.isPerfect(verdicts);
 
-  /// Wordle-style share text — verdicts as an emoji row, no hand details
-  /// (spoiler-safe: everyone plays the same spots).
+  /// Wordle-style share text — verdicts as emoji, no hand details
+  /// (spoiler-safe: everyone plays the same spots). One-decision hands (RNG
+  /// days) share a single row; authored hands get one row each.
   static String shareText({
     required DateTime day,
     required String verdicts,
+    List<double>? weights,
     required int streak,
   }) {
-    final emoji = verdicts
+    String emoji(String letters) => letters
         .split('')
         .map((v) => switch (v) { 'c' => '🟢', 'o' => '🟡', _ => '🔴' })
         .join();
-    final score = scoreOf(verdicts);
-    final scoreLabel = score == score.roundToDouble()
-        ? score.round().toString()
-        : score.toStringAsFixed(1);
-    return 'Final Table Daily #${challengeNumber(day)}\n'
-        '$emoji $scoreLabel/${verdicts.length}'
-        '${streak > 1 ? ' · 🔥$streak day streak' : ''}';
+    final hands = DailyScoring.handsOf(verdicts);
+    final multi = hands.any((h) => h.length > 1);
+    final rows = multi
+        ? [for (var i = 0; i < hands.length; i++) 'H${i + 1} ${emoji(hands[i])}']
+        : [emoji(hands.join())];
+    final pct = DailyScoring.formatPct(scoreOf(verdicts, weights));
+    return 'Final Table Daily #${challengeNumber(day)} · $pct%\n'
+        '${rows.join('\n')}'
+        '${streak > 1 ? '\n🔥$streak day streak' : ''}';
   }
 }

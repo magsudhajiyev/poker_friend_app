@@ -1,0 +1,5 @@
+{
+  "_comment": "Bundled fallback for Firestore authored_days/{yyyy-MM-dd}. 'days' maps a local date to up to 5 tree ids (play order). 'default' is a TESTING bridge that serves on every unscheduled day - remove it before shipping so unscheduled days play the RNG challenge.",
+  "days": {},
+  "default": ["lj-btn-ts9c4d-99"]
+}

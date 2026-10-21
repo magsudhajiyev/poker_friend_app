@@ -105,27 +105,40 @@ void main() {
       expect(DailyChallengeService.verdictLetter(DrillGrade.mistake), 'm');
     });
 
-    test('score: correct=1, ok=0.5, mistake=0', () {
-      expect(DailyChallengeService.scoreOf('ccccc'), 5.0);
-      expect(DailyChallengeService.scoreOf('ccomm'), 2.5);
+    test('score = accuracy %: correct=1, ok=0.5, mistake=0', () {
+      expect(DailyChallengeService.scoreOf('c|c|c|c|c'), 100.0);
+      expect(DailyChallengeService.scoreOf('c|c|o|m|m'), 50.0);
+      expect(DailyChallengeService.scoreOf('ccomm'), 50.0); // legacy
       expect(DailyChallengeService.isPerfect('ccccc'), isTrue);
       expect(DailyChallengeService.isPerfect('ccocc'), isFalse);
     });
 
     test('share text: emoji row, score, streak — no hand spoilers', () {
       final text = DailyChallengeService.shareText(
-          day: DateTime(2026, 10, 20), verdicts: 'ccomc', streak: 4);
-      expect(text, contains('Final Table Daily #7'));
-      expect(text, contains('🟢🟢🟡🔴🟢 3.5/5'));
+          day: DateTime(2026, 10, 20), verdicts: 'c|c|o|m|c', streak: 4);
+      expect(text, contains('Final Table Daily #7 · 70%'));
+      expect(text, contains('🟢🟢🟡🔴🟢'));
       expect(text, contains('🔥4 day streak'));
       expect(text.contains(RegExp('[AKQJT2-9]{2}')), isFalse,
           reason: 'no hand classes leak into the share');
     });
 
+    test('share text: authored hands get one row each, pot-weighted %', () {
+      final text = DailyChallengeService.shareText(
+          day: DateTime(2026, 10, 20),
+          verdicts: 'ccom|cc',
+          weights: const [2.5, 12, 19, 26, 2.5, 12],
+          streak: 0);
+      // hand 1 = 40.3%, hand 2 = 100% → day 70.2% (mean of hand accuracies)
+      expect(text, contains('· 70.2%'));
+      expect(text, contains('H1 🟢🟢🟡🔴'));
+      expect(text, contains('H2 🟢🟢'));
+    });
+
     test('share text: streak of 1 omits the flame', () {
       final text = DailyChallengeService.shareText(
-          day: DateTime(2026, 10, 14), verdicts: 'ccccc', streak: 1);
-      expect(text, contains('5/5'));
+          day: DateTime(2026, 10, 14), verdicts: 'c|c|c|c|c', streak: 1);
+      expect(text, contains('100%'));
       expect(text.contains('🔥'), isFalse);
     });
   });
@@ -244,10 +257,26 @@ void main() {
       final back = DailyChallengeResult.fromJson(
           result.dayKey, result.toJson().cast<String, dynamic>());
       expect(back.verdicts, 'ccomc');
-      expect(back.score, 3.5);
+      expect(back.score, 70.0);
       expect(back.spots.length, 2);
       expect(back.spots[1].handClass, '72o');
       expect(back.spots[1].recommendedAction, 'fold');
     });
+  });
+
+  test('spot summary keeps hand index + street through toJson/fromJson', () {
+    const spot = DailySpotSummary(
+        handClass: '99',
+        position: 'LJ',
+        heroAction: 'raise',
+        recommendedAction: 'raise',
+        verdict: 'c',
+        hand: 3,
+        street: 'Turn');
+    final back = DailySpotSummary.fromJson(spot.toJson());
+    expect(back.hand, 3);
+    expect(back.street, 'Turn');
+    // RNG spots carry no street (the row then shows the holding).
+    expect(DailySpotSummary.fromJson(const {'g': 'c'}).street, '');
   });
 }

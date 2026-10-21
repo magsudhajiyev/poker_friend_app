@@ -90,6 +90,9 @@ class _ChartGridPainter extends CustomPainter {
         final (color, strongFill) = switch (kind) {
           DrillRangeLayerKind.raise => (AppColors.rangeRaise, true),
           DrillRangeLayerKind.call => (AppColors.rangeCall, true),
+          DrillRangeLayerKind.check => (AppColors.accentPrimary, true),
+          DrillRangeLayerKind.allin => (AppColors.rangeAllIn, true),
+          DrillRangeLayerKind.fold => (AppColors.rangeFold, false),
           null => (Colors.white.withValues(alpha: 0.05), false),
         };
 

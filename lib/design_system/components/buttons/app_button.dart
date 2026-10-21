@@ -24,6 +24,11 @@ class AppButton extends StatelessWidget {
   final Widget? trailingIcon;
   final bool fullWidth;
 
+  /// Optional second line under [label] (e.g. a bet amount, '16.2BB'). With
+  /// a sub-label the button keeps one line per row and scales the text down
+  /// instead of wrapping when space is tight (row of 4 action buttons).
+  final String? subLabel;
+
   const AppButton({
     super.key,
     required this.label,
@@ -32,27 +37,54 @@ class AppButton extends StatelessWidget {
     this.leadingIcon,
     this.trailingIcon,
     this.fullWidth = false,
+    this.subLabel,
   });
 
   @override
   Widget build(BuildContext context) {
     final spec = _specFor(variant);
 
+    final labelText = Text(
+      label,
+      maxLines: subLabel == null ? null : 1,
+      style: GoogleFonts.ibmPlexSans(
+        fontSize: spec.fontSize,
+        fontWeight: FontWeight.w600,
+        color: spec.textColor,
+        height: 20 / spec.fontSize,
+        letterSpacing: -0.5,
+      ),
+    );
+    final Widget labelBlock = subLabel == null
+        ? labelText
+        : FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                labelText,
+                if (subLabel!.isNotEmpty)
+                  Text(
+                    subLabel!,
+                    maxLines: 1,
+                    style: GoogleFonts.ibmPlexSans(
+                      fontSize: spec.fontSize - 3,
+                      fontWeight: FontWeight.w600,
+                      color: spec.textColor.withValues(alpha: 0.7),
+                      height: 16 / (spec.fontSize - 3),
+                      letterSpacing: -0.3,
+                    ),
+                  ),
+              ],
+            ),
+          );
+
     Widget content = Row(
       mainAxisSize: fullWidth ? MainAxisSize.max : MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         if (leadingIcon != null) ...[leadingIcon!, const SizedBox(width: 8)],
-        Text(
-          label,
-          style: GoogleFonts.ibmPlexSans(
-            fontSize: spec.fontSize,
-            fontWeight: FontWeight.w600,
-            color: spec.textColor,
-            height: 20 / spec.fontSize,
-            letterSpacing: -0.5,
-          ),
-        ),
+        subLabel == null ? labelBlock : Flexible(child: labelBlock),
         if (trailingIcon != null) ...[const SizedBox(width: 8), trailingIcon!],
       ],
     );
@@ -63,7 +95,12 @@ class AppButton extends StatelessWidget {
         opacity: onTap == null ? 0.4 : 1.0,
         child: Container(
           width: fullWidth ? double.infinity : null,
-          padding: spec.padding,
+          // A sub-label button is stacked two lines: trim the side padding so
+          // a row of four still fits, keep the vertical rhythm.
+          padding: subLabel == null
+              ? spec.padding
+              : EdgeInsets.symmetric(
+                  horizontal: 8, vertical: spec.padding.vertical / 2 - 2),
           decoration: BoxDecoration(
             color: spec.bgColor,
             borderRadius: BorderRadius.circular(999),

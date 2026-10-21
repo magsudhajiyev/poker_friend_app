@@ -13,10 +13,10 @@ void main() {
 
   group('scoreKey', () {
     test('maps the 0..5 score to an int ×10 for stable ranking', () {
-      expect(LeaderboardService.scoreKey(5.0), 50);
-      expect(LeaderboardService.scoreKey(4.5), 45);
+      expect(LeaderboardService.scoreKey(100.0), 1000);
+      expect(LeaderboardService.scoreKey(87.4), 874);
       expect(LeaderboardService.scoreKey(0.0), 0);
-      expect(LeaderboardService.scoreKey(2.5), 25);
+      expect(LeaderboardService.scoreKey(50.0), 500);
     });
 
     test('orders strictly by score (no float ties)', () {

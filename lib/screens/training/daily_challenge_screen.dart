@@ -14,6 +14,8 @@ import '../../design_system/constants/spacing.dart';
 import '../../design_system/constants/typography.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/drill_models.dart';
+import '../../services/authored_tree_service.dart';
+import '../../services/daily_scoring.dart';
 import '../../services/analytics_service.dart';
 import '../../services/challenge_sound_service.dart';
 import '../../services/coach_persona.dart';
@@ -28,6 +30,7 @@ import '../../services/username_service.dart';
 import '../../widgets/coach_mascot.dart';
 import '../../widgets/hand_micro_animations.dart';
 import '../username_setup_screen.dart';
+import 'authored_challenge_screen.dart';
 import 'drill_table_screen.dart';
 import 'leaderboard_screen.dart';
 
@@ -56,6 +59,9 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> {
   DailyChallengeStreaks? _streaks;
   CoachPersona _persona = CoachPersonas.grinder;
   bool _loaded = false;
+
+  /// Results: which authored hands are expanded (collapsed by default).
+  final Set<int> _openHands = {};
 
   @override
   void initState() {
@@ -98,41 +104,97 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> {
     // Time the whole run (first spot shown → last decision) for the
     // leaderboard "today" tiebreaker.
     final stopwatch = Stopwatch()..start();
-    final records = await Navigator.push<List<DrillDecisionRecord>>(
-      context,
-      MaterialPageRoute(
-        builder: (_) => DrillTableScreen(
-          seats: DailyChallengeService.seatsFor(_config),
-          stackBB: _config.stackBB,
-          anteMode: _config.anteMode,
-          challengeConfig: _config,
-          challengeDecisions: DailyChallengeService.spotsPerDay,
-        ),
-      ),
-    );
-    stopwatch.stop();
-    if (records == null ||
-        records.length < DailyChallengeService.spotsPerDay) {
-      return; // abandoned — nothing recorded, the day stays playable
-    }
+    // Scheduled days serve REAL solver game trees — up to 5 hands, each
+    // branching on the player's line (decision count varies per hand);
+    // unscheduled days fall back to the RNG preflop drill.
+    final dayKey = DailyChallengeStore.dayKey(_config.day);
+    final trees = await AuthoredTreeService.loadDay(dayKey);
+    if (!mounted) return;
 
-    final verdicts = records
-        .map((r) => DailyChallengeService.verdictLetter(r.result.grade))
-        .join();
+    // Per-hand decision records + aligned pot weights (DailyScoring).
+    final List<List<DrillDecisionRecord>> hands;
+    final List<double> weights;
+    // Street label per decision, aligned with the flattened hands (authored).
+    List<String> streets = const [];
+    List<List<String>> boards = const [];
+    List<String> facing = const [], heroLabels = const [], bestLabels = const [];
+    if (trees != null) {
+      final outcomes = await Navigator.push<List<AuthoredHandOutcome>>(
+        context,
+        MaterialPageRoute(
+          builder: (_) => AuthoredDayRunner(trees: trees, persona: _persona),
+        ),
+      );
+      stopwatch.stop();
+      // Abandoned mid-day → nothing recorded, the day stays playable.
+      if (outcomes == null || outcomes.length < trees.length) return;
+      hands = [for (final o in outcomes) o.records];
+      weights = [for (final o in outcomes) ...o.potWeights];
+      streets = [for (final o in outcomes) ...o.streets];
+      boards = [for (final o in outcomes) ...o.boards];
+      facing = [for (final o in outcomes) ...o.facing];
+      heroLabels = [for (final o in outcomes) ...o.heroLabels];
+      bestLabels = [for (final o in outcomes) ...o.bestLabels];
+    } else {
+      final records = await Navigator.push<List<DrillDecisionRecord>>(
+        context,
+        MaterialPageRoute(
+          builder: (_) => DrillTableScreen(
+            seats: DailyChallengeService.seatsFor(_config),
+            stackBB: _config.stackBB,
+            anteMode: _config.anteMode,
+            challengeConfig: _config,
+            challengeDecisions: DailyChallengeService.spotsPerDay,
+          ),
+        ),
+      );
+      stopwatch.stop();
+      if (records == null ||
+          records.length < DailyChallengeService.spotsPerDay) {
+        return;
+      }
+      // Every RNG spot is its own one-decision hand, weight 1.
+      hands = [
+        for (final r in records) [r]
+      ];
+      weights = const [];
+    }
+    if (hands.any((h) => h.isEmpty)) return;
+
+    String letter(DrillDecisionRecord r) =>
+        DailyChallengeService.verdictLetter(r.result.grade);
+    var flat = 0; // index into [streets]
     final result = DailyChallengeResult(
-      dayKey: DailyChallengeStore.dayKey(_config.day),
+      dayKey: dayKey,
       seed: _config.seed,
-      verdicts: verdicts,
+      verdicts:
+          DailyScoring.encode([for (final h in hands) h.map(letter).join()]),
+      weights: weights,
       durationMs: stopwatch.elapsedMilliseconds,
       spots: [
-        for (final r in records)
-          DailySpotSummary(
-            handClass: r.handClass,
-            position: r.position,
-            heroAction: r.result.heroAction,
-            recommendedAction: r.result.recommendedAction,
-            verdict: DailyChallengeService.verdictLetter(r.result.grade),
-          ),
+        for (var i = 0; i < hands.length; i++)
+          for (final r in hands[i])
+            DailySpotSummary(
+              // Authored hands store the real suited cards ('9♠ 9♥').
+              handClass: trees != null && i < trees.length
+                  ? trees[i].heroCards.join(' ')
+                  : r.handClass,
+              // Authored hands name the matchup ('LJ vs BTN') for the
+              // hand header; RNG spots keep the hero's position.
+              position: trees != null && i < trees.length
+                  ? '${trees[i].heroPosition} vs ${trees[i].villainPosition}'
+                  : r.position,
+              heroAction: r.result.heroAction,
+              recommendedAction: r.result.recommendedAction,
+              verdict: letter(r),
+              hand: i,
+              board: flat < boards.length ? boards[flat] : const [],
+              facing: flat < facing.length ? facing[flat] : '',
+              heroLabel: flat < heroLabels.length ? heroLabels[flat] : '',
+              recommendedLabel:
+                  flat < bestLabels.length ? bestLabels[flat] : '',
+              street: flat < streets.length ? streets[flat++] : '',
+            ),
       ],
     );
     await DailyChallengeStore.save(result);
@@ -189,8 +251,7 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> {
         username: username,
       );
       AnalyticsService.capture('daily_challenge_leaderboard_submitted', {
-        'challenge_number':
-            DailyChallengeService.challengeNumber(_config.day),
+        'challenge_number': DailyChallengeService.challengeNumber(_config.day),
         'score': result.score,
         'streak': streaks.current,
       });
@@ -207,6 +268,7 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> {
     Share.share(DailyChallengeService.shareText(
       day: _config.day,
       verdicts: result.verdicts,
+      weights: result.weights,
       streak: _streaks?.current ?? 0,
     ));
     AnalyticsService.capture('daily_challenge_shared', {
@@ -232,13 +294,12 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> {
                         width: 20,
                         height: 20,
                         child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: AppColors.accentPrimary),
+                            strokeWidth: 2, color: AppColors.accentPrimary),
                       ),
                     )
                   : SingleChildScrollView(
-                      padding: const EdgeInsets.fromLTRB(AppSpacing.md,
-                          AppSpacing.xs, AppSpacing.md, 120),
+                      padding: const EdgeInsets.fromLTRB(
+                          AppSpacing.md, AppSpacing.xs, AppSpacing.md, 120),
                       child: _todayResult == null
                           ? _intro()
                           : _results(_todayResult!),
@@ -312,8 +373,7 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> {
             padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius:
-                  BorderRadius.circular(AppDecorations.buttonRadius),
+              borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
             ),
             child: Center(
               child: Text(AppLocalizations.of(context).dailyChallengePlayToday,
@@ -437,8 +497,7 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> {
                     top: 0,
                     child: PopIn(
                       delay: Duration(
-                          milliseconds:
-                              120 * CoachPersonas.all.indexOf(p)),
+                          milliseconds: 120 * CoachPersonas.all.indexOf(p)),
                       child: AnimatedScale(
                         duration: const Duration(milliseconds: 220),
                         curve: Curves.easeOut,
@@ -522,9 +581,8 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> {
                 value: result.score,
                 animateOnMount: true,
                 duration: const Duration(milliseconds: 700),
-                format: (v) => v == v.roundToDouble()
-                    ? v.round().toString()
-                    : v.toStringAsFixed(1),
+                format: (v) =>
+                    '${DailyScoring.formatPct((v * 10).round() / 10)}%',
                 style: AppTypography.mono(
                     fontSize: 38,
                     fontWeight: FontWeight.w700,
@@ -532,9 +590,10 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> {
                         ? AppColors.accentPrimary
                         : AppColors.textPrimary),
               ),
-              Text('/${result.verdicts.length}',
-                  style: AppTypography.mono(
-                      fontSize: 20, color: AppColors.textSecondary)),
+              const SizedBox(width: AppSpacing.xxs),
+              Text('accuracy',
+                  style: AppTypography.ibm(
+                      fontSize: 12, color: AppColors.textSecondary)),
               const Spacer(),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
@@ -542,20 +601,24 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> {
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                      // Dots grouped by hand (a wider gap between hands).
                       for (final v in result.verdicts.split('')) ...[
-                        Container(
-                          width: 12,
-                          height: 12,
-                          margin: const EdgeInsets.only(left: 4),
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: switch (v) {
-                              'c' => AppColors.accentPrimary,
-                              'o' => _gold,
-                              _ => _red,
-                            },
+                        if (v == DailyScoring.handSeparator)
+                          const SizedBox(width: 6)
+                        else
+                          Container(
+                            width: 10,
+                            height: 10,
+                            margin: const EdgeInsets.only(left: 3),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: switch (v) {
+                                'c' => AppColors.accentPrimary,
+                                'o' => _gold,
+                                _ => _red,
+                              },
+                            ),
                           ),
-                        ),
                       ],
                     ],
                   ),
@@ -582,19 +645,7 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> {
                 letterSpacing: 1.0,
                 color: AppColors.accentTertiary)),
         const SizedBox(height: AppSpacing.xs),
-        _card(
-          child: Column(
-            children: [
-              for (var i = 0; i < result.spots.length; i++) ...[
-                if (i > 0)
-                  Divider(
-                      height: 16,
-                      color: Colors.white.withValues(alpha: 0.06)),
-                _spotRow(i + 1, result.spots[i]),
-              ],
-            ],
-          ),
-        ),
+        _card(child: _spotsList(result)),
         const SizedBox(height: AppSpacing.xl),
         GestureDetector(
           onTap: _share,
@@ -603,11 +654,11 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> {
             padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius:
-                  BorderRadius.circular(AppDecorations.buttonRadius),
+              borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
             ),
             child: Center(
-              child: Text(AppLocalizations.of(context).dailyChallengeShareResult,
+              child: Text(
+                  AppLocalizations.of(context).dailyChallengeShareResult,
                   style: AppTypography.ibm(
                       fontSize: 17,
                       fontWeight: FontWeight.w600,
@@ -636,8 +687,7 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> {
                 child: Text('Reset today (testing)',
                     style: AppTypography.ibm(
                         fontSize: 12,
-                        color: AppColors.accentDanger
-                            .withValues(alpha: 0.8))),
+                        color: AppColors.accentDanger.withValues(alpha: 0.8))),
               ),
             ),
           ),
@@ -654,6 +704,223 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> {
     await _load();
   }
 
+  /// Decisions list. Multi-decision (authored) days show one COLLAPSIBLE
+  /// section per hand (header: hand, holding, verdict dots, accuracy; rows:
+  /// the street of each decision). RNG days stay a flat list.
+  Widget _spotsList(DailyChallengeResult result) {
+    final spots = result.spots;
+    final grouped =
+        DailyScoring.handsOf(result.verdicts).any((h) => h.length > 1);
+    if (!grouped) {
+      return Column(
+        children: [
+          for (var i = 0; i < spots.length; i++) ...[
+            if (i > 0)
+              Divider(height: 16, color: Colors.white.withValues(alpha: 0.06)),
+            _spotRow(i + 1, spots[i]),
+          ],
+        ],
+      );
+    }
+    final accs = result.handAccuracies;
+    final byHand = <int, List<DailySpotSummary>>{};
+    for (final s in spots) {
+      (byHand[s.hand] ??= []).add(s);
+    }
+    final handIdx = byHand.keys.toList()..sort();
+    return Column(
+      children: [
+        for (var k = 0; k < handIdx.length; k++) ...[
+          if (k > 0)
+            Divider(height: 12, color: Colors.white.withValues(alpha: 0.10)),
+          _handSection(handIdx[k], byHand[handIdx[k]]!,
+              handIdx[k] < accs.length ? accs[handIdx[k]] : 0),
+        ],
+      ],
+    );
+  }
+
+  Widget _handSection(int hand, List<DailySpotSummary> rows, double accuracy) {
+    final open = _openHands.contains(hand);
+    final first = rows.first;
+    final pct = (accuracy * 1000).round() / 10;
+    final color =
+        pct >= 80 ? AppColors.accentPrimary : (pct >= 50 ? _gold : _red);
+    return Column(
+      children: [
+        InkWell(
+          borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
+          onTap: () {
+            HapticFeedback.selectionClick();
+            setState(
+                () => open ? _openHands.remove(hand) : _openHands.add(hand));
+          },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: AppSpacing.xxs),
+            child: Row(
+              children: [
+                Text('HAND ${hand + 1}',
+                    style: AppTypography.ibm(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 1.0,
+                        color: AppColors.accentTertiary)),
+                const SizedBox(width: AppSpacing.xs),
+                // The hero's real cards as mini card faces (rank + suit);
+                // old results stored only the class ('99') → plain text.
+                if (_cardList(first.handClass).isNotEmpty)
+                  _miniCards(_cardList(first.handClass))
+                else
+                  Text(first.handClass,
+                      style: AppTypography.mono(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textPrimary)),
+                const SizedBox(width: AppSpacing.xxs),
+                Text(first.position,
+                    style: AppTypography.mono(
+                        fontSize: 12, color: AppColors.textSecondary)),
+                const SizedBox(width: AppSpacing.xs),
+                Expanded(
+                  child: Wrap(
+                    spacing: 3,
+                    runSpacing: 3,
+                    children: [
+                      for (final r in rows)
+                        Container(
+                          width: 8,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: switch (r.verdict) {
+                              'c' => AppColors.accentPrimary,
+                              'o' => _gold,
+                              _ => _red,
+                            },
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                Text('${DailyScoring.formatPct(pct)}%',
+                    style: AppTypography.mono(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: color)),
+                AnimatedRotation(
+                  turns: open ? 0.5 : 0,
+                  duration: const Duration(milliseconds: 200),
+                  child: const Icon(Icons.expand_more,
+                      size: 20, color: AppColors.textSecondary),
+                ),
+              ],
+            ),
+          ),
+        ),
+        AnimatedSize(
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOutCubic,
+          alignment: Alignment.topCenter,
+          child: open
+              ? Padding(
+                  padding: const EdgeInsets.only(
+                      top: AppSpacing.xxs, bottom: AppSpacing.xxs),
+                  child: Column(
+                    children: [
+                      for (var i = 0; i < rows.length; i++) ...[
+                        if (i > 0)
+                          Divider(
+                              height: 14,
+                              color: Colors.white.withValues(alpha: 0.06)),
+                        _spotRow(i + 1, rows[i]),
+                      ],
+                    ],
+                  ),
+                )
+              : const SizedBox(width: double.infinity),
+        ),
+      ],
+    );
+  }
+
+  /// Authored row, line 2: what the hero faced → what they did, plus the
+  /// coach's line when it differs ("BTN 3-bet to 7.3BB → you call 7.3BB").
+  /// Results saved before these labels existed fall back to raw actions.
+  Widget _authoredActionLine(DailySpotSummary spot) {
+    final hero = spot.heroLabel.isNotEmpty ? spot.heroLabel : spot.heroAction;
+    final best = spot.recommendedLabel.isNotEmpty
+        ? spot.recommendedLabel
+        : spot.recommendedAction;
+    final dim = AppTypography.ibm(fontSize: 12, color: AppColors.textSecondary);
+    return Text.rich(
+      TextSpan(style: dim, children: [
+        if (spot.facing.isNotEmpty) ...[
+          TextSpan(
+              text: spot.facing,
+              style: dim.copyWith(color: AppColors.textPrimary)),
+          const TextSpan(text: '  →  '),
+        ],
+        TextSpan(text: 'you $hero'),
+        if (spot.verdict != 'c') TextSpan(text: ' · coach: $best'),
+      ]),
+      maxLines: 2,
+      overflow: TextOverflow.ellipsis,
+    );
+  }
+
+  /// '9♠ 9♥' → ['9♠', '9♥']; '' when the text has no suit glyphs.
+  static List<String> _cardList(String text) {
+    final cards = text.split(' ').where((c) => c.isNotEmpty).toList();
+    const suits = {'♠', '♥', '♦', '♣'};
+    return cards.isNotEmpty &&
+            cards.every((c) => c.length >= 2 && suits.contains(c[c.length - 1]))
+        ? cards
+        : const [];
+  }
+
+  /// Small card faces (white, rank over suit, ♥/♦ red) — same look as the
+  /// table's cards, scaled for a list row.
+  Widget _miniCards(List<String> cards) {
+    final w = (MediaQuery.sizeOf(context).width * 0.052).clamp(18.0, 24.0);
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (final c in cards)
+          Container(
+            width: w,
+            height: w * 1.3,
+            margin: const EdgeInsets.only(right: 2),
+            decoration: BoxDecoration(
+              color: AppColors.bgInverse,
+              borderRadius:
+                  BorderRadius.circular(AppDecorations.legendDotRadius),
+            ),
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(c.substring(0, c.length - 1),
+                      style: AppTypography.mono(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          height: 1.0,
+                          color: _isRed(c) ? _red : Colors.black)),
+                  Text(c.substring(c.length - 1),
+                      style: TextStyle(
+                          fontSize: 10,
+                          height: 1.0,
+                          color: _isRed(c) ? _red : Colors.black)),
+                ],
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  static bool _isRed(String card) => card.endsWith('♥') || card.endsWith('♦');
+
   Widget _spotRow(int n, DailySpotSummary spot) {
     final l10n = AppLocalizations.of(context);
     final (color, label) = switch (spot.verdict) {
@@ -661,44 +928,78 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> {
       'o' => (_gold, l10n.dailyChallengeVerdictGood),
       _ => (_red, l10n.dailyChallengeVerdictLeak),
     };
+    final number = Text('$n',
+        style: AppTypography.mono(fontSize: 12, color: AppColors.textDisabled));
+    final action = Text(
+      spot.verdict == 'c'
+          ? 'you ${spot.heroAction}'
+          : 'you ${spot.heroAction} · coach: ${spot.recommendedAction}',
+      overflow: TextOverflow.ellipsis,
+      style: AppTypography.ibm(fontSize: 12, color: AppColors.textSecondary),
+    );
+    final badge = Container(
+      padding:
+          const EdgeInsets.symmetric(horizontal: AppSpacing.xxs, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
+      ),
+      child: Text(label,
+          style: AppTypography.ibm(
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.8,
+              color: color)),
+    );
+    final labelStyle = AppTypography.mono(
+        fontSize: 13,
+        fontWeight: FontWeight.w600,
+        color: AppColors.textPrimary);
+
+    // RNG spot: one line — holding, action, verdict.
+    if (spot.street.isEmpty) {
+      return Row(
+        children: [
+          number,
+          const SizedBox(width: AppSpacing.xs),
+          SizedBox(
+            width: 64,
+            child:
+                Text('${spot.handClass} ${spot.position}', style: labelStyle),
+          ),
+          Expanded(child: action),
+          badge,
+        ],
+      );
+    }
+
+    // Authored decision: street + the board it was played on (card faces),
+    // then the action line with the verdict.
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('$n',
-            style: AppTypography.mono(
-                fontSize: 12, color: AppColors.textDisabled)),
+        number,
         const SizedBox(width: AppSpacing.xs),
-        SizedBox(
-          width: 64,
-          child: Text('${spot.handClass} ${spot.position}',
-              style: AppTypography.mono(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary)),
-        ),
         Expanded(
-          child: Text(
-            spot.verdict == 'c'
-                ? 'you ${spot.heroAction}'
-                : 'you ${spot.heroAction} · coach: ${spot.recommendedAction}',
-            overflow: TextOverflow.ellipsis,
-            style: AppTypography.ibm(
-                fontSize: 12, color: AppColors.textSecondary),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Text(spot.street, style: labelStyle),
+                  if (spot.board.isNotEmpty) ...[
+                    const SizedBox(width: AppSpacing.xs),
+                    Flexible(child: _miniCards(spot.board)),
+                  ],
+                ],
+              ),
+              const SizedBox(height: AppSpacing.xxxs),
+              _authoredActionLine(spot),
+            ],
           ),
         ),
-        Container(
-          padding:
-              const EdgeInsets.symmetric(horizontal: AppSpacing.xxs, vertical: 2),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
-          ),
-          child: Text(label,
-              style: AppTypography.ibm(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.8,
-                  color: color)),
-        ),
+        const SizedBox(width: AppSpacing.xxs),
+        badge,
       ],
     );
   }

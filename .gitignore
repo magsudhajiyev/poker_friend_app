@@ -11,6 +11,11 @@ brand/
 android/key.properties
 *.jks
 
+# Solver-export dev tool — secrets + local deps (keep the scripts, ignore these)
+tool/gto_export/node_modules/
+tool/gto_export/service-account.json
+tool/gto_export/*.local.json
+
 # Miscellaneous
 *.class
 *.log

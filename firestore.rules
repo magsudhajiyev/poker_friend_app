@@ -333,8 +333,17 @@ service cloud.firestore {
         && request.resource.data.uid == uid
         && request.resource.data.username is string
         && request.resource.data.username.size() >= 3
+        // Verdict letters grouped by hand with '|' (up to 5 hands of up to
+        // 10 decisions each: 50 letters + 4 separators); optional pot weights
+        // aligned with the letters. The score itself is re-derived by the
+        // validateLeaderboardEntry CF (DailyScoring mirror).
         && request.resource.data.verdicts is string
-        && request.resource.data.verdicts.size() == 5
+        && request.resource.data.verdicts.size() >= 1
+        && request.resource.data.verdicts.size() <= 60
+        && request.resource.data.verdicts.matches('^[com|]+$')
+        && (!('weights' in request.resource.data)
+            || (request.resource.data.weights is list
+                && request.resource.data.weights.size() <= 50))
         && request.resource.data.score is number;
       allow delete: if isOwner(uid) || isSuperAdmin();
     }
@@ -528,6 +537,20 @@ service cloud.firestore {
         // then the parent — feedOwner() needs the parent alive).
         allow delete: if isAuthenticated() && feedOwner() == request.auth.uid;
       }
+    }
+
+    // Authored Daily Challenge spots (solver game trees). Written ONLY out of
+    // band via the admin SDK (tool/gto_export/build_tree.js); clients read.
+    // Daily Challenge day schedule: {hands: [tree ids]} — written only by
+    // tool/gto_export/schedule_day.js (Admin SDK).
+    match /authored_days/{dayKey} {
+      allow read: if isAuthenticated();
+      allow write: if false;
+    }
+
+    match /authored_spots/{spotId} {
+      allow read: if isAuthenticated();
+      allow write: if false;
     }
 
     // Blocks. Doc id is '{blockerId}_{blockedId}'. Existence alone denies

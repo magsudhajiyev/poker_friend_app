@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'auth_service.dart';
 import 'daily_challenge_service.dart';
 import 'daily_challenge_store.dart';
+import 'daily_scoring.dart';
 import 'logger_service.dart';
 
 /// Which board a ranking query targets.
@@ -13,11 +14,11 @@ class LeaderboardEntry {
   final int rank; // 1-based
   final String uid;
   final String username;
-  final int value; // streak count, or score*2 for daily (see valueLabel)
+  final int value; // streak count, or scoreKey (accuracy ×10) for daily
   final bool isMe;
 
   /// Daily-only extras (null on streak boards).
-  final double? score; // 0..5
+  final double? score; // accuracy 0..100
   final bool perfect;
   final int? durationMs;
 
@@ -43,7 +44,7 @@ class LeaderboardEntry {
 ///
 /// Trust model: the client-written `score` is advisory; a Cloud Function
 /// re-validates it against `verdicts`. Rules only shape-check (own uid,
-/// username present, verdicts length 5).
+/// username present, verdicts shape). Score = day accuracy, see DailyScoring.
 ///
 /// Data model (see docs/features/daily-challenge-leaderboard.md):
 ///   leaderboard_daily/{dayKey}/entries/{uid}
@@ -57,10 +58,9 @@ class LeaderboardService {
   static const String _entries = 'entries';
   static const String _streak = 'leaderboard_streak';
 
-  /// Score (0..5) stored as an int ×10 so the daily board can orderBy it
-  /// (Firestore orders fine on doubles too, but an int key avoids float
-  /// drift when ranking ties). 5.0 → 50, 4.5 → 45.
-  static int scoreKey(double score) => (score * 10).round();
+  /// Accuracy (0..100) stored as an int ×10 so the daily board can orderBy
+  /// it without float drift on ties. 87.4 → 874, 100 → 1000.
+  static int scoreKey(double score) => DailyScoring.scoreKey(score);
 
   /// Write this run's rows. Best-effort: logs and swallows all errors.
   ///
@@ -88,6 +88,7 @@ class LeaderboardService {
         'uid': uid,
         'username': name,
         'verdicts': result.verdicts,
+        if (result.weights.isNotEmpty) 'weights': result.weights,
         'score': result.score,
         'scoreKey': scoreKey(result.score),
         'perfect': result.perfect,

@@ -4,12 +4,19 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'auth_service.dart';
 import 'daily_challenge_service.dart';
+import 'daily_scoring.dart';
 
 /// One completed day of the Daily Challenge, as persisted.
 class DailyChallengeResult {
   final String dayKey; // 'yyyy-MM-dd' (local date)
   final int seed;
-  final String verdicts; // one letter per decision: c / o / m
+  /// One letter per decision (c / o / m), grouped by hand with '|' — see
+  /// [DailyScoring]. Legacy RNG results have no '|' (one letter = one hand).
+  final String verdicts;
+
+  /// Pot (BB) at each decision, aligned with the verdict letters — the
+  /// accuracy weights. Empty = every decision weighs 1 (RNG days).
+  final List<double> weights;
 
   /// Compact per-spot summaries for the results view on later visits:
   /// hand class, position, hero action, recommended action, verdict letter.
@@ -25,15 +32,22 @@ class DailyChallengeResult {
     required this.seed,
     required this.verdicts,
     required this.spots,
+    this.weights = const [],
     this.durationMs = 0,
   });
 
-  double get score => DailyChallengeService.scoreOf(verdicts);
+  /// Day accuracy, 0..100.
+  double get score => DailyChallengeService.scoreOf(verdicts, weights);
+
+  /// Per-hand accuracies, 0..1.
+  List<double> get handAccuracies =>
+      DailyScoring.handAccuracies(verdicts, weights);
   bool get perfect => DailyChallengeService.isPerfect(verdicts);
 
   Map<String, dynamic> toJson() => {
         'seed': seed,
         'v': verdicts,
+        if (weights.isNotEmpty) 'w': weights,
         'spots': spots.map((s) => s.toJson()).toList(),
         if (durationMs > 0) 'ms': durationMs,
       };
@@ -44,6 +58,10 @@ class DailyChallengeResult {
         dayKey: dayKey,
         seed: (json['seed'] as num?)?.toInt() ?? 0,
         verdicts: json['v']?.toString() ?? '',
+        weights: [
+          for (final w in (json['w'] as List? ?? const []))
+            if (w is num) w.toDouble(),
+        ],
         durationMs: (json['ms'] as num?)?.toInt() ?? 0,
         spots: [
           for (final s in (json['spots'] as List? ?? const []))
@@ -59,12 +77,36 @@ class DailySpotSummary {
   final String recommendedAction;
   final String verdict; // c / o / m
 
+  /// 0-based hand this decision belongs to (several per authored hand).
+  final int hand;
+
+  /// Street label of the decision ('Preflop', 'Flop', ...); '' on RNG days
+  /// (every spot is preflop there).
+  final String street;
+
+  /// Board cards when the decision was made (e.g. ['10♠','9♣','4♦']);
+  /// empty preflop and on RNG days.
+  final List<String> board;
+
+  /// Authored decisions: what the hero faced ('BTN 3-bet to 7.3BB') and
+  /// plain-word labels for the hero's and the coach's action ('call 7.3BB',
+  /// 'bet 16.2BB'). Empty on RNG days (rows fall back to the raw actions).
+  final String facing;
+  final String heroLabel;
+  final String recommendedLabel;
+
   const DailySpotSummary({
     required this.handClass,
     required this.position,
     required this.heroAction,
     required this.recommendedAction,
     required this.verdict,
+    this.hand = 0,
+    this.street = '',
+    this.board = const [],
+    this.facing = '',
+    this.heroLabel = '',
+    this.recommendedLabel = '',
   });
 
   Map<String, dynamic> toJson() => {
@@ -73,6 +115,12 @@ class DailySpotSummary {
         'act': heroAction,
         'rec': recommendedAction,
         'g': verdict,
+        'h': hand,
+        if (street.isNotEmpty) 'st': street,
+        if (board.isNotEmpty) 'bd': board,
+        if (facing.isNotEmpty) 'fc': facing,
+        if (heroLabel.isNotEmpty) 'hl': heroLabel,
+        if (recommendedLabel.isNotEmpty) 'rl': recommendedLabel,
       };
 
   factory DailySpotSummary.fromJson(Map<String, dynamic> json) =>
@@ -82,6 +130,14 @@ class DailySpotSummary {
         heroAction: json['act']?.toString() ?? '',
         recommendedAction: json['rec']?.toString() ?? '',
         verdict: json['g']?.toString() ?? 'm',
+        hand: (json['h'] as num?)?.toInt() ?? 0,
+        street: json['st']?.toString() ?? '',
+        facing: json['fc']?.toString() ?? '',
+        heroLabel: json['hl']?.toString() ?? '',
+        recommendedLabel: json['rl']?.toString() ?? '',
+        board: [
+          for (final c in (json['bd'] as List? ?? const [])) c.toString(),
+        ],
       );
 }
 

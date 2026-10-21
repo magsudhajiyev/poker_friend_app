@@ -1363,6 +1363,9 @@ class _DrillTableScreenState extends State<DrillTableScreen>
                     color: switch (layer.kind) {
                       DrillRangeLayerKind.raise => AppColors.rangeRaise,
                       DrillRangeLayerKind.call => AppColors.rangeCall,
+                      DrillRangeLayerKind.check => AppColors.accentPrimary,
+                      DrillRangeLayerKind.allin => AppColors.rangeAllIn,
+                      DrillRangeLayerKind.fold => AppColors.rangeFold,
                     },
                   ),
                 ),

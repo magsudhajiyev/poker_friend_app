@@ -9,7 +9,7 @@ import 'drill_nash_pushfold.dart';
 ///
 /// Pure and Flutter-free: layers carry a semantic [DrillRangeLayerKind];
 /// the widget maps kinds to colors.
-enum DrillRangeLayerKind { raise, call }
+enum DrillRangeLayerKind { raise, call, check, fold, allin }
 
 class DrillRangeLayer {
   final String label; // 'Open', '3-bet', 'Call', 'Jam', ...
