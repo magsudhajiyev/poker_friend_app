@@ -4,7 +4,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 /// Converts hand data from our app format into PokerStars hand history
-/// text format, suitable for import into GTO Wizard and similar tools.
+/// text format, suitable for import into common solver/study tools.
 ///
 /// All methods are static. The service handles:
 /// - Card symbol conversion (♠→s, ♥→h, ♦→d, ♣→c)
@@ -83,7 +83,7 @@ class PokerStarsExportService {
   /// Names are sanitized HERE and blank names become "Player {seat}": a
   /// seat stored with an empty name otherwise produces lines like
   /// ": raises 3000" and "Seat 3:  (49200 in chips)", which hand-history
-  /// parsers (GTO Wizard etc.) reject.
+  /// parsers (solver tools etc.) reject.
   static Map<int, String> _getPlayerNames(Map<String, dynamic> hand) {
     final raw = hand['playerNames'] as Map<String, dynamic>? ?? {};
     final heroSeat = hand['heroSeatNumber'] as int?;
@@ -378,7 +378,7 @@ class PokerStarsExportService {
     final buf = StringBuffer();
 
     // Antes come BEFORE blinds in PokerStars format.
-    // Our app uses BB ante (only BB posts), but GTO Wizard expects
+    // Our app uses BB ante (only BB posts), but solver tools expect
     // per-player ante lines. Convert: BB ante total / playerCount = per-player ante.
     if (hasBBante && playerCount > 0) {
       final antePerPlayer = bb / playerCount;

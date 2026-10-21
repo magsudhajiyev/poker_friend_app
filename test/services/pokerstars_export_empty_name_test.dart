@@ -4,7 +4,7 @@ import 'package:poker_logger/services/pokerstars_export_service.dart';
 /// A seat stored with an EMPTY name must export as "Player {seat}".
 /// Repro of hand #101785449031: seat 3 had name '' which produced
 /// ": raises 3000 to 5000" and "Seat 3:  (49200 in chips)" — lines that
-/// GTO Wizard's hand-history parser rejects.
+/// the solver's hand-history parser rejects.
 void main() {
   Map<String, dynamic> session() => {
         'sessionName': 'Test MTT',
@@ -62,7 +62,7 @@ void main() {
     expect(text, contains('Player 3: raises'));
     expect(text, contains('Player 3: folds'));
 
-    // No line may start with a bare colon (the GTO Wizard rejection).
+    // No line may start with a bare colon (the the solver rejection).
     for (final line in text.split('\n')) {
       expect(line.trimLeft().startsWith(':'), isFalse,
           reason: 'empty-name action line leaked: "$line"');
