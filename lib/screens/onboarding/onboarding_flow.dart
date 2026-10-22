@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../services/auth_service.dart';
 import '../../services/currency_service.dart';
+import '../../services/feature_flag_service.dart';
 import '../../services/onboarding_service.dart';
 import 'welcome_step.dart';
+import 'demo_challenge_step.dart';
 import 'nickname_step.dart';
 import 'game_type_step.dart';
 import 'currency_step.dart';
@@ -43,7 +45,7 @@ class OnboardingFlow extends StatefulWidget {
 
 class _OnboardingFlowState extends State<OnboardingFlow> {
   late final PageController _pageController;
-  late final List<Widget> _steps;
+  late List<Widget> _steps;
   int _currentStep = 0;
 
   // Collected onboarding data
@@ -57,15 +59,43 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
     super.initState();
     _pageController = PageController();
     _steps = _buildSteps();
+    // The demo step depends on the daily_challenge flag, which loads
+    // asynchronously (SharedPreferences cache, then Firestore). On a fresh
+    // install the flag often is not resolved yet when onboarding opens, so
+    // rebuild the step list when it lands — but only while still on Welcome
+    // (step 0), i.e. before the user could have reached where the demo is
+    // inserted. Once past Welcome the listener detaches and the list is fixed.
+    FeatureFlagService.revision.addListener(_onFlagsChanged);
+  }
+
+  void _onFlagsChanged() {
+    if (!mounted) return;
+    // The demo step is APPENDED at the end, so a rebuild never shifts the
+    // step the user is currently on — safe to apply any time the daily_challenge
+    // flag resolves (it loads async; on a fresh install it often lands while
+    // the user is still answering the questions). Only rebuild when the count
+    // actually changes and the current index stays valid.
+    final rebuilt = _buildSteps();
+    if (rebuilt.length != _steps.length && _currentStep < rebuilt.length) {
+      setState(() => _steps = rebuilt);
+    }
   }
 
   @override
   void dispose() {
+    FeatureFlagService.revision.removeListener(_onFlagsChanged);
     _pageController.dispose();
     super.dispose();
   }
 
   List<Widget> _buildSteps() {
+    // The Daily Challenge demo is the LAST step (value-first: the user answers
+    // the setup questions, then plays one real spot before the post-tour
+    // paywall). Only when the feature is live — a flag-off or test build omits
+    // it, and then the questions' terminal step completes onboarding directly.
+    final hasDemo = !widget.testMode &&
+        FeatureFlagService.isEnabled(FeatureFlagService.dailyChallenge);
+
     final steps = <Widget>[
       WelcomeStep(onContinue: _nextStep),
     ];
@@ -110,10 +140,19 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
         onContinue: (values) {
           _purposes.clear();
           _purposes.addAll(values);
-          _completeOnboarding();
+          // With the demo last, Purpose advances to it; otherwise it is the
+          // terminal step and completes onboarding.
+          hasDemo ? _nextStep() : _completeOnboarding();
         },
       ),
     ]);
+
+    if (hasDemo) {
+      steps.add(DemoChallengeStep(
+        onContinue: _completeOnboarding,
+        onBack: _previousStep,
+      ));
+    }
 
     return steps;
   }

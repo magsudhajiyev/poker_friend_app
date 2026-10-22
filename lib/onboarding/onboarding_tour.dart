@@ -16,6 +16,7 @@ import '../screens/onboarding/onboarding_flow.dart';
 import '../services/auth_service.dart';
 import '../services/notification_service.dart';
 import '../services/subscription_service.dart';
+import '../services/feature_flag_service.dart';
 import 'onboarding_prefs.dart';
 import 'onboarding_state.dart';
 import 'promo_reminder_logic.dart';
@@ -901,10 +902,18 @@ Future<void> maybeShowPostTourPaywall(BuildContext context) async {
     await OnboardingPrefs.markPostTourPaywallShown();
     await OnboardingPrefs.clearPostTourPaywallPending();
     if (!context.mounted) return;
+    // Hard paywall: the first-run paywall (right after the tour) is
+    // non-dismissible — the user must start a subscription to use the app.
+    // When the flag is off this stays the skippable promotional paywall.
+    final hardGate =
+        FeatureFlagService.isEnabled(FeatureFlagService.hardPaywall) &&
+            !SubscriptionService.isPremium;
     await Navigator.of(context).push(
       MaterialPageRoute(
         fullscreenDialog: true,
-        builder: (_) => PaywallScreen(showSkip: true, launchPromo: launchPromo),
+        builder: (_) => hardGate
+            ? const PaywallScreen(hardGate: true)
+            : PaywallScreen(showSkip: true, launchPromo: launchPromo),
       ),
     );
   } finally {

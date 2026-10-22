@@ -1,5 +1,10 @@
+import 'dart:io' show Platform;
+
+import 'package:flutter/foundation.dart' show kDebugMode, debugPrint;
 import 'package:flutter/services.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
+
+import 'subscription_logic.dart' show TrialOffer, freeTrialOffer;
 
 /// Thin wrapper over the RevenueCat SDK — the ONLY place `Purchases.*` is
 /// called. SubscriptionService depends on this interface, not the SDK, so a
@@ -23,12 +28,29 @@ class TierEntitlements {
   /// Expiry of the active 'pro' entitlement, ISO-8601 string as RC returns it.
   final String? proExpirationIso;
 
+  /// The HIGHEST active entitlement (club > elite > pro) — the one the user
+  /// is paying for: whether it is in a free-trial period, whether it will
+  /// renew (false once the user cancels), its expiry (= trial end / next
+  /// charge) and the store product. Defaults describe "no subscription".
+  final bool topInTrial;
+  final bool topWillRenew;
+  final String? topExpirationIso;
+  final String? topProductId;
+
+  /// Google Play base plan of [topProductId] ('annual'); null on iOS.
+  final String? topProductPlanId;
+
   const TierEntitlements({
     required this.proActive,
     required this.eliteActive,
     required this.clubActive,
     this.proIsPromotional,
     this.proExpirationIso,
+    this.topInTrial = false,
+    this.topWillRenew = false,
+    this.topExpirationIso,
+    this.topProductId,
+    this.topProductPlanId,
   });
 
   static const empty = TierEntitlements(
@@ -59,6 +81,12 @@ abstract class RevenueCatClient {
   Future<TierEntitlements> restorePurchases();
   Future<TierEntitlements> logIn(String userId);
   Future<TierEntitlements> logOut();
+
+  /// FREE trials the CURRENT user can still start, keyed by package
+  /// identifier. A package is absent when it has no free trial or the user
+  /// is not eligible (already used one) — the paywall must then not promise
+  /// a trial. Never throws.
+  Future<Map<String, TrialOffer>> freeTrials(List<Package> packages);
 }
 
 /// Production implementation forwarding to the RevenueCat SDK.
@@ -74,6 +102,9 @@ class LiveRevenueCatClient implements RevenueCatClient {
   static TierEntitlements _fromCustomerInfo(CustomerInfo info) {
     final all = info.entitlements.all;
     final proEnt = all[_pro];
+    // Highest ACTIVE entitlement carries the trial / renewal state.
+    final top = [all[_club], all[_elite], proEnt]
+        .firstWhere((e) => e?.isActive ?? false, orElse: () => null);
     return TierEntitlements(
       proActive: proEnt?.isActive ?? false,
       eliteActive: all[_elite]?.isActive ?? false,
@@ -81,6 +112,11 @@ class LiveRevenueCatClient implements RevenueCatClient {
       proIsPromotional:
           proEnt == null ? null : proEnt.store == Store.promotional,
       proExpirationIso: proEnt?.expirationDate,
+      topInTrial: top?.periodType == PeriodType.trial,
+      topWillRenew: top?.willRenew ?? false,
+      topExpirationIso: top?.expirationDate,
+      topProductId: top?.productIdentifier,
+      topProductPlanId: top?.productPlanIdentifier,
     );
   }
 
@@ -133,6 +169,82 @@ class LiveRevenueCatClient implements RevenueCatClient {
       return PurchaseOutcome(error: e);
     } catch (e) {
       return PurchaseOutcome(error: e);
+    }
+  }
+
+  @override
+  Future<Map<String, TrialOffer>> freeTrials(List<Package> packages) async {
+    final out = <String, TrialOffer>{};
+    try {
+      if (Platform.isAndroid) {
+        // Google Play only returns offers this user is ELIGIBLE for. Scan ALL
+        // subscription options for a free-trial phase — NOT just defaultOption,
+        // which RevenueCat may point at the base plan (and "Backwards
+        // compatible" legacy offers are not always the default). The trial is
+        // a phase with a freePhase, or any phase priced at 0.
+        for (final p in packages) {
+          final options = p.storeProduct.subscriptionOptions ??
+              [
+                if (p.storeProduct.defaultOption != null)
+                  p.storeProduct.defaultOption!
+              ];
+          if (kDebugMode) {
+            debugPrint('🎁 trial scan ${p.identifier} '
+                '(${p.storeProduct.identifier}): '
+                '${options.length} option(s) → '
+                '${options.map((o) => '${o.id}[free=${o.freePhase != null},'
+                    'phases=${o.pricingPhases.map((ph) => ph.price.amountMicros).toList()}]').join(', ')}');
+          }
+          PricingPhase? trialPhase;
+          for (final o in options) {
+            final phase = o.freePhase ??
+                o.pricingPhases.cast<PricingPhase?>().firstWhere(
+                      (ph) => (ph?.price.amountMicros ?? -1) == 0,
+                      orElse: () => null,
+                    );
+            if (phase?.billingPeriod != null) {
+              trialPhase = phase;
+              break;
+            }
+          }
+          final period = trialPhase?.billingPeriod;
+          if (period == null) continue;
+          final t = freeTrialOffer(
+            unit: period.unit.name,
+            count: period.value * (trialPhase!.billingCycleCount ?? 1),
+            price: 0,
+          );
+          if (t != null) out[p.identifier] = t;
+        }
+        return out;
+      }
+      // iOS: the intro offer is on the product; eligibility is per Apple ID
+      // (one trial per subscription group), so ask StoreKit via RevenueCat.
+      final candidates = <Package, TrialOffer>{};
+      for (final p in packages) {
+        final intro = p.storeProduct.introductoryPrice;
+        if (intro == null) continue;
+        final t = freeTrialOffer(
+          unit: intro.periodUnit.name,
+          count: intro.periodNumberOfUnits * (intro.cycles > 0 ? intro.cycles : 1),
+          price: intro.price,
+        );
+        if (t != null) candidates[p] = t;
+      }
+      if (candidates.isEmpty) return out;
+      final eligibility = await Purchases.checkTrialOrIntroductoryPriceEligibility(
+          [for (final p in candidates.keys) p.storeProduct.identifier]);
+      candidates.forEach((p, t) {
+        if (eligibility[p.storeProduct.identifier]?.status ==
+            IntroEligibilityStatus.introEligibilityStatusEligible) {
+          out[p.identifier] = t;
+        }
+      });
+      return out;
+    } catch (_) {
+      // Unknown eligibility → promise nothing (the store still applies a
+      // trial at purchase if the user qualifies).
+      return const {};
     }
   }
 

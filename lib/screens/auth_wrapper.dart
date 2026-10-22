@@ -11,6 +11,7 @@ import '../l10n/app_localizations.dart';
 import '../widgets/looping_splash_logo.dart';
 import 'intro_screen.dart';
 import '../widgets/main_shell.dart';
+import 'hard_paywall_gate.dart';
 import 'onboarding/onboarding_flow.dart';
 import '../onboarding/onboarding_prefs.dart';
 import '../onboarding/onboarding_tour.dart';
@@ -180,13 +181,13 @@ class _AuthWrapperState extends State<AuthWrapper> {
               }
               switch (gateSnapshot.data) {
                 case 'home':
-                  return MainShell();
+                  return HardPaywallGate(child: MainShell());
                 case 'onboarding_skip':
                   return const OnboardingFlow(skipNickname: true);
                 case 'onboarding_full':
                   return const OnboardingFlow(skipNickname: false);
                 default:
-                  return MainShell();
+                  return HardPaywallGate(child: MainShell());
               }
             },
           );

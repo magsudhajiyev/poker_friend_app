@@ -594,43 +594,49 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> {
               Text('accuracy',
                   style: AppTypography.ibm(
                       fontSize: 12, color: AppColors.textSecondary)),
-              const Spacer(),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Dots grouped by hand (a wider gap between hands).
-                      for (final v in result.verdicts.split('')) ...[
-                        if (v == DailyScoring.handSeparator)
-                          const SizedBox(width: 6)
-                        else
-                          Container(
-                            width: 10,
-                            height: 10,
-                            margin: const EdgeInsets.only(left: 3),
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: switch (v) {
-                                'c' => AppColors.accentPrimary,
-                                'o' => _gold,
-                                _ => _red,
-                              },
+              const SizedBox(width: AppSpacing.sm),
+              // Flexible so the dots take only the width left of the score and
+              // WRAP when a day has many decisions (authored multi-hand days),
+              // instead of overflowing the card.
+              Flexible(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Wrap(
+                      alignment: WrapAlignment.end,
+                      spacing: 3,
+                      runSpacing: 4,
+                      children: [
+                        // Dots grouped by hand (a wider gap between hands).
+                        for (final v in result.verdicts.split(''))
+                          if (v == DailyScoring.handSeparator)
+                            const SizedBox(width: 3)
+                          else
+                            Container(
+                              width: 10,
+                              height: 10,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: switch (v) {
+                                  'c' => AppColors.accentPrimary,
+                                  'o' => _gold,
+                                  _ => _red,
+                                },
+                              ),
                             ),
-                          ),
                       ],
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.xxs),
-                  Text(
-                    result.perfect
-                        ? AppLocalizations.of(context).dailyChallengePerfectDay
-                        : _config.theme,
-                    style: AppTypography.ibm(
-                        fontSize: 12, color: AppColors.textSecondary),
-                  ),
-                ],
+                    ),
+                    const SizedBox(height: AppSpacing.xxs),
+                    Text(
+                      result.perfect
+                          ? AppLocalizations.of(context).dailyChallengePerfectDay
+                          : _config.theme,
+                      textAlign: TextAlign.end,
+                      style: AppTypography.ibm(
+                          fontSize: 12, color: AppColors.textSecondary),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),

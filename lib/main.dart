@@ -24,6 +24,7 @@ import 'services/deep_link_service.dart';
 import 'services/club_service.dart';
 import 'services/event_service.dart';
 import 'services/subscription_service.dart';
+import 'services/trial_reminder_service.dart';
 import 'services/app_data_cache.dart';
 import 'services/locale_service.dart';
 import 'services/currency_service.dart';
@@ -174,6 +175,9 @@ Future<void> _initServicesInBackground() async {
 
     // Setup subscription status change listener for cache invalidation
     _setupSubscriptionStatusListener();
+
+    // "Your free trial ends tomorrow" — re-syncs on every entitlement change.
+    TrialReminderService.start();
   } catch (e) {
     debugPrint('Subscription service initialization failed: $e');
   }

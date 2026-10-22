@@ -75,4 +75,75 @@ void main() {
       expect(g.grade, DrillGrade.ok);
     });
   });
+
+  group('Range-standard softening', () {
+    // A flop node where the RANGE bets ~78% but one hand (TT) bets only 12%
+    // and checks 88%. Betting is range-standard, so TT's bet must soften from
+    // LEAK to GOOD; folding a hand that wants to continue must still be a LEAK.
+    AuthoredDecision flop({
+      required Map<String, double> bet,
+      required Map<String, double> check,
+      Map<String, double> fold = const {},
+    }) =>
+        AuthoredDecision(
+          street: AuthoredStreet.flop,
+          board: const ['J♦', '8♥', '8♦'],
+          prompt: 'flop',
+          options: const [
+            AuthoredAction.fold,
+            AuthoredAction.check,
+            AuthoredAction.raise,
+          ],
+          best: AuthoredAction.check,
+          potBB: 10,
+          toCallBB: 0,
+          freq: {
+            AuthoredAction.raise: bet,
+            AuthoredAction.check: check,
+            if (fold.isNotEmpty) AuthoredAction.fold: fold,
+          },
+        );
+
+    // Range bets heavily (AK/AQ/KQ all ~1.0 bet); TT is the check-preferring
+    // exception (bet 0.12 / check 0.88).
+    final d = flop(
+      bet: const {'AKs': 1.0, 'AQs': 1.0, 'KQs': 1.0, 'TT': 0.12},
+      check: const {'TT': 0.88},
+    );
+
+    test('range-standard low-freq action: TT bet → GOOD, not LEAK', () {
+      final g = AuthoredSpotGrader.grade(d, 'TT', AuthoredAction.raise);
+      expect(g.grade, DrillGrade.ok);
+      expect(g.explanation.toLowerCase(), contains('standard'));
+    });
+
+    test('the dominant line is still BEST', () {
+      final g = AuthoredSpotGrader.grade(d, 'TT', AuthoredAction.check);
+      expect(g.grade, DrillGrade.correct);
+    });
+
+    test('fold is never softened, even when the range folds a lot', () {
+      // Range folds 80% here; a hand that wants to continue still leaks by
+      // folding.
+      final foldHeavy = flop(
+        bet: const {'TT': 0.9},
+        check: const {},
+        fold: const {'72o': 1.0, '83o': 1.0, '94o': 1.0, '62o': 1.0, 'TT': 0.0},
+      );
+      final g =
+          AuthoredSpotGrader.grade(foldHeavy, 'TT', AuthoredAction.fold);
+      expect(g.grade, DrillGrade.mistake);
+    });
+
+    test('a truly range-avoided action still LEAKs', () {
+      // Nobody bets here (range checks ~100%); TT betting 5% is a real leak.
+      final checkHeavy = flop(
+        bet: const {'TT': 0.05},
+        check: const {'AKs': 1.0, 'AQs': 1.0, 'KQs': 1.0, 'TT': 0.95},
+      );
+      final g =
+          AuthoredSpotGrader.grade(checkHeavy, 'TT', AuthoredAction.raise);
+      expect(g.grade, DrillGrade.mistake);
+    });
+  });
 }

@@ -208,6 +208,14 @@ class _AuthoredChallengeScreenState extends State<AuthoredChallengeScreen> {
       if (mounted) setState(() => _voiceOn = on);
     });
     CoachVoiceService.speechState.addListener(_onVoiceState);
+    // Some trees open on a VILLAIN node (e.g. the hero flats a CO open — the
+    // root is the CO's open, not the hero). Auto-play those villain nodes so
+    // the walker lands on the hero's first real decision before we render /
+    // explain the spot. Hero-root trees (hero opens) are a no-op here.
+    if (!_walker.isHeroTurn && !_walker.isOver) {
+      _walker.advanceVillains();
+      _pendingVillainMoves = List.of(_walker.lastVillainMoves);
+    }
     _explainSpot();
     AnalyticsService.capture('daily_challenge_authored_started', {
       'spot_id': _tree.id,
@@ -598,27 +606,48 @@ class _AuthoredChallengeScreenState extends State<AuthoredChallengeScreen> {
         ],
       );
 
-  // Full 9-max MTT table. Hero (LJ) sits bottom-centre (visual seat 5); the
+  // Full 9-max MTT table. The HERO sits bottom-centre (visual seat 5); the
   // other 8 positions wrap around the oval clockwise in betting order so the
-  // dealer button (BTN) and blinds read naturally. Everyone except the hero
-  // and the BTN folded preflop — they show greyed out.
+  // dealer button (BTN) and blinds read naturally. The seat→position map is
+  // DERIVED from THIS spot's hero position (not hardcoded), so the hero's
+  // label, the villain's seat, and the dealer button all match the real spot
+  // — e.g. a BTN-vs-SB hand puts the button on the hero, a BTN-vs-CO hand
+  // puts the hero on the button while the CO sits to their right.
   static const int _heroVisual = 5;
 
-  /// visual seat (1..9) → position label. Hero LJ at 5, then clockwise.
-  static const Map<int, String> _seatPositions = {
-    5: 'LJ', // hero, bottom-centre
-    6: 'HJ',
-    7: 'CO',
-    8: 'BTN', // villain (3-bettor)
-    9: 'SB',
-    1: 'BB',
-    2: 'UTG',
-    3: 'UTG+1',
-    4: 'UTG+2',
-  };
+  /// Canonical 9-max order, clockwise from the button.
+  static const List<String> _positionOrder = [
+    'BTN', 'SB', 'BB', 'UTG', 'UTG+1', 'UTG+2', 'LJ', 'HJ', 'CO',
+  ];
 
-  int get _villainVisual =>
+  /// Visual seats laid out clockwise starting at the hero (bottom-centre).
+  static const List<int> _clockwiseVisual = [5, 6, 7, 8, 9, 1, 2, 3, 4];
+
+  /// visual seat (1..9) → position label, rotated so the hero's real position
+  /// lands on seat 5 and the rest follow in betting order around the oval.
+  late final Map<int, String> _seatPositions = _buildSeatPositions();
+
+  Map<int, String> _buildSeatPositions() {
+    final heroPos = _tree.heroPosition;
+    var start = _positionOrder.indexOf(heroPos);
+    if (start < 0) start = _positionOrder.indexOf('LJ'); // defensive fallback
+    final map = <int, String>{};
+    for (var i = 0; i < 9; i++) {
+      final pos = _positionOrder[(start + i) % 9];
+      map[_clockwiseVisual[i]] = pos;
+    }
+    return map;
+  }
+
+  /// The visual seat holding the real dealer button (whoever is 'BTN').
+  int get _buttonVisual =>
       _seatPositions.entries.firstWhere((e) => e.value == 'BTN').key;
+
+  /// The visual seat holding the villain (the spot's villainPosition).
+  int get _villainVisual => _seatPositions.entries
+      .firstWhere((e) => e.value == _tree.villainPosition,
+          orElse: () => MapEntry(_buttonVisual, 'BTN'))
+      .key;
 
   Widget _table() {
     return Column(
@@ -657,7 +686,7 @@ class _AuthoredChallengeScreenState extends State<AuthoredChallengeScreen> {
                         activeSeatMap: {
                           for (var v = 1; v <= 9; v++) v: true,
                         },
-                        buttonPosition: _villainVisual,
+                        buttonPosition: _buttonVisual,
                         showDealerButton: true,
                         showLogo: false,
                         tableWidthFraction: _tableW,
@@ -880,13 +909,10 @@ class _AuthoredChallengeScreenState extends State<AuthoredChallengeScreen> {
     );
   }
 
-  /// Seat states follow the ACTION TIMELINE, not a static layout:
-  /// - UTG/UTG+1/UTG+2 folded BEFORE the hero's first decision ("folded to
-  ///   you") — greyed from the start.
-  /// - HJ/CO/SB/BB act AFTER the hero — live until the hero's first action,
-  ///   then they fold around BTN's 3-bet (the solved line) — greyed after.
-  /// - BTN stays highlighted while live; greys only if it ends the hand by
-  ///   folding.
+  /// These are heads-up postflop solver spots: only the hero and the villain
+  /// reach the flop — every OTHER seat folded preflop. So all non-hero,
+  /// non-villain seats render greyed ("folded"); the villain stays highlighted
+  /// until (if) it folds to end the hand.
   _SeatState _seatStateFor(String position, bool isVillain) {
     if (isVillain) {
       final villainFolded = _done &&
@@ -894,10 +920,7 @@ class _AuthoredChallengeScreenState extends State<AuthoredChallengeScreen> {
           _pendingVillainMoves.last.action == AuthoredAction.fold;
       return villainFolded ? _SeatState.folded : _SeatState.villain;
     }
-    const foldedBeforeHero = {'UTG', 'UTG+1', 'UTG+2'};
-    if (foldedBeforeHero.contains(position)) return _SeatState.folded;
-    // HJ/CO/SB/BB: live until the hero has acted once.
-    return _records.isEmpty ? _SeatState.live : _SeatState.folded;
+    return _SeatState.folded;
   }
 
   /// The villain's most recent auto-played move on [street], if any.

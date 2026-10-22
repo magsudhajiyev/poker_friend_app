@@ -795,6 +795,8 @@
   "authSendResetLink": "Invia link di reimpostazione",
   "authPasswordResetSent": "Email di reimpostazione password inviata!",
   "paywallRestore": "Ripristina",
+  "paywallSignOut": "Esci",
+  "paywallDeleteAccount": "Elimina account",
   "paywallTitle": "FINAL TABLE PREMIUM",
   "paywallAvailablePlans": "Piani disponibili",
   "paywallStepLabel": "Passo 1 di 2",
@@ -4853,6 +4855,10 @@
     }
   },
   "onboardingWelcomeSubtitle": "Il tuo compagno di poker personale per registrare mani, tracciare statistiche e migliorare il tuo gioco.",
+  "onboardingDemoTitle": "Prova la sfida di oggi",
+  "onboardingDemoSubtitle": "Gioca una mano come la studiano i pro: prendi una decisione e ricevi coaching immediato. Nessun account richiesto.",
+  "onboardingDemoPlay": "Gioca una mano",
+  "onboardingDemoSkip": "Salta per ora",
   "onboardingNicknameTitle": "Iniziamo scegliendo il tuo nickname",
   "onboardingNicknameSubtitle": "Puoi alternare tra nome e nickname e cambiarlo quando vuoi.",
   "onboardingCurrencyTitle": "Seleziona la valuta",
@@ -5550,5 +5556,14 @@
   },
   "notifQuietHoursDialogBody": "Nessuna notifica in questo intervallo. I promemoria Streak sono l'unica eccezione — vengono inviati solo quando la tua Streak scadrebbe durante la notte.",
   "notifQuietHoursFrom": "Dalle",
-  "notifQuietHoursUntil": "Alle"
+  "notifQuietHoursUntil": "Alle",
+  "paywallTrialDays": "{count, plural, =1{1 giorno} other{{count} giorni}}",
+  "paywallTrialMonths": "{count, plural, =1{1 mese} other{{count} mesi}}",
+  "paywallTrialBadge": "{duration} gratis",
+  "paywallTrialThen": "Gratis per {duration}, poi {price}",
+  "paywallStartTrial": "Inizia la prova gratuita",
+  "paywallTrialDisclosure": "Gratis per {duration}, poi {price}. Non ti verrà addebitato nulla se annulli almeno 24 ore prima della fine della prova. Annulla quando vuoi nelle impostazioni dell'abbonamento.",
+  "trialReminderTitle": "La tua prova gratuita termina domani",
+  "trialReminderBody": "Poi {plan} costa {price}. Annulla quando vuoi nelle impostazioni dell'abbonamento.",
+  "trialReminderBodyNoPrice": "Poi inizia il tuo abbonamento {plan}. Annulla quando vuoi nelle impostazioni dell'abbonamento."
 }

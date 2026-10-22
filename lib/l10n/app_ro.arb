@@ -795,6 +795,8 @@
   "authSendResetLink": "Trimite linkul de resetare",
   "authPasswordResetSent": "Emailul de resetare a parolei a fost trimis!",
   "paywallRestore": "Restaurează",
+  "paywallSignOut": "Deconectare",
+  "paywallDeleteAccount": "Șterge contul",
   "paywallTitle": "FINAL TABLE PREMIUM",
   "paywallAvailablePlans": "Planuri disponibile",
   "paywallStepLabel": "Pasul 1 din 2",
@@ -4853,6 +4855,10 @@
     }
   },
   "onboardingWelcomeSubtitle": "Partenerul tău personal de poker pentru înregistrarea mâinilor, urmărirea statisticilor și îmbunătățirea jocului.",
+  "onboardingDemoTitle": "Încearcă provocarea de azi",
+  "onboardingDemoSubtitle": "Joacă o mână așa cum studiază profesioniștii — ia o decizie și primești coaching instant. Fără cont.",
+  "onboardingDemoPlay": "Joacă o mână",
+  "onboardingDemoSkip": "Omite deocamdată",
   "onboardingNicknameTitle": "Să începem prin a-ți alege porecla",
   "onboardingNicknameSubtitle": "Poți comuta între nume și poreclă și o poți schimba oricând dorești.",
   "onboardingCurrencyTitle": "Selectează moneda",
@@ -5512,5 +5518,14 @@
   "notifQuietHoursValue": "{start} – {end} (memento-urile pentru Streak sunt exceptate)",
   "notifQuietHoursDialogBody": "Nicio notificare în acest interval. Memento-urile pentru Streak sunt singura excepție — se declanșează doar când Streak-ul tău ar dispărea peste noapte.",
   "notifQuietHoursFrom": "De la",
-  "notifQuietHoursUntil": "Până la"
+  "notifQuietHoursUntil": "Până la",
+  "paywallTrialDays": "{count, plural, =1{1 zi} few{{count} zile} other{{count} de zile}}",
+  "paywallTrialMonths": "{count, plural, =1{1 lună} few{{count} luni} other{{count} de luni}}",
+  "paywallTrialBadge": "{duration} gratuit",
+  "paywallTrialThen": "Gratuit {duration}, apoi {price}",
+  "paywallStartTrial": "Începe perioada de probă gratuită",
+  "paywallTrialDisclosure": "Gratuit {duration}, apoi {price}. Nu vei fi taxat dacă anulezi cu cel puțin 24 de ore înainte de sfârșitul perioadei de probă. Anulează oricând din setările abonamentului.",
+  "trialReminderTitle": "Perioada ta de probă gratuită se termină mâine",
+  "trialReminderBody": "Apoi, {plan} costă {price}. Anulează oricând din setările abonamentului.",
+  "trialReminderBodyNoPrice": "Apoi începe abonamentul tău {plan}. Anulează oricând din setările abonamentului."
 }

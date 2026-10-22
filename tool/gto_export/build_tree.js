@@ -37,6 +37,14 @@ const SPOT_ID = arg('id', 'authored-spot');
 const OUT = arg('out', 'tree.local.json');
 const UPLOAD = arg('upload', false);
 const TAB = arg('tab'); // optional explicit tab name
+// Optional overrides — normally inferred from the sheet's "Hand" title
+// (e.g. "MTT 50bb · BTN vs SB · QcTd9d"). Flags win when present.
+const HERO_POS = arg('heroPos'); // e.g. 'BTN'
+const VILLAIN_POS = arg('villainPos'); // e.g. 'SB'
+const STACK = arg('stack'); // e.g. '50'
+// Explicit hero cards in GTOW ASCII, comma-separated, e.g. 'Kd,Qd'. Needed
+// when the suited combo matters vs the board; else auto-picked off-board.
+const CARDS = arg('cards');
 
 if (!SHEET_ID) {
   console.error('Missing --sheet <SHEET_ID>');
@@ -119,10 +127,18 @@ function boardCards(s) {
 // one key before this).
 // Bare preflop prompts ("LJ open", "LJ vs BTN 3-bet", "LJ to act") have no
 // grammar → empty path; the preflop spine links those explicitly.
-function historyPath(spot) {
+// Escape a position name for use inside a RegExp (UTG+1, UTG+2 contain '+').
+function reEsc(s) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+// [heroPos, villainPos] are the two actor labels in this sheet (e.g.
+// ['BTN','SB']). Passed in so the parser isn't hardcoded to LJ/BTN.
+function historyPath(spot, heroPos, villainPos) {
   if (!spot) return '';
   const pre = spot.split(/→|->/)[0];
   if (!/\b(Flop|Turn|River):/.test(pre)) return '';
+  const actorAlt = `${reEsc(heroPos)}|${reEsc(villainPos)}`;
   const toks = [];
   for (const seg of pre.split('|')) {
     const sm = seg.match(/\b(Flop|Turn|River):/);
@@ -130,7 +146,10 @@ function historyPath(spot) {
     const st = sm[1][0]; // F / T / R
     const body = seg.slice(sm.index + sm[0].length);
     // Order matters: AI and multi-char tokens before single letters.
-    const re = /\b(LJ|BTN)\s+(AI(?:\s*\d+%?)?|b\d*%?|r\d*%?|x|c|f)\b/g;
+    const re = new RegExp(
+      `(${actorAlt})\\s+(AI(?:\\s*\\d+%?)?|b\\d*%?|r\\d*%?|x|c|f)\\b`,
+      'g'
+    );
     let m;
     while ((m = re.exec(body))) {
       let a = m[2].toLowerCase();
@@ -138,10 +157,31 @@ function historyPath(spot) {
       else if (a.startsWith('b')) a = 'b';
       else if (a.startsWith('r')) a = 'r';
       else if (a.startsWith('x')) a = 'x';
-      toks.push(`${st}:${m[1]}:${a}`);
+      // Canonicalize the actor to H (hero) / V (villain) so path keys don't
+      // depend on the position names.
+      const who = m[1] === heroPos ? 'H' : 'V';
+      toks.push(`${st}:${who}:${a}`);
     }
   }
   return toks.join('|');
+}
+
+/// Parse the sheet "Hand" title → { heroPos, villainPos, stackBB, format }.
+/// Title grammar: "MTT 50bb · BTN vs SB · QcTd9d" (or 'cash'). Falls back to
+/// the legacy LJ/BTN/70 when the title can't be parsed, preserving the
+/// original spot's behaviour.
+function parseTitleMeta(title) {
+  const t = (title || '').trim();
+  const fmt = /\bMTT\b/i.test(t) ? 'mtt' : /\bcash\b/i.test(t) ? 'cash' : 'mtt';
+  const stackM = t.match(/(\d+(?:\.\d+)?)\s*bb\b/i);
+  const vsM = t.match(/([A-Za-z+0-9]+)\s+vs\s+([A-Za-z+0-9]+)/i);
+  return {
+    heroPos: HERO_POS || (vsM ? vsM[1].toUpperCase() : 'LJ'),
+    villainPos: VILLAIN_POS || (vsM ? vsM[2].toUpperCase() : 'BTN'),
+    stackBB: STACK ? parseFloat(STACK) : stackM ? parseFloat(stackM[1]) : 70,
+    format: fmt,
+    anteMode: fmt === 'mtt',
+  };
 }
 
 // Map a node's RAW action name to its history token. 'bet' and 'raise' are
@@ -185,6 +225,15 @@ async function main() {
     range: col('Range'),
     hand: col('Hand'),
   };
+
+  // Resolve hero/villain/stack from the first data row's "Hand" title
+  // (overridable by --heroPos/--villainPos/--stack).
+  const firstData = rows.slice(1).find((row) => row && row[ci.step]);
+  const meta = parseTitleMeta(firstData ? firstData[ci.hand] : '');
+  console.log(
+    `Meta: hero=${meta.heroPos} villain=${meta.villainPos} ` +
+      `stack=${meta.stackBB}bb format=${meta.format}`
+  );
 
   const nodes = []; // raw parsed rows
   for (let r = 1; r < rows.length; r++) {
@@ -231,20 +280,22 @@ async function main() {
       step: parseInt(row[ci.step], 10),
       street: STREET[row[ci.street]] || 'preflop',
       board: boardCards(row[ci.board]),
-      actor: row[ci.actor] === 'LJ' ? 'hero' : 'villain',
+      actor: row[ci.actor] === meta.heroPos ? 'hero' : 'villain',
       actions,
       rawActions,
       sizing,
       pot: potFromSizing,
       prompt: (row[ci.spot] || '').split(/→|->/).slice(-1)[0].trim(),
-      path: historyPath(row[ci.spot]),
+      path: historyPath(row[ci.spot], meta.heroPos, meta.villainPos),
       freq: parseRange(row[ci.range]),
       title: row[ci.hand] || '',
     });
   }
 
   for (const n of nodes) n.id = `n${n.step}`;
-  const whoFor = (actor) => (actor === 'hero' ? 'LJ' : 'BTN');
+  // History paths canonicalize actors to H/V (see historyPath), so edge
+  // keys must too — independent of the position names in this sheet.
+  const whoFor = (actor) => (actor === 'hero' ? 'H' : 'V');
 
   // Postflop nodes link by action-history path. Preflop + the flop-entry node
   // have no history grammar, so chain the PREFLOP SPINE explicitly by step
@@ -266,10 +317,37 @@ async function main() {
     byPath.set(n.path, n);
   }
 
-  // Preflop spine (no history grammar for preflop actions):
-  //   n1 LJ open --raise--> n2 BTN vs open --raise--> n3 LJ vs 3-bet
-  //   n3 --call--> n4 (flop entry). Other preflop actions are terminal.
-  const spine = { 1: { raise: 2 }, 2: { raise: 3 }, 3: { call: 4 } };
+  // Preflop spine (no history grammar for preflop actions) — DERIVED from the
+  // sheet so it works for any preflop sequence (open→3bet→call, open→call,
+  // etc.), not just LJ's open→3bet→call. Rule: walk the preflop steps in order
+  // and link each to the next; the transition INTO the first postflop node is a
+  // 'call' (someone closes the preflop action to see a flop), every earlier
+  // preflop transition is a 'raise' (open / 3-bet / 4-bet). Non-spine preflop
+  // actions (fold / the branch not solved deeper) stay terminal.
+  const preSteps = nodes
+    .filter((n) => n.street === 'preflop')
+    .map((n) => n.step)
+    .sort((x, y) => x - y);
+  const firstPostStep = Math.min(
+    ...nodes.filter((n) => n.street !== 'preflop').map((n) => n.step)
+  );
+  const spine = {};
+  for (let i = 0; i < preSteps.length; i++) {
+    const step = preSteps[i];
+    const next = preSteps[i + 1] ?? firstPostStep; // flop entry after last pre
+    if (!Number.isFinite(next)) continue;
+    // Last preflop step → postflop is a call; earlier ones are raises. Only
+    // add the edge if the node actually offers that action.
+    const node = nodes.find((n) => n.step === step);
+    const isLastPre = i === preSteps.length - 1;
+    const edge = isLastPre ? 'call' : 'raise';
+    if (node && node.actions.includes(edge)) spine[step] = { [edge]: next };
+  }
+  console.log(
+    `Preflop spine: ${Object.entries(spine)
+      .map(([s, e]) => `${s}-${Object.keys(e)[0]}->${Object.values(e)[0]}`)
+      .join(' ')}`
+  );
 
   const STREET_LETTER = { preflop: 'P', flop: 'F', turn: 'T', river: 'R' };
 
@@ -333,8 +411,14 @@ async function main() {
   }
 
   const root = nodes.find((n) => n.step === 1) || nodes[0];
-  // Big blinds always read 'BB' in the app (sheet titles say '70bb').
+  // Big blinds always read 'BB' in the app (sheet titles say '50bb').
   const title = (root.title || SPOT_ID).replace(/(\d)bb\b/g, '$1BB');
+  // The final board (longest board seen) — for board-aware hero-card picking.
+  const finalBoard = nodes.reduce(
+    (b, n) => (n.board.length > b.length ? n.board : b),
+    []
+  );
+  const formatLabel = `${meta.format === 'mtt' ? 'MTT' : 'cash'} · ${meta.stackBB}BB`;
 
   const treeNodes = {};
   for (const n of nodes) {
@@ -356,16 +440,22 @@ async function main() {
   const tree = {
     id: SPOT_ID,
     title,
-    formatLabel: 'MTT · 70BB · 9-max',
-    stackBB: 70,
-    anteMode: true,
-    heroPosition: 'LJ',
-    villainPosition: 'BTN',
-    heroCards: HERO ? heroCardsFor(HERO) : [],
+    formatLabel,
+    stackBB: meta.stackBB,
+    anteMode: meta.anteMode,
+    heroPosition: meta.heroPos,
+    villainPosition: meta.villainPos,
+    heroCards: HERO ? heroCardsFor(HERO, finalBoard) : [],
     heroHandClass: HERO || '',
     rootId: root.id,
     nodes: treeNodes,
   };
+  if (HERO && tree.heroCards.length !== 2) {
+    console.warn(
+      `WARNING: could not resolve concrete cards for hero ${HERO} off board ` +
+        `${finalBoard.join('')} — pass --cards 'Xy,Zw' (GTOW ascii).`
+    );
+  }
 
   const json = JSON.stringify(tree, null, 2);
   fs.writeFileSync(path.join(__dirname, OUT), json);
@@ -389,15 +479,59 @@ async function main() {
   }
 }
 
-// Hero hand → concrete off-board cards (board = T♠9♣4♦J♦2♥). Mirrors the app.
-function heroCardsFor(hc) {
-  const MAP = {
-    '99': ['9♠', '9♥'],
-    TT: ['10♥', '10♦'],
-    KQs: ['K♠', 'Q♠'],
-    JTs: ['J♥', '10♥'], // hearts — J♦ is the turn card
-  };
-  return MAP[hc] || [];
+// Hero hand class → two concrete glyph cards that avoid [board].
+// Precedence: explicit --cards (GTOW ascii, e.g. 'Kd,Qd') wins; otherwise
+// auto-pick suits for the 169 class so neither card is on the board.
+// Returns [] if it can't (caller warns → pass --cards).
+function glyphFromAscii(c) {
+  let rank = c.slice(0, -1);
+  const suit = c.slice(-1).toLowerCase();
+  if (rank.toUpperCase() === 'T') rank = '10';
+  else rank = rank.toUpperCase();
+  const SUITS = { s: '♠', h: '♥', d: '♦', c: '♣' };
+  return `${rank}${SUITS[suit] || suit}`;
+}
+function heroCardsFor(hc, board) {
+  const used = new Set(board || []);
+  if (CARDS) {
+    const cards = CARDS.split(',').map((c) => glyphFromAscii(c.trim()));
+    return cards.length === 2 ? cards : [];
+  }
+  // Rank glyphs: ten is '10'.
+  const rankGlyph = (r) => (r === 'T' ? '10' : r);
+  const ALL_SUITS = ['♠', '♥', '♦', '♣'];
+  const m = hc.match(/^([AKQJT2-9])([AKQJT2-9])?([so])?$/);
+  if (!m) return [];
+  const r1 = rankGlyph(m[1]);
+  const r2 = m[2] ? rankGlyph(m[2]) : r1; // pair when one rank
+  const kind = m[3]; // 's' | 'o' | undefined (pair)
+  const freeFor = (rank) => ALL_SUITS.filter((s) => !used.has(`${rank}${s}`));
+  if (!m[2]) {
+    // Pair: two distinct suits of the same rank, both off-board.
+    const free = freeFor(r1);
+    if (free.length < 2) return [];
+    const picked = [`${r1}${free[0]}`, `${r1}${free[1]}`];
+    picked.forEach((c) => used.add(c));
+    return picked;
+  }
+  if (kind === 's') {
+    // Suited: one suit present for BOTH ranks, off-board.
+    for (const s of ALL_SUITS) {
+      const a = `${r1}${s}`;
+      const b = `${r2}${s}`;
+      if (!used.has(a) && !used.has(b)) return [a, b];
+    }
+    return [];
+  }
+  // Offsuit: two different suits, each off-board.
+  const f1 = freeFor(r1);
+  const f2 = freeFor(r2);
+  for (const s1 of f1) {
+    for (const s2 of f2) {
+      if (s1 !== s2) return [`${r1}${s1}`, `${r2}${s2}`];
+    }
+  }
+  return [];
 }
 
 main().catch((e) => {

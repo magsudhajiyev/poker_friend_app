@@ -15,6 +15,7 @@ import '../services/auth_service.dart';
 import '../services/username_service.dart';
 import '../services/display_identity_service.dart';
 import '../services/notification_service.dart';
+import '../services/trial_reminder_service.dart';
 import '../services/subscription_service.dart';
 import '../models/hand_state_machine.dart';
 import '../models/game_types.dart';
@@ -1114,6 +1115,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                 content:
                     Text('Notification fired — open the shade and tap it'),
+              ));
+            }
+          }),
+          const SizedBox(height: 8),
+          // Sandbox trials last minutes — show the real reminder now.
+          _devButton('Test Trial Reminder Notification', AppColors.accentPrimary,
+              () async {
+            await TrialReminderService.debugShowNow();
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                content: Text('Trial reminder shown — check the shade'),
               ));
             }
           }),

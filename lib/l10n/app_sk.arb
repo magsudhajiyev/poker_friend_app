@@ -795,6 +795,8 @@
   "authSendResetLink": "Poslať odkaz na obnovenie",
   "authPasswordResetSent": "E-mail na obnovenie hesla bol odoslaný!",
   "paywallRestore": "Obnoviť",
+  "paywallSignOut": "Odhlásiť sa",
+  "paywallDeleteAccount": "Odstrániť účet",
   "paywallTitle": "FINAL TABLE PREMIUM",
   "paywallAvailablePlans": "Dostupné plány",
   "paywallStepLabel": "Krok 1 z 2",
@@ -4853,6 +4855,10 @@
     }
   },
   "onboardingWelcomeSubtitle": "Tvoj osobný pokrový spoločník na logovanie hánd, sledovanie štatistík a zlepšovanie hry.",
+  "onboardingDemoTitle": "Vyskúšaj dnešnú výzvu",
+  "onboardingDemoSubtitle": "Zahraj si jedno rozdanie tak, ako to študujú profíci — urob rozhodnutie a hneď dostaneš tréning. Účet netreba.",
+  "onboardingDemoPlay": "Zahrať rozdanie",
+  "onboardingDemoSkip": "Zatiaľ preskočiť",
   "onboardingNicknameTitle": "Začnime výberom tvojej prezývky",
   "onboardingNicknameSubtitle": "Medzi menom a prezývkou môžeš prepínať a kedykoľvek si ich zmeniť.",
   "onboardingCurrencyTitle": "Vyber menu",
@@ -5540,5 +5546,14 @@
   "notifQuietHoursValue": "{start} – {end} (okrem pripomienok streaku)",
   "notifQuietHoursDialogBody": "Počas tohto okna žiadne notifikácie. Pripomienky streaku sú jedinou výnimkou — spustia sa len vtedy, keď by ti streak cez noc zanikol.",
   "notifQuietHoursFrom": "Od",
-  "notifQuietHoursUntil": "Do"
+  "notifQuietHoursUntil": "Do",
+  "paywallTrialDays": "{count, plural, =1{1 deň} few{{count} dni} many{{count} dňa} other{{count} dní}}",
+  "paywallTrialMonths": "{count, plural, =1{1 mesiac} few{{count} mesiace} many{{count} mesiaca} other{{count} mesiacov}}",
+  "paywallTrialBadge": "{duration} zadarmo",
+  "paywallTrialThen": "Zadarmo {duration}, potom {price}",
+  "paywallStartTrial": "Spustiť skúšobnú verziu zadarmo",
+  "paywallTrialDisclosure": "Zadarmo {duration}, potom {price}. Ak zrušíte aspoň 24 hodín pred koncom skúšobného obdobia, nebudete platiť. Zrušiť môžete kedykoľvek v nastaveniach predplatného.",
+  "trialReminderTitle": "Vaša skúšobná verzia zadarmo končí zajtra",
+  "trialReminderBody": "Potom {plan} stojí {price}. Zrušiť môžete kedykoľvek v nastaveniach predplatného.",
+  "trialReminderBodyNoPrice": "Potom sa začne vaše predplatné {plan}. Zrušiť môžete kedykoľvek v nastaveniach predplatného."
 }

@@ -55,6 +55,7 @@ class FeatureFlagService {
   static const String leakDetector = 'leak_detector';
   static const String dailyChallenge = 'daily_challenge';
   static const String engagementNotifications = 'engagement_notifications';
+  static const String hardPaywall = 'hard_paywall';
 
   static const List<FeatureFlag> all = [
     FeatureFlag(
@@ -91,6 +92,15 @@ class FeatureFlagService {
       'Settings notification preferences. Dark-launch switch for the '
       'scheduler.',
       defaultMode: FlagMode.adminOnly,
+    ),
+    FeatureFlag(
+      hardPaywall,
+      'Hard Paywall',
+      'Removes the free tier: a signed-in, onboarded user without an active '
+      'subscription is sent to a non-dismissible paywall (start the trial to '
+      'use the app). OFF by default — enable to switch the app to the hard '
+      'paywall.',
+      defaultMode: FlagMode.off,
     ),
   ];
 

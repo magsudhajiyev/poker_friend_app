@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:purchases_flutter/purchases_flutter.dart' show Offerings, Package;
 import 'package:poker_logger/services/revenuecat_client.dart';
+import 'package:poker_logger/services/subscription_logic.dart' show TrialOffer;
 import 'package:poker_logger/services/subscription_service.dart';
 
 /// Drives SubscriptionService through a fake RevenueCat client so the
@@ -51,8 +52,10 @@ class FakeRevenueCatClient implements RevenueCatClient {
   @override
   Future<void> invalidateCustomerInfoCache() async => invalidateCalls++;
 
+  Offerings? offerings;
+
   @override
-  Future<Offerings?> getOfferings() async => null;
+  Future<Offerings?> getOfferings() async => offerings;
 
   @override
   Future<PurchaseOutcome> purchasePackage(Package package) async => nextPurchase;
@@ -65,6 +68,11 @@ class FakeRevenueCatClient implements RevenueCatClient {
 
   @override
   Future<TierEntitlements> logOut() async => logoutResult;
+
+  Map<String, TrialOffer> trials = const {};
+  @override
+  Future<Map<String, TrialOffer>> freeTrials(List<Package> packages) async =>
+      trials;
 }
 
 const _proActive = TierEntitlements(
@@ -203,6 +211,62 @@ void main() {
     expect(ent.proActive, isTrue);
     expect(ent.proIsPromotional, isTrue);
     expect(ent.proExpirationIso, '2026-08-25T00:00:00Z');
+  });
+
+  group('free trial', () {
+    // Ends a week from "now" so the status is always in the future.
+    final endIso =
+        DateTime.now().toUtc().add(const Duration(days: 7)).toIso8601String();
+
+    TierEntitlements eliteTrial({bool renew = true}) => TierEntitlements(
+          proActive: true,
+          eliteActive: true,
+          clubActive: false,
+          topInTrial: true,
+          topWillRenew: renew,
+          topExpirationIso: endIso,
+          topProductId: 'elite_annual',
+        );
+
+    test('trial snapshot → trialStatus with end date, renew and product',
+        () async {
+      await SubscriptionService.debugInitializeWithClient(
+          FakeRevenueCatClient(entitlements: eliteTrial()));
+      final t = SubscriptionService.trialStatus!;
+      expect(t.endsAt, DateTime.parse(endIso));
+      expect(t.willRenew, isTrue);
+      expect(t.productId, 'elite_annual');
+      // A trial is a real entitlement: the tier unlocks during it.
+      expect(SubscriptionService.isElite, isTrue);
+    });
+
+    test('user cancels during the trial → still in trial, will not renew',
+        () async {
+      final fake = FakeRevenueCatClient(entitlements: eliteTrial());
+      await SubscriptionService.debugInitializeWithClient(fake);
+      fake.pushUpdate(eliteTrial(renew: false));
+      expect(SubscriptionService.trialStatus!.willRenew, isFalse);
+      expect(SubscriptionService.isElite, isTrue); // access until the end
+    });
+
+    test('trial converts to a paid period → no trialStatus', () async {
+      final fake = FakeRevenueCatClient(entitlements: eliteTrial());
+      await SubscriptionService.debugInitializeWithClient(fake);
+      fake.pushUpdate(TierEntitlements(
+        proActive: true,
+        eliteActive: true,
+        clubActive: false,
+        topWillRenew: true,
+        topExpirationIso: endIso,
+        topProductId: 'elite_annual',
+      ));
+      expect(SubscriptionService.trialStatus, isNull);
+      expect(SubscriptionService.isElite, isTrue);
+    });
+
+    test('no subscription → no trialStatus', () {
+      expect(SubscriptionService.trialStatus, isNull);
+    });
   });
 }
 

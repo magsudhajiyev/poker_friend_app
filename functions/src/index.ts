@@ -1,4 +1,6 @@
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
+import { mirrorFromSubscriber } from "./subscription_mirror";
+import { shouldSendTrialReminder, trialReminderCopy } from "./trial_reminder";
 import { onSchedule } from "firebase-functions/v2/scheduler";
 import { onRequest } from "firebase-functions/v2/https";
 import { defineSecret } from "firebase-functions/params";
@@ -544,33 +546,21 @@ export const revenuecatWebhook = onRequest(
           return;
         }
         const subscriber = (await response.json()).subscriber;
-        const entitlements: Record<string, { expires_date: string | null }> =
-          subscriber?.entitlements ?? {};
-
-        // Highest active entitlement wins; expires_date null = lifetime.
-        const now = Date.now();
-        const isActive = (id: string) => {
-          const e = entitlements[id];
-          if (!e) return false;
-          return e.expires_date === null || Date.parse(e.expires_date) > now;
-        };
-        const tier = isActive("club") ? "club"
-          : isActive("elite") ? "elite"
-          : isActive("pro") ? "pro"
-          : "free";
-
-        let expiresAt: Timestamp | null = null;
-        if (tier !== "free") {
-          const raw = entitlements[tier].expires_date;
-          expiresAt = raw === null
-            ? Timestamp.fromMillis(now + 100 * 365 * 24 * 3600 * 1000) // lifetime
-            : Timestamp.fromDate(new Date(raw));
-        }
+        // Pure + unit-tested (src/subscription_mirror.ts): tier, expiry and
+        // the free-trial state of the highest active entitlement.
+        const m = mirrorFromSubscriber(subscriber, Date.now());
+        const tier = m.tier;
 
         await db.collection("users").doc(uid).set(
           {
             subscriptionTier: tier,
-            subscriptionTierExpiresAt: expiresAt,
+            subscriptionTierExpiresAt:
+              m.expiresAtMs === null ? null : Timestamp.fromMillis(m.expiresAtMs),
+            // Free-trial mirror — the server-side "trial ends tomorrow"
+            // reminder reads these (hard paywall step 4).
+            subscriptionInTrial: m.inTrial,
+            subscriptionWillRenew: m.willRenew,
+            subscriptionProductId: m.productId,
             tierSyncedAt: FieldValue.serverTimestamp(),
           },
           { merge: true }
@@ -1081,3 +1071,53 @@ export const scheduleEngagement = onSchedule(
     console.log(`scheduleEngagement: hour=${utcHourNow} sent=${sent}`);
   }
 );
+
+/* ────────────────────────────────────────────────────────────────────────
+   Free-trial reminder BACKUP (hard paywall step 4)
+   The app schedules "your free trial ends tomorrow" on the device and stamps
+   users/{uid}.trialReminderScheduledForMs. This hourly job only covers users
+   whose device did not (deleted app, phone off, notifications blocked):
+   trial ending within 24 h (≥ 2 h left), renewing, no matching device stamp,
+   not sent yet. Decision is pure + tested (src/trial_reminder.ts). Trial
+   users are few, so it reads them with one equality query (no new index).
+   ──────────────────────────────────────────────────────────────────────── */
+export const sendTrialReminders = onSchedule("every 60 minutes", async () => {
+  const now = Date.now();
+  const snap = await db.collection("users")
+    .where("subscriptionInTrial", "==", true)
+    .get();
+  let sent = 0;
+  for (const doc of snap.docs) {
+    try {
+      const d = doc.data();
+      const exp = d.subscriptionTierExpiresAt;
+      const expiresAtMs =
+        exp && typeof exp.toMillis === "function" ? exp.toMillis() : null;
+      const state = {
+        subscriptionInTrial: d.subscriptionInTrial,
+        subscriptionWillRenew: d.subscriptionWillRenew,
+        subscriptionTier: d.subscriptionTier,
+        expiresAtMs,
+        trialReminderScheduledForMs: d.trialReminderScheduledForMs ?? null,
+        trialReminderSentForMs: d.trialReminderSentForMs ?? null,
+      };
+      if (!shouldSendTrialReminder(state, now)) continue;
+      const copy = trialReminderCopy(d.subscriptionTier);
+      // Mark first, then send: a crash between the two skips one push
+      // rather than risking a duplicate on the next run.
+      await doc.ref.set({ trialReminderSentForMs: expiresAtMs }, { merge: true });
+      await db.collection("user_notifications").add({
+        userId: doc.id,
+        title: copy.title,
+        body: copy.body,
+        type: "trial_reminder",
+        data: { action: "trial_reminder", type: "trial_reminder" },
+        createdAt: FieldValue.serverTimestamp(),
+      });
+      sent++;
+    } catch (err) {
+      console.error(`sendTrialReminders failed for ${doc.id}:`, err);
+    }
+  }
+  console.log(`sendTrialReminders: ${snap.size} in trial, ${sent} reminded`);
+});

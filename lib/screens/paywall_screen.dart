@@ -14,10 +14,14 @@ import '../design_system/components/overlays/subscription_success_popup.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/spacing.dart';
 import '../design_system/constants/typography.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../design_system/components/modals/confirm_dialog.dart';
 import '../onboarding/onboarding_prefs.dart';
 import '../services/subscription_service.dart';
+import '../services/subscription_logic.dart' show TrialOffer, TrialUnit;
 import '../services/auth_service.dart';
 import '../services/logger_service.dart';
+import '../utils/user_facing_error.dart';
 import '../design_system/constants/decorations.dart';
 import 'auth_screen_experimental.dart';
 import '../services/analytics_service.dart';
@@ -42,6 +46,13 @@ class PaywallScreen extends StatefulWidget {
   /// post-purchase success flow can be exercised. No-op in release builds.
   final bool mockPurchase;
 
+  /// Hard-paywall mode: NON-DISMISSIBLE. No skip, no back (system back blocked
+  /// too), so the only way forward is to start a subscription. The escape
+  /// hatches that must stay reachable — Restore purchases (footer), Sign out
+  /// and Delete account — are shown instead. Used by the app-entry gate when
+  /// the `hard_paywall` flag is on and the user has no access.
+  final bool hardGate;
+
   const PaywallScreen({
     super.key,
     this.featureName,
@@ -49,6 +60,7 @@ class PaywallScreen extends StatefulWidget {
     this.preselectedTier,
     this.launchPromo = false,
     this.mockPurchase = false,
+    this.hardGate = false,
   });
 
   static Future<bool?> show(
@@ -91,9 +103,49 @@ class _PaywallScreenState extends State<PaywallScreen> {
   // Keys on each plan card so we can scroll the preselected one into view.
   final List<GlobalKey> _planCardKeys = List.generate(3, (_) => GlobalKey());
 
+  // Package ids per tier (index = plan card) and their offline fallback
+  // prices — the real prices always come from the store via RevenueCat.
+  static const _tierIds = [
+    ['pro_monthly', 'pro_annual'],
+    ['elite_monthly', 'elite_annual'],
+    ['club_monthly', 'club_annual'],
+  ];
+  static const _fallbackPrices = [
+    ['\$19.99', '\$159.99'],
+    ['\$24.99', '\$189.99'],
+    ['\$59.99', '\$449.99'],
+  ];
+
+  /// The package id the [tier] card buys in the current billing period.
+  String _packageIdFor(int tier) => _tierIds[tier][_isAnnual ? 1 : 0];
+
+  /// The free trial the user can start on [tier] in the current billing
+  /// period, or null (no trial / already used one / not loaded yet).
+  TrialOffer? _trialFor(int tier) =>
+      SubscriptionService.trialFor(_packageIdFor(tier));
+
+  /// "7 days" / "1 month" — the length always comes from the store.
+  String _trialDuration(TrialOffer t, AppLocalizations l10n) =>
+      t.unit == TrialUnit.day
+          ? l10n.paywallTrialDays(t.count)
+          : l10n.paywallTrialMonths(t.count);
+
+  /// What the user pays after the trial, e.g. "$159.99/year".
+  String _pricePerPeriod(int tier, AppLocalizations l10n) => _tierPrimaryPrice(
+      _tierIds[tier][0],
+      _tierIds[tier][1],
+      l10n,
+      _fallbackPrices[tier][0],
+      _fallbackPrices[tier][1]);
+
   @override
   void initState() {
     super.initState();
+    // Which free trials can this user still start? (Eligibility changes once
+    // a trial was used, so re-check every time the paywall opens.)
+    SubscriptionService.refreshTrialOffers().then((_) {
+      if (mounted) setState(() {});
+    });
     _offering = SubscriptionService.currentOffering;
     if (_offering == null) {
       _fetchOfferings();
@@ -257,12 +309,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
     }
 
     // Get the appropriate package via product ID lookup
-    final tierIds = [
-      ['pro_monthly', 'pro_annual'],
-      ['elite_monthly', 'elite_annual'],
-      ['club_monthly', 'club_annual'],
-    ];
-    final ids = tierIds[_selectedPlanIndex];
+    final ids = _tierIds[_selectedPlanIndex];
     final package =
         SubscriptionService.packageById(_isAnnual ? ids[1] : ids[0]);
     unawaited(LoggerService.debug(
@@ -368,6 +415,59 @@ class _PaywallScreenState extends State<PaywallScreen> {
     }
   }
 
+  // ── Hard-gate escape hatches ─────────────────────────────────────────────
+  // The paywall is non-dismissible, so these keep the user able to leave:
+  // sign out (switch accounts) and delete the account. Both let the auth
+  // stream route back to the intro screen — no explicit navigation here.
+
+  Future<void> _onHardGateSignOut() async {
+    await AuthService.signOut();
+    // AuthWrapper's auth stream rebuilds to the intro screen on sign-out.
+  }
+
+  void _onHardGateDelete() {
+    final l10n = AppLocalizations.of(context);
+    ConfirmDialog.show(
+      context,
+      title: l10n.profileDeleteAccount,
+      message: l10n.profileDeleteAccountMessage,
+      confirmLabel: l10n.commonDelete,
+      onConfirm: _deleteAccount,
+    );
+  }
+
+  Future<void> _deleteAccount() async {
+    final uid = AuthService.userId;
+    if (uid == null) return;
+    try {
+      final firestore = FirebaseFirestore.instance;
+      await firestore.collection('users').doc(uid).delete();
+      await firestore.collection('user_stats').doc(uid).delete();
+      for (final coll in ['session_results', 'poker_sessions', 'opponents']) {
+        final snap =
+            await firestore.collection(coll).where('userId', isEqualTo: uid).get();
+        for (final doc in snap.docs) {
+          await doc.reference.delete();
+        }
+      }
+      final opponents = await firestore
+          .collection('opponents')
+          .where('userId', isEqualTo: uid)
+          .get();
+      for (final doc in opponents.docs) {
+        await firestore.collection('opponent_stats').doc(doc.id).delete();
+      }
+      await AuthService.deleteAccount();
+      // Auth stream routes to the intro screen once the user is gone.
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(UserFacingError.message(e))),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -375,7 +475,11 @@ class _PaywallScreenState extends State<PaywallScreen> {
 
     final topPadding = MediaQuery.of(context).padding.top;
     final topBarHeight = topPadding + 56;
-    return Scaffold(
+    // Hard gate: block the Android system back button too, so the paywall is
+    // truly non-dismissible (the skip/back affordances are already hidden).
+    return PopScope(
+      canPop: !widget.hardGate,
+      child: Scaffold(
       backgroundColor: AppColors.bgPrimary,
       body: Column(
         children: [
@@ -416,6 +520,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
           _buildBottomButton(l10n, bottomPadding),
         ],
       ),
+      ),
     );
   }
 
@@ -435,9 +540,9 @@ class _PaywallScreenState extends State<PaywallScreen> {
                 child: Stack(
                   children: [
                     // Back button — hidden when the Skip button is shown
-                    // (onboarding paywall), kept for feature-gate paywalls so they
-                    // stay dismissible.
-                    if (!widget.showSkip)
+                    // (onboarding paywall) OR in the non-dismissible hard gate;
+                    // kept for feature-gate paywalls so they stay dismissible.
+                    if (!widget.showSkip && !widget.hardGate)
                       Align(
                         alignment: Alignment.centerLeft,
                         child: Padding(
@@ -638,6 +743,21 @@ class _PaywallScreenState extends State<PaywallScreen> {
     return l10n.paywallOrPriceYearly(_priceOf(annualId, annualFallback));
   }
 
+  /// Card badge, e.g. "7 days free" (null without an eligible trial).
+  String? _trialBadge(int tier, AppLocalizations l10n) {
+    final t = _trialFor(tier);
+    return t == null ? null : l10n.paywallTrialBadge(_trialDuration(t, l10n));
+  }
+
+  /// Card line, e.g. "Free for 1 month, then $159.99/year".
+  String? _trialLine(int tier, AppLocalizations l10n) {
+    final t = _trialFor(tier);
+    return t == null
+        ? null
+        : l10n.paywallTrialThen(
+            _trialDuration(t, l10n), _pricePerPeriod(tier, l10n));
+  }
+
   Widget _buildPlanCards(AppLocalizations l10n) {
     return Column(
       children: [
@@ -657,11 +777,11 @@ class _PaywallScreenState extends State<PaywallScreen> {
               l10n.paywallProFeature4,
               l10n.paywallProFeature5,
             ],
-            // Free-trial badge removed — no introductory offers are configured
-            // in the stores. Only the launch-promo gift badge remains.
-            showTrialBadge: widget.launchPromo,
-            trialBadgeText:
-                widget.launchPromo ? l10n.promoFreeMonthBadge : null,
+            // Store free trial wins; the launch-promo gift badge otherwise.
+            showTrialBadge: _trialFor(0) != null || widget.launchPromo,
+            trialBadgeText: _trialBadge(0, l10n) ??
+                (widget.launchPromo ? l10n.promoFreeMonthBadge : null),
+            trialLine: _trialLine(0, l10n),
             isSelected: _selectedPlanIndex == 0,
             onTap: () => setState(() => _selectedPlanIndex = 0),
           ),
@@ -683,7 +803,9 @@ class _PaywallScreenState extends State<PaywallScreen> {
               l10n.paywallEliteFeature7,
               l10n.paywallEliteFeature8,
             ],
-            showTrialBadge: false,
+            showTrialBadge: _trialFor(1) != null,
+            trialBadgeText: _trialBadge(1, l10n),
+            trialLine: _trialLine(1, l10n),
             isSelected: _selectedPlanIndex == 1,
             onTap: () => setState(() => _selectedPlanIndex = 1),
           ),
@@ -704,7 +826,9 @@ class _PaywallScreenState extends State<PaywallScreen> {
               l10n.paywallLiveDealerVoice,
               l10n.paywallMultiTableEvents,
             ],
-            showTrialBadge: false,
+            showTrialBadge: _trialFor(2) != null,
+            trialBadgeText: _trialBadge(2, l10n),
+            trialLine: _trialLine(2, l10n),
             isSelected: _selectedPlanIndex == 2,
             onTap: () => setState(() => _selectedPlanIndex = 2),
           ),
@@ -714,8 +838,25 @@ class _PaywallScreenState extends State<PaywallScreen> {
   }
 
   Widget _buildFooter(AppLocalizations l10n) {
+    final trial = _trialFor(_selectedPlanIndex);
     return Column(
       children: [
+        // Store-required trial terms (Apple 3.1.2 / Play): length, price
+        // after the trial, and how to avoid the charge.
+        if (trial != null) ...[
+          Text(
+            l10n.paywallTrialDisclosure(_trialDuration(trial, l10n),
+                _pricePerPeriod(_selectedPlanIndex, l10n)),
+            textAlign: TextAlign.center,
+            style: AppTypography.ibm(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              height: 22 / 15,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 8),
+        ],
         Text(
           l10n.paywallDisclaimer,
           textAlign: TextAlign.center,
@@ -797,6 +938,52 @@ class _PaywallScreenState extends State<PaywallScreen> {
             ),
           ],
         ),
+        // Hard-gate escape hatches: the paywall is non-dismissible, so the
+        // user must still be able to sign out (switch to a subscribed account)
+        // and delete their account (store/compliance requirement). Restore is
+        // the button above.
+        if (widget.hardGate) ...[
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              GestureDetector(
+                onTap: (_isPurchasing || _isRestoring) ? null : _onHardGateSignOut,
+                child: Text(
+                  l10n.paywallSignOut,
+                  style: AppTypography.ibm(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w400,
+                    height: 22 / 15,
+                    color: AppColors.textSecondary,
+                    decoration: TextDecoration.underline,
+                    decorationColor: AppColors.textSecondary,
+                  ),
+                ),
+              ),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 8),
+                child: Text('•',
+                    style: TextStyle(
+                        fontSize: 15, color: AppColors.textSecondary)),
+              ),
+              GestureDetector(
+                onTap: (_isPurchasing || _isRestoring) ? null : _onHardGateDelete,
+                child: Text(
+                  l10n.paywallDeleteAccount,
+                  style: AppTypography.ibm(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w400,
+                    height: 22 / 15,
+                    color: AppColors.accentDanger,
+                    decoration: TextDecoration.underline,
+                    decorationColor: AppColors.accentDanger,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
       ],
     );
   }
@@ -833,7 +1020,9 @@ class _PaywallScreenState extends State<PaywallScreen> {
                       ),
                     )
                   : Text(
-                      l10n.paywallContinue,
+                      _trialFor(_selectedPlanIndex) != null
+                          ? l10n.paywallStartTrial
+                          : l10n.paywallContinue,
                       style: AppTypography.ibm(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
@@ -858,6 +1047,10 @@ class _PlanCard extends StatelessWidget {
   final List<String> features;
   final bool showTrialBadge;
   final String? trialBadgeText;
+
+  /// "Free for 7 days, then $19.99/month" — shown under the price when the
+  /// user can start a free trial on this plan.
+  final String? trialLine;
   final bool isSelected;
   final VoidCallback onTap;
 
@@ -869,6 +1062,7 @@ class _PlanCard extends StatelessWidget {
     required this.features,
     required this.showTrialBadge,
     this.trialBadgeText,
+    this.trialLine,
     required this.isSelected,
     required this.onTap,
   });
@@ -976,6 +1170,18 @@ class _PlanCard extends StatelessWidget {
                 color: AppColors.textSecondary,
               ),
             ),
+            if (trialLine != null) ...[
+              const SizedBox(height: 8),
+              Text(
+                trialLine!,
+                style: AppTypography.ibm(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  height: 20 / 15,
+                  color: AppColors.accentSecondary,
+                ),
+              ),
+            ],
             const SizedBox(height: 24),
 
             // Divider

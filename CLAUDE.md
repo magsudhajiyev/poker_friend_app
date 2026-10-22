@@ -43,8 +43,12 @@ flutter clean && flutter pub get
 
 # Cloud Functions (run from functions/)
 npm run build            # tsc compile
-npm run deploy           # firebase deploy --only functions
+npm test                 # build + node --test test/*.test.js (pure CF logic)
 npm run logs             # firebase functions:log
+# Deploy BY NAME only. Do NOT run `npm run deploy` (full deploy): three
+# speaker-enrollment functions live in prod but not in this repo, and a full
+# deploy tries to delete them.
+firebase deploy --only functions:<functionName>
 
 # Deploy Firestore rules (editing firestore.rules alone does nothing live)
 firebase deploy --only firestore:rules
@@ -119,7 +123,7 @@ Full machine setup (tool versions, keystores, step-by-step install) lives in `SE
 - **Note**: the root `package.json` and `src/` are a legacy TypeScript prototype ("poker-logger") — NOT the app and NOT the Cloud Functions. The real Functions codebase is `functions/` (own `package.json`).
 
 ### Cloud Functions (`functions/src/index.ts`)
-Node 20 / TypeScript, firebase-functions v7. Deploy with `npm run deploy` from `functions/`. Current functions:
+Node 20 / TypeScript, firebase-functions v7. Deploy each function by name (see Commands — never a full `functions` deploy). Current functions:
 - `sendPushNotification` — FCM push on `user_notifications` doc create
 - `sendClubNotification` — topic-based FCM to all club members
 - `grantFreeMonthOnSignup` — launch promo: RevenueCat promotional Pro month on `users/{uid}` create, gated by `app_config/promotions.freeMonthOnSignup`
@@ -870,14 +874,6 @@ Tests are organized in subdirectories mirroring `lib/`:
 - [ ] Test all-in with side pots and chopped pots
 - [ ] Test dealer mode stats track for all players
 - [ ] Verify navigation confirmation on active session
-
-### Common Debug Commands
-```bash
-flutter clean && flutter pub get
-flutter run --debug
-flutter test
-flutter test test/services/stats_calculator_test.dart
-```
 
 ---
 

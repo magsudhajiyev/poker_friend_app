@@ -110,3 +110,143 @@ int matchPackageId(String identifier, List<PackageRef> packages) {
   }
   return -1;
 }
+
+// ---------------------------------------------------------------------------
+// Free trial (hard paywall). Store introductory offers: monthly plans 7 days,
+// annual plans 1 month — the LENGTH always comes from the store; this logic
+// only trusts the entitlement's period type + expiry.
+// ---------------------------------------------------------------------------
+
+/// An active free trial: when it ends (= the first charge), whether the
+/// subscription will renew into a paid period, and the store product.
+class TrialStatus {
+  final DateTime endsAt;
+  final bool willRenew;
+  final String? productId;
+  const TrialStatus(
+      {required this.endsAt, required this.willRenew, this.productId});
+}
+
+/// The trial state from an entitlement snapshot, or null when the user is not
+/// in an active trial (normal paid period, no expiry, unparsable or past
+/// expiry).
+TrialStatus? trialStatusFrom({
+  required bool inTrial,
+  required bool willRenew,
+  required String? expirationIso,
+  String? productId,
+  required DateTime now,
+}) {
+  if (!inTrial || expirationIso == null) return null;
+  final endsAt = DateTime.tryParse(expirationIso);
+  if (endsAt == null || !endsAt.isAfter(now)) return null;
+  return TrialStatus(endsAt: endsAt, willRenew: willRenew, productId: productId);
+}
+
+/// When the "your free trial ends tomorrow" reminder fires, in LOCAL time:
+/// 24 h before the first charge, but never in quiet hours (22:00–09:00) —
+/// then 19:00 the evening before. Always moved EARLIER, never later, so the
+/// user keeps at least 24 h to cancel.
+DateTime trialReminderTime(DateTime chargeAt) {
+  final base = chargeAt.subtract(const Duration(hours: 24));
+  if (base.hour >= 22) {
+    return DateTime(base.year, base.month, base.day, 19);
+  }
+  if (base.hour < 9) {
+    final prev = base.subtract(const Duration(days: 1));
+    return DateTime(prev.year, prev.month, prev.day, 19);
+  }
+  return base;
+}
+
+enum TrialReminderAction { schedule, showNow, cancel }
+
+/// What to do about the trial reminder right now.
+class TrialReminderDecision {
+  final TrialReminderAction action;
+
+  /// When to fire (schedule only).
+  final DateTime? at;
+
+  /// The trial end it is for — the dedupe key shared with the server push.
+  final int? endsAtMs;
+  const TrialReminderDecision(this.action, {this.at, this.endsAtMs});
+}
+
+/// Minimum time before the charge for a reminder to still be useful.
+const Duration kTrialReminderMinLead = Duration(hours: 2);
+
+/// Decide the reminder for [trial] at [now] (local time):
+/// - no trial, or cancelled (will not renew) → cancel (nothing to charge)
+/// - reminder moment still ahead → schedule it
+/// - moment passed but ≥ [kTrialReminderMinLead] left → show now (a late
+///   reminder beats none — e.g. the trial started on another device)
+/// - less than that left → cancel
+/// The caller must remember which [TrialReminderDecision.endsAtMs] it already
+/// handled, so "show now" fires once, not on every app open.
+TrialReminderDecision decideTrialReminder(TrialStatus? trial, DateTime now) {
+  if (trial == null || !trial.willRenew) {
+    return const TrialReminderDecision(TrialReminderAction.cancel);
+  }
+  final endsLocal = trial.endsAt.toLocal();
+  final endsMs = trial.endsAt.millisecondsSinceEpoch;
+  final at = trialReminderTime(endsLocal);
+  if (at.isAfter(now)) {
+    return TrialReminderDecision(TrialReminderAction.schedule,
+        at: at, endsAtMs: endsMs);
+  }
+  if (endsLocal.difference(now) >= kTrialReminderMinLead) {
+    return TrialReminderDecision(TrialReminderAction.showNow, endsAtMs: endsMs);
+  }
+  return const TrialReminderDecision(TrialReminderAction.cancel);
+}
+
+/// Unit of a free-trial length as the paywall shows it.
+enum TrialUnit { day, month }
+
+/// A FREE introductory offer on a plan: "7 days" / "1 month". App-owned so
+/// the paywall never touches SDK types.
+class TrialOffer {
+  final TrialUnit unit;
+  final int count;
+  const TrialOffer(this.unit, this.count);
+
+  @override
+  bool operator ==(Object other) =>
+      other is TrialOffer && other.unit == unit && other.count == count;
+  @override
+  int get hashCode => Object.hash(unit, count);
+}
+
+/// Map a store intro offer to a [TrialOffer]. [unit] is the SDK period unit
+/// name ('day' | 'week' | 'month' | 'year' | 'unknown'). Weeks show as days
+/// ("7 days", not "1 week"), years as months. A PAID intro price is not a
+/// free trial → null; so is an unknown unit or a non-positive length.
+TrialOffer? freeTrialOffer({
+  required String unit,
+  required int count,
+  required double price,
+}) {
+  if (price != 0 || count <= 0) return null;
+  return switch (unit) {
+    'day' => TrialOffer(TrialUnit.day, count),
+    'week' => TrialOffer(TrialUnit.day, count * 7),
+    'month' => TrialOffer(TrialUnit.month, count),
+    'year' => TrialOffer(TrialUnit.month, count * 12),
+    _ => null,
+  };
+}
+
+/// Index of the package the user's entitlement product belongs to (to show
+/// its price), or -1. iOS: the entitlement product id IS the store product
+/// ('elite_annual'). Android: the entitlement carries the subscription id +
+/// base plan ('pro' + 'annual') and the package's store product is
+/// 'pro:annual'. An Android id without a plan never guesses.
+int matchEntitlementPackage(
+    String? productId, String? planId, List<PackageRef> packages) {
+  if (productId == null || productId.isEmpty) return -1;
+  final wanted = planId == null || planId.isEmpty
+      ? productId
+      : '$productId:$planId';
+  return packages.indexWhere((p) => p.storeProductIdentifier == wanted);
+}

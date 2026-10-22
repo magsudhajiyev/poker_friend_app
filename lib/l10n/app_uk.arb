@@ -795,6 +795,8 @@
   "authSendResetLink": "Надіслати посилання",
   "authPasswordResetSent": "Лист для скидання пароля надіслано!",
   "paywallRestore": "Відновити",
+  "paywallSignOut": "Вийти",
+  "paywallDeleteAccount": "Видалити акаунт",
   "paywallTitle": "FINAL TABLE PREMIUM",
   "paywallAvailablePlans": "Доступні плани",
   "paywallStepLabel": "Крок 1 з 2",
@@ -4853,6 +4855,10 @@
     }
   },
   "onboardingWelcomeSubtitle": "Ваш персональний покерний помічник для логування рук, відстеження статистики та покращення гри.",
+  "onboardingDemoTitle": "Спробуйте сьогоднішній виклик",
+  "onboardingDemoSubtitle": "Зіграйте одну роздачу так, як це вивчають профі — ухваліть рішення й одразу отримайте розбір. Акаунт не потрібен.",
+  "onboardingDemoPlay": "Зіграти роздачу",
+  "onboardingDemoSkip": "Пропустити поки що",
   "onboardingNicknameTitle": "Почнімо з вибору вашого нікнейму",
   "onboardingNicknameSubtitle": "Ви можете перемикатися між своїм ім'ям і нікнеймом та змінювати його будь-коли.",
   "onboardingCurrencyTitle": "Оберіть валюту",
@@ -5512,5 +5518,14 @@
   "notifQuietHoursValue": "{start} – {end} (окрім нагадувань про Streak)",
   "notifQuietHoursDialogBody": "Жодних сповіщень у цьому проміжку. Нагадування про Streak — єдиний виняток: вони надходять лише тоді, коли ваш Streak може згаснути за ніч.",
   "notifQuietHoursFrom": "Від",
-  "notifQuietHoursUntil": "До"
+  "notifQuietHoursUntil": "До",
+  "paywallTrialDays": "{count, plural, one{{count} день} few{{count} дні} many{{count} днів} other{{count} дня}}",
+  "paywallTrialMonths": "{count, plural, one{{count} місяць} few{{count} місяці} many{{count} місяців} other{{count} місяця}}",
+  "paywallTrialBadge": "{duration} безкоштовно",
+  "paywallTrialThen": "Безкоштовно {duration}, потім {price}",
+  "paywallStartTrial": "Почати безкоштовний період",
+  "paywallTrialDisclosure": "Безкоштовно {duration}, потім {price}. Оплату не буде списано, якщо скасувати щонайменше за 24 години до кінця пробного періоду. Скасувати можна будь-коли в налаштуваннях підписки.",
+  "trialReminderTitle": "Ваш безкоштовний період закінчується завтра",
+  "trialReminderBody": "Потім {plan} коштує {price}. Скасувати можна будь-коли в налаштуваннях підписки.",
+  "trialReminderBodyNoPrice": "Потім почнеться ваша підписка {plan}. Скасувати можна будь-коли в налаштуваннях підписки."
 }

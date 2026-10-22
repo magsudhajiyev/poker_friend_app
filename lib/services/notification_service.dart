@@ -470,6 +470,78 @@ class NotificationService {
     }
   }
 
+  static const int _trialReminderId = 888892;
+
+  /// "Your free trial ends tomorrow" (hard paywall). Fixed id: re-scheduling
+  /// replaces the queued one, so syncing on every entitlement change never
+  /// duplicates. Text is localized by the caller.
+  static Future<void> scheduleTrialReminder({
+    required DateTime at,
+    required String title,
+    required String body,
+  }) async {
+    try {
+      if (!_initialized) await initialize();
+      await requestPermissions();
+      await _notifications.cancel(_trialReminderId);
+      await _scheduleNotification(
+        id: _trialReminderId,
+        title: title,
+        body: body,
+        scheduledDate: at,
+        payload: 'trial_reminder',
+      );
+    } catch (e) {
+      debugPrint('Error scheduling trial reminder: $e');
+    }
+  }
+
+  /// Show the trial reminder immediately (the reminder moment already
+  /// passed, or the debug tester).
+  static Future<void> showTrialReminderNow({
+    required String title,
+    required String body,
+  }) async {
+    try {
+      if (!_initialized) await initialize();
+      await requestPermissions();
+      await _notifications.show(
+        _trialReminderId,
+        title,
+        body,
+        NotificationDetails(
+          android: AndroidNotificationDetails(
+            'poker_events',
+            'Poker Events',
+            channelDescription: 'Notifications for upcoming poker events',
+            importance: Importance.high,
+            priority: Priority.high,
+            icon: '@drawable/ic_notification',
+            styleInformation: const BigTextStyleInformation(''),
+            color: AppColors.accentPrimary,
+          ),
+          iOS: const DarwinNotificationDetails(
+            presentAlert: true,
+            presentBadge: true,
+            presentSound: true,
+          ),
+        ),
+        payload: 'trial_reminder',
+      );
+    } catch (e) {
+      debugPrint('Error showing trial reminder: $e');
+    }
+  }
+
+  /// Remove a queued trial reminder (trial cancelled / converted / ended).
+  static Future<void> cancelTrialReminder() async {
+    try {
+      await _notifications.cancel(_trialReminderId);
+    } catch (e) {
+      debugPrint('Error cancelling trial reminder: $e');
+    }
+  }
+
   static const int _promoExpiryWarningId = 888890;
   static const int _promoExpiredId = 888891;
 

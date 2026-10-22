@@ -41,6 +41,7 @@ class SubscriptionService {
     _purchasedTierOverride = null;
     _debugTierOverride = null;
     _offerings = null;
+    _trialOffers = const {};
   }
 
   // Cached subscription state
@@ -64,6 +65,15 @@ class SubscriptionService {
 
   // Stream controller for subscription status changes
   static final _premiumStatusController = StreamController<bool>.broadcast();
+
+  // Every entitlement snapshot (also when only trial/renewal state changes,
+  // which premiumStatusStream does not report) — drives the trial reminder.
+  static final _entitlementsController =
+      StreamController<TierEntitlements>.broadcast();
+
+  /// Emits each new RevenueCat entitlement snapshot.
+  static Stream<TierEntitlements> get entitlementsStream =>
+      _entitlementsController.stream;
 
   /// Stream of premium status changes
   static Stream<bool> get premiumStatusStream => _premiumStatusController.stream;
@@ -209,6 +219,52 @@ class SubscriptionService {
   /// Null-safe: returns the last snapshot, [TierEntitlements.empty] until set.
   static TierEntitlements get proEntitlement => _proEntitlements;
 
+  /// The active free trial (end date = first charge, will-renew flag), or
+  /// null when the user is not in a trial. From the RevenueCat snapshot only
+  /// — partner grants and debug overrides are never trials.
+  static logic.TrialStatus? get trialStatus => logic.trialStatusFrom(
+        inTrial: _proEntitlements.topInTrial,
+        willRenew: _proEntitlements.topWillRenew,
+        expirationIso: _proEntitlements.topExpirationIso,
+        productId: _proEntitlements.topProductId,
+        now: DateTime.now(),
+      );
+
+  /// The store package of the subscription the user is trialling (for its
+  /// price in the reminder), or null when unknown / offerings not loaded.
+  static Package? get trialPackage {
+    final packages = defaultOffering?.availablePackages ?? const <Package>[];
+    final i = logic.matchEntitlementPackage(
+      _proEntitlements.topProductId,
+      _proEntitlements.topProductPlanId,
+      [
+        for (final p in packages)
+          logic.PackageRef(p.identifier, p.storeProduct.identifier)
+      ],
+    );
+    return i >= 0 ? packages[i] : null;
+  }
+
+  /// Free trials the user can still start, by package identifier (filled
+  /// by [refreshTrialOffers]). Empty until loaded or when none apply.
+  static Map<String, logic.TrialOffer> _trialOffers = const {};
+
+  /// The free trial on [packageId] for this user, or null (no trial, not
+  /// eligible, or not loaded yet). Accepts the same ids as [packageById].
+  static logic.TrialOffer? trialFor(String packageId) {
+    final p = packageById(packageId);
+    return p == null ? null : _trialOffers[p.identifier];
+  }
+
+  /// Re-read which free trials this user can start (call when the paywall
+  /// opens — eligibility changes once a trial has been used). Never throws.
+  static Future<void> refreshTrialOffers() async {
+    if (!_isInitialized) return;
+    if (_offerings == null) await fetchOfferings();
+    final packages = defaultOffering?.availablePackages ?? const <Package>[];
+    _trialOffers = await _client.freeTrials(packages);
+  }
+
   /// Available subscription offerings
   static Offerings? get offerings => _offerings;
 
@@ -273,6 +329,7 @@ class SubscriptionService {
   /// Update premium status from an entitlement snapshot.
   static void _updatePremiumStatus(TierEntitlements ents) {
     _proEntitlements = ents;
+    _entitlementsController.add(ents);
     final prevTier = currentTier;
     _isPremium = ents.proActive;
     _isElite = ents.eliteActive;
