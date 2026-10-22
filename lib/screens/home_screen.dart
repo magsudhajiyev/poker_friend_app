@@ -55,6 +55,7 @@ import '../services/table_service.dart';
 import '../services/club_notification_service.dart';
 import '../services/feature_flag_service.dart';
 import '../services/daily_challenge_service.dart';
+import '../services/authored_tree_service.dart';
 import '../services/daily_challenge_store.dart';
 import 'training/daily_challenge_screen.dart';
 import '../services/club_service.dart';
@@ -2426,11 +2427,27 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   /// admin-flagged (Leak Detector precedent).
   int _dailyChallengeReload = 0;
 
-  Future<(DailyChallengeResult?, DailyChallengeStreaks)>
-      _loadDailyChallengeState(DateTime day) async => (
-            await DailyChallengeStore.resultFor(day),
-            await DailyChallengeStore.streaks(day),
-          );
+  Future<(DailyChallengeResult?, DailyChallengeStreaks, String?)>
+      _loadDailyChallengeState(DateTime day) async {
+    final result = await DailyChallengeStore.resultFor(day);
+    final streaks = await DailyChallengeStore.streaks(day);
+    // Authored (solver game-tree) day → label the card from the real GTO data
+    // ('MTT 50BB · 3 spots') instead of the leftover RNG weekday theme. Null
+    // on an RNG day (the weekday theme is correct there).
+    String? authoredLabel;
+    final trees =
+        await AuthoredTreeService.loadDay(DailyChallengeStore.dayKey(day));
+    if (trees != null && trees.isNotEmpty) {
+      final format = trees.first.formatLabel
+          .replaceAll(' · ', ' ')
+          .replaceAll('·', ' ')
+          .replaceAll('  ', ' ')
+          .trim();
+      final count = trees.length == 1 ? '1 spot' : '${trees.length} spots';
+      authoredLabel = format.isEmpty ? count : '$format · $count';
+    }
+    return (result, streaks, authoredLabel);
+  }
 
   Widget _buildDailyChallengeCard() {
     return ValueListenableBuilder<int>(
@@ -2441,12 +2458,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           return const SizedBox.shrink();
         }
         final config = DailyChallengeService.configFor(DailyChallengeService.today());
-        return FutureBuilder<(DailyChallengeResult?, DailyChallengeStreaks)>(
+        return FutureBuilder<
+            (DailyChallengeResult?, DailyChallengeStreaks, String?)>(
           key: ValueKey('daily_challenge_$_dailyChallengeReload'),
           future: _loadDailyChallengeState(config.day),
           builder: (context, snap) {
             final result = snap.data?.$1;
             final streak = snap.data?.$2.current ?? 0;
+            final authoredLabel = snap.data?.$3;
             final done = result != null;
             return Padding(
               padding: const EdgeInsets.fromLTRB(16, 24, 16, 0),
@@ -2505,7 +2524,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             Text(
                               done
                                   ? 'Done · ${result.score == result.score.roundToDouble() ? result.score.round() : result.score}/${result.verdicts.length} today'
-                                  : '${config.theme} · ${config.formatLabel}',
+                                  : (authoredLabel ??
+                                      '${config.theme} · ${config.formatLabel}'),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: AppTypography.ibm(

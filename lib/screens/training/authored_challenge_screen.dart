@@ -713,8 +713,11 @@ class _AuthoredChallengeScreenState extends State<AuthoredChallengeScreen> {
     );
   }
 
-  static const double _tableW = 0.85;
-  static const double _tableH = 0.8;
+  // 4% larger than the original 0.85 / 0.80 fractions (user request). Seats,
+  // the contained oval and the board width all derive from these, so they
+  // scale together.
+  static const double _tableW = 0.884;
+  static const double _tableH = 0.832;
 
   /// Seat-ring fractions that put every seat plate just OUTSIDE the neon
   /// rail. The rail sits at ~62% (x) / ~81% (y) of the table art's half-size
@@ -752,10 +755,23 @@ class _AuthoredChallengeScreenState extends State<AuthoredChallengeScreen> {
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              for (final c in d.board)
+              for (final (i, c) in d.board.indexed)
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: 2.5 * cardScale),
-                  child: _card(c, cardScale),
+                  // Keyed by the card string so only NEWLY dealt cards flip
+                  // (the flop flips when it appears, then the turn, then the
+                  // river) — cards already on the felt keep their state. The
+                  // three flop cards stagger like a real deal; the single
+                  // turn/river card (index ≥ 3) flips on its own, no delay.
+                  child: _FlipCard(
+                    key: ValueKey(c),
+                    width: 34 * cardScale,
+                    height: 46 * cardScale,
+                    delay: i < 3
+                        ? Duration(milliseconds: i * 80)
+                        : Duration.zero,
+                    face: _card(c, cardScale),
+                  ),
                 ),
             ],
           )
@@ -1103,7 +1119,7 @@ class _AuthoredChallengeScreenState extends State<AuthoredChallengeScreen> {
                 text,
                 key: ValueKey(text),
                 style: AppTypography.ibm(
-                    fontSize: 13.5, height: 1.35, color: Colors.white),
+                    fontSize: 15, height: 1.35, color: Colors.white),
               ),
             ),
           ),
@@ -1210,7 +1226,7 @@ class _AuthoredChallengeScreenState extends State<AuthoredChallengeScreen> {
                               Text(
                                 widget.persona.compose(grade, _index),
                                 style: AppTypography.ibm(
-                                    fontSize: 14,
+                                    fontSize: 15.5,
                                     height: 1.35,
                                     color: Colors.white),
                               ),
@@ -1325,6 +1341,112 @@ class _AuthoredChallengeScreenState extends State<AuthoredChallengeScreen> {
                   fontSize: 15 * s, color: red ? _red : Colors.black)),
         ],
       ),
+    );
+  }
+}
+
+/// A board card that FLIPS over when it first appears — a card-back rotates
+/// 180° on the Y axis and reveals [face] at the halfway point, like a dealer
+/// turning the flop/turn/river. Because the board row keys each card by its
+/// string, this animates once (on deal) and existing cards never re-flip.
+class _FlipCard extends StatefulWidget {
+  final Widget face;
+  final double width;
+  final double height;
+  final Duration delay;
+
+  const _FlipCard({
+    super.key,
+    required this.face,
+    required this.width,
+    required this.height,
+    this.delay = Duration.zero,
+  });
+
+  @override
+  State<_FlipCard> createState() => _FlipCardState();
+}
+
+class _FlipCardState extends State<_FlipCard>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 420),
+  );
+  late final Animation<double> _anim =
+      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic);
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.delay == Duration.zero) {
+      _controller.forward();
+    } else {
+      // Hold the card back, then flip — staggers the flop deal.
+      Future.delayed(widget.delay, () {
+        if (mounted) _controller.forward();
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Widget _cardBack() {
+    return Container(
+      width: widget.width,
+      height: widget.height,
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF1E7D66), Color(0xFF0E3D33)],
+        ),
+        borderRadius:
+            BorderRadius.circular(AppDecorations.radiusSm * 0.75 * (widget.width / 34)),
+        border: Border.all(color: Colors.black.withValues(alpha: 0.25)),
+      ),
+      child: Center(
+        child: Container(
+          width: widget.width * 0.5,
+          height: widget.height * 0.5,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(3),
+            border: Border.all(
+                color: AppColors.accentPrimary.withValues(alpha: 0.35)),
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _anim,
+      builder: (context, _) {
+        // 0 → 1 maps to a half-turn (π). Before the midpoint we show the back;
+        // past it, the face (counter-rotated so it isn't mirrored).
+        final t = _anim.value;
+        final angle = t * math.pi;
+        final showFace = t >= 0.5;
+        return Transform(
+          alignment: Alignment.center,
+          transform: Matrix4.identity()
+            ..setEntry(3, 2, 0.0012) // perspective
+            ..rotateY(angle),
+          child: showFace
+              ? Transform(
+                  alignment: Alignment.center,
+                  transform: Matrix4.identity()..rotateY(math.pi),
+                  child: widget.face,
+                )
+              : _cardBack(),
+        );
+      },
     );
   }
 }

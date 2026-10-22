@@ -60,6 +60,16 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> {
   CoachPersona _persona = CoachPersonas.grinder;
   bool _loaded = false;
 
+  /// For an AUTHORED (solver game-tree) day: the headline + subtitle derived
+  /// from the real GTO data, replacing the leftover RNG weekday theme
+  /// ("Six-Max Thursday") which has nothing to do with the authored spots.
+  /// Both null on an RNG day (the weekday theme is correct there).
+  String? _authoredHeadline;
+  String? _authoredSubtitle;
+
+  String get _dayHeadline => _authoredHeadline ?? _config.theme;
+  String get _daySubtitle => _authoredSubtitle ?? _config.formatLabel;
+
   /// Results: which authored hands are expanded (collapsed by default).
   final Set<int> _openHands = {};
 
@@ -84,13 +94,31 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> {
   Future<void> _load() async {
     final result = await DailyChallengeStore.resultFor(_config.day);
     final streaks = await DailyChallengeStore.streaks(_config.day);
+    // Authored day? Name it from the real GTO data, not the RNG weekday theme.
+    final dayKey = DailyChallengeStore.dayKey(_config.day);
+    final trees = await AuthoredTreeService.loadDay(dayKey);
+    String? headline, subtitle;
+    if (trees != null && trees.isNotEmpty) {
+      // Shared stake/format across the day's hands (e.g. 'MTT · 50BB').
+      final format = trees.first.formatLabel.trim();
+      headline = format.isEmpty ? 'Solver Spots' : _cleanFormat(format);
+      subtitle = trees.length == 1
+          ? 'Solver spot'
+          : '${trees.length} solver spots';
+    }
     if (!mounted) return;
     setState(() {
       _todayResult = result;
       _streaks = streaks;
+      _authoredHeadline = headline;
+      _authoredSubtitle = subtitle;
       _loaded = true;
     });
   }
+
+  /// 'MTT · 50BB' → 'MTT 50BB' (drop the middle dot for a clean headline).
+  static String _cleanFormat(String s) =>
+      s.replaceAll(' · ', ' ').replaceAll('·', ' ').replaceAll('  ', ' ').trim();
 
   @override
   void dispose() {
@@ -327,14 +355,14 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> {
               color: AppColors.accentTertiary),
         ),
         const SizedBox(height: AppSpacing.xxs),
-        Text(_config.theme,
+        Text(_dayHeadline,
             style: AppTypography.ibm(
                 fontSize: 28,
                 fontWeight: FontWeight.w700,
                 letterSpacing: -0.5,
                 color: AppColors.textPrimary)),
         const SizedBox(height: AppSpacing.xxxs),
-        Text(_config.formatLabel,
+        Text(_daySubtitle,
             style: AppTypography.mono(
                 fontSize: 13, color: AppColors.textSecondary)),
         const SizedBox(height: AppSpacing.lg),
@@ -630,7 +658,7 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> {
                     Text(
                       result.perfect
                           ? AppLocalizations.of(context).dailyChallengePerfectDay
-                          : _config.theme,
+                          : _dayHeadline,
                       textAlign: TextAlign.end,
                       style: AppTypography.ibm(
                           fontSize: 12, color: AppColors.textSecondary),

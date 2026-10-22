@@ -1536,7 +1536,7 @@ class _DrillTableScreenState extends State<DrillTableScreen>
                     child: Text(line,
                         style: AppTypography.ibm(
                             color: AppColors.textPrimary,
-                            fontSize: 14 * s,
+                            fontSize: 15.5 * s,
                             height: 1.4)),
                   ),
                   if (revealed)
@@ -1546,7 +1546,7 @@ class _DrillTableScreenState extends State<DrillTableScreen>
                       text: line,
                       style: AppTypography.ibm(
                           color: AppColors.textPrimary,
-                          fontSize: 14 * s,
+                          fontSize: 15.5 * s,
                           height: 1.4),
                     ),
                 ],
