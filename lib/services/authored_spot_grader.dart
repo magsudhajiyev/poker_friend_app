@@ -55,11 +55,16 @@ class AuthoredSpotGrader {
 
   /// Grade [heroAction] on [decision] for [handClass]. [displayHand] (the
   /// real cards, e.g. '9♠ 9♥') replaces the class in the coaching text.
+  ///
+  /// [explanation] is the authored plain-English strategy narrative for this
+  /// node (sheet column "Explanation"). When present it becomes the main coach
+  /// teaching line, with the hand-specific frequency note appended after it.
   static DrillGradeResult grade(
     AuthoredDecision decision,
     String handClass,
     AuthoredAction heroAction, {
     String? displayHand,
+    String explanation = '',
   }) {
     final freq = decision.freqOf(heroAction, handClass);
     final shown = displayHand ?? handClass;
@@ -124,19 +129,26 @@ class AuthoredSpotGrader {
       DrillGrade.mistake => 'Leak. ',
     };
 
+    // With an authored explanation: the sheet's range narrative leads (used
+    // verbatim), then a short hand-specific note tying it to the hero's actual
+    // hand + action. Without one: the frequency reason alone (as before).
+    final note = explanation.trim();
+    final teaching =
+        note.isEmpty ? reason : '$note\n\n${_handNote(grade, heroAction, best, shown, actionPct, bestPct, heroNoun, bestNoun)}';
+
     return DrillGradeResult(
       grade: grade,
       heroAction: heroAction.wire,
       recommendedAction: best.wire,
-      explanation: '$verdictLead$reason',
-      headlineReason: reason,
+      explanation: '$verdictLead$teaching',
+      headlineReason: teaching,
       handTopPercent: 0, // not meaningful for an authored fixed hand
       gtoAction: best.wire,
       gtoRangePercent: bestFreq * 100,
-      gtoReason: reason,
+      gtoReason: teaching,
       exploitAction: best.wire,
       exploitRangePercent: bestFreq * 100,
-      exploitReason: reason,
+      exploitReason: teaching,
       trace: [
         'AUTHORED spot grade',
         'hand=$handClass action=${heroAction.wire} freq=$freq',
@@ -144,6 +156,34 @@ class AuthoredSpotGrader {
         'verdict=${grade.name}',
       ],
     );
+  }
+
+  /// One short sentence tying the range narrative to the hero's SPECIFIC hand
+  /// and chosen action — appended after the authored explanation.
+  static String _handNote(
+    DrillGrade grade,
+    AuthoredAction hero,
+    AuthoredAction best,
+    String shown,
+    int actionPct,
+    int bestPct,
+    String heroNoun,
+    String bestNoun,
+  ) {
+    switch (grade) {
+      case DrillGrade.correct:
+        return 'Your $shown is right in it — it takes the $heroNoun $actionPct% '
+            'of the time.';
+      case DrillGrade.ok:
+        return hero == best
+            ? 'Your $shown takes the $heroNoun $actionPct% — a fine part of the '
+                'mix.'
+            : 'Your $shown mostly prefers to $bestNoun ($bestPct%), but the '
+                '$heroNoun is a reasonable mix.';
+      case DrillGrade.mistake:
+        return 'But your $shown specifically wants to $bestNoun ($bestPct%) — '
+            'the $heroNoun loses value with this exact hand.';
+    }
   }
 
   static String _label(AuthoredAction a) => switch (a) {

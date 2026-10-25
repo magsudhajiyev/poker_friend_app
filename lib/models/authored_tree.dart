@@ -39,6 +39,12 @@ class TreeNode {
   /// Short label of what the acting player faces (e.g. 'BTN bets 51% pot').
   final String prompt;
 
+  /// Plain-English strategy narrative for THIS node, authored alongside the
+  /// solver export (sheet column "Explanation"). Present on hero decision
+  /// nodes; '' when not authored. Used verbatim as the coach's after-action
+  /// teaching line (see AuthoredSpotGrader).
+  final String explanation;
+
   /// The actions available here, in display order.
   final List<AuthoredAction> actions;
 
@@ -64,6 +70,7 @@ class TreeNode {
     required this.sizingBB,
     required this.freq,
     required this.children,
+    this.explanation = '',
   });
 
   bool get isHero => actor == TreeActor.hero;
@@ -120,6 +127,7 @@ class TreeNode {
       potBB: (j['potBB'] as num?)?.toDouble() ?? 0,
       toCallBB: (j['toCallBB'] as num?)?.toDouble() ?? 0,
       prompt: j['prompt']?.toString() ?? '',
+      explanation: j['explanation']?.toString() ?? '',
       actions: (j['actions'] as List?)
               ?.map((e) => act(e.toString()))
               .toList() ??
@@ -144,6 +152,7 @@ class TreeNode {
         'potBB': potBB,
         'toCallBB': toCallBB,
         'prompt': prompt,
+        if (explanation.isNotEmpty) 'explanation': explanation,
         'actions': [for (final a in actions) a.wire],
         'sizingBB': {for (final e in sizingBB.entries) e.key.wire: e.value},
         'freq': {

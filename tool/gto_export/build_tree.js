@@ -65,11 +65,11 @@ async function readSheet() {
   });
   const sheets = google.sheets({ version: 'v4', auth: await auth.getClient() });
   // Discover tab if not given.
-  let range = TAB ? `${TAB}!A:J` : 'A:J';
+  let range = TAB ? `${TAB}!A:K` : 'A:K';
   if (!TAB) {
     const meta = await sheets.spreadsheets.get({ spreadsheetId: SHEET_ID });
     const first = meta.data.sheets[0].properties.title;
-    range = `${first}!A:J`;
+    range = `${first}!A:K`;
   }
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId: SHEET_ID,
@@ -224,6 +224,7 @@ async function main() {
     sizing: col('Sizing'),
     range: col('Range'),
     hand: col('Hand'),
+    explanation: col('Explanation'), // plain-English coach line (optional)
   };
 
   // Resolve hero/villain/stack from the first data row's "Hand" title
@@ -289,6 +290,8 @@ async function main() {
       path: historyPath(row[ci.spot], meta.heroPos, meta.villainPos),
       freq: parseRange(row[ci.range]),
       title: row[ci.hand] || '',
+      explanation:
+        ci.explanation >= 0 ? (row[ci.explanation] || '').trim() : '',
     });
   }
 
@@ -430,6 +433,7 @@ async function main() {
       potBB: n.pot || 0,
       toCallBB: n.toCall || 0,
       prompt: n.prompt,
+      ...(n.explanation ? { explanation: n.explanation } : {}),
       actions: n.actions,
       sizingBB: n.sizing,
       freq: n.freq,
@@ -474,8 +478,22 @@ async function main() {
         require(path.join(__dirname, 'service-account.json'))
       ),
     });
-    await admin.firestore().collection('authored_spots').doc(SPOT_ID).set(tree);
-    console.log(`Uploaded to authored_spots/${SPOT_ID}`);
+    // Firestore auto-indexes every map entry; a big tree (hundreds of nodes ×
+    // per-hand freqs) blows past the 20k index-entries-per-doc limit. Store the
+    // tree as ONE JSON string ('treeJson') so it counts as a single index
+    // entry, with a little queryable metadata alongside. The app loader parses
+    // treeJson when present (and still accepts the old inline shape).
+    const doc = {
+      id: tree.id,
+      title: tree.title,
+      formatLabel: tree.formatLabel,
+      heroPosition: tree.heroPosition,
+      villainPosition: tree.villainPosition,
+      heroHandClass: tree.heroHandClass,
+      treeJson: JSON.stringify(tree),
+    };
+    await admin.firestore().collection('authored_spots').doc(SPOT_ID).set(doc);
+    console.log(`Uploaded to authored_spots/${SPOT_ID} (treeJson blob)`);
   }
 }
 

@@ -89,5 +89,11 @@
       ]
     }
   ],
-  "fieldOverrides": []
+  "fieldOverrides": [
+    {
+      "collectionGroup": "authored_spots",
+      "fieldPath": "nodes",
+      "indexes": []
+    }
+  ]
 }

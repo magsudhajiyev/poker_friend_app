@@ -146,4 +146,44 @@ void main() {
       expect(g.grade, DrillGrade.mistake);
     });
   });
+
+  group('Authored explanation (coach feedback)', () {
+    final d = AuthoredDecision(
+      street: AuthoredStreet.flop,
+      board: const ['9♠', '8♠', '5♦'],
+      prompt: 'flop',
+      options: const [AuthoredAction.check, AuthoredAction.raise],
+      best: AuthoredAction.raise,
+      potBB: 5,
+      toCallBB: 0,
+      freq: const {
+        AuthoredAction.raise: {'A9s': 0.94, 'AA': 0.75},
+        AuthoredAction.check: {'A9s': 0.06, 'AA': 0.25},
+      },
+    );
+
+    test('explanation leads, hand note appended', () {
+      const narrative =
+          'On a connected 9-8-5 board the BTN bets small about 70%.';
+      final g = AuthoredSpotGrader.grade(
+        d,
+        'A9s',
+        AuthoredAction.raise,
+        displayHand: 'A♦ 9♦',
+        explanation: narrative,
+      );
+      // Sheet narrative is used verbatim…
+      expect(g.explanation, contains(narrative));
+      // …followed by a hand-specific note mentioning the hero's cards.
+      expect(g.explanation, contains('A♦ 9♦'));
+      // Verdict still leads.
+      expect(g.explanation, startsWith('Best.'));
+    });
+
+    test('no explanation → frequency reason only (unchanged)', () {
+      final g = AuthoredSpotGrader.grade(d, 'A9s', AuthoredAction.raise);
+      expect(g.explanation, contains('94%'));
+      expect(g.explanation, isNot(contains('\n\n')));
+    });
+  });
 }

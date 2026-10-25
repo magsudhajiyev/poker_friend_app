@@ -55,6 +55,7 @@ class AuthoredTreeWalker {
       action,
       displayHand:
           tree.heroCards.isEmpty ? null : tree.heroCards.join(' '),
+      explanation: node.explanation,
     );
     lastReroute = null;
     String? next = node.children[action];

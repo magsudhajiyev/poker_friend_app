@@ -95,7 +95,15 @@ class AuthoredTreeService {
           .timeout(const Duration(seconds: 4));
       final data = doc.data();
       if (data != null) {
-        final tree = AuthoredTree.fromJson(data);
+        // Large trees are stored as a single `treeJson` string (Firestore
+        // auto-indexes map entries and a big inline tree exceeds the 20k
+        // index-entries/doc limit). Parse that when present; otherwise the doc
+        // is the inline tree shape (small spots, older uploads).
+        final raw = data['treeJson'];
+        final map = raw is String
+            ? json.decode(raw) as Map<String, dynamic>
+            : data;
+        final tree = AuthoredTree.fromJson(map);
         _cache[id] = tree;
         return tree;
       }
