@@ -2,6 +2,8 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../models/authored_tree.dart';
+import '../models/drill_models.dart';
 import 'auth_service.dart';
 import 'daily_challenge_service.dart';
 import 'daily_scoring.dart';
@@ -68,6 +70,64 @@ class DailyChallengeResult {
             if (s is Map) DailySpotSummary.fromJson(s.cast<String, dynamic>()),
         ],
       );
+
+  /// Assemble a result from a completed run. Shared by the normal daily play
+  /// path and the (non-persisting) REPLAY path so they grade and summarize
+  /// identically — building this is NOT the same as saving it (replay never
+  /// calls [DailyChallengeStore.save]).
+  ///
+  /// [hands] is the per-hand list of decision records; [weights] the pot-BB
+  /// weights aligned with the flattened decisions (empty on RNG days). The
+  /// `*Labels`/`streets`/`boards`/`facing` lists are the authored per-decision
+  /// detail, flattened and aligned (empty on RNG days). [trees] is the
+  /// authored day's trees (null on RNG days) — used for real card faces and
+  /// the 'LJ vs BTN' matchup label.
+  static DailyChallengeResult build({
+    required String dayKey,
+    required int seed,
+    required List<List<DrillDecisionRecord>> hands,
+    required List<double> weights,
+    required int durationMs,
+    List<AuthoredTree>? trees,
+    List<String> streets = const [],
+    List<List<String>> boards = const [],
+    List<String> facing = const [],
+    List<String> heroLabels = const [],
+    List<String> bestLabels = const [],
+  }) {
+    String letter(DrillDecisionRecord r) =>
+        DailyChallengeService.verdictLetter(r.result.grade);
+    var flat = 0; // index into the flattened per-decision detail lists
+    return DailyChallengeResult(
+      dayKey: dayKey,
+      seed: seed,
+      verdicts:
+          DailyScoring.encode([for (final h in hands) h.map(letter).join()]),
+      weights: weights,
+      durationMs: durationMs,
+      spots: [
+        for (var i = 0; i < hands.length; i++)
+          for (final r in hands[i])
+            DailySpotSummary(
+              handClass: trees != null && i < trees.length
+                  ? trees[i].heroCards.join(' ')
+                  : r.handClass,
+              position: trees != null && i < trees.length
+                  ? '${trees[i].heroPosition} vs ${trees[i].villainPosition}'
+                  : r.position,
+              heroAction: r.result.heroAction,
+              recommendedAction: r.result.recommendedAction,
+              verdict: letter(r),
+              hand: i,
+              board: flat < boards.length ? boards[flat] : const [],
+              facing: flat < facing.length ? facing[flat] : '',
+              heroLabel: flat < heroLabels.length ? heroLabels[flat] : '',
+              recommendedLabel: flat < bestLabels.length ? bestLabels[flat] : '',
+              street: flat < streets.length ? streets[flat++] : '',
+            ),
+      ],
+    );
+  }
 }
 
 class DailySpotSummary {
@@ -199,6 +259,10 @@ class DailyChallengeStore {
   static Future<DailyChallengeResult?> resultFor(DateTime day) async =>
       (await _loadAll())[dayKey(day)];
 
+  /// All stored results keyed by `yyyy-MM-dd`. Read-only snapshot for the
+  /// replay calendar (which days were played + their scores). Never throws.
+  static Future<Map<String, DailyChallengeResult>> allResults() => _loadAll();
+
   static Future<void> save(DailyChallengeResult result) async {
     final all = await _loadAll();
     all[result.dayKey] = result;
@@ -259,5 +323,64 @@ class DailyChallengeStore {
       perfectDays: results.values.where((r) => r.perfect).length,
       totalPlayed: results.length,
     );
+  }
+}
+
+/// Persisted results of REPLAYS (replaying a past day — unranked practice).
+///
+/// A SEPARATE store from [DailyChallengeStore] on purpose: streaks and the
+/// leaderboard derive from the ranked store, so replay results must never land
+/// there (back-dating would corrupt the streak). This store exists only so the
+/// replay calendar can show a breakdown for a past day the user replayed, and
+/// survive app restarts. It is never read by streak/leaderboard code.
+///
+/// Reuses [DailyChallengeResult] and the same per-user, dayKey-keyed JSON map
+/// shape as [DailyChallengeStore].
+class DailyReplayStore {
+  DailyReplayStore._();
+
+  static const String _keyPrefix = 'daily_replay_results';
+
+  static String _storageKey() {
+    String? uid;
+    try {
+      uid = AuthService.currentUser?.uid;
+    } catch (_) {}
+    return uid == null ? _keyPrefix : '${_keyPrefix}_$uid';
+  }
+
+  static Future<Map<String, DailyChallengeResult>> _loadAll() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString(_storageKey());
+      if (raw == null) return {};
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map) return {};
+      return {
+        for (final e in decoded.entries)
+          if (e.value is Map)
+            e.key.toString(): DailyChallengeResult.fromJson(
+                e.key.toString(), (e.value as Map).cast<String, dynamic>()),
+      };
+    } catch (_) {
+      return {};
+    }
+  }
+
+  /// All saved replay results keyed by `yyyy-MM-dd`. Never throws.
+  static Future<Map<String, DailyChallengeResult>> allResults() => _loadAll();
+
+  /// Save (or overwrite — latest replay wins) a replay result for its day.
+  /// Best-effort: a failure simply means the calendar won't remember it.
+  static Future<void> save(DailyChallengeResult result) async {
+    try {
+      final all = await _loadAll();
+      all[result.dayKey] = result;
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(
+        _storageKey(),
+        jsonEncode({for (final e in all.entries) e.key: e.value.toJson()}),
+      );
+    } catch (_) {}
   }
 }

@@ -18,11 +18,19 @@ class UsernameSetupScreen extends StatefulWidget {
   /// Pre-fill from a web reservation (nickname_claims).
   final String? reservedUsername;
 
+  /// Opened from the Daily Challenge leaderboard submit (username missing).
+  /// Shows an info note that a username is required for the leaderboard and
+  /// that skipping falls back to the player's real name, and makes Skip RETURN
+  /// an empty string (caller submits with the display name) instead of routing
+  /// to the app root.
+  final bool leaderboardContext;
+
   const UsernameSetupScreen({
     Key? key,
     this.isChanging = false,
     this.currentUsername,
     this.reservedUsername,
+    this.leaderboardContext = false,
   }) : super(key: key);
 
   @override
@@ -163,9 +171,13 @@ class _UsernameSetupScreenState extends State<UsernameSetupScreen> {
 
   Future<void> _skipUsername() async {
     await UsernameService.skipUsername();
-    if (mounted) {
-      Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+    if (!mounted) return;
+    if (widget.leaderboardContext) {
+      // Return '' = "skipped": the caller submits with the display name.
+      Navigator.pop(context, '');
+      return;
     }
+    Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
   }
 
   bool get _canClaim {
@@ -343,14 +355,52 @@ class _UsernameSetupScreenState extends State<UsernameSetupScreen> {
                       ),
                     ),
 
-                    // Skip button (only during initial setup)
-                    if (!widget.isChanging) ...[
+                    // Leaderboard context: a note that a username is required
+                    // for the leaderboard, and that skipping falls back to the
+                    // player's real name.
+                    if (widget.leaderboardContext) ...[
+                      const SizedBox(height: 16),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.05),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                              color: Colors.white.withOpacity(0.10)),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Icon(Icons.leaderboard_outlined,
+                                size: 18, color: AppColors.accentPrimary),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                AppLocalizations.of(context)
+                                    .usernameLeaderboardNote,
+                                style: AppTypography.ibm(
+                                  fontSize: 13,
+                                  height: 1.35,
+                                  color: Colors.white.withOpacity(0.70),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+
+                    // Skip button (initial setup, or the leaderboard prompt).
+                    if (!widget.isChanging || widget.leaderboardContext) ...[
                       const SizedBox(height: 16),
                       Center(
                         child: TextButton(
                           onPressed: _isClaiming ? null : _skipUsername,
                           child: Text(
-                            AppLocalizations.of(context).usernameSetupSkip,
+                            widget.leaderboardContext
+                                ? AppLocalizations.of(context)
+                                    .usernameLeaderboardSkip
+                                : AppLocalizations.of(context).usernameSetupSkip,
                             style: TextStyle(
                               color: Colors.white.withOpacity(0.50),
                               fontSize: 15,

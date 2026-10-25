@@ -44,6 +44,11 @@ post_install do |installer|
 
     target.build_configurations.each do |config|
       config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.5'
+      # NOTE: do NOT clear EXCLUDED_ARCHS for the simulator. ML Kit (MLImage,
+      # via mobile_scanner → GoogleMLKit/BarcodeScanning) ships NO arm64
+      # simulator slice — only arm64-device + x86_64-simulator. Forcing arm64
+      # for the simulator makes the linker reject the device-arm64 MLImage
+      # object. On Apple Silicon run the simulator under Rosetta (x86_64).
     end
   end
 end

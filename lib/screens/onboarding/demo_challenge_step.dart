@@ -51,8 +51,13 @@ class _DemoChallengeStepState extends State<DemoChallengeStep> {
         await Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) =>
-                AuthoredDayRunner(trees: [trees.first], persona: persona),
+            builder: (_) => AuthoredDayRunner(
+              trees: [trees.first],
+              persona: persona,
+              // Demo has no results screen after it → the final button just
+              // finishes and advances the onboarding flow.
+              lastHandLabel: AppLocalizations.of(context).onboardingDemoDone,
+            ),
           ),
         );
       } else {

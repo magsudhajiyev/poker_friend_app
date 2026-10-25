@@ -17,6 +17,7 @@ import '../design_system/constants/typography.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../design_system/components/modals/confirm_dialog.dart';
 import '../onboarding/onboarding_prefs.dart';
+import 'intro_screen.dart';
 import '../services/subscription_service.dart';
 import '../services/subscription_logic.dart' show TrialOffer, TrialUnit;
 import '../services/auth_service.dart';
@@ -24,6 +25,7 @@ import '../services/logger_service.dart';
 import '../utils/user_facing_error.dart';
 import '../design_system/constants/decorations.dart';
 import 'auth_screen_experimental.dart';
+import 'value_proposition_screen.dart';
 import '../services/analytics_service.dart';
 
 /// Paywall screen showing subscription plan selection.
@@ -293,8 +295,49 @@ class _PaywallScreenState extends State<PaywallScreen> {
       );
     }
 
-    // Debug-only mock purchase: skip RevenueCat, set a debug tier override so
-    // the effective tier flips, and run the same success flow.
+    // Value-proposition step: before charging, explain how the free trial
+    // works (today free → reminder before charge → cancel anytime). Its CTA
+    // kicks off the real purchase via [_startPurchase]. Everything shown is
+    // read from the selected store product — never hardcoded.
+    if (!mounted) return;
+    // In DEBUG, the store won't return a trial to a sideloaded build (Play only
+    // serves offers to a Play-installed tester build), so the explainer would
+    // collapse to its no-trial fallback. Synthesize the configured trial
+    // (annual = 1 month, monthly = 7 days) so the full design renders for
+    // development. Release always uses the real store trial.
+    var trial = _trialFor(_selectedPlanIndex);
+    if (trial == null && !kReleaseMode) {
+      trial = _isAnnual
+          ? const TrialOffer(TrialUnit.month, 1)
+          : const TrialOffer(TrialUnit.day, 7);
+    }
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (_) => ValuePropositionScreen(
+          trial: trial,
+          tierName: _tierLabel(_selectedPlanIndex, l10n),
+          priceLine: _pricePerPeriod(_selectedPlanIndex, l10n),
+          onStartTrial: () {
+            Navigator.of(context).pop(); // close the value-prop screen
+            _startPurchase();
+          },
+        ),
+      ),
+    );
+  }
+
+  /// Runs the actual purchase for the selected plan. Called by the
+  /// value-proposition screen's CTA.
+  Future<void> _startPurchase() async {
+    final l10n = AppLocalizations.of(context);
+
+    // Debug-only mock purchase (explicit dev-tools flag only): skip RevenueCat,
+    // set a debug tier override, and run the success flow. NOTE: the hard-gate
+    // paywall does NOT auto-mock — "Try it for free" must invoke the real store
+    // purchase sheet (card details). On a debug sideload that sheet will fail
+    // with the store's "not configured for billing" error; a Play-tester build
+    // completes it. Release builds always hit RevenueCat.
     if (widget.mockPurchase && !kReleaseMode) {
       setState(() => _isPurchasing = true);
       try {
@@ -326,8 +369,9 @@ class _PaywallScreenState extends State<PaywallScreen> {
       if (retryPackage != null) {
         if (!mounted) return; // disposed during the fetch — don't recurse
         setState(() {});
-        // Re-run with the now-available package
-        return _onContinue();
+        // Re-run the purchase with the now-available package (don't re-show
+        // the value-prop screen — the user already passed through it).
+        return _startPurchase();
       }
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -421,8 +465,21 @@ class _PaywallScreenState extends State<PaywallScreen> {
   // stream route back to the intro screen — no explicit navigation here.
 
   Future<void> _onHardGateSignOut() async {
-    await AuthService.signOut();
-    // AuthWrapper's auth stream rebuilds to the intro screen on sign-out.
+    // This paywall is PUSHED on top of AuthWrapper (post-tour) OR rendered
+    // inline by HardPaywallGate. Just signing out isn't enough for the pushed
+    // case: the auth stream rebuilds AuthWrapper UNDERNEATH this route, so the
+    // paywall still covers the intro screen. Mirror the settings/profile
+    // sign-out: replace the whole stack with IntroScreen FIRST (which also
+    // avoids AuthWrapper's "unexpected logout" recovery loading), then sign
+    // out in the background.
+    if (!mounted) return;
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => IntroScreen()),
+      (_) => false,
+    );
+    try {
+      await AuthService.signOut();
+    } catch (_) {}
   }
 
   void _onHardGateDelete() {
@@ -458,9 +515,33 @@ class _PaywallScreenState extends State<PaywallScreen> {
         await firestore.collection('opponent_stats').doc(doc.id).delete();
       }
       await AuthService.deleteAccount();
-      // Auth stream routes to the intro screen once the user is gone.
-    } catch (e) {
+      // Deleted — replace the whole stack with the intro screen (same as the
+      // profile-screen delete flow). Without this the pushed paywall route
+      // would stay on top of AuthWrapper and the user would appear stuck.
       if (mounted) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => IntroScreen()),
+          (_) => false,
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      // Firebase requires a RECENT login to delete an account; at a launch
+      // paywall the session is rarely recent, so delete() throws
+      // 'requires-recent-login'. We can't re-auth inside a non-dismissible
+      // paywall, so sign the user out (which escapes the gate to the intro
+      // screen) and tell them to sign back in and retry from Profile. Any
+      // Firestore docs already removed above are gone; the auth record is
+      // cleaned up on the next signed-in delete.
+      final msg = e.toString().toLowerCase();
+      if (msg.contains('recent') || msg.contains('requires-recent-login')) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text(AppLocalizations.of(context)
+                  .paywallDeleteNeedsReauth)),
+        );
+        await _onHardGateSignOut();
+      } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(UserFacingError.message(e))),
         );
@@ -776,6 +857,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
               l10n.paywallProFeature3,
               l10n.paywallProFeature4,
               l10n.paywallProFeature5,
+              l10n.paywallProDailyChallenge,
             ],
             // Store free trial wins; the launch-promo gift badge otherwise.
             showTrialBadge: _trialFor(0) != null || widget.launchPromo,
@@ -802,6 +884,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
               l10n.paywallEliteFeature6,
               l10n.paywallEliteFeature7,
               l10n.paywallEliteFeature8,
+              l10n.paywallEliteDailyChallenge,
             ],
             showTrialBadge: _trialFor(1) != null,
             trialBadgeText: _trialBadge(1, l10n),

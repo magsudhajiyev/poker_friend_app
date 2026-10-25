@@ -201,22 +201,36 @@ class UsernameService {
       // Reuse prefetched doc from SplashScreen to avoid a separate read.
       final prefetched = AuthService.consumePrefetchedUserDoc();
       final data = prefetched ?? (await _firestore.collection('users').doc(userId).get()).data();
-      if (data == null) return true; // No user doc = skip
+      // No user doc yet (brand-new sign-up) → setup is NOT done. We must ask
+      // for a username during onboarding; a null doc used to short-circuit to
+      // "done", which silently skipped the username step for new users.
+      if (data == null) return false;
 
-      // If field doesn't exist, user is grandfathered in
-      if (!data.containsKey('hasSetUsername')) {
+      // Ground truth: an actual username already set means done (covers both
+      // users who set one and legacy/grandfathered accounts that predate the
+      // `hasSetUsername` flag but already have a username).
+      final username = (data['username'] as String?)?.trim() ?? '';
+      if (username.isNotEmpty) {
         _cachedHasSetUsername = true;
         _cachedForUserId = userId;
         return true;
       }
 
-      final result = data['hasSetUsername'] as bool? ?? true;
-      _cachedHasSetUsername = result;
+      // No username value. Only treat as done if explicitly marked
+      // (hasSetUsername == true — e.g. the user deliberately skipped). A
+      // missing flag on a doc WITHOUT a username is a new user who must be
+      // asked — NOT grandfathered (a real legacy user would have a username).
+      final flag = data['hasSetUsername'] == true;
+      _cachedHasSetUsername = flag;
       _cachedForUserId = userId;
-      return result;
+      return flag;
     } catch (e) {
       debugPrint('Error checking username setup: $e');
-      return true; // On error, don't block the user
+      // On a transient read error we can't tell a new user from a returning
+      // one; stay lenient (don't block an established user on flaky network).
+      // The genuine "new user skipped" bug is fixed above on the SUCCESSFUL
+      // read path (null doc / missing-flag-without-username → ask).
+      return true;
     }
   }
 

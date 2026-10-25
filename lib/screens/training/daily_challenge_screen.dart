@@ -27,12 +27,14 @@ import '../../services/leaderboard_service.dart';
 import '../../services/notification_prefs_service.dart';
 import '../../services/streak_saver_service.dart';
 import '../../services/username_service.dart';
+import '../../services/auth_service.dart';
 import '../../widgets/coach_mascot.dart';
 import '../../widgets/hand_micro_animations.dart';
 import '../username_setup_screen.dart';
 import 'authored_challenge_screen.dart';
 import 'drill_table_screen.dart';
 import 'leaderboard_screen.dart';
+import 'daily_challenge_calendar_screen.dart';
 
 /// DAILY CHALLENGE host — the chess.com-style daily ritual around the drill
 /// table: intro (theme + streak + play) → the seeded run on DrillTableScreen
@@ -189,41 +191,18 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> {
     }
     if (hands.any((h) => h.isEmpty)) return;
 
-    String letter(DrillDecisionRecord r) =>
-        DailyChallengeService.verdictLetter(r.result.grade);
-    var flat = 0; // index into [streets]
-    final result = DailyChallengeResult(
+    final result = DailyChallengeResult.build(
       dayKey: dayKey,
       seed: _config.seed,
-      verdicts:
-          DailyScoring.encode([for (final h in hands) h.map(letter).join()]),
+      hands: hands,
       weights: weights,
       durationMs: stopwatch.elapsedMilliseconds,
-      spots: [
-        for (var i = 0; i < hands.length; i++)
-          for (final r in hands[i])
-            DailySpotSummary(
-              // Authored hands store the real suited cards ('9♠ 9♥').
-              handClass: trees != null && i < trees.length
-                  ? trees[i].heroCards.join(' ')
-                  : r.handClass,
-              // Authored hands name the matchup ('LJ vs BTN') for the
-              // hand header; RNG spots keep the hero's position.
-              position: trees != null && i < trees.length
-                  ? '${trees[i].heroPosition} vs ${trees[i].villainPosition}'
-                  : r.position,
-              heroAction: r.result.heroAction,
-              recommendedAction: r.result.recommendedAction,
-              verdict: letter(r),
-              hand: i,
-              board: flat < boards.length ? boards[flat] : const [],
-              facing: flat < facing.length ? facing[flat] : '',
-              heroLabel: flat < heroLabels.length ? heroLabels[flat] : '',
-              recommendedLabel:
-                  flat < bestLabels.length ? bestLabels[flat] : '',
-              street: flat < streets.length ? streets[flat++] : '',
-            ),
-      ],
+      trees: trees,
+      streets: streets,
+      boards: boards,
+      facing: facing,
+      heroLabels: heroLabels,
+      bestLabels: bestLabels,
     );
     await DailyChallengeStore.save(result);
     final streaks = await DailyChallengeStore.streaks(_config.day);
@@ -257,6 +236,17 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> {
     ));
   }
 
+  /// The leaderboard name to use when the user skips picking a username: their
+  /// real display name, or a stable 'Player####' from the uid as a last resort.
+  String _leaderboardFallbackName() {
+    final user = AuthService.currentUser;
+    final name = user?.displayName?.trim() ?? '';
+    if (name.isNotEmpty) return name;
+    final uid = user?.uid ?? '';
+    final suffix = uid.length >= 4 ? uid.substring(uid.length - 4) : uid;
+    return 'Player$suffix';
+  }
+
   /// Ensure the player has a username (prompting the setup screen once if
   /// not), then submit the run to the global leaderboard. Best-effort: a
   /// cancelled username prompt or any failure simply skips the write.
@@ -265,14 +255,29 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> {
     try {
       var username = await UsernameService.getUsername();
       if ((username == null || username.trim().isEmpty) && mounted) {
-        username = await Navigator.push<String>(
-          context,
-          MaterialPageRoute(
-            builder: (_) => const UsernameSetupScreen(isChanging: true),
-          ),
-        );
+        // No username set. If the user ALREADY chose to skip once
+        // (hasCompletedUsernameSetup is true but there's no username), don't
+        // nag them every day — just submit with their real name.
+        if (await UsernameService.hasCompletedUsernameSetup()) {
+          username = _leaderboardFallbackName();
+        } else {
+          // First time: prompt to pick one (required for the leaderboard).
+          // Skip returns '' (submit with the real name); closing with X
+          // returns null (don't submit this run).
+          final picked = await Navigator.push<String>(
+            context,
+            MaterialPageRoute(
+              builder: (_) =>
+                  const UsernameSetupScreen(leaderboardContext: true),
+            ),
+          );
+          if (picked == null) return; // cancelled — don't submit
+          username = picked.trim().isNotEmpty
+              ? picked
+              : _leaderboardFallbackName(); // skipped → real name
+        }
       }
-      if (username == null || username.trim().isEmpty) return; // declined
+      if (username == null || username.trim().isEmpty) return;
       await LeaderboardService.submit(
         result: result,
         streaks: streaks,
@@ -415,9 +420,47 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> {
         ),
         const SizedBox(height: AppSpacing.xs),
         _leaderboardButton(),
+        const SizedBox(height: AppSpacing.xs),
+        _pastChallengesButton(),
       ],
     );
   }
+
+  /// Outlined secondary button that opens the past-challenges replay calendar.
+  Widget _pastChallengesButton() => GestureDetector(
+        onTap: () {
+          HapticFeedback.selectionClick();
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (_) => const DailyChallengeCalendarScreen()),
+          );
+        },
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
+          ),
+          child: Center(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.history_rounded,
+                    size: 18, color: AppColors.accentPrimary),
+                const SizedBox(width: AppSpacing.xxs),
+                Text(AppLocalizations.of(context).replayPastChallenges,
+                    style: AppTypography.ibm(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: -0.3,
+                        color: Colors.white)),
+              ],
+            ),
+          ),
+        ),
+      );
 
   /// Outlined secondary button that opens the global leaderboard. Shown on
   /// both the intro and the results view.

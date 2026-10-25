@@ -6,6 +6,7 @@ import '../../services/feature_flag_service.dart';
 import '../../services/onboarding_service.dart';
 import 'welcome_step.dart';
 import 'demo_challenge_step.dart';
+import 'daily_challenge_info_step.dart';
 import 'nickname_step.dart';
 import 'game_type_step.dart';
 import 'currency_step.dart';
@@ -70,11 +71,12 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
 
   void _onFlagsChanged() {
     if (!mounted) return;
-    // The demo step is APPENDED at the end, so a rebuild never shifts the
-    // step the user is currently on — safe to apply any time the daily_challenge
-    // flag resolves (it loads async; on a fresh install it often lands while
-    // the user is still answering the questions). Only rebuild when the count
-    // actually changes and the current index stays valid.
+    // The daily_challenge steps (demo spot + the DC info screen) are APPENDED
+    // at the end, so a rebuild never shifts the step the user is currently on
+    // — safe to apply any time the daily_challenge flag resolves (it loads
+    // async; on a fresh install it often lands while the user is still
+    // answering the questions). Only rebuild when the count actually changes
+    // and the current index stays valid.
     final rebuilt = _buildSteps();
     if (rebuilt.length != _steps.length && _currentStep < rebuilt.length) {
       setState(() => _steps = rebuilt);
@@ -148,7 +150,13 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
     ]);
 
     if (hasDemo) {
+      // Demo spot → a final info screen about the ongoing Daily Challenge →
+      // finish onboarding (Home + in-app tour).
       steps.add(DemoChallengeStep(
+        onContinue: _nextStep,
+        onBack: _previousStep,
+      ));
+      steps.add(DailyChallengeInfoStep(
         onContinue: _completeOnboarding,
         onBack: _previousStep,
       ));

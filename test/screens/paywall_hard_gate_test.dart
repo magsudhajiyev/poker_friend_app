@@ -99,4 +99,10 @@ void main() {
     expect(find.text('Sign out'), findsNothing);
     expect(find.text('Delete account'), findsNothing);
   });
+
+  // NOTE: the Sign-out / Delete-account ESCAPE navigation (pushAndRemoveUntil
+  // to IntroScreen) is verified ON DEVICE — IntroScreen needs a live Firebase
+  // app to build, so it can't render inside a widget test. The code mirrors the
+  // proven profile/settings sign-out pattern (navigate first, then sign out in
+  // the background).
 }

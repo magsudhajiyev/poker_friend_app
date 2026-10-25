@@ -45,26 +45,66 @@ class _HardPaywallGateState extends State<HardPaywallGate> {
   /// Whether the first run (onboarding + tour, up to the post-tour paywall)
   /// has completed. Until then the gate stays transparent so the tour runs.
   /// Null = still loading (don't block yet).
+  ///
+  /// This is re-fetched (not read once) because on the fresh-signup → straight
+  /// to Home path the gate mounts and reads the flag BEFORE the post-tour
+  /// paywall has marked it `true` in Firestore — latching a one-shot `false`
+  /// left the gate permanently open for the session. We re-read whenever a
+  /// reactive signal fires (tour ends, entitlement/flag changes) until it
+  /// resolves to `true`.
   bool? _firstRunDone;
+  bool _firstRunFetchInFlight = false;
 
   @override
   void initState() {
     super.initState();
+    _refreshFirstRun();
+    // When the tour starts/ends, re-check (the post-tour paywall flips the
+    // flag right as the tour finishes).
+    OnboardingState.notifier.addListener(_refreshFirstRun);
+  }
+
+  @override
+  void dispose() {
+    OnboardingState.notifier.removeListener(_refreshFirstRun);
+    super.dispose();
+  }
+
+  /// (Re)read the first-run flag. No-op once it has latched `true` or while a
+  /// fetch is already running.
+  void _refreshFirstRun() {
+    if (_firstRunDone == true || _firstRunFetchInFlight) return;
+    _firstRunFetchInFlight = true;
     OnboardingPrefs.wasPostTourPaywallShown().then((shown) {
-      if (mounted) setState(() => _firstRunDone = shown);
+      _firstRunFetchInFlight = false;
+      if (mounted && shown && _firstRunDone != true) {
+        setState(() => _firstRunDone = true);
+      } else if (mounted && _firstRunDone == null) {
+        setState(() => _firstRunDone = shown);
+      }
+    }).catchError((_) {
+      _firstRunFetchInFlight = false;
     });
   }
 
-  bool _shouldBlock() =>
-      _firstRunDone == true &&
-      // NEVER block mid-tour: the guided first-hand tour navigates through the
-      // app (tapping +, logging a hand…), and the hard wall must not interrupt
-      // it. The tour runs its OWN non-dismissible paywall when it finishes
-      // (maybeShowPostTourPaywall); after that isOnboardingActive is false and
-      // this gate takes over for every later launch.
-      !OnboardingState.isOnboardingActive &&
-      FeatureFlagService.isEnabled(FeatureFlagService.hardPaywall) &&
-      !HardPaywallGate._hasAccess();
+  bool _shouldBlock() {
+    // Opportunistically re-read on rebuild until first-run resolves true, so a
+    // flag flip we haven't observed yet gets picked up on the next signal.
+    if (_firstRunDone != true) _refreshFirstRun();
+    final firstRun = _firstRunDone == true;
+    final tourActive = OnboardingState.isOnboardingActive;
+    final flagOn = FeatureFlagService.isEnabled(FeatureFlagService.hardPaywall);
+    final hasAccess = HardPaywallGate._hasAccess();
+    return firstRun &&
+        // NEVER block mid-tour: the guided first-hand tour navigates through
+        // the app (tapping +, logging a hand…), and the hard wall must not
+        // interrupt it. The tour runs its OWN non-dismissible paywall when it
+        // finishes (maybeShowPostTourPaywall); after that isOnboardingActive
+        // is false and this gate takes over for every later launch.
+        !tourActive &&
+        flagOn &&
+        !hasAccess;
+  }
 
   @override
   Widget build(BuildContext context) {

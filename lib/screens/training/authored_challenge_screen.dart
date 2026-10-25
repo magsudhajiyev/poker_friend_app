@@ -46,6 +46,10 @@ class AuthoredChallengeScreen extends StatefulWidget {
   /// the [AuthoredDayRunner] then shows the next hand.
   final void Function(AuthoredHandOutcome outcome)? onHandComplete;
 
+  /// Label for the final-hand primary button (default "See result"). The
+  /// onboarding demo passes "Done" since there's no results screen after it.
+  final String lastHandLabel;
+
   const AuthoredChallengeScreen({
     super.key,
     required this.tree,
@@ -53,6 +57,7 @@ class AuthoredChallengeScreen extends StatefulWidget {
     this.handNumber = 1,
     this.handCount = 1,
     this.onHandComplete,
+    this.lastHandLabel = 'See result',
   });
 
   @override
@@ -85,8 +90,16 @@ class AuthoredHandOutcome {
 class AuthoredDayRunner extends StatefulWidget {
   final List<AuthoredTree> trees;
   final CoachPersona persona;
+
+  /// Final-hand button label (default "See result"). The onboarding demo
+  /// passes "Done" since no results screen follows.
+  final String lastHandLabel;
+
   const AuthoredDayRunner(
-      {super.key, required this.trees, required this.persona});
+      {super.key,
+      required this.trees,
+      required this.persona,
+      this.lastHandLabel = 'See result'});
 
   @override
   State<AuthoredDayRunner> createState() => _AuthoredDayRunnerState();
@@ -113,6 +126,7 @@ class _AuthoredDayRunnerState extends State<AuthoredDayRunner> {
         handNumber: _hand + 1,
         handCount: widget.trees.length,
         onHandComplete: _onHandComplete,
+        lastHandLabel: widget.lastHandLabel,
       );
 }
 
@@ -1098,21 +1112,28 @@ class _AuthoredChallengeScreenState extends State<AuthoredChallengeScreen> {
     final mascot = (MediaQuery.sizeOf(context).width * 0.2).clamp(68.0, 92.0);
     final overflow = mascot * 0.3; // how far the coach pokes above the card
     return Padding(
-      padding: EdgeInsets.only(top: overflow),
+      // Top room for the mascot's overhang above the card; bottom room so that
+      // when the card shrinks to a short line, the mascot (which can overflow
+      // below too) doesn't collide with what follows.
+      padding: EdgeInsets.only(top: overflow, bottom: overflow),
       child: Stack(
         clipBehavior: Clip.none,
         children: [
           Container(
             width: double.infinity,
-            constraints: BoxConstraints(minHeight: mascot - overflow),
-            padding: EdgeInsets.fromLTRB(mascot + AppSpacing.xs, AppSpacing.xs,
-                AppSpacing.sm, AppSpacing.xs),
+            // NO minHeight: the card hugs its text. The mascot is positioned
+            // (Clip.none) and overflows the card's top AND bottom freely, so a
+            // short line gives a compact card with the coach standing beside
+            // it — no empty gap. (A maxHeight + scroll is only needed on the
+            // feedback card, where the explanation can be long.)
+            padding: EdgeInsets.fromLTRB(mascot + AppSpacing.xs, AppSpacing.sm,
+                AppSpacing.sm, AppSpacing.sm),
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(AppDecorations.cardRadius),
               border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
             ),
-            alignment: Alignment.centerLeft,
+            alignment: Alignment.topLeft,
             child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 200),
               child: Text(
@@ -1176,8 +1197,10 @@ class _AuthoredChallengeScreenState extends State<AuthoredChallengeScreen> {
     final mascot = (MediaQuery.sizeOf(context).width * 0.2).clamp(68.0, 92.0);
     final overflow = mascot * 0.3;
     return Padding(
+      // Bottom room ≥ the mascot's overhang so a shrunk (short-feedback) card
+      // doesn't let the mascot collide with the buttons below.
       padding: EdgeInsets.fromLTRB(
-          AppSpacing.sm, overflow, AppSpacing.sm, AppSpacing.md),
+          AppSpacing.sm, overflow, AppSpacing.sm, overflow),
       child: Stack(
         clipBehavior: Clip.none,
         children: [
@@ -1194,12 +1217,24 @@ class _AuthoredChallengeScreenState extends State<AuthoredChallengeScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
-                  // Text column reserves the mascot's width; min height so the
-                  // card is never shorter than the mascot's visible part.
-                  constraints: BoxConstraints(minHeight: mascot - overflow),
+                  // The card hugs its content (NO minHeight) so short feedback
+                  // gives a compact card with no empty gap — the mascot is
+                  // positioned (Clip.none) and simply overflows the card top &
+                  // bottom. A maxHeight caps a LONG explanation so it SCROLLS
+                  // inside the card instead of growing it and squeezing the
+                  // table above (the buttons below stay pinned). ~26% of the
+                  // screen keeps the table roomy on every device.
+                  constraints: BoxConstraints(
+                    maxHeight: MediaQuery.sizeOf(context).height * 0.26,
+                  ),
                   padding: EdgeInsets.only(left: mascot),
-                  alignment: Alignment.centerLeft,
-                  child: Row(
+                  // NO alignment: an `alignment` here would make the Container
+                  // expand to its maxHeight to position the child, re-creating
+                  // the empty gap below short text. Without it the Container
+                  // (and its SingleChildScrollView) hugs the content up to the
+                  // cap, then scrolls only when the text is longer.
+                  child: SingleChildScrollView(
+                    child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(
@@ -1267,6 +1302,7 @@ class _AuthoredChallengeScreenState extends State<AuthoredChallengeScreen> {
                       ),
                     ],
                   ),
+                  ),
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 if (revealed)
@@ -1290,7 +1326,7 @@ class _AuthoredChallengeScreenState extends State<AuthoredChallengeScreen> {
                           // spot", which implies a brand-new hand).
                           label: !_done
                               ? 'Next'
-                              : (_lastHand ? 'See result' : 'Next hand'),
+                              : (_lastHand ? widget.lastHandLabel : 'Next hand'),
                           variant: AppButtonVariant.primaryLarge,
                           fullWidth: true,
                           onTap: _next,
