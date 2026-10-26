@@ -115,6 +115,81 @@ void main() {
     expect(w.isOver, isTrue);
   });
 
+  test('ends the hand at a hero node the hero hand cannot reach', () {
+    // n3 is a hero decision where the hero hand (99) has NO frequency (the
+    // solver only lists other hands there — it's a line 99 never reaches).
+    // Presenting it would misgrade every action as 0% → LEAK; instead the
+    // walker must end the hand after the villain advances to it.
+    final tree = AuthoredTree(
+      id: 't2',
+      title: 'unreachable',
+      formatLabel: 'MTT',
+      stackBB: 50,
+      anteMode: false,
+      heroPosition: 'BTN',
+      villainPosition: 'SB',
+      heroCards: const ['K♠', 'Q♠'],
+      heroHandClass: 'KQs',
+      rootId: 'n1',
+      nodes: {
+        'n1': TreeNode(
+          id: 'n1',
+          street: TreeStreet.preflop,
+          board: const [],
+          actor: TreeActor.hero,
+          potBB: 6,
+          toCallBB: 2,
+          prompt: 'open',
+          actions: const [AuthoredAction.fold, AuthoredAction.raise],
+          sizingBB: const {AuthoredAction.raise: 2.5},
+          freq: const {
+            AuthoredAction.raise: {'KQs': 1.0},
+            AuthoredAction.fold: {'KQs': 0.0},
+          },
+          children: const {AuthoredAction.raise: 'n2'},
+        ),
+        'n2': TreeNode(
+          id: 'n2',
+          street: TreeStreet.flop,
+          board: const ['9♥', '7♠', '2♦'],
+          actor: TreeActor.villain,
+          potBB: 6,
+          toCallBB: 0,
+          prompt: 'SB to act',
+          actions: const [AuthoredAction.check],
+          sizingBB: const {},
+          freq: const {
+            AuthoredAction.check: {'AA': 1.0},
+          },
+          children: const {AuthoredAction.check: 'n3'},
+        ),
+        // Hero flop node, but KQs is NOT in its frequency maps → unreachable.
+        'n3': TreeNode(
+          id: 'n3',
+          street: TreeStreet.flop,
+          board: const ['9♥', '7♠', '2♦'],
+          actor: TreeActor.hero,
+          potBB: 6,
+          toCallBB: 0,
+          prompt: 'vs check',
+          actions: const [AuthoredAction.check, AuthoredAction.raise],
+          sizingBB: const {AuthoredAction.raise: 4},
+          freq: const {
+            AuthoredAction.check: {'AA': 0.5},
+            AuthoredAction.raise: {'AA': 0.5},
+          },
+          children: const {},
+        ),
+      },
+    );
+    final w = AuthoredTreeWalker(tree);
+    final g = w.applyHeroAction(AuthoredAction.raise); // open → villain checks
+    expect(g.grade, DrillGrade.correct); // KQs opens 100%
+    // Villain advanced to n3, but KQs can't reach it → hand ends, no decision.
+    expect(w.isOver, isTrue);
+    expect(w.isHeroTurn, isFalse);
+  });
+
   test('round-trips through JSON', () {
     final tree = _fixture();
     final restored = AuthoredTree.fromJson(tree.toJson());

@@ -56,7 +56,18 @@ class CoachPersona {
     final reason = grade.headlineReason.isNotEmpty
         ? grade.headlineReason
         : grade.explanation;
-    var line = '${_lead(grade.grade, grade.recommendedAction, n)} $reason';
+    // Lead tier: an OK verdict where the hero PICKED the solver's top action
+    // (it's just a thin mix) must NOT use the "but {action} edges it" leads —
+    // that implies a better line when there isn't one. Lead with the "correct"
+    // pool instead; the reason already explains it's a close mix.
+    final leadGrade =
+        (grade.grade == DrillGrade.ok && grade.heroAction == grade.recommendedAction)
+            ? DrillGrade.correct
+            : grade.grade;
+    // Use the street-aware recommended WORD ('bet' vs 'raise'), not the raw
+    // wire action (which always reads 'raise') — so a flop bet never shows as
+    // "raise edges it".
+    var line = '${_lead(leadGrade, grade.recommendedWord, n)} $reason';
     if (!grade.linesAgree) {
       line += ' (Pure GTO would ${grade.gtoAction} here — against this '
           'table, ${grade.exploitAction} is the better line.)';

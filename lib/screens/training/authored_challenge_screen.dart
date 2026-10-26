@@ -634,6 +634,38 @@ class _AuthoredChallengeScreenState extends State<AuthoredChallengeScreen> {
     'BTN', 'SB', 'BB', 'UTG', 'UTG+1', 'UTG+2', 'LJ', 'HJ', 'CO',
   ];
 
+  /// Normalize a tree/sheet position label to the canonical form in
+  /// [_positionOrder]. Solver sheets title positions as 'UTG1'/'UTG2' (and
+  /// sometimes other aliases); the app uses 'UTG+1'/'UTG+2'. Without this, the
+  /// villain seat isn't found → it falls back to BTN and the REAL villain seat
+  /// renders as folded while the hand continues against it (bug: KK vs UTG+1).
+  static String _normalizePos(String raw) {
+    final p = raw.trim().toUpperCase();
+    switch (p) {
+      case 'UTG1':
+      case 'UTG+1':
+        return 'UTG+1';
+      case 'UTG2':
+      case 'UTG+2':
+        return 'UTG+2';
+      case 'MP':
+      case 'MP1':
+        return 'LJ'; // middle-position aliases → lojack
+      case 'MP2':
+        return 'HJ';
+      case 'EP':
+        return 'UTG';
+      case 'LJ':
+      case 'LOJACK':
+        return 'LJ';
+      case 'HJ':
+      case 'HIJACK':
+        return 'HJ';
+      default:
+        return p; // BTN/SB/BB/UTG/LJ/HJ/CO already canonical
+    }
+  }
+
   /// Visual seats laid out clockwise starting at the hero (bottom-centre).
   static const List<int> _clockwiseVisual = [5, 6, 7, 8, 9, 1, 2, 3, 4];
 
@@ -642,7 +674,7 @@ class _AuthoredChallengeScreenState extends State<AuthoredChallengeScreen> {
   late final Map<int, String> _seatPositions = _buildSeatPositions();
 
   Map<int, String> _buildSeatPositions() {
-    final heroPos = _tree.heroPosition;
+    final heroPos = _normalizePos(_tree.heroPosition);
     var start = _positionOrder.indexOf(heroPos);
     if (start < 0) start = _positionOrder.indexOf('LJ'); // defensive fallback
     final map = <int, String>{};
@@ -657,11 +689,15 @@ class _AuthoredChallengeScreenState extends State<AuthoredChallengeScreen> {
   int get _buttonVisual =>
       _seatPositions.entries.firstWhere((e) => e.value == 'BTN').key;
 
-  /// The visual seat holding the villain (the spot's villainPosition).
-  int get _villainVisual => _seatPositions.entries
-      .firstWhere((e) => e.value == _tree.villainPosition,
-          orElse: () => MapEntry(_buttonVisual, 'BTN'))
-      .key;
+  /// The visual seat holding the villain (the spot's villainPosition,
+  /// normalized so sheet aliases like 'UTG1' match the canonical 'UTG+1').
+  int get _villainVisual {
+    final villain = _normalizePos(_tree.villainPosition);
+    return _seatPositions.entries
+        .firstWhere((e) => e.value == villain,
+            orElse: () => MapEntry(_buttonVisual, 'BTN'))
+        .key;
+  }
 
   Widget _table() {
     return Column(
@@ -1265,7 +1301,11 @@ class _AuthoredChallengeScreenState extends State<AuthoredChallengeScreen> {
                                     height: 1.35,
                                     color: Colors.white),
                               ),
-                              if (_lastReroute != null) ...[
+                              // Only when the hand continues — on the final
+                              // (terminal) decision nothing follows, so the
+                              // "continues along the solver line" note would be
+                              // misleading.
+                              if (_lastReroute != null && !_done) ...[
                                 const SizedBox(height: 6),
                                 Text(
                                   'The hand continues along the solver line — '

@@ -746,6 +746,8 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> {
         ),
         const SizedBox(height: AppSpacing.xs),
         _leaderboardButton(),
+        const SizedBox(height: AppSpacing.xs),
+        _pastChallengesButton(),
         const SizedBox(height: AppSpacing.sm),
         Center(
           child: Text(AppLocalizations.of(context).dailyChallengeNextAtMidnight,

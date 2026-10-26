@@ -79,6 +79,15 @@ class TreeNode {
   double freqOf(AuthoredAction action, String handClass) =>
       freq[action]?[handClass] ?? 0.0;
 
+  /// Whether [handClass] has ANY solver frequency at this node. The solver
+  /// only lists hands that can REACH a node; if the hero hand appears in none
+  /// of the actions' frequency maps, the node is unreachable for this hand —
+  /// presenting it as a decision would misgrade (every action reads as 0% →
+  /// LEAK, and the "best" degenerates to the first action). The walker uses
+  /// this to end the hand instead of asking an impossible decision.
+  bool hasHeroFreq(String handClass) =>
+      freq.values.any((m) => m.containsKey(handClass));
+
   /// The action with the highest frequency FOR THE WHOLE RANGE at this node —
   /// used to pick the villain's deterministic line. Weighted by combos is
   /// overkill; the simple range-wide argmax of summed frequency is stable and

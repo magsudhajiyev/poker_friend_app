@@ -192,19 +192,29 @@ class AuthoredSituation {
 
     final now = HandReader.read(hero, board.sublist(0, to));
     if (now == null) return;
-    if (street == TreeStreet.flop) {
-      b.raw("You've flopped ${now.label}.");
-    } else {
-      final before = HandReader.read(hero, board.sublist(0, from));
-      if (before != null && before.rank == now.rank) {
-        b.raw('Still ${now.label}.');
+    // Only narrate the holding when it's worth saying: a MADE hand that
+    // connected with the board (→ "flopped/now got X"), or an overpair (→
+    // "you have an overpair"). Announcing "two overcards", a bare draw, or
+    // restating an unimproved pocket pair ("flopped nines") reads as nonsense.
+    if (now.overpair) {
+      // Said the same way on any street — the hero already held the pair.
+      b.raw('You have ${now.label}.');
+    } else if (now.made) {
+      if (street == TreeStreet.flop) {
+        b.raw("You've flopped ${now.label}.");
       } else {
-        b.raw("Now you've got ${now.label}.");
+        final before = HandReader.read(hero, board.sublist(0, from));
+        if (before != null && before.made && before.rank == now.rank) {
+          b.raw('Still ${now.label}.');
+        } else {
+          b.raw("Now you've got ${now.label}.");
+        }
       }
-      // A scary card the hero doesn't already have covered.
-      final warn = HandReader.boardWarning(board.sublist(0, to), now);
-      if (warn != null) b.raw(warn);
     }
+    // A scary card the hero doesn't already have covered (turn/river only;
+    // boardWarning itself guards board.length < 4).
+    final warn = HandReader.boardWarning(board.sublist(0, to), now);
+    if (warn != null) b.raw(warn);
   }
 
   // ── helpers ────────────────────────────────────────────────────────────
@@ -437,8 +447,23 @@ class HandRead {
   final int rank;
   final String label;
   final bool madeStraight, madeFlush;
+
+  /// True only for a genuine MADE hand the hero connected with the board (a
+  /// pair using a board card, two pair, set/trips, straight, flush, full
+  /// house, quads). False for overcards, draw-only, and an unimproved pocket
+  /// pair (over/under the board) — the coach should NOT announce "you've
+  /// flopped X" for those (you didn't make a new hand with the board).
+  final bool made;
+
+  /// A pocket pair over the board (strong, but not "flopped" — the coach
+  /// phrases it as "You have an overpair" rather than "You've flopped…").
+  final bool overpair;
+
   const HandRead(this.rank, this.label,
-      {this.madeStraight = false, this.madeFlush = false});
+      {this.madeStraight = false,
+      this.madeFlush = false,
+      this.made = true,
+      this.overpair = false});
 }
 
 class HandReader {
@@ -564,9 +589,14 @@ class HandReader {
       return HandRead(4, withDraw('two pair'));
     }
     if (pocket && hr[0] > topBoard) {
-      return HandRead(3, withDraw('an overpair, ${_plural[hr[0]]}'));
+      // Overpair: a strong made hand worth mentioning, but the hero already
+      // HAD the pair preflop — it wasn't "flopped" (see the `made` gate, which
+      // uses a non-"flopped" phrasing for this).
+      return HandRead(3, withDraw('an overpair, ${_plural[hr[0]]}'),
+          made: false, overpair: true);
     }
     if (pairedHeroRanks.isNotEmpty) {
+      // Paired a BOARD card — genuinely connected on this street.
       final r = pairedHeroRanks.first;
       final idx = boardDistinct.indexOf(r);
       final label = idx == 0
@@ -575,14 +605,16 @@ class HandReader {
       return HandRead(idx == 0 ? 3 : 2, withDraw(label));
     }
     if (pocket) {
-      return HandRead(2, withDraw('${_plural[hr[0]]}, under the top card'));
+      // Underpair: already a pair preflop, didn't connect — not "flopped".
+      return HandRead(2, withDraw('${_plural[hr[0]]}, under the top card'),
+          made: false);
     }
     final d = draws();
-    if (d.isNotEmpty) return HandRead(1, d);
+    if (d.isNotEmpty) return HandRead(1, d, made: false);
     if (hr.every((r) => r > topBoard)) {
-      return const HandRead(0, 'two overcards');
+      return const HandRead(0, 'two overcards', made: false);
     }
-    return const HandRead(0, 'nothing yet');
+    return const HandRead(0, 'nothing yet', made: false);
   }
 
   /// A heads-up about a scary new board (paired / flush or straight now

@@ -70,6 +70,22 @@ class _DailyReplayScreenState extends State<DailyReplayScreen> {
     });
   }
 
+  /// The user backed out of the run without finishing it.
+  /// - If a prior result exists (they opened the breakdown, tapped "Replay
+  ///   again", then abandoned) → fall back to showing that result.
+  /// - Otherwise (we auto-started into the run on open, no prior result) → pop
+  ///   straight back to the calendar, NOT to the intro "middle screen".
+  void _onAbandoned() {
+    if (widget.initialResult != null) {
+      setState(() {
+        _started = false;
+        _result = widget.initialResult;
+      });
+    } else {
+      _close();
+    }
+  }
+
   /// Run the day's spots and grade them — WITHOUT persisting anything.
   Future<void> _play() async {
     if (_started) return; // re-entrancy guard (double-tap "Replay again")
@@ -92,10 +108,9 @@ class _DailyReplayScreenState extends State<DailyReplayScreen> {
           builder: (_) => AuthoredDayRunner(trees: trees, persona: _persona),
         ),
       );
-      // Abandoned mid-run → nothing to show; stay on the intro.
       if (!mounted) return;
       if (outcomes == null || outcomes.length < trees.length) {
-        setState(() => _started = false);
+        _onAbandoned();
         return;
       }
       hands = [for (final o in outcomes) o.records];
@@ -121,7 +136,7 @@ class _DailyReplayScreenState extends State<DailyReplayScreen> {
       if (!mounted) return;
       if (records == null ||
           records.length < DailyChallengeService.spotsPerDay) {
-        setState(() => _started = false);
+        _onAbandoned();
         return;
       }
       hands = [
@@ -192,66 +207,13 @@ class _DailyReplayScreenState extends State<DailyReplayScreen> {
           ),
         ),
         body: SafeArea(
-          child:
-              _result == null ? _intro(l10n, number) : _results(l10n, _result!),
+          child: _result != null
+              ? _results(l10n, _result!)
+              // No result yet. We auto-start into the run on open (and on
+              // "Replay again"), so the intro "middle screen" would only flash
+              // for a frame — show a spinner instead of that teaser.
+              : const Center(child: CircularProgressIndicator()),
         ),
-      ),
-    );
-  }
-
-  // ── Intro ───────────────────────────────────────────────────────────────
-
-  Widget _intro(AppLocalizations l10n, int number) {
-    return Padding(
-      padding: const EdgeInsets.all(AppSpacing.xl),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.history_rounded,
-              color: AppColors.accentPrimary, size: 56),
-          const SizedBox(height: AppSpacing.lg),
-          Text(
-            _config.theme,
-            textAlign: TextAlign.center,
-            style: AppTypography.ibm(
-              color: AppColors.textPrimary,
-              fontSize: 24,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.xxs),
-          Text(
-            _config.formatLabel,
-            style: AppTypography.ibm(
-              color: AppColors.textSecondary,
-              fontSize: 15,
-              fontWeight: FontWeight.w400,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          // Unranked notice — this run never counts.
-          Container(
-            padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.md, vertical: AppSpacing.xs),
-            decoration: BoxDecoration(
-              color: AppColors.surfaceDark,
-              borderRadius: BorderRadius.circular(40),
-            ),
-            child: Text(
-              l10n.replayUnrankedNote,
-              style: AppTypography.ibm(
-                color: AppColors.textSecondary,
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-          const SizedBox(height: AppSpacing.xxxl),
-          _ctaButton(
-            label: _started ? l10n.replayLoading : l10n.replayPlay,
-            onTap: _started ? null : _play,
-          ),
-        ],
       ),
     );
   }

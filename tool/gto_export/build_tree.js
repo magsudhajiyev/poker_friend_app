@@ -170,11 +170,26 @@ function historyPath(spot, heroPos, villainPos) {
 /// Title grammar: "MTT 50bb · BTN vs SB · QcTd9d" (or 'cash'). Falls back to
 /// the legacy LJ/BTN/70 when the title can't be parsed, preserving the
 /// original spot's behaviour.
+// Canonical position labels the app uses. Solver titles write 'UTG1'/'UTG2'
+// (and other aliases); normalize so the app matches the villain seat (else it
+// renders the real villain as folded — the KK-vs-UTG1 bug).
+function normalizePos(raw) {
+  const p = (raw || '').trim().toUpperCase();
+  const map = {
+    UTG1: 'UTG+1', 'UTG+1': 'UTG+1', UTG2: 'UTG+2', 'UTG+2': 'UTG+2',
+    MP: 'LJ', MP1: 'LJ', MP2: 'HJ', EP: 'UTG', LOJACK: 'LJ', HIJACK: 'HJ',
+  };
+  return map[p] || p;
+}
+
 function parseTitleMeta(title) {
   const t = (title || '').trim();
   const fmt = /\bMTT\b/i.test(t) ? 'mtt' : /\bcash\b/i.test(t) ? 'cash' : 'mtt';
   const stackM = t.match(/(\d+(?:\.\d+)?)\s*bb\b/i);
   const vsM = t.match(/([A-Za-z+0-9]+)\s+vs\s+([A-Za-z+0-9]+)/i);
+  // RAW (as the sheet writes them) — these must match the Actor column and the
+  // Spot history tokens verbatim. The app-facing labels are normalized only at
+  // output (heroPosition/villainPosition) so the app's seat map matches.
   return {
     heroPos: HERO_POS || (vsM ? vsM[1].toUpperCase() : 'LJ'),
     villainPos: VILLAIN_POS || (vsM ? vsM[2].toUpperCase() : 'BTN'),
@@ -447,8 +462,8 @@ async function main() {
     formatLabel,
     stackBB: meta.stackBB,
     anteMode: meta.anteMode,
-    heroPosition: meta.heroPos,
-    villainPosition: meta.villainPos,
+    heroPosition: normalizePos(meta.heroPos),
+    villainPosition: normalizePos(meta.villainPos),
     heroCards: HERO ? heroCardsFor(HERO, finalBoard) : [],
     heroHandClass: HERO || '',
     rootId: root.id,

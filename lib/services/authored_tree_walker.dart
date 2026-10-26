@@ -108,6 +108,14 @@ class AuthoredTreeWalker {
       ));
       _currentId = node.children[action];
     }
+    // If we landed on a hero decision the hero hand can never reach (the
+    // solver lists no frequency for it here), end the hand rather than ask an
+    // impossible decision that would always misgrade as a LEAK. This happens
+    // on deep reroute lines where the hand took an earlier action at ~0%.
+    final here = current;
+    if (here != null && here.isHero && !here.hasHeroFreq(heroHand)) {
+      _currentId = null;
+    }
   }
 
   static AuthoredAction _argmaxRange(

@@ -88,11 +88,18 @@ class AuthoredSpotGrader {
     final actionPct = (freq * 100).round();
     final bestPct = (bestFreq * 100).round();
     final sharePct = (rangeShare * 100).round();
-    final bestLabel = _label(best);
-    final heroLabel = _label(heroAction);
     final preflop = decision.street == AuthoredStreet.preflop;
-    final heroNoun = _noun(heroAction, preflop); // 'bet' / 'check' / 'call' …
-    final bestNoun = _noun(best, preflop);
+    // Bet vs raise: putting chips in with NOTHING to call is a BET; doing it
+    // over a villain's bet (toCall > 0) is a RAISE. Preflop, opening over the
+    // blinds is conventionally a "raise" regardless. So a postflop raise action
+    // reads as "bet" when first-in / into a check, and "raise" only when facing
+    // a bet.
+    final facingBet = decision.toCallBB > 0;
+    final aggroIsRaise = preflop || facingBet;
+    final bestLabel = _label(best, aggroIsRaise);
+    final heroLabel = _label(heroAction, aggroIsRaise);
+    final heroNoun = _noun(heroAction, aggroIsRaise); // 'bet'/'raise'/'check' …
+    final bestNoun = _noun(best, aggroIsRaise);
 
     // The teaching line: name the solver's dominant play and how often the
     // hero's hand takes it. Honest and specific to this hand.
@@ -111,8 +118,15 @@ class AuthoredSpotGrader {
               '$shown — a clear, dominant line.';
           break;
         case DrillGrade.ok:
-          reason = 'A fine mix: the solver $heroLabel $actionPct% with $shown, '
-              'but $bestLabel is the bigger share ($bestPct%).';
+          // When the hero picked the solver's TOP action, it's simply a valid
+          // play — affirm it, don't hedge (you did what the solver does most).
+          // Only contrast with `best` when the hero actually chose differently.
+          reason = heroAction == best
+              ? 'A valid play — the $heroNoun is the solver\'s most frequent '
+                  'choice with $shown ($actionPct%). It mixes other lines too, '
+                  'so this is a close spot.'
+              : 'A fine mix: the solver $heroLabel $actionPct% with $shown, '
+                  'but $bestLabel is the bigger share ($bestPct%).';
           break;
         case DrillGrade.mistake:
           reason = heroAction == best
@@ -140,6 +154,7 @@ class AuthoredSpotGrader {
       grade: grade,
       heroAction: heroAction.wire,
       recommendedAction: best.wire,
+      recommendedWordRaw: bestNoun, // street-aware 'bet'/'raise'/… for {action}
       explanation: '$verdictLead$teaching',
       headlineReason: teaching,
       handTopPercent: 0, // not meaningful for an authored fixed hand
@@ -176,8 +191,8 @@ class AuthoredSpotGrader {
             'of the time.';
       case DrillGrade.ok:
         return hero == best
-            ? 'Your $shown takes the $heroNoun $actionPct% — a fine part of the '
-                'mix.'
+            ? 'Your $shown takes the $heroNoun most often ($actionPct%) — a '
+                'valid play; it just mixes in other lines too.'
             : 'Your $shown mostly prefers to $bestNoun ($bestPct%), but the '
                 '$heroNoun is a reasonable mix.';
       case DrillGrade.mistake:
@@ -186,22 +201,24 @@ class AuthoredSpotGrader {
     }
   }
 
-  static String _label(AuthoredAction a) => switch (a) {
+  /// Verb form ('raises'/'bets'). The aggressive action is 'raises' only when
+  /// [aggroIsRaise] (preflop open, or there's a bet to raise over); otherwise
+  /// putting chips in is a 'bets'.
+  static String _label(AuthoredAction a, bool aggroIsRaise) => switch (a) {
         AuthoredAction.fold => 'folds',
         AuthoredAction.check => 'checks',
         AuthoredAction.call => 'calls',
-        AuthoredAction.raise => 'raises',
+        AuthoredAction.raise => aggroIsRaise ? 'raises' : 'bets',
         AuthoredAction.allin => 'jams',
       };
 
-  /// Noun form of an action ('the bet', 'the check'). Postflop the app folds
-  /// 'bet' into the raise action, so a raise reads as 'bet' off the flop/turn/
-  /// river; preflop it stays 'raise'.
-  static String _noun(AuthoredAction a, bool preflop) => switch (a) {
+  /// Noun/base form of an action ('the raise'/'the bet', 'the check'). Same
+  /// bet-vs-raise rule as [_label].
+  static String _noun(AuthoredAction a, bool aggroIsRaise) => switch (a) {
         AuthoredAction.fold => 'fold',
         AuthoredAction.check => 'check',
         AuthoredAction.call => 'call',
-        AuthoredAction.raise => preflop ? 'raise' : 'bet',
+        AuthoredAction.raise => aggroIsRaise ? 'raise' : 'bet',
         AuthoredAction.allin => 'jam',
       };
 }

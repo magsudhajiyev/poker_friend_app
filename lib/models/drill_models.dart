@@ -294,6 +294,18 @@ class DrillGradeResult {
   final DrillGrade grade;
   final String heroAction; // 'fold' | 'check' | 'call' | 'raise'
   final String recommendedAction; // = exploitAction (primary target)
+
+  /// Street-aware display word for the recommended action ('bet' vs 'raise'
+  /// depending on whether there was a bet to raise over). Set by the authored
+  /// grader; null elsewhere → [recommendedWord] falls back to
+  /// [recommendedAction]. Coach-persona lead templates substitute `{action}`
+  /// with [recommendedWord], not the raw wire string (which always reads
+  /// 'raise').
+  final String? recommendedWordRaw;
+
+  /// Display word for the recommended action (street-aware when provided).
+  String get recommendedWord => recommendedWordRaw ?? recommendedAction;
+
   final String explanation; // verdict lead + exploit reason (for summaries)
 
   /// The reason half of [explanation] WITHOUT the rotated lead — coach
@@ -316,6 +328,7 @@ class DrillGradeResult {
     required this.grade,
     required this.heroAction,
     required this.recommendedAction,
+    this.recommendedWordRaw,
     required this.explanation,
     this.headlineReason = '',
     this.handTopPercent = 0,
