@@ -14,6 +14,20 @@ List<Situation> _play(AuthoredTree tree, List<AuthoredAction> actions,
   final walker = AuthoredTreeWalker(tree);
   final history = <SituationStep>[];
   final lines = <Situation>[];
+  // Mirror the screen's initState: if the tree opens on a VILLAIN node (hero
+  // isn't first to act — BB defense, flat vs an open), play the opener's
+  // action(s) into history BEFORE the hero's first decision, so the coach sees
+  // "BTN raised to 2BB" rather than "folds to you".
+  if (!walker.isHeroTurn && !walker.isOver) {
+    walker.advanceVillains();
+    for (final m in walker.lastVillainMoves) {
+      history.add(SituationStep(
+          actor: TreeActor.villain,
+          action: m.action,
+          sizeBB: m.sizeBB,
+          street: m.street));
+    }
+  }
   for (final a in actions) {
     final node = walker.current!;
     lines.add(AuthoredSituation.describe(
@@ -98,6 +112,100 @@ void main() {
     final a = _play(tree, [AuthoredAction.raise, AuthoredAction.call]);
     final b = _play(tree, [AuthoredAction.raise, AuthoredAction.call]);
     expect(a.map((s) => s.text), b.map((s) => s.text));
+  });
+
+  group('hero acts SECOND preflop (BB defense / flat vs an open)', () {
+    // A villain-root tree: step 1 BTN opens to 2BB, step 2 the hero (BB)
+    // decides. The hero is NOT first to act — the opener must be played out
+    // before the hero's first decision.
+    final bbTree = AuthoredTree.fromJson({
+      'id': 'bb-btn-test',
+      'title': 'MTT 25BB · BB vs BTN · 3cTdJh',
+      'formatLabel': 'MTT · 25BB',
+      'stackBB': 25,
+      'heroPosition': 'BB',
+      'villainPosition': 'BTN',
+      'heroCards': ['K♦', '6♣'],
+      'heroHandClass': 'K6o',
+      'rootId': 'n1',
+      'nodes': {
+        'n1': {
+          'id': 'n1',
+          'street': 'preflop',
+          'board': <String>[],
+          'actor': 'villain',
+          'potBB': 1.5,
+          'toCallBB': 0,
+          'prompt': 'BTN open (first in)',
+          'actions': ['fold', 'raise', 'allin'],
+          'sizingBB': {'raise': 2.0, 'allin': 25},
+          'freq': {
+            'raise': {'K6o': 1.0}
+          },
+          'children': {'raise': 'n2'},
+        },
+        'n2': {
+          'id': 'n2',
+          'street': 'preflop',
+          'board': <String>[],
+          'actor': 'hero',
+          'potBB': 3.5,
+          'toCallBB': 2.0,
+          'prompt': 'BB vs BTN open',
+          'actions': ['fold', 'call', 'raise', 'allin'],
+          'sizingBB': {'raise': 6.5},
+          'freq': {
+            'call': {'K6o': 0.5},
+            'fold': {'K6o': 0.5},
+          },
+          'children': const <String, dynamic>{},
+        },
+      },
+    });
+
+    test('coach acknowledges the opener, never "folds to you"', () {
+      // First hero decision line (no hero action yet).
+      final first = _play(bbTree, const []);
+      expect(first, isNotEmpty);
+      final t = first.first.text;
+      // The opener is named (coach bubble spells the seat: "the button") with
+      // its size, so the hero knows a raise happened before their turn.
+      expect(t.toLowerCase(), contains('button'));
+      expect(t, contains('2BB'));
+      // It must NOT read as if it folded to the hero / hero is first in.
+      expect(t.toLowerCase(), isNot(contains('folds to you')));
+      expect(t.toLowerCase(), isNot(contains('folded to you')));
+      expect(t.toLowerCase(), isNot(contains('first to act')));
+      // It's an OPEN, not a 3-bet / re-raise (only one preflop raise so far).
+      expect(t.toLowerCase(), isNot(contains('3-bet')));
+      expect(t.toLowerCase(), isNot(contains('three-bet')));
+      // The hero faces a 2BB call into the 3.5BB pot.
+      expect(t, contains('3.5BB'));
+    });
+
+    test('results facing label reads "BTN raised to 2BB", not "Folded to you"',
+        () {
+      // Build the pre-decision history the screen builds, then label it.
+      final walker = AuthoredTreeWalker(bbTree);
+      final history = <SituationStep>[];
+      walker.advanceVillains();
+      for (final m in walker.lastVillainMoves) {
+        history.add(SituationStep(
+            actor: TreeActor.villain,
+            action: m.action,
+            sizeBB: m.sizeBB,
+            street: m.street));
+      }
+      final label =
+          AuthoredSituation.facingLabel(bbTree, history, TreeStreet.preflop);
+      expect(label, 'BTN raised to 2BB');
+    });
+
+    test('spoken line is bb-free and non-empty', () {
+      final first = _play(bbTree, const []).first;
+      expect(first.spoken, isNotEmpty);
+      expect(first.spoken, isNot(contains('BB')));
+    });
   });
 
   test('every hero node on every line gets a non-empty, bb-free spoken line',

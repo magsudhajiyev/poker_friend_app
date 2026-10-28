@@ -14,11 +14,14 @@ import '../../l10n/app_localizations.dart';
 import '../../models/authored_tree.dart';
 import '../../models/drill_models.dart';
 import '../../services/analytics_service.dart';
+import '../../services/auth_service.dart';
 import '../../services/authored_situation.dart';
 import '../../services/authored_tree_walker.dart';
 import '../../services/challenge_sound_service.dart';
+import '../../services/coach_level_resolver.dart';
 import '../../services/coach_persona.dart';
 import '../../services/coach_voice_service.dart';
+import '../../services/daily_coach_lines_service.dart';
 import '../../widgets/authored_range_grid.dart';
 import '../../widgets/coach_mascot.dart';
 import '../../widgets/hand_micro_animations.dart';
@@ -159,6 +162,11 @@ class _AuthoredChallengeScreenState extends State<AuthoredChallengeScreen> {
   DrillGradeResult? _lastGrade;
   bool _voiceOn = true;
 
+  /// The player's experience tier — selects which AI line variant set to read
+  /// (beginner/intermediate/advanced). Resolved async in initState; defaults to
+  /// beginner so the first fetch has a value.
+  CoachLevel _level = CoachLevel.beginner;
+
   /// The game-tree walker: current node, grading, deterministic villain.
   late final AuthoredTreeWalker _walker = AuthoredTreeWalker(widget.tree);
 
@@ -170,9 +178,22 @@ class _AuthoredChallengeScreenState extends State<AuthoredChallengeScreen> {
   /// incoming bet/check chips when the next decision renders.
   List<VillainMove> _pendingVillainMoves = const [];
 
+  /// Whether the villain's auto-played response is REVEALED on the table.
+  /// It stays hidden through the feedback card (you only see the coach grade
+  /// YOUR move), and is revealed on 'Next' — so the villain's bet appears
+  /// between decisions, animating in as the coach sets up the next spot,
+  /// rather than popping instantly the moment you act.
+  bool _villainRevealed = false;
+
   /// When the hero's chosen action had no solved continuation, the hand was
   /// kept alive via this solver-line action (shown as a note in feedback).
   AuthoredAction? _lastReroute;
+
+  /// The persona-driven AI feedback line for the LAST graded decision, fetched
+  /// from `daily_challenge_lines/{dayKey}` keyed by (spotId, coach, action).
+  /// Null on a miss (not generated / offline) — the persona template is used.
+  /// Reset each decision so one spot's line never bleeds into the next.
+  String? _aiLine;
 
   /// The action the hero committed on the current decision (null while acting)
   /// — drives the chip/tag shown at the hero seat after they act.
@@ -221,14 +242,32 @@ class _AuthoredChallengeScreenState extends State<AuthoredChallengeScreen> {
     CoachVoiceService.loadEnabled().then((on) {
       if (mounted) setState(() => _voiceOn = on);
     });
+    // Resolve the player's experience tier for level-adapted coach lines.
+    CoachLevelResolver.resolveForCurrentUser().then((l) {
+      if (mounted) _level = l;
+    });
     CoachVoiceService.speechState.addListener(_onVoiceState);
-    // Some trees open on a VILLAIN node (e.g. the hero flats a CO open — the
-    // root is the CO's open, not the hero). Auto-play those villain nodes so
-    // the walker lands on the hero's first real decision before we render /
-    // explain the spot. Hero-root trees (hero opens) are a no-op here.
+    // Some trees open on a VILLAIN node (e.g. the hero defends the BB, or flats
+    // a CO open — the root is the opener's raise, not the hero). Auto-play those
+    // villain nodes so the walker lands on the hero's first real decision before
+    // we render / explain the spot. Hero-root trees (hero opens) are a no-op.
+    //
+    // CRITICAL: record the opener's action(s) into `_history` too. The coach
+    // setup line + facing label derive from `_history`; without this the hand
+    // reads as "folds to you on the BB" even though someone opened first — a
+    // contradiction (if it folded to the BB the hand would be over). With the
+    // opener in history it reads "BTN raises to 2BB, action on you."
     if (!_walker.isHeroTurn && !_walker.isOver) {
       _walker.advanceVillains();
       _pendingVillainMoves = List.of(_walker.lastVillainMoves);
+      for (final m in _pendingVillainMoves) {
+        _history.add(SituationStep(
+          actor: TreeActor.villain,
+          action: m.action,
+          sizeBB: m.sizeBB,
+          street: m.street,
+        ));
+      }
     }
     _explainSpot();
     AnalyticsService.capture('daily_challenge_authored_started', {
@@ -299,20 +338,27 @@ class _AuthoredChallengeScreenState extends State<AuthoredChallengeScreen> {
       scenario: DrillScenario.vsRaise, // nominal; not used by the host
       result: grade,
     ));
-    // Record the hero's committed action so a chip/tag shows at their seat —
-    // and remember it per-street so the chip survives into the next decision
-    // on the same street (e.g. the preflop open while facing the 3-bet).
+    // Record the hero's committed chip/tag at their seat — and remember it
+    // per-street so the chip survives into the next decision on the same
+    // street (e.g. the preflop open while facing the 3-bet).
+    //
+    // The chip follows the line the hand ACTUALLY took (`taken` = the reroute
+    // action when the chosen one had no solved continuation), NOT the rejected
+    // choice. Otherwise the chip would show "Raise 7.3BB" while the hand
+    // continued as a call and the stack (computed from `_history`, which also
+    // uses `taken`) only deducted the call — chip and stack would disagree.
+    // The verdict text still tells the player what they picked vs the solver.
     _heroActionTaken = action;
     _heroCommitted = (
       street: node.street,
-      tag: switch (action) {
+      tag: switch (taken) {
         AuthoredAction.fold => 'Fold',
         AuthoredAction.check => 'Check',
         AuthoredAction.call => 'Call',
         AuthoredAction.raise => 'Raise',
         AuthoredAction.allin => 'All-in',
       },
-      amountBB: switch (action) {
+      amountBB: switch (taken) {
         AuthoredAction.call => node.toCallBB,
         AuthoredAction.raise => node.sizingBB[AuthoredAction.raise] ?? 0,
         AuthoredAction.allin =>
@@ -320,14 +366,45 @@ class _AuthoredChallengeScreenState extends State<AuthoredChallengeScreen> {
         _ => 0,
       },
     );
+    _aiLine = null; // reset; the fetch below fills it if a line exists
     setState(() {
       _index++;
       _lastGrade = grade;
       _phase = _Phase.feedback;
+      // Hold the villain's response hidden through the feedback card on a
+      // CONTINUING hand — it is revealed on 'Next', timed with the next
+      // decision's setup line. On a TERMINAL hand there is no next decision, so
+      // the villain's final move IS the outcome and shows on this card.
+      _villainRevealed = _done;
     });
     // The verdict melody + reveal are HELD until the coach voice starts (or
     // the grace window elapses) — so the cue lands WITH the verdict, not
-    // ahead of the voice.
+    // ahead of the voice. Fetch the AI line FIRST (quick, inside the reveal
+    // grace) so the bubble and the voice both speak it; on a miss we fall
+    // through to the persona template with no delay difference.
+    _fetchAiLine(action, grade);
+  }
+
+  /// Fetch the persona-driven AI feedback for the action the hero just took,
+  /// then arm the reveal + speak. Keyed by (spotId, NODE id, coach, action,
+  /// level) — node id so a repeated action across streets doesn't collide, and
+  /// level for tier-adapted depth. A miss leaves `_aiLine` null (template).
+  Future<void> _fetchAiLine(AuthoredAction action, DrillGradeResult grade) async {
+    final node = _lastGradedNode; // the node the hero just acted on
+    // persona.id is already the stored coach key (grinder/professor/nova).
+    final line = node == null
+        ? null
+        : await DailyCoachLinesService.lineForAction(
+            spotKey: _tree.id,
+            nodeId: node.id,
+            coachKey: widget.persona.id,
+            action: action.wire,
+            level: _level,
+            uid: AuthService.userId,
+            spotNumber: widget.handNumber,
+          );
+    if (!mounted || _phase != _Phase.feedback) return;
+    if (line != null) setState(() => _aiLine = line);
     _armVerdictReveal();
     _speak(grade);
   }
@@ -364,29 +441,11 @@ class _AuthoredChallengeScreenState extends State<AuthoredChallengeScreen> {
       _phase = _Phase.acting;
       _lastGrade = null;
       _heroActionTaken = null;
-      // When the hand continued via the solver's line (the chosen action had
-      // no solved branch), the table story follows THAT action from here.
-      final reroute = _lastReroute;
-      final graded = _lastGradedNode;
-      if (reroute != null && graded != null) {
-        _heroCommitted = (
-          street: graded.street,
-          tag: switch (reroute) {
-            AuthoredAction.fold => 'Fold',
-            AuthoredAction.check => 'Check',
-            AuthoredAction.call => 'Call',
-            AuthoredAction.raise => 'Raise',
-            AuthoredAction.allin => 'All-in',
-          },
-          amountBB: switch (reroute) {
-            AuthoredAction.call => graded.toCallBB,
-            AuthoredAction.raise => graded.sizingBB[AuthoredAction.raise] ?? 0,
-            AuthoredAction.allin =>
-              graded.sizingBB[AuthoredAction.allin] ?? _tree.stackBB,
-            _ => 0,
-          },
-        );
-      }
+      // Reveal the villain's response now (animates in with the setup line).
+      _villainRevealed = true;
+      // `_heroCommitted` already reflects the line the hand actually took (it
+      // was set from `taken`, the reroute-aware action), so it carries over
+      // correctly here — no re-assignment needed.
       _lastReroute = null;
       // Clear the hero's committed chip when the street moved on.
       final node = _walker.current;
@@ -396,6 +455,10 @@ class _AuthoredChallengeScreenState extends State<AuthoredChallengeScreen> {
         _heroCommitted = null;
       }
     });
+    // A light tap as the villain's chip animates in — reads as "they acted".
+    if (_villainMoveOnStreet(_displayNode.street) != null) {
+      HapticFeedback.lightImpact();
+    }
     _explainSpot();
   }
 
@@ -417,14 +480,57 @@ class _AuthoredChallengeScreenState extends State<AuthoredChallengeScreen> {
   // Guards make sure it never hangs: a 600ms grace reveals when the voice is
   // muted/disabled, and a 4s hard cap reveals even if a fetch is slow.
 
+  /// The composed coach line for the feedback card, with the hero's hand
+  /// normalized to CLASS notation ('ATs', '98o', '45s') — never the exact
+  /// combo ('As-Ts', 'A♠T♠'). The AI lines are generated with the exact combo
+  /// in context, so they sometimes echo it; this collapses every form of the
+  /// hero's own combo back to the class the rest of the UI (and the voice's
+  /// speakable transform) expects. Shown in the bubble AND fed to the voice.
+  String _coachText(DrillGradeResult grade) =>
+      _toHandClass(widget.persona.compose(grade, _index, aiLine: _aiLine));
+
+  /// Guarantee terminal punctuation — the AI lines occasionally end without a
+  /// period, which reads as a cut-off sentence in the bubble. Adds a '.' only
+  /// when the trimmed line doesn't already end in . ! ? … or a closing quote.
+  static String _ensurePeriod(String s) {
+    final t = s.trimRight();
+    if (t.isEmpty) return t;
+    return RegExp(r'''[.!?…"'’”)]$''').hasMatch(t) ? t : '$t.';
+  }
+
+  /// Replace any written form of the HERO's exact combo with its class.
+  /// Handles 'As-Ts', 'AsTs', 'A♠T♠', 'A♠-T♠', 'A♠ T♠' (either card order),
+  /// plus the glyph pair the situation line uses ('9♠ 9♥').
+  String _toHandClass(String text) {
+    final cards = _tree.heroCards; // e.g. ['A♠','T♠'] (glyph) — 2 cards
+    final cls = _tree.heroHandClass; // e.g. 'ATs'
+    if (cards.length != 2 || cls.isEmpty) return text;
+    var out = text.replaceAll(cards.join(' '), cls); // glyph pair "A♠ T♠"
+    // ASCII rank+suit per card, e.g. 'A♠' -> 'As'.
+    const suitAscii = {'♠': 's', '♥': 'h', '♦': 'd', '♣': 'c'};
+    String ascii(String c) {
+      final r = c.substring(0, c.length - 1).replaceAll('10', 'T');
+      return '$r${suitAscii[c.substring(c.length - 1)] ?? ''}';
+    }
+    final a = ascii(cards[0]), bq = ascii(cards[1]);
+    for (final combo in [a + bq, bq + a]) {
+      // 'AsTs', 'As-Ts', 'As Ts', and the glyph forms 'A♠T♠' / 'A♠-T♠'.
+      for (final sep in ['', '-', ' ']) {
+        out = out.replaceAll('${combo[0]}${combo[1]}$sep${combo[2]}${combo[3]}',
+            cls);
+      }
+    }
+    for (final sep in ['', '-', ' ']) {
+      out = out.replaceAll('${cards[0]}$sep${cards[1]}', cls);
+      out = out.replaceAll('${cards[1]}$sep${cards[0]}', cls);
+    }
+    return out;
+  }
+
   void _speak(DrillGradeResult grade) {
     // speak() self-guards on the enabled flag; calling it is safe either way.
-    // The bubble shows the real cards ('9♠ 9♥'); the voice says the class
-    // ('99' → "pocket nines").
-    final line = widget.persona
-        .compose(grade, _index)
-        .replaceAll(_tree.heroCards.join(' '), _tree.heroHandClass);
-    CoachVoiceService.speak(line, coachId: widget.persona.id);
+    // The voice's speakable() expands the class ('45s' → "four five suited").
+    CoachVoiceService.speak(_coachText(grade), coachId: widget.persona.id);
   }
 
   void _armVerdictReveal() {
@@ -955,22 +1061,37 @@ class _AuthoredChallengeScreenState extends State<AuthoredChallengeScreen> {
             },
             move.sizeBB,
           );
-    final showChip = isVillain && (vTag.isNotEmpty || vAmount > 0);
+    final hasMove = vTag.isNotEmpty || vAmount > 0;
+    // The chip is only VISIBLE once the villain's response is revealed — it
+    // stays hidden through the feedback card on a continuing hand and animates
+    // in on 'Next' (see [_villainRevealed]). On a terminal hand it's revealed
+    // with the final feedback.
+    final showChip = isVillain && hasMove && _villainRevealed;
     final plate = _plate(
       position,
       stackBB: isVillain ? _stacks.villain : _tree.stackBB,
       state: _seatStateFor(position, isVillain),
       s: s,
     );
-    if (!showChip) return plate;
+    if (!(isVillain && hasMove)) return plate;
     // Villain's chip sits BELOW the plate (toward the felt, since villain is
-    // at the top of the oval).
+    // at the top of the oval). Reserve its space always (so the plate doesn't
+    // jump when the chip reveals) and fade/scale it in when revealed.
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         plate,
         SizedBox(height: 3 * s),
-        _betChip(vTag, vAmount, _gold, s),
+        AnimatedScale(
+          scale: showChip ? 1 : 0.6,
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeOutBack,
+          child: AnimatedOpacity(
+            opacity: showChip ? 1 : 0,
+            duration: const Duration(milliseconds: 220),
+            child: _betChip(vTag, vAmount, _gold, s),
+          ),
+        ),
       ],
     );
   }
@@ -1295,7 +1416,7 @@ class _AuthoredChallengeScreenState extends State<AuthoredChallengeScreen> {
                               ),
                               const SizedBox(height: 6),
                               Text(
-                                widget.persona.compose(grade, _index),
+                                _ensurePeriod(_coachText(grade)),
                                 style: AppTypography.ibm(
                                     fontSize: 15.5,
                                     height: 1.35,

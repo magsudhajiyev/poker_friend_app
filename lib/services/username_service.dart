@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'analytics_service.dart';
 import 'auth_service.dart';
 import 'display_identity_service.dart';
 
@@ -115,6 +116,9 @@ class UsernameService {
               'displayNameLower': normalized,
             });
             DisplayIdentityService.clearCache();
+            // Push the new name to PostHog so the dashboard shows it instead of
+            // the uid without waiting for the next sign-in.
+            AnalyticsService.refreshIdentity();
           }
         } catch (_) {
           // Non-fatal: username claim already succeeded.

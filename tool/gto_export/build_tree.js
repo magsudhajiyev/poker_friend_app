@@ -64,12 +64,17 @@ async function readSheet() {
     scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly'],
   });
   const sheets = google.sheets({ version: 'v4', auth: await auth.getClient() });
-  // Discover tab if not given.
-  let range = TAB ? `${TAB}!A:K` : 'A:K';
+  // Discover tab if not given. Range spans A:N — the newer sheet format adds
+  // "Hero hand" (K), "Hero hand strategy" (L), "Explanation" (M, now a JSON
+  // fact block on new sheets / plain-English narrative on old ones) and
+  // "mags_note" (N, a maintainer free-text note). A:K (the original range)
+  // silently dropped L–N, so authored spots uploaded with it carried NO coach
+  // explanation.
+  let range = TAB ? `${TAB}!A:N` : 'A:N';
   if (!TAB) {
     const meta = await sheets.spreadsheets.get({ spreadsheetId: SHEET_ID });
     const first = meta.data.sheets[0].properties.title;
-    range = `${first}!A:K`;
+    range = `${first}!A:N`;
   }
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId: SHEET_ID,
@@ -97,6 +102,32 @@ function parseRange(cell) {
   // drop empty action maps
   for (const a of ACTIONS) if (Object.keys(out[a]).length === 0) delete out[a];
   return out;
+}
+
+// Column M holds either a JSON fact block (new sheets) or plain prose (old).
+// Returns { facts, explanation }: on a parsed object, `facts` is the structured
+// block and `explanation` is a derived plain-text string (key_concept + first
+// fact) for the in-app grader fallback. On prose, `facts` is null and
+// `explanation` is the raw string. See FEEDBACK-SCHEMA.md.
+function parseFactBlock(raw) {
+  const text = (raw || '').trim();
+  if (!text) return { facts: null, explanation: '' };
+  let parsed;
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    return { facts: null, explanation: text }; // prose (old style)
+  }
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    return { facts: null, explanation: text };
+  }
+  const keyConcept = (parsed.key_concept || '').toString().trim();
+  const firstFact =
+    Array.isArray(parsed.facts) && parsed.facts.length
+      ? (parsed.facts[0] || '').toString().trim()
+      : '';
+  const derived = [keyConcept, firstFact].filter(Boolean).join(' ');
+  return { facts: parsed, explanation: derived };
 }
 
 const STREET = { Preflop: 'preflop', Flop: 'flop', Turn: 'turn', River: 'river' };
@@ -239,7 +270,8 @@ async function main() {
     sizing: col('Sizing'),
     range: col('Range'),
     hand: col('Hand'),
-    explanation: col('Explanation'), // plain-English coach line (optional)
+    explanation: col('Explanation'), // JSON fact block (new) / prose (old)
+    magsNote: col('mags_note'), // column N — maintainer free-text note
   };
 
   // Resolve hero/villain/stack from the first data row's "Hand" title
@@ -292,6 +324,16 @@ async function main() {
         if (pct > 0) potFromSizing = Math.round((bb / pct) * 10) / 10;
       }
     }
+    // Column M: a JSON fact block on new sheets, plain prose on old ones.
+    // When it parses as an object, keep the structured block as `facts` AND
+    // derive a plain-text `explanation` (key_concept + first fact) for the
+    // in-app grader. When it's prose, `explanation` is the raw string and
+    // `facts` is null. Column N is the maintainer `mags_note`.
+    const rawExplanation =
+      ci.explanation >= 0 ? (row[ci.explanation] || '').trim() : '';
+    const { facts, explanation } = parseFactBlock(rawExplanation);
+    const magsNote =
+      ci.magsNote >= 0 ? (row[ci.magsNote] || '').trim() : '';
     nodes.push({
       step: parseInt(row[ci.step], 10),
       street: STREET[row[ci.street]] || 'preflop',
@@ -305,8 +347,9 @@ async function main() {
       path: historyPath(row[ci.spot], meta.heroPos, meta.villainPos),
       freq: parseRange(row[ci.range]),
       title: row[ci.hand] || '',
-      explanation:
-        ci.explanation >= 0 ? (row[ci.explanation] || '').trim() : '',
+      explanation,
+      facts,
+      magsNote,
     });
   }
 
@@ -428,6 +471,20 @@ async function main() {
     for (const n of nodes) if (n.toCall == null) n.toCall = n.sizing.call || 0;
   }
 
+  // The exact hero combo from the fact block (column M JSON), e.g. "7s-6h".
+  // When present it is the SOURCE OF TRUTH for which two cards the table deals,
+  // so the dealt combo matches the reasoning in the facts (bug 2026-10-28: the
+  // auto-picker chose K♠Q♠ while the facts assumed K♥Q♥). First hero node wins.
+  const factHeroHand = (() => {
+    for (const n of nodes) {
+      const h = n.facts && n.facts.hero_hand;
+      if (h && /^[AKQJT2-9][shdc]-?[AKQJT2-9][shdc]$/i.test(String(h).replace(/\s/g, ''))) {
+        return String(h).replace(/\s/g, '');
+      }
+    }
+    return null;
+  })();
+
   const root = nodes.find((n) => n.step === 1) || nodes[0];
   // Big blinds always read 'BB' in the app (sheet titles say '50bb').
   const title = (root.title || SPOT_ID).replace(/(\d)bb\b/g, '$1BB');
@@ -449,6 +506,8 @@ async function main() {
       toCallBB: n.toCall || 0,
       prompt: n.prompt,
       ...(n.explanation ? { explanation: n.explanation } : {}),
+      ...(n.facts ? { facts: n.facts } : {}),
+      ...(n.magsNote ? { magsNote: n.magsNote } : {}),
       actions: n.actions,
       sizingBB: n.sizing,
       freq: n.freq,
@@ -464,7 +523,7 @@ async function main() {
     anteMode: meta.anteMode,
     heroPosition: normalizePos(meta.heroPos),
     villainPosition: normalizePos(meta.villainPos),
-    heroCards: HERO ? heroCardsFor(HERO, finalBoard) : [],
+    heroCards: HERO ? heroCardsFor(HERO, finalBoard, factHeroHand) : [],
     heroHandClass: HERO || '',
     rootId: root.id,
     nodes: treeNodes,
@@ -524,11 +583,21 @@ function glyphFromAscii(c) {
   const SUITS = { s: '♠', h: '♥', d: '♦', c: '♣' };
   return `${rank}${SUITS[suit] || suit}`;
 }
-function heroCardsFor(hc, board) {
+function heroCardsFor(hc, board, factHeroHand) {
   const used = new Set(board || []);
   if (CARDS) {
     const cards = CARDS.split(',').map((c) => glyphFromAscii(c.trim()));
     return cards.length === 2 ? cards : [];
+  }
+  // Prefer the exact combo from the fact block ("7s-6h" → ['7♠','6♥']) so the
+  // dealt cards match the authored reasoning. Only use it if both cards are
+  // off-board (a fact combo that clashes with the board falls through to auto).
+  if (factHeroHand) {
+    const parts = factHeroHand.split('-');
+    if (parts.length === 2) {
+      const cards = parts.map((c) => glyphFromAscii(c.trim()));
+      if (cards.length === 2 && cards.every((c) => !used.has(c))) return cards;
+    }
   }
   // Rank glyphs: ten is '10'.
   const rankGlyph = (r) => (r === 'T' ? '10' : r);

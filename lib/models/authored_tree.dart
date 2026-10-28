@@ -42,8 +42,22 @@ class TreeNode {
   /// Plain-English strategy narrative for THIS node, authored alongside the
   /// solver export (sheet column "Explanation"). Present on hero decision
   /// nodes; '' when not authored. Used verbatim as the coach's after-action
-  /// teaching line (see AuthoredSpotGrader).
+  /// teaching line (see AuthoredSpotGrader). On new JSON-fact-block sheets this
+  /// is DERIVED from [facts] (key_concept + first fact); on old prose sheets it
+  /// is the raw narrative.
   final String explanation;
+
+  /// Structured fact block for THIS node (sheet column M as JSON) — the
+  /// authoritative ground truth the coach feedback generator is built on:
+  /// `hand_class`, `solver`, `facts[]`, `key_concept`, `villain_view`,
+  /// `threats`, `wrong_action_notes`, `concept_tags`, `level_hints`. Null on
+  /// prose-era nodes (then [explanation] carries the raw text). The in-app code
+  /// uses [explanation]; [facts] is consumed out of band by the feedback batch
+  /// tool. See tool/gto_export/FEEDBACK-SCHEMA.md.
+  final Map<String, dynamic>? facts;
+
+  /// Maintainer free-text note (sheet column N `mags_note`). Optional.
+  final String? magsNote;
 
   /// The actions available here, in display order.
   final List<AuthoredAction> actions;
@@ -71,6 +85,8 @@ class TreeNode {
     required this.freq,
     required this.children,
     this.explanation = '',
+    this.facts,
+    this.magsNote,
   });
 
   bool get isHero => actor == TreeActor.hero;
@@ -137,6 +153,8 @@ class TreeNode {
       toCallBB: (j['toCallBB'] as num?)?.toDouble() ?? 0,
       prompt: j['prompt']?.toString() ?? '',
       explanation: j['explanation']?.toString() ?? '',
+      facts: (j['facts'] as Map?)?.cast<String, dynamic>(),
+      magsNote: j['magsNote']?.toString(),
       actions: (j['actions'] as List?)
               ?.map((e) => act(e.toString()))
               .toList() ??
@@ -162,6 +180,8 @@ class TreeNode {
         'toCallBB': toCallBB,
         'prompt': prompt,
         if (explanation.isNotEmpty) 'explanation': explanation,
+        if (facts != null) 'facts': facts,
+        if (magsNote != null && magsNote!.isNotEmpty) 'magsNote': magsNote,
         'actions': [for (final a in actions) a.wire],
         'sizingBB': {for (final e in sizingBB.entries) e.key.wire: e.value},
         'freq': {

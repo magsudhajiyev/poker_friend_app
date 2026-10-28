@@ -162,7 +162,8 @@ void main() {
       },
     );
 
-    test('explanation leads, hand note appended', () {
+    test('explanation IS the coach line on a BEST — no generic note tacked on',
+        () {
       const narrative =
           'On a connected 9-8-5 board the BTN bets small about 70%.';
       final g = AuthoredSpotGrader.grade(
@@ -172,12 +173,35 @@ void main() {
         displayHand: 'A♦ 9♦',
         explanation: narrative,
       );
-      // Sheet narrative is used verbatim…
+      // The sheet's verbal reasoning IS the teaching, verbatim.
       expect(g.explanation, contains(narrative));
-      // …followed by a hand-specific note mentioning the hero's cards.
-      expect(g.explanation, contains('A♦ 9♦'));
-      // Verdict still leads.
+      // Verdict still leads…
       expect(g.explanation, startsWith('Best.'));
+      // …but NO redundant "Your A♦ 9♦ takes the …%" note is appended: the
+      // authored explanation already explains the hand-specific why.
+      expect(g.headlineReason, narrative);
+      expect(g.explanation, isNot(contains('\n\n')));
+    });
+
+    test('explanation + hand-specific correction on a LEAK the hero chose', () {
+      const narrative =
+          'On a connected 9-8-5 board the BTN bets small about 70%.';
+      // A9s raises 94% here, so FOLD is a clear leak (and != best).
+      final g = AuthoredSpotGrader.grade(
+        d,
+        'A9s',
+        AuthoredAction.fold,
+        displayHand: 'A♦ 9♦',
+        explanation: narrative,
+      );
+      expect(g.grade, DrillGrade.mistake);
+      expect(g.explanation, startsWith('Leak.'));
+      // Sheet narrative leads…
+      expect(g.explanation, contains(narrative));
+      // …then the correction naming the hero's actual hand (the authored text
+      // describes the SOLVER line, which the player did NOT take).
+      expect(g.explanation, contains('A♦ 9♦'));
+      expect(g.explanation, contains('\n\n'));
     });
 
     test('no explanation → frequency reason only (unchanged)', () {

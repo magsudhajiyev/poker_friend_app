@@ -48,9 +48,43 @@ class AuthoredSituation {
     final b = _Builder(tree);
     final v = tree.villainPosition;
 
+    final heroActed = history.any((s) => s.actor == TreeActor.hero);
     if (history.isEmpty) {
       b.say(_pick(voice.intro, n), {'heroPos': _posWord(tree.heroPosition)},
           depth: tree.stackBB);
+    } else if (!heroActed) {
+      // The hero has NOT acted yet, but the pot is not folded to them — someone
+      // opened before the hero's first decision (BB defense, or a flat behind
+      // an open). Describe the OPENER's action(s) so the coach never says
+      // "folds to you" when the hand would be over if it had. [start] = -1
+      // below (no hero index), so the old branch's history[start] crashed.
+      b.say(_pick(voice.openIntro, n),
+          {'heroPos': _posWord(tree.heroPosition)}, depth: tree.stackBB);
+      var preflopRaises = 0;
+      for (var i = 0; i < history.length; i++) {
+        final step = history[i];
+        if (step.actor != TreeActor.villain) continue;
+        final betBefore = history
+            .sublist(0, i)
+            .any((s) => s.street == step.street && _isRaise(s));
+        if (step.street == TreeStreet.preflop && _isRaise(step)) {
+          preflopRaises++;
+        }
+        final pool = switch (step.action) {
+          AuthoredAction.raise when step.street == TreeStreet.preflop =>
+            preflopRaises >= 3
+                ? voice.reRaise
+                : (preflopRaises == 2 ? voice.threeBet : voice.raise),
+          AuthoredAction.raise => betBefore ? voice.raise : voice.bet,
+          AuthoredAction.allin => voice.jam,
+          AuthoredAction.call => voice.call,
+          AuthoredAction.check => voice.checkBack,
+          AuthoredAction.fold => const <String>[],
+        };
+        if (pool.isNotEmpty) {
+          b.say(_pick(pool, n + i), {'pos': _posWord(v)}, size: step.sizeBB);
+        }
+      }
     } else {
       final start = history.lastIndexWhere((s) => s.actor == TreeActor.hero);
       var street = history[start].street;
@@ -335,12 +369,17 @@ class _Builder {
 /// A persona's phrase pools. Lines react and set the scene — never advise.
 class _Voice {
   final List<String> intro, yourMove;
+  // Scene-setter when the hero is NOT first to act (someone opened before the
+  // hero's first decision): stack depth + hero seat + hand, WITHOUT the
+  // "folds to you" framing the [intro] pool uses for a hero-first open.
+  final List<String> openIntro;
   final List<String> threeBet, reRaise, bet, raise, jam, call, checkBack;
   final List<String> flop, turn, river;
   final List<String> facing, checkedTo, firstToAct;
   const _Voice({
     required this.intro,
     required this.yourMove,
+    required this.openIntro,
     required this.threeBet,
     required this.reRaise,
     required this.bet,
@@ -365,6 +404,10 @@ const Map<String, _Voice> _voices = {
       'Folds around to you in {heroPos}, kid. {depth} deep, holding {hand}.',
     ],
     yourMove: ["What's it gonna be?", 'Your move, kid.'],
+    openIntro: [
+      "Alright, kid. {depth} deep, you're in {heroPos} with {hand}.",
+      "{depth} deep, kid. You've got {hand} in {heroPos}.",
+    ],
     threeBet: [
       "{Pos} doesn't like it. Three-bet to {size}.",
       'Here we go — {pos} comes over the top to {size}.',
@@ -393,6 +436,10 @@ const Map<String, _Voice> _voices = {
       'We begin in {heroPos}, {depth} deep, with {hand}. Folded to you.',
     ],
     yourMove: ['Your decision.', 'Proceed.'],
+    openIntro: [
+      '{depth} effective. You hold {hand} in {heroPos}.',
+      '{heroPos}, {depth} deep, with {hand}.',
+    ],
     threeBet: ['{Pos} responds with a three-bet to {size}.',
       'A three-bet from {pos}: {size}. Noted.'],
     reRaise: ['{Pos} escalates again, to {size}.'],
@@ -418,6 +465,10 @@ const Map<String, _Voice> _voices = {
       "Here we go! Folds to you in {heroPos}, {depth} deep, with {hand} in hand!",
     ],
     yourMove: ["What's the move?", 'Show me what you got!'],
+    openIntro: [
+      "{depth} deep and you've got {hand} in {heroPos}!",
+      "You're in {heroPos}, {depth} deep, holding {hand}!",
+    ],
     threeBet: ['Ooh, {pos} fights back! Three-bet to {size}!',
       '{Pos} wants a battle — three-bet to {size}!'],
     reRaise: ["{Pos} isn't done! Re-raise to {size}!"],

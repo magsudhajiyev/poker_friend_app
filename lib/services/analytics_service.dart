@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:posthog_flutter/posthog_flutter.dart';
 
 import '../config/env_config.dart';
+import 'auth_service.dart';
 import 'logger_service.dart';
 
 /// PostHog product analytics (ROADMAP Update 3 — minimal viable setup).
@@ -62,7 +63,7 @@ class AnalyticsService {
       _authSub?.cancel();
       _authSub = FirebaseAuth.instance.authStateChanges().listen((user) {
         if (user != null) {
-          _identify(user.uid);
+          _identify(user);
         } else if (_identifiedUid != null) {
           _identifiedUid = null;
           _swallow(() => Posthog().reset());
@@ -73,10 +74,42 @@ class AnalyticsService {
     }
   }
 
-  static void _identify(String uid) {
-    if (_identifiedUid == uid) return;
-    _identifiedUid = uid;
-    _swallow(() => Posthog().identify(userId: uid));
+  /// Identify the person to PostHog, keyed by Firebase uid (the warehouse join
+  /// key), AND attach human-readable person properties so the dashboard shows a
+  /// name/email instead of the raw uid. `name` and `email` are the properties
+  /// PostHog's person UI renders by default. A placeholder display name (empty,
+  /// or a private-relay local part) is dropped so we never show a junk token.
+  static void _identify(User user) {
+    if (_identifiedUid == user.uid) return;
+    _identifiedUid = user.uid;
+
+    final email = user.email?.trim() ?? '';
+    final name = user.displayName?.trim() ?? '';
+    final nameIsReal = !AuthService.isPlaceholderNameFor(name, email);
+
+    final props = <String, Object>{
+      if (nameIsReal) 'name': name,
+      if (email.isNotEmpty) 'email': email,
+    };
+
+    _swallow(() => Posthog().identify(
+          userId: user.uid,
+          // `userProperties` sets person properties on every identify (keeps
+          // name/email fresh if the user renames). Pass null when we have
+          // nothing real to set so we don't overwrite with blanks.
+          userProperties: props.isEmpty ? null : props,
+        ));
+  }
+
+  /// Re-send person properties for the signed-in user — call after a rename or
+  /// once a just-signed-up user has set their username, so PostHog picks up the
+  /// real name without waiting for the next sign-in. No-op if nothing changed.
+  static void refreshIdentity() {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+    // Force a re-identify even if the uid is unchanged (name may have changed).
+    _identifiedUid = null;
+    _identify(user);
   }
 
   /// Capture a product event. [properties] values must be JSON-safe.
