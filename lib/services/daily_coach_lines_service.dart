@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 
 import 'coach_level_resolver.dart';
+import '../utils/coach_text.dart';
 import 'daily_challenge_service.dart';
 
 /// Reads the persona-driven AI coach lines for the Daily Challenge.
@@ -124,7 +125,7 @@ class DailyCoachLinesService {
       if (variant == null) return null;
 
       final opener = _sessionOpener(coachKey, spotNumber, streak);
-      return opener == null ? variant : '$opener $variant';
+      return joinSentences([opener, normalizeCoachText(variant)]);
     } catch (_) {
       return null;
     }

@@ -161,3 +161,36 @@ The audit reports a per-coach table (number-match rate, never_say violations,
 repeated openings, average length, max_words overflow) plus a totals line, and
 exits non-zero if any never_say violation or number-match failure survives —
 so it doubles as a CI gate.
+
+## Punctuation rule + fallback + repair (2026-10-29)
+
+- `text_rules.mjs` (pure, tested: `node --test test/*.test.mjs`) holds
+  `checkPunctuation`, `normalizeLine`, `buildFallbackPair`. Behaviour mirrors the
+  Flutter helper `normalizeCoachText` (lib/utils/coach_text.dart): keep in sync.
+- `validate()` now rejects a line with no terminal `. ! ? …`, a lowercase
+  sentence start, double spaces, or a bare fragment. A failure triggers the
+  normal single retry, with a corrective punctuation instruction.
+- **Fallback** (a line failing twice) is a complete sentence and ACTION-AWARE.
+  The node-level `key_concept` describes the solver's preferred line, so it is
+  used ("The solver's plan here: ...") ONLY when the player's action is that
+  line. For any other action the fallback uses `wrong_action_notes[action]`, or
+  names the preferred action + frequencies from the solver data. It never
+  describes an action the player did not take. The two variants differ.
+- The end-of-run summary prints validation failures by reason (first pass,
+  after retry, cause of each fallback), and each fallback logs its reasons.
+- Retry requests now also pass the experience level (they used to drop it).
+
+### Repair existing docs (free, no LLM)
+```
+node repair_fallback_lines.mjs --day 2026-10-25            # read-only report
+node repair_fallback_lines.mjs --day 2026-10-25 --apply    # writes changed leaves
+```
+Finds pairs with identical variants that fail the punctuation check, rebuilds
+them with the same action-aware builder (reads `authored_spots/{spot}`
+read-only), and with `--apply` updates only those leaf field paths. If a spot
+is unreadable the line is only normalised and marked `[unverified]`.
+
+### Regenerating (costs money)
+Only 10-25 and 10-26. Always `--dry` first, then a `--sample 10` review, then
+the real run (shows a cost estimate and asks to confirm). Roughly $3-4 per
+5-spot day. Repair is free and usually enough for the fallback issue.

@@ -5576,6 +5576,8 @@
   "authoredYourHand": "твоя рука",
   "authoredHandLabel": "РАЗДАЧА {n}",
   "authoredHandProgress": "Раздача {n}/{total} · {title}",
+  "authoredSyntheticReroute": "Ставки нет в линии солвера — раздача продолжается с действием {action}.",
+  "@authoredSyntheticReroute": {"placeholders": {"action": {"type": "String"}}},
   "authoredRerouteNote": "Раздача продолжается по линии солвера — {action}.",
   "authoredYouFold": "Ты делаешь фолд — {villain} забирает банк.",
   "authoredVillainFolds": "{villain} делает фолд — ты забираешь банк.",

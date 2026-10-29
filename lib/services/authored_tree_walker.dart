@@ -186,3 +186,23 @@ extension on TreeNode {
     return best;
   }
 }
+
+/// True when [action] is a trainer-only option the solver never lists at
+/// [node] (today: the synthetic "Bet" added where the solver only checks).
+bool isSyntheticAction(TreeNode node, AuthoredAction action) =>
+    action == AuthoredAction.raise &&
+    !node.actions.contains(AuthoredAction.raise) &&
+    node.actions.contains(AuthoredAction.check);
+
+/// Size (BB, 1 decimal) of the synthetic trainer Bet: 1/3 of the current pot,
+/// minimum 1BB.
+/// Null = do not offer it: the node already has a real raise, check is not
+/// available, or the size reaches the all-in (it would be a second jam).
+double? syntheticBetSizeBB(TreeNode node) {
+  if (!isSyntheticAction(node, AuthoredAction.raise)) return null;
+  final third = node.potBB / 3;
+  final size = ((third < 1.0 ? 1.0 : third) * 10).round() / 10;
+  final jam = node.sizingBB[AuthoredAction.allin];
+  if (jam != null && size >= jam) return null;
+  return size;
+}

@@ -5583,6 +5583,8 @@
   "authoredYourHand": "твоя рука",
   "authoredHandLabel": "РОЗДАЧА {n}",
   "authoredHandProgress": "Роздача {n}/{total} · {title}",
+  "authoredSyntheticReroute": "Ставки немає в лінії солвера — роздача триває з дією {action}.",
+  "@authoredSyntheticReroute": {"placeholders": {"action": {"type": "String"}}},
   "authoredRerouteNote": "Роздача триває за лінією солвера — {action}.",
   "authoredYouFold": "Ти робиш фолд — {villain} забирає банк.",
   "authoredVillainFolds": "{villain} робить фолд — ти забираєш банк.",

@@ -33,6 +33,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { createRequire } from 'module';
+import { checkPunctuation, buildFallbackPair, stripNumbers } from './text_rules.mjs';
 
 const require = createRequire(import.meta.url);
 const admin = require('firebase-admin');
@@ -510,24 +511,45 @@ function validate(text, ctx, coach, recentOpenings, siblingOpening) {
   if (numBad.length) failed.push(`numbers:${numBad.join(',')}`);
   if (nsBad.length) failed.push(`never_say:${nsBad.join(',')}`);
   if (recentOpenings.includes(op) || (siblingOpening && op === siblingOpening)) failed.push(`opening:${op}`);
+  const punct = checkPunctuation(text);
+  if (punct.length) failed.push(`punctuation:${punct.join(',')}`);
   return failed;
 }
-function fallbackLine(coach, ctx) {
+// Complete-sentence, ACTION-AWARE fallback pair (never a bare key_concept fragment). The two
+// variants use different frames. See text_rules.buildFallbackPair.
+function fallbackPair(coach, ctx) {
   const max = (coach.voice.max_words || 70) - 4;
-  const base =
-    ctx.keyConcept || (ctx.facts && ctx.facts[0]) || `The solver's line here is ${ACTION_WORDS[ctx.chosenAction]}.`;
-  return trimWords(stripNumbers(base), max);
+  const top = Object.entries(ctx.availableActions || {}).sort((x, y) => y[1].frequencyPct - x[1].frequencyPct)[0];
+  return buildFallbackPair({
+    action: ctx.chosenAction,
+    top: top ? top[0] : null,
+    topPct: top ? top[1].frequencyPct : 0,
+    chosenPct: ctx.chosenActionFrequencyPct,
+    concept: stripNumbers(ctx.keyConcept || ''),
+    wrongNote: ctx.wrongActionNote || '',
+    street: ctx.street,
+    toCallBB: ctx.toCallBB,
+    max,
+  });
 }
-function stripNumbers(s) {
-  return String(s)
-    .replace(/\(\s*\d+(?:\.\d+)?\s*%\s*\)/g, '')
-    .replace(/\b\d+(?:\.\d+)?\s*%/g, 'often')
-    .replace(/\s{2,}/g, ' ')
-    .trim();
+
+// Count validation failures by reason (prefix before ':' plus punctuation
+// sub-reasons) so the fallback rate can be diagnosed at the end of a run.
+const reasonCounts = { first: {}, retry: {}, fallbackCause: {} };
+function tally(bucket, failed) {
+  for (const f of failed) {
+    const [kind, rest] = f.split(/:(.*)/s);
+    const keys = kind === 'punctuation' ? rest.split(',').map((r) => `punctuation.${r}`)
+      : kind === 'opening' ? ['opening'] : [kind];
+    for (const k of new Set(keys)) reasonCounts[bucket][k] = (reasonCounts[bucket][k] || 0) + 1;
+  }
 }
-function trimWords(s, max) {
-  const w = s.split(/\s+/);
-  return w.length <= max ? s : w.slice(0, max).join(' ').replace(/[,;:]?$/, '') + '.';
+function printReasons() {
+  console.log('\nValidation failures by reason (per variant check):');
+  for (const [bucket, label] of [['first', 'first pass'], ['retry', 'after retry'], ['fallbackCause', 'cause of fallback']]) {
+    const e = Object.entries(reasonCounts[bucket]).sort((x, y) => y[1] - x[1]);
+    console.log(`  ${label}: ${e.length ? e.map(([k, n]) => `${k}=${n}`).join(', ') : 'none'}`);
+  }
 }
 
 // ── Batch API ─────────────────────────────────────────────────────────────
@@ -808,6 +830,7 @@ async function main() {
     const text = raw[customId];
     const variants = text ? parseVariants(text) : null;
     if (!variants) {
+      reasonCounts.first.unparseable = (reasonCounts.first.unparseable || 0) + 1;
       retryRequests.push(buildSingleRequest(customId, meta));
       continue;
     }
@@ -815,6 +838,7 @@ async function main() {
     const f1 = validate(variants[1], ctx, coach, recentOpenings, opening(variants[0]));
     if (f0.length || f1.length) {
       retryRequests.push(buildSingleRequest(customId, meta, { f0, f1 }));
+      tally('first', [...f0, ...f1]);
       logs.push({ customId, failed: [...f0, ...f1], stage: 'first' });
     } else {
       placeVariants(customId, variants);
@@ -833,14 +857,19 @@ async function main() {
       let fellBack = false;
       let final = variants;
       if (!variants) {
-        final = [fallbackLine(coach, ctx), fallbackLine(coach, ctx)];
+        final = fallbackPair(coach, ctx);
         fellBack = true;
+        tally('fallbackCause', ['unparseable']);
+        tally('retry', ['unparseable']);
       } else {
         const f0 = validate(variants[0], ctx, coach, recentOpenings, null);
         const f1 = validate(variants[1], ctx, coach, recentOpenings, opening(variants[0]));
         if (f0.length || f1.length) {
-          final = [fallbackLine(coach, ctx), fallbackLine(coach, ctx)];
+          final = fallbackPair(coach, ctx);
           fellBack = true;
+          tally('retry', [...f0, ...f1]);
+          tally('fallbackCause', [...f0, ...f1]);
+          console.log(`  fallback ${customId}: ${[...f0, ...f1].join(' | ')}`);
         }
       }
       placeVariants(customId, final);
@@ -886,7 +915,15 @@ async function main() {
   // ── Summary ──────────────────────────────────────────────────────────────
   const fell = logs.filter((l) => l.fellBack).length;
   console.log(`\nSummary: ${Object.keys(finalByCustomId).length} decisions × 2 variants; ${fell} fell back.`);
+  printReasons();
   process.exit(0);
+}
+
+function punctuationNudge(failed) {
+  const all = [...(failed.f0 || []), ...(failed.f1 || [])].filter((f) => f.startsWith('punctuation:'));
+  if (!all.length) return '';
+  return ` PUNCTUATION problem (${all.join('; ')}): write complete sentences, capitalise each sentence, ` +
+    `end every sentence (including the last) with a period, and use single spaces.`;
 }
 
 // Single-request rebuild for the retry batch (adds a nudge about what failed).
@@ -894,7 +931,8 @@ function buildSingleRequest(customId, meta, failed) {
   const { coach, ctx, recentOpenings } = meta;
   const nudge = failed
     ? `\n\nYour previous attempt failed these checks — fix them: ${JSON.stringify(failed)}. ` +
-      `Remember: only cite numbers from the context; never use forbidden phrases; open differently.`
+      `Remember: only cite numbers from the context; never use forbidden phrases; open differently.` +
+      punctuationNudge(failed)
     : '';
   return {
     customId,
@@ -905,7 +943,7 @@ function buildSingleRequest(customId, meta, failed) {
         model: MODEL,
         max_tokens: 600,
         system: systemBlocks(coach, recentOpenings),
-        messages: [{ role: 'user', content: userMessage(coach, ctx) + nudge }],
+        messages: [{ role: 'user', content: userMessage(coach, ctx, meta.level) + nudge }],
       },
     },
   };

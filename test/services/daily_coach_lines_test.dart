@@ -125,14 +125,14 @@ void _dayDocTests() {
     });
 
     test('reads the requested day, not another', () async {
-      expect(await read('2026-10-15'), 'line for 2026-10-15');
+      expect(await read('2026-10-15'), 'Line for 2026-10-15.');
       expect(fetched, ['2026-10-15']);
     });
 
     test('cache does not serve day A for day B (and keeps both)', () async {
-      expect(await read('2026-10-15'), 'line for 2026-10-15');
-      expect(await read('2026-10-16'), 'line for 2026-10-16');
-      expect(await read('2026-10-15'), 'line for 2026-10-15');
+      expect(await read('2026-10-15'), 'Line for 2026-10-15.');
+      expect(await read('2026-10-16'), 'Line for 2026-10-16.');
+      expect(await read('2026-10-15'), 'Line for 2026-10-15.');
       expect(fetched, ['2026-10-15', '2026-10-16']);
     });
 
@@ -163,7 +163,7 @@ void _dayDocTests() {
         return doc('x');
       };
       final r = await Future.wait([read('2026-10-15'), read('2026-10-15')]);
-      expect(r, ['x', 'x']);
+      expect(r, ['X.', 'X.']);
       expect(fetches, 1);
     });
 
@@ -188,7 +188,7 @@ void _dayDocTests() {
         return doc('ok');
       };
       expect(await read('2026-10-15'), isNull);
-      expect(await read('2026-10-15'), 'ok');
+      expect(await read('2026-10-15'), 'Ok.');
       expect(fetches, 2);
     });
   });

@@ -5583,6 +5583,8 @@
   "authoredYourHand": "mâna ta",
   "authoredHandLabel": "MÂNA {n}",
   "authoredHandProgress": "Mâna {n}/{total} · {title}",
+  "authoredSyntheticReroute": "Un bet nu se află în linia solverului — mâna continuă cu {action}.",
+  "@authoredSyntheticReroute": {"placeholders": {"action": {"type": "String"}}},
   "authoredRerouteNote": "Mâna continuă pe linia solverului — {action}.",
   "authoredYouFold": "Dai fold — {villain} ia potul.",
   "authoredVillainFolds": "{villain} dă fold — iei potul.",

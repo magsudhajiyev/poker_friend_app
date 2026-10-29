@@ -56,10 +56,7 @@ List<Situation> _play(AuthoredTree tree, List<AuthoredAction> actions,
   }
   if (!walker.isOver && walker.isHeroTurn) {
     lines.add(AuthoredSituation.describe(
-        tree: tree,
-        node: walker.current!,
-        history: history,
-        coachId: coach));
+        tree: tree, node: walker.current!, history: history, coachId: coach));
   }
   return lines;
 }
@@ -241,8 +238,8 @@ void main() {
     expect(checked, greaterThan(10));
   });
   group('stacks', () {
-    SituationStep step(TreeActor a, AuthoredAction x, double size,
-            TreeStreet st) =>
+    SituationStep step(
+            TreeActor a, AuthoredAction x, double size, TreeStreet st) =>
         SituationStep(actor: a, action: x, sizeBB: size, street: st);
     const h = TreeActor.hero, v = TreeActor.villain;
     const pf = TreeStreet.preflop, fl = TreeStreet.flop;
@@ -309,8 +306,8 @@ void main() {
       expect(label(['A♥', '2♥'], ['K♥', '9♥', '4♣']), 'a flush draw');
       expect(label(['Q♣', 'J♦'], ['10♠', '9♣', '4♦']), 'a straight draw');
       expect(label(['A♣', 'K♦'], ['10♠', '9♣', '4♦']), 'two overcards');
-      expect(label(['A♥', '2♥'], ['K♥', '9♥', '4♣', '7♠', '3♦']),
-          'nothing yet');
+      expect(
+          label(['A♥', '2♥'], ['K♥', '9♥', '4♣', '7♠', '3♦']), 'nothing yet');
     });
     test('board warnings', () {
       final set = HandReader.read(['9♠', '9♥'], ['10♠', '9♣', '4♦', 'J♦'])!;
@@ -356,8 +353,8 @@ void main() {
     ]) {
       final node = walker.current!;
       facing.add(AuthoredSituation.facingLabel(tree, history, node.street));
-      hero.add(AuthoredSituation.actionLabel(a, node,
-          firstIn: history.isEmpty));
+      hero.add(
+          AuthoredSituation.actionLabel(a, node, firstIn: history.isEmpty));
       walker.applyHeroAction(a);
       final taken = walker.lastReroute ?? a;
       history.add(SituationStep(
@@ -392,5 +389,45 @@ void main() {
     final vsBet = tree.nodes['n31']!; // hero facing the 8.8BB c-bet
     expect(AuthoredSituation.actionLabel(AuthoredAction.raise, vsBet),
         'raise to 19.2BB');
+  });
+
+  group('villain check wording', () {
+    const pre = TreeStreet.preflop, flop = TreeStreet.flop;
+    SituationStep v(AuthoredAction a, TreeStreet st) => SituationStep(
+        actor: TreeActor.villain, action: a, sizeBB: 0, street: st);
+    SituationStep h(AuthoredAction a, TreeStreet st) =>
+        SituationStep(actor: TreeActor.hero, action: a, sizeBB: 0, street: st);
+
+    test('villain acting FIRST checks to you (no "behind", no repeat)', () {
+      for (final coach in ['grinder', 'professor', 'nova']) {
+        final t = AuthoredSituation.describe(
+            tree: tree,
+            node: tree.nodes['n4']!,
+            coachId: coach,
+            history: [
+              h(AuthoredAction.raise, pre),
+              v(AuthoredAction.call, pre),
+              v(AuthoredAction.check, flop),
+            ]).text;
+        expect(t.toLowerCase(), contains('checks to you'));
+        expect(t.toLowerCase(), isNot(contains('behind')));
+        expect(t.toLowerCase(), isNot(contains('checked to you')));
+      }
+    });
+
+    test('villain acting AFTER the hero may check behind', () {
+      final t = AuthoredSituation.describe(
+          tree: tree,
+          node: tree.nodes['n4']!,
+          coachId: 'professor',
+          history: [
+            h(AuthoredAction.raise, pre),
+            v(AuthoredAction.call, pre),
+            h(AuthoredAction.check, flop),
+            v(AuthoredAction.check, flop),
+          ]).text;
+      expect(t.toLowerCase(), isNot(contains('checks to you')));
+      expect(t, contains('Checked to you'));
+    });
   });
 }

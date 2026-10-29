@@ -5576,6 +5576,8 @@
   "authoredYourHand": "twoja ręka",
   "authoredHandLabel": "ROZDANIE {n}",
   "authoredHandProgress": "Rozdanie {n}/{total} · {title}",
+  "authoredSyntheticReroute": "Zakładu nie ma w linii solvera — rozdanie toczy się dalej z akcją {action}.",
+  "@authoredSyntheticReroute": {"placeholders": {"action": {"type": "String"}}},
   "authoredRerouteNote": "Rozdanie toczy się dalej linią solvera — {action}.",
   "authoredYouFold": "Pasujesz — {villain} zgarnia pulę.",
   "authoredVillainFolds": "{villain} pasuje — zgarniasz pulę.",

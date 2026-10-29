@@ -1,5 +1,6 @@
 import '../models/authored_spot.dart';
 import '../models/drill_models.dart';
+import '../utils/coach_text.dart';
 
 /// Grades a hero decision in an AUTHORED spot against the solver's per-hand
 /// action frequencies (frequency-only — the solver export carries no EV).
@@ -155,12 +156,17 @@ class AuthoredSpotGrader {
     final note = explanation.trim();
     final String teaching;
     if (note.isEmpty) {
-      teaching = reason;
+      teaching = normalizeCoachText(reason);
     } else if (grade == DrillGrade.mistake && heroAction != best) {
-      teaching =
-          '$note\n\n${_handNote(grade, heroAction, best, shown, actionPct, bestPct, heroNoun, bestNoun)}';
+      // Joined with a space: the feedback card renders ONE Text widget, so a
+      // '\n\n' was only a stray line break, never a real paragraph.
+      teaching = joinSentences([
+        note,
+        _handNote(grade, heroAction, best, shown, actionPct, bestPct,
+            heroNoun, bestNoun),
+      ]);
     } else {
-      teaching = note;
+      teaching = normalizeCoachText(note);
     }
 
     return DrillGradeResult(

@@ -50,9 +50,10 @@ void main() {
 
   group('Variant hands', () {
     test('KQs is a bluff check-raise (94%) → BEST on the flop', () {
-      final spot = authoredSpotVariants.firstWhere((s) => s.heroHandClass == 'KQs');
-      final raise =
-          AuthoredSpotGrader.grade(spot.decisions[1], 'KQs', AuthoredAction.raise);
+      final spot =
+          authoredSpotVariants.firstWhere((s) => s.heroHandClass == 'KQs');
+      final raise = AuthoredSpotGrader.grade(
+          spot.decisions[1], 'KQs', AuthoredAction.raise);
       expect(raise.grade, DrillGrade.correct);
     });
 
@@ -130,8 +131,7 @@ void main() {
         check: const {},
         fold: const {'72o': 1.0, '83o': 1.0, '94o': 1.0, '62o': 1.0, 'TT': 0.0},
       );
-      final g =
-          AuthoredSpotGrader.grade(foldHeavy, 'TT', AuthoredAction.fold);
+      final g = AuthoredSpotGrader.grade(foldHeavy, 'TT', AuthoredAction.fold);
       expect(g.grade, DrillGrade.mistake);
     });
 
@@ -201,7 +201,9 @@ void main() {
       // …then the correction naming the hero's actual hand (the authored text
       // describes the SOLVER line, which the player did NOT take).
       expect(g.explanation, contains('A♦ 9♦'));
-      expect(g.explanation, contains('\n\n'));
+      // One Text widget renders the card: joined by a space, not a blank line.
+      expect(g.explanation, isNot(contains('\n')));
+      expect(g.explanation, contains('. But your'));
     });
 
     test('no explanation → frequency reason only (unchanged)', () {

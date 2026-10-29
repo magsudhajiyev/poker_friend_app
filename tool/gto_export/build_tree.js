@@ -352,6 +352,28 @@ async function main() {
         if (pct > 0) potFromSizing = Math.round((bb / pct) * 10) / 10;
       }
     }
+    // Sizing sanity (the client needs a size for every real raise/bet).
+    if ((row[ci.actor] === meta.heroPos ? 'hero' : 'villain') === 'hero') {
+      if (actions.includes('raise') && sizing.raise === undefined) {
+        console.warn(`WARN step ${row[ci.step]}: hero raise without a size`);
+      }
+      if (
+        sizing.raise !== undefined &&
+        sizing.allin !== undefined &&
+        sizing.raise >= sizing.allin
+      ) {
+        console.warn(
+          `WARN step ${row[ci.step]}: raise ${sizing.raise}bb >= allin ${sizing.allin}bb`
+        );
+      }
+      if (
+        actions.includes('check') &&
+        !actions.includes('raise') &&
+        actions.includes('allin')
+      ) {
+        globalThis.__checkAllinOnly = (globalThis.__checkAllinOnly || 0) + 1;
+      }
+    }
     // Column M: a JSON fact block on new sheets, plain prose on old ones.
     // When it parses as an object, keep the structured block as `facts` AND
     // derive a plain-text `explanation` (key_concept + first fact) for the
@@ -572,6 +594,12 @@ async function main() {
     );
   }
   console.log(`Max hero decisions on any path: ${maxDecisions}`);
+  if (globalThis.__checkAllinOnly) {
+    console.log(
+      `Check+allin-only hero nodes: ${globalThis.__checkAllinOnly} ` +
+        `(client will add a 1/3-pot trainer Bet)`
+    );
+  }
 
   const json = JSON.stringify(tree, null, 2);
   fs.writeFileSync(path.join(__dirname, OUT), json);

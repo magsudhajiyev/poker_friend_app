@@ -5576,6 +5576,8 @@
   "authoredYourHand": "ta main",
   "authoredHandLabel": "MAIN {n}",
   "authoredHandProgress": "Main {n}/{total} · {title}",
+  "authoredSyntheticReroute": "Une mise ne fait pas partie de la ligne du solver — la main continue avec {action}.",
+  "@authoredSyntheticReroute": {"placeholders": {"action": {"type": "String"}}},
   "authoredRerouteNote": "La main continue sur la ligne du solver — {action}.",
   "authoredYouFold": "Tu te couches — {villain} remporte le pot.",
   "authoredVillainFolds": "{villain} se couche — tu remportes le pot.",

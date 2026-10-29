@@ -5576,6 +5576,8 @@
   "authoredYourHand": "tu mano",
   "authoredHandLabel": "MANO {n}",
   "authoredHandProgress": "Mano {n}/{total} · {title}",
+  "authoredSyntheticReroute": "Una apuesta no está en la línea del solver — la mano continúa con {action}.",
+  "@authoredSyntheticReroute": {"placeholders": {"action": {"type": "String"}}},
   "authoredRerouteNote": "La mano continúa por la línea del solver — {action}.",
   "authoredYouFold": "Haces fold — {villain} se lleva el bote.",
   "authoredVillainFolds": "{villain} hace fold — te llevas el bote.",

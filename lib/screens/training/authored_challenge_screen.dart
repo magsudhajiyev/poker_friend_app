@@ -22,9 +22,11 @@ import '../../services/coach_level_resolver.dart';
 import '../../services/coach_persona.dart';
 import '../../services/coach_voice_service.dart';
 import '../../services/daily_coach_lines_service.dart';
+import '../../services/logger_service.dart';
 import '../../widgets/authored_range_grid.dart';
 import '../../widgets/coach_mascot.dart';
 import '../../widgets/hand_micro_animations.dart';
+import '../../utils/coach_text.dart';
 import '../../widgets/poker_table_widget.dart';
 
 /// AUTHORED TREE challenge runner — the hero plays a REAL solver game tree
@@ -199,6 +201,7 @@ class _AuthoredChallengeScreenState extends State<AuthoredChallengeScreen> {
   /// When the hero's chosen action had no solved continuation, the hand was
   /// kept alive via this solver-line action (shown as a note in feedback).
   AuthoredAction? _lastReroute;
+  bool _lastWasSynthetic = false;
 
   /// The persona-driven AI feedback line for the LAST graded decision, fetched
   /// from `daily_challenge_lines/{dayKey}` keyed by (spotId, coach, action).
@@ -304,8 +307,11 @@ class _AuthoredChallengeScreenState extends State<AuthoredChallengeScreen> {
     // Results labels — computed from the history BEFORE this action.
     final firstIn = _history.isEmpty;
     _facing.add(AuthoredSituation.facingLabel(_tree, _history, node.street));
-    _heroLabels
-        .add(AuthoredSituation.actionLabel(action, node, firstIn: firstIn));
+    final synthetic = isSyntheticAction(node, action);
+    _heroLabels.add(synthetic
+        ? 'bet ${_fmtBB(_raiseSizeBB(node) ?? 0)}BB'
+        : AuthoredSituation.actionLabel(action, node, firstIn: firstIn));
+    _lastWasSynthetic = synthetic;
     // Walker grades against the node's solver frequencies, applies the
     // action, and auto-plays the villain's deterministic response(s).
     final grade = _walker.applyHeroAction(action);
@@ -319,7 +325,7 @@ class _AuthoredChallengeScreenState extends State<AuthoredChallengeScreen> {
       action: taken,
       sizeBB: switch (taken) {
         AuthoredAction.call => node.toCallBB,
-        AuthoredAction.raise => node.sizingBB[AuthoredAction.raise] ?? 0,
+        AuthoredAction.raise => _raiseSizeBB(node) ?? 0,
         AuthoredAction.allin =>
           node.sizingBB[AuthoredAction.allin] ?? _tree.stackBB,
         _ => 0,
@@ -371,7 +377,7 @@ class _AuthoredChallengeScreenState extends State<AuthoredChallengeScreen> {
       },
       amountBB: switch (taken) {
         AuthoredAction.call => node.toCallBB,
-        AuthoredAction.raise => node.sizingBB[AuthoredAction.raise] ?? 0,
+        AuthoredAction.raise => _raiseSizeBB(node) ?? 0,
         AuthoredAction.allin =>
           node.sizingBB[AuthoredAction.allin] ?? _tree.stackBB,
         _ => 0,
@@ -498,17 +504,13 @@ class _AuthoredChallengeScreenState extends State<AuthoredChallengeScreen> {
   /// in context, so they sometimes echo it; this collapses every form of the
   /// hero's own combo back to the class the rest of the UI (and the voice's
   /// speakable transform) expects. Shown in the bubble AND fed to the voice.
-  String _coachText(DrillGradeResult grade) =>
-      _toHandClass(widget.persona.compose(grade, _index, aiLine: _aiLine));
+  String _coachText(DrillGradeResult grade) => normalizeCoachText(
+      _toHandClass(widget.persona.compose(grade, _index, aiLine: _aiLine)));
 
   /// Guarantee terminal punctuation — the AI lines occasionally end without a
   /// period, which reads as a cut-off sentence in the bubble. Adds a '.' only
   /// when the trimmed line doesn't already end in . ! ? … or a closing quote.
-  static String _ensurePeriod(String s) {
-    final t = s.trimRight();
-    if (t.isEmpty) return t;
-    return RegExp(r'''[.!?…"'’”)]$''').hasMatch(t) ? t : '$t.';
-  }
+  static String _ensurePeriod(String s) => normalizeCoachText(s);
 
   /// Replace any written form of the HERO's exact combo with its class.
   /// Handles 'As-Ts', 'AsTs', 'A♠T♠', 'A♠-T♠', 'A♠ T♠' (either card order),
@@ -1011,6 +1013,21 @@ class _AuthoredChallengeScreenState extends State<AuthoredChallengeScreen> {
   static String _bbCaps(String text) =>
       text.replaceAllMapped(RegExp(r'(\d)bb\b'), (m) => '${m[1]}BB');
 
+  /// Size of the hero's raise/bet at [node]: the solver's own size, or the
+  /// 1/3-pot size for the synthetic trainer Bet. A real raise without a size
+  /// is a data bug: log a warning and fall back to null.
+  double? _raiseSizeBB(TreeNode node) {
+    if (isSyntheticAction(node, AuthoredAction.raise)) {
+      return syntheticBetSizeBB(node);
+    }
+    final size = node.sizingBB[AuthoredAction.raise];
+    if (size == null) {
+      LoggerService.log('Authored raise without sizing at node ${node.id}',
+          level: LogLevel.WARNING);
+    }
+    return size;
+  }
+
   String _fmtBB(double v) =>
       v == v.roundToDouble() ? v.round().toString() : v.toStringAsFixed(1);
 
@@ -1232,7 +1249,7 @@ class _AuthoredChallengeScreenState extends State<AuthoredChallengeScreen> {
 
     /// (action word, amount) — amount is '' when the action has none.
     (String, String) labelFor(AuthoredAction a) {
-      final size = d.sizingBB[a];
+      final size = a == AuthoredAction.raise ? _raiseSizeBB(d) : d.sizingBB[a];
       String amt(double? v) => v == null ? '' : '${_fmtBB(v)}BB';
       return switch (a) {
         AuthoredAction.fold => ('Fold', ''),
@@ -1336,8 +1353,7 @@ class _AuthoredChallengeScreenState extends State<AuthoredChallengeScreen> {
   /// main branch.
   List<AuthoredAction> _displayActions(TreeNode d) {
     final list = List<AuthoredAction>.of(d.actions);
-    if (list.contains(AuthoredAction.check) &&
-        !list.contains(AuthoredAction.raise)) {
+    if (syntheticBetSizeBB(d) != null) {
       // Insert the Bet between check and all-in (display order).
       final allinIdx = list.indexOf(AuthoredAction.allin);
       list.insert(
@@ -1442,7 +1458,9 @@ class _AuthoredChallengeScreenState extends State<AuthoredChallengeScreen> {
                               if (_lastReroute != null && !_done) ...[
                                 const SizedBox(height: 6),
                                 Text(
-                                  l10n.authoredRerouteNote(switch (_lastReroute!) {
+                                  (_lastWasSynthetic
+                                      ? l10n.authoredSyntheticReroute
+                                      : l10n.authoredRerouteNote)(switch (_lastReroute!) {
                                     AuthoredAction.check => 'check',
                                     AuthoredAction.call => 'call',
                                     AuthoredAction.raise => 'raise',

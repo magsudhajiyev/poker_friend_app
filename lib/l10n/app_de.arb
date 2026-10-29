@@ -5576,6 +5576,8 @@
   "authoredYourHand": "deine Hand",
   "authoredHandLabel": "HAND {n}",
   "authoredHandProgress": "Hand {n}/{total} · {title}",
+  "authoredSyntheticReroute": "Ein Bet gehört nicht zur Solver-Linie — die Hand läuft mit {action} weiter.",
+  "@authoredSyntheticReroute": {"placeholders": {"action": {"type": "String"}}},
   "authoredRerouteNote": "Die Hand läuft entlang der Solver-Linie weiter — {action}.",
   "authoredYouFold": "Du foldest — {villain} gewinnt den Pot.",
   "authoredVillainFolds": "{villain} foldet — du gewinnst den Pot.",

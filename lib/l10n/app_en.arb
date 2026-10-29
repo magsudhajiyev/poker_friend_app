@@ -5712,6 +5712,8 @@
       }
     }
   },
+  "authoredSyntheticReroute": "A bet isn't in the solver's line — the hand continues with {action}.",
+  "@authoredSyntheticReroute": {"placeholders": {"action": {"type": "String"}}},
   "authoredRerouteNote": "The hand continues along the solver line — {action}.",
   "@authoredRerouteNote": {
     "placeholders": {

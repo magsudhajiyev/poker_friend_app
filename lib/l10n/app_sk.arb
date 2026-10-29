@@ -5611,6 +5611,8 @@
   "authoredYourHand": "tvoja ruka",
   "authoredHandLabel": "ROZDANIE {n}",
   "authoredHandProgress": "Rozdanie {n}/{total} · {title}",
+  "authoredSyntheticReroute": "Stávka nie je v línii solvera — rozdanie pokračuje akciou {action}.",
+  "@authoredSyntheticReroute": {"placeholders": {"action": {"type": "String"}}},
   "authoredRerouteNote": "Rozdanie pokračuje po línii solvera — {action}.",
   "authoredYouFold": "Foldneš — {villain} berie pot.",
   "authoredVillainFolds": "{villain} foldne — berieš pot.",

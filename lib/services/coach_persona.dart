@@ -1,5 +1,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../utils/coach_text.dart';
+
 import '../models/drill_models.dart';
 
 /// Daily Challenge coach personas: character lives in the WRITING; the
@@ -38,7 +40,8 @@ class CoachPersona {
       DrillGrade.ok => okLeads,
       DrillGrade.mistake => mistakeLeads,
     };
-    return pool[n % pool.length].replaceAll('{action}', action);
+    return normalizeCoachText(
+        pool[n % pool.length].replaceAll('{action}', action));
   }
 
   /// The full coach line for one graded decision: persona lead + the
@@ -51,7 +54,7 @@ class CoachPersona {
   /// template lead is prepended, no GTO note appended). Falls back to the
   /// template lead + grader reason when null/empty.
   String compose(DrillGradeResult grade, int n, {String? aiLine}) {
-    if (aiLine != null && aiLine.trim().isNotEmpty) return aiLine.trim();
+    if (aiLine != null && aiLine.trim().isNotEmpty) return normalizeCoachText(aiLine);
 
     final reason = grade.headlineReason.isNotEmpty
         ? grade.headlineReason
@@ -67,12 +70,13 @@ class CoachPersona {
     // Use the street-aware recommended WORD ('bet' vs 'raise'), not the raw
     // wire action (which always reads 'raise') — so a flop bet never shows as
     // "raise edges it".
-    var line = '${_lead(leadGrade, grade.recommendedWord, n)} $reason';
-    if (!grade.linesAgree) {
-      line += ' (Pure GTO would ${grade.gtoAction} here — against this '
-          'table, ${grade.exploitAction} is the better line.)';
-    }
-    return line;
+    return joinSentences([
+      _lead(leadGrade, grade.recommendedWord, n),
+      reason,
+      if (!grade.linesAgree)
+        '(Pure GTO would ${grade.gtoAction} here — against this '
+            'table, ${grade.exploitAction} is the better line.)',
+    ]);
   }
 }
 
