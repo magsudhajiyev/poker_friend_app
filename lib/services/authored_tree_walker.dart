@@ -108,6 +108,9 @@ class AuthoredTreeWalker {
       ));
       _currentId = node.children[action];
     }
+    // Guard tripped on a villain node (malformed/cyclic tree): end the hand
+    // instead of leaving the UI waiting on a node nobody acts on.
+    if (current != null && !current!.isHero) _currentId = null;
     // If we landed on a hero decision the hero hand can never reach (the
     // solver lists no frequency for it here), end the hand rather than ask an
     // impossible decision that would always misgrade as a LEAK. This happens

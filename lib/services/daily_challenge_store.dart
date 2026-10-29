@@ -289,6 +289,16 @@ class DailyChallengeStore {
   static Future<DailyChallengeStreaks> streaks(DateTime today) async =>
       computeStreaks(await _loadAll(), today);
 
+  /// Calendar-day shift. Never subtract a 24h `Duration` from a local
+  /// DateTime: on a DST day (23h/25h) that skips or repeats a calendar day.
+  static DateTime _shiftDays(DateTime d, int n) =>
+      DateTime(d.year, d.month, d.day + n);
+
+  /// True when [next] is the calendar day right after [prev] (DST-safe,
+  /// compares Y-M-D, not elapsed hours).
+  static bool isNextDay(DateTime prev, DateTime next) =>
+      dayKey(_shiftDays(prev, 1)) == dayKey(next);
+
   /// Pure streak math (unit-tested). The current streak stays ALIVE when
   /// yesterday was played but today isn't yet — missing a full day breaks it.
   static DailyChallengeStreaks computeStreaks(
@@ -299,10 +309,10 @@ class DailyChallengeStore {
     var current = 0;
     // Anchor on today if played, else on yesterday (today still pending).
     var cursor =
-        played.contains(dayKey(day0)) ? day0 : day0.subtract(const Duration(days: 1));
+        played.contains(dayKey(day0)) ? day0 : _shiftDays(day0, -1);
     while (played.contains(dayKey(cursor))) {
       current++;
-      cursor = cursor.subtract(const Duration(days: 1));
+      cursor = _shiftDays(cursor, -1);
     }
 
     // Best run: walk the sorted day keys counting consecutive-date runs.
@@ -312,7 +322,7 @@ class DailyChallengeStore {
     for (final key in played.toList()..sort()) {
       final parts = key.split('-').map(int.parse).toList();
       final d = DateTime(parts[0], parts[1], parts[2]);
-      run = (prev != null && d.difference(prev).inDays == 1) ? run + 1 : 1;
+      run = (prev != null && isNextDay(prev, d)) ? run + 1 : 1;
       if (run > best) best = run;
       prev = d;
     }

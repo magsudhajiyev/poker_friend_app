@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:poker_logger/services/daily_scoring.dart';
 
@@ -79,5 +82,26 @@ void main() {
 
   test('decisionCount ignores separators', () {
     expect(DailyScoring.decisionCount('ccoc|cc|c'), 7);
+  });
+
+  // Shared with functions/test/daily_accuracy.test.js — the CF re-grades
+  // every leaderboard entry, so any drift would rewrite honest scores.
+  group('CF parity fixture', () {
+    final fixture = jsonDecode(
+            File('test/fixtures/daily_scoring_cases.json').readAsStringSync())
+        as Map<String, dynamic>;
+    for (final c in (fixture['cases'] as List).cast<Map<String, dynamic>>()) {
+      test(c['name'] as String, () {
+        final raw = c['weights'] as List?;
+        final weights = raw
+            ?.map((x) => x == 'Infinity' ? double.infinity : (x as num).toDouble())
+            .toList();
+        final verdicts = c['verdicts'] as String;
+        final score = DailyScoring.accuracy(verdicts, weights);
+        expect(score, (c['score'] as num).toDouble());
+        expect(DailyScoring.scoreKey(score), c['scoreKey']);
+        expect(DailyScoring.isPerfect(verdicts), c['perfect']);
+      });
+    }
   });
 }

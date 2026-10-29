@@ -1,15 +1,20 @@
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
 import { mirrorFromSubscriber } from "./subscription_mirror";
 import { shouldSendTrialReminder, trialReminderCopy } from "./trial_reminder";
+import { dailyAccuracy } from "./daily_accuracy";
 import { onSchedule } from "firebase-functions/v2/scheduler";
 import { onRequest } from "firebase-functions/v2/https";
 import { defineSecret } from "firebase-functions/params";
 import { initializeApp } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
-import { getFirestore, FieldValue, Timestamp } from "firebase-admin/firestore";
+import { getFirestore, FieldValue, Timestamp, QueryDocumentSnapshot } from "firebase-admin/firestore";
 import { getMessaging } from "firebase-admin/messaging";
 import { getStorage } from "firebase-admin/storage";
 import { createHash, randomUUID } from "crypto";
+import { localDayKey, isStreakAlive } from "./local_day";
+import * as functionsV1 from "firebase-functions/v1";
+import { chunk } from "./chunk_refs";
+import { staleCutoffKey, isStaleStreakRow } from "./streak_expiry";
 
 // Initialize Firebase Admin SDK
 initializeApp();
@@ -735,39 +740,8 @@ export const coachSpeech = onRequest(
  * `scoreKey` if they disagree, so no one can post a fake score through the
  * rules (which only shape-check). Fires on daily-entry create.
  *
- * Scoring mirrors the client's DailyScoring (lib/services/daily_scoring.dart)
- * — keep both in sync: score = day ACCURACY % (0..100, one decimal).
- *   decision c=1 / o=0.5 / else 0; hands are '|'-separated (no '|' = one
- *   hand); hand accuracy = pot-weighted mean
- *   (weights[] aligned with the letters, floored at 1, missing → 1); day =
- *   plain mean of hand accuracies. scoreKey = accuracy ×10; perfect = every
- *   letter 'c'.
+ * Scoring: see src/daily_accuracy.ts (mirrors lib/services/daily_scoring.dart).
  */
-export function dailyAccuracy(verdicts: string, weights: unknown): number {
-  const w: number[] = Array.isArray(weights) ?
-    weights.map((x) => (typeof x === "number" ? x : 1)) :
-    [];
-  // No '|' = ONE hand (single-hand day or legacy RNG run).
-  const hands = verdicts.length === 0 ? [] : verdicts.split("|");
-  if (hands.length === 0) return 0;
-  let offset = 0;
-  let sumAcc = 0;
-  for (const hand of hands) {
-    let sum = 0;
-    let total = 0;
-    for (let i = 0; i < hand.length; i++) {
-      const raw = offset + i < w.length ? w[offset + i] : 1;
-      const weight = raw > 1 ? raw : 1;
-      const ch = hand[i];
-      sum += (ch === "c" ? 1 : ch === "o" ? 0.5 : 0) * weight;
-      total += weight;
-    }
-    sumAcc += hand.length > 0 ? sum / total : 0;
-    offset += hand.length;
-  }
-  return Math.round((sumAcc / hands.length) * 1000) / 10;
-}
-
 export const validateLeaderboardEntry = onDocumentCreated(
   "leaderboard_daily/{dayKey}/entries/{uid}",
   async (event) => {
@@ -901,13 +875,11 @@ function isHoldout(uid: string): boolean {
   return h % 10 === 0;
 }
 
-const dayKeyUtc = (d: Date) => d.toISOString().slice(0, 10);
-
 export const scheduleEngagement = onSchedule(
   { schedule: "0 * * * *", timeoutSeconds: 540, memory: "512MiB" },
   async () => {
-    const utcHourNow = new Date().getUTCHours();
-    const today = dayKeyUtc(new Date());
+    const nowMs = Date.now();
+    const utcHourNow = new Date(nowMs).getUTCHours();
 
     // Candidates: users with a computed active hour whose prefs allow pushes.
     // (A missing notif map = defaults; we require activeHourUtc so we only
@@ -931,7 +903,11 @@ export const scheduleEngagement = onSchedule(
         if (!forced && isHoldout(uid)) continue;
 
         const activeHourUtc = Number(notif.activeHourUtc);
-        const tz = Number(notif.tzOffsetMinutes ?? 0);
+        const tzParsed = Number(notif.tzOffsetMinutes ?? 0);
+        const tz = Number.isFinite(tzParsed) ? tzParsed : 0;
+        // The user's LOCAL calendar day (matches the client's lastDayKey);
+        // UTC day when no offset is known.
+        const today = localDayKey(nowMs, tz);
         const localNow = localHour(utcHourNow, tz);
 
         // TWO evaluation windows so a daily player who plays early is still
@@ -970,9 +946,12 @@ export const scheduleEngagement = onSchedule(
 
         // Resolve the eligible moment (priority order; server-reachable set).
         const streakDoc = await db.collection("leaderboard_streak").doc(uid).get();
-        const currentStreak = Number(streakDoc.get("currentStreak") || 0);
-        const bestStreak = Number(streakDoc.get("bestStreak") || 0);
         const lastDayKey = String(streakDoc.get("lastDayKey") || "");
+        // A streak not played today/yesterday (local) is dead: count it as 0.
+        const currentStreak = isStreakAlive(lastDayKey, today)
+          ? Number(streakDoc.get("currentStreak") || 0)
+          : 0;
+        const bestStreak = Number(streakDoc.get("bestStreak") || 0);
         const playedToday = lastDayKey === today;
         // Milestone = a round-number streak reached today (celebration push).
         const milestoneHit =
@@ -1121,3 +1100,90 @@ export const sendTrialReminders = onSchedule("every 60 minutes", async () => {
   }
   console.log(`sendTrialReminders: ${snap.size} in trial, ${sent} reminded`);
 });
+
+/**
+ * GDPR / Google Play data deletion: when a Firebase Auth account is deleted,
+ * remove the user's public Daily Challenge leaderboard data. Rules make
+ * leaderboard entries create-only for clients, so this must run server-side.
+ *
+ * Uses the v1 auth trigger (v2 has no auth onDelete). uid comes from the
+ * auth event, never from client input.
+ *
+ * DEPLOY BY NAME ONLY: `firebase deploy --only functions:deleteLeaderboardDataOnUserDelete`
+ * A full functions deploy would delete three prod functions not in this repo.
+ */
+// Retries enabled: deleting already-missing docs is a no-op, so re-runs are safe (idempotent).
+export const deleteLeaderboardDataOnUserDelete = functionsV1
+  .runWith({ failurePolicy: true })
+  .auth.user()
+  .onDelete(async (user) => {
+    const uid = user.uid;
+    const db = getFirestore();
+    const refs: FirebaseFirestore.DocumentReference[] = [
+      db.collection("leaderboard_streak").doc(uid),
+    ];
+    const entries = await db.collectionGroup("entries").where("uid", "==", uid).get();
+    // Collection group "entries" may exist elsewhere; only touch leaderboard_daily.
+    for (const d of entries.docs) {
+      if (d.ref.path.startsWith("leaderboard_daily/")) refs.push(d.ref);
+    }
+    for (const part of chunk(refs, 500)) {
+      const batch = db.batch();
+      part.forEach((r) => batch.delete(r));
+      await batch.commit();
+    }
+    console.log(`deleteLeaderboardDataOnUserDelete: ${refs.length} docs removed for ${uid}`);
+  });
+
+/* ────────────────────────────────────────────────────────────────────────
+   expireStaleStreaks — nightly Daily Challenge streak-board hygiene.
+
+   Lapsed players keep leaderboard_streak.currentStreak > 0 forever, which
+   piles them at the top of the board and inflates count()-based ranks. Once
+   a day, zero currentStreak on rows whose lastDayKey is older than
+   (UTC today - 2 days). bestStreak / perfectDays / totalPlayed are kept.
+
+   Query: `currentStreak > 0` ordered by currentStreak (automatic single-field
+   index, no composite). Rows already at 0 never match, so the nightly scan
+   does not grow with lapsed players. `lastDayKey < cutoff` is checked in code
+   (isStaleStreakRow). Paging uses the last DocumentSnapshot as cursor
+   (lastDayKey/currentStreak are not unique). Zeroing a row removes it from
+   the result set, but startAfter(snapshot) positions by the (currentStreak,
+   __name__) values captured when the page was read, not by a live lookup,
+   so committing each page's batch before fetching the next skips nothing.
+   Pure logic: src/streak_expiry.ts (tested).
+
+   DEPLOY BY NAME ONLY: `firebase deploy --only functions:expireStaleStreaks`.
+   A full functions deploy would delete three prod functions that are not in
+   this repo.
+   ──────────────────────────────────────────────────────────────────────── */
+export const expireStaleStreaks = onSchedule(
+  { schedule: "every day 06:00", timeZone: "Etc/UTC" },
+  async () => {
+    const cutoff = staleCutoffKey(Date.now());
+    const PAGE = 500;
+    let cursor: QueryDocumentSnapshot | null = null;
+    let expired = 0;
+    for (;;) {
+      let q = db.collection("leaderboard_streak")
+        .where("currentStreak", ">", 0)
+        .orderBy("currentStreak")
+        .limit(PAGE);
+      if (cursor !== null) q = q.startAfter(cursor);
+      const snap = await q.get();
+      if (snap.empty) break;
+      const batch = db.batch();
+      let n = 0;
+      for (const doc of snap.docs) {
+        if (!isStaleStreakRow(doc.data(), cutoff)) continue;
+        batch.update(doc.ref, { currentStreak: 0 });
+        n++;
+      }
+      if (n > 0) await batch.commit();
+      expired += n;
+      cursor = snap.docs[snap.docs.length - 1];
+      if (snap.size < PAGE) break;
+    }
+    console.log(`expireStaleStreaks: cutoff=${cutoff} expired=${expired}`);
+  },
+);

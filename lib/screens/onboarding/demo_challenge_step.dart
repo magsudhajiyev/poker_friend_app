@@ -54,6 +54,7 @@ class _DemoChallengeStepState extends State<DemoChallengeStep> {
             builder: (_) => AuthoredDayRunner(
               trees: [trees.first],
               persona: persona,
+              dayKey: dayKey,
               // Demo has no results screen after it → the final button just
               // finishes and advances the onboarding flow.
               lastHandLabel: AppLocalizations.of(context).onboardingDemoDone,

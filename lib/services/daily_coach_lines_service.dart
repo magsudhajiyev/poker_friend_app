@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 
 import 'coach_level_resolver.dart';
 import 'daily_challenge_service.dart';
@@ -36,8 +37,37 @@ class DailyCoachLinesService {
 
   /// One day's lines are cached in memory after the first read so every
   /// spot of the run does not re-fetch the same doc.
-  static String? _cachedDayKey;
-  static Map<String, dynamic>? _cachedData;
+  /// Keyed by the REQUESTED day (not just today), so a replay of day A and
+  /// today's run never see each other's doc. Only successful reads are cached.
+  static final Map<String, Map<String, dynamic>> _cache = {};
+
+  /// In-flight reads per day, so concurrent lookups share ONE Firestore read.
+  /// An entry is dropped as soon as the read settles (value, null or error).
+  static final Map<String, Future<Map<String, dynamic>?>> _inFlight = {};
+
+  /// Negative cache: when a day had no lines doc, remember the miss for
+  /// [missTtl] so every coach decision does not re-hit Firestore, while a doc
+  /// generated later in the day is still picked up. Value = miss timestamp.
+  static final Map<String, DateTime> _missedAt = {};
+
+  /// How long a missing doc is remembered.
+  static const Duration missTtl = Duration(seconds: 60);
+
+  /// Test seam: replaces the Firestore read. Null in production.
+  @visibleForTesting
+  static Future<Map<String, dynamic>?> Function(String dayKey)? debugFetcher;
+
+  /// Test seam: replaces the clock used for the negative-cache TTL.
+  @visibleForTesting
+  static DateTime Function()? debugNow;
+
+  /// Test seam: clears the in-memory caches.
+  @visibleForTesting
+  static void debugResetCache() {
+    _cache.clear();
+    _inFlight.clear();
+    _missedAt.clear();
+  }
 
   /// Per-NODE, per-action, per-level lookup (shape 1). Navigates
   /// `hands[spotKey][nodeId][action][coachKey][level.id]`.
@@ -189,14 +219,36 @@ class DailyCoachLinesService {
     return banks[idx];
   }
 
-  static Future<Map<String, dynamic>?> _dayData(String dayKey) async {
-    if (_cachedDayKey == dayKey && _cachedData != null) return _cachedData;
-    final doc =
-        await _db.collection('daily_challenge_lines').doc(dayKey).get();
-    _cachedDayKey = dayKey;
-    _cachedData = doc.data();
-    return _cachedData;
+  static Future<Map<String, dynamic>?> _dayData(String dayKey) {
+    final hit = _cache[dayKey];
+    if (hit != null) return Future.value(hit);
+    final missed = _missedAt[dayKey];
+    if (missed != null) {
+      if (_now().difference(missed) < missTtl) return Future.value(null);
+      _missedAt.remove(dayKey);
+    }
+    return _inFlight[dayKey] ??= _load(dayKey);
   }
+
+  static Future<Map<String, dynamic>?> _load(String dayKey) async {
+    try {
+      final fetch = debugFetcher;
+      final data = fetch != null
+          ? await fetch(dayKey)
+          : (await _db.collection('daily_challenge_lines').doc(dayKey).get())
+              .data();
+      if (data != null) {
+        _cache[dayKey] = data;
+      } else {
+        _missedAt[dayKey] = _now();
+      }
+      return data;
+    } finally {
+      _inFlight.remove(dayKey);
+    }
+  }
+
+  static DateTime _now() => (debugNow ?? DateTime.now)();
 
   static String _todayKey() => _dayKey(
       DailyChallengeService.configFor(DailyChallengeService.today()).day);

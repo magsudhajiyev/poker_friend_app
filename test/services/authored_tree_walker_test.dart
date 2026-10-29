@@ -190,6 +190,40 @@ void main() {
     expect(w.isHeroTurn, isFalse);
   });
 
+  test('villain cycle ends the hand instead of stalling', () {
+    TreeNode v(String id, String next) => TreeNode(
+          id: id,
+          street: TreeStreet.flop,
+          board: const ['10♠', '9♣', '4♦'],
+          actor: TreeActor.villain,
+          potBB: 10,
+          toCallBB: 0,
+          prompt: 'loop',
+          actions: const [AuthoredAction.check],
+          sizingBB: const {},
+          freq: const {
+            AuthoredAction.check: {'AA': 1.0},
+          },
+          children: {AuthoredAction.check: next},
+        );
+    final tree = AuthoredTree(
+      id: 'cyc',
+      title: 'cycle',
+      formatLabel: 'MTT',
+      stackBB: 70,
+      anteMode: true,
+      heroPosition: 'LJ',
+      villainPosition: 'BTN',
+      heroCards: const ['9♠', '9♥'],
+      heroHandClass: '99',
+      rootId: 'a',
+      nodes: {'a': v('a', 'b'), 'b': v('b', 'a')},
+    );
+    final w = AuthoredTreeWalker(tree)..advanceVillains();
+    expect(w.isOver, isTrue);
+    expect(w.isHeroTurn, isFalse);
+  });
+
   test('round-trips through JSON', () {
     final tree = _fixture();
     final restored = AuthoredTree.fromJson(tree.toJson());

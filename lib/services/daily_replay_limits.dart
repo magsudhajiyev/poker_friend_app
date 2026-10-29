@@ -45,8 +45,9 @@ class DailyReplayLimits {
     if (window == 0) return null; // free: nothing
     final epoch = DailyChallengeService.dateOnly(DailyChallengeService.epoch);
     if (window == null) return epoch; // unlimited
-    final cutoff = DailyChallengeService.dateOnly(today)
-        .subtract(Duration(days: window));
+    final t = DailyChallengeService.dateOnly(today);
+    // Calendar arithmetic: a 24h Duration is wrong across DST changes.
+    final cutoff = DateTime(t.year, t.month, t.day - window);
     return cutoff.isBefore(epoch) ? epoch : cutoff;
   }
 

@@ -11,6 +11,7 @@ import '../../services/analytics_service.dart';
 import '../../services/daily_challenge_service.dart';
 import '../../services/daily_challenge_store.dart';
 import '../../services/daily_replay_limits.dart';
+import '../../services/daily_rollover.dart';
 import '../../services/subscription_service.dart';
 import '../paywall_screen.dart';
 import 'daily_replay_screen.dart';
@@ -37,8 +38,9 @@ class DailyChallengeCalendarScreen extends StatefulWidget {
 }
 
 class _DailyChallengeCalendarScreenState
-    extends State<DailyChallengeCalendarScreen> {
-  final DateTime _today = DailyChallengeService.dateOnly(
+    extends State<DailyChallengeCalendarScreen> with WidgetsBindingObserver {
+  // Re-resolved on app resume so the grid never sits on yesterday's "today".
+  DateTime _today = DailyChallengeService.dateOnly(
       DailyChallengeService.today());
   late final DateTime _epoch =
       DailyChallengeService.dateOnly(DailyChallengeService.epoch);
@@ -58,6 +60,7 @@ class _DailyChallengeCalendarScreenState
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _load();
     _premiumSub = SubscriptionService.premiumStatusStream.listen((_) {
       if (mounted) setState(() {}); // tier changed → window updates
@@ -67,8 +70,21 @@ class _DailyChallengeCalendarScreenState
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _premiumSub?.cancel();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed) return;
+    final now = DailyChallengeService.today();
+    if (!DailyRollover.hasRolledOver(_today, now) || !mounted) return;
+    setState(() {
+      _today = DailyChallengeService.dateOnly(now);
+      _month = DateTime(_today.year, _today.month);
+    });
+    _load();
   }
 
   Future<void> _load() async {

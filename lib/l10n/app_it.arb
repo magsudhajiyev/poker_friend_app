@@ -5508,6 +5508,9 @@
     }
   },
   "dailyChallengeTitle": "Daily Challenge",
+  "dailyChallengeAlreadyPlayedElsewhere": "Hai già giocato oggi su un altro dispositivo: {score}%",
+  "dailyChallengeOfflineTitle": "Impossibile caricare la sfida di oggi",
+  "dailyChallengeOfflineBody": "Controlla la connessione e riprova.",
   "dailyChallengeRuleGrades": "Il Coach valuta ogni tua mossa mentre la fai",
   "dailyChallengeRuleSameSpots": "Stessi spot per tutti — confrontati con gli amici",
   "dailyChallengeRuleStreak": "Gioca ogni giorno per costruire la tua Streak",
@@ -5615,5 +5618,21 @@
   "onboardingDcInfoBullet1": "5 nuovi spot al giorno per affinare il tuo gioco.",
   "onboardingDcInfoBullet2": "Adattato al tuo livello di esperienza mentre giochi.",
   "onboardingDcInfoBullet3": "I coach spiegano ogni linea, mano dopo mano.",
-  "onboardingDcInfoContinue": "Inizia"
+  "onboardingDcInfoContinue": "Inizia",
+  "authoredEvaluating": "Valutazione…",
+  "authoredShowRange": "Mostra range",
+  "authoredYourHand": "la tua mano",
+  "authoredHandLabel": "MANO {n}",
+  "authoredHandProgress": "Mano {n}/{total} · {title}",
+  "authoredRerouteNote": "La mano prosegue lungo la linea del solver — {action}.",
+  "authoredYouFold": "Fai fold — {villain} vince il piatto.",
+  "authoredVillainFolds": "{villain} fa fold — vinci il piatto.",
+  "authoredShowdown": "Mano conclusa — showdown.",
+  "authoredYouAction": "tu: {action}",
+  "authoredCoachAction": "coach: {action}",
+  "authoredSeeResult": "Vedi risultato",
+  "authoredYouPlate": "Tu · {name}",
+  "authoredFolded": "foldato",
+  "authoredPot": "Piatto {amount}BB",
+  "authoredSolverRanges": "Range del solver · {format}"
 }

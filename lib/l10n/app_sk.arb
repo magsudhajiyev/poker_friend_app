@@ -5508,6 +5508,9 @@
     }
   },
   "dailyChallengeTitle": "Daily Challenge",
+  "dailyChallengeAlreadyPlayedElsewhere": "Dnes ste už hrali na inom zariadení: {score}%",
+  "dailyChallengeOfflineTitle": "Dnešnú výzvu sa nepodarilo načítať",
+  "dailyChallengeOfflineBody": "Skontrolujte pripojenie a skúste to znova.",
   "dailyChallengeRuleGrades": "Coach hodnotí každý ťah hneď, ako ho spravíš",
   "dailyChallengeRuleSameSpots": "Rovnaké spoty pre všetkých — porovnaj sa s priateľmi",
   "dailyChallengeRuleStreak": "Hraj denne a buduj si streak",
@@ -5605,5 +5608,21 @@
   "onboardingDcInfoBullet1": "5 nových situácií denne na zdokonaľovanie svojej hry.",
   "onboardingDcInfoBullet2": "Prispôsobené tvojej úrovni skúseností, keď hraš.",
   "onboardingDcInfoBullet3": "Koči vysvetľujú každú linku, ruku za rukou.",
-  "onboardingDcInfoContinue": "Začať"
+  "onboardingDcInfoContinue": "Začať",
+  "authoredEvaluating": "Vyhodnocovanie…",
+  "authoredShowRange": "Zobraziť range",
+  "authoredYourHand": "tvoja ruka",
+  "authoredHandLabel": "ROZDANIE {n}",
+  "authoredHandProgress": "Rozdanie {n}/{total} · {title}",
+  "authoredRerouteNote": "Rozdanie pokračuje po línii solvera — {action}.",
+  "authoredYouFold": "Foldneš — {villain} berie pot.",
+  "authoredVillainFolds": "{villain} foldne — berieš pot.",
+  "authoredShowdown": "Rozdanie skončilo — showdown.",
+  "authoredYouAction": "ty: {action}",
+  "authoredCoachAction": "coach: {action}",
+  "authoredSeeResult": "Zobraziť výsledok",
+  "authoredYouPlate": "Ty · {name}",
+  "authoredFolded": "zahodil",
+  "authoredPot": "Pot {amount}BB",
+  "authoredSolverRanges": "Rozsahy solvera · {format}"
 }

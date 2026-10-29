@@ -22,6 +22,7 @@ import '../../services/coach_persona.dart';
 import '../../services/coach_voice_service.dart';
 import '../../services/daily_challenge_service.dart';
 import '../../services/daily_challenge_store.dart';
+import '../../services/daily_rollover.dart';
 import '../../services/feature_flag_service.dart';
 import '../../services/leaderboard_service.dart';
 import '../../services/notification_prefs_service.dart';
@@ -51,13 +52,32 @@ class DailyChallengeScreen extends StatefulWidget {
   State<DailyChallengeScreen> createState() => _DailyChallengeScreenState();
 }
 
-class _DailyChallengeScreenState extends State<DailyChallengeScreen> {
+/// True when today's intro must show the offline card instead of Play: the
+/// schedule came from a failed/offline read and the player has no result yet
+/// (local or server). A finished day still shows its results.
+bool dailyPlayBlocked({
+  required DayPlan? plan,
+  required bool hasLocalResult,
+  required bool hasRemote,
+}) =>
+    plan != null && !plan.ranked && !hasLocalResult && !hasRemote;
+
+class _DailyChallengeScreenState extends State<DailyChallengeScreen>
+    with WidgetsBindingObserver {
   static const _gold = AppColors.accentTertiary;
   static const _red = AppColors.accentDanger;
 
-  late final DailyChallengeConfig _config =
+  // Re-resolved when the calendar day rolls over (see _refreshDay).
+  DailyChallengeConfig _config =
       DailyChallengeService.configFor(DailyChallengeService.today());
   DailyChallengeResult? _todayResult;
+
+  /// Today's ranked run found on the server only (another device / reinstall).
+  /// Shown as a minimal "already played" state; never written locally.
+  RemoteDailySummary? _remotePlayed;
+
+  /// True while a run is on screen: the day must not be swapped under it.
+  bool _playing = false;
   DailyChallengeStreaks? _streaks;
   CoachPersona _persona = CoachPersonas.grinder;
   bool _loaded = false;
@@ -69,6 +89,20 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> {
   String? _authoredHeadline;
   String? _authoredSubtitle;
 
+  /// One schedule per visit: `_load` fetches it, `_playRun` reuses it, so the
+  /// unranked notice and the run always agree.
+  DayPlan? _plan;
+
+  /// True when the schedule could not be confirmed online. Play is blocked
+  /// (an offline look at the spots would leak the answers); see [dailyPlayBlocked].
+  bool get _unranked => _plan != null && !_plan!.ranked;
+
+  /// True while the offline card's Retry re-reads the schedule (debounce).
+  bool _retrying = false;
+
+  /// Monotonic id for schedule requests; only the latest may assign `_plan`.
+  int _planRequestId = 0;
+
   String get _dayHeadline => _authoredHeadline ?? _config.theme;
   String get _daySubtitle => _authoredSubtitle ?? _config.formatLabel;
 
@@ -78,6 +112,7 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _load();
     CoachPersonas.load().then((p) {
       if (mounted) setState(() => _persona = p);
@@ -93,24 +128,70 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> {
     });
   }
 
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) _refreshDay();
+  }
+
+  /// Re-resolve "today". If the date changed since this screen built its
+  /// config, rebuild the config and reload. Returns true when it rolled over.
+  /// Skipped while a run is on screen (that run keeps the day it started on).
+  Future<bool> _refreshDay() async {
+    final now = DailyChallengeService.today();
+    if (!DailyRollover.hasRolledOver(_config.day, now)) {
+      // Back from the background while blocked offline: re-check quietly.
+      if (_unranked && !_playing) _retry();
+      return false;
+    }
+    if (_playing || !mounted) return false;
+    setState(() {
+      _config = DailyChallengeService.configFor(now);
+      _todayResult = null;
+      _remotePlayed = null;
+      _plan = null;
+      _loaded = false;
+    });
+    await _load();
+    return true;
+  }
+
+  /// Server-side "already played elsewhere" check. Null when a local result
+  /// exists or for admin day-override runs (they never post).
+  Future<RemoteDailySummary?> _fetchRemote(
+      String dayKey, DailyChallengeResult? local) async {
+    if (local != null || DailyChallengeService.debugDayOffset != 0) {
+      return null;
+    }
+    return RemoteDailySummary.fromEntry(
+        await LeaderboardService.fetchMyDailyEntry(dayKey));
+  }
+
   Future<void> _load() async {
-    final result = await DailyChallengeStore.resultFor(_config.day);
-    final streaks = await DailyChallengeStore.streaks(_config.day);
+    final config = _config;
+    final requestId = ++_planRequestId;
+    final result = await DailyChallengeStore.resultFor(config.day);
+    final streaks = await DailyChallengeStore.streaks(config.day);
     // Authored day? Name it from the real GTO data, not the RNG weekday theme.
-    final dayKey = DailyChallengeStore.dayKey(_config.day);
-    final trees = await AuthoredTreeService.loadDay(dayKey);
+    final dayKey = DailyChallengeStore.dayKey(config.day);
+    // No local result: has this account already played today elsewhere?
+    // Skipped for admin day-override runs (they never post).
+    final remote = await _fetchRemote(dayKey, result);
+    final plan = await AuthoredTreeService.loadDaySchedule(dayKey);
+    final trees = plan.trees;
     String? headline, subtitle;
     if (trees != null && trees.isNotEmpty) {
       // Shared stake/format across the day's hands (e.g. 'MTT · 50BB').
       final format = trees.first.formatLabel.trim();
       headline = format.isEmpty ? 'Solver Spots' : _cleanFormat(format);
-      subtitle = trees.length == 1
-          ? 'Solver spot'
-          : '${trees.length} solver spots';
+      subtitle =
+          trees.length == 1 ? 'Solver spot' : '${trees.length} solver spots';
     }
-    if (!mounted) return;
+    if (!mounted || !identical(config, _config)) return; // day changed
+    if (requestId != _planRequestId) return; // a newer request won
     setState(() {
+      _plan = plan;
       _todayResult = result;
+      _remotePlayed = remote;
       _streaks = streaks;
       _authoredHeadline = headline;
       _authoredSubtitle = subtitle;
@@ -119,17 +200,67 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> {
   }
 
   /// 'MTT · 50BB' → 'MTT 50BB' (drop the middle dot for a clean headline).
-  static String _cleanFormat(String s) =>
-      s.replaceAll(' · ', ' ').replaceAll('·', ' ').replaceAll('  ', ' ').trim();
+  static String _cleanFormat(String s) => s
+      .replaceAll(' · ', ' ')
+      .replaceAll('·', ' ')
+      .replaceAll('  ', ' ')
+      .trim();
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     CoachVoiceService.stop(); // cut a running greeting preview
     super.dispose();
   }
 
+  /// Re-reads today's schedule after an offline block. Ignores re-entrant taps.
+  Future<void> _retry() async {
+    if (_retrying || !mounted) return;
+    final config = _config;
+    final requestId = ++_planRequestId;
+    setState(() => _retrying = true);
+    final dayKey = DailyChallengeStore.dayKey(config.day);
+    DayPlan? plan;
+    RemoteDailySummary? remote;
+    try {
+      plan = await AuthoredTreeService.loadDaySchedule(dayKey);
+      if (plan.ranked) remote = await _fetchRemote(dayKey, _todayResult);
+    } catch (_) {
+      plan = null; // stay blocked
+    }
+    if (!mounted) return;
+    final latest = identical(config, _config) && requestId == _planRequestId;
+    setState(() {
+      _retrying = false;
+      if (plan != null && latest) {
+        _plan = plan;
+        if (remote != null) _remotePlayed = remote;
+      }
+    });
+  }
+
   Future<void> _play() async {
     HapticFeedback.selectionClick();
+    // Never START a run for a day that is no longer today: re-resolve first.
+    if (_playing || await _refreshDay()) return;
+    if (_unranked) return;
+    if (!DailyRollover.canStartRun(
+        _config.day, DailyChallengeService.today())) {
+      return;
+    }
+    // The run belongs to the day it STARTED on, even if it ends after midnight.
+    final config = _config;
+    _playing = true;
+    try {
+      await _playRun(config);
+    } finally {
+      _playing = false;
+    }
+    // If midnight passed during the run, move the screen to the new day.
+    if (mounted) await _refreshDay();
+  }
+
+  Future<void> _playRun(DailyChallengeConfig config) async {
     CoachVoiceService.stop();
     // Time the whole run (first spot shown → last decision) for the
     // leaderboard "today" tiebreaker.
@@ -137,9 +268,11 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> {
     // Scheduled days serve REAL solver game trees — up to 5 hands, each
     // branching on the player's line (decision count varies per hand);
     // unscheduled days fall back to the RNG preflop drill.
-    final dayKey = DailyChallengeStore.dayKey(_config.day);
-    final trees = await AuthoredTreeService.loadDay(dayKey);
-    if (!mounted) return;
+    final dayKey = DailyChallengeStore.dayKey(config.day);
+    // Never run without a confirmed (ranked) schedule.
+    final plan = _plan;
+    if (plan == null || !plan.ranked || !mounted) return;
+    final trees = plan.trees;
 
     // Per-hand decision records + aligned pot weights (DailyScoring).
     final List<List<DrillDecisionRecord>> hands;
@@ -147,12 +280,15 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> {
     // Street label per decision, aligned with the flattened hands (authored).
     List<String> streets = const [];
     List<List<String>> boards = const [];
-    List<String> facing = const [], heroLabels = const [], bestLabels = const [];
+    List<String> facing = const [],
+        heroLabels = const [],
+        bestLabels = const [];
     if (trees != null) {
       final outcomes = await Navigator.push<List<AuthoredHandOutcome>>(
         context,
         MaterialPageRoute(
-          builder: (_) => AuthoredDayRunner(trees: trees, persona: _persona),
+          builder: (_) => AuthoredDayRunner(
+              trees: trees, persona: _persona, dayKey: dayKey),
         ),
       );
       stopwatch.stop();
@@ -170,10 +306,10 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> {
         context,
         MaterialPageRoute(
           builder: (_) => DrillTableScreen(
-            seats: DailyChallengeService.seatsFor(_config),
-            stackBB: _config.stackBB,
-            anteMode: _config.anteMode,
-            challengeConfig: _config,
+            seats: DailyChallengeService.seatsFor(config),
+            stackBB: config.stackBB,
+            anteMode: config.anteMode,
+            challengeConfig: config,
             challengeDecisions: DailyChallengeService.spotsPerDay,
           ),
         ),
@@ -193,7 +329,7 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> {
 
     final result = DailyChallengeResult.build(
       dayKey: dayKey,
-      seed: _config.seed,
+      seed: config.seed,
       hands: hands,
       weights: weights,
       durationMs: stopwatch.elapsedMilliseconds,
@@ -205,14 +341,17 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> {
       bestLabels: bestLabels,
     );
     await DailyChallengeStore.save(result);
-    final streaks = await DailyChallengeStore.streaks(_config.day);
+    final streaks = await DailyChallengeStore.streaks(config.day);
     if (!mounted) return;
-    setState(() {
-      _todayResult = result;
-      _streaks = streaks;
-    });
+    final stillToday = identical(config, _config);
+    if (stillToday) {
+      setState(() {
+        _todayResult = result;
+        _streaks = streaks;
+      });
+    }
     AnalyticsService.capture('daily_challenge_completed', {
-      'challenge_number': DailyChallengeService.challengeNumber(_config.day),
+      'challenge_number': DailyChallengeService.challengeNumber(config.day),
       'score': result.score,
       'perfect': result.perfect,
       'streak': streaks.current,
@@ -232,7 +371,8 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> {
     unawaited(StreakSaverService.onChallengeCompleted(
       currentStreak: streaks.current,
       coachId: _persona.id,
-      challengeNumber: DailyChallengeService.challengeNumber(_config.day),
+      challengeNumber: DailyChallengeService.challengeNumber(config.day),
+      runDay: config.day, // start-day config: a midnight-crossing run keeps D
     ));
   }
 
@@ -284,7 +424,8 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> {
         username: username,
       );
       AnalyticsService.capture('daily_challenge_leaderboard_submitted', {
-        'challenge_number': DailyChallengeService.challengeNumber(_config.day),
+        'challenge_number': DailyChallengeService.challengeNumber(
+            DateTime.parse(result.dayKey)),
         'score': result.score,
         'streak': streaks.current,
       });
@@ -333,10 +474,78 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> {
                   : SingleChildScrollView(
                       padding: const EdgeInsets.fromLTRB(
                           AppSpacing.md, AppSpacing.xs, AppSpacing.md, 120),
-                      child: _todayResult == null
-                          ? _intro()
-                          : _results(_todayResult!),
+                      child: _todayResult != null
+                          ? _results(_todayResult!)
+                          : _remotePlayed != null
+                              ? _playedElsewhere(_remotePlayed!)
+                              : dailyPlayBlocked(
+                                      plan: _plan,
+                                      hasLocalResult: _todayResult != null,
+                                      hasRemote: _remotePlayed != null)
+                                  ? _offlineCard()
+                                  : _intro(),
                     ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── Offline block (schedule unconfirmed) ─────────────────────────────
+
+  Widget _offlineCard() {
+    final l10n = AppLocalizations.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(top: AppSpacing.xl),
+      child: _card(
+        child: Column(
+          children: [
+            const Icon(Icons.cloud_off_outlined,
+                size: 32, color: AppColors.textSecondary),
+            const SizedBox(height: AppSpacing.xs),
+            Text(l10n.dailyChallengeOfflineTitle,
+                textAlign: TextAlign.center,
+                style: AppTypography.ibm(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary)),
+            const SizedBox(height: AppSpacing.xxs),
+            Text(l10n.dailyChallengeOfflineBody,
+                textAlign: TextAlign.center,
+                style: AppTypography.ibm(
+                    fontSize: 14, color: AppColors.textSecondary)),
+            const SizedBox(height: AppSpacing.md),
+            Semantics(
+              button: true,
+              label: l10n.commonRetry,
+              child: GestureDetector(
+                onTap: _retrying ? null : _retry,
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius:
+                        BorderRadius.circular(AppDecorations.buttonRadius),
+                  ),
+                  child: Center(
+                    child: _retrying
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                                strokeWidth: 2, color: Colors.black),
+                          )
+                        : Text(l10n.commonRetry,
+                            style: AppTypography.ibm(
+                                fontSize: 17,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: -0.43,
+                                color: Colors.black)),
+                  ),
+                ),
+              ),
             ),
           ],
         ),
@@ -630,6 +839,36 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> {
         ),
       );
 
+  // ── Already played today on another device (server entry only) ───────
+
+  Widget _playedElsewhere(RemoteDailySummary r) {
+    final l10n = AppLocalizations.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'DAILY #${DailyChallengeService.challengeNumber(_config.day)} · DONE',
+          style: AppTypography.ibm(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 1.0,
+              color: AppColors.accentTertiary),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        _card(
+          child: Text(
+            l10n.dailyChallengeAlreadyPlayedElsewhere(r.scoreText),
+            style: AppTypography.ibm(
+                fontSize: 15,
+                fontWeight: FontWeight.w500,
+                color: AppColors.textPrimary,
+                height: 1.4),
+          ),
+        ),
+      ],
+    );
+  }
+
   // ── Results (already played today) ───────────────────────────────────
 
   Widget _results(DailyChallengeResult result) {
@@ -700,7 +939,8 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> {
                     const SizedBox(height: AppSpacing.xxs),
                     Text(
                       result.perfect
-                          ? AppLocalizations.of(context).dailyChallengePerfectDay
+                          ? AppLocalizations.of(context)
+                              .dailyChallengePerfectDay
                           : _dayHeadline,
                       textAlign: TextAlign.end,
                       style: AppTypography.ibm(
@@ -776,10 +1016,15 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> {
   }
 
   /// Debug/super-admin only: forget today's result so the day is playable
-  /// again (streaks recompute from what's left).
+  /// again (streaks recompute from what's left). Also drops the leaderboard
+  /// entry — entries are create-only, so the replay could not post otherwise.
   Future<void> _resetToday() async {
     HapticFeedback.selectionClick();
     await DailyChallengeStore.delete(_config.day);
+    if (DailyChallengeService.debugDayOffset == 0) {
+      await LeaderboardService.deleteDailyEntry(
+          DailyChallengeStore.dayKey(_config.day));
+    }
     await _load();
   }
 

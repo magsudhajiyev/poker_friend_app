@@ -5533,6 +5533,22 @@
     }
   },
   "dailyChallengeTitle": "Daily Challenge",
+  "dailyChallengeAlreadyPlayedElsewhere": "You already played today on another device: {score}%",
+  "@dailyChallengeAlreadyPlayedElsewhere": {
+    "placeholders": {
+      "score": {
+        "type": "String"
+      }
+    }
+  },
+  "dailyChallengeOfflineTitle": "Can't load today's challenge",
+  "@dailyChallengeOfflineTitle": {
+    "description": "Title of the card shown when today's challenge cannot be loaded offline"
+  },
+  "dailyChallengeOfflineBody": "Check your connection and try again.",
+  "@dailyChallengeOfflineBody": {
+    "description": "Body of the offline card; a Retry button sits below"
+  },
   "dailyChallengeRuleGrades": "The coach grades every move as you make it",
   "dailyChallengeRuleSameSpots": "Same spots for everyone — compare with friends",
   "dailyChallengeRuleStreak": "Play daily to build your streak",
@@ -5676,5 +5692,81 @@
   "replayLegendOk": "OK",
   "@replayLegendOk": {"description": "Calendar legend: medium-score day color."},
   "replayLegendLow": "Needs work",
-  "@replayLegendLow": {"description": "Calendar legend: low-score day color."}
+  "@replayLegendLow": {"description": "Calendar legend: low-score day color."},
+  "authoredEvaluating": "Evaluating…",
+  "authoredShowRange": "Show range",
+  "authoredYourHand": "your hand",
+  "authoredHandLabel": "HAND {n}",
+  "@authoredHandLabel": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "authoredHandProgress": "Hand {n}/{total} · {title}",
+  "@authoredHandProgress": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "authoredRerouteNote": "The hand continues along the solver line — {action}.",
+  "@authoredRerouteNote": {
+    "placeholders": {
+      "action": {
+        "type": "String"
+      }
+    }
+  },
+  "authoredYouFold": "You fold — {villain} takes the pot.",
+  "@authoredYouFold": {
+    "placeholders": {
+      "villain": {
+        "type": "String"
+      }
+    }
+  },
+  "authoredVillainFolds": "{villain} folds — you take the pot.",
+  "@authoredVillainFolds": {
+    "placeholders": {
+      "villain": {
+        "type": "String"
+      }
+    }
+  },
+  "authoredShowdown": "Hand complete — showdown.",
+  "authoredYouAction": "you {action}",
+  "@authoredYouAction": {
+    "placeholders": {
+      "action": {
+        "type": "String"
+      }
+    }
+  },
+  "authoredCoachAction": "coach: {action}",
+  "@authoredCoachAction": {
+    "placeholders": {
+      "action": {
+        "type": "String"
+      }
+    }
+  },
+  "authoredSeeResult": "See result",
+  "@authoredSeeResult": {"description": "Label of the final-hand button of the Daily Challenge (leads to the results screen)."},
+  "authoredYouPlate": "You · {name}",
+  "@authoredYouPlate": {"description": "Seat plate of the hero: 'You · BTN'.", "placeholders": {"name": {"type": "String"}}},
+  "authoredFolded": "folded",
+  "@authoredFolded": {"description": "Seat plate text for a player who folded (lower-case)."},
+  "authoredPot": "Pot {amount}BB",
+  "@authoredPot": {"description": "Pot size in big blinds on the table; keep the literal BB.", "placeholders": {"amount": {"type": "String"}}},
+  "authoredSolverRanges": "Solver ranges · {format}",
+  "@authoredSolverRanges": {"description": "Caption of the solver range sheet, e.g. 'Solver ranges · 100BB'.", "placeholders": {"format": {"type": "String"}}}
 }

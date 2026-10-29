@@ -61,8 +61,13 @@ class DailyChallengeService {
   /// The challenge "today" — real now plus [debugDayOffset]. EVERY date
   /// read in the challenge flow goes through this, so the override covers
   /// the intro, the home card, the lines lookup, streaks, and share.
-  static DateTime today() =>
-      DateTime.now().add(Duration(days: debugDayOffset));
+  static DateTime today() {
+    // Calendar arithmetic (not Duration) so a DST change can't shift the
+    // wall-clock time or the date.
+    final n = DateTime.now();
+    return DateTime(n.year, n.month, n.day + debugDayOffset, n.hour, n.minute,
+        n.second, n.millisecond, n.microsecond);
+  }
 
   static DateTime dateOnly(DateTime d) => DateTime(d.year, d.month, d.day);
 
@@ -71,7 +76,10 @@ class DailyChallengeService {
 
   /// Days since [epoch] + 1 → the shareable "Daily #N".
   static int challengeNumber(DateTime day) =>
-      dateOnly(day).difference(epoch).inDays + 1;
+      DateTime.utc(day.year, day.month, day.day)
+          .difference(DateTime.utc(epoch.year, epoch.month, epoch.day))
+          .inDays +
+      1;
 
   /// Weekday-themed formats. Depth drives the grader's regime too:
   /// ≤20BB days grade on Nash push-fold, deep days on the open charts.

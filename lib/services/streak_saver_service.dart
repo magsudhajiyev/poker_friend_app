@@ -43,6 +43,17 @@ class StreakSaverService {
     return DateTime(tomorrow.year, tomorrow.month, tomorrow.day, hour);
   }
 
+  /// Pure: the reminder time for a run of [runDay] completed at [now].
+  /// Targets (runDay + 1 calendar day) at [hour] so a run that started before
+  /// midnight and ended after it still protects the next unplayed day. Never
+  /// in the past: if that time already passed, falls back to
+  /// [nextReminderTime] (tomorrow relative to [now]).
+  static DateTime reminderTimeForRun(DateTime runDay, DateTime now,
+      {int hour = defaultReminderHour}) {
+    final at = DateTime(runDay.year, runDay.month, runDay.day + 1, hour);
+    return at.isAfter(now) ? at : nextReminderTime(now, hour: hour);
+  }
+
   /// Pure: parse an `engagement:{type}:{eventId}` payload.
   static ({EngagementNotifType type, String eventId})? parsePayload(
       String? payload) {
@@ -60,6 +71,7 @@ class StreakSaverService {
     required int currentStreak,
     required String coachId,
     required int challengeNumber,
+    required DateTime runDay,
   }) async {
     try {
       // Admin day-override runs never touch the real pipeline (same guard
@@ -76,7 +88,7 @@ class StreakSaverService {
       if (!prefs.categoryEnabled(NotifCategory.streak)) return;
       if (currentStreak < 1) return;
 
-      final at = nextReminderTime(DateTime.now());
+      final at = reminderTimeForRun(runDay, DateTime.now());
       final copy = NotificationCopy.copyFor(
         EngagementNotifType.dcStreakRisk,
         coachId,

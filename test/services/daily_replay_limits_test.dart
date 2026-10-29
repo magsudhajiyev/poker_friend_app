@@ -134,5 +134,18 @@ void main() {
       expect(DailyReplayLimits.earliestReplayDay(today),
           DailyChallengeService.dateOnly(epoch));
     });
+
+    test('pro window crosses year rollover, leap day, and DST dates', () async {
+      await asTier('pro');
+      expect(DailyReplayLimits.earliestReplayDay(DateTime(2027, 1, 5)),
+          DateTime(2026, 12, 21));
+      expect(DailyReplayLimits.earliestReplayDay(DateTime(2028, 3, 5)),
+          DateTime(2028, 2, 19)); // 2028 is a leap year
+      // US spring forward 2027-03-14: midnight-to-midnight is 23h there.
+      expect(DailyReplayLimits.earliestReplayDay(DateTime(2027, 3, 20)),
+          DateTime(2027, 3, 5));
+      expect(DailyReplayLimits.earliestReplayDay(DateTime(2027, 3, 29)),
+          DateTime(2027, 3, 14));
+    });
   });
 }

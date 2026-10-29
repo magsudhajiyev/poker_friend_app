@@ -24,6 +24,34 @@ const path = require('path');
 
 const ACTIONS = ['raise', 'call', 'check', 'fold', 'allin'];
 
+// Max hero decisions on any root->terminal path. A day is up to 5 hands and
+// firestore.rules for leaderboard_daily entries cap `verdicts` at 60 chars and
+// `weights` at 50 items: 5x10 letters + 4 '|' separators = 54 <= 60; 5x10
+// weights = 50 <= 50. Longer trees would silently fail the leaderboard write.
+const MAX_HERO_DECISIONS_PER_HAND = 10;
+
+// Longest chain of hero decisions along any path (follows every child).
+// `nodes` = object keyed by id or array of nodes with {id, actor, children}.
+function maxHeroDecisions(nodes, rootId) {
+  const byId = Array.isArray(nodes)
+    ? Object.fromEntries(nodes.map((n) => [n.id, n]))
+    : nodes;
+  const memo = {};
+  const walk = (id, stack) => {
+    const n = byId[id];
+    if (!n) return 0;
+    if (stack.has(id)) throw new Error(`cycle in tree at node ${id}`);
+    if (id in memo) return memo[id];
+    stack.add(id);
+    let best = 0;
+    for (const c of Object.values(n.children || {}))
+      if (c) best = Math.max(best, walk(c, stack));
+    stack.delete(id);
+    return (memo[id] = best + (n.actor === 'hero' ? 1 : 0));
+  };
+  return walk(rootId, new Set());
+}
+
 // ── args ────────────────────────────────────────────────────────────────
 function arg(name, def) {
   const i = process.argv.indexOf(`--${name}`);
@@ -46,7 +74,7 @@ const STACK = arg('stack'); // e.g. '50'
 // when the suited combo matters vs the board; else auto-picked off-board.
 const CARDS = arg('cards');
 
-if (!SHEET_ID) {
+if (require.main === module && !SHEET_ID) {
   console.error('Missing --sheet <SHEET_ID>');
   process.exit(1);
 }
@@ -535,6 +563,16 @@ async function main() {
     );
   }
 
+  const maxDecisions = maxHeroDecisions(tree.nodes, tree.rootId);
+  if (maxDecisions > MAX_HERO_DECISIONS_PER_HAND) {
+    throw new Error(
+      `Tree has a hero line of ${maxDecisions} decisions (max ` +
+        `${MAX_HERO_DECISIONS_PER_HAND}): a 5-hand day would exceed the ` +
+        `leaderboard rules limits (verdicts<=60 chars, weights<=50). Prune the tree.`
+    );
+  }
+  console.log(`Max hero decisions on any path: ${maxDecisions}`);
+
   const json = JSON.stringify(tree, null, 2);
   fs.writeFileSync(path.join(__dirname, OUT), json);
   console.log(`Wrote ${OUT}  (${nodes.length} nodes, root=${root.id})`);
@@ -636,7 +674,9 @@ function heroCardsFor(hc, board, factHeroHand) {
   return [];
 }
 
-main().catch((e) => {
+module.exports = { maxHeroDecisions, MAX_HERO_DECISIONS_PER_HAND };
+
+if (require.main === module) main().catch((e) => {
   console.error(e);
   process.exit(1);
 });

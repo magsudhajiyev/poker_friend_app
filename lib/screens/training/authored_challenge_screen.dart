@@ -40,6 +40,11 @@ class AuthoredChallengeScreen extends StatefulWidget {
   final AuthoredTree tree;
   final CoachPersona persona;
 
+  /// Day whose `daily_challenge_lines/{dayKey}` doc the coach reads
+  /// (yyyy-MM-dd, same format as `DailyChallengeStore.dayKey`). Required so a
+  /// replay of a past day can never silently read today's lines.
+  final String dayKey;
+
   /// 1-based position of this hand in the day, and the day's hand count
   /// (header "Hand 2/5"; last hand says "See result").
   final int handNumber;
@@ -51,16 +56,17 @@ class AuthoredChallengeScreen extends StatefulWidget {
 
   /// Label for the final-hand primary button (default "See result"). The
   /// onboarding demo passes "Done" since there's no results screen after it.
-  final String lastHandLabel;
+  final String? lastHandLabel;
 
   const AuthoredChallengeScreen({
     super.key,
     required this.tree,
     required this.persona,
+    required this.dayKey,
     this.handNumber = 1,
     this.handCount = 1,
     this.onHandComplete,
-    this.lastHandLabel = 'See result',
+    this.lastHandLabel,
   });
 
   @override
@@ -94,15 +100,19 @@ class AuthoredDayRunner extends StatefulWidget {
   final List<AuthoredTree> trees;
   final CoachPersona persona;
 
+  /// yyyy-MM-dd of the day being played (today, or the replayed past day).
+  final String dayKey;
+
   /// Final-hand button label (default "See result"). The onboarding demo
   /// passes "Done" since no results screen follows.
-  final String lastHandLabel;
+  final String? lastHandLabel;
 
   const AuthoredDayRunner(
       {super.key,
       required this.trees,
       required this.persona,
-      this.lastHandLabel = 'See result'});
+      required this.dayKey,
+      this.lastHandLabel});
 
   @override
   State<AuthoredDayRunner> createState() => _AuthoredDayRunnerState();
@@ -126,6 +136,7 @@ class _AuthoredDayRunnerState extends State<AuthoredDayRunner> {
         key: ValueKey(_hand),
         tree: widget.trees[_hand],
         persona: widget.persona,
+        dayKey: widget.dayKey,
         handNumber: _hand + 1,
         handCount: widget.trees.length,
         onHandComplete: _onHandComplete,
@@ -402,6 +413,7 @@ class _AuthoredChallengeScreenState extends State<AuthoredChallengeScreen> {
             level: _level,
             uid: AuthService.userId,
             spotNumber: widget.handNumber,
+            dayKeyOverride: widget.dayKey,
           );
     if (!mounted || _phase != _Phase.feedback) return;
     if (line != null) setState(() => _aiLine = line);
@@ -615,7 +627,8 @@ class _AuthoredChallengeScreenState extends State<AuthoredChallengeScreen> {
         mix: mix,
         actions: actions,
         highlightHand: _tree.heroHandClass,
-        caption: 'Solver ranges · ${_bbCaps(_tree.formatLabel)}',
+        caption: AppLocalizations.of(context)
+            .authoredSolverRanges(_bbCaps(_tree.formatLabel)),
       ),
     );
   }
@@ -659,8 +672,8 @@ class _AuthoredChallengeScreenState extends State<AuthoredChallengeScreen> {
                 children: [
                   Text(
                       widget.handCount > 1
-                          ? 'Hand ${widget.handNumber}/${widget.handCount} · '
-                              '${_bbCaps(_tree.title)}'
+                          ? l10n.authoredHandProgress(widget.handNumber,
+                              widget.handCount, _bbCaps(_tree.title))
                           : _bbCaps(_tree.title),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -939,7 +952,7 @@ class _AuthoredChallengeScreenState extends State<AuthoredChallengeScreen> {
                   letterSpacing: 2,
                   color: AppColors.textSecondary)),
         SizedBox(height: 6 * s),
-        Text('Pot ${_fmtBB(d.potBB)}BB',
+        Text(AppLocalizations.of(context).authoredPot(_fmtBB(d.potBB)),
             style: AppTypography.mono(
                 fontSize: 13 * s,
                 fontWeight: FontWeight.w700,
@@ -1119,18 +1132,18 @@ class _AuthoredChallengeScreenState extends State<AuthoredChallengeScreen> {
   }
 
   /// How the hand ended (shown under the coach line on the final verdict).
-  String? _outcomeLine() {
+  String? _outcomeLine(AppLocalizations l10n) {
     if (!_done) return null;
     if (_heroActionTaken == AuthoredAction.fold) {
-      return 'You fold — ${_tree.villainPosition} takes the pot.';
+      return l10n.authoredYouFold(_tree.villainPosition);
     }
     final last = _pendingVillainMoves.isNotEmpty
         ? _pendingVillainMoves.last.action
         : null;
     if (last == AuthoredAction.fold) {
-      return '${_tree.villainPosition} folds — you take the pot.';
+      return l10n.authoredVillainFolds(_tree.villainPosition);
     }
-    return 'Hand complete — showdown.';
+    return l10n.authoredShowdown;
   }
 
   Widget _plate(String name,
@@ -1158,7 +1171,7 @@ class _AuthoredChallengeScreenState extends State<AuthoredChallengeScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(hero ? 'You · $name' : name,
+            Text(hero ? AppLocalizations.of(context).authoredYouPlate(name) : name,
                 style: AppTypography.ibm(
                     fontSize: 10.5 * s,
                     fontWeight: hero ? FontWeight.w700 : FontWeight.w500,
@@ -1167,7 +1180,7 @@ class _AuthoredChallengeScreenState extends State<AuthoredChallengeScreen> {
                         : (state == _SeatState.villain
                             ? _gold
                             : Colors.white))),
-            Text(folded ? 'folded' : '${_fmtBB(stackBB)}BB',
+            Text(folded ? AppLocalizations.of(context).authoredFolded : '${_fmtBB(stackBB)}BB',
                 style: AppTypography.mono(
                     fontSize: 9.5 * s, color: AppColors.textSecondary)),
           ],
@@ -1429,24 +1442,23 @@ class _AuthoredChallengeScreenState extends State<AuthoredChallengeScreen> {
                               if (_lastReroute != null && !_done) ...[
                                 const SizedBox(height: 6),
                                 Text(
-                                  'The hand continues along the solver line — '
-                                  '${switch (_lastReroute!) {
+                                  l10n.authoredRerouteNote(switch (_lastReroute!) {
                                     AuthoredAction.check => 'check',
                                     AuthoredAction.call => 'call',
                                     AuthoredAction.raise => 'raise',
                                     AuthoredAction.allin => 'all-in',
                                     AuthoredAction.fold => 'fold',
-                                  }}.',
+                                  }),
                                   style: AppTypography.ibm(
                                       fontSize: 12.5,
                                       fontStyle: FontStyle.italic,
                                       color: AppColors.textSecondary),
                                 ),
                               ],
-                              if (_done && _outcomeLine() != null) ...[
+                              if (_done && _outcomeLine(l10n) != null) ...[
                                 const SizedBox(height: 6),
                                 Text(
-                                  _outcomeLine()!,
+                                  _outcomeLine(l10n)!,
                                   style: AppTypography.ibm(
                                       fontSize: 12.5,
                                       fontStyle: FontStyle.italic,
@@ -1454,7 +1466,7 @@ class _AuthoredChallengeScreenState extends State<AuthoredChallengeScreen> {
                                 ),
                               ],
                             ] else
-                              Text('Evaluating…',
+                              Text(l10n.authoredEvaluating,
                                   style: AppTypography.ibm(
                                       fontSize: 14,
                                       color: AppColors.textSecondary)),
@@ -1471,7 +1483,7 @@ class _AuthoredChallengeScreenState extends State<AuthoredChallengeScreen> {
                     children: [
                       Expanded(
                         child: AppButton(
-                          label: 'Show range',
+                          label: l10n.authoredShowRange,
                           // Same range-grid icon as the RNG challenge.
                           leadingIcon: const Icon(Icons.grid_on_rounded,
                               size: 16, color: Colors.white),
@@ -1486,8 +1498,10 @@ class _AuthoredChallengeScreenState extends State<AuthoredChallengeScreen> {
                           // Same hand across decisions → just "Next" (not "Next
                           // spot", which implies a brand-new hand).
                           label: !_done
-                              ? 'Next'
-                              : (_lastHand ? widget.lastHandLabel : 'Next hand'),
+                              ? l10n.onboardingNext
+                              : (_lastHand
+                                  ? (widget.lastHandLabel ?? l10n.authoredSeeResult)
+                                  : l10n.drillNextHand),
                           variant: AppButtonVariant.primaryLarge,
                           fullWidth: true,
                           onTap: _next,
@@ -1762,7 +1776,7 @@ class _RangeSheetBodyState extends State<_RangeSheetBody> {
               ),
             ),
             const SizedBox(width: 4),
-            Text('your hand',
+            Text(AppLocalizations.of(context).authoredYourHand,
                 style: AppTypography.ibm(
                     fontSize: 12, color: AppColors.textSecondary)),
           ],
