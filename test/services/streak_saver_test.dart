@@ -31,6 +31,34 @@ void main() {
     });
   });
 
+  group('reminderTimeForRun', () {
+    test('normal run: day D+1 at the reminder hour', () {
+      final t = StreakSaverService.reminderTimeForRun(
+          DateTime(2026, 10, 16), DateTime(2026, 10, 16, 21));
+      expect(t, DateTime(2026, 10, 17, 19));
+    });
+
+    test('midnight-crossing run still targets D+1, not D+2', () {
+      // Started on the 16th, finished 00:10 on the 17th.
+      final t = StreakSaverService.reminderTimeForRun(
+          DateTime(2026, 10, 16), DateTime(2026, 10, 17, 0, 10));
+      expect(t, DateTime(2026, 10, 17, 19));
+    });
+
+    test('past D+1 reminder falls back to nextReminderTime(now)', () {
+      final now = DateTime(2026, 10, 17, 20);
+      final t = StreakSaverService.reminderTimeForRun(DateTime(2026, 10, 16), now);
+      expect(t, StreakSaverService.nextReminderTime(now));
+      expect(t, DateTime(2026, 10, 18, 19));
+    });
+
+    test('calendar arithmetic across month/year end', () {
+      final t = StreakSaverService.reminderTimeForRun(
+          DateTime(2026, 12, 31), DateTime(2027, 1, 1, 0, 5));
+      expect(t, DateTime(2027, 1, 1, 19));
+    });
+  });
+
   group('payload parsing', () {
     test('round-trips type + eventId', () {
       const payload = 'engagement:dc_streak_risk:abc123';

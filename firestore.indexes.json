@@ -94,6 +94,16 @@
       "collectionGroup": "authored_spots",
       "fieldPath": "nodes",
       "indexes": []
+    },
+    {
+      "collectionGroup": "entries",
+      "fieldPath": "uid",
+      "indexes": [
+        {
+          "order": "ASCENDING",
+          "queryScope": "COLLECTION_GROUP"
+        }
+      ]
     }
   ]
 }

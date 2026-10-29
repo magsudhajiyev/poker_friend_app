@@ -24,6 +24,34 @@ const path = require('path');
 
 const ACTIONS = ['raise', 'call', 'check', 'fold', 'allin'];
 
+// Max hero decisions on any root->terminal path. A day is up to 5 hands and
+// firestore.rules for leaderboard_daily entries cap `verdicts` at 60 chars and
+// `weights` at 50 items: 5x10 letters + 4 '|' separators = 54 <= 60; 5x10
+// weights = 50 <= 50. Longer trees would silently fail the leaderboard write.
+const MAX_HERO_DECISIONS_PER_HAND = 10;
+
+// Longest chain of hero decisions along any path (follows every child).
+// `nodes` = object keyed by id or array of nodes with {id, actor, children}.
+function maxHeroDecisions(nodes, rootId) {
+  const byId = Array.isArray(nodes)
+    ? Object.fromEntries(nodes.map((n) => [n.id, n]))
+    : nodes;
+  const memo = {};
+  const walk = (id, stack) => {
+    const n = byId[id];
+    if (!n) return 0;
+    if (stack.has(id)) throw new Error(`cycle in tree at node ${id}`);
+    if (id in memo) return memo[id];
+    stack.add(id);
+    let best = 0;
+    for (const c of Object.values(n.children || {}))
+      if (c) best = Math.max(best, walk(c, stack));
+    stack.delete(id);
+    return (memo[id] = best + (n.actor === 'hero' ? 1 : 0));
+  };
+  return walk(rootId, new Set());
+}
+
 // ── args ────────────────────────────────────────────────────────────────
 function arg(name, def) {
   const i = process.argv.indexOf(`--${name}`);
@@ -46,7 +74,7 @@ const STACK = arg('stack'); // e.g. '50'
 // when the suited combo matters vs the board; else auto-picked off-board.
 const CARDS = arg('cards');
 
-if (!SHEET_ID) {
+if (require.main === module && !SHEET_ID) {
   console.error('Missing --sheet <SHEET_ID>');
   process.exit(1);
 }
@@ -64,12 +92,17 @@ async function readSheet() {
     scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly'],
   });
   const sheets = google.sheets({ version: 'v4', auth: await auth.getClient() });
-  // Discover tab if not given.
-  let range = TAB ? `${TAB}!A:K` : 'A:K';
+  // Discover tab if not given. Range spans A:N — the newer sheet format adds
+  // "Hero hand" (K), "Hero hand strategy" (L), "Explanation" (M, now a JSON
+  // fact block on new sheets / plain-English narrative on old ones) and
+  // "mags_note" (N, a maintainer free-text note). A:K (the original range)
+  // silently dropped L–N, so authored spots uploaded with it carried NO coach
+  // explanation.
+  let range = TAB ? `${TAB}!A:N` : 'A:N';
   if (!TAB) {
     const meta = await sheets.spreadsheets.get({ spreadsheetId: SHEET_ID });
     const first = meta.data.sheets[0].properties.title;
-    range = `${first}!A:K`;
+    range = `${first}!A:N`;
   }
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId: SHEET_ID,
@@ -97,6 +130,32 @@ function parseRange(cell) {
   // drop empty action maps
   for (const a of ACTIONS) if (Object.keys(out[a]).length === 0) delete out[a];
   return out;
+}
+
+// Column M holds either a JSON fact block (new sheets) or plain prose (old).
+// Returns { facts, explanation }: on a parsed object, `facts` is the structured
+// block and `explanation` is a derived plain-text string (key_concept + first
+// fact) for the in-app grader fallback. On prose, `facts` is null and
+// `explanation` is the raw string. See FEEDBACK-SCHEMA.md.
+function parseFactBlock(raw) {
+  const text = (raw || '').trim();
+  if (!text) return { facts: null, explanation: '' };
+  let parsed;
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    return { facts: null, explanation: text }; // prose (old style)
+  }
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    return { facts: null, explanation: text };
+  }
+  const keyConcept = (parsed.key_concept || '').toString().trim();
+  const firstFact =
+    Array.isArray(parsed.facts) && parsed.facts.length
+      ? (parsed.facts[0] || '').toString().trim()
+      : '';
+  const derived = [keyConcept, firstFact].filter(Boolean).join(' ');
+  return { facts: parsed, explanation: derived };
 }
 
 const STREET = { Preflop: 'preflop', Flop: 'flop', Turn: 'turn', River: 'river' };
@@ -239,7 +298,8 @@ async function main() {
     sizing: col('Sizing'),
     range: col('Range'),
     hand: col('Hand'),
-    explanation: col('Explanation'), // plain-English coach line (optional)
+    explanation: col('Explanation'), // JSON fact block (new) / prose (old)
+    magsNote: col('mags_note'), // column N — maintainer free-text note
   };
 
   // Resolve hero/villain/stack from the first data row's "Hand" title
@@ -292,6 +352,38 @@ async function main() {
         if (pct > 0) potFromSizing = Math.round((bb / pct) * 10) / 10;
       }
     }
+    // Sizing sanity (the client needs a size for every real raise/bet).
+    if ((row[ci.actor] === meta.heroPos ? 'hero' : 'villain') === 'hero') {
+      if (actions.includes('raise') && sizing.raise === undefined) {
+        console.warn(`WARN step ${row[ci.step]}: hero raise without a size`);
+      }
+      if (
+        sizing.raise !== undefined &&
+        sizing.allin !== undefined &&
+        sizing.raise >= sizing.allin
+      ) {
+        console.warn(
+          `WARN step ${row[ci.step]}: raise ${sizing.raise}bb >= allin ${sizing.allin}bb`
+        );
+      }
+      if (
+        actions.includes('check') &&
+        !actions.includes('raise') &&
+        actions.includes('allin')
+      ) {
+        globalThis.__checkAllinOnly = (globalThis.__checkAllinOnly || 0) + 1;
+      }
+    }
+    // Column M: a JSON fact block on new sheets, plain prose on old ones.
+    // When it parses as an object, keep the structured block as `facts` AND
+    // derive a plain-text `explanation` (key_concept + first fact) for the
+    // in-app grader. When it's prose, `explanation` is the raw string and
+    // `facts` is null. Column N is the maintainer `mags_note`.
+    const rawExplanation =
+      ci.explanation >= 0 ? (row[ci.explanation] || '').trim() : '';
+    const { facts, explanation } = parseFactBlock(rawExplanation);
+    const magsNote =
+      ci.magsNote >= 0 ? (row[ci.magsNote] || '').trim() : '';
     nodes.push({
       step: parseInt(row[ci.step], 10),
       street: STREET[row[ci.street]] || 'preflop',
@@ -305,8 +397,9 @@ async function main() {
       path: historyPath(row[ci.spot], meta.heroPos, meta.villainPos),
       freq: parseRange(row[ci.range]),
       title: row[ci.hand] || '',
-      explanation:
-        ci.explanation >= 0 ? (row[ci.explanation] || '').trim() : '',
+      explanation,
+      facts,
+      magsNote,
     });
   }
 
@@ -428,6 +521,20 @@ async function main() {
     for (const n of nodes) if (n.toCall == null) n.toCall = n.sizing.call || 0;
   }
 
+  // The exact hero combo from the fact block (column M JSON), e.g. "7s-6h".
+  // When present it is the SOURCE OF TRUTH for which two cards the table deals,
+  // so the dealt combo matches the reasoning in the facts (bug 2026-10-28: the
+  // auto-picker chose K♠Q♠ while the facts assumed K♥Q♥). First hero node wins.
+  const factHeroHand = (() => {
+    for (const n of nodes) {
+      const h = n.facts && n.facts.hero_hand;
+      if (h && /^[AKQJT2-9][shdc]-?[AKQJT2-9][shdc]$/i.test(String(h).replace(/\s/g, ''))) {
+        return String(h).replace(/\s/g, '');
+      }
+    }
+    return null;
+  })();
+
   const root = nodes.find((n) => n.step === 1) || nodes[0];
   // Big blinds always read 'BB' in the app (sheet titles say '50bb').
   const title = (root.title || SPOT_ID).replace(/(\d)bb\b/g, '$1BB');
@@ -449,6 +556,8 @@ async function main() {
       toCallBB: n.toCall || 0,
       prompt: n.prompt,
       ...(n.explanation ? { explanation: n.explanation } : {}),
+      ...(n.facts ? { facts: n.facts } : {}),
+      ...(n.magsNote ? { magsNote: n.magsNote } : {}),
       actions: n.actions,
       sizingBB: n.sizing,
       freq: n.freq,
@@ -464,7 +573,7 @@ async function main() {
     anteMode: meta.anteMode,
     heroPosition: normalizePos(meta.heroPos),
     villainPosition: normalizePos(meta.villainPos),
-    heroCards: HERO ? heroCardsFor(HERO, finalBoard) : [],
+    heroCards: HERO ? heroCardsFor(HERO, finalBoard, factHeroHand) : [],
     heroHandClass: HERO || '',
     rootId: root.id,
     nodes: treeNodes,
@@ -473,6 +582,22 @@ async function main() {
     console.warn(
       `WARNING: could not resolve concrete cards for hero ${HERO} off board ` +
         `${finalBoard.join('')} — pass --cards 'Xy,Zw' (GTOW ascii).`
+    );
+  }
+
+  const maxDecisions = maxHeroDecisions(tree.nodes, tree.rootId);
+  if (maxDecisions > MAX_HERO_DECISIONS_PER_HAND) {
+    throw new Error(
+      `Tree has a hero line of ${maxDecisions} decisions (max ` +
+        `${MAX_HERO_DECISIONS_PER_HAND}): a 5-hand day would exceed the ` +
+        `leaderboard rules limits (verdicts<=60 chars, weights<=50). Prune the tree.`
+    );
+  }
+  console.log(`Max hero decisions on any path: ${maxDecisions}`);
+  if (globalThis.__checkAllinOnly) {
+    console.log(
+      `Check+allin-only hero nodes: ${globalThis.__checkAllinOnly} ` +
+        `(client will add a 1/3-pot trainer Bet)`
     );
   }
 
@@ -524,11 +649,21 @@ function glyphFromAscii(c) {
   const SUITS = { s: '♠', h: '♥', d: '♦', c: '♣' };
   return `${rank}${SUITS[suit] || suit}`;
 }
-function heroCardsFor(hc, board) {
+function heroCardsFor(hc, board, factHeroHand) {
   const used = new Set(board || []);
   if (CARDS) {
     const cards = CARDS.split(',').map((c) => glyphFromAscii(c.trim()));
     return cards.length === 2 ? cards : [];
+  }
+  // Prefer the exact combo from the fact block ("7s-6h" → ['7♠','6♥']) so the
+  // dealt cards match the authored reasoning. Only use it if both cards are
+  // off-board (a fact combo that clashes with the board falls through to auto).
+  if (factHeroHand) {
+    const parts = factHeroHand.split('-');
+    if (parts.length === 2) {
+      const cards = parts.map((c) => glyphFromAscii(c.trim()));
+      if (cards.length === 2 && cards.every((c) => !used.has(c))) return cards;
+    }
   }
   // Rank glyphs: ten is '10'.
   const rankGlyph = (r) => (r === 'T' ? '10' : r);
@@ -567,7 +702,9 @@ function heroCardsFor(hc, board) {
   return [];
 }
 
-main().catch((e) => {
+module.exports = { maxHeroDecisions, MAX_HERO_DECISIONS_PER_HAND };
+
+if (require.main === module) main().catch((e) => {
   console.error(e);
   process.exit(1);
 });

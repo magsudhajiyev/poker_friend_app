@@ -108,6 +108,9 @@ class AuthoredTreeWalker {
       ));
       _currentId = node.children[action];
     }
+    // Guard tripped on a villain node (malformed/cyclic tree): end the hand
+    // instead of leaving the UI waiting on a node nobody acts on.
+    if (current != null && !current!.isHero) _currentId = null;
     // If we landed on a hero decision the hero hand can never reach (the
     // solver lists no frequency for it here), end the hand rather than ask an
     // impossible decision that would always misgrade as a LEAK. This happens
@@ -182,4 +185,24 @@ extension on TreeNode {
     }
     return best;
   }
+}
+
+/// True when [action] is a trainer-only option the solver never lists at
+/// [node] (today: the synthetic "Bet" added where the solver only checks).
+bool isSyntheticAction(TreeNode node, AuthoredAction action) =>
+    action == AuthoredAction.raise &&
+    !node.actions.contains(AuthoredAction.raise) &&
+    node.actions.contains(AuthoredAction.check);
+
+/// Size (BB, 1 decimal) of the synthetic trainer Bet: 1/3 of the current pot,
+/// minimum 1BB.
+/// Null = do not offer it: the node already has a real raise, check is not
+/// available, or the size reaches the all-in (it would be a second jam).
+double? syntheticBetSizeBB(TreeNode node) {
+  if (!isSyntheticAction(node, AuthoredAction.raise)) return null;
+  final third = node.potBB / 3;
+  final size = ((third < 1.0 ? 1.0 : third) * 10).round() / 10;
+  final jam = node.sizingBB[AuthoredAction.allin];
+  if (jam != null && size >= jam) return null;
+  return size;
 }

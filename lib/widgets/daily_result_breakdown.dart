@@ -85,7 +85,7 @@ class _DailyResultBreakdownState extends State<DailyResultBreakdown> {
             padding: const EdgeInsets.symmetric(vertical: AppSpacing.xxs),
             child: Row(
               children: [
-                Text('HAND ${hand + 1}',
+                Text(AppLocalizations.of(context).authoredHandLabel(hand + 1),
                     style: AppTypography.ibm(
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
@@ -172,6 +172,7 @@ class _DailyResultBreakdownState extends State<DailyResultBreakdown> {
     final best = spot.recommendedLabel.isNotEmpty
         ? spot.recommendedLabel
         : spot.recommendedAction;
+    final l10n = AppLocalizations.of(context);
     final dim = AppTypography.ibm(fontSize: 12, color: AppColors.textSecondary);
     return Text.rich(
       TextSpan(style: dim, children: [
@@ -181,8 +182,9 @@ class _DailyResultBreakdownState extends State<DailyResultBreakdown> {
               style: dim.copyWith(color: AppColors.textPrimary)),
           const TextSpan(text: '  →  '),
         ],
-        TextSpan(text: 'you $hero'),
-        if (spot.verdict != 'c') TextSpan(text: ' · coach: $best'),
+        TextSpan(text: l10n.authoredYouAction(hero)),
+        if (spot.verdict != 'c')
+          TextSpan(text: ' · ${l10n.authoredCoachAction(best)}'),
       ]),
       maxLines: 2,
       overflow: TextOverflow.ellipsis,
@@ -200,8 +202,9 @@ class _DailyResultBreakdownState extends State<DailyResultBreakdown> {
         style: AppTypography.mono(fontSize: 12, color: AppColors.textDisabled));
     final action = Text(
       spot.verdict == 'c'
-          ? 'you ${spot.heroAction}'
-          : 'you ${spot.heroAction} · coach: ${spot.recommendedAction}',
+          ? l10n.authoredYouAction(spot.heroAction)
+          : '${l10n.authoredYouAction(spot.heroAction)} · '
+              '${l10n.authoredCoachAction(spot.recommendedAction)}',
       overflow: TextOverflow.ellipsis,
       style: AppTypography.ibm(fontSize: 12, color: AppColors.textSecondary),
     );

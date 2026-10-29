@@ -105,7 +105,8 @@ class _DailyReplayScreenState extends State<DailyReplayScreen> {
       final outcomes = await Navigator.push<List<AuthoredHandOutcome>>(
         context,
         MaterialPageRoute(
-          builder: (_) => AuthoredDayRunner(trees: trees, persona: _persona),
+          builder: (_) => AuthoredDayRunner(
+              trees: trees, persona: _persona, dayKey: dayKey),
         ),
       );
       if (!mounted) return;

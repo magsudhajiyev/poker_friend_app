@@ -24,6 +24,15 @@ class DailyScoring {
 
   static const String handSeparator = '|';
 
+  /// Upper bound on a decision weight (pot BB). Mirrors `DAILY_MAX_WEIGHT`
+  /// in the CF so a forged Infinity/huge weight can't dominate the score.
+  static const double maxWeight = 1000;
+
+  /// Effective weight of one decision: floored at 1, capped at [maxWeight],
+  /// non-finite → 1.
+  static double effectiveWeight(double raw) =>
+      raw.isFinite && raw > 1 ? (raw > maxWeight ? maxWeight : raw) : 1.0;
+
   static double decisionValue(String letter) => switch (letter) {
         'c' => 1.0,
         'o' => 0.5,
@@ -49,7 +58,7 @@ class DailyScoring {
     if (letters.isEmpty) return 0;
     var sum = 0.0, total = 0.0;
     for (var i = 0; i < letters.length; i++) {
-      final w = i < weights.length && weights[i] > 1 ? weights[i] : 1.0;
+      final w = i < weights.length ? effectiveWeight(weights[i]) : 1.0;
       sum += decisionValue(letters[i]) * w;
       total += w;
     }

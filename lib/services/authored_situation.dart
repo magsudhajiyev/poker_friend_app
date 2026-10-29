@@ -48,9 +48,46 @@ class AuthoredSituation {
     final b = _Builder(tree);
     final v = tree.villainPosition;
 
+    final heroActed = history.any((s) => s.actor == TreeActor.hero);
     if (history.isEmpty) {
       b.say(_pick(voice.intro, n), {'heroPos': _posWord(tree.heroPosition)},
           depth: tree.stackBB);
+    } else if (!heroActed) {
+      // The hero has NOT acted yet, but the pot is not folded to them — someone
+      // opened before the hero's first decision (BB defense, or a flat behind
+      // an open). Describe the OPENER's action(s) so the coach never says
+      // "folds to you" when the hand would be over if it had. [start] = -1
+      // below (no hero index), so the old branch's history[start] crashed.
+      b.say(_pick(voice.openIntro, n), {'heroPos': _posWord(tree.heroPosition)},
+          depth: tree.stackBB);
+      var preflopRaises = 0;
+      for (var i = 0; i < history.length; i++) {
+        final step = history[i];
+        if (step.actor != TreeActor.villain) continue;
+        final betBefore = history
+            .sublist(0, i)
+            .any((s) => s.street == step.street && _isRaise(s));
+        if (step.street == TreeStreet.preflop && _isRaise(step)) {
+          preflopRaises++;
+        }
+        final pool = switch (step.action) {
+          AuthoredAction.raise when step.street == TreeStreet.preflop =>
+            preflopRaises >= 3
+                ? voice.reRaise
+                : (preflopRaises == 2 ? voice.threeBet : voice.raise),
+          AuthoredAction.raise => betBefore ? voice.raise : voice.bet,
+          AuthoredAction.allin => voice.jam,
+          AuthoredAction.call => voice.call,
+          // "Checks behind" only when the villain acts AFTER someone on this
+          // street; acting first, the villain "checks to you".
+          AuthoredAction.check =>
+            _actsFirstOnStreet(history, i) ? voice.checkTo : voice.checkBack,
+          AuthoredAction.fold => const <String>[],
+        };
+        if (pool.isNotEmpty) {
+          b.say(_pick(pool, n + i), {'pos': _posWord(v)}, size: step.sizeBB);
+        }
+      }
     } else {
       final start = history.lastIndexWhere((s) => s.actor == TreeActor.hero);
       var street = history[start].street;
@@ -79,12 +116,13 @@ class AuthoredSituation {
           AuthoredAction.raise => betBefore ? voice.raise : voice.bet,
           AuthoredAction.allin => voice.jam,
           AuthoredAction.call => voice.call,
-          AuthoredAction.check => voice.checkBack,
+          AuthoredAction.check => _actsFirstOnStreet(history, i)
+              ? voice.checkTo
+              : voice.checkBack,
           AuthoredAction.fold => const <String>[],
         };
         if (pool.isNotEmpty) {
-          b.say(_pick(pool, n + i), {'pos': _posWord(v)},
-              size: step.sizeBB);
+          b.say(_pick(pool, n + i), {'pos': _posWord(v)}, size: step.sizeBB);
         }
       }
       if (node.street != street) {
@@ -103,8 +141,14 @@ class AuthoredSituation {
       final checkedTo = last.actor == TreeActor.villain &&
           last.action == AuthoredAction.check &&
           last.street == node.street;
-      b.say(_pick(checkedTo ? voice.checkedTo : voice.firstToAct, n),
-          const {}, pot: pot);
+      // The "X checks to you." line above already says it — no repeat.
+      final alreadySaid =
+          checkedTo && _actsFirstOnStreet(history, history.length - 1);
+      if (!alreadySaid) {
+        b.say(
+            _pick(checkedTo ? voice.checkedTo : voice.firstToAct, n), const {},
+            pot: pot);
+      }
     }
     return b.build();
   }
@@ -147,7 +191,9 @@ class AuthoredSituation {
         AuthoredAction.raise when street == TreeStreet.preflop =>
           preflopRaises == 2
               ? '$v 3-bet to $size'
-              : (preflopRaises == 3 ? '$v 4-bet to $size' : '$v raised to $size'),
+              : (preflopRaises == 3
+                  ? '$v 4-bet to $size'
+                  : '$v raised to $size'),
         AuthoredAction.raise => (betBefore || heroBetThisStreet)
             ? '$v raised to $size'
             : '$v bet $size',
@@ -221,12 +267,21 @@ class AuthoredSituation {
 
   static String _pick(List<String> pool, int n) => pool[n % pool.length];
 
+  /// True when history[i] is the first step of its street (nobody acted
+  /// before that player).
+  static bool _actsFirstOnStreet(List<SituationStep> history, int i) =>
+      !history.sublist(0, i).any((s) => s.street == history[i].street);
+
   static bool _isRaise(SituationStep s) =>
       s.action == AuthoredAction.raise || s.action == AuthoredAction.allin;
 
   static const Map<String, String> _positionWords = {
-    'BTN': 'the button', 'SB': 'the small blind', 'BB': 'the big blind',
-    'LJ': 'the lojack', 'HJ': 'the hijack', 'CO': 'the cutoff',
+    'BTN': 'the button',
+    'SB': 'the small blind',
+    'BB': 'the big blind',
+    'LJ': 'the lojack',
+    'HJ': 'the hijack',
+    'CO': 'the cutoff',
     'UTG': 'under the gun',
   };
 
@@ -301,15 +356,13 @@ class _Builder {
       String amt(double v) => spoken
           ? '${AuthoredSituation._fmt(v)} big blinds'
           : '${AuthoredSituation._fmt(v)}BB';
-      String cardList(List<String> c) => spoken
-          ? c.map(HandReader.cardWords).join(', ')
-          : c.join(' ');
+      String cardList(List<String> c) =>
+          spoken ? c.map(HandReader.cardWords).join(', ') : c.join(' ');
       var out = template;
       vars.forEach((k, val) {
-        out = out
-            .replaceAll('{$k}', val)
-            .replaceAll('{${k[0].toUpperCase()}${k.substring(1)}}',
-                val.isEmpty ? val : '${val[0].toUpperCase()}${val.substring(1)}');
+        out = out.replaceAll('{$k}', val).replaceAll(
+            '{${k[0].toUpperCase()}${k.substring(1)}}',
+            val.isEmpty ? val : '${val[0].toUpperCase()}${val.substring(1)}');
       });
       out = out.replaceAll(
           '{hand}', spoken ? tree.heroHandClass : tree.heroCards.join(' '));
@@ -322,7 +375,11 @@ class _Builder {
             .replaceAll('{cards}', cardList(cards))
             .replaceAll('{card}', cardList(cards));
       }
-      return out;
+      // Grammar: "in the button" -> "on the button"; "in under the gun" ->
+      // "under the gun".
+      return out
+          .replaceAll('in the button', 'on the button')
+          .replaceAll('in under the gun', 'under the gun');
     }
 
     _text.add(render(false));
@@ -335,12 +392,24 @@ class _Builder {
 /// A persona's phrase pools. Lines react and set the scene — never advise.
 class _Voice {
   final List<String> intro, yourMove;
-  final List<String> threeBet, reRaise, bet, raise, jam, call, checkBack;
+  // Scene-setter when the hero is NOT first to act (someone opened before the
+  // hero's first decision): stack depth + hero seat + hand, WITHOUT the
+  // "folds to you" framing the [intro] pool uses for a hero-first open.
+  final List<String> openIntro;
+  final List<String> threeBet,
+      reRaise,
+      bet,
+      raise,
+      jam,
+      call,
+      checkBack,
+      checkTo;
   final List<String> flop, turn, river;
   final List<String> facing, checkedTo, firstToAct;
   const _Voice({
     required this.intro,
     required this.yourMove,
+    required this.openIntro,
     required this.threeBet,
     required this.reRaise,
     required this.bet,
@@ -348,6 +417,7 @@ class _Voice {
     required this.jam,
     required this.call,
     required this.checkBack,
+    required this.checkTo,
     required this.flop,
     required this.turn,
     required this.river,
@@ -365,26 +435,42 @@ const Map<String, _Voice> _voices = {
       'Folds around to you in {heroPos}, kid. {depth} deep, holding {hand}.',
     ],
     yourMove: ["What's it gonna be?", 'Your move, kid.'],
+    openIntro: [
+      "Alright, kid. {depth} deep, you're in {heroPos} with {hand}.",
+      "{depth} deep, kid. You've got {hand} in {heroPos}.",
+    ],
     threeBet: [
       "{Pos} doesn't like it. Three-bet to {size}.",
       'Here we go — {pos} comes over the top to {size}.',
     ],
     reRaise: ["{Pos} isn't backing down. Re-raise to {size}."],
     bet: ['{Pos} takes a stab, {size}.', '{Pos} fires {size} at it.'],
-    raise: ['Whoa — {pos} raises you to {size}. Somebody woke up.',
-      'Uh-oh. {Pos} raises to {size}.'],
-    jam: ['{Pos} shoves. All-in, {size}.',
-      '{Pos} puts you to the test — all-in for {size}.'],
+    raise: [
+      'Whoa — {pos} raises you to {size}. Somebody woke up.',
+      'Uh-oh. {Pos} raises to {size}.'
+    ],
+    jam: [
+      '{Pos} shoves. All-in, {size}.',
+      '{Pos} puts you to the test — all-in for {size}.'
+    ],
     call: ['{Pos} just calls.', '{Pos} flats. No fireworks yet.'],
     checkBack: ['{Pos} checks it back.', '{Pos} taps the table behind you.'],
+    checkTo: [
+      '{Pos} checks to you.',
+      '{Pos} taps the table and checks to you.'
+    ],
     flop: ['Flop comes {cards}.', "Here's your flop: {cards}."],
     turn: ["Turn's the {card}.", 'The {card} hits the turn.'],
     river: ['River: the {card}.', 'And the river brings the {card}.'],
-    facing: ["{pot} in the middle, {call} to you. What's it gonna be?",
-      "It's {call} to stay in a {pot} pot. Your move, kid."],
+    facing: [
+      "{pot} in the middle, {call} to you. What's it gonna be?",
+      "It's {call} to stay in a {pot} pot. Your move, kid."
+    ],
     checkedTo: ["Checked to you with {pot} out there. What d'you do?"],
-    firstToAct: ["{pot} in the pot and it's on you, kid.",
-      "You're first in, {pot} in the middle. What's the play?"],
+    firstToAct: [
+      "{pot} in the pot and it's on you, kid.",
+      "You're first in, {pot} in the middle. What's the play?"
+    ],
   ),
   // Prof. Vega — dry theorist.
   'professor': _Voice(
@@ -393,23 +479,39 @@ const Map<String, _Voice> _voices = {
       'We begin in {heroPos}, {depth} deep, with {hand}. Folded to you.',
     ],
     yourMove: ['Your decision.', 'Proceed.'],
-    threeBet: ['{Pos} responds with a three-bet to {size}.',
-      'A three-bet from {pos}: {size}. Noted.'],
+    openIntro: [
+      '{depth} effective. You hold {hand} in {heroPos}.',
+      '{heroPos}, {depth} deep, with {hand}.',
+    ],
+    threeBet: [
+      '{Pos} responds with a three-bet to {size}.',
+      'A three-bet from {pos}: {size}. Noted.'
+    ],
     reRaise: ['{Pos} escalates again, to {size}.'],
     bet: ['{Pos} bets {size}.', '{Pos} elects to bet, {size}.'],
-    raise: ['{Pos} raises to {size}. The range narrows considerably.',
-      'A raise from {pos}, to {size}.'],
+    raise: [
+      '{Pos} raises to {size}. The range narrows considerably.',
+      'A raise from {pos}, to {size}.'
+    ],
     jam: ['{Pos} commits the stack: all-in for {size}.'],
     call: ['{Pos} calls.', '{Pos} continues with a call.'],
     checkBack: ['{Pos} declines to bet.', '{Pos} checks behind.'],
+    checkTo: [
+      '{Pos} checks to you.',
+      '{Pos} declines to bet and checks to you.'
+    ],
     flop: ['The flop: {cards}.', 'Observe the flop: {cards}.'],
     turn: ['The turn is the {card}.', 'Turn card: the {card}.'],
     river: ['The river: the {card}.', 'Final card: the {card}.'],
-    facing: ['The pot is {pot}; {call} to call. Your decision.',
-      'Price check: {call} into a {pot} pot. Proceed.'],
+    facing: [
+      'The pot is {pot}; {call} to call. Your decision.',
+      'Price check: {call} into a {pot} pot. Proceed.'
+    ],
     checkedTo: ['Checked to you. {pot} in the pot. Your decision.'],
-    firstToAct: ['{pot} in the pot, and you act first.',
-      'You are first to act with {pot} in the pot.'],
+    firstToAct: [
+      '{pot} in the pot, and you act first.',
+      'You are first to act with {pot} in the pot.'
+    ],
   ),
   // Nova — high-energy hype coach.
   'nova': _Voice(
@@ -418,24 +520,42 @@ const Map<String, _Voice> _voices = {
       "Here we go! Folds to you in {heroPos}, {depth} deep, with {hand} in hand!",
     ],
     yourMove: ["What's the move?", 'Show me what you got!'],
-    threeBet: ['Ooh, {pos} fights back! Three-bet to {size}!',
-      '{Pos} wants a battle — three-bet to {size}!'],
+    openIntro: [
+      "{depth} deep and you've got {hand} in {heroPos}!",
+      "You're in {heroPos}, {depth} deep, holding {hand}!",
+    ],
+    threeBet: [
+      'Ooh, {pos} fights back! Three-bet to {size}!',
+      '{Pos} wants a battle — three-bet to {size}!'
+    ],
     reRaise: ["{Pos} isn't done! Re-raise to {size}!"],
     bet: ['{Pos} fires {size}!', '{Pos} goes for it — {size}!'],
-    raise: ['Whoa, {pos} raises to {size}! Things just got spicy!',
-      '{Pos} hits you with a raise to {size}!'],
-    jam: ["ALL-IN! {Pos} shoves for {size}!",
-      'Big moment — {pos} moves all-in for {size}!'],
+    raise: [
+      'Whoa, {pos} raises to {size}! Things just got spicy!',
+      '{Pos} hits you with a raise to {size}!'
+    ],
+    jam: [
+      "ALL-IN! {Pos} shoves for {size}!",
+      'Big moment — {pos} moves all-in for {size}!'
+    ],
     call: ['{Pos} calls — let\'s keep going!', '{Pos} sticks around!'],
     checkBack: ['{Pos} checks it back!', '{Pos} slows down and checks!'],
+    checkTo: [
+      '{Pos} checks to you!',
+      '{Pos} taps the table and checks to you!'
+    ],
     flop: ['Flop time: {cards}!', 'Here comes the flop — {cards}!'],
     turn: ['Turn card: the {card}!', 'The {card} on the turn!'],
     river: ['River time — the {card}!', 'Last card: the {card}!'],
-    facing: ['{pot} in the pot, {call} to you — what\'s the move?',
-      "It's {call} to call into {pot}. You've got this — decide!"],
+    facing: [
+      '{pot} in the pot, {call} to you — what\'s the move?',
+      "It's {call} to call into {pot}. You've got this — decide!"
+    ],
     checkedTo: ['Checked to you with {pot} out there — your call!'],
-    firstToAct: ["You're first to act, {pot} in the middle — let's go!",
-      "{pot} pot, all eyes on you!"],
+    firstToAct: [
+      "You're first to act, {pot} in the middle — let's go!",
+      "{pot} pot, all eyes on you!"
+    ],
   ),
 };
 
@@ -470,21 +590,56 @@ class HandReader {
   HandReader._();
 
   static const Map<String, int> _ranks = {
-    '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9,
-    '10': 10, 'T': 10, 'J': 11, 'Q': 12, 'K': 13, 'A': 14,
+    '2': 2,
+    '3': 3,
+    '4': 4,
+    '5': 5,
+    '6': 6,
+    '7': 7,
+    '8': 8,
+    '9': 9,
+    '10': 10,
+    'T': 10,
+    'J': 11,
+    'Q': 12,
+    'K': 13,
+    'A': 14,
   };
   static const Map<int, String> _single = {
-    2: 'two', 3: 'three', 4: 'four', 5: 'five', 6: 'six', 7: 'seven',
-    8: 'eight', 9: 'nine', 10: 'ten', 11: 'jack', 12: 'queen', 13: 'king',
+    2: 'two',
+    3: 'three',
+    4: 'four',
+    5: 'five',
+    6: 'six',
+    7: 'seven',
+    8: 'eight',
+    9: 'nine',
+    10: 'ten',
+    11: 'jack',
+    12: 'queen',
+    13: 'king',
     14: 'ace',
   };
   static const Map<int, String> _plural = {
-    2: 'twos', 3: 'threes', 4: 'fours', 5: 'fives', 6: 'sixes',
-    7: 'sevens', 8: 'eights', 9: 'nines', 10: 'tens', 11: 'jacks',
-    12: 'queens', 13: 'kings', 14: 'aces',
+    2: 'twos',
+    3: 'threes',
+    4: 'fours',
+    5: 'fives',
+    6: 'sixes',
+    7: 'sevens',
+    8: 'eights',
+    9: 'nines',
+    10: 'tens',
+    11: 'jacks',
+    12: 'queens',
+    13: 'kings',
+    14: 'aces',
   };
   static const Map<String, String> _suitWords = {
-    '♠': 'spades', '♥': 'hearts', '♦': 'diamonds', '♣': 'clubs',
+    '♠': 'spades',
+    '♥': 'hearts',
+    '♦': 'diamonds',
+    '♣': 'clubs',
   };
 
   static (int, String)? _parse(String c) {
@@ -536,8 +691,8 @@ class HandReader {
       return have >= need && usesHero;
     }
 
-    final straight = [for (var lo = 1; lo <= 10; lo++) lo].any(
-        (lo) => windowHas(lo, 5));
+    final straight =
+        [for (var lo = 1; lo <= 10; lo++) lo].any((lo) => windowHas(lo, 5));
     final straightDraw = !river &&
         [for (var lo = 1; lo <= 10; lo++) lo].any((lo) => windowHas(lo, 4));
 
@@ -556,8 +711,8 @@ class HandReader {
       for (final r in hr)
         if (br.contains(r)) r
     };
-    final fullHouse = trips &&
-        counts.entries.where((e) => e.value >= 2).length >= 2;
+    final fullHouse =
+        trips && counts.entries.where((e) => e.value >= 2).length >= 2;
 
     final topBoard = br.reduce((a, b) => a > b ? a : b);
     final boardDistinct = br.toSet().toList()..sort((a, b) => b - a);
@@ -599,9 +754,8 @@ class HandReader {
       // Paired a BOARD card — genuinely connected on this street.
       final r = pairedHeroRanks.first;
       final idx = boardDistinct.indexOf(r);
-      final label = idx == 0
-          ? 'top pair'
-          : (idx == 1 ? 'second pair' : 'a weak pair');
+      final label =
+          idx == 0 ? 'top pair' : (idx == 1 ? 'second pair' : 'a weak pair');
       return HandRead(idx == 0 ? 3 : 2, withDraw(label));
     }
     if (pocket) {

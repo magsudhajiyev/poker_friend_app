@@ -200,6 +200,62 @@ void main() {
       expect(s.current, 2);
       expect(s.best, 2);
     });
+
+    test('year rollover and leap day are consecutive', () {
+      final s = DailyChallengeStore.computeStreaks({
+        '2027-12-31': day('2027-12-31'),
+        '2028-01-01': day('2028-01-01'),
+        '2028-02-28': day('2028-02-28'),
+        '2028-02-29': day('2028-02-29'),
+        '2028-03-01': day('2028-03-01'),
+      }, DateTime(2028, 3, 1));
+      expect(s.current, 3, reason: '28 Feb, 29 Feb, 1 Mar');
+      expect(s.best, 3);
+    });
+
+    test('streak crosses DST spring-forward dates (US + EU)', () {
+      final s = DailyChallengeStore.computeStreaks({
+        for (final k in [
+          '2027-03-13', '2027-03-14', '2027-03-15', // US spring forward
+          '2027-03-27', '2027-03-28', '2027-03-29', // EU spring forward
+        ])
+          k: day(k),
+      }, DateTime(2027, 3, 15));
+      expect(s.current, 3);
+      expect(s.best, 3);
+      final eu = DailyChallengeStore.computeStreaks({
+        '2027-03-27': day('2027-03-27'),
+        '2027-03-28': day('2027-03-28'),
+        '2027-03-29': day('2027-03-29'),
+      }, DateTime(2027, 3, 29));
+      expect(eu.current, 3);
+      expect(eu.best, 3);
+    });
+
+    test('isNextDay compares calendar days, not elapsed hours', () {
+      // On a DST machine these midnights are 23h apart.
+      expect(
+          DailyChallengeStore.isNextDay(
+              DateTime(2027, 3, 14), DateTime(2027, 3, 15)),
+          isTrue);
+      expect(
+          DailyChallengeStore.isNextDay(
+              DateTime(2027, 3, 13), DateTime(2027, 3, 14)),
+          isTrue);
+      expect(
+          DailyChallengeStore.isNextDay(
+              DateTime(2027, 3, 14), DateTime(2027, 3, 16)),
+          isFalse);
+      expect(
+          DailyChallengeStore.isNextDay(
+              DateTime(2027, 12, 31), DateTime(2028, 1, 1)),
+          isTrue);
+      expect(
+          DailyChallengeStore.isNextDay(
+              DateTime(2028, 2, 28), DateTime(2028, 3, 1)),
+          isFalse,
+          reason: '29 Feb 2028 exists');
+    });
   });
 
   group('DailyChallengeStore persistence (mock prefs)', () {
@@ -278,5 +334,48 @@ void main() {
     expect(back.street, 'Turn');
     // RNG spots carry no street (the row then shows the holding).
     expect(DailySpotSummary.fromJson(const {'g': 'c'}).street, '');
+  });
+
+  group('challengeNumber is DST-safe', () {
+    int n(int y, int m, int d) =>
+        DailyChallengeService.challengeNumber(DateTime(y, m, d));
+
+    test('epoch day is #1', () {
+      expect(n(2026, 10, 14), 1);
+    });
+
+    test('equals calendar day count + 1 across DST changes', () {
+      final e = DailyChallengeService.epoch;
+      final eu = DateTime.utc(e.year, e.month, e.day);
+      for (final d in [
+        DateTime(2026, 10, 24), DateTime(2026, 10, 25), DateTime(2026, 10, 26),
+        DateTime(2026, 11, 1), DateTime(2026, 11, 2),
+        DateTime(2027, 3, 13), DateTime(2027, 3, 14), DateTime(2027, 3, 15),
+        DateTime(2027, 3, 28), DateTime(2027, 3, 29), DateTime(2027, 6, 1),
+      ]) {
+        final want =
+            DateTime.utc(d.year, d.month, d.day).difference(eu).inDays + 1;
+        expect(n(d.year, d.month, d.day), want, reason: '$d');
+      }
+    });
+
+    test('consecutive days differ by exactly 1 and year rolls over', () {
+      expect(n(2026, 10, 15), 2);
+      expect(n(2026, 12, 31), 79);
+      expect(n(2027, 1, 1), 80);
+      expect(n(2027, 3, 29) - n(2027, 3, 28), 1);
+      expect(n(2027, 3, 14) - n(2027, 3, 13), 1);
+    });
+
+    test('today() shifts by calendar days', () {
+      DailyChallengeService.debugDayOffset = 3;
+      addTearDown(() => DailyChallengeService.debugDayOffset = 0);
+      final now = DateTime.now();
+      final t = DailyChallengeService.today();
+      expect(t.difference(DateTime(now.year, now.month, now.day + 3)).inDays,
+          0);
+      expect(DateTime(t.year, t.month, t.day),
+          DateTime(now.year, now.month, now.day + 3));
+    });
   });
 }

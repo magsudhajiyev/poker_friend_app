@@ -1,5 +1,5 @@
 {
-  "_comment": "Bundled fallback for Firestore authored_days/{yyyy-MM-dd}. 'days' maps a local date to up to 5 tree ids (play order). 'default' is a TESTING bridge that serves on every unscheduled day - remove it before shipping so unscheduled days play the RNG challenge.",
+  "_comment": "Bundled fallback for Firestore authored_days/{yyyy-MM-dd}. 'days' maps a local date to up to 5 tree ids (play order) and always wins. Otherwise 'rotation' serves up to 5 consecutive ids starting at challengeNumber mod len (wrapping), identical for every user. Add new bundled tree ids to 'rotation'.",
   "days": {
     "2026-10-22": [
       "btn-sb-qctd9d-kqs",
@@ -7,5 +7,10 @@
       "btn-co-acjd4d-ajs"
     ]
   },
-  "default": ["lj-btn-ts9c4d-99"]
+  "rotation": [
+    "lj-btn-ts9c4d-99",
+    "btn-sb-qctd9d-kqs",
+    "btn-bb-jd8h8d-tt",
+    "btn-co-acjd4d-ajs"
+  ]
 }

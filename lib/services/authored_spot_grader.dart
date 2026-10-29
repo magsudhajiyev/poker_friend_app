@@ -1,5 +1,6 @@
 import '../models/authored_spot.dart';
 import '../models/drill_models.dart';
+import '../utils/coach_text.dart';
 
 /// Grades a hero decision in an AUTHORED spot against the solver's per-hand
 /// action frequencies (frequency-only — the solver export carries no EV).
@@ -143,12 +144,30 @@ class AuthoredSpotGrader {
       DrillGrade.mistake => 'Leak. ',
     };
 
-    // With an authored explanation: the sheet's range narrative leads (used
-    // verbatim), then a short hand-specific note tying it to the hero's actual
-    // hand + action. Without one: the frequency reason alone (as before).
+    // With an authored explanation (the sheet's "WHAT HAPPENED / WHY / KEY
+    // IDEA" verbal reasoning), that IS the coaching line — used verbatim, no
+    // generic frequency note appended (it already explains the hand-specific
+    // why, so a "Your X takes Y most often" tack-on just repeats it). The
+    // persona still prepends a short in-character lead. Without an explanation,
+    // fall back to the computed frequency reason. EXCEPTION: on a LEAK, append
+    // the short hand-specific correction so the player hears what their exact
+    // hand wanted (the authored text is written for the SOLVER line, which the
+    // player didn't take).
     final note = explanation.trim();
-    final teaching =
-        note.isEmpty ? reason : '$note\n\n${_handNote(grade, heroAction, best, shown, actionPct, bestPct, heroNoun, bestNoun)}';
+    final String teaching;
+    if (note.isEmpty) {
+      teaching = normalizeCoachText(reason);
+    } else if (grade == DrillGrade.mistake && heroAction != best) {
+      // Joined with a space: the feedback card renders ONE Text widget, so a
+      // '\n\n' was only a stray line break, never a real paragraph.
+      teaching = joinSentences([
+        note,
+        _handNote(grade, heroAction, best, shown, actionPct, bestPct,
+            heroNoun, bestNoun),
+      ]);
+    } else {
+      teaching = normalizeCoachText(note);
+    }
 
     return DrillGradeResult(
       grade: grade,

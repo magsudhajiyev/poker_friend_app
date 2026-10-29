@@ -14,6 +14,20 @@ List<Situation> _play(AuthoredTree tree, List<AuthoredAction> actions,
   final walker = AuthoredTreeWalker(tree);
   final history = <SituationStep>[];
   final lines = <Situation>[];
+  // Mirror the screen's initState: if the tree opens on a VILLAIN node (hero
+  // isn't first to act — BB defense, flat vs an open), play the opener's
+  // action(s) into history BEFORE the hero's first decision, so the coach sees
+  // "BTN raised to 2BB" rather than "folds to you".
+  if (!walker.isHeroTurn && !walker.isOver) {
+    walker.advanceVillains();
+    for (final m in walker.lastVillainMoves) {
+      history.add(SituationStep(
+          actor: TreeActor.villain,
+          action: m.action,
+          sizeBB: m.sizeBB,
+          street: m.street));
+    }
+  }
   for (final a in actions) {
     final node = walker.current!;
     lines.add(AuthoredSituation.describe(
@@ -42,10 +56,7 @@ List<Situation> _play(AuthoredTree tree, List<AuthoredAction> actions,
   }
   if (!walker.isOver && walker.isHeroTurn) {
     lines.add(AuthoredSituation.describe(
-        tree: tree,
-        node: walker.current!,
-        history: history,
-        coachId: coach));
+        tree: tree, node: walker.current!, history: history, coachId: coach));
   }
   return lines;
 }
@@ -100,6 +111,100 @@ void main() {
     expect(a.map((s) => s.text), b.map((s) => s.text));
   });
 
+  group('hero acts SECOND preflop (BB defense / flat vs an open)', () {
+    // A villain-root tree: step 1 BTN opens to 2BB, step 2 the hero (BB)
+    // decides. The hero is NOT first to act — the opener must be played out
+    // before the hero's first decision.
+    final bbTree = AuthoredTree.fromJson({
+      'id': 'bb-btn-test',
+      'title': 'MTT 25BB · BB vs BTN · 3cTdJh',
+      'formatLabel': 'MTT · 25BB',
+      'stackBB': 25,
+      'heroPosition': 'BB',
+      'villainPosition': 'BTN',
+      'heroCards': ['K♦', '6♣'],
+      'heroHandClass': 'K6o',
+      'rootId': 'n1',
+      'nodes': {
+        'n1': {
+          'id': 'n1',
+          'street': 'preflop',
+          'board': <String>[],
+          'actor': 'villain',
+          'potBB': 1.5,
+          'toCallBB': 0,
+          'prompt': 'BTN open (first in)',
+          'actions': ['fold', 'raise', 'allin'],
+          'sizingBB': {'raise': 2.0, 'allin': 25},
+          'freq': {
+            'raise': {'K6o': 1.0}
+          },
+          'children': {'raise': 'n2'},
+        },
+        'n2': {
+          'id': 'n2',
+          'street': 'preflop',
+          'board': <String>[],
+          'actor': 'hero',
+          'potBB': 3.5,
+          'toCallBB': 2.0,
+          'prompt': 'BB vs BTN open',
+          'actions': ['fold', 'call', 'raise', 'allin'],
+          'sizingBB': {'raise': 6.5},
+          'freq': {
+            'call': {'K6o': 0.5},
+            'fold': {'K6o': 0.5},
+          },
+          'children': const <String, dynamic>{},
+        },
+      },
+    });
+
+    test('coach acknowledges the opener, never "folds to you"', () {
+      // First hero decision line (no hero action yet).
+      final first = _play(bbTree, const []);
+      expect(first, isNotEmpty);
+      final t = first.first.text;
+      // The opener is named (coach bubble spells the seat: "the button") with
+      // its size, so the hero knows a raise happened before their turn.
+      expect(t.toLowerCase(), contains('button'));
+      expect(t, contains('2BB'));
+      // It must NOT read as if it folded to the hero / hero is first in.
+      expect(t.toLowerCase(), isNot(contains('folds to you')));
+      expect(t.toLowerCase(), isNot(contains('folded to you')));
+      expect(t.toLowerCase(), isNot(contains('first to act')));
+      // It's an OPEN, not a 3-bet / re-raise (only one preflop raise so far).
+      expect(t.toLowerCase(), isNot(contains('3-bet')));
+      expect(t.toLowerCase(), isNot(contains('three-bet')));
+      // The hero faces a 2BB call into the 3.5BB pot.
+      expect(t, contains('3.5BB'));
+    });
+
+    test('results facing label reads "BTN raised to 2BB", not "Folded to you"',
+        () {
+      // Build the pre-decision history the screen builds, then label it.
+      final walker = AuthoredTreeWalker(bbTree);
+      final history = <SituationStep>[];
+      walker.advanceVillains();
+      for (final m in walker.lastVillainMoves) {
+        history.add(SituationStep(
+            actor: TreeActor.villain,
+            action: m.action,
+            sizeBB: m.sizeBB,
+            street: m.street));
+      }
+      final label =
+          AuthoredSituation.facingLabel(bbTree, history, TreeStreet.preflop);
+      expect(label, 'BTN raised to 2BB');
+    });
+
+    test('spoken line is bb-free and non-empty', () {
+      final first = _play(bbTree, const []).first;
+      expect(first.spoken, isNotEmpty);
+      expect(first.spoken, isNot(contains('BB')));
+    });
+  });
+
   test('every hero node on every line gets a non-empty, bb-free spoken line',
       () {
     // Walk all hero action choices breadth-first (bounded) and check that the
@@ -133,8 +238,8 @@ void main() {
     expect(checked, greaterThan(10));
   });
   group('stacks', () {
-    SituationStep step(TreeActor a, AuthoredAction x, double size,
-            TreeStreet st) =>
+    SituationStep step(
+            TreeActor a, AuthoredAction x, double size, TreeStreet st) =>
         SituationStep(actor: a, action: x, sizeBB: size, street: st);
     const h = TreeActor.hero, v = TreeActor.villain;
     const pf = TreeStreet.preflop, fl = TreeStreet.flop;
@@ -201,8 +306,8 @@ void main() {
       expect(label(['A♥', '2♥'], ['K♥', '9♥', '4♣']), 'a flush draw');
       expect(label(['Q♣', 'J♦'], ['10♠', '9♣', '4♦']), 'a straight draw');
       expect(label(['A♣', 'K♦'], ['10♠', '9♣', '4♦']), 'two overcards');
-      expect(label(['A♥', '2♥'], ['K♥', '9♥', '4♣', '7♠', '3♦']),
-          'nothing yet');
+      expect(
+          label(['A♥', '2♥'], ['K♥', '9♥', '4♣', '7♠', '3♦']), 'nothing yet');
     });
     test('board warnings', () {
       final set = HandReader.read(['9♠', '9♥'], ['10♠', '9♣', '4♦', 'J♦'])!;
@@ -248,8 +353,8 @@ void main() {
     ]) {
       final node = walker.current!;
       facing.add(AuthoredSituation.facingLabel(tree, history, node.street));
-      hero.add(AuthoredSituation.actionLabel(a, node,
-          firstIn: history.isEmpty));
+      hero.add(
+          AuthoredSituation.actionLabel(a, node, firstIn: history.isEmpty));
       walker.applyHeroAction(a);
       final taken = walker.lastReroute ?? a;
       history.add(SituationStep(
@@ -284,5 +389,45 @@ void main() {
     final vsBet = tree.nodes['n31']!; // hero facing the 8.8BB c-bet
     expect(AuthoredSituation.actionLabel(AuthoredAction.raise, vsBet),
         'raise to 19.2BB');
+  });
+
+  group('villain check wording', () {
+    const pre = TreeStreet.preflop, flop = TreeStreet.flop;
+    SituationStep v(AuthoredAction a, TreeStreet st) => SituationStep(
+        actor: TreeActor.villain, action: a, sizeBB: 0, street: st);
+    SituationStep h(AuthoredAction a, TreeStreet st) =>
+        SituationStep(actor: TreeActor.hero, action: a, sizeBB: 0, street: st);
+
+    test('villain acting FIRST checks to you (no "behind", no repeat)', () {
+      for (final coach in ['grinder', 'professor', 'nova']) {
+        final t = AuthoredSituation.describe(
+            tree: tree,
+            node: tree.nodes['n4']!,
+            coachId: coach,
+            history: [
+              h(AuthoredAction.raise, pre),
+              v(AuthoredAction.call, pre),
+              v(AuthoredAction.check, flop),
+            ]).text;
+        expect(t.toLowerCase(), contains('checks to you'));
+        expect(t.toLowerCase(), isNot(contains('behind')));
+        expect(t.toLowerCase(), isNot(contains('checked to you')));
+      }
+    });
+
+    test('villain acting AFTER the hero may check behind', () {
+      final t = AuthoredSituation.describe(
+          tree: tree,
+          node: tree.nodes['n4']!,
+          coachId: 'professor',
+          history: [
+            h(AuthoredAction.raise, pre),
+            v(AuthoredAction.call, pre),
+            h(AuthoredAction.check, flop),
+            v(AuthoredAction.check, flop),
+          ]).text;
+      expect(t.toLowerCase(), isNot(contains('checks to you')));
+      expect(t, contains('Checked to you'));
+    });
   });
 }

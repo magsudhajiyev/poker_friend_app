@@ -53,9 +53,22 @@ async function main() {
   if (ids.length === 0 || ids.length > MAX_HANDS) {
     throw new Error(`--hands needs 1..${MAX_HANDS} tree ids (got ${ids.length})`);
   }
+  // Leaderboard rules cap a day at 50 weights (one per hero decision).
+  const { maxHeroDecisions } = require('./build_tree.js');
+  const MAX_DAY_DECISIONS = 50;
+  let total = 0;
   for (const id of ids) {
     const spot = await db.collection('authored_spots').doc(id).get();
     if (!spot.exists) throw new Error(`authored_spots/${id} does not exist — upload it first`);
+    const d = spot.data();
+    const tree = d.treeJson ? JSON.parse(d.treeJson) : d;
+    total += maxHeroDecisions(tree.nodes, tree.rootId);
+  }
+  if (total > MAX_DAY_DECISIONS) {
+    throw new Error(
+      `Day worst case is ${total} hero decisions (max ${MAX_DAY_DECISIONS}): ` +
+        'leaderboard writes would fail the rules limits. Pick shorter trees.'
+    );
   }
   await ref.set({ hands: ids, updatedAt: admin.firestore.FieldValue.serverTimestamp() });
   console.log(`Scheduled authored_days/${DAY}: ${ids.join(', ')}`);
