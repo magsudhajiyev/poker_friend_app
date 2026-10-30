@@ -46,6 +46,7 @@ class AppButton extends StatelessWidget {
 
     final labelText = Text(
       label,
+      textAlign: TextAlign.center,
       maxLines: subLabel == null ? null : 1,
       style: GoogleFonts.ibmPlexSans(
         fontSize: spec.fontSize,
@@ -84,7 +85,11 @@ class AppButton extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         if (leadingIcon != null) ...[leadingIcon!, const SizedBox(width: 8)],
-        subLabel == null ? labelBlock : Flexible(child: labelBlock),
+        // A full-width button has bounded width, so its label may wrap
+        // (large text, long translations) instead of overflowing.
+        subLabel == null && !fullWidth
+            ? labelBlock
+            : Flexible(child: labelBlock),
         if (trailingIcon != null) ...[const SizedBox(width: 8), trailingIcon!],
       ],
     );

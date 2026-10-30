@@ -9,3 +9,4 @@ export 'constants/colors.dart';
 export 'constants/spacing.dart';
 export 'constants/decorations.dart';
 export 'constants/typography.dart';
+export 'constants/sizes.dart';
