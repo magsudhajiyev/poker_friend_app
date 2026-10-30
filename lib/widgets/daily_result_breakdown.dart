@@ -8,6 +8,7 @@ import '../design_system/constants/typography.dart';
 import '../l10n/app_localizations.dart';
 import '../services/daily_challenge_store.dart';
 import '../services/daily_scoring.dart';
+import 'playing_card_face.dart';
 
 /// The per-hand, street-by-street results breakdown for a Daily Challenge day.
 ///
@@ -283,42 +284,17 @@ class _DailyResultBreakdownState extends State<DailyResultBreakdown> {
         : const [];
   }
 
-  static bool _isRed(String card) => card.endsWith('♥') || card.endsWith('♦');
-
-  /// Small card faces (white, rank over suit, ♥/♦ red).
+  /// Small card faces (white, rank over suit, red hearts/diamonds).
   Widget _miniCards(List<String> cards) {
     final w = (MediaQuery.sizeOf(context).width * 0.052).clamp(18.0, 24.0);
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         for (final c in cards)
-          Container(
-            width: w,
-            height: w * 1.3,
-            margin: const EdgeInsets.only(right: 2),
-            decoration: BoxDecoration(
-              color: AppColors.bgInverse,
-              borderRadius: BorderRadius.circular(AppDecorations.legendDotRadius),
-            ),
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(c.substring(0, c.length - 1),
-                      style: AppTypography.mono(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          height: 1.0,
-                          color: _isRed(c) ? _red : Colors.black)),
-                  Text(c.substring(c.length - 1),
-                      style: TextStyle(
-                          fontSize: 10,
-                          height: 1.0,
-                          color: _isRed(c) ? _red : Colors.black)),
-                ],
-              ),
-            ),
+          Padding(
+            padding: const EdgeInsets.only(right: 2),
+            child: PlayingCardFace(c,
+                width: w, rankSize: 11, suitSize: 10, redColor: _red),
           ),
       ],
     );

@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'dart:math' as math;
 import '../utils/poker_positions.dart';
-import '../utils/number_formatter.dart';
-import '../models/game_types.dart';
 import '../services/ai_analyzer_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../services/auth_service.dart';
@@ -12,16 +10,21 @@ import '../services/partner_grant_service.dart';
 import '../services/subscription_service.dart';
 import '../services/pokerstars_export_service.dart';
 import '../services/hand_sharing_service.dart';
+import '../services/hand_display_prefs.dart';
 import '../services/opponent_service.dart';
 import '../services/play_style_detector.dart';
 import 'package:share_plus/share_plus.dart';
 import '../services/opponent_stats_service.dart';
 import '../l10n/app_localizations.dart';
 import 'paywall_screen.dart';
-import '../services/currency_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/feature_flag_service.dart';
 import '../design_system/components/app_toggle.dart';
+import '../design_system/components/bodies/message_body.dart';
+import '../design_system/components/buttons/app_button.dart';
+import '../design_system/components/dialogs/app_dialog.dart';
+import '../design_system/components/dialogs/dialog_action_bar.dart';
+import '../design_system/components/headers/section_header.dart';
 import '../design_system/components/buttons/back_button_circle.dart';
 import '../design_system/components/form_drawer.dart';
 import '../design_system/constants/colors.dart';
@@ -32,6 +35,12 @@ import '../utils/user_facing_error.dart';
 import '../onboarding/onboarding_state.dart';
 import '../onboarding/onboarding_tour.dart';
 import '../onboarding/onboarding_prefs.dart';
+import '../widgets/hand_details/hand_ai_analysis_card.dart';
+import '../widgets/hand_details/hand_street_section.dart';
+import '../widgets/hand_details/hand_summary_card.dart';
+import '../widgets/hand_details/hand_tools_strip.dart';
+import '../services/currency_service.dart';
+import '../widgets/hand_details/hand_view_data.dart';
 
 class HandActionsScreen extends StatefulWidget {
   final Map<String, dynamic> hand;
@@ -55,7 +64,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
 
   // Star, tags, and display state
   late bool _isStarred;
-  bool _showBB = false;
+  bool _showBB = HandDisplayPrefs.showBB;
   bool _isSharing = false;
   late List<String> _tags;
   String? _notes;
@@ -67,8 +76,15 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
     final rawTags = widget.hand['tags'];
     _tags = rawTags is List ? rawTags.cast<String>() : [];
     _notes = widget.hand['notes'] as String?;
+    _loadShowBB();
     _loadExistingAnalysis();
     _scheduleOnboardingTour();
+  }
+
+  /// First-ever load only: later screens start with the cached value.
+  Future<void> _loadShowBB() async {
+    final v = await HandDisplayPrefs.load();
+    if (mounted && v != _showBB) setState(() => _showBB = v);
   }
 
   /// Phase 6 — after the hand-card handoff: explain the hand tools (BB /
@@ -80,7 +96,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
         !OnboardingState.aiAnalysisTourPending) return;
     OnboardingState.aiAnalysisTourPending = false;
 
-    // The tools row is at the top of the screen — always laid out first.
+    // The tools strip sits in the summary card at the top of the scroll view.
     for (int i = 0; i < 20; i++) {
       await Future.delayed(const Duration(milliseconds: 100));
       if (!mounted) return;
@@ -89,6 +105,13 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
     if (!mounted) return;
 
     if (_toolsRowKey.currentContext != null) {
+      await Scrollable.ensureVisible(
+        _toolsRowKey.currentContext!,
+        alignment: 0.3,
+        duration: const Duration(milliseconds: 250),
+      );
+      await Future.delayed(const Duration(milliseconds: 150));
+      if (!mounted) return;
       HandToolsTour(toolsRowKey: _toolsRowKey)
           .show(context, onNext: _showAiAnalysisStep);
     } else {
@@ -177,7 +200,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(AppLocalizations.of(context).handActionsFailedToUpdateStar),
-            backgroundColor: Colors.red,
+            backgroundColor: AppColors.accentDanger,
           ),
         );
       }
@@ -223,7 +246,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                       style: AppTypography.ibm(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
-                        color: Colors.white,
+                        color: AppColors.textPrimary,
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -233,7 +256,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                           : l10n.handActionsHideHoleCardsSubtitle,
                       style: AppTypography.ibm(
                         fontSize: 12,
-                        color: Colors.white.withValues(alpha: 0.4),
+                        color: AppColors.textSecondary,
                       ),
                     ),
                   ],
@@ -327,54 +350,15 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
     if (usedCount >= _maxMonthlyExportsPro) {
       if (!mounted) return;
       final l10n = AppLocalizations.of(context);
-      showDialog(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          backgroundColor: AppColors.infoCardBg,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDecorations.radius18)),
-          title: Text(
-            l10n.quotaExportLimitTitle,
-            style: AppTypography.ibm(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          content: Text(
-            l10n.quotaExportLimitPro(_maxMonthlyExportsPro),
-            style: AppTypography.ibm(
-              color: Colors.white.withValues(alpha: 0.5),
-              fontSize: 14,
-              height: 1.5,
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(ctx);
-                PaywallScreen.show(context, featureName: 'Unlimited Exports');
-              },
-              child: Text(
-                l10n.quotaUpgradeToElite,
-                style: AppTypography.ibm(
-                  color: AppColors.accentPrimary,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: Text(
-                l10n.quotaOk,
-                style: AppTypography.ibm(
-                  color: AppColors.accentPrimary,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
+      AppDialog.show<void>(
+        context,
+        title: l10n.quotaExportLimitTitle,
+        body: MessageBody(l10n.quotaExportLimitPro(_maxMonthlyExportsPro)),
+        actions: DialogActionBar(
+          confirmLabel: l10n.quotaUpgradeToElite,
+          cancelLabel: l10n.quotaOk,
+          onConfirm: () =>
+              PaywallScreen.show(context, featureName: 'Unlimited Exports'),
         ),
       );
       return;
@@ -417,7 +401,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(AppLocalizations.of(context).handActionsExportedSuccessfully('${widget.hand['handNumber'] ?? 'N/A'}')),
-            backgroundColor: Colors.green,
+            backgroundColor: AppColors.profitGreen,
           ),
         );
       }
@@ -426,7 +410,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(AppLocalizations.of(context).handActionsFailedToExport(UserFacingError.message(e))),
-            backgroundColor: Colors.red,
+            backgroundColor: AppColors.accentDanger,
           ),
         );
       }
@@ -455,14 +439,15 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
     }
   }
 
-  Future<void> _analyzeHand() async {
+  /// Returns true only when a valid analysis was obtained and saved.
+  Future<bool> _analyzeHand() async {
     // Remote kill-switch (super-admin feature flag) for backend outages.
     if (!FeatureFlagService.isEnabled(FeatureFlagService.aiHandAnalysis)) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
             content: Text('AI analysis is temporarily unavailable.')));
       }
-      return;
+      return false;
     }
     final ourHoleCards = widget.hand['ourHoleCards'] as Map<String, dynamic>?;
     final card1 = ourHoleCards?['card1'] as String?;
@@ -470,52 +455,15 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
 
     if (card1 == null || card2 == null || card1.isEmpty || card2.isEmpty) {
       if (mounted) {
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            backgroundColor: AppColors.bgSurface,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppDecorations.radius18),
-            ),
-            title: Row(
-              children: [
-                const Icon(Icons.error_outline, color: Colors.orange, size: 28),
-                const SizedBox(width: 12),
-                Text(
-                  AppLocalizations.of(context).handActionsMissingHeroCards,
-                  style: AppTypography.ibm(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-            content: Text(
-              AppLocalizations.of(context).handActionsMissingHeroCardsMessage,
-              style: AppTypography.ibm(
-                color: Colors.white.withOpacity(0.5),
-                fontSize: 14,
-                height: 1.5,
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text(
-                  'OK',
-                  style: AppTypography.ibm(
-                    color: AppColors.accentPrimary,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
-          ),
+        final l10n = AppLocalizations.of(context);
+        AppDialog.show<void>(
+          context,
+          title: l10n.handActionsMissingHeroCards,
+          body: MessageBody(l10n.handActionsMissingHeroCardsMessage),
+          actions: DialogActionBar.single(cancelLabel: l10n.quotaOk),
         );
       }
-      return;
+      return false;
     }
 
     setState(() {
@@ -563,13 +511,24 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
           }
         });
       }
-    } catch (e) {
+      return true;
+    } on AiAnalysisUnavailableException {
       if (mounted) {
         setState(() {
-          _analysisError = e.toString();
+          _analysisError =
+              AppLocalizations.of(context).handActionsAnalysisUnavailable;
           _isAnalyzing = false;
         });
       }
+      return false;
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _analysisError = UserFacingError.message(e);
+          _isAnalyzing = false;
+        });
+      }
+      return false;
     }
   }
 
@@ -621,574 +580,199 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final heroPositionName = widget.hand['heroPositionName'] as String?;
+    final l10n = AppLocalizations.of(context);
+    final data = HandViewData.from(widget.hand,
+        ourSeat: widget.ourSeat, showBB: _showBB);
     final heroSeatNumber = widget.hand['heroSeatNumber'] as int?;
     final buttonPosition = widget.hand['buttonPosition'] ?? 1;
     final rawPlayerCount = (widget.hand['playerCount'] as int?) ?? 6;
     final playerCount = math.max(2, rawPlayerCount);
-    final heroPosition = widget.ourSeat ?? heroSeatNumber ?? widget.hand['heroPosition'] ?? 1;
+    final heroSeat =
+        widget.ourSeat ?? heroSeatNumber ?? widget.hand['heroPosition'] ?? 1;
+    final positionName = (widget.hand['heroPositionName'] as String?) ??
+        PokerPositions.getPositionName(heroSeat, buttonPosition, playerCount);
+    final title =
+        l10n.handActionsHandNumber('${widget.hand['handNumber'] ?? 'N/A'}');
+    final subtitle = [
+      positionName,
+      HandSummaryCard.blindsText(
+          widget.hand, data.formatter, data.formatter.isCash),
+      data.formatter.isCash ? l10n.statsCash : l10n.statsTournament,
+    ].where((e) => e.toString().isNotEmpty).join(' · ');
 
     return Scaffold(
       backgroundColor: AppColors.bgPrimary,
-      body: Stack(
-        children: [
-          SafeArea(
-            child: Column(
-              children: [
-                // Header
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
-                  child: Row(
-                    children: [
-                      // Canonical BackButtonCircle for consistent nav.
-                      SizedBox(
-                        width: 44,
-                        height: 44,
-                        child: Center(
-                          child: BackButtonCircle(
-                            onPressed: () => Navigator.pop(context),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      // Hand info
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              AppLocalizations.of(context).handActionsHandNumber('${widget.hand['handNumber'] ?? 'N/A'}'),
-                              style: AppTypography.ibm(
-                                fontSize: 17,
-                                color: AppColors.textPrimary,
-                                fontWeight: FontWeight.w600,
-                                height: 22 / 17,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              AppLocalizations.of(context).handActionsPosition(heroPositionName ?? PokerPositions.getPositionName(heroPosition, buttonPosition, playerCount)),
-                              style: AppTypography.ibm(
-                                fontSize: 13,
-                                color: AppColors.textSecondary,
-                                fontWeight: FontWeight.w400,
-                                height: 20 / 13,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      // Hand tools (BB / export / share / star) — wrapped in
-                      // a Container so TutorialCoachMark reads the full
-                      // bounding box for the spotlight (not just the last child).
-                      Container(
-                        key: _toolsRowKey,
-                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            // BB toggle button
-                            GestureDetector(
-                              onTap: () => setState(() => _showBB = !_showBB),
-                              child: Container(
-                                width: 44,
-                                height: 44,
-                                decoration: BoxDecoration(
-                                  color: _showBB
-                                      ? AppColors.accentPrimary.withOpacity(0.2)
-                                      : AppColors.bgSurface,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Center(
-                                  child: Text(
-                                    'BB',
-                                    style: AppTypography.mono(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w700,
-                                      color: _showBB
-                                          ? AppColors.accentPrimary
-                                          : Colors.white,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            // Export button
-                            GestureDetector(
-                              onTap: _handleExportButtonTap,
-                              child: Container(
-                                width: 44,
-                                height: 44,
-                                decoration: const BoxDecoration(
-                                  color: AppColors.bgSurface,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(
-                                  Icons.download,
-                                  color: Colors.white,
-                                  size: 22,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            // Share button
-                            GestureDetector(
-                              onTap: _handleShareButtonTap,
-                              child: Container(
-                                width: 44,
-                                height: 44,
-                                decoration: const BoxDecoration(
-                                  color: AppColors.bgSurface,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: _isSharing
-                                    ? const Padding(
-                                        padding: EdgeInsets.all(12),
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          color: Colors.white,
-                                        ),
-                                      )
-                                    : const Icon(
-                                        Icons.ios_share,
-                                        color: Colors.white,
-                                        size: 20,
-                                      ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            // Star button
-                            GestureDetector(
-                              onTap: _toggleStar,
-                              child: Container(
-                                width: 44,
-                                height: 44,
-                                decoration: BoxDecoration(
-                                  color: _isStarred
-                                      ? Colors.amber.withOpacity(0.2)
-                                      : AppColors.bgSurface,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Icon(
-                                  _isStarred ? Icons.star : Icons.star_border,
-                                  color: _isStarred ? Colors.amber : Colors.white,
-                                  size: 22,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+      body: SafeArea(
+        child: Column(
+          children: [
+            _buildHeader(title, subtitle),
+            Expanded(
+              child: SingleChildScrollView(
+                controller: _scrollController,
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    HandSummaryCard(
+                        data: data, footer: _buildToolsStrip(data)),
+                    if (_tags.isNotEmpty) ...[
+                      const SizedBox(height: 16),
+                      _buildTagsSection(),
                     ],
+                    if (_notes != null && _notes!.isNotEmpty) ...[
+                      const SizedBox(height: 12),
+                      _buildNotesSection(),
+                    ],
+                    if (data.streets.isNotEmpty) ...[
+                      const SizedBox(height: 24),
+                      SectionHeader(title: l10n.handActionsAction),
+                      const SizedBox(height: 12),
+                      for (final block in data.streets)
+                        HandStreetSection(block: block, data: data),
+                    ],
+                    const SizedBox(height: 8),
+                    _buildAIAnalyzerButton(),
+                    if (_aiAnalysis != null) ...[
+                      const SizedBox(height: 24),
+                      HandAiAnalysisCard(analysis: _aiAnalysis!),
+                    ],
+                    if (_analysisError != null) ...[
+                      const SizedBox(height: 16),
+                      _buildAnalysisError(),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Back | title block (Hand #N + subtitle) | star. One aligned row; the
+  /// display/export/share tools live on the summary card's footer.
+  Widget _buildHeader(String title, String subtitle) {
+    final l10n = AppLocalizations.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          SizedBox(
+            width: 44,
+            height: 44,
+            child: Center(
+              child: BackButtonCircle(onPressed: () => Navigator.pop(context)),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Semantics(
+                  header: true,
+                  child: Text(
+                    title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTypography.titleBase().copyWith(fontSize: 21),
                   ),
                 ),
-
-                // Content
-                Expanded(
-                  child: SingleChildScrollView(
-                    controller: _scrollController,
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Tags row
-                        if (_tags.isNotEmpty) ...[
-                          _buildTagsSection(),
-                          const SizedBox(height: 12),
-                        ],
-
-                        // Notes section
-                        if (_notes != null && _notes!.isNotEmpty) ...[
-                          _buildNotesSection(),
-                          const SizedBox(height: 12),
-                        ],
-
-                        // Hand Summary Stats
-                        _buildHandSummaryCards(),
-
-                        const SizedBox(height: 16),
-
-                        // Hero Cards and Winner Info
-                        _buildHeroCardsAndWinner(),
-
-                        const SizedBox(height: 16),
-
-                        // Street-by-street action table
-                        _buildStreetByStreetTable(),
-
-                        const SizedBox(height: 16),
-
-                        // AI Analyzer Button
-                        _buildAIAnalyzerButton(),
-
-                        // AI Analysis Results
-                        if (_aiAnalysis != null) ...[
-                          const SizedBox(height: 16),
-                          _buildAIAnalysisResults(),
-                        ],
-
-                        // Analysis Error
-                        if (_analysisError != null) ...[
-                          const SizedBox(height: 16),
-                          _buildAnalysisError(),
-                        ],
-                      ],
+                if (subtitle.isNotEmpty)
+                  Text(
+                    subtitle,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTypography.ibm(
+                      fontSize: 14,
+                      color: AppColors.textSecondary,
                     ),
                   ),
-                ),
               ],
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHeroCardsAndWinner() {
-    final ourHoleCardsData = widget.hand['ourHoleCards'];
-    final showdownData = widget.hand['showdownData'];
-    final playerNamesData = widget.hand['playerNames'];
-
-    String? heroCard1;
-    String? heroCard2;
-    if (ourHoleCardsData != null && ourHoleCardsData is Map) {
-      heroCard1 = ourHoleCardsData['card1'];
-      heroCard2 = ourHoleCardsData['card2'];
-    }
-
-    Map<int, Map<String, String?>>? opponentCards;
-    if (showdownData != null && showdownData is Map) {
-      final playerCardsData = showdownData['playerCards'];
-      if (playerCardsData != null && playerCardsData is Map) {
-        opponentCards = {};
-        playerCardsData.forEach((key, value) {
-          if (value != null && value is Map) {
-            final playerId = int.tryParse(key.toString());
-            if (playerId != null) {
-              opponentCards![playerId] = {
-                'card1': value['card1'] as String?,
-                'card2': value['card2'] as String?,
-              };
-            }
-          }
-        });
-      }
-    }
-
-    final bool hasHeroCards = (heroCard1 != null || heroCard2 != null);
-    final bool hasOpponentCards = opponentCards != null && opponentCards.isNotEmpty;
-
-    if (!hasHeroCards && !hasOpponentCards) {
-      return const SizedBox.shrink();
-    }
-
-    return Row(
-      children: [
-        // Hero Cards
-        if (hasHeroCards)
-          Expanded(
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppColors.bgSurface,
-                borderRadius: BorderRadius.circular(AppDecorations.radius18),
-                border: Border.all(color: AppColors.accentPrimary.withOpacity(0.4)),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(Icons.style, color: AppColors.accentPrimary, size: 16),
-                      const SizedBox(width: 6),
-                      Text(
-                        AppLocalizations.of(context).handActionsYourCards,
-                        style: AppTypography.ibm(
-                          color: AppColors.accentPrimary,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      if (heroCard1 != null) _buildCard(heroCard1),
-                      if (heroCard1 != null && heroCard2 != null) const SizedBox(width: 8),
-                      if (heroCard2 != null) _buildCard(heroCard2),
-                    ],
-                  ),
-                ],
-              ),
+          const SizedBox(width: 8),
+          _ToolButton(
+            tooltip:
+                _isStarred ? l10n.handActionsUnstarHand : l10n.handActionsStarHand,
+            selected: _isStarred,
+            selectedColor: AppColors.accentTertiary,
+            onTap: _toggleStar,
+            child: Icon(
+              _isStarred ? Icons.star : Icons.star_border,
+              color:
+                  _isStarred ? AppColors.accentTertiary : AppColors.textPrimary,
+              size: 22,
             ),
           ),
-
-        if (hasHeroCards && hasOpponentCards)
-          const SizedBox(width: 12),
-
-        // Opponent Cards
-        if (hasOpponentCards)
-          Expanded(
-            child: _buildOpponentCardsCard(opponentCards!, playerNamesData),
-          ),
-      ],
-    );
-  }
-
-  Widget _buildOpponentCardsCard(Map<int, Map<String, String?>> opponentCards, dynamic playerNamesData) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: AppColors.bgSurface,
-        borderRadius: BorderRadius.circular(AppDecorations.radius18),
-        border: Border.all(color: const Color(0xFF8B5CF6).withOpacity(0.4)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.people, color: Color(0xFF8B5CF6), size: 16),
-              const SizedBox(width: 6),
-              Text(
-                AppLocalizations.of(context).handActionsOpponentCards,
-                style: AppTypography.ibm(
-                  color: const Color(0xFF8B5CF6),
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          ...opponentCards.entries.map((entry) {
-            final playerId = entry.key;
-            final cards = entry.value;
-            final card1 = cards['card1'];
-            final card2 = cards['card2'];
-
-            if (card1 == null || card2 == null) {
-              return const SizedBox.shrink();
-            }
-
-            String? playerName;
-            if (playerNamesData != null && playerNamesData is Map) {
-              playerName = playerNamesData[playerId.toString()];
-            }
-            playerName ??= AppLocalizations.of(context).handActionsPlayerSeat(playerId);
-
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 6),
-              child: Row(
-                children: [
-                  Expanded(
-                    flex: 2,
-                    child: Text(
-                      playerName,
-                      style: AppTypography.ibm(
-                        color: Colors.white,
-                        fontSize: 12,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                  _buildSmallCard(card1),
-                  const SizedBox(width: 4),
-                  _buildSmallCard(card2),
-                ],
-              ),
-            );
-          }).toList(),
         ],
       ),
     );
   }
 
-  Widget _buildSmallCard(String card) {
+  /// BB/currency switch + export + share, attached to the summary card.
+  /// The Container gives TutorialCoachMark a full bounding box to spotlight.
+  Widget _buildToolsStrip(HandViewData data) {
+    final l10n = AppLocalizations.of(context);
     return Container(
-      width: 24,
-      height: 32,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(4),
-        border: Border.all(color: Colors.white.withOpacity(0.2)),
+      key: _toolsRowKey,
+      child: HandToolsStrip(
+        showBB: _showBB,
+        onShowBBChanged: (v) {
+          setState(() => _showBB = v);
+          HandDisplayPrefs.setShowBB(v);
+        },
+        amountLabel:
+            data.formatter.isCash ? CurrencyService.symbol : l10n.handActionsUnitChips,
+        onExport: _handleExportButtonTap,
+        onShare: _handleShareButtonTap,
+        isSharing: _isSharing,
       ),
-      child: Center(
-        child: Text(
-          card,
-          style: TextStyle(
-            color: _getCardColor(card),
-            fontSize: 10,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHandSummaryCards() {
-    final pot = widget.hand['potAmount'] ?? widget.hand['pot'] ?? 0;
-    final smallBlind = widget.hand['smallBlind'] ?? 1;
-    final bigBlind = widget.hand['bigBlind'] ?? 2;
-    final gameTypeStr = widget.hand['gameType'] ?? 'cash';
-    final gameType = GameTypeExtension.fromString(gameTypeStr);
-
-    final String potText;
-    if (_showBB) {
-      potText = _formatBB((pot as num).toDouble());
-    } else if (gameType == GameType.cash) {
-      potText = formatCompactCurrency(pot);
-    } else {
-      potText = formatCompactNumber(pot);
-    }
-    final String blindsText = gameType == GameType.cash
-        ? '${formatCompactCurrency(smallBlind)}/${formatCompactCurrency(bigBlind)}'
-        : '${formatCompactNumber(smallBlind)}/${formatCompactNumber(bigBlind)}';
-    String? winnerText = _getWinnerText();
-
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppColors.bgSurface,
-        borderRadius: BorderRadius.circular(AppDecorations.radius18),
-      ),
-      child: Row(
-        children: [
-          Expanded(child: _buildCompactStat(AppLocalizations.of(context).handActionsPot, potText)),
-          Container(width: 1, height: 32, color: Colors.white.withOpacity(0.1)),
-          Expanded(child: _buildCompactStat(AppLocalizations.of(context).handActionsBlinds, blindsText)),
-          if (winnerText != null) ...[
-            Container(width: 1, height: 32, color: Colors.white.withOpacity(0.1)),
-            Expanded(child: _buildCompactStat(AppLocalizations.of(context).handActionsWinner, winnerText, isWinner: true)),
-          ],
-        ],
-      ),
-    );
-  }
-
-  String? _getWinnerText() {
-    final isChoppedPot = widget.hand['isChoppedPot'] == true;
-    final winnerId = widget.hand['winnerId'];
-    final choppedWinners = widget.hand['choppedWinners'] as List<dynamic>?;
-    final playerNamesData = widget.hand['playerNames'];
-
-    if (isChoppedPot && choppedWinners != null && choppedWinners.isNotEmpty) {
-      // B11: split pots (winners of separate side pots) show every winner —
-      // never collapse to a count — so a side-pot winner is never hidden.
-      final isSplitPot = widget.hand['isSplitPot'] == true;
-      String nameOf(dynamic w) {
-        if (playerNamesData is Map) {
-          final name = playerNamesData[w.toString()] as String?;
-          return (name != null && name.isNotEmpty) ? name : 'Player $w';
-        }
-        return 'Player $w';
-      }
-
-      if (isSplitPot || choppedWinners.length <= 2) {
-        return choppedWinners.map(nameOf).join(', ');
-      }
-      return AppLocalizations.of(context).handActionsPlayersCount(choppedWinners.length);
-    } else if (winnerId != null) {
-      if (playerNamesData is Map) {
-        final name = playerNamesData[winnerId.toString()] as String?;
-        return (name != null && name.isNotEmpty) ? name : 'Player $winnerId';
-      }
-      return 'Player $winnerId';
-    }
-    return null;
-  }
-
-  Widget _buildCompactStat(String label, String value, {bool isWinner = false}) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          value,
-          style: AppTypography.ibm(
-            color: isWinner ? const Color(0xFFFFD700) : AppColors.accentPrimary,
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-          ),
-          textAlign: TextAlign.center,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-        const SizedBox(height: 2),
-        Text(
-          label,
-          style: AppTypography.ibm(
-            color: Colors.white.withOpacity(0.5),
-            fontSize: 10,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ],
     );
   }
 
   Widget _buildTagsSection() {
     return Wrap(
       spacing: 8,
-      runSpacing: 6,
-      children: _tags.map((tag) => _buildTagBadge(tag)).toList(),
+      runSpacing: 8,
+      children: _tags.map(_buildTagBadge).toList(),
     );
   }
 
   Widget _buildTagBadge(String tag) {
-    IconData tagIcon;
-    switch (tag) {
-      case 'Bluff':
-        tagIcon = Icons.psychology;
-        break;
-      case 'Value':
-        tagIcon = Icons.attach_money;
-        break;
-      case 'Mistake':
-        tagIcon = Icons.error_outline;
-        break;
-      case 'Cooler':
-        tagIcon = Icons.ac_unit;
-        break;
-      case 'Hero Call':
-        tagIcon = Icons.shield;
-        break;
-      case 'Exploit':
-        tagIcon = Icons.gps_fixed;
-        break;
-      default:
-        tagIcon = Icons.label;
-    }
-
+    const icons = {
+      'Bluff': Icons.psychology,
+      'Value': Icons.attach_money,
+      'Mistake': Icons.error_outline,
+      'Cooler': Icons.ac_unit,
+      'Hero Call': Icons.shield,
+      'Exploit': Icons.gps_fixed,
+    };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: AppColors.accentPrimary.withOpacity(0.1),
+        color: AppColors.accentPrimary.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
-        border: Border.all(
-          color: AppColors.accentPrimary.withOpacity(0.3),
-          width: 1,
-        ),
+        border:
+            Border.all(color: AppColors.accentPrimary.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            tagIcon,
-            size: 14,
-            color: AppColors.accentPrimary,
-          ),
+          Icon(icons[tag] ?? Icons.label,
+              size: 16, color: AppColors.accentPrimary),
           const SizedBox(width: 6),
-          Text(
-            tag,
-            style: AppTypography.ibm(
-              fontSize: 13,
-              color: AppColors.accentPrimary,
-              fontWeight: FontWeight.w500,
+          Flexible(
+            child: Text(
+              tag,
+              style: AppTypography.ibm(
+                fontSize: 14,
+                color: AppColors.accentPrimary,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
         ],
@@ -1198,6 +782,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
 
   Widget _buildNotesSection() {
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.bgSurface,
@@ -1206,26 +791,14 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Icon(Icons.note, color: Colors.white.withOpacity(0.5), size: 18),
-              const SizedBox(width: 8),
-              Text(
-                AppLocalizations.of(context).handActionsNotes,
-                style: AppTypography.ibm(
-                  color: Colors.white.withOpacity(0.5),
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
+          Text(AppLocalizations.of(context).handActionsNotes,
+              style: AppTypography.caption()),
+          const SizedBox(height: 6),
           Text(
             _notes!,
             style: AppTypography.ibm(
-              color: Colors.white,
-              fontSize: 14,
+              color: AppColors.textPrimary,
+              fontSize: 15,
               height: 1.4,
             ),
           ),
@@ -1234,668 +807,98 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
     );
   }
 
-  Widget _buildStreetByStreetTable() {
-    final actions = List<Map<String, dynamic>>.from(widget.hand['actions'] ?? []);
-    final boardCardsData = widget.hand['boardCards'];
-    final buttonPosition = widget.hand['buttonPosition'] ?? 1;
-    final rawPlayerCount = (widget.hand['playerCount'] as int?) ?? 6;
-    final playerCount = math.max(2, rawPlayerCount);
-    final heroPosition = widget.ourSeat ?? widget.hand['heroPosition'];
-    final playerNamesData = widget.hand['playerNames'];
-    final winnerId = widget.hand['winnerId'];
-    final gameTypeStr = widget.hand['gameType'] ?? 'cash';
-    final gameType = GameTypeExtension.fromString(gameTypeStr);
-
-    Map<String, String> playerNamesMap = {};
-    if (playerNamesData != null && playerNamesData is Map) {
-      playerNamesData.forEach((key, value) {
-        playerNamesMap[key.toString()] = value.toString();
-      });
-    }
-
-    List<String> flop = [];
-    String? turn;
-    String? river;
-    if (boardCardsData != null && boardCardsData is Map) {
-      flop = List<String>.from(boardCardsData['flop'] ?? []);
-      turn = boardCardsData['turn'] as String?;
-      river = boardCardsData['river'] as String?;
-    }
-
-    Map<String, List<Map<String, dynamic>>> actionsByStreet = {
-      'preflop': [],
-      'flop': [],
-      'turn': [],
-      'river': [],
-    };
-
-    for (final action in actions) {
-      final street = action['street'] as String? ?? 'preflop';
-      actionsByStreet[street]?.add(action);
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          AppLocalizations.of(context).handActionsActionSummary,
-          style: AppTypography.ibm(
-            color: Colors.white,
-            fontSize: 17,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: 16),
-
-        // Preflop
-        if (actionsByStreet['preflop']!.isNotEmpty)
-          _buildStreetSection(AppLocalizations.of(context).handActionsPreflop, null, actionsByStreet['preflop']!,
-              buttonPosition, playerCount, heroPosition, playerNamesMap, winnerId, gameType.value, widget.hand['preflopPot']),
-
-        _buildPostflopSections(widget.hand, flop, turn, river, actionsByStreet,
-            buttonPosition, playerCount, heroPosition, playerNamesMap, winnerId, gameType),
-      ],
-    );
-  }
-
-  Widget _buildStreetSection(String streetName, List<String>? cards, List<Map<String, dynamic>> actions,
-      int buttonPosition, int playerCount, int? heroPosition,
-      Map<String, String> playerNamesMap, int? winnerId, String gameType, dynamic potAmount) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 14),
-      decoration: BoxDecoration(
-        color: AppColors.bgSurface,
-        borderRadius: BorderRadius.circular(AppDecorations.radius18),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Street header with cards
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.05),
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(AppDecorations.radius18),
-                topRight: Radius.circular(AppDecorations.radius18),
-              ),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      streetName,
-                      style: AppTypography.ibm(
-                        color: AppColors.accentPrimary,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 1.0,
-                      ),
-                    ),
-                    if (cards != null && cards.isNotEmpty) ...[
-                      const SizedBox(width: 12),
-                      ...cards.map((card) => Padding(
-                        padding: const EdgeInsets.only(right: 6),
-                        child: _buildCard(card),
-                      )),
-                    ],
-                  ],
-                ),
-                // Pot amount
-                if (potAmount != null && (potAmount as double) > 0)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: AppColors.accentPrimary.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(AppDecorations.radius10),
-                      border: Border.all(color: AppColors.accentPrimary.withOpacity(0.3)),
-                    ),
-                    child: Text(
-                      _formatPotAmount(potAmount as double, gameType),
-                      style: AppTypography.ibm(
-                        color: AppColors.accentPrimary,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-
-          // Action table
-          _buildActionTable(actions, buttonPosition, playerCount, heroPosition, playerNamesMap, winnerId, gameType),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildActionTable(List<Map<String, dynamic>> actions, int buttonPosition, int playerCount,
-      int? heroPosition, Map<String, String> playerNamesMap, int? winnerId, String gameType) {
-    return Container(
-      padding: const EdgeInsets.all(10),
-      child: Table(
-        columnWidths: const {
-          0: FlexColumnWidth(2.5),
-          1: FlexColumnWidth(1.5),
-          2: FlexColumnWidth(1.5),
-          3: FlexColumnWidth(1),
-        },
-        children: [
-          TableRow(
-            children: [
-              _buildTableHeader(AppLocalizations.of(context).handActionsPlayer),
-              _buildTableHeader(AppLocalizations.of(context).handActionsStack),
-              _buildTableHeader(AppLocalizations.of(context).handActionsAction),
-              _buildTableHeader(AppLocalizations.of(context).handActionsAmount),
-            ],
-          ),
-          ...actions.map((action) => _buildActionRow(
-              action, buttonPosition, playerCount, heroPosition, playerNamesMap, winnerId, gameType
-          )),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTableHeader(String text) {
-    return Container(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Text(
-        text,
-        style: AppTypography.ibm(
-          color: Colors.white.withOpacity(0.4),
-          fontSize: 10,
-          fontWeight: FontWeight.w600,
-          letterSpacing: 0.5,
-        ),
-      ),
-    );
-  }
-
-  bool _isAllInAction(Map<String, dynamic> action) {
-    final actionType = action['action'] as String?;
-    final amount = action['amount'];
-    final playerStack = action['playerStack'] ?? action['stack'];
-
-    // HL-8: a CALL that consumes the whole stack is an all-in for less and
-    // must read ALL-IN too — not just bets/raises.
-    final type = actionType?.toLowerCase();
-    if (type != 'raise' && type != 'bet' && type != 'call') {
-      return false;
-    }
-
-    if (amount == null || playerStack == null) return false;
-
-    final betAmount = (amount as num).toDouble();
-    final stack = (playerStack as num).toDouble();
-    if (stack <= 0) return false; // no stack recorded — can't infer all-in
-
-    return betAmount >= (stack - 0.01);
-  }
-
-  bool _isAllInSituation(Map<String, dynamic> hand) {
-    final actions = hand['actions'] as List<dynamic>? ?? [];
-    return actions.any((action) => _isAllInAction(action));
-  }
-
-  bool _hasPostflopActions(Map<String, dynamic> hand) {
-    final actions = hand['actions'] as List<dynamic>? ?? [];
-    return actions.any((action) =>
-        action['street'] != null &&
-            action['street'].toString().toLowerCase() != 'preflop'
-    );
-  }
-
-  Widget _buildPostflopSections(
-      Map<String, dynamic> hand,
-      List<String> flop,
-      String? turn,
-      String? river,
-      Map<String, List<Map<String, dynamic>>> actionsByStreet,
-      int buttonPosition,
-      int playerCount,
-      int? heroPosition,
-      Map<String, String> playerNamesMap,
-      int? winnerId,
-      GameType gameType,
-      ) {
-    final hasPostflopActions = _hasPostflopActions(hand);
-    final isAllInSituation = _isAllInSituation(hand);
-
-    if (isAllInSituation && !hasPostflopActions) {
-      return _buildCombinedBoardSection(flop, turn, river, gameType);
-    } else {
-      return _buildStreetByStreetSections(
-          flop, turn, river, actionsByStreet,
-          buttonPosition, playerCount, heroPosition, playerNamesMap, winnerId, gameType
-      );
-    }
-  }
-
-  Widget _buildCombinedBoardSection(List<String> flop, String? turn, String? river, GameType gameType) {
-    final allCards = <String>[];
-    allCards.addAll(flop);
-    final hasTurn = turn != null && turn.isNotEmpty;
-    final hasRiver = river != null && river.isNotEmpty;
-    if (hasTurn) allCards.add(turn);
-    if (hasRiver) allCards.add(river);
-
-    if (allCards.isEmpty) return const SizedBox.shrink();
-
-    // Single-street run-out keeps its street name (all-in on the turn shows
-    // just the river card → "RIVER"); multi-street run-outs are "RUNOUT".
-    // Labels match the hardcoded FLOP/TURN/RIVER street headers.
-    final String label = flop.isEmpty && !hasTurn && hasRiver
-        ? 'RIVER'
-        : flop.isEmpty && hasTurn && !hasRiver
-            ? 'TURN'
-            : 'RUNOUT';
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 20),
-      decoration: BoxDecoration(
-        color: AppColors.bgSurface,
-        borderRadius: BorderRadius.circular(AppDecorations.radius18),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.05),
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(AppDecorations.radius18),
-                topRight: Radius.circular(AppDecorations.radius18),
-              ),
-            ),
-            child: Row(
-              children: [
-                Text(
-                  label,
-                  style: AppTypography.ibm(
-                    color: AppColors.accentPrimary,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 1.2,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.all(16),
-            child: Wrap(
-              spacing: 8,
-              runSpacing: 4,
-              children: allCards.map((card) => Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(4),
-                  border: Border.all(color: Colors.white.withOpacity(0.2)),
-                ),
-                child: Text(
-                  card,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: _getCardColor(card),
-                  ),
-                ),
-              )).toList(),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStreetByStreetSections(
-      List<String> flop,
-      String? turn,
-      String? river,
-      Map<String, List<Map<String, dynamic>>> actionsByStreet,
-      int buttonPosition,
-      int playerCount,
-      int? heroPosition,
-      Map<String, String> playerNamesMap,
-      int? winnerId,
-      GameType gameType,
-      ) {
-    // A street that was DEALT but has no recorded actions is an all-in
-    // run-out — players were already all-in on an earlier street. Those
-    // streets collapse into one side-by-side board strip (no street name,
-    // no player/stack/action table) instead of empty street sections.
-    final flopIsRunout =
-        flop.isNotEmpty && actionsByStreet['flop']!.isEmpty;
-    final turnIsRunout = turn != null &&
-        turn.isNotEmpty &&
-        actionsByStreet['turn']!.isEmpty;
-    final riverIsRunout = river != null &&
-        river.isNotEmpty &&
-        actionsByStreet['river']!.isEmpty;
-
-    return Column(
-      children: [
-        if (flop.isNotEmpty && !flopIsRunout)
-          _buildStreetSection('FLOP', flop, actionsByStreet['flop']!,
-              buttonPosition, playerCount, heroPosition, playerNamesMap, winnerId, gameType.value, widget.hand['flopPot']),
-
-        if (turn != null && turn.isNotEmpty && !turnIsRunout)
-          _buildStreetSection('TURN', [turn], actionsByStreet['turn']!,
-              buttonPosition, playerCount, heroPosition, playerNamesMap, winnerId, gameType.value, widget.hand['turnPot']),
-
-        if (river != null && river.isNotEmpty && !riverIsRunout)
-          _buildStreetSection('RIVER', [river], actionsByStreet['river']!,
-              buttonPosition, playerCount, heroPosition, playerNamesMap, winnerId, gameType.value, widget.hand['riverPot']),
-
-        if (flopIsRunout || turnIsRunout || riverIsRunout)
-          _buildCombinedBoardSection(
-            flopIsRunout ? flop : const [],
-            turnIsRunout ? turn : null,
-            riverIsRunout ? river : null,
-            gameType,
-          ),
-      ],
-    );
-  }
-
-  TableRow _buildActionRow(Map<String, dynamic> action, int buttonPosition, int playerCount,
-      int? heroPosition, Map<String, String> playerNamesMap, int? winnerId, String gameType) {
-    final playerSeat = action['player'] as int? ?? action['playerSeat'] as int? ?? 1;
-    final actionType = action['action'] as String? ?? 'Unknown';
-    final amount = action['amount'];
-    final stack = action['playerStack'] ?? action['stack'] ?? 0;
-
-    String playerName = playerNamesMap[playerSeat.toString()] ??
-        action['playerName'] as String? ??
-        AppLocalizations.of(context).handActionsPlayerSeat(playerSeat);
-
-    final isHero = heroPosition != null && playerSeat == heroPosition;
-    final isWinner = winnerId != null && playerSeat == winnerId;
-    final positionName = action['playerPosition'] as String? ??
-        PokerPositions.getPositionName(playerSeat, buttonPosition, playerCount);
-
-    String playerDisplay = isHero ? AppLocalizations.of(context).handActionsYou : playerName;
-    playerDisplay = '$playerDisplay ($positionName)';
-
-    Color actionColor = Colors.white.withOpacity(0.5);
-    switch (actionType.toLowerCase()) {
-      case 'fold':
-        actionColor = Colors.red;
-        break;
-      case 'call':
-      case 'check':
-        actionColor = AppColors.accentPrimary;
-        break;
-      case 'raise':
-      case 'bet':
-        actionColor = const Color(0xFFFF9500);
-        break;
-      case 'all in':
-      case 'allin':
-        actionColor = Colors.red;
-        break;
-    }
-
-    return TableRow(
-      children: [
-        Container(
-          padding: const EdgeInsets.symmetric(vertical: 6),
-          child: Row(
-            children: [
-              if (isWinner)
-                const Icon(Icons.emoji_events, color: Color(0xFFFFD700), size: 12),
-              if (isWinner) const SizedBox(width: 3),
-              Expanded(
-                child: Text(
-                  playerDisplay,
-                  style: AppTypography.ibm(
-                    color: isHero ? AppColors.accentPrimary : Colors.white,
-                    fontSize: 11,
-                    fontWeight: isHero ? FontWeight.w600 : FontWeight.normal,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
-        ),
-        Container(
-          padding: const EdgeInsets.symmetric(vertical: 6),
-          child: Text(
-            _formatStack(stack, gameType),
-            style: AppTypography.ibm(
-              color: Colors.white.withOpacity(0.5),
-              fontSize: 11,
-            ),
-          ),
-        ),
-        Container(
-          padding: const EdgeInsets.symmetric(vertical: 6),
-          child: Text(
-            _isAllInAction(action) ? AppLocalizations.of(context).handActionsAllIn : actionType.toUpperCase(),
-            style: AppTypography.ibm(
-              color: actionColor,
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
-        Container(
-          padding: const EdgeInsets.symmetric(vertical: 6),
-          child: Text(
-            _formatAmount(amount, gameType),
-            style: AppTypography.ibm(
-              color: Colors.white.withOpacity(0.5),
-              fontSize: 11,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildCard(String? card) {
-    if (card == null || card.isEmpty) return const SizedBox.shrink();
-
-    final suit = card.length > 1 ? card.substring(1) : '';
-    final rank = card.isNotEmpty ? card[0] : '';
-
-    Color suitColor = Colors.white;
-    if (suit == '♥' || suit == '♦') suitColor = Colors.red;
-
-    return Container(
-      width: 30,
-      height: 40,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: Colors.white.withOpacity(0.2)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.2),
-            blurRadius: 3,
-            offset: const Offset(0, 1),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            rank,
-            style: TextStyle(
-              color: suitColor == Colors.red ? Colors.red : Colors.black,
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 1),
-          Text(
-            suit,
-            style: TextStyle(
-              color: suitColor == Colors.red ? Colors.red : Colors.black,
-              fontSize: 10,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  String _formatBB(double value) {
-    final bb = (widget.hand['bigBlind'] as num?)?.toDouble() ?? 2.0;
-    final bbValue = value / bb;
-    if (bbValue == bbValue.roundToDouble()) {
-      return '${bbValue.toInt()}BB';
-    }
-    return '${bbValue.toStringAsFixed(1)}BB';
-  }
-
-  String _formatPotAmount(double amount, String gameType) {
-    if (amount <= 0) return '';
-
-    final l10n = AppLocalizations.of(context);
-
-    if (_showBB) return l10n.handActionsPotAmount(_formatBB(amount));
-
-    final isCashGame = gameType == 'cash';
-
-    if (isCashGame) {
-      return l10n.handActionsPotAmount(CurrencyService.formatCash(amount));
-    } else {
-      return l10n.handActionsPotAmount('${amount.toInt()}');
-    }
-  }
-
-  String _formatStack(dynamic stack, String gameType) {
-    if (stack == null || (stack is num && stack <= 0)) return '-';
-
-    final stackNum = (stack is num) ? stack.toDouble() : 0.0;
-
-    if (_showBB) return _formatBB(stackNum);
-
-    final isCashGame = gameType == 'cash';
-
-    if (isCashGame) {
-      return formatCompactCurrency(stackNum);
-    } else {
-      return formatCompactNumber(stackNum);
-    }
-  }
-
-  String _formatAmount(dynamic amount, String gameType) {
-    if (amount == null) return '-';
-
-    final amountNum = (amount is num) ? amount.toDouble() : 0.0;
-    if (amountNum <= 0) return '-';
-
-    if (_showBB) return _formatBB(amountNum);
-
-    final isCashGame = gameType == 'cash';
-
-    if (isCashGame) {
-      return formatCompactCurrency(amountNum);
-    } else {
-      return formatCompactNumber(amountNum);
-    }
-  }
-
-  Color _getCardColor(String card) {
-    if (card.contains('♥') || card.contains('♦')) {
-      return Colors.red;
-    }
-    return Colors.black;
-  }
-
   Widget _buildAIAnalyzerButton() {
+    final l10n = AppLocalizations.of(context);
     final ourHoleCards = widget.hand['ourHoleCards'] as Map<String, dynamic>?;
     final card1 = ourHoleCards?['card1'] as String?;
     final card2 = ourHoleCards?['card2'] as String?;
-    final hasHeroCards = card1 != null && card2 != null && card1.isNotEmpty && card2.isNotEmpty;
+    final hasHeroCards =
+        card1 != null && card2 != null && card1.isNotEmpty && card2.isNotEmpty;
 
-    Color buttonColor;
-    Color textColor;
-    if (!hasHeroCards) {
-      buttonColor = Colors.white.withOpacity(0.1);
-      textColor = Colors.white.withOpacity(0.3);
+    final String label;
+    final Widget icon;
+    final AppButtonVariant variant;
+    if (_isAnalyzing) {
+      label = l10n.handActionsAnalyzingHand;
+      variant = AppButtonVariant.secondaryLarge;
+      icon = const SizedBox(
+        width: 18,
+        height: 18,
+        child: CircularProgressIndicator(
+            strokeWidth: 2, color: AppColors.textPrimary),
+      );
+    } else if (!hasHeroCards) {
+      label = l10n.handActionsHeroCardsMissing;
+      variant = AppButtonVariant.secondaryLarge;
+      icon = const Icon(Icons.block, color: AppColors.textPrimary, size: 20);
     } else if (_aiAnalysis != null) {
-      buttonColor = Colors.white.withOpacity(0.1);
-      textColor = Colors.white.withOpacity(0.4);
+      label = l10n.handActionsAnalysisComplete;
+      variant = AppButtonVariant.ghost;
+      icon = const Icon(Icons.check_circle_outline,
+          color: AppColors.accentPrimary, size: 20);
     } else {
-      buttonColor = AppColors.accentPrimary;
-      textColor = Colors.black;
+      label = l10n.handActionsAiAnalyzerBeta;
+      variant = AppButtonVariant.secondaryLarge;
+      icon = SvgPicture.asset(
+        'icons/figma_icons/sparkle.svg',
+        width: 20,
+        height: 20,
+        colorFilter:
+            const ColorFilter.mode(AppColors.textPrimary, BlendMode.srcIn),
+      );
     }
+    final enabled = !_isAnalyzing && hasHeroCards && _aiAnalysis == null;
 
-    return GestureDetector(
+    // The keyed box is the tour's spotlight target for the AI step.
+    return SizedBox(
       key: _aiButtonKey,
-      onTap: (_isAnalyzing || !hasHeroCards || _aiAnalysis != null) ? null : () => _handleAnalyzeButtonTap(),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        decoration: BoxDecoration(
-          color: buttonColor,
-          borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (_isAnalyzing) ...[
-              SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(textColor),
+      width: double.infinity,
+      child: AppButton(
+        label: label,
+        variant: variant,
+        fullWidth: true,
+        leadingIcon: icon,
+        onTap: enabled ? _handleAnalyzeButtonTap : null,
+      ),
+    );
+  }
+
+  Widget _buildAnalysisError() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.bgSurface,
+        borderRadius: BorderRadius.circular(AppDecorations.radius18),
+        border:
+            Border.all(color: AppColors.accentDanger.withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.error_outline,
+              color: AppColors.accentDanger, size: 24),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  AppLocalizations.of(context).handActionsAnalysisFailed,
+                  style: AppTypography.ibm(
+                    color: AppColors.accentDanger,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Text(
-                AppLocalizations.of(context).handActionsAnalyzingHand,
-                style: AppTypography.ibm(
-                  color: textColor,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
+                const SizedBox(height: 4),
+                Text(
+                  _analysisError ?? 'Unknown error',
+                  style: AppTypography.caption(),
                 ),
-              ),
-            ] else if (!hasHeroCards) ...[
-              Icon(Icons.block, color: textColor),
-              const SizedBox(width: 12),
-              Text(
-                AppLocalizations.of(context).handActionsHeroCardsMissing,
-                style: AppTypography.ibm(
-                  color: textColor,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ] else ...[
-              if (_aiAnalysis != null)
-                Icon(Icons.check_circle_outline, color: textColor)
-              else
-                SvgPicture.asset(
-                  'icons/figma_icons/sparkle.svg',
-                  width: 22,
-                  height: 22,
-                  colorFilter: ColorFilter.mode(textColor, BlendMode.srcIn),
-                ),
-              const SizedBox(width: 12),
-              Text(
-                _aiAnalysis != null ? AppLocalizations.of(context).handActionsAnalysisComplete : AppLocalizations.of(context).handActionsAiAnalyzerBeta,
-                style: AppTypography.ibm(
-                  color: textColor,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ],
-        ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -1936,7 +939,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
 
     // Club tier: unlimited — no quota check
     if (SubscriptionService.isClub) {
-      _analyzeHand();
+      await _analyzeHand();
       return;
     }
 
@@ -1950,7 +953,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
       } catch (_) {}
     }
     if (isAdmin) {
-      _analyzeHand();
+      await _analyzeHand();
       return;
     }
 
@@ -1958,7 +961,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
     final partnerQuota = PartnerGrantService.partnerAiQuota;
     if (partnerQuota != null) {
       if (partnerQuota == -1) {
-        _analyzeHand();
+        await _analyzeHand();
         return;
       }
       final prefs = await SharedPreferences.getInstance();
@@ -1976,8 +979,8 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
         if (mounted) _showAnalysisQuotaDialog(used, partnerQuota, true);
         return;
       }
-      _analyzeHand();
-      await prefs.setInt(partnerCountKey, used + 1);
+      // Count only a valid analysis (never the backend fallback / errors).
+      if (await _analyzeHand()) await prefs.setInt(partnerCountKey, used + 1);
       return;
     }
 
@@ -2006,338 +1009,68 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
       return;
     }
 
-    _analyzeHand();
-    await prefs.setInt(countKey, usedCount + 1);
+    // Count only a valid analysis (never the backend fallback / errors).
+    if (await _analyzeHand()) await prefs.setInt(countKey, usedCount + 1);
   }
 
   void _showAnalysisQuotaDialog(int used, int max, bool isElite) {
     final l10n = AppLocalizations.of(context);
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.infoCardBg,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDecorations.radius18)),
-        title: Text(
-          l10n.quotaMonthlyLimitTitle,
-          style: AppTypography.ibm(
-            color: Colors.white,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
+    AppDialog.show<void>(
+      context,
+      title: l10n.quotaMonthlyLimitTitle,
+      body: MessageBody(isElite
+          ? l10n.quotaAiLimitElite(max)
+          : l10n.quotaAiLimitPro(max, _maxMonthlyAnalysesElite)),
+      actions: isElite
+          ? DialogActionBar.single(cancelLabel: l10n.quotaOk)
+          : DialogActionBar(
+              confirmLabel: l10n.quotaUpgradeToElite,
+              cancelLabel: l10n.quotaOk,
+              onConfirm: () =>
+                  PaywallScreen.show(context, featureName: 'More AI Analyses'),
+            ),
+    );
+  }
+}
+
+/// Circular header tool button with ripple, tooltip and screen-reader label.
+class _ToolButton extends StatelessWidget {
+  final String tooltip;
+  final VoidCallback onTap;
+  final Widget child;
+  final bool selected;
+  final Color selectedColor;
+
+  const _ToolButton({
+    required this.tooltip,
+    required this.onTap,
+    required this.child,
+    this.selected = false,
+    this.selectedColor = AppColors.accentPrimary,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: tooltip,
+      child: Semantics(
+        button: true,
+        selected: selected,
+        label: tooltip,
+        excludeSemantics: true,
+        onTap: onTap,
+        child: Material(
+          color: selected
+              ? selectedColor.withValues(alpha: 0.2)
+              : AppColors.bgSurface,
+          shape: const CircleBorder(),
+          child: InkWell(
+            customBorder: const CircleBorder(),
+            onTap: onTap,
+            child: SizedBox(width: 44, height: 44, child: Center(child: child)),
           ),
         ),
-        content: Text(
-          isElite
-              ? l10n.quotaAiLimitElite(max)
-              : l10n.quotaAiLimitPro(max, _maxMonthlyAnalysesElite),
-          style: AppTypography.ibm(
-            color: Colors.white.withValues(alpha: 0.5),
-            fontSize: 14,
-            height: 1.5,
-          ),
-        ),
-        actions: [
-          if (!isElite)
-            TextButton(
-              onPressed: () {
-                Navigator.pop(ctx);
-                PaywallScreen.show(context, featureName: 'More AI Analyses');
-              },
-              child: Text(
-                l10n.quotaUpgradeToElite,
-                style: AppTypography.ibm(
-                  color: AppColors.accentPrimary,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(
-              l10n.quotaOk,
-              style: AppTypography.ibm(
-                color: AppColors.accentPrimary,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }
-
-  Widget _buildAnalysisError() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.bgSurface,
-        borderRadius: BorderRadius.circular(AppDecorations.radius18),
-        border: Border.all(color: Colors.red.withOpacity(0.4)),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.error_outline, color: Colors.red, size: 24),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  AppLocalizations.of(context).handActionsAnalysisFailed,
-                  style: AppTypography.ibm(
-                    color: Colors.red,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  _analysisError ?? 'Unknown error',
-                  style: AppTypography.ibm(
-                    color: Colors.white.withOpacity(0.5),
-                    fontSize: 12,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAIAnalysisResults() {
-    if (_aiAnalysis == null) return const SizedBox.shrink();
-
-    final aiAnalysis = _aiAnalysis!['aiAnalysis'] as Map<String, dynamic>?;
-    final streetBreakdown = _aiAnalysis!['streetBreakdown'] as Map<String, dynamic>?;
-    final exploitativeTip = _aiAnalysis!['exploitativeTip'] as String?;
-    final hasStreetBreakdown = streetBreakdown != null && streetBreakdown.isNotEmpty;
-    final processingTime = _aiAnalysis!['processingTimeMs'] as int? ?? 0;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // AI Analysis
-        if (aiAnalysis != null) ...[
-          const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: AppColors.bgSurface,
-              borderRadius: BorderRadius.circular(AppDecorations.radius18),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Icon(Icons.psychology, color: AppColors.accentPrimary, size: 20),
-                    const SizedBox(width: 8),
-                    Text(
-                      AppLocalizations.of(context).handActionsAiAnalysis,
-                      style: AppTypography.ibm(
-                        color: AppColors.accentPrimary,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                if (aiAnalysis['reasoning'] != null) ...[
-                  Text(
-                    aiAnalysis['reasoning'],
-                    style: AppTypography.ibm(
-                      color: Colors.white,
-                      fontSize: 14,
-                      height: 1.5,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                ],
-                if (aiAnalysis['learningPoint'] != null &&
-                    (aiAnalysis['learningPoint'] as String).isNotEmpty) ...[
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFFD700).withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
-                      border: Border.all(color: const Color(0xFFFFD700).withOpacity(0.3)),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.lightbulb, color: Color(0xFFFFD700), size: 20),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            aiAnalysis['learningPoint'],
-                            style: AppTypography.ibm(
-                              color: const Color(0xFFFFD700),
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
-                              height: 1.4,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ],
-
-        // Street-by-street breakdown (from Claude)
-        if (hasStreetBreakdown) ...[
-          const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: AppColors.bgSurface,
-              borderRadius: BorderRadius.circular(AppDecorations.radius18),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Icon(Icons.school_rounded, color: AppColors.accentPrimary, size: 20),
-                    const SizedBox(width: 8),
-                    Text(
-                      AppLocalizations.of(context).handActionsStreetByStreetBreakdown,
-                      style: AppTypography.ibm(
-                        color: AppColors.accentPrimary,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                ...['preflop', 'flop', 'turn', 'river']
-                    .where((s) => streetBreakdown!.containsKey(s))
-                    .map((streetName) {
-                  final street = streetBreakdown![streetName] as Map<String, dynamic>? ?? {};
-                  final analysis = street['analysis'] as String? ?? '';
-                  final grade = street['grade'] as String? ?? 'C';
-                  return _buildStreetGradeRow(streetName, analysis, grade);
-                }),
-                // Exploitative tip
-                if (exploitativeTip != null && exploitativeTip!.isNotEmpty) ...[
-                  const SizedBox(height: 16),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFFD700).withOpacity(0.08),
-                      borderRadius: BorderRadius.circular(AppDecorations.radius10),
-                    ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Icon(Icons.person_search,
-                            color: Color(0xFFFFD700), size: 16),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            exploitativeTip!,
-                            style: AppTypography.ibm(
-                              fontSize: 13,
-                              color: const Color(0xFFFFD700),
-                              height: 1.4,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ],
-
-        // Processing Time
-        const SizedBox(height: 12),
-        Center(
-          child: Text(
-            AppLocalizations.of(context).handActionsAnalysisCompletedIn((processingTime / 1000).toStringAsFixed(2)),
-            style: AppTypography.ibm(
-              color: Colors.white.withOpacity(0.4),
-              fontSize: 12,
-              fontStyle: FontStyle.italic,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildStreetGradeRow(String streetName, String analysis, String grade) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 28,
-            height: 28,
-            decoration: BoxDecoration(
-              color: _gradeColor(grade).withOpacity(0.15),
-              borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
-            ),
-            child: Center(
-              child: Text(
-                grade,
-                style: AppTypography.mono(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: _gradeColor(grade),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  streetName[0].toUpperCase() + streetName.substring(1),
-                  style: AppTypography.ibm(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white.withOpacity(0.5),
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  analysis,
-                  style: AppTypography.ibm(
-                    fontSize: 13,
-                    color: Colors.white.withOpacity(0.8),
-                    height: 1.4,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Color _gradeColor(String grade) {
-    switch (grade.toUpperCase()) {
-      case 'A': return const Color(0xFF54E98A);
-      case 'B': return AppColors.accentPrimary;
-      case 'C': return const Color(0xFFFFD700);
-      case 'D': return Colors.orange;
-      case 'F': return Colors.red;
-      default: return Colors.white.withOpacity(0.5);
-    }
-  }
-
 }
