@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart' show User;
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -148,9 +151,16 @@ class FeatureFlagService {
 
   // ── Lifecycle ─────────────────────────────────────────────────────────
 
-  /// Loads the SharedPreferences cache, then subscribes to the Firestore
-  /// doc. Safe to call before sign-in (reads attach once rules allow).
+  static bool _initialized = false;
+  static StreamSubscription<DocumentSnapshot>? _flagSub;
+
+  /// Loads the SharedPreferences cache, then (re)subscribes to the Firestore
+  /// doc whenever a user signs in. The rules require auth, so a listener
+  /// attached before sign-in is killed by permission-denied and would never
+  /// recover; we attach per auth state instead. Idempotent.
   static Future<void> init() async {
+    if (_initialized) return;
+    _initialized = true;
     try {
       final prefs = await SharedPreferences.getInstance();
       for (final f in all) {
@@ -162,20 +172,37 @@ class FeatureFlagService {
       debugPrint('FeatureFlagService cache load failed: $e');
     }
     try {
-      FirebaseFirestore.instance
+      AuthService.authStateChanges.listen(_onAuthChanged);
+    } catch (e) {
+      debugPrint('FeatureFlagService auth subscribe failed: $e');
+    }
+  }
+
+  static void _onAuthChanged(User? user) {
+    _flagSub?.cancel();
+    _flagSub = null;
+    if (user == null) return; // keep current modes + cache
+    try {
+      _flagSub = FirebaseFirestore.instance
           .collection('app_config')
           .doc('feature_flags')
           .snapshots()
           .listen(_onRemote, onError: (e) {
         debugPrint('FeatureFlagService listener error: $e');
+        _flagSub?.cancel(); // errored listeners are dead; next auth re-attaches
+        _flagSub = null;
       });
     } catch (e) {
       debugPrint('FeatureFlagService subscribe failed: $e');
     }
   }
 
-  static Future<void> _onRemote(DocumentSnapshot snap) async {
-    final data = snap.data() as Map<String, dynamic>?;
+  static Future<void> _onRemote(DocumentSnapshot snap) =>
+      applyRemote(snap.data() as Map<String, dynamic>?);
+
+  /// Applies a remote flag map (bumps [revision], writes the cache).
+  @visibleForTesting
+  static Future<void> applyRemote(Map<String, dynamic>? data) async {
     if (data == null) return;
     var changed = false;
     for (final f in all) {
