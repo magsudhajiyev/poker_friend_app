@@ -5614,5 +5614,6 @@
   "onbLeaderboardHeader": "Щоденний рейтинг",
   "onbLeaderboardYou": "Ти",
   "onbSamplePlayer": "Гравець {letter}",
-  "onbLeaderboardSemantics": "Приклад щоденного рейтингу"
+  "onbLeaderboardSemantics": "Приклад щоденного рейтингу",
+  "replayLegendPreview": "Незабаром (попередній перегляд)"
 }

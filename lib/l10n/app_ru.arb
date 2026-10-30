@@ -5607,5 +5607,6 @@
   "onbLeaderboardHeader": "Рейтинг дня",
   "onbLeaderboardYou": "Ты",
   "onbSamplePlayer": "Игрок {letter}",
-  "onbLeaderboardSemantics": "Пример рейтинга дня"
+  "onbLeaderboardSemantics": "Пример рейтинга дня",
+  "replayLegendPreview": "Скоро (предпросмотр)"
 }

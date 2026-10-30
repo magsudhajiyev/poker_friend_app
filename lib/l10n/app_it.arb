@@ -5652,5 +5652,6 @@
   "onbLeaderboardHeader": "Classifica giornaliera",
   "onbLeaderboardYou": "Tu",
   "onbSamplePlayer": "Giocatore {letter}",
-  "onbLeaderboardSemantics": "Esempio di classifica giornaliera"
+  "onbLeaderboardSemantics": "Esempio di classifica giornaliera",
+  "replayLegendPreview": "In arrivo (anteprima)"
 }

@@ -5787,5 +5787,7 @@
   "onbLeaderboardYou": "You",
   "onbSamplePlayer": "Player {letter}",
   "@onbSamplePlayer": {"description": "Fake player name on the onboarding sample leaderboard.", "placeholders": {"letter": {"type": "String"}}},
-  "onbLeaderboardSemantics": "Daily leaderboard example"
+  "onbLeaderboardSemantics": "Daily leaderboard example",
+  "replayLegendPreview": "Upcoming (preview)",
+  "@replayLegendPreview": {"description": "Calendar legend (super-admin only): upcoming scheduled day available for preview."}
 }

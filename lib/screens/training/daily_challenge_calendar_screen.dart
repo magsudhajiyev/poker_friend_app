@@ -8,6 +8,8 @@ import '../../design_system/constants/spacing.dart';
 import '../../design_system/constants/typography.dart';
 import '../../l10n/app_localizations.dart';
 import '../../services/analytics_service.dart';
+import '../../services/authored_tree_service.dart';
+import '../../services/feature_flag_service.dart';
 import '../../services/daily_challenge_service.dart';
 import '../../services/daily_challenge_store.dart';
 import '../../services/daily_replay_limits.dart';
@@ -55,6 +57,11 @@ class _DailyChallengeCalendarScreenState
   /// in [_resultFor] (latest replay wins).
   Map<String, DailyChallengeResult> _replayed = {};
   bool _loaded = false;
+
+  /// Admin early access: dayKeys of FUTURE days that have a real scheduled
+  /// `authored_days` doc. Always empty for non-admins (never fetched).
+  Set<String> _preview = {};
+  bool get _isAdmin => FeatureFlagService.isSuperAdmin;
   StreamSubscription<bool>? _premiumSub;
 
   @override
@@ -96,12 +103,40 @@ class _DailyChallengeCalendarScreenState
       _replayed = replayed;
       _loaded = true;
     });
+    _loadPreview();
   }
+
+  /// Super-admin only: probe the next days for scheduled challenges.
+  Future<void> _loadPreview() async {
+    if (!_isAdmin) return;
+    final days = [
+      for (var i = 1; i <= DailyReplayLimits.adminPreviewHorizonDays; i++)
+        DateTime(_today.year, _today.month, _today.day + i)
+    ];
+    final keys = [for (final d in days) DailyChallengeStore.dayKey(d)];
+    final flags = await Future.wait(
+        [for (final k in keys) AuthoredTreeService.hasScheduledDay(k)]);
+    if (!mounted) return;
+    setState(() => _preview = {
+          for (var i = 0; i < keys.length; i++)
+            if (flags[i]) keys[i]
+        });
+  }
+
+  bool _isPreview(DateTime day) => DailyReplayLimits.isPreviewable(day, _today,
+      isAdmin: _isAdmin,
+      hasSchedule: _preview.contains(DailyChallengeStore.dayKey(day)));
 
   bool get _canGoPrev =>
       _month.isAfter(DateTime(_epoch.year, _epoch.month));
-  bool get _canGoNext =>
-      _month.isBefore(DateTime(_today.year, _today.month));
+  bool get _canGoNext {
+    // Admins may page forward to the preview horizon; everyone else stops at
+    // the current month.
+    final last = _isAdmin
+        ? DailyReplayLimits.lastPreviewDay(_today)
+        : DateTime(_today.year, _today.month);
+    return _month.isBefore(DateTime(last.year, last.month));
+  }
 
   void _prevMonth() {
     if (!_canGoPrev) return;
@@ -123,7 +158,7 @@ class _DailyChallengeCalendarScreenState
   }
 
   Future<void> _onDayTap(DateTime day) async {
-    if (DailyReplayLimits.isReplayable(day, _today)) {
+    if (DailyReplayLimits.isReplayable(day, _today) || _isPreview(day)) {
       HapticFeedback.selectionClick();
       // If the day already has a result (stored, or replayed this session),
       // open straight on the breakdown instead of restarting.
@@ -357,6 +392,7 @@ class _DailyChallengeCalendarScreenState
   Widget _dayCell(DateTime day) {
     final beforeEpoch = day.isBefore(_epoch);
     final isTodayOrFuture = !day.isBefore(_today);
+    if (_isPreview(day)) return _previewCell(day);
     if (beforeEpoch || isTodayOrFuture) {
       // Outside the challenge range entirely — faint, non-interactive.
       return _cellShell(
@@ -433,11 +469,43 @@ class _DailyChallengeCalendarScreenState
     );
   }
 
-  Widget _cellShell({required Widget child, Color? bg}) {
+  /// Admin-only upcoming day: tappable, outlined + eye icon (distinct from
+  /// played/locked cells). Replays through the same unranked flow.
+  Widget _previewCell(DateTime day) {
+    final result = _resultFor(day);
+    return GestureDetector(
+      onTap: () => _onDayTap(day),
+      child: _cellShell(
+        bg: AppColors.accentSecondary.withValues(alpha: 0.12),
+        border: AppColors.accentSecondary,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('${day.day}',
+                style: AppTypography.ibm(
+                  color: AppColors.textPrimary,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                )),
+            const SizedBox(height: 2),
+            Icon(
+                result != null
+                    ? Icons.check_rounded
+                    : Icons.visibility_rounded,
+                size: 11,
+                color: AppColors.accentSecondary),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _cellShell({required Widget child, Color? bg, Color? border}) {
     return Container(
       decoration: BoxDecoration(
         color: bg ?? Colors.transparent,
         borderRadius: BorderRadius.circular(10),
+        border: border == null ? null : Border.all(color: border),
       ),
       alignment: Alignment.center,
       child: child,
@@ -477,6 +545,8 @@ class _DailyChallengeCalendarScreenState
           item(AppColors.accentPrimary, l10n.replayLegendGood),
           item(AppColors.accentTertiary, l10n.replayLegendOk),
           item(AppColors.accentDanger, l10n.replayLegendLow),
+          if (_isAdmin && _preview.isNotEmpty)
+            item(AppColors.accentSecondary, l10n.replayLegendPreview),
         ],
       ),
     );

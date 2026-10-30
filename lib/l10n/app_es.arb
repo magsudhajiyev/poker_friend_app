@@ -5607,5 +5607,6 @@
   "onbLeaderboardHeader": "Clasificación diaria",
   "onbLeaderboardYou": "Tú",
   "onbSamplePlayer": "Jugador {letter}",
-  "onbLeaderboardSemantics": "Ejemplo de clasificación diaria"
+  "onbLeaderboardSemantics": "Ejemplo de clasificación diaria",
+  "replayLegendPreview": "Próximo (vista previa)"
 }

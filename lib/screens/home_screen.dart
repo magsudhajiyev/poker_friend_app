@@ -88,7 +88,23 @@ class HomeScreen extends StatefulWidget {
   _HomeScreenState createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
+class _HomeScreenState extends State<HomeScreen>
+    with TickerProviderStateMixin, WidgetsBindingObserver {
+  /// Day the Daily Challenge card was last built for (midnight rollover).
+  DateTime _dcShownDay =
+      DailyChallengeService.dateOnly(DailyChallengeService.today());
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed) return;
+    final now = DailyChallengeService.today();
+    if (DailyChallengeService.dateOnly(now) == _dcShownDay || !mounted) return;
+    setState(() {
+      _dcShownDay = DailyChallengeService.dateOnly(now);
+      _dailyChallengeReload++;
+    });
+  }
+
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final GlobalKey _fabKey = GlobalKey(debugLabel: 'fab');
   final GlobalKey _bankrollCardKey = GlobalKey(debugLabel: 'bankrollCard');
@@ -139,6 +155,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     LoggerService.logScreenView('home');
 
     _progressAnimationController = AnimationController(
@@ -1214,6 +1231,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     OnboardingState.notifier.removeListener(_onOnboardingChanged);
     _seatSubscription?.cancel();
     _clubNotificationSubscription?.cancel();

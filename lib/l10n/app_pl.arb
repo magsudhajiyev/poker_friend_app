@@ -5607,5 +5607,6 @@
   "onbLeaderboardHeader": "Dzienny ranking",
   "onbLeaderboardYou": "Ty",
   "onbSamplePlayer": "Gracz {letter}",
-  "onbLeaderboardSemantics": "Przykład dziennego rankingu"
+  "onbLeaderboardSemantics": "Przykład dziennego rankingu",
+  "replayLegendPreview": "Nadchodzące (podgląd)"
 }

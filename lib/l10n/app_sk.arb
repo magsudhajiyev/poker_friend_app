@@ -5642,5 +5642,6 @@
   "onbLeaderboardHeader": "Denný rebríček",
   "onbLeaderboardYou": "Ty",
   "onbSamplePlayer": "Hráč {letter}",
-  "onbLeaderboardSemantics": "Príklad denného rebríčka"
+  "onbLeaderboardSemantics": "Príklad denného rebríčka",
+  "replayLegendPreview": "Nadchádzajúce (náhľad)"
 }

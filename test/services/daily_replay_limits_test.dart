@@ -23,6 +23,8 @@ void main() {
   Future<void> asTier(String? tier) =>
       SubscriptionService.setDebugTierOverride(tier);
 
+  adminPreviewTests();
+
   group('replayWindowDays', () {
     test('free = 0 (no replays)', () async {
       await asTier(null);
@@ -146,6 +148,54 @@ void main() {
           DateTime(2027, 3, 5));
       expect(DailyReplayLimits.earliestReplayDay(DateTime(2027, 3, 29)),
           DateTime(2027, 3, 14));
+    });
+  });
+}
+
+// Admin early-access gating (pure).
+void adminPreviewTests() {
+  final today = DateTime(2026, 12, 1);
+  group('isPreviewable (admin early access)', () {
+    test('admin + scheduled future day is previewable', () {
+      expect(
+          DailyReplayLimits.isPreviewable(DateTime(2026, 12, 2), today,
+              isAdmin: true, hasSchedule: true),
+          isTrue);
+    });
+    test('non-admin future day is never previewable', () {
+      expect(
+          DailyReplayLimits.isPreviewable(DateTime(2026, 12, 2), today,
+              isAdmin: false, hasSchedule: true),
+          isFalse);
+    });
+    test('admin but no schedule -> not previewable', () {
+      expect(
+          DailyReplayLimits.isPreviewable(DateTime(2026, 12, 2), today,
+              isAdmin: true, hasSchedule: false),
+          isFalse);
+    });
+    test('today and past are not previews', () {
+      for (final d in [today, DateTime(2026, 11, 30)]) {
+        expect(
+            DailyReplayLimits.isPreviewable(d, today,
+                isAdmin: true, hasSchedule: true),
+            isFalse);
+      }
+    });
+    test('beyond horizon is not previewable', () {
+      final far = DateTime(2026, 12, 1 + DailyReplayLimits.adminPreviewHorizonDays + 1);
+      expect(
+          DailyReplayLimits.isPreviewable(far, today,
+              isAdmin: true, hasSchedule: true),
+          isFalse);
+    });
+    test('isReplayable is unchanged for future days (even admin tier elite)',
+        () async {
+      SharedPreferences.setMockInitialValues({});
+      await SubscriptionService.setDebugTierOverride('elite');
+      expect(DailyReplayLimits.isReplayable(DateTime(2026, 12, 2), today),
+          isFalse);
+      await SubscriptionService.setDebugTierOverride(null);
     });
   });
 }

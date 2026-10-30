@@ -5614,5 +5614,6 @@
   "onbLeaderboardHeader": "Clasamentul zilei",
   "onbLeaderboardYou": "Tu",
   "onbSamplePlayer": "Jucător {letter}",
-  "onbLeaderboardSemantics": "Exemplu de clasament zilnic"
+  "onbLeaderboardSemantics": "Exemplu de clasament zilnic",
+  "replayLegendPreview": "Viitoare (previzualizare)"
 }
