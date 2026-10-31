@@ -247,6 +247,34 @@ class AppTypography {
     height: 20 / 13,
   );
 
+  // Caption — 12px Medium, secondary text (smallest size allowed on content
+  // screens; field labels, stat labels).
+  static TextStyle caption({Color? color}) => GoogleFonts.ibmPlexSans(
+    fontSize: 12,
+    fontWeight: FontWeight.w500,
+    color: color ?? AppColors.textSecondary,
+    height: 16 / 12,
+  );
+
+  // Data/Mono — Roboto Mono SemiBold for amounts and stacks in lists.
+  static TextStyle dataMono({Color? color, double fontSize = 15}) =>
+      GoogleFonts.robotoMono(
+        fontSize: fontSize,
+        fontWeight: FontWeight.w600,
+        color: color ?? AppColors.textPrimary,
+        height: 20 / 15,
+      );
+
+  // Data/Mono SM — Roboto Mono SemiBold 12px for compact numeric values
+  // (percentages, counts, BB totals). 12px is the smallest size allowed on
+  // content screens.
+  static TextStyle dataMonoSm({Color? color}) => GoogleFonts.robotoMono(
+    fontSize: 12,
+    fontWeight: FontWeight.w600,
+    color: color ?? AppColors.textPrimary,
+    height: 16 / 12,
+  );
+
   // Body/XS Medium — 11px Medium lh16 (tiny labels, badges)
   static TextStyle bodyXsMedium({Color? color}) => GoogleFonts.ibmPlexSans(
     fontSize: 11,

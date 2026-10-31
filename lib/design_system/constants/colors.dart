@@ -55,6 +55,9 @@ class AppColors {
   static const Color accentInfo      = _blue500;    // semantic/accent/info
   static const Color accentTertiary  = _orange500;  // semantic/accent/tertiary
   static const Color accentPurple    = _purple500;  // semantic/accent/purple
+  /// Red suit ink for WHITE card faces. accentDanger (#FF3B30) is only ~3.6:1
+  /// on white; this darker red clears WCAG AA (~5.6:1).
+  static const Color cardFaceRed     = Color(0xFFC62828);
 
   // Content
   static const Color contentActive   = _grayWhite;  // semantic/content/active
@@ -104,6 +107,14 @@ class AppColors {
   // Separators
   static const Color separatorDark  = Color(0xFF1C1F21);
 
+  // Subtle neutral fills / borders (white at low alpha) for tracks, hairlines
+  // and quiet card outlines.
+  static const Color fillSubtle   = Color(0x0FFFFFFF);  // white 6%
+  static const Color borderSubtle = Color(0x1AFFFFFF);  // white 10%
+
+  /// Opacity applied to disabled controls / unavailable rows.
+  static const double disabledOpacity = 0.4;
+
   // Glassmorphism
   static const Color glassyCardBase      = Color(0xFF546165);
   static const Color semiTransparentDark = Color(0xFF3D3D3D);
@@ -147,6 +158,16 @@ class AppColors {
   // ─────────────────────────────────────────────────────────────────────────
   // OPACITY HELPERS
   // ─────────────────────────────────────────────────────────────────────────
+
+  /// Tint levels for status / accent colors: background wash, outline, and
+  /// strong emphasis outline. Use these instead of ad-hoc alphas.
+  static const double tintBgAlpha     = 0.12;
+  static const double tintBorderAlpha = 0.30;
+  static const double tintStrongAlpha = 0.60;
+
+  static Color tintBg(Color c)     => c.withValues(alpha: tintBgAlpha);
+  static Color tintBorder(Color c) => c.withValues(alpha: tintBorderAlpha);
+  static Color tintStrong(Color c) => c.withValues(alpha: tintStrongAlpha);
 
   static Color glassyCardColor({double opacity = 0.74}) =>
       glassyCardBase.withOpacity(opacity);

@@ -9,6 +9,13 @@ import 'locale_service.dart';
 import 'logger_service.dart';
 import 'analytics_service.dart';
 
+/// Thrown when the backend answered 200 but could not produce an analysis.
+class AiAnalysisUnavailableException implements Exception {
+  const AiAnalysisUnavailableException();
+  @override
+  String toString() => 'AI analysis unavailable';
+}
+
 class AIAnalyzerService {
   static String get _apiKey => EnvConfig.aiApiKey;
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -65,6 +72,24 @@ class AIAnalyzerService {
     return analyzeHandFull(handId: handId, handData: handData);
   }
 
+  /// True when [analysis] is the backend's HTTP 200 fallback body returned
+  /// when its Claude call fails (e.g. provider usage limit). Real analyses
+  /// carry reasoning/street breakdown; the fallback has neither.
+  static bool isFailedAnalysis(Map<String, dynamic>? analysis) {
+    if (analysis == null) return true;
+    final inner = analysis['aiAnalysis'];
+    final ai = inner is Map ? inner : const <dynamic, dynamic>{};
+    final reasoning = (ai['reasoning'] as String?)?.trim();
+    if (reasoning == 'Analysis could not be completed') return true;
+    final optimal = ai['optimalAction'];
+    final learning = (ai['learningPoint'] as String?)?.trim() ?? '';
+    final breakdown = analysis['streetBreakdown'];
+    final noBreakdown =
+        breakdown == null || (breakdown is Iterable && breakdown.isEmpty) ||
+            (breakdown is Map && breakdown.isEmpty);
+    return optimal == 'unknown' && noBreakdown && learning.isEmpty;
+  }
+
   static const String _baseUrl = 'https://poker-friend-engine.onrender.com/api/v1';
 
   /// Full AI analysis: Claude street-by-street breakdown
@@ -100,6 +125,11 @@ class AIAnalyzerService {
 
       if (response.statusCode == 200) {
         final responseJson = jsonDecode(response.body) as Map<String, dynamic>;
+        if (isFailedAnalysis(responseJson)) {
+          await LoggerService.warning(
+              '🎲 Full analysis returned backend fallback body (not counted)');
+          throw const AiAnalysisUnavailableException();
+        }
         AnalyticsService.capture('ai_analysis_used');
         // Carried through so saveAnalysis can persist the voice this
         // analysis was written in (mirrors the 'language' field).
@@ -112,6 +142,8 @@ class AIAnalyzerService {
         await LoggerService.error('🎲 Full analysis error: ${response.body}');
         throw Exception('Full analysis failed: ${response.statusCode}');
       }
+    } on AiAnalysisUnavailableException {
+      rethrow;
     } catch (e) {
       await LoggerService.error('🎲 Full AI Analysis Exception: $e');
       throw Exception('Full analysis failed: $e');
@@ -317,7 +349,10 @@ class AIAnalyzerService {
       if (doc.exists) {
         final data = doc.data();
         if (data != null && data.containsKey('aiAnalysis')) {
-          return data['aiAnalysis'] as Map<String, dynamic>;
+          final saved = data['aiAnalysis'] as Map<String, dynamic>;
+          // Ignore fallback bodies saved by older builds so the user can retry.
+          if (isFailedAnalysis(saved)) return null;
+          return saved;
         }
       }
       return null;

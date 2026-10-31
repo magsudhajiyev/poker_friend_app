@@ -592,6 +592,8 @@
   "handActionsAnalysisComplete": "Analysis Complete",
   "handActionsAiAnalyzerBeta": "AI Analyzer (beta)",
   "handActionsAnalysisFailed": "Analysis Failed",
+  "handActionsAnalysisUnavailable": "AI analysis is temporarily unavailable. Please try again later. This did not count toward your monthly limit.",
+  "@handActionsAnalysisUnavailable": {"description": "Shown when the AI backend cannot produce an analysis; the attempt is not counted."},
   "handActionsAiAnalysis": "AI Analysis",
   "handActionsStreetByStreetBreakdown": "Street-by-Street Breakdown",
   "handActionsAnalysisCompletedIn": "Analysis completed in {time}s",
@@ -4640,7 +4642,7 @@
   "onboardingHandCardTitle": "Your Logged Hand",
   "onboardingHandCardBody": "Tap a hand to see the full action replay, street by street.",
   "onboardingHandToolsTitle": "Hand Tools",
-  "onboardingHandToolsBody": "Switch amounts to big blinds (BB), export or share the hand, and star it to save your favourites — all from here. You can also swipe left on this screen to browse through your hands.",
+  "onboardingHandToolsBody": "Switch amounts between big blinds (BB) and money, or export and share the hand — all from here. Tap the star at the top to save your favourites. You can also swipe left on this screen to browse through your hands.",
   "onboardingAiAnalysisTitle": "AI Hand Analysis",
   "onboardingAiAnalysisBody": "Get instant coaching on this hand — your first analysis is on us. Tap the button!",
   "sessionTutorialBadge": "Tutorial",
@@ -5787,5 +5789,542 @@
   "onbLeaderboardYou": "You",
   "onbSamplePlayer": "Player {letter}",
   "@onbSamplePlayer": {"description": "Fake player name on the onboarding sample leaderboard.", "placeholders": {"letter": {"type": "String"}}},
-  "onbLeaderboardSemantics": "Daily leaderboard example"
+  "onbLeaderboardSemantics": "Daily leaderboard example",
+  "handActionsStreetPreflop": "Preflop",
+  "handActionsStreetFlop": "Flop",
+  "handActionsStreetTurn": "Turn",
+  "handActionsStreetRiver": "River",
+  "handActionsStreetRunout": "Run-out",
+  "handActionsActionFold": "Fold",
+  "handActionsActionCheck": "Check",
+  "handActionsActionCall": "Call",
+  "handActionsActionBet": "Bet",
+  "handActionsActionRaise": "Raise",
+  "handActionsActionAllIn": "All-in",
+  "handActionsToAmount": "to {amount}",
+  "@handActionsToAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "handActionsToggleBB": "Show amounts in big blinds",
+  "handActionsUnitChips": "Chips",
+  "handActionsExportHand": "Export hand",
+  "handActionsStarHand": "Star hand",
+  "handActionsUnstarHand": "Remove star",
+  "handActionsLearningPoint": "Key takeaway",
+  "handActionsExploitTip": "Exploit tip",
+  "leakTitle": "Leak Detector",
+  "leakTabLeaks": "Leaks",
+  "leakTabRanges": "Ranges",
+  "leakTabHealth": "Health",
+  "leakVerdictLeaks": "{count, plural, =1{1 leak to fix} other{{count} leaks to fix}}",
+  "@leakVerdictLeaks": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "leakVerdictNone": "No leaks detected",
+  "leakVerdictSolid": "{count} solid",
+  "@leakVerdictSolid": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "leakMetaBased": "{count, plural, =1{Based on 1 hand} other{Based on {count} hands}} · Updated just now",
+  "@leakMetaBased": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "leakMetaLastVisit": "Last visit {when}",
+  "@leakMetaLastVisit": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "leakRelMonths": "{count}mo ago",
+  "@leakRelMonths": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "leakRelDays": "{count}d ago",
+  "@leakRelDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "leakRelHours": "{count}h ago",
+  "@leakRelHours": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "leakRelToday": "today",
+  "leakSectionFixFirst": "Fix first",
+  "leakSectionFocus": "Your focus",
+  "leakSectionAlso": "Also detected",
+  "leakSectionUnlock": "Unlock with more hands",
+  "leakSectionNoLeaks": "No leaks detected",
+  "leakSectionHealthy": "Looking solid",
+  "leakSectionFixed": "Fixed leaks",
+  "leakSectionMoney": "Money by position",
+  "leakSectionRangeShape": "Range shape · opening",
+  "leakSectionWorstSpots": "Worst spots · total BB lost",
+  "leakNoLeaksBody": "Nothing outside the healthy ranges yet. Keep logging: the detectors sharpen with every hand.",
+  "leakCoachRead": "Coach's read",
+  "leakStatusConfirmed": "Confirmed",
+  "leakStatusEmerging": "Emerging",
+  "leakStatusHealthy": "Healthy",
+  "leakCaptionYou": "You {value} · Healthy {low}–{high}",
+  "@leakCaptionYou": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      },
+      "low": {
+        "type": "String"
+      },
+      "high": {
+        "type": "String"
+      }
+    }
+  },
+  "leakSpotsCount": "{count, plural, =1{1 spot} other{{count} spots}}",
+  "@leakSpotsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "leakCaptionHint": "How this range is set",
+  "leakGaugeSemantics": "{title} {value}, healthy range {low} to {high}",
+  "@leakGaugeSemantics": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "value": {
+        "type": "String"
+      },
+      "low": {
+        "type": "String"
+      },
+      "high": {
+        "type": "String"
+      }
+    }
+  },
+  "leakCardSemantics": "{title}, {status}. {state}",
+  "@leakCardSemantics": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "status": {
+        "type": "String"
+      },
+      "state": {
+        "type": "String"
+      }
+    }
+  },
+  "leakSemExpanded": "Expanded",
+  "leakSemCollapsed": "Collapsed",
+  "leakDeltaCloser": "{points}pt closer to healthy since your last visit",
+  "@leakDeltaCloser": {
+    "placeholders": {
+      "points": {
+        "type": "int"
+      }
+    }
+  },
+  "leakDeltaFurther": "{points}pt further from healthy since your last visit",
+  "@leakDeltaFurther": {
+    "placeholders": {
+      "points": {
+        "type": "int"
+      }
+    }
+  },
+  "leakDeltaMoved": "Moved {points}pt since your last visit",
+  "@leakDeltaMoved": {
+    "placeholders": {
+      "points": {
+        "type": "int"
+      }
+    }
+  },
+  "leakBlockSaw": "What we saw",
+  "leakBlockCost": "What it costs",
+  "leakBlockFix": "The fix",
+  "leakBlockByPosition": "By position",
+  "leakBlockHands": "Your hands ({count})",
+  "@leakBlockHands": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "leakReviewAll": "Review all",
+  "leakShowMore": "Show more",
+  "leakShowMoreCount": "Show {count} more",
+  "@leakShowMoreCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "leakShowLess": "Show less",
+  "leakHandUnavailable": "Hand no longer available",
+  "leakExampleSemantics": "Hand {number}. {details}",
+  "@leakExampleSemantics": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      },
+      "details": {
+        "type": "String"
+      }
+    }
+  },
+  "leakSliceFlagged": "outside the healthy range",
+  "leakPractice": "Practice this spot",
+  "leakSeeHands": "See the hands behind it",
+  "leakWorkOnThis": "Work on this",
+  "leakFocusHint": "Track your progress on this leak",
+  "leakFocusProgress": "Day {day} · +{spots} spots · {from} → {to} · {points}pt to the band",
+  "@leakFocusProgress": {
+    "placeholders": {
+      "day": {
+        "type": "int"
+      },
+      "spots": {
+        "type": "int"
+      },
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      },
+      "points": {
+        "type": "int"
+      }
+    }
+  },
+  "leakFocusClear": "Stop working on this leak",
+  "leakNewsCount": "{count, plural, =1{1 change} other{{count} changes}} since your last visit",
+  "@leakNewsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "leakNewsHands": "+{count} hands",
+  "@leakNewsHands": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "leakNewsMore": "+{count} more changes",
+  "@leakNewsMore": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "leakChangeHealthy": "{title} is back in the healthy range",
+  "@leakChangeHealthy": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "leakChangeUnlocked": "{title} unlocked: enough spots for a verdict",
+  "@leakChangeUnlocked": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "leakChangeImproved": "{title} is improving · {from} → {to}",
+  "@leakChangeImproved": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
+    }
+  },
+  "leakChangeBecameLeak": "{title} slipped outside the band",
+  "@leakChangeBecameLeak": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "leakChangeWorsened": "{title} is drifting · {from} → {to}",
+  "@leakChangeWorsened": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
+    }
+  },
+  "leakUnlockNext": "Next",
+  "leakUnlockRemaining": "{count, plural, =1{1 more spot for a verdict} other{{count} more spots for a verdict}}",
+  "@leakUnlockRemaining": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "leakUnlockSemantics": "{title}: {have} of {need} spots, {remaining} more for a verdict",
+  "@leakUnlockSemantics": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "have": {
+        "type": "int"
+      },
+      "need": {
+        "type": "int"
+      },
+      "remaining": {
+        "type": "int"
+      }
+    }
+  },
+  "leakUnlockProgress": "{have}/{need}",
+  "@leakUnlockProgress": {
+    "placeholders": {
+      "have": {
+        "type": "int"
+      },
+      "need": {
+        "type": "int"
+      }
+    }
+  },
+  "leakShapeLoading": "Comparing your opens against the charts…",
+  "leakShapeLocked": "Once a position reaches {min} first-in spots, your actual opening range appears here, cell by cell, against the baseline chart.",
+  "@leakShapeLocked": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      }
+    }
+  },
+  "leakShapeProgress": "Progress: {list}",
+  "@leakShapeProgress": {
+    "placeholders": {
+      "list": {
+        "type": "String"
+      }
+    }
+  },
+  "leakShapeMoreUnlock": "More opens unlock: {list}",
+  "@leakShapeMoreUnlock": {
+    "placeholders": {
+      "list": {
+        "type": "String"
+      }
+    }
+  },
+  "leakShapeSummary": "You open {mine} of spots · chart ≈{chart}",
+  "@leakShapeSummary": {
+    "placeholders": {
+      "mine": {
+        "type": "String"
+      },
+      "chart": {
+        "type": "String"
+      }
+    }
+  },
+  "leakShapeFolded": "{hand} folded ×{count}",
+  "@leakShapeFolded": {
+    "placeholders": {
+      "hand": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "leakShapeOpened": "{hand} opened ×{count}",
+  "@leakShapeOpened": {
+    "placeholders": {
+      "hand": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "leakShapeShowAll": "Show all {count}",
+  "@leakShapeShowAll": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "leakShapeOpenGrid": "Open in grid",
+  "leakShapePracticeOpens": "Practice opens",
+  "leakShapeInfoTitle": "About range shape",
+  "leakShapeInfoBody": "Your opens are compared with the app's baseline opening charts (about 100BB). The result is directional, not a verdict.",
+  "leakShapeInfoLegend": "Amber cells are hands the chart opens but you folded. Red cells are hands the chart folds but you opened.",
+  "leakPositionLocked": "{pos}: {have} of {need} spots, not enough yet",
+  "@leakPositionLocked": {
+    "placeholders": {
+      "pos": {
+        "type": "String"
+      },
+      "have": {
+        "type": "int"
+      },
+      "need": {
+        "type": "int"
+      }
+    }
+  },
+  "leakHealthEmpty": "Healthy checks, fixed leaks and the money view land here as your sample grows.",
+  "leakFixedInDays": "{from} → {to} · fixed in {days}d",
+  "@leakFixedInDays": {
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      },
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "leakFixedInUnderDay": "{from} → {to} · fixed in under a day",
+  "@leakFixedInUnderDay": {
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
+    }
+  },
+  "leakMoneyValue": "{sign}{bb}bb · {hands}h",
+  "@leakMoneyValue": {
+    "placeholders": {
+      "sign": {
+        "type": "String"
+      },
+      "bb": {
+        "type": "String"
+      },
+      "hands": {
+        "type": "int"
+      }
+    }
+  },
+  "leakMoneySemantics": "{pos}: {sign}{bb} big blinds over {hands} hands",
+  "@leakMoneySemantics": {
+    "placeholders": {
+      "pos": {
+        "type": "String"
+      },
+      "sign": {
+        "type": "String"
+      },
+      "bb": {
+        "type": "String"
+      },
+      "hands": {
+        "type": "int"
+      }
+    }
+  },
+  "leakMoneyInfoTitle": "About these numbers",
+  "leakMoneyInfoBody": "Directional only: live samples swing hard. Blinds include forced posts.",
+  "leakDrill": "Drill",
+  "leakBandSheetSummary": "Healthy {low}–{high} · you {value} · {spots} spots (verdicts need {min}+)",
+  "@leakBandSheetSummary": {
+    "placeholders": {
+      "low": {
+        "type": "String"
+      },
+      "high": {
+        "type": "String"
+      },
+      "value": {
+        "type": "String"
+      },
+      "spots": {
+        "type": "int"
+      },
+      "min": {
+        "type": "int"
+      }
+    }
+  },
+  "leakBandSheetOrigin": "Where this range comes from: population norms that online trackers and training material converged on over millions of hands, widened for live play and small samples so we under-flag rather than over-flag. It is a reference zone, not solver output. Being outside it is a signal worth checking, not a verdict on a single hand.",
+  "leakBandSheetMinSample": "Below {min} spots you will see \"not enough data\", never a verdict. Small-sample honesty is the whole point.",
+  "@leakBandSheetMinSample": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      }
+    }
+  },
+  "leakLoading": "Re-reading every hand you've logged…",
+  "leakErrorTitle": "Couldn't load your report",
+  "leakRefreshFailed": "Couldn't refresh. Showing your last report.",
+  "leakEmptyTitle": "No hands to analyze yet",
+  "leakEmptyBody": "Log a few hands and the Leak Detector will start finding patterns in your play.",
+  "leakEmptyAction": "Log a hand"
 }

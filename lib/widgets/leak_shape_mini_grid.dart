@@ -72,9 +72,8 @@ class _ShapeGridPainter extends CustomPainter {
           style: AppTypography.mono(
             fontSize: fontSize,
             fontWeight: strongFill ? FontWeight.w700 : FontWeight.w400,
-            color: strongFill
-                ? Colors.black.withValues(alpha: 0.8)
-                : Colors.white.withValues(alpha: 0.3),
+            // Dark ink on solid fills, textSecondary (>= 4.5:1) on quiet ones.
+            color: strongFill ? AppColors.textInverse : AppColors.textSecondary,
           ),
         ),
         textDirection: TextDirection.ltr,
@@ -87,7 +86,9 @@ class _ShapeGridPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final stride = size.width / 13;
     final cell = stride - 1; // 1px gutter, same footprint as before
-    // 8px mono fits 3-char labels down to ~20px cells; shrink below that.
+    // DOCUMENTED EXCEPTION to the 12px type floor: 169 cell labels are
+    // painted into ~20px cells, so they cannot be larger. 8px mono fits
+    // 3-char labels down to ~20px cells; shrink below that.
     final fontSize = cell >= 20 ? 8.0 : (cell * 0.38).clamp(5.0, 8.0);
     final paintBox = Paint();
 
@@ -102,25 +103,25 @@ class _ShapeGridPainter extends CustomPainter {
         final bool strongFill; // dark label on strong fills, dim otherwise
         switch (kind) {
           case 'alignedOpen':
-            color = AppColors.accentPrimary.withValues(alpha: 0.75);
+            color = AppColors.accentPrimary;
             strongFill = true;
             break;
           case 'missed':
-            color = AppColors.accentTertiary.withValues(alpha: 0.85);
+            color = AppColors.accentTertiary;
             strongFill = true;
             break;
           case 'loose':
-            color = AppColors.accentDanger.withValues(alpha: 0.8);
+            color = AppColors.accentDanger;
             strongFill = true;
             break;
           case 'alignedFold':
-            color = Colors.white.withValues(alpha: 0.10);
+            color = AppColors.borderSubtle;
             strongFill = false;
             break;
           default: // noData — the chart's target shape as a faint tint
             color = inChart
-                ? AppColors.accentPrimary.withValues(alpha: 0.14)
-                : Colors.white.withValues(alpha: 0.03);
+                ? AppColors.tintBg(AppColors.accentPrimary)
+                : AppColors.fillSubtle;
             strongFill = false;
         }
 
