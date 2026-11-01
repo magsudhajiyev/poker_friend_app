@@ -7,6 +7,7 @@ import '../services/auth_service.dart';
 import '../services/subscription_service.dart';
 import '../services/free_tier_limits.dart';
 import '../models/game_types.dart';
+import '../models/hand_completeness.dart';
 
 class LocalStorageService {
   static Database? _database;
@@ -22,7 +23,7 @@ class LocalStorageService {
     
     return await openDatabase(
       dbPath,
-      version: 19,
+      version: 20,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE sessions(
@@ -84,6 +85,9 @@ class LocalStorageService {
             isScouted INTEGER DEFAULT 0,
             tags TEXT,
             notes TEXT,
+            completeness TEXT DEFAULT 'full',
+            statsApplied INTEGER DEFAULT 1,
+            flagMeta TEXT,
             FOREIGN KEY (sessionId) REFERENCES sessions (id)
           )
         ''');
@@ -93,69 +97,69 @@ class LocalStorageService {
       onUpgrade: (db, oldVersion, newVersion) async {
         if (oldVersion < 2) {
           // Add sessionName and updatedAt columns to existing sessions table
-          await db.execute('ALTER TABLE sessions ADD COLUMN sessionName TEXT');
-          await db.execute('ALTER TABLE sessions ADD COLUMN updatedAt TEXT');
+          await _addColumnIfMissing(db, 'sessions', 'sessionName', 'TEXT');
+          await _addColumnIfMissing(db, 'sessions', 'updatedAt', 'TEXT');
         }
         if (oldVersion < 3) {
           // Add ourSeatNumber column if missing
-          await db.execute('ALTER TABLE sessions ADD COLUMN ourSeatNumber INTEGER');
+          await _addColumnIfMissing(db, 'sessions', 'ourSeatNumber', 'INTEGER');
         }
         if (oldVersion < 4) {
           // Add gameType column if missing
-          await db.execute('ALTER TABLE sessions ADD COLUMN gameType TEXT DEFAULT \'cash\'');
+          await _addColumnIfMissing(db, 'sessions', 'gameType', "TEXT DEFAULT 'cash'");
         }
         if (oldVersion < 5) {
           // Add new columns for hole cards and showdown data
-          await db.execute('ALTER TABLE hands ADD COLUMN ourHoleCards TEXT');
-          await db.execute('ALTER TABLE hands ADD COLUMN showdownData TEXT');
-          await db.execute('ALTER TABLE hands ADD COLUMN reachedShowdown INTEGER DEFAULT 0');
+          await _addColumnIfMissing(db, 'hands', 'ourHoleCards', 'TEXT');
+          await _addColumnIfMissing(db, 'hands', 'showdownData', 'TEXT');
+          await _addColumnIfMissing(db, 'hands', 'reachedShowdown', 'INTEGER DEFAULT 0');
         }
         if (oldVersion < 6) {
           // Add new columns for pot amount, winner, hero position, and player names
-          await db.execute('ALTER TABLE hands ADD COLUMN potAmount REAL DEFAULT 0');
-          await db.execute('ALTER TABLE hands ADD COLUMN winnerId INTEGER');
-          await db.execute('ALTER TABLE hands ADD COLUMN heroPosition INTEGER');
-          await db.execute('ALTER TABLE hands ADD COLUMN playerNames TEXT');
+          await _addColumnIfMissing(db, 'hands', 'potAmount', 'REAL DEFAULT 0');
+          await _addColumnIfMissing(db, 'hands', 'winnerId', 'INTEGER');
+          await _addColumnIfMissing(db, 'hands', 'heroPosition', 'INTEGER');
+          await _addColumnIfMissing(db, 'hands', 'playerNames', 'TEXT');
         }
         if (oldVersion < 7) {
           // Add session-level data to hands for easier querying
-          await db.execute('ALTER TABLE hands ADD COLUMN handSmallBlind INTEGER');
-          await db.execute('ALTER TABLE hands ADD COLUMN handBigBlind INTEGER');
-          await db.execute('ALTER TABLE hands ADD COLUMN handGameType TEXT');
+          await _addColumnIfMissing(db, 'hands', 'handSmallBlind', 'INTEGER');
+          await _addColumnIfMissing(db, 'hands', 'handBigBlind', 'INTEGER');
+          await _addColumnIfMissing(db, 'hands', 'handGameType', 'TEXT');
         }
         if (oldVersion < 8) {
           // Add per-street pot tracking columns
-          await db.execute('ALTER TABLE hands ADD COLUMN preflopPot REAL DEFAULT 0');
-          await db.execute('ALTER TABLE hands ADD COLUMN flopPot REAL DEFAULT 0');
-          await db.execute('ALTER TABLE hands ADD COLUMN turnPot REAL DEFAULT 0');
-          await db.execute('ALTER TABLE hands ADD COLUMN riverPot REAL DEFAULT 0');
+          await _addColumnIfMissing(db, 'hands', 'preflopPot', 'REAL DEFAULT 0');
+          await _addColumnIfMissing(db, 'hands', 'flopPot', 'REAL DEFAULT 0');
+          await _addColumnIfMissing(db, 'hands', 'turnPot', 'REAL DEFAULT 0');
+          await _addColumnIfMissing(db, 'hands', 'riverPot', 'REAL DEFAULT 0');
         }
         if (oldVersion < 9) {
           // Add chopped pot tracking columns
-          await db.execute('ALTER TABLE hands ADD COLUMN isChoppedPot INTEGER DEFAULT 0');
-          await db.execute('ALTER TABLE hands ADD COLUMN choppedWinners TEXT');
-          await db.execute('ALTER TABLE hands ADD COLUMN individualShares TEXT');
-          await db.execute('ALTER TABLE hands ADD COLUMN sharePerWinner REAL');
+          await _addColumnIfMissing(db, 'hands', 'isChoppedPot', 'INTEGER DEFAULT 0');
+          await _addColumnIfMissing(db, 'hands', 'choppedWinners', 'TEXT');
+          await _addColumnIfMissing(db, 'hands', 'individualShares', 'TEXT');
+          await _addColumnIfMissing(db, 'hands', 'sharePerWinner', 'REAL');
         }
         if (oldVersion < 10) {
           // Add stack history tracking column to sessions table
-          await db.execute('ALTER TABLE sessions ADD COLUMN stackHistory TEXT');
+          await _addColumnIfMissing(db, 'sessions', 'stackHistory', 'TEXT');
         }
         if (oldVersion < 11) {
           // Add buy-in amount tracking columns to sessions table
-          await db.execute('ALTER TABLE sessions ADD COLUMN buyInAmount REAL');
-          await db.execute('ALTER TABLE sessions ADD COLUMN totalBuyIn REAL');
+          await _addColumnIfMissing(db, 'sessions', 'buyInAmount', 'REAL');
+          await _addColumnIfMissing(db, 'sessions', 'totalBuyIn', 'REAL');
         }
         if (oldVersion < 12) {
           // Add hand annotation columns for review/tagging
-          await db.execute('ALTER TABLE hands ADD COLUMN isStarred INTEGER DEFAULT 0');
-          await db.execute('ALTER TABLE hands ADD COLUMN tags TEXT');
-          await db.execute('ALTER TABLE hands ADD COLUMN notes TEXT');
+          await _addColumnIfMissing(db, 'hands', 'isStarred', 'INTEGER DEFAULT 0');
+          await _addColumnIfMissing(db, 'hands', 'tags', 'TEXT');
+          await _addColumnIfMissing(db, 'hands', 'notes', 'TEXT');
         }
         if (oldVersion < 13) {
           // Add handsLogged and biggestPot columns to sessions table
-          await db.execute('ALTER TABLE sessions ADD COLUMN handsLogged INTEGER DEFAULT 0');
-          await db.execute('ALTER TABLE sessions ADD COLUMN biggestPot REAL DEFAULT 0');
+          await _addColumnIfMissing(db, 'sessions', 'handsLogged', 'INTEGER DEFAULT 0');
+          await _addColumnIfMissing(db, 'sessions', 'biggestPot', 'REAL DEFAULT 0');
         }
         if (oldVersion < 15) {
           // Range grid index v2 — keyed by (sessionId, handNumber) so the
@@ -166,25 +170,27 @@ class LocalStorageService {
         }
         if (oldVersion < 16) {
           // B11: split-pot flag (winners of separate side pots, not a chop)
-          await db.execute(
-              'ALTER TABLE hands ADD COLUMN isSplitPot INTEGER DEFAULT 0');
+          await _addColumnIfMissing(db, 'hands', 'isSplitPot', 'INTEGER DEFAULT 0');
         }
         if (oldVersion < 17) {
           // Hands folded preflop + skipped (no hand record) — needed for
           // honest VPIP/PFR denominators in session exports.
-          await db.execute(
-              'ALTER TABLE sessions ADD COLUMN skippedHands INTEGER DEFAULT 0');
+          await _addColumnIfMissing(db, 'sessions', 'skippedHands', 'INTEGER DEFAULT 0');
         }
         if (oldVersion < 18) {
           // First-run tour sessions — badged in history, excluded from stats
-          await db.execute(
-              'ALTER TABLE sessions ADD COLUMN isTutorial INTEGER DEFAULT 0');
+          await _addColumnIfMissing(db, 'sessions', 'isTutorial', 'INTEGER DEFAULT 0');
         }
         if (oldVersion < 19) {
           // Scouting hands — hero folded preflop, board skipped, preflop-only
           // record that feeds opponent stats but is excluded from hero summary.
-          await db.execute(
-              'ALTER TABLE hands ADD COLUMN isScouted INTEGER DEFAULT 0');
+          await _addColumnIfMissing(db, 'hands', 'isScouted', 'INTEGER DEFAULT 0');
+        }
+        if (oldVersion < 20) {
+          // Easy hand logging: completeness level, stub stats guard, flag meta.
+          // Per-column and idempotent: a DB that hopped branches may already
+          // have some of them.
+          await _ensureHandsV20Columns(db);
         }
       },
       onOpen: (db) async {
@@ -196,6 +202,12 @@ class LocalStorageService {
           await _ensureRangeGridColumns(db);
         } catch (e) {
           debugPrint('Error ensuring range_grid_index: $e');
+        }
+        // Same self-healing for the v20 easy-logging columns.
+        try {
+          await _ensureHandsV20Columns(db);
+        } catch (e) {
+          debugPrint('Error ensuring hands v20 columns: $e');
         }
       },
     );
@@ -372,7 +384,7 @@ class LocalStorageService {
       final rows = await db.rawQuery('''
         SELECT h.id, h.sessionId, h.handNumber, h.actions, h.ourHoleCards,
                h.winnerId, h.choppedWinners, h.potAmount, h.handBigBlind,
-               h.handGameType, h.startTime, h.endTime,
+               h.handGameType, h.startTime, h.endTime, h.completeness,
                s.userId, s.gameType, s.bigBlind
         FROM hands h
         LEFT JOIN sessions s ON s.id = h.sessionId
@@ -502,6 +514,10 @@ class LocalStorageService {
     bool? isScouted,
     List<String>? tags,
     String? notes,
+    // Easy hand logging (defaults = legacy full hand)
+    HandCompleteness completeness = HandCompleteness.full,
+    bool statsApplied = true,
+    Map<String, dynamic>? flagMeta,
   }) async {
     try {
       final db = await database;
@@ -547,21 +563,145 @@ class LocalStorageService {
           'isScouted': (isScouted == true) ? 1 : 0,
           'tags': tags != null && tags.isNotEmpty ? _safeJsonEncode(tags) : null,
           'notes': notes,
+          'completeness': completeness.wire,
+          'statsApplied': statsApplied ? 1 : 0,
+          'flagMeta': flagMeta != null ? _safeJsonEncode(flagMeta) : null,
         },
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
-      
-      // Update session hand count
-      await db.rawUpdate(
-        'UPDATE sessions SET totalHands = totalHands + 1 WHERE id = ?',
-        [sessionId],
-      );
+
+      // Session counters: ticks bump skippedHands, stubs nothing, the rest
+      // bump totalHands (mirrors FirebaseService._updateSessionCounters).
+      final counter = sessionCounterColumn(completeness);
+      if (counter != null) {
+        await db.rawUpdate(
+          'UPDATE sessions SET $counter = COALESCE($counter, 0) + 1 WHERE id = ?',
+          [sessionId],
+        );
+      }
       
       debugPrint('Hand saved locally: $handId with potAmount: ${potAmount ?? 0}');
       return handId;
     } catch (e) {
       debugPrint('Error saving hand locally: $e');
       return null;
+    }
+  }
+
+  /// Pure: the ALTER statement for `table.column`, or null when [existing]
+  /// (column names from `PRAGMA table_info`) already has it.
+  static String? addColumnStatement(
+      Set<Object?> existing, String table, String column, String definition) {
+    if (existing.contains(column)) return null;
+    return 'ALTER TABLE $table ADD COLUMN $column $definition';
+  }
+
+  /// Idempotent ADD COLUMN: devices that hop branches may already have it.
+  static Future<void> _addColumnIfMissing(
+      Database db, String table, String column, String definition) async {
+    final cols = (await db.rawQuery('PRAGMA table_info($table)'))
+        .map((r) => r['name'])
+        .toSet();
+    final stmt = addColumnStatement(cols, table, column, definition);
+    if (stmt != null) await db.execute(stmt);
+  }
+
+  /// v19 -> v20 columns of `hands` (additive only): column -> definition.
+  static const Map<String, String> kHandsV20Columns = {
+    'completeness': "TEXT DEFAULT 'full'",
+    'statsApplied': 'INTEGER DEFAULT 1',
+    'flagMeta': 'TEXT',
+  };
+
+  /// Pure: the ALTER statements still needed given the [existing] column
+  /// names. Never touches a column that exists.
+  static List<String> missingHandsV20Statements(Set<Object?> existing) => [
+        for (final e in kHandsV20Columns.entries)
+          if (!existing.contains(e.key))
+            'ALTER TABLE hands ADD COLUMN ${e.key} ${e.value}',
+      ];
+
+  static Future<void> _ensureHandsV20Columns(Database db) async {
+    final cols = (await db.rawQuery('PRAGMA table_info(hands)'))
+        .map((r) => r['name'])
+        .toSet();
+    for (final stmt in missingHandsV20Statements(cols)) {
+      await db.execute(stmt);
+    }
+  }
+
+  /// Which local `sessions` counter a hand of this level bumps (null = none).
+  @visibleForTesting
+  static String? sessionCounterColumn(HandCompleteness c) {
+    if (c == HandCompleteness.foldTick) return 'skippedHands';
+    if (c == HandCompleteness.flagged) return null;
+    return 'totalHands';
+  }
+
+  /// Promotion mirror: a flagged stub became a reconstructed hand.
+  static Future<bool> updateHandPromotion({
+    required String handId,
+    required Map<String, dynamic> fields,
+  }) async {
+    try {
+      final db = await database;
+      final row = <String, Object?>{
+        'completeness': HandCompleteness.reconstructed.wire,
+        'statsApplied': 1,
+      };
+      void put(String k, Object? v) {
+        if (v != null) row[k] = v is String || v is num ? v : _safeJsonEncode(v);
+      }
+
+      put('actions', fields['actions']);
+      put('boardCards', fields['boardCards']);
+      put('ourHoleCards', fields['ourHoleCards']);
+      put('showdownData', fields['showdownData']);
+      put('potAmount', fields['potAmount']);
+      put('preflopPot', fields['preflopPot']);
+      put('flopPot', fields['flopPot']);
+      put('turnPot', fields['turnPot']);
+      put('riverPot', fields['riverPot']);
+      put('winnerId', fields['winnerId']);
+      put('endTime', fields['endTime']);
+      put('flagMeta', fields['flag']);
+      final rows = await db.update('hands', row, where: 'id = ?', whereArgs: [handId]);
+      if (rows > 0) {
+        final sid = fields['sessionId'];
+        if (sid is String) {
+          await db.rawUpdate(
+              'UPDATE sessions SET totalHands = COALESCE(totalHands, 0) + 1 WHERE id = ?',
+              [sid]);
+        }
+      }
+      return rows > 0;
+    } catch (e) {
+      debugPrint('Error promoting hand locally: $e');
+      return false;
+    }
+  }
+
+  /// Flagged stubs of a session still waiting to be finished (decoded).
+  static Future<List<Map<String, dynamic>>> getPendingFlags(
+      String sessionId) async {
+    try {
+      final db = await database;
+      final rows = await db.query(
+        'hands',
+        where: "sessionId = ? AND completeness = 'flagged'",
+        whereArgs: [sessionId],
+        orderBy: 'handNumber ASC',
+      );
+      return rows
+          .map((r) => _decodeHandRow(r, const {
+                'smallBlind': 1,
+                'bigBlind': 2,
+                'gameType': 'cash',
+              }))
+          .toList();
+    } catch (e) {
+      debugPrint('Error getting pending flags: $e');
+      return [];
     }
   }
 
@@ -697,6 +837,16 @@ class LocalStorageService {
 
     // Convert reachedShowdown from int to bool
     result['reachedShowdown'] = (result['reachedShowdown'] as int?) == 1;
+
+    // Easy hand logging columns (missing / null = legacy full hand)
+    result['completeness'] = result['completeness'] ?? 'full';
+    result['statsApplied'] = (result['statsApplied'] as int?) != 0;
+    final rawFlag = result.remove('flagMeta');
+    if (rawFlag is String && rawFlag.isNotEmpty) {
+      try {
+        result['flag'] = jsonDecode(rawFlag);
+      } catch (_) {}
+    }
 
     // Include pot amount, winner, and hero position
     result['potAmount'] = result['potAmount'] ?? 0;

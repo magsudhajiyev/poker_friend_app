@@ -593,7 +593,9 @@
   "handActionsAiAnalyzerBeta": "AI Analyzer (beta)",
   "handActionsAnalysisFailed": "Analysis Failed",
   "handActionsAnalysisUnavailable": "AI analysis is temporarily unavailable. Please try again later. This did not count toward your monthly limit.",
-  "@handActionsAnalysisUnavailable": {"description": "Shown when the AI backend cannot produce an analysis; the attempt is not counted."},
+  "@handActionsAnalysisUnavailable": {
+    "description": "Shown when the AI backend cannot produce an analysis; the attempt is not counted."
+  },
   "handActionsAiAnalysis": "AI Analysis",
   "handActionsStreetByStreetBreakdown": "Street-by-Street Breakdown",
   "handActionsAnalysisCompletedIn": "Analysis completed in {time}s",
@@ -3536,9 +3538,13 @@
   "usernameSetupClaimButton": "Claim username",
   "usernameSetupSkip": "Skip for now",
   "usernameLeaderboardNote": "A username is required for the leaderboard. If you skip, your real name is shown instead.",
-  "@usernameLeaderboardNote": {"description": "Info note on the username prompt when opened from the Daily Challenge leaderboard."},
+  "@usernameLeaderboardNote": {
+    "description": "Info note on the username prompt when opened from the Daily Challenge leaderboard."
+  },
   "usernameLeaderboardSkip": "Skip — use my real name",
-  "@usernameLeaderboardSkip": {"description": "Skip button on the leaderboard username prompt; skipping falls back to the player's real name."},
+  "@usernameLeaderboardSkip": {
+    "description": "Skip button on the leaderboard username prompt; skipping falls back to the player's real name."
+  },
   "sessionHandsTitle": "Session",
   "sessionHandsHandsLogged": "{count} hands logged",
   "@sessionHandsHandsLogged": {
@@ -4135,9 +4141,6 @@
     }
   },
   "pokerHandUnknownLabel": "Unknown",
-  "pokerHandFoldAction": "Fold",
-  "pokerHandRaiseAction": "Raise",
-  "pokerHandBetAction": "Bet",
   "pokerHandAllInAction": "All-In",
   "pokerHandAllPlayersAllIn": "All players all-in - dealing remaining cards",
   "pokerHandWaitingForCards": "Waiting for cards to be dealt",
@@ -4734,6 +4737,8 @@
   "guidedTableIntroBody": "This is your drawing board — where you take all the actions. Fold: swipe left or right. Check / Call: tap. Bet / Raise: press & drag up. Manual bet amount: press & drag down. Let's log the first hand!",
   "guidedUndoTitle": "Undo Anytime",
   "guidedUndoBody": "Made a mistake? Tap Undo Last Action to revert your last move — the pot and stacks are restored too.",
+  "guidedFlagTitle": "Flag a hand",
+  "guidedFlagBody": "No time to log a hand? Tap Flag and enter your two cards. Finish it later from Session details (flagged hands) or the stack chart.",
   "guidedSessionInfoFinishTitle": "Finish Up",
   "guidedSessionInfoFinishBody": "Ready to wrap up? Tap here to open your session details and finish.",
   "guidedDetailsBackTitle": "Back to the Table",
@@ -4874,13 +4879,21 @@
   "onboardingDemoPlay": "Play a hand",
   "onboardingDemoSkip": "Skip for now",
   "onboardingDemoDone": "Done",
-  "@onboardingDemoDone": {"description": "Final button after the onboarding demo spot — finishes the spot and advances onboarding (no results screen follows)."},
+  "@onboardingDemoDone": {
+    "description": "Final button after the onboarding demo spot — finishes the spot and advances onboarding (no results screen follows)."
+  },
   "onboardingDcInfoTitle": "Your daily poker workout",
-  "@onboardingDcInfoTitle": {"description": "Title of the onboarding info screen about the ongoing Daily Challenge."},
+  "@onboardingDcInfoTitle": {
+    "description": "Title of the onboarding info screen about the ongoing Daily Challenge."
+  },
   "onboardingDcInfoSubtitle": "A fresh set of hands every day — the same for everyone, graded move by move.",
-  "@onboardingDcInfoSubtitle": {"description": "Subtitle of the Daily Challenge onboarding info screen."},
+  "@onboardingDcInfoSubtitle": {
+    "description": "Subtitle of the Daily Challenge onboarding info screen."
+  },
   "onboardingDcInfoContinue": "Get started",
-  "@onboardingDcInfoContinue": {"description": "CTA on the last onboarding step that finishes onboarding and goes to Home + the in-app tour."},
+  "@onboardingDcInfoContinue": {
+    "description": "CTA on the last onboarding step that finishes onboarding and goes to Home + the in-app tour."
+  },
   "onboardingNicknameTitle": "Let's start by choosing your nickname",
   "onboardingNicknameSubtitle": "You can switch between your name and nickname and change it whenever you want.",
   "onboardingCurrencyTitle": "Select currency",
@@ -5584,111 +5597,310 @@
   "notifQuietHoursValue": "{start} – {end} (streak reminders excepted)",
   "@notifQuietHoursValue": {
     "placeholders": {
-      "start": { "type": "String" },
-      "end": { "type": "String" }
+      "start": {
+        "type": "String"
+      },
+      "end": {
+        "type": "String"
+      }
     }
   },
   "notifQuietHoursDialogBody": "No notifications in this window. Streak reminders are the one exception — they fire only when your streak would die overnight.",
   "notifQuietHoursFrom": "From",
   "notifQuietHoursUntil": "Until",
   "paywallTrialDays": "{count, plural, =1{1 day} other{{count} days}}",
-  "@paywallTrialDays": {"description": "Free-trial length in days (paywall).", "placeholders": {"count": {"type": "int"}}},
+  "@paywallTrialDays": {
+    "description": "Free-trial length in days (paywall).",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "paywallTrialMonths": "{count, plural, =1{1 month} other{{count} months}}",
-  "@paywallTrialMonths": {"description": "Free-trial length in months (paywall).", "placeholders": {"count": {"type": "int"}}},
+  "@paywallTrialMonths": {
+    "description": "Free-trial length in months (paywall).",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "paywallTrialBadge": "{duration} free",
-  "@paywallTrialBadge": {"description": "Plan-card badge, e.g. '7 days free'.", "placeholders": {"duration": {"type": "String"}}},
+  "@paywallTrialBadge": {
+    "description": "Plan-card badge, e.g. '7 days free'.",
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
   "paywallTrialThen": "Free for {duration}, then {price}",
-  "@paywallTrialThen": {"description": "Trial line on a plan card: 'Free for 7 days, then $19.99/month'.", "placeholders": {"duration": {"type": "String"}, "price": {"type": "String"}}},
+  "@paywallTrialThen": {
+    "description": "Trial line on a plan card: 'Free for 7 days, then $19.99/month'.",
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      },
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "paywallStartTrial": "Start free trial",
-  "@paywallStartTrial": {"description": "Paywall button when the selected plan has a free trial (length shown elsewhere)."},
+  "@paywallStartTrial": {
+    "description": "Paywall button when the selected plan has a free trial (length shown elsewhere)."
+  },
   "paywallTrialDisclosure": "Free for {duration}, then {price}. You won't be charged if you cancel at least 24 hours before the trial ends. Cancel anytime in your subscription settings.",
-  "@paywallTrialDisclosure": {"description": "Store-required trial terms under the paywall.", "placeholders": {"duration": {"type": "String"}, "price": {"type": "String"}}},
+  "@paywallTrialDisclosure": {
+    "description": "Store-required trial terms under the paywall.",
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      },
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "trialReminderTitle": "Your free trial ends tomorrow",
-  "@trialReminderTitle": {"description": "Notification title 1 day before a free trial converts to paid."},
+  "@trialReminderTitle": {
+    "description": "Notification title 1 day before a free trial converts to paid."
+  },
   "trialReminderBody": "After that, {plan} costs {price}. Cancel anytime in your subscription settings.",
-  "@trialReminderBody": {"description": "Notification body: plan name (Pro/Elite/Club) and the price after the trial, e.g. '$189.99/year'.", "placeholders": {"plan": {"type": "String"}, "price": {"type": "String"}}},
+  "@trialReminderBody": {
+    "description": "Notification body: plan name (Pro/Elite/Club) and the price after the trial, e.g. '$189.99/year'.",
+    "placeholders": {
+      "plan": {
+        "type": "String"
+      },
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "trialReminderBodyNoPrice": "After that, your {plan} subscription starts. Cancel anytime in your subscription settings.",
-  "@trialReminderBodyNoPrice": {"description": "Same as trialReminderBody when the price is not known.", "placeholders": {"plan": {"type": "String"}}},
+  "@trialReminderBodyNoPrice": {
+    "description": "Same as trialReminderBody when the price is not known.",
+    "placeholders": {
+      "plan": {
+        "type": "String"
+      }
+    }
+  },
   "vpBrand": "Final Table",
-  "@vpBrand": {"description": "Brand wordmark at the top of the free-trial explainer screen."},
+  "@vpBrand": {
+    "description": "Brand wordmark at the top of the free-trial explainer screen."
+  },
   "vpTitle": "How Does\nthe Free Trial Work?",
-  "@vpTitle": {"description": "Title of the free-trial explainer screen (two lines)."},
+  "@vpTitle": {
+    "description": "Title of the free-trial explainer screen (two lines)."
+  },
   "vpTitleNoTrial": "Unlock Everything\nin {tier}",
-  "@vpTitleNoTrial": {"description": "Title shown when the selected plan has no free trial. {tier} is Pro/Elite/Club.", "placeholders": {"tier": {"type": "String"}}},
+  "@vpTitleNoTrial": {
+    "description": "Title shown when the selected plan has no free trial. {tier} is Pro/Elite/Club.",
+    "placeholders": {
+      "tier": {
+        "type": "String"
+      }
+    }
+  },
   "vpStepTodayTitle": "Today",
-  "@vpStepTodayTitle": {"description": "Timeline step 1 title on the free-trial explainer."},
+  "@vpStepTodayTitle": {
+    "description": "Timeline step 1 title on the free-trial explainer."
+  },
   "vpStepTodayBody": "Get full access to all {tier} features.",
-  "@vpStepTodayBody": {"description": "Timeline step 1 body. {tier} is Pro/Elite/Club.", "placeholders": {"tier": {"type": "String"}}},
+  "@vpStepTodayBody": {
+    "description": "Timeline step 1 body. {tier} is Pro/Elite/Club.",
+    "placeholders": {
+      "tier": {
+        "type": "String"
+      }
+    }
+  },
   "vpStepMiddleTitle": "Day 2-{lastDayMinusOne}",
-  "@vpStepMiddleTitle": {"description": "Timeline middle step title, e.g. 'Day 2-6' or 'Day 2-29'. {lastDayMinusOne} is the day before the charge.", "placeholders": {"lastDayMinusOne": {"type": "int"}}},
+  "@vpStepMiddleTitle": {
+    "description": "Timeline middle step title, e.g. 'Day 2-6' or 'Day 2-29'. {lastDayMinusOne} is the day before the charge.",
+    "placeholders": {
+      "lastDayMinusOne": {
+        "type": "int"
+      }
+    }
+  },
   "vpStepMiddleBody": "Enjoy unlimited access to all {tier} features.",
-  "@vpStepMiddleBody": {"description": "Timeline middle step body. {tier} is Pro/Elite/Club.", "placeholders": {"tier": {"type": "String"}}},
+  "@vpStepMiddleBody": {
+    "description": "Timeline middle step body. {tier} is Pro/Elite/Club.",
+    "placeholders": {
+      "tier": {
+        "type": "String"
+      }
+    }
+  },
   "vpStepLastTitle": "Day {day}",
-  "@vpStepLastTitle": {"description": "Timeline last step title, e.g. 'Day 7' — the day the card is charged.", "placeholders": {"day": {"type": "int"}}},
+  "@vpStepLastTitle": {
+    "description": "Timeline last step title, e.g. 'Day 7' — the day the card is charged.",
+    "placeholders": {
+      "day": {
+        "type": "int"
+      }
+    }
+  },
   "vpStepLastTitleFallback": "Last day",
-  "@vpStepLastTitleFallback": {"description": "Timeline last step title when the trial is too short to number."},
+  "@vpStepLastTitleFallback": {
+    "description": "Timeline last step title when the trial is too short to number."
+  },
   "vpStepLastBody": "You’ll receive a reminder before your trial ends. Cancel anytime.",
-  "@vpStepLastBody": {"description": "Timeline last step body on the free-trial explainer."},
+  "@vpStepLastBody": {
+    "description": "Timeline last step body on the free-trial explainer."
+  },
   "vpCancelTitle": "How to Cancel Your Subscription",
-  "@vpCancelTitle": {"description": "Heading of the cancel-instructions card."},
+  "@vpCancelTitle": {
+    "description": "Heading of the cancel-instructions card."
+  },
   "vpCancelStepsApple": "Open Settings → tap your Apple ID → Subscriptions → select Final Table → tap Cancel Subscription.",
-  "@vpCancelStepsApple": {"description": "How to cancel on iOS/App Store."},
+  "@vpCancelStepsApple": {
+    "description": "How to cancel on iOS/App Store."
+  },
   "vpCancelStepsGoogle": "Open the Play Store → tap your profile → Payments & subscriptions → Subscriptions → Final Table → Cancel.",
-  "@vpCancelStepsGoogle": {"description": "How to cancel on Android/Google Play."},
+  "@vpCancelStepsGoogle": {
+    "description": "How to cancel on Android/Google Play."
+  },
   "vpNoPayment": "No Payment Today",
-  "@vpNoPayment": {"description": "Reassurance line above the CTA."},
+  "@vpNoPayment": {
+    "description": "Reassurance line above the CTA."
+  },
   "vpSecured": "Secured with {store}",
-  "@vpSecured": {"description": "Security line. {store} is 'App Store' or 'Google Play'.", "placeholders": {"store": {"type": "String"}}},
+  "@vpSecured": {
+    "description": "Security line. {store} is 'App Store' or 'Google Play'.",
+    "placeholders": {
+      "store": {
+        "type": "String"
+      }
+    }
+  },
   "vpCtaTrial": "Try it for free",
-  "@vpCtaTrial": {"description": "Main CTA that starts the free trial / opens the purchase sheet."},
+  "@vpCtaTrial": {
+    "description": "Main CTA that starts the free trial / opens the purchase sheet."
+  },
   "vpCtaContinue": "Continue",
-  "@vpCtaContinue": {"description": "CTA when the plan has no free trial."},
+  "@vpCtaContinue": {
+    "description": "CTA when the plan has no free trial."
+  },
   "vpFooterTrial": "Free for {duration}, then {price}. Cancel anytime.",
-  "@vpFooterTrial": {"description": "Fine print under the CTA. {duration} e.g. '7 days', {price} e.g. '$159.99/year'.", "placeholders": {"duration": {"type": "String"}, "price": {"type": "String"}}},
+  "@vpFooterTrial": {
+    "description": "Fine print under the CTA. {duration} e.g. '7 days', {price} e.g. '$159.99/year'.",
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      },
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "vpNoTrialBlurb": "Get full access to all {tier} features.",
-  "@vpNoTrialBlurb": {"description": "Body shown when the plan has no free trial. {tier} is Pro/Elite/Club.", "placeholders": {"tier": {"type": "String"}}},
+  "@vpNoTrialBlurb": {
+    "description": "Body shown when the plan has no free trial. {tier} is Pro/Elite/Club.",
+    "placeholders": {
+      "tier": {
+        "type": "String"
+      }
+    }
+  },
   "paywallProDailyChallenge": "Daily Challenge + replay last 15 days",
-  "@paywallProDailyChallenge": {"description": "Pro plan feature: Daily Challenge with replay of the last 15 days of past challenges."},
+  "@paywallProDailyChallenge": {
+    "description": "Pro plan feature: Daily Challenge with replay of the last 15 days of past challenges."
+  },
   "paywallEliteDailyChallenge": "Daily Challenge + unlimited replays",
-  "@paywallEliteDailyChallenge": {"description": "Elite/Club plan feature: Daily Challenge with unlimited replay of all past challenges."},
+  "@paywallEliteDailyChallenge": {
+    "description": "Elite/Club plan feature: Daily Challenge with unlimited replay of all past challenges."
+  },
   "replayPastChallenges": "Past challenges",
-  "@replayPastChallenges": {"description": "Button on the Daily Challenge screen that opens the past-challenges replay calendar."},
+  "@replayPastChallenges": {
+    "description": "Button on the Daily Challenge screen that opens the past-challenges replay calendar."
+  },
   "replayCalendarTitle": "Past Challenges",
-  "@replayCalendarTitle": {"description": "Title of the replay calendar screen."},
+  "@replayCalendarTitle": {
+    "description": "Title of the replay calendar screen."
+  },
   "replayTitle": "Replay · Daily #{number}",
-  "@replayTitle": {"description": "Title of the replay screen for a past day. {number} is the challenge number.", "placeholders": {"number": {"type": "int"}}},
+  "@replayTitle": {
+    "description": "Title of the replay screen for a past day. {number} is the challenge number.",
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
   "replayUnrankedNote": "Practice only · not ranked",
-  "@replayUnrankedNote": {"description": "Badge on the replay intro explaining the run does not count."},
+  "@replayUnrankedNote": {
+    "description": "Badge on the replay intro explaining the run does not count."
+  },
   "replayPlay": "Play this day",
-  "@replayPlay": {"description": "CTA to start replaying the selected past day."},
+  "@replayPlay": {
+    "description": "CTA to start replaying the selected past day."
+  },
   "replayPlayAgain": "Replay again",
-  "@replayPlayAgain": {"description": "CTA to replay the same past day once more."},
+  "@replayPlayAgain": {
+    "description": "CTA to replay the same past day once more."
+  },
   "replayLoading": "Loading…",
-  "@replayLoading": {"description": "CTA label while the replay run is loading."},
+  "@replayLoading": {
+    "description": "CTA label while the replay run is loading."
+  },
   "replayDone": "Done",
-  "@replayDone": {"description": "Button to close the replay results and return to the calendar."},
+  "@replayDone": {
+    "description": "Button to close the replay results and return to the calendar."
+  },
   "replayAccuracy": "accuracy",
-  "@replayAccuracy": {"description": "Label under the big accuracy percentage on the replay results."},
+  "@replayAccuracy": {
+    "description": "Label under the big accuracy percentage on the replay results."
+  },
   "replayYou": "You",
-  "@replayYou": {"description": "Prefix for the hero's action in a replay results row (when there is no 'faced' label)."},
+  "@replayYou": {
+    "description": "Prefix for the hero's action in a replay results row (when there is no 'faced' label)."
+  },
   "replayBest": "Best",
-  "@replayBest": {"description": "Prefix for the solver's recommended action in a replay results row."},
+  "@replayBest": {
+    "description": "Prefix for the solver's recommended action in a replay results row."
+  },
   "replayFeatureName": "Daily Challenge replays",
-  "@replayFeatureName": {"description": "Feature name shown on the paywall when a user tries to replay beyond their tier's window."},
+  "@replayFeatureName": {
+    "description": "Feature name shown on the paywall when a user tries to replay beyond their tier's window."
+  },
   "replayUpgrade": "Upgrade",
-  "@replayUpgrade": {"description": "Upgrade link on the replay window banner / locked days."},
+  "@replayUpgrade": {
+    "description": "Upgrade link on the replay window banner / locked days."
+  },
   "replayWindowFree": "Replays are a paid feature. Upgrade to replay past challenges.",
-  "@replayWindowFree": {"description": "Banner for free users who cannot replay any past days."},
+  "@replayWindowFree": {
+    "description": "Banner for free users who cannot replay any past days."
+  },
   "replayWindowPro": "You can replay the last {days} days. Upgrade for the full archive.",
-  "@replayWindowPro": {"description": "Banner for Pro users. {days} is the replay window length (e.g. 15).", "placeholders": {"days": {"type": "int"}}},
+  "@replayWindowPro": {
+    "description": "Banner for Pro users. {days} is the replay window length (e.g. 15).",
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
   "replayWindowUnlimited": "You can replay every past challenge.",
-  "@replayWindowUnlimited": {"description": "Banner for Elite/Club users with unlimited replays."},
+  "@replayWindowUnlimited": {
+    "description": "Banner for Elite/Club users with unlimited replays."
+  },
   "replayLegendGood": "Great",
-  "@replayLegendGood": {"description": "Calendar legend: high-score day color."},
+  "@replayLegendGood": {
+    "description": "Calendar legend: high-score day color."
+  },
   "replayLegendOk": "OK",
-  "@replayLegendOk": {"description": "Calendar legend: medium-score day color."},
+  "@replayLegendOk": {
+    "description": "Calendar legend: medium-score day color."
+  },
   "replayLegendLow": "Needs work",
-  "@replayLegendLow": {"description": "Calendar legend: low-score day color."},
+  "@replayLegendLow": {
+    "description": "Calendar legend: low-score day color."
+  },
   "authoredEvaluating": "Evaluating…",
   "authoredShowRange": "Show range",
   "authoredYourHand": "your hand",
@@ -5715,7 +5927,13 @@
     }
   },
   "authoredSyntheticReroute": "A bet isn't in the solver's line — the hand continues with {action}.",
-  "@authoredSyntheticReroute": {"placeholders": {"action": {"type": "String"}}},
+  "@authoredSyntheticReroute": {
+    "placeholders": {
+      "action": {
+        "type": "String"
+      }
+    }
+  },
   "authoredRerouteNote": "The hand continues along the solver line — {action}.",
   "@authoredRerouteNote": {
     "placeholders": {
@@ -5758,15 +5976,40 @@
     }
   },
   "authoredSeeResult": "See result",
-  "@authoredSeeResult": {"description": "Label of the final-hand button of the Daily Challenge (leads to the results screen)."},
+  "@authoredSeeResult": {
+    "description": "Label of the final-hand button of the Daily Challenge (leads to the results screen)."
+  },
   "authoredYouPlate": "You · {name}",
-  "@authoredYouPlate": {"description": "Seat plate of the hero: 'You · BTN'.", "placeholders": {"name": {"type": "String"}}},
+  "@authoredYouPlate": {
+    "description": "Seat plate of the hero: 'You · BTN'.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "authoredFolded": "folded",
-  "@authoredFolded": {"description": "Seat plate text for a player who folded (lower-case)."},
+  "@authoredFolded": {
+    "description": "Seat plate text for a player who folded (lower-case)."
+  },
   "authoredPot": "Pot {amount}BB",
-  "@authoredPot": {"description": "Pot size in big blinds on the table; keep the literal BB.", "placeholders": {"amount": {"type": "String"}}},
+  "@authoredPot": {
+    "description": "Pot size in big blinds on the table; keep the literal BB.",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "authoredSolverRanges": "Solver ranges · {format}",
-  "@authoredSolverRanges": {"description": "Caption of the solver range sheet, e.g. 'Solver ranges · 100BB'.", "placeholders": {"format": {"type": "String"}}},
+  "@authoredSolverRanges": {
+    "description": "Caption of the solver range sheet, e.g. 'Solver ranges · 100BB'.",
+    "placeholders": {
+      "format": {
+        "type": "String"
+      }
+    }
+  },
   "onbCoachesHint": "Tap a coach to say hi",
   "onbCoachTagDuke": "Old-school",
   "onbCoachTagVega": "By the book",
@@ -5777,18 +6020,31 @@
   "onbFactCoach": "Your coach explains every line",
   "onbFactOnce": "One attempt per day. Make it count.",
   "onbFactSpotsBody": "Everyone plays the same hands, so you can compare scores.",
-  "@onbFactSpotsBody": {"description": "Body line under the first step of the onboarding timeline."},
+  "@onbFactSpotsBody": {
+    "description": "Body line under the first step of the onboarding timeline."
+  },
   "onbFactCoachBody": "Learn why a play works, not just what to click.",
-  "@onbFactCoachBody": {"description": "Body line under the coach step of the onboarding timeline."},
+  "@onbFactCoachBody": {
+    "description": "Body line under the coach step of the onboarding timeline."
+  },
   "onbFactOnceBody": "No retries. Focus on every decision.",
-  "@onbFactOnceBody": {"description": "Body line under the one-attempt step of the onboarding timeline."},
+  "@onbFactOnceBody": {
+    "description": "Body line under the one-attempt step of the onboarding timeline."
+  },
   "onbStreakHeader": "Build a streak",
   "onbStreakCaption": "Play daily to keep the flame alive.",
   "onbStreakSemantics": "Example of a 7-day streak",
   "onbLeaderboardHeader": "Daily leaderboard",
   "onbLeaderboardYou": "You",
   "onbSamplePlayer": "Player {letter}",
-  "@onbSamplePlayer": {"description": "Fake player name on the onboarding sample leaderboard.", "placeholders": {"letter": {"type": "String"}}},
+  "@onbSamplePlayer": {
+    "description": "Fake player name on the onboarding sample leaderboard.",
+    "placeholders": {
+      "letter": {
+        "type": "String"
+      }
+    }
+  },
   "onbLeaderboardSemantics": "Daily leaderboard example",
   "handActionsStreetPreflop": "Preflop",
   "handActionsStreetFlop": "Flop",
@@ -6326,5 +6582,216 @@
   "leakRefreshFailed": "Couldn't refresh. Showing your last report.",
   "leakEmptyTitle": "No hands to analyze yet",
   "leakEmptyBody": "Log a few hands and the Leak Detector will start finding patterns in your play.",
-  "leakEmptyAction": "Log a hand"
+  "leakEmptyAction": "Log a hand",
+  "easyLogFoldTick": "I folded, next hand",
+  "easyLogFoldTickToast": "Hand counted. Next hand ready.",
+  "easyLogUndo": "Undo",
+  "easyLogUndone": "Undone",
+  "easyLogFoldedTonight": "{count, plural, =1{1 fold tonight} other{{count} folds tonight}}",
+  "@easyLogFoldedTonight": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "easyLogHeroCardsChip": "Add your cards",
+  "easyLogHeroCardsDone": "Cards saved",
+  "easyLogBoardAddLater": "Add later",
+  "easyLogBoardPending": "Board not entered. Add it later.",
+  "easyLogBoardAddNow": "Add board",
+  "easyLogFoldToSeat": "Fold to {seat}",
+  "@easyLogFoldToSeat": {
+    "placeholders": {
+      "seat": {
+        "type": "String"
+      }
+    }
+  },
+  "easyLogNotes": "Notes",
+  "easyLogFlag": "Flag",
+  "easyLogFlagged": "Flagged. Finish it later.",
+  "easyLogFlagSheetTitle": "Flag this hand",
+  "easyLogFlagCardsRequired": "Pick your two cards to save this hand",
+  "@easyLogFlagCardsRequired": {
+    "description": "Hint in the flag sheet: hero hole cards are required before saving"
+  },
+  "easyLogFlagTagsHint": "Pick up to 3 tags",
+  "easyLogTagCooler": "Cooler",
+  "easyLogTagBluff": "Bluff",
+  "easyLogTagHeroCall": "Hero call",
+  "easyLogTagBigPot": "Big pot",
+  "easyLogTagMistake": "Mistake",
+  "easyLogTagReview": "Review",
+  "easyLogTagPlayed": "Played",
+  "easyLogTagLimit": "You can pick 3 tags at most.",
+  "easyLogPendingTitle": "Flagged hands",
+  "easyLogPendingCount": "{count, plural, =1{1 flagged hand to finish} other{{count} flagged hands to finish}}",
+  "@easyLogPendingCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "easyLogPendingEmpty": "No flagged hands.",
+  "easyLogFinish": "Finish",
+  "easyLogDelete": "Delete",
+  "easyLogDeleteFlagTitle": "Delete flagged hand?",
+  "easyLogDeleteFlagBody": "The flag is removed. Your statistics do not change.",
+  "easyLogReconstructedBadge": "Reconstructed",
+  "easyLogFlagCompleted": "Hand saved",
+  "easyLogSavingHand": "Saving hand…",
+  "@easyLogSavingHand": {
+    "description": "Blocking overlay text while a recalled flagged hand is being saved"
+  },
+  "easyLogStackCheckpoint": "Stack checkpoint",
+  "easyLogStackCheckpointHint": "Your stack now",
+  "easyLogStackSaved": "Stack saved",
+  "easyLogStackDeltaWon": "You won about {bb} BB. Flag or log it?",
+  "@easyLogStackDeltaWon": {
+    "placeholders": {
+      "bb": {
+        "type": "num"
+      }
+    }
+  },
+  "easyLogStackDeltaLost": "You lost about {bb} BB. Flag or log it?",
+  "@easyLogStackDeltaLost": {
+    "placeholders": {
+      "bb": {
+        "type": "num"
+      }
+    }
+  },
+  "easyLogLogIt": "Log it",
+  "easyLogDismiss": "Dismiss",
+  "easyLogVillainFoldedToCbet": "{seat}: folded to {folded}/{total} c-bets tonight",
+  "@easyLogVillainFoldedToCbet": {
+    "placeholders": {
+      "seat": {
+        "type": "String"
+      },
+      "folded": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "easyLogVillainFoldedTo3Bet": "{seat}: folded to {folded}/{total} 3-bets tonight",
+  "@easyLogVillainFoldedTo3Bet": {
+    "placeholders": {
+      "seat": {
+        "type": "String"
+      },
+      "folded": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "easyLogVillain3Bets": "{seat}: 3-bet {count}/{total} times tonight",
+  "@easyLogVillain3Bets": {
+    "placeholders": {
+      "seat": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "easyLogVillainVpip": "{seat}: played {count} of {total} hands tonight",
+  "@easyLogVillainVpip": {
+    "placeholders": {
+      "seat": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "easyLogInsightOpens": "That is open number {n} from {position} tonight.",
+  "@easyLogInsightOpens": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      },
+      "position": {
+        "type": "String"
+      }
+    }
+  },
+  "easyLogInsightFoldCbet": "You folded {pct}% of c-bets you faced tonight ({n} spots).",
+  "@easyLogInsightFoldCbet": {
+    "placeholders": {
+      "pct": {
+        "type": "int"
+      },
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "easyLogInsightBiggestPot": "Biggest pot of the night.",
+  "easyLogInsightNoFlop": "{n} hands in a row without a flop.",
+  "@easyLogInsightNoFlop": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "easyLogSizeSameAsLast": "Same as last",
+  "easyLogSizeUsual": "Your usual",
+  "easyLogRecallBanner": "Recall: finishing flagged hand #{n}",
+  "@easyLogRecallBanner": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "easyLogRecallLeaveTitle": "Leave recall?",
+  "easyLogRecallLeaveBody": "The hand stays flagged. Nothing is saved.",
+  "easyLogRecallLeave": "Leave",
+  "easyLogFinalStackTitle": "Your final stack",
+  "easyLogFinalStackBody": "Flagged hands are still open. Enter your final stack so your result is right.",
+  "easyLogStackBeforeTitle": "Your stack before the rebuy",
+  "easyLogStackBeforeBody": "Flagged hands are still open. Enter the stack you have now.",
+  "stackChartHandsPending": "{count, plural, =1{1 hand pending} other{{count} hands pending}}",
+  "@stackChartHandsPending": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "stackChartUnlogged": "Unlogged {amount}",
+  "@stackChartUnlogged": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "stackChartPendingTooltip": "Hand #{hand} pending. Tap to finish.",
+  "@stackChartPendingTooltip": {
+    "placeholders": {
+      "hand": {
+        "type": "int"
+      }
+    }
+  }
 }

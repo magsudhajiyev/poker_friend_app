@@ -1,3 +1,4 @@
+import '../models/hand_completeness.dart';
 import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
 import '../models/opponent.dart';
@@ -216,6 +217,7 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
       }
 
       for (final hand in sessionHands) {
+        if (!HandCompletenessX.fromHandMap(hand).showsInHandHistory) continue;
         if (!_isOpponentInvolved(hand, opponentName)) continue;
         if (_isOpponentHandTrivial(hand, opponentName)) continue;
 

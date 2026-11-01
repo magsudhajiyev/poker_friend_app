@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'dart:math' as math;
 import '../utils/poker_positions.dart';
+import '../models/hand_completeness.dart';
 import '../services/ai_analyzer_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../services/auth_service.dart';
@@ -631,7 +632,12 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                         HandStreetSection(block: block, data: data),
                     ],
                     const SizedBox(height: 8),
-                    _buildAIAnalyzerButton(),
+                    if (_completeness == HandCompleteness.reconstructed) ...[
+                      _buildReconstructedBadge(),
+                      const SizedBox(height: 8),
+                    ],
+                    // AI analysis is for fully logged hands only.
+                    if (_completeness.isAnalyzable) _buildAIAnalyzerButton(),
                     if (_aiAnalysis != null) ...[
                       const SizedBox(height: 24),
                       HandAiAnalysisCard(analysis: _aiAnalysis!),
@@ -803,6 +809,28 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  HandCompleteness get _completeness =>
+      HandCompletenessX.fromHandMap(widget.hand);
+
+  Widget _buildReconstructedBadge() {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.xs, vertical: AppSpacing.xxxs),
+        decoration: BoxDecoration(
+          color: AppColors.bgSurface,
+          borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
+          border: Border.all(color: AppColors.accentPrimary),
+        ),
+        child: Text(
+          AppLocalizations.of(context).easyLogReconstructedBadge,
+          style: AppTypography.caption(),
+        ),
       ),
     );
   }

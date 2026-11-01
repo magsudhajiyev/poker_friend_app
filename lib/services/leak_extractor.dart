@@ -1,3 +1,4 @@
+import '../models/hand_completeness.dart';
 import 'board_texture.dart';
 import 'flop_strength.dart';
 import 'stats_calculator.dart';
@@ -107,6 +108,7 @@ class LeakExtractor {
   /// that must not be analyzed (scouted records, missing hero seat).
   static LeakHandFacts? extract(Map<String, dynamic> hand, {String? ref}) {
     if (hand['isScouted'] == true) return null;
+    if (!HandCompletenessX.fromHandMap(hand).isAnalyzable) return null;
     final heroSeat = hand['heroSeatNumber'] as int?;
     if (heroSeat == null) return null;
     final actionsRaw = hand['actions'];

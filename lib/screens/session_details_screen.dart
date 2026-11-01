@@ -36,6 +36,13 @@ import 'home_screen.dart';
 import '../widgets/main_shell.dart';
 import '../utils/user_facing_error.dart';
 import '../utils/decimal_input.dart';
+import '../services/app_data_cache.dart';
+import '../services/easy_logging.dart';
+import '../services/logger_service.dart';
+import '../services/hand_flag_service.dart';
+import '../services/flag_resolution_loader.dart';
+import '../services/stack_timeline.dart';
+import '../widgets/easy_logging/pending_flags_card.dart';
 
 class SessionDetailsScreen extends StatefulWidget {
   final String sessionName;
@@ -135,6 +142,12 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
   // Menu key
   final GlobalKey _dotsKey = GlobalKey();
 
+  // Easy hand logging: flagged hands waiting to be finished.
+  List<FlaggedHandRef> _pendingFlags = [];
+  Map<String, FlagResolution> _resolutions = const {};
+  List<Map<String, dynamic>> _resolvedHandDocs = const [];
+  HandFlagService? _flagService;
+
   // Onboarding GlobalKeys
   final GlobalKey _currentStackCardKey = GlobalKey(debugLabel: 'currentStackCard');
   final GlobalKey _updateStackBtnKey = GlobalKey(debugLabel: 'updateStackBtn');
@@ -164,6 +177,7 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
 
     _currentSmallBlind = widget.smallBlind;
     _currentBigBlind = widget.bigBlind;
+    _loadResolutions();
     _currentHasBBante = widget.hasBBante;
 
     // Initialize completed hands from passed-in data (active session)
@@ -181,6 +195,7 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
     _resumeSession();
     _loadBBMode();
     _startTimer();
+    _initEasyLogging();
 
     if (_isHubMode) {
       _scheduleSessionDetailsHubTour();
@@ -200,6 +215,138 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
         _showStackChartReturnTour();
       });
     }
+  }
+
+  // ── Easy hand logging (flag-now-finish-later, stack checkpoints) ──────
+
+  String? get _easySessionId =>
+      widget.sessionId ?? widget.sessionManager?.sessionId;
+
+  /// Snapshot at call time: a mid-session flag flip applies at the next
+  /// screen visit, never mid-interaction.
+  bool get _easy =>
+      _easySessionId != null &&
+      EasyLogging.supportsSession(
+        isDealer: false,
+        isTutorial: widget.sessionManager?.isTutorialSession ?? false,
+      );
+
+  HandFlagService? get _flags {
+    final sm = widget.sessionManager;
+    if (sm == null) return null;
+    return _flagService ??= HandFlagService.forSession(sm);
+  }
+
+  void _initEasyLogging() {
+    if (!_easy) return;
+    _loadPendingFlags();
+  }
+
+  Future<void> _loadPendingFlags() async {
+    final sid = _easySessionId;
+    if (sid == null || !_easy) return;
+    try {
+      final list = await (_flags ??
+              HandFlagService(store: FirebaseFlagStore(), sessionId: sid))
+          .pendingFor(sid);
+      if (!mounted) return;
+      setState(() => _pendingFlags = list);
+    } catch (e) {
+      LoggerService.log('Pending flags load failed: $e');
+    }
+    await _loadResolutions();
+  }
+
+  Future<void> _loadResolutions() async {
+    final sid = widget.sessionId ?? widget.sessionManager?.sessionId;
+    if (sid == null || FlagResolutionLoader.pendingIds(_stackHistory).isEmpty) {
+      return;
+    }
+    final r = await FlagResolutionLoader.loadAll(sid, _stackHistory);
+    if (!mounted) return;
+    setState(() {
+      _resolutions = r.resolutions;
+      _resolvedHandDocs = r.resolvedHands;
+    });
+  }
+
+  /// Tap on a pending dot or its label: finish the first matching open flag.
+  Future<void> _finishFlagsById(List<String> flagIds) async {
+    for (final ref in _pendingFlags) {
+      if (flagIds.contains(ref.cloudId) || flagIds.contains(ref.localId)) {
+        await _finishFlag(ref);
+        return;
+      }
+    }
+    final sid = _easySessionId;
+    if (sid == null) return;
+    final done = await FlagResolutionLoader.finish(context, sid, flagIds);
+    if (done && mounted) await _loadPendingFlags();
+  }
+
+  /// True once the history carries easy-logging data (fold runs, flags, or a
+  /// rebuy with its before-stack). Older sessions keep the plain rules.
+  bool get _hasEasyKinds => _stackHistory.any((e) =>
+      e['changeType'] == 'fold_run' ||
+      e['changeType'] == 'pending' ||
+      e['stackBefore'] != null);
+
+  /// Tooltip lookup: live hands first, promoted-stub docs as fallback (they
+  /// are not part of the manager's completed list).
+  ChartHandLookup get _chartHandLookup => handLookupChain(
+      handLookupFromRecords(_completedHands),
+      handLookupFromMaps(_resolvedHandDocs));
+
+  StackTimelineData get _timeline =>
+      StackTimeline.build(_stackHistory, _resolutions);
+
+  /// Plain sessions need two entries; easy-logging sessions show the card
+  /// from the first real point, or as soon as a flag is pending.
+  bool get _showStackCard {
+    if (!_hasEasyKinds) return _stackHistory.length > 1;
+    final t = _timeline;
+    return t.realPointCount >= 1 || t.hasPending;
+  }
+
+  bool get _stackCardHasData {
+    if (!_hasEasyKinds) return _stackHistory.length >= 2;
+    final t = _timeline;
+    return t.points.length >= 2 || t.hasPending;
+  }
+
+  bool get _chartInBigBlinds =>
+      _showBBMode && widget.gameType != GameType.cash && _hasEasyKinds;
+
+  /// Entries carry their own blind when they have one; the rest follow the
+  /// last known blind (see StackTimelineData.inBigBlinds).
+  double? _bigBlindForHand(int handNumber) => null;
+
+  Future<void> _finishFlag(FlaggedHandRef ref) async {
+    final open = FlagFinishLauncher.open;
+    if (open == null) {
+      LoggerService.log('FlagFinishLauncher not registered');
+      return;
+    }
+    final done = await open(context, ref);
+    if (done && mounted) {
+      AppDataCache.markHomeDirty();
+      AppDataCache.markSessionsDirty();
+      AppDataCache.markStatsDirty();
+      widget.sessionManager?.flagResolved();
+    }
+    if (mounted) await _loadPendingFlags();
+  }
+
+  Future<void> _deleteFlag(FlaggedHandRef ref) async {
+    final service = _flags ??
+        HandFlagService(store: FirebaseFlagStore(), sessionId: ref.sessionId);
+    final ok = await service.discard(ref);
+    if (!ok && mounted) {
+      final l10n = AppLocalizations.of(context);
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(l10n.errorGeneric)));
+    }
+    if (mounted) await _loadPendingFlags();
   }
 
   Future<void> _loadBBMode() async {
@@ -836,6 +983,9 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
           if (note.isNotEmpty) {
             entry['note'] = note;
           }
+          // Easy logging: anchor the entry in the hand sequence.
+          final sm = widget.sessionManager;
+          if (_easy && sm != null) entry['handNumber'] = sm.lastHandNumber;
           _stackHistory.add(entry);
         });
 
@@ -1159,6 +1309,8 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
       });
     }
 
+    if (mounted && _easy) _loadPendingFlags();
+
     // If PokerHandScreen ended the session (e.g. via stop button), navigate home
     if (result != null && result['sessionEnded'] == true && mounted) {
       Navigator.of(context).popUntil((route) => route.isFirst);
@@ -1209,7 +1361,8 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
       // Capture final stack
       final ourSeat = sm.ourSeatNumber ?? widget.heroSeat;
       if (ourSeat != null) {
-        sm.addFinalStackEntry(_currentStack);
+        final finalStack = _currentStack;
+        sm.addFinalStackEntry(finalStack);
       }
 
       await sm.endSession();
@@ -1234,6 +1387,15 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
           totalBuyIn: sm.totalBuyIn,
           durationMinutes: sessionDuration,
         );
+        // Easy logging, flags open: the cash-out becomes the final anchor.
+        if (bankrollResult != null &&
+            sm.flagsOpenCount > 0 &&
+            sm.gameType == GameType.cash) {
+          final profit = (bankrollResult['profitLoss'] as num?)?.toDouble();
+          if (profit != null) {
+            await sm.applyFinalStackAnchor(profit + sm.totalBuyIn);
+          }
+        }
 
         // Save tournament finish data
         if (bankrollResult != null) {
@@ -1422,6 +1584,8 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
           'changeType': 'manual_increase',
           'changeAmount': chips,
           'note': noteText,
+          if (_easy && widget.sessionManager != null)
+            'handNumber': widget.sessionManager!.lastHandNumber,
         });
       });
 
@@ -1830,13 +1994,22 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
                     ),
                   ),
 
+                  if (_easy && _pendingFlags.isNotEmpty) ...[
+                    const SizedBox(height: 16),
+                    PendingFlagsCard(
+                      flags: _pendingFlags,
+                      onFinish: _finishFlag,
+                      onDelete: _deleteFlag,
+                    ),
+                  ],
+
                   const SizedBox(height: 16),
 
                   // Stack Chart
-                  if (_stackHistory.length > 1)
+                  if (_showStackCard)
                     _buildStackChartCard(),
 
-                  if (_stackHistory.length > 1)
+                  if (_showStackCard)
                     const SizedBox(height: 16),
 
                   // Session Info (collapsible) — flat, no card wrapper
@@ -1979,7 +2152,7 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
   Widget _buildStackChartCard() {
     final l10n = AppLocalizations.of(context);
     final history = _stackHistory;
-    final hasData = history.length >= 2;
+    final hasData = _stackCardHasData;
 
     return Container(
       key: _stackChartKey,
@@ -2010,12 +2183,18 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
                       context: context,
                       stackHistory: history,
                       completedHands: _completedHands,
+                      handLookup: _chartHandLookup,
                       startingStack: widget.startingStack,
                       formatValue: _chartFormatValue,
                       profitLoss: _currentStack - _initialStack,
                       sessionName: widget.sessionName,
                       sessionDuration: _sessionDuration,
                       isCashGame: widget.gameType == GameType.cash,
+                      resolutions: _resolutions,
+                      onPendingTapped: _finishFlagsById,
+                      showBigBlinds: _chartInBigBlinds,
+                      bigBlindForHand: _bigBlindForHand,
+                      fallbackBigBlind: _currentBigBlind,
                     );
                   },
                   child: Container(
@@ -2040,11 +2219,17 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
             StackGrowthChart(
               stackHistory: history,
               completedHands: _completedHands,
+              handLookup: _chartHandLookup,
               startingStack: widget.startingStack,
               formatValue: _chartFormatValue,
               height: 200,
               selectedIndex: _selectedHandIndex,
               onDotTapped: (index) => setState(() => _selectedHandIndex = index),
+              resolutions: _resolutions,
+              onPendingTapped: _finishFlagsById,
+              showBigBlinds: _chartInBigBlinds,
+              bigBlindForHand: _bigBlindForHand,
+              fallbackBigBlind: _currentBigBlind,
             )
           else
             SizedBox(

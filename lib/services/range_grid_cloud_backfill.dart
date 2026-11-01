@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../models/hand_completeness.dart';
 import '../models/hand_state_machine.dart';
 import 'auth_service.dart';
 import 'firebase_service.dart';
@@ -165,6 +166,7 @@ class RangeGridCloudBackfill {
       potAmount: (hand['potAmount'] as num?)?.toDouble() ?? 0.0,
       winnerId: (hand['winnerId'] as num?)?.toInt(),
       choppedWinners: chopped,
+      completeness: HandCompletenessX.fromHandMap(hand),
     );
   }
 

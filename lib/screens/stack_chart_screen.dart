@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:fl_chart/fl_chart.dart';
 import '../l10n/app_localizations.dart';
 import '../services/currency_service.dart';
 import '../models/game_types.dart';
+import '../services/stack_timeline.dart';
+import '../widgets/stack_growth_chart.dart';
 import 'hand_actions_page_view.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/typography.dart';
@@ -17,12 +18,20 @@ class StackChartScreen extends StatefulWidget {
   final Map<String, dynamic> sessionData;
   final double profitLoss;
 
+  /// Flag results by flag id (easy hand logging); empty for older sessions.
+  final Map<String, FlagResolution> resolutions;
+
+  /// Opens the finish screen for these open flags, when available.
+  final ValueChanged<List<String>>? onPendingTapped;
+
   const StackChartScreen({
     super.key,
     required this.stackHistory,
     required this.hands,
     required this.sessionData,
     required this.profitLoss,
+    this.resolutions = const {},
+    this.onPendingTapped,
   });
 
   @override
@@ -31,20 +40,12 @@ class StackChartScreen extends StatefulWidget {
 
 class _StackChartScreenState extends State<StackChartScreen> {
   int? _touchedSpotIndex;
-  late double _viewStart;
   static const int _visiblePoints = 30;
 
   @override
   void initState() {
     super.initState();
     _setLandscapeMode();
-    _viewStart = _computeDefaultViewStart();
-  }
-
-  double _computeDefaultViewStart() {
-    final total = widget.stackHistory.length;
-    if (total <= _visiblePoints) return -0.5;
-    return total - _visiblePoints - 0.5;
   }
 
   @override
@@ -102,11 +103,14 @@ class _StackChartScreenState extends State<StackChartScreen> {
   }
 
   String _formatAvgGrowth() {
-    if (widget.stackHistory.length < 2) return AppLocalizations.of(context).commonNA;
+    final history = widget.stackHistory
+        .where((e) => e['changeType'] != 'fold_run' && e['changeType'] != 'pending')
+        .toList();
+    if (history.length < 2) return AppLocalizations.of(context).commonNA;
 
-    final initialEntry = widget.stackHistory.firstWhere(
+    final initialEntry = history.firstWhere(
       (e) => e['changeType'] == 'initial',
-      orElse: () => widget.stackHistory.first,
+      orElse: () => history.first,
     );
     final startStack = initialEntry['stackSize']?.toDouble() ?? 0.0;
     if (startStack <= 0) return AppLocalizations.of(context).commonNA;
@@ -114,9 +118,9 @@ class _StackChartScreenState extends State<StackChartScreen> {
     // Count actual hand entries (exclude initial, rebuy, final)
     int handCount = 0;
     double totalGrowth = 0.0;
-    for (int i = 1; i < widget.stackHistory.length; i++) {
-      final current = widget.stackHistory[i]['stackSize']?.toDouble() ?? 0.0;
-      final previous = widget.stackHistory[i - 1]['stackSize']?.toDouble() ?? 0.0;
+    for (int i = 1; i < history.length; i++) {
+      final current = history[i]['stackSize']?.toDouble() ?? 0.0;
+      final previous = history[i - 1]['stackSize']?.toDouble() ?? 0.0;
       if (previous > 0) {
         totalGrowth += ((current - previous) / previous) * 100;
         handCount++;
@@ -134,14 +138,7 @@ class _StackChartScreenState extends State<StackChartScreen> {
     return null;
   }
 
-  void _navigateToHandFromChart(int spotIndex) {
-    if (spotIndex < 0 || spotIndex >= widget.stackHistory.length) return;
-    final entry = widget.stackHistory[spotIndex];
-    final handNumber = entry['handNumber'] as int?;
-    final changeType = entry['changeType'] ?? '';
-    if (changeType == 'initial' || changeType == 'rebuy' || changeType == 'final') return;
-    if (handNumber == null || handNumber <= 0) return;
-
+  void _openHand(int handNumber) {
     final hand = _findHandByNumber(handNumber);
     if (hand == null) return;
 
@@ -277,277 +274,27 @@ class _StackChartScreenState extends State<StackChartScreen> {
   }
 
   Widget _buildChart(Color lineColor) {
-    List<FlSpot> spots = [];
-    for (int i = 0; i < widget.stackHistory.length; i++) {
-      final entry = widget.stackHistory[i];
-      final stackSize = entry['stackSize']?.toDouble() ?? 0.0;
-      spots.add(FlSpot(i.toDouble(), stackSize));
-    }
-
-    if (spots.isEmpty) return const SizedBox.shrink();
-
-    // Compute Y bounds based on visible window for dynamic scaling
-    final viewStartIdx = _viewStart.floor().clamp(0, spots.length - 1);
-    final viewEndIdx = (_viewStart + (_visiblePoints - 1) + 1).ceil().clamp(0, spots.length - 1);
-    final visibleSpots = spots.sublist(viewStartIdx, viewEndIdx + 1);
-    final rawMinY = visibleSpots.map((e) => e.y).reduce((a, b) => a < b ? a : b);
-    final rawMaxY = visibleSpots.map((e) => e.y).reduce((a, b) => a > b ? a : b);
-    final yPadding = rawMaxY > rawMinY ? (rawMaxY - rawMinY) * 0.15 : rawMaxY * 0.1;
-    final minY = rawMinY - yPadding;
-    final maxY = rawMaxY + yPadding;
-    final yRange = maxY > minY ? maxY - minY : 100.0;
-    final yInterval = yRange / 4;
-
-    // Viewport
-    final viewWindow = (_visiblePoints - 1).toDouble() + 1.0;
-    final viewMinX = _viewStart;
-    final viewMaxX = _viewStart + viewWindow;
-
-    // Scroll bounds
-    final totalMaxX = (spots.length - 1).toDouble() + 0.5;
-    const scrollMin = -0.5;
-    final scrollMax = (totalMaxX - viewWindow).clamp(scrollMin, double.infinity);
-
-    return GestureDetector(
-      onHorizontalDragUpdate: spots.length > _visiblePoints
-          ? (details) {
-              final chartWidth = context.size?.width ?? 300;
-              final unitsPerPixel = viewWindow / chartWidth;
-              final delta = -details.delta.dx * unitsPerPixel;
-              setState(() {
-                _viewStart = (_viewStart + delta).clamp(scrollMin, scrollMax);
-                // Dismiss tooltip on scroll
-                if (_touchedSpotIndex != null) {
-                  _touchedSpotIndex = null;
-                }
-              });
-            }
-          : null,
-      child: LineChart(
-      LineChartData(
-        clipData: const FlClipData.all(),
-        gridData: FlGridData(
-          show: true,
-          drawVerticalLine: false,
-          horizontalInterval: yInterval,
-          getDrawingHorizontalLine: (value) {
-            return FlLine(
-              color: Colors.white.withValues(alpha: 0.06),
-              strokeWidth: 1,
-            );
-          },
-        ),
-        titlesData: FlTitlesData(
-          show: true,
-          rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          leftTitles: AxisTitles(
-            sideTitles: SideTitles(
-              showTitles: true,
-              interval: yInterval,
-              reservedSize: 60,
-              getTitlesWidget: (double value, TitleMeta meta) {
-                return Text(
-                  _formatAmount(value),
-                  style: AppTypography.mono(
-                    color: Colors.white.withValues(alpha: 0.35),
-                    fontSize: 10,
-                  ),
-                );
-              },
-            ),
-          ),
-          bottomTitles: AxisTitles(
-            sideTitles: SideTitles(
-              showTitles: true,
-              reservedSize: 28,
-              interval: 1,
-              getTitlesWidget: (double value, TitleMeta meta) {
-                if (value != value.roundToDouble()) return const SizedBox.shrink();
-                final idx = value.toInt();
-                if (idx < 0 || idx >= widget.stackHistory.length) return const SizedBox.shrink();
-                final entry = widget.stackHistory[idx];
-                final changeType = entry['changeType'] ?? 'unknown';
-                String label;
-                switch (changeType) {
-                  case 'initial':
-                    label = AppLocalizations.of(context).stackChartScreenStart;
-                    break;
-                  case 'rebuy':
-                    label = AppLocalizations.of(context).stackChartScreenRebuy;
-                    break;
-                  case 'final':
-                    label = AppLocalizations.of(context).stackChartScreenEnd;
-                    break;
-                  case 'manual_increase':
-                  case 'manual_decrease':
-                    label = '📝';
-                    break;
-                  default:
-                    label = '#${entry['handNumber'] ?? idx}';
-                }
-                return SideTitleWidget(
-                  axisSide: meta.axisSide,
-                  space: 6.0,
-                  child: Text(
-                    label,
-                    style: AppTypography.ibm(
-                      color: Colors.white.withValues(alpha: 0.3),
-                      fontSize: 10,
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-        ),
-        borderData: FlBorderData(show: false),
-        minX: viewMinX,
-        maxX: viewMaxX,
-        minY: minY,
-        maxY: maxY,
-        lineTouchData: LineTouchData(
-          enabled: true,
-          handleBuiltInTouches: false,
-          touchSpotThreshold: 40,
-          touchCallback: (FlTouchEvent event, LineTouchResponse? response) {
-            if (event is FlTapUpEvent) {
-              final hasTappedSpot = response != null &&
-                  response.lineBarSpots != null &&
-                  response.lineBarSpots!.isNotEmpty;
-              final tappedIndex = hasTappedSpot
-                  ? response.lineBarSpots!.first.x.toInt()
-                  : null;
-
-              if (_touchedSpotIndex != null) {
-                if (tappedIndex != null && tappedIndex != _touchedSpotIndex) {
-                  // Tapped a different dot — switch tooltip
-                  setState(() => _touchedSpotIndex = tappedIndex);
-                } else {
-                  // Tapped same dot, tooltip, or empty area — navigate to hand details
-                  final idx = _touchedSpotIndex!;
-                  setState(() => _touchedSpotIndex = null);
-                  _navigateToHandFromChart(idx);
-                }
-                return;
-              }
-              if (tappedIndex != null) {
-                setState(() => _touchedSpotIndex = tappedIndex);
-              }
-            }
-          },
-          touchTooltipData: LineTouchTooltipData(
-            getTooltipColor: (_) => const Color(0xFF1C2926),
-            tooltipRoundedRadius: 12,
-            tooltipPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            getTooltipItems: (touchedSpots) {
-              return touchedSpots.map((spot) {
-                final index = spot.x.toInt();
-                final stackValue = _formatAmount(spot.y);
-
-                if (index >= 0 && index < widget.stackHistory.length) {
-                  final entry = widget.stackHistory[index];
-                  final handNumber = entry['handNumber'] as int?;
-                  final changeType = entry['changeType'] ?? '';
-                  final note = entry['note'] as String?;
-
-                  String detail = stackValue;
-
-                  if (changeType != 'initial' &&
-                      changeType != 'rebuy' &&
-                      changeType != 'final' &&
-                      handNumber != null &&
-                      handNumber > 0) {
-                    final hand = _findHandByNumber(handNumber);
-                    final position = hand?['heroPositionName'] as String?;
-                    final holeCards = hand?['ourHoleCards'] as Map<String, dynamic>?;
-                    final card1 = holeCards?['card1'] as String?;
-                    final card2 = holeCards?['card2'] as String?;
-                    final hasCards = card1 != null &&
-                        card1.isNotEmpty &&
-                        card2 != null &&
-                        card2.isNotEmpty;
-
-                    if (position != null && position.isNotEmpty) {
-                      detail += '  ·  $position';
-                    }
-                    if (hasCards) {
-                      detail += '\n$card1 $card2';
-                    }
-                  }
-
-                  if (note != null && note.isNotEmpty) {
-                    detail += '\n📝 $note';
-                  }
-
-                  if (detail != stackValue) {
-                    return LineTooltipItem(
-                      detail,
-                      AppTypography.ibm(
-                        color: Colors.white,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    );
-                  }
-                }
-
-                return LineTooltipItem(
-                  stackValue,
-                  AppTypography.ibm(
-                    color: Colors.white,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                  ),
-                );
-              }).toList();
-            },
-          ),
-        ),
-        showingTooltipIndicators: _touchedSpotIndex != null
-            ? [
-                ShowingTooltipIndicators([
-                  LineBarSpot(
-                    LineChartBarData(spots: spots),
-                    0,
-                    spots[_touchedSpotIndex!],
-                  ),
-                ])
-              ]
-            : [],
-        lineBarsData: [
-          LineChartBarData(
-            spots: spots,
-            isCurved: true,
-            curveSmoothness: 0.3,
-            preventCurveOverShooting: true,
-            gradient: LinearGradient(
-              colors: [lineColor.withValues(alpha: 0.3), lineColor],
-            ),
-            barWidth: 3,
-            isStrokeCapRound: true,
-            dotData: FlDotData(
-              show: true,
-              getDotPainter: (spot, percent, barData, index) =>
-                  FlDotCirclePainter(
-                radius: 4,
-                color: Colors.white,
-                strokeWidth: 2,
-                strokeColor: lineColor,
-              ),
-            ),
-            belowBarData: BarAreaData(
-              show: true,
-              gradient: LinearGradient(
-                colors: [lineColor.withValues(alpha: 0.15), Colors.transparent],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              ),
-            ),
-          ),
-        ],
-      ),
-    ),
+    return StackGrowthChart(
+      stackHistory: widget.stackHistory,
+      startingStack: _startingStack(),
+      formatValue: _formatAmount,
+      height: double.infinity,
+      visiblePoints: _visiblePoints,
+      selectedIndex: _touchedSpotIndex,
+      resolutions: widget.resolutions,
+      handLookup: handLookupFromMaps(widget.hands),
+      onPendingTapped: widget.onPendingTapped,
+      onDotTapped: (i) => setState(() => _touchedSpotIndex = i),
+      onHandOpen: _openHand,
     );
+  }
+
+  double _startingStack() {
+    for (final e in widget.stackHistory) {
+      if (e['changeType'] == 'initial') {
+        return (e['stackSize'] as num?)?.toDouble() ?? 0.0;
+      }
+    }
+    return 0.0;
   }
 }

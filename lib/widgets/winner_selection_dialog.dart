@@ -18,6 +18,9 @@ class WinnerSelectionDialog extends StatefulWidget {
   final int playerCount;
   final int? heroSeat;
 
+  /// Easy logging: the one remaining player starts selected.
+  final int? preselectedWinner;
+
   const WinnerSelectionDialog({
     super.key,
     required this.activePlayers,
@@ -27,6 +30,7 @@ class WinnerSelectionDialog extends StatefulWidget {
     required this.playerCount,
     this.gameType = GameType.cash,
     this.heroSeat,
+    this.preselectedWinner,
   });
 
   /// Present as a modal bottom sheet and resolve with the caller-selected
@@ -40,6 +44,7 @@ class WinnerSelectionDialog extends StatefulWidget {
     required int playerCount,
     GameType gameType = GameType.cash,
     int? heroSeat,
+    int? preselectedWinner,
   }) {
     return showModalBottomSheet<Map<String, dynamic>>(
       context: context,
@@ -53,6 +58,7 @@ class WinnerSelectionDialog extends StatefulWidget {
         playerCount: playerCount,
         gameType: gameType,
         heroSeat: heroSeat,
+        preselectedWinner: preselectedWinner,
       ),
     );
   }
@@ -65,6 +71,15 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
   int? selectedWinner;
   Set<int> selectedWinners = <int>{};
   bool isChoppedPot = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final pre = widget.preselectedWinner;
+    if (pre != null && widget.activePlayers.contains(pre)) {
+      selectedWinner = pre;
+    }
+  }
 
   String _formatAmount(double amount) {
     return widget.gameType == GameType.cash

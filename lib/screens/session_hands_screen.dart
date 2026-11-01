@@ -1,3 +1,4 @@
+import '../models/hand_completeness.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../services/currency_service.dart';
@@ -149,6 +150,10 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
       // grid all still count — they're just not history the hero replays.
       loadedHands = loadedHands.where((hand) {
         if (hand['isScouted'] == true) return false;
+        // Ticks, preflop-only and flagged stubs are not hand history.
+        if (!HandCompletenessX.fromHandMap(hand).showsInHandHistory) {
+          return false;
+        }
         final heroSeat = hand['heroSeatNumber'] is int
             ? hand['heroSeatNumber'] as int
             : int.tryParse('${hand['heroSeatNumber'] ?? ''}');

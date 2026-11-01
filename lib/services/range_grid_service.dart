@@ -1,5 +1,6 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../models/hand_completeness.dart';
 import '../models/hand_state_machine.dart';
 import '../models/stack_bucket.dart';
 import 'auth_service.dart';
@@ -316,7 +317,11 @@ class RangeGridService {
     required double potAmount,
     required int? winnerId,
     required List<int>? choppedWinners,
+    // Flagged stubs are never indexed; ticks/preflop/reconstructed need
+    // hole cards (enforced below like every other hand).
+    HandCompleteness completeness = HandCompleteness.full,
   }) {
+    if (completeness.isStub) return null;
     final handClass = canonicalHandClass(holeCards);
     if (handClass == null) return null;
     if (heroSeat == null) return null;
@@ -379,6 +384,7 @@ class RangeGridService {
         potAmount: hand.potAmount,
         winnerId: hand.winnerId,
         choppedWinners: hand.choppedWinners,
+        completeness: hand.completeness,
       );
       if (entry == null) return;
       await LocalStorageService.saveRangeEntry(entry.toDbMap());
@@ -532,6 +538,7 @@ class RangeGridService {
             potAmount: (row['potAmount'] as num?)?.toDouble() ?? 0.0,
             winnerId: row['winnerId'] as int?,
             choppedWinners: chopped,
+            completeness: HandCompletenessX.parse(row['completeness']),
           );
           if (entry != null) {
             final saved =
