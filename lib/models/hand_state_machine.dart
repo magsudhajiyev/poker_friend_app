@@ -4,7 +4,10 @@ import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/poker_game_state.dart';
 import '../models/game_types.dart';
+import '../models/hand_completeness.dart';
+import '../services/fold_tick_queue.dart';
 import '../services/firebase_service.dart';
+import '../services/hand_log_telemetry.dart';
 import '../services/local_storage_service.dart';
 import '../services/opponent_service.dart';
 import '../services/opponent_stats_service.dart';
@@ -41,6 +44,10 @@ class ActionRecord {
   final double? playerStack;
   final double? amount;
 
+  /// True for actions the app inferred (e.g. the hero fold of a fold tick),
+  /// not logged by the user. Serialised only when true.
+  final bool synthetic;
+
   ActionRecord({
     required this.player,
     required this.action,
@@ -53,6 +60,7 @@ class ActionRecord {
     this.playerPosition,
     this.playerStack,
     this.amount,
+    this.synthetic = false,
   });
 
   Map<String, dynamic> toMap() {
@@ -68,6 +76,7 @@ class ActionRecord {
       'playerPosition': playerPosition,
       'playerStack': playerStack,
       'amount': amount,
+      if (synthetic) 'synthetic': true,
     };
   }
 
@@ -84,6 +93,7 @@ class ActionRecord {
       playerPosition: map['playerPosition'],
       playerStack: map['playerStack']?.toDouble(),
       amount: map['amount']?.toDouble(),
+      synthetic: map['synthetic'] == true,
     );
   }
 }
@@ -218,6 +228,18 @@ class HandRecord {
   /// session summary. See PokerSessionManager scouting flow.
   bool isScouted = false;
 
+  /// How complete this record is (see docs/hand-logging-completeness.md).
+  /// Default `full` = today's behaviour. Only serialised when not full.
+  HandCompleteness completeness = HandCompleteness.full;
+
+  /// Stub metadata for flagged hands: {tags, source, flaggedAt, heroStackBB,
+  /// stackDeltaBB?, bigBlind, smallBlind, stacks}. Null for normal hands.
+  Map<String, dynamic>? flagMeta;
+
+  /// False only for stubs whose stats were not applied yet. Promotion flips it
+  /// exactly once (guards against double counting).
+  bool statsApplied = true;
+
   /// Storage identifiers, assigned AFTER the hand is saved (HL-5: needed to
   /// UPDATE the persisted record when shown cards are recorded during the
   /// settling overlay). In-memory only — the Firestore doc id IS the id.
@@ -321,6 +343,9 @@ class HandRecord {
       'isScouted': isScouted,
       'tags': tags,
       'notes': notes,
+      if (completeness != HandCompleteness.full) 'completeness': completeness.wire,
+      if (flagMeta != null) 'flag': flagMeta,
+      if (!statsApplied) 'statsApplied': false,
     };
   }
 
@@ -369,6 +394,11 @@ class HandRecord {
     hand.isScouted = map['isScouted'] ?? false;
     hand.tags = List<String>.from(map['tags'] ?? []);
     hand.notes = map['notes'];
+    hand.completeness = HandCompletenessX.parse(map['completeness']);
+    hand.flagMeta = map['flag'] is Map
+        ? Map<String, dynamic>.from(map['flag'] as Map)
+        : null;
+    hand.statsApplied = map['statsApplied'] ?? true;
 
     return hand;
   }
@@ -404,6 +434,18 @@ class RebuyRecord {
       handNumber: map['handNumber'] ?? 0,
     );
   }
+}
+
+class _FoldTickPayload {
+  final HandRecord record;
+  final HandRecord? consumedHand;
+  final int prevLastHandNumber;
+  _FoldTickPayload(this.record, this.consumedHand, this.prevLastHandNumber);
+
+  /// Hero stack before / after the tick (set by the screen once the table has
+  /// advanced). Null = unknown: no stack-history entry is written.
+  double? stackBefore;
+  double? stackAfter;
 }
 
 class PokerSessionManager {
@@ -457,6 +499,53 @@ class PokerSessionManager {
   // hand record, so exports/analytics need this counter to compute honest
   // VPIP/PFR denominators (hands dealt, not just hands logged).
   int skippedHands = 0;
+
+  // ── Easy hand logging (completeness levels) ─────────────────────────
+  /// Recall mode: a throw-away manager used to re-log a flagged hand. It has no
+  /// session id, writes nothing and never touches opponents.
+  bool isRecall = false;
+  int _lastHandNumber = 0;
+
+  /// True once a fold tick, flag or typed hand used a hand number. Until then
+  /// rebuy hand numbers keep today's `completedHands.length + 1` rule.
+  bool _nonFullUsed = false;
+  int _foldTickCount = 0;
+  int _flagsOpen = 0;
+
+  /// Extra props for the NEXT `hand_logged` event (set by the screen from its
+  /// HandLogTelemetry; consumed and cleared by [_saveHandToFirebase]).
+  Map<String, Object>? nextHandAnalyticsExtras;
+
+  /// Test seam: replaces the storage write of non-full records.
+  @visibleForTesting
+  Future<void> Function(HandRecord hand)? persistOverride;
+
+  FoldTickQueue? _foldTickQueue;
+
+  /// Deferred-commit queue for fold ticks (4 s undo window). Lazily created.
+  FoldTickQueue get foldTickQueue => _foldTickQueue ??= FoldTickQueue(
+      commit: (tick) async {
+        final payload = tick.payload;
+        if (payload is _FoldTickPayload) {
+          await _commitFoldTick(payload.record, payload: payload);
+        }
+      });
+
+  /// The hand that was in progress when the last UNDONE tick was enqueued
+  /// (null if none). The screen restores its UI state from its own snapshot;
+  /// this lets it re-adopt the logged actions.
+  HandRecord? lastUndoneLiveHand;
+
+  /// Fold ticks committed in this session.
+  int get foldTickCount => _foldTickCount;
+
+  /// Flagged stubs created in this session that are not resolved yet.
+  int get flagsOpenCount => _flagsOpen;
+
+  /// Called when a stub was promoted or discarded.
+  void flagResolved() {
+    if (_flagsOpen > 0) _flagsOpen--;
+  }
 
   // True when this session was started during the first-run tour. Its hands
   // are persisted (session history must show them) but excluded from all
@@ -577,6 +666,8 @@ class PokerSessionManager {
         currentHand = null;
       }
     }
+
+    if (handNumber > _lastHandNumber) _lastHandNumber = handNumber;
 
     // Update current button position and blind positions
     this.buttonPosition = buttonPosition;
@@ -957,9 +1048,359 @@ class PokerSessionManager {
     currentHand = null;
   }
 
+  // ── Easy hand logging: non-full records ─────────────────────────────
+
+  /// Next hand number to use: above the in-progress hand, every started hand
+  /// (full, fold tick, stub, reconstructed) and every completed hand.
+  int get nextHandNumber {
+    var n = _lastHandNumber;
+    final cur = currentHand?.handNumber ?? 0;
+    if (cur > n) n = cur;
+    for (final h in completedHands) {
+      if (h.handNumber > n) n = h.handNumber;
+    }
+    return n + 1;
+  }
+
+  int get _nextHandNumber => nextHandNumber;
+
+  /// Hero action list entry shared by tick/stub builders.
+  ActionRecord _heroFoldAction(int button) => ActionRecord(
+        player: ourSeatNumber ?? 0,
+        action: PlayerAction.fold,
+        street: BettingRound.preflop,
+        timestamp: DateTime.now(),
+        buttonPosition: button,
+        playerName: ourSeatNumber != null ? getPlayerName(ourSeatNumber!) : null,
+        playerId: _heroUserId(),
+        isCurrentUser: true,
+        playerPosition: _heroPositionFor(button),
+        playerStack: ourSeatNumber != null ? playerStacks[ourSeatNumber!] : null,
+        synthetic: true,
+      );
+
+  String? _heroUserId() {
+    try {
+      return FirebaseAuth.instance.currentUser?.uid;
+    } catch (_) {
+      return null; // Firebase not initialised (tests)
+    }
+  }
+
+  String? _heroPositionFor(int button) {
+    final seat = ourSeatNumber;
+    if (seat == null) return null;
+    return PokerPositions.getPositionNameForActivePlayers(
+        seat, button, activeSeats.toList());
+  }
+
+  /// Rotates the button to the next active seat (used only when a tick or
+  /// stub is recorded without a hand in progress).
+  int _rotatedButton() {
+    final seats = activeSeats.toList()..sort();
+    if (seats.isEmpty) return buttonPosition;
+    return seats.firstWhere((x) => x > buttonPosition, orElse: () => seats.first);
+  }
+
+  /// Pure: the base record for a tick/stub. Reuses the in-progress hand's
+  /// number and button; otherwise takes the next REAL hand number and rotates
+  /// the button (range-grid dedupe key is `{session}:{handNumber}`).
+  HandRecord _buildBaseRecord() {
+    final live = currentHand;
+    final inProgress = live != null && live.state == HandState.inProgress;
+    final number = inProgress ? live.handNumber : _nextHandNumber;
+    final button = inProgress ? live.buttonPosition : _rotatedButton();
+    final record = HandRecord(
+      handNumber: number,
+      buttonPosition: button,
+      playerCount: playerCount,
+      startTime: inProgress ? live.startTime : DateTime.now(),
+      heroSeatNumber: ourSeatNumber,
+      heroPositionName:
+          inProgress ? live.heroPositionName : _heroPositionFor(button),
+    );
+    record.tableNumber = currentTableNumber;
+    if (inProgress) {
+      record.ourHoleCards = live.ourHoleCards;
+      record.actions.addAll(live.actions);
+    }
+    return record;
+  }
+
+  /// Builds the fold-tick record (no I/O).
+  @visibleForTesting
+  HandRecord buildFoldTickRecord({HoleCards? heroCards}) {
+    final r = _buildBaseRecord();
+    r.completeness = HandCompleteness.foldTick;
+    if (heroCards != null) r.ourHoleCards = heroCards;
+    r.actions
+      ..clear()
+      ..add(_heroFoldAction(r.buttonPosition));
+    r.endTime = DateTime.now();
+    return r;
+  }
+
+  /// Captures a tick NOW (hand number, button, hero cards frozen at tap time)
+  /// and defers the commit by the undo window. Counters, stats and storage are
+  /// only touched on commit, so an undo never needs a stats reversal.
+  PendingFoldTick enqueueFoldTick({HoleCards? heroCards}) {
+    final live = currentHand;
+    final prevLast = _lastHandNumber;
+    _nonFullUsed = true;
+    final record = buildFoldTickRecord(heroCards: heroCards);
+    final consumed = (live != null &&
+            live.state == HandState.inProgress &&
+            live.handNumber == record.handNumber)
+        ? live
+        : null;
+    _consumeInProgressHand(record);
+    return foldTickQueue.enqueue(
+      heroCards: heroCards,
+      payload: _FoldTickPayload(record, consumed, prevLast),
+    );
+  }
+
+  /// Tells a queued tick the hero stack before and after it (after the screen
+  /// advanced the table). The tick then writes a `fold_run` history entry.
+  void noteFoldTickStack(PendingFoldTick tick,
+      {required double before, required double after}) {
+    final p = tick.payload;
+    if (p is _FoldTickPayload) {
+      p.stackBefore = before;
+      p.stackAfter = after;
+    }
+  }
+
+  /// Cancels the newest uncommitted tick. True if something was undone.
+  bool undoLastFoldTick() {
+    final pending = _foldTickQueue?.newestPending;
+    final ok = _foldTickQueue?.undoLast() ?? false;
+    final payload = pending?.payload;
+    if (ok && payload is _FoldTickPayload) {
+      _lastHandNumber = payload.prevLastHandNumber;
+      lastUndoneLiveHand = payload.consumedHand;
+      if (currentHand == null && payload.consumedHand != null) {
+        currentHand = payload.consumedHand;
+      }
+    }
+    return ok;
+  }
+
+  /// Records a fold tick immediately (no undo window). `totalHands + 1` and
+  /// `skippedHands + 1`, exactly like the legacy Skip hand. Takes a real
+  /// incremented hand number. Does not touch [completedHands], biggest pot or
+  /// stack history.
+  Future<HandRecord> recordFoldTick({HoleCards? heroCards}) async {
+    _nonFullUsed = true;
+    final record = buildFoldTickRecord(heroCards: heroCards);
+    _consumeInProgressHand(record);
+    await _commitFoldTick(record);
+    return record;
+  }
+
+  Future<void> _commitFoldTick(HandRecord record,
+      {_FoldTickPayload? payload}) async {
+    skippedHands++;
+    _foldTickCount++;
+    HandLogTelemetry.captureFoldTick();
+    await _persistNonFull(record);
+    final after = payload?.stackAfter;
+    if (after != null) {
+      _addFoldRun(record.handNumber, payload!.stackBefore ?? after, after);
+      await _persistTimeline();
+    }
+  }
+
+  /// Saves the stack history; a storage failure never breaks logging.
+  Future<void> _persistTimeline() async {
+    try {
+      await _updateSessionProgress();
+    } catch (e, st) {
+      await LoggerService.error('Stack timeline save failed', e, st);
+    }
+  }
+
+  /// Fold ticks as ONE history entry per run: consecutive ticks coalesce into
+  /// the previous `fold_run` (`count`, `changeAmount` = blinds lost,
+  /// `stackSize` = live stack after the last tick, `handNumber` = last tick).
+  void _addFoldRun(int handNumber, double before, double after) {
+    final cost = before > after ? before - after : 0.0;
+    final last = stackHistory.isNotEmpty ? stackHistory.last : null;
+    if (last != null && last['changeType'] == 'fold_run') {
+      final prev = (last['handNumber'] as num?)?.toInt() ?? 0;
+      last['handNumber'] = handNumber > prev ? handNumber : prev;
+      last['stackSize'] = after;
+      last['count'] = ((last['count'] as num?)?.toInt() ?? 1) + 1;
+      last['changeAmount'] = ((last['changeAmount'] as num?)?.toDouble() ?? 0) + cost;
+      last['timestamp'] = DateTime.now().toIso8601String();
+      return;
+    }
+    stackHistory.add({
+      'timestamp': DateTime.now().toIso8601String(),
+      'stackSize': after,
+      'changeType': 'fold_run',
+      'changeAmount': cost,
+      'handNumber': handNumber,
+      'count': 1,
+    });
+  }
+
+  /// Builds a flagged stub (no I/O). [tags] are capped at 3.
+  @visibleForTesting
+  HandRecord buildFlagRecord({
+    List<String> tags = const [],
+    HoleCards? heroCards,
+    String source = 'flag',
+    double? stackDeltaBB,
+    Map<String, dynamic>? tableSnapshot,
+  }) {
+    final r = _buildBaseRecord();
+    r.completeness = HandCompleteness.flagged;
+    r.statsApplied = false;
+    if (heroCards != null) r.ourHoleCards = heroCards;
+    final seat = ourSeatNumber;
+    final heroStack = seat != null ? playerStacks[seat] : null;
+    r.flagMeta = {
+      'tags': tags.take(3).toList(),
+      'source': source,
+      'flaggedAt': DateTime.now().toIso8601String(),
+      if (heroStack != null && bigBlind > 0) 'heroStackBB': heroStack / bigBlind,
+      if (stackDeltaBB != null) 'stackDeltaBB': stackDeltaBB,
+      'bigBlind': bigBlind,
+      'smallBlind': smallBlind,
+      'gameType': gameType.name,
+      'stacks': playerStacks.map((k, v) => MapEntry(k.toString(), v)),
+      if (tableSnapshot != null) 'table': tableSnapshot,
+    };
+    r.endTime = DateTime.now();
+    return r;
+  }
+
+  /// Saves a flagged stub. Bypasses the "empty hand is never saved" rule on
+  /// purpose (I36): stubs have no actions. Applies NO stats (I31).
+  Future<HandRecord> recordFlag({
+    List<String> tags = const [],
+    HoleCards? heroCards,
+    String source = 'flag',
+    double? stackDeltaBB,
+    Map<String, dynamic>? tableSnapshot,
+  }) async {
+    final record = buildFlagRecord(
+      tags: tags,
+      heroCards: heroCards,
+      source: source,
+      stackDeltaBB: stackDeltaBB,
+      tableSnapshot: tableSnapshot,
+    );
+    _nonFullUsed = true;
+    _consumeInProgressHand(record);
+    _flagsOpen++;
+    HandLogTelemetry.captureHandFlagged(
+        (record.flagMeta?['tags'] as List?)?.cast<String>() ?? const []);
+    await _persistNonFull(record);
+    _addPendingEntry(record, tableSnapshot);
+    await _persistTimeline();
+    return record;
+  }
+
+  /// `pending` history entry for a flagged hand: `stackSize` = hero stack at
+  /// the START of that hand, `flagId` = hand doc id, `bigBlind` for BB views.
+  void _addPendingEntry(HandRecord record, Map<String, dynamic>? table) {
+    final start = _flagHeroStartStack(table);
+    if (start == null) return;
+    stackHistory.add({
+      'timestamp': DateTime.now().toIso8601String(),
+      'stackSize': start,
+      'changeType': 'pending',
+      'changeAmount': 0.0,
+      'handNumber': record.handNumber,
+      'flagId': record.cloudHandId ?? record.localHandId,
+      'bigBlind': bigBlind,
+    });
+  }
+
+  double? _flagHeroStartStack(Map<String, dynamic>? table) {
+    final hero = ourSeatNumber;
+    if (hero == null) return null;
+    final seats = table?['seats'];
+    if (seats is List) {
+      for (final s in seats) {
+        if (s is Map && s['seat'] == hero && s['stack'] is num) {
+          return (s['stack'] as num).toDouble();
+        }
+      }
+    }
+    return playerStacks[hero];
+  }
+
+  /// A flag was discarded: its `pending` entry (matched by [flagId]) is marked
+  /// `discarded: true` and the session is saved.
+  Future<void> markFlagDiscarded(String? flagId) async {
+    if (flagId == null) return;
+    var changed = false;
+    for (final e in stackHistory) {
+      if (e['changeType'] == 'pending' && e['flagId'] == flagId) {
+        e['discarded'] = true;
+        changed = true;
+      }
+    }
+    if (changed) await _persistTimeline();
+  }
+
+  /// Number of the last hand that actually happened (ticks, flags, typed and
+  /// full hands count; a dealt hand with no action yet does not). Manual stack
+  /// updates written under easy logging use it as their `handNumber`.
+  int get lastHandNumber {
+    final n = nextHandNumber - 1;
+    final cur = currentHand;
+    if (cur != null &&
+        cur.state == HandState.inProgress &&
+        cur.actions.isEmpty &&
+        cur.handNumber == n) {
+      return n - 1;
+    }
+    return n;
+  }
+
+  /// Saves a hand typed from memory (completeness reconstructed). Runs the
+  /// full stats once (opponents excluded via kReconstructedFeedsOpponents).
+  Future<HandRecord> recordReconstructed(HandRecord built) async {
+    built.completeness = HandCompleteness.reconstructed;
+    built.statsApplied = true;
+    _nonFullUsed = true;
+    if (built.handNumber > _lastHandNumber) _lastHandNumber = built.handNumber;
+    await _persistNonFull(built);
+    return built;
+  }
+
+  /// A tick/stub replaces the hand that was in progress at the moment it was
+  /// recorded; the screen then starts the next hand itself.
+  void _consumeInProgressHand(HandRecord record) {
+    if (record.handNumber > _lastHandNumber) _lastHandNumber = record.handNumber;
+    final live = currentHand;
+    if (live != null &&
+        live.state == HandState.inProgress &&
+        live.handNumber == record.handNumber) {
+      currentHand = null;
+    }
+  }
+
+  Future<void> _persistNonFull(HandRecord record) async {
+    record.state = HandState.completed;
+    final override = persistOverride;
+    if (override != null) {
+      await override(record);
+    } else {
+      await _saveHandToFirebase(record);
+    }
+    record.markSaved();
+  }
+
   // Save a completed hand to both Firebase and local storage
   Future<void> _saveHandToFirebase(HandRecord hand, {bool skipHeroStats = false}) async {
     if (sessionId == null) return;
+    final analyticsExtras = nextHandAnalyticsExtras;
+    nextHandAnalyticsExtras = null;
     // Knowledge-Base replay hands are never persisted
     if (OnboardingState.isGuidedHandActive && OnboardingState.isReplay) return;
     // First-run tour hands ARE persisted (so the tour can show them in session
@@ -1005,6 +1446,9 @@ class PokerSessionManager {
       isScouted: hand.isScouted,
       tags: hand.tags,
       notes: hand.notes,
+      completeness: hand.completeness,
+      statsApplied: hand.statsApplied,
+      flagMeta: hand.flagMeta,
     );
 
     hand.localHandId = localHandId;
@@ -1068,6 +1512,9 @@ class PokerSessionManager {
         playerIds: playerIds.isNotEmpty ? playerIds : null,
         skipStats: skipStats,
         skipHeroStats: skipHeroStats,
+        completeness: hand.completeness,
+        flagMeta: hand.flagMeta,
+        analyticsExtras: analyticsExtras,
       );
 
       hand.cloudHandId = cloudHandId;
@@ -1090,15 +1537,38 @@ class PokerSessionManager {
   }
 
   // Add stack history entry
-  void _addStackHistoryEntry(double stackSize, String changeType, double changeAmount, int handNumber) {
-    final entry = {
+  void _addStackHistoryEntry(double stackSize, String changeType, double changeAmount, int handNumber,
+      {Map<String, dynamic>? extra}) {
+    final entry = <String, dynamic>{
       'timestamp': DateTime.now().toIso8601String(),
       'stackSize': stackSize,
       'changeType': changeType,
       'changeAmount': changeAmount,
       'handNumber': handNumber,
+      if (extra != null) ...extra,
     };
     stackHistory.add(entry);
+  }
+
+  /// Easy logging: with flags open, the session-end sheet's cash-out is the
+  /// truth. Rewrites the last `final` entry (or adds one) so the chart anchor
+  /// matches the P/L, then saves the history.
+  Future<void> applyFinalStackAnchor(double finalStack) async {
+    final i = stackHistory.lastIndexWhere((e) => e['changeType'] == 'final');
+    final before = i >= 0 ? stackHistory.sublist(0, i) : stackHistory;
+    final prev = before.isNotEmpty
+        ? (before.last['stackSize'] as num).toDouble()
+        : finalStack;
+    if (i >= 0) {
+      stackHistory[i]['stackSize'] = finalStack;
+      stackHistory[i]['changeAmount'] = (finalStack - prev).abs();
+    } else if (finalStack != prev || stackHistory.isEmpty) {
+      _addStackHistoryEntry(
+          finalStack, 'final', (finalStack - prev).abs(), completedHands.length);
+    } else {
+      return;
+    }
+    await _persistTimeline();
   }
 
   // Add final stack entry before ending session
@@ -1132,20 +1602,26 @@ class PokerSessionManager {
       await LoggerService.error('Error updating session progress in Firebase', e, StackTrace.current);
     }
 
-    // Always update local storage with stack history, totalBuyIn, and stats
-    await LocalStorageService.updateSession(
-      sessionId: sessionId!,
-      handsLogged: completedHands.length,
-      biggestPot: biggestPot,
-      stackHistory: stackHistory,
-      totalBuyIn: totalBuyIn,
-    );
+    // Always update local storage with stack history, totalBuyIn, and stats.
+    // Dual storage: a local SQLite failure must never block ending a session
+    // (the cloud copy above is already saved).
+    try {
+      await LocalStorageService.updateSession(
+        sessionId: sessionId!,
+        handsLogged: completedHands.length,
+        biggestPot: biggestPot,
+        stackHistory: stackHistory,
+        totalBuyIn: totalBuyIn,
+      );
+    } catch (e) {
+      await LoggerService.error('Error updating session locally', e, StackTrace.current);
+    }
   }
 
   // Update opponent lastSeenAt timestamp for completed hand
   // NOTE: Statistical updates happen via _updateOptimizedStats() which updates OpponentStats
   Future<void> _updateOpponentStats() async {
-    if (currentHand == null) return;
+    if (currentHand == null || isRecall) return;
 
     try {
       // Get all player names from active seats who are not the hero
@@ -1175,6 +1651,9 @@ class PokerSessionManager {
 
   // End the session
   Future<void> endSession() async {
+    // Commit any fold tick still inside its undo window.
+    await _foldTickQueue?.flushAll();
+
     // Complete current hand if active and has actions, otherwise discard empty hand
     if (currentHand != null && currentHand!.state == HandState.inProgress) {
       if (currentHand!.actions.isNotEmpty) {
@@ -1209,22 +1688,29 @@ class PokerSessionManager {
   }
 
   // Add a rebuy to the session
+  /// [stackBefore] (easy logging, flags open): what the hero held before the
+  /// rebuy, stored on the history entry so the chart can draw the step.
   void addRebuy({
     required double amount,
     required double stack,
+    double? stackBefore,
   }) {
+    // Today's rule until a tick/flag/typed hand used a number; then the real
+    // hand sequence.
+    final handNo = _nonFullUsed ? nextHandNumber : completedHands.length + 1;
     final rebuy = RebuyRecord(
       timestamp: DateTime.now(),
       amount: amount,
       stack: stack,
-      handNumber: completedHands.length + 1, // Next hand number
+      handNumber: handNo,
     );
 
     rebuys.add(rebuy);
     totalBuyIn += amount;
 
     // Add stack history entry for rebuy
-    _addStackHistoryEntry(stack, 'rebuy', amount, completedHands.length + 1);
+    _addStackHistoryEntry(stack, 'rebuy', amount, handNo,
+        extra: stackBefore == null ? null : {'stackBefore': stackBefore});
 
 
     // Update session immediately with new totalBuyIn

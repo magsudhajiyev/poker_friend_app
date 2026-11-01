@@ -99,6 +99,18 @@ Status: ✅ tested · ⚠️ enforced but untested · ❌ nothing protects it
 | I28 | Busted players deactivated only at hand boundary, never mid-hand | pgs:96-97, 1102, 1108 | ⚠️ |
 | I29 | Chop vs split: `isSplitPot` distinguishes side-pot wins from chopped single pot; `winnerId` = largest-pot winner | hsm:203-205, 873-875 | ✅ partial (multi_pot_winner_aggregation) |
 
+**Easy hand logging — completeness levels (flag `easy_hand_logging`; see `docs/hand-logging-completeness.md`)**
+
+| # | Invariant | Where | Tested |
+|---|---|---|---|
+| I30 | A flagged stub's stats apply EXACTLY ONCE, at promotion, guarded by `statsApplied` (flipped in a Firestore transaction BEFORE the stats call; a failure under-counts, never double-counts) | hand_promotion_service `promote`, firebase_service `claimStubPromotion` | ✅ hand_promotion_test |
+| I31 | Stubs (`flagged`) never reach `updateStatsAtomic`; the only hand-stat callers are the allow-listed sites | firebase_service `_applyStatsForSavedHand` | ✅ completeness_gating_test (allow-list) |
+| I32 | A fold tick adds `totalHands + 1` and `skippedHands + 1` (position stays null), exactly like the legacy Skip hand | `HeroHandDelta.foldTick`, `_updateSessionCounters` | ✅ hand_stats_plan_test |
+| I33 | Session `totalHands` and `walksCount` change at promotion only for a stub (a BB-walk stub adds `walksCount` when promoted) | hand_promotion_service, `computeHeroDelta` | ✅ |
+| I34 | Ticks and stubs take REAL incremented hand numbers (range-grid dedupe key `{sessionId}:{handNumber}`) | `PokerSessionManager._buildBaseRecord` | ✅ hand_promotion_test |
+| I35 | Non-full hands are excluded from analysis consumers per the gating matrix (leaks, AI, exports, summary best/worst, history) | leak_extractor, exports, hand_actions_screen, history screens | ✅ completeness_gating_test |
+| I36 | Empty-actions stubs are allowed ONLY through `PokerSessionManager.recordFlag` (bypasses the "empty hand is never saved" rule on purpose) | hand_state_machine `recordFlag` | ✅ |
+
 ### UI flow invariants
 | # | Invariant | Enforced at | Test |
 |---|---|---|---|

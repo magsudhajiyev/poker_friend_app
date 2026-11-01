@@ -3,12 +3,14 @@ import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/poker_game_state.dart';
 import '../models/game_types.dart';
+import '../models/hand_completeness.dart';
 import 'auth_service.dart';
 import 'display_identity_service.dart';
 import 'local_storage_service.dart';
 import 'logger_service.dart';
 import 'opponent_service.dart';
 import 'opponent_stats_service.dart';
+import 'hand_stats_plan.dart';
 import 'stats_calculator.dart';
 import 'user_stats_service.dart';
 import 'app_data_cache.dart';
@@ -171,6 +173,12 @@ class FirebaseService {
     // Skip only the HERO's user-stats for this hand (opponent stats still run).
     // Used for pure-scout hands where the hero folded without entering the pot.
     bool skipHeroStats = false,
+    // Easy-logging completeness level (default full = legacy behaviour).
+    HandCompleteness completeness = HandCompleteness.full,
+    // Stub metadata (flagged hands only).
+    Map<String, dynamic>? flagMeta,
+    // Extra props merged into the single `hand_logged` event (package B).
+    Map<String, Object>? analyticsExtras,
   }) async {
     try {
       final handData = {
@@ -279,6 +287,17 @@ class FirebaseService {
         handData['isScouted'] = true;
       }
 
+      // Completeness is written only when not full: legacy docs stay identical.
+      if (completeness != HandCompleteness.full) {
+        handData['completeness'] = completeness.wire;
+      }
+      if (flagMeta != null) {
+        handData['flag'] = flagMeta;
+      }
+      if (completeness.isStub) {
+        handData['statsApplied'] = false;
+      }
+
       if (tags != null && tags.isNotEmpty) {
         handData['tags'] = tags;
       }
@@ -306,48 +325,25 @@ class FirebaseService {
       AnalyticsService.capture('hand_logged', {
         'is_scouted': isScouted,
         if (gameType != null) 'game_type': gameType,
+        if (completeness != HandCompleteness.full)
+          'completeness': completeness.wire,
+        ...?analyticsExtras,
       });
 
-      // Update session total hands count
-      await _firestore.collection(_sessionsCollection).doc(sessionId).update({
-        'totalHands': FieldValue.increment(1),
-      });
+      await _updateSessionCounters(sessionId, completeness);
 
       if (!skipStats) {
-        // Hero user-stats are skipped for pure-scout hands (hero folded without
-        // entering the pot) — those hands exist only to feed OPPONENT stats.
-        if (!skipHeroStats) {
-          // Check if this is dealer-assisted mode (playerIds present)
-          final isDealerMode = playerIds != null && playerIds.isNotEmpty;
-
-          if (isDealerMode) {
-            // Dealer mode: update stats for ALL seated players (including dealer if playing)
-            final activeSeats = playerNames?.keys.toList() ?? [];
-            await _updateAllPlayerStatsFromHand(
-              actions: actions,
-              playerIds: playerIds,
-              buttonPosition: buttonPosition,
-              activeSeats: activeSeats,
-              winnerId: winnerId,
-              choppedWinners: choppedWinners,
-            );
-          } else {
-            // Normal mode: update stats for hero only
-            await _updateUserStatsFromHand(
-              actions: actions,
-              heroPositionName: heroPositionName,
-              heroSeatNumber: heroSeatNumber,
-              winnerId: winnerId,
-              playerNames: playerNames,
-              choppedWinners: choppedWinners,
-            );
-          }
-        }
-
-        // Update opponent statistics incrementally (runs even for scout hands).
-        await updateOpponentStatsFromHand(
+        await _applyStatsForSavedHand(
+          completeness: completeness,
+          skipHeroStats: skipHeroStats,
           actions: actions,
+          heroPositionName: heroPositionName,
+          heroSeatNumber: heroSeatNumber,
+          winnerId: winnerId,
           playerNames: playerNames,
+          playerIds: playerIds,
+          buttonPosition: buttonPosition,
+          choppedWinners: choppedWinners,
           reachedShowdown: reachedShowdown,
         );
       }
@@ -374,6 +370,135 @@ class FirebaseService {
       await LoggerService.error('Error saving hand', e, StackTrace.current);
       rethrow;
     }
+  }
+
+  /// Session counters per completeness: ticks bump `skippedHands`, stubs
+  /// bump nothing, every counting level bumps `totalHands`.
+  static Future<void> _updateSessionCounters(
+      String sessionId, HandCompleteness completeness) async {
+    final ref = _firestore.collection(_sessionsCollection).doc(sessionId);
+    if (completeness == HandCompleteness.foldTick) {
+      await ref.update({'skippedHands': FieldValue.increment(1)});
+    } else if (completeness != HandCompleteness.flagged) {
+      await ref.update({'totalHands': FieldValue.increment(1)});
+    }
+  }
+
+  /// Hero + opponent stats for a freshly saved hand, gated by completeness.
+  /// Stubs (flagged) never reach any stats call.
+  static Future<void> _applyStatsForSavedHand({
+    required HandCompleteness completeness,
+    required bool skipHeroStats,
+    required List<Map<String, dynamic>> actions,
+    required String? heroPositionName,
+    required int? heroSeatNumber,
+    required int? winnerId,
+    required Map<int, String>? playerNames,
+    required Map<int, String>? playerIds,
+    required int buttonPosition,
+    required List<int>? choppedWinners,
+    required bool? reachedShowdown,
+  }) async {
+    final mode = heroModeFor(completeness);
+    if (mode == HeroStatsMode.none) return;
+    if (!skipHeroStats) {
+      if (mode == HeroStatsMode.totalsOnly) {
+        final userId = AuthService.userId;
+        if (userId != null) {
+          await applyHeroDelta(userId, HeroHandDelta.foldTick);
+        }
+      } else if (completeness == HandCompleteness.full &&
+          playerIds != null &&
+          playerIds.isNotEmpty) {
+        // Dealer mode: stats for ALL seated players (full hands only).
+        await _updateAllPlayerStatsFromHand(
+          actions: actions,
+          playerIds: playerIds,
+          buttonPosition: buttonPosition,
+          activeSeats: playerNames?.keys.toList() ?? [],
+          winnerId: winnerId,
+          choppedWinners: choppedWinners,
+        );
+      } else {
+        await _updateUserStatsFromHand(
+          actions: actions,
+          heroPositionName: heroPositionName,
+          heroSeatNumber: heroSeatNumber,
+          winnerId: winnerId,
+          playerNames: playerNames,
+          choppedWinners: choppedWinners,
+          mode: mode,
+        );
+      }
+    }
+    if (opponentsFeedFor(completeness)) {
+      await updateOpponentStatsFromHand(
+        actions: actions,
+        playerNames: playerNames,
+        reachedShowdown: reachedShowdown,
+      );
+    }
+  }
+
+  /// Transactional claim for stub promotion. Reads `statsApplied` on the hand
+  /// doc: if it is already true returns false and writes nothing; otherwise
+  /// writes [fields] + `completeness:'reconstructed'` + `statsApplied:true`
+  /// and returns true. The flip happens BEFORE any stats call, so a later
+  /// failure under-counts but can never double-count.
+  static Future<bool> claimStubPromotion({
+    required String sessionId,
+    required String handId,
+    required Map<String, dynamic> fields,
+  }) async {
+    final ref = _firestore
+        .collection(_sessionsCollection)
+        .doc(sessionId)
+        .collection(_handsCollection)
+        .doc(handId);
+    return _firestore.runTransaction<bool>((tx) async {
+      final snap = await tx.get(ref);
+      final data = snap.data();
+      if (!snap.exists || data == null) return false;
+      if (data['statsApplied'] == true) return false;
+      if (HandCompletenessX.parse(data['completeness']) !=
+          HandCompleteness.flagged) {
+        return false;
+      }
+      tx.update(ref, {
+        ...fields,
+        'completeness': HandCompleteness.reconstructed.wire,
+        'statsApplied': true,
+        'promotedAt': FieldValue.serverTimestamp(),
+      });
+      return true;
+    });
+  }
+
+  /// Session `totalHands + 1` (used once at promotion).
+  static Future<void> incrementSessionTotalHands(String sessionId) {
+    return _firestore
+        .collection(_sessionsCollection)
+        .doc(sessionId)
+        .update({'totalHands': FieldValue.increment(1)});
+  }
+
+  /// Promotion of a flagged stub: the full hero computation, run ONCE by
+  /// HandPromotionService after the `statsApplied` flip.
+  static Future<void> applyStatsForPromotedHand({
+    required List<Map<String, dynamic>> actions,
+    required String? heroPositionName,
+    required int? heroSeatNumber,
+    required int? winnerId,
+    List<int>? choppedWinners,
+  }) {
+    return _updateUserStatsFromHand(
+      actions: actions,
+      heroPositionName: heroPositionName,
+      heroSeatNumber: heroSeatNumber,
+      winnerId: winnerId,
+      playerNames: null,
+      choppedWinners: choppedWinners,
+    );
   }
 
   /// HL-5: update a saved hand's showdown data (opponent showed cards after
@@ -1453,8 +1578,9 @@ class FirebaseService {
     }
   }
 
-  /// Update user statistics from hand data incrementally
-  /// Updated to support full 7-metric parity with opponent stats
+  /// Update user statistics from hand data incrementally.
+  /// The arithmetic lives in the pure [computeHeroDelta] (hand_stats_plan.dart);
+  /// [mode] restricts which counters a hand may touch (completeness gating).
   static Future<void> _updateUserStatsFromHand({
     required List<Map<String, dynamic>> actions,
     required String? heroPositionName,
@@ -1462,119 +1588,52 @@ class FirebaseService {
     required int? winnerId,
     required Map<int, String>? playerNames,
     List<int>? choppedWinners,
+    HeroStatsMode mode = HeroStatsMode.full,
   }) async {
     final userId = AuthService.userId;
     if (userId == null || heroPositionName == null || heroSeatNumber == null) return;
 
     try {
-      // Initialize user stats if they don't exist
       await UserStatsService.initializeUserStats(userId);
-
-      // Analyze user's actions in this hand
-      bool didPlay = false;
-      bool didVpip = false;
-      bool didPfr = false;
-      bool didThreeBet = false;
-      bool didWin = false;
-
-      // Check if user won this hand (compare seat numbers, including chopped pots)
-      if ((winnerId != null && winnerId == heroSeatNumber) ||
-          (choppedWinners?.contains(heroSeatNumber) ?? false)) {
-        didWin = true;
-      }
-
-      // Analyze user's actions
-      for (final action in actions) {
-        final playerId = action['player'] as int?;
-        final actionType = action['action']?.toString().toLowerCase() ?? '';
-        final street = action['street']?.toString().toLowerCase() ?? '';
-
-        if (playerId != heroSeatNumber) continue;
-
-        // didPlay = any voluntary action (not just blind posts)
-        // This includes: call, bet, raise, all-in, check on any street
-        if (actionType == 'call' || actionType == 'bet' || actionType == 'raise' || actionType == 'all-in' || actionType == 'check') {
-          didPlay = true;
-        }
-
-        // VPIP and PFR only apply to preflop
-        if (street == 'preflop') {
-          if (actionType == 'bet' || actionType == 'call' || actionType == 'raise' || actionType == 'all-in') {
-            // VPIP = voluntarily put money in (excludes blind posts)
-            if (!StatsCalculator.isBlindAction(action)) {
-              didVpip = true;
-            }
-            // PFR = preflop raise
-            if (actionType == 'bet' || actionType == 'raise' || actionType == 'all-in') {
-              didPfr = true;
-            }
-          }
-        }
-      }
-
-      // Check for 3-bet (re-raise after seeing opponent's raise)
-      if (didPlay) {
-        didThreeBet = StatsCalculator.didPlayerThreeBet(actions, heroSeatNumber);
-      }
-
-      // === Advanced stat detection using helper methods (7-metric parity) ===
-
-      // Walk detection: Everyone folded to BB
-      final isWalk = StatsCalculator.isWalkHand(actions);
-      final isBBAndWalk = isWalk && StatsCalculator.isBigBlind(actions, heroSeatNumber);
-
-      // 3-Bet opportunity: Hero faced a raise pre-flop
-      final had3BetOpportunity = StatsCalculator.hadThreeBetOpportunity(actions, heroSeatNumber);
-
-      // Fold to 3-Bet: Hero raised, faced 3-bet, and folded
-      final didFoldTo3Bet = StatsCalculator.didFoldTo3Bet(actions, heroSeatNumber);
-      final facedA3Bet = StatsCalculator.facedThreeBet(actions, heroSeatNumber);
-
-      // C-Bet: Hero was last aggressor pre-flop and saw flop
-      final hadCbetOpp = StatsCalculator.hadCbetOpportunity(actions, heroSeatNumber);
-      final didCbet = hadCbetOpp && StatsCalculator.didCbet(actions, heroSeatNumber);
-
-      // Steal: Hero in CO/BTN/SB with unopened pot
-      final hadStealOpp = StatsCalculator.hadStealOpportunity(actions, heroSeatNumber);
-      final didSteal = hadStealOpp && StatsCalculator.didSteal(actions, heroSeatNumber);
-
-      // Check/Raise on flop: Hero checked, faced bet, raised
-      final hadCRFlopOpp = StatsCalculator.hadCheckRaiseFlopOpportunity(actions, heroSeatNumber);
-      final didCRFlop = hadCRFlopOpp && StatsCalculator.didCheckRaiseFlop(actions, heroSeatNumber);
-
-      // Blind Defend: Hero in BB/SB faced a raise and called/raised
-      final hadBlindDefendOpp = StatsCalculator.hadBlindDefendOpportunity(actions, heroSeatNumber);
-      final didBlindDefend = hadBlindDefendOpp && StatsCalculator.didBlindDefend(actions, heroSeatNumber);
-
-      // Update user stats atomically with all 7 metrics
-      await UserStatsService.updateStatsAtomic(
-        userId: userId,
-        totalHandsDelta: 1, // Always increment total hands
-        walksDelta: isBBAndWalk ? 1 : 0,
-        handsDelta: didPlay ? 1 : 0,
-        vpipDelta: didVpip ? 1 : 0,
-        pfrDelta: didPfr ? 1 : 0,
-        threeBetDelta: didThreeBet ? 1 : 0,
-        threeBetOpportunityDelta: had3BetOpportunity ? 1 : 0,
-        fold3betDelta: didFoldTo3Bet ? 1 : 0,
-        facing3BetDelta: facedA3Bet ? 1 : 0,
-        cbetDelta: didCbet ? 1 : 0,
-        cbetOpportunityDelta: hadCbetOpp ? 1 : 0,
-        stealDelta: didSteal ? 1 : 0,
-        stealOpportunityDelta: hadStealOpp ? 1 : 0,
-        checkRaiseFlopDelta: didCRFlop ? 1 : 0,
-        checkRaiseFlopOpportunityDelta: hadCRFlopOpp ? 1 : 0,
-        blindDefendCountDelta: didBlindDefend ? 1 : 0,
-        blindDefendOpportunityDelta: hadBlindDefendOpp ? 1 : 0,
-        wonHandsDelta: (didWin && didPlay) ? 1 : 0,
-        position: heroPositionName,
+      final delta = computeHeroDelta(
+        actions: actions,
+        heroPositionName: heroPositionName,
+        heroSeatNumber: heroSeatNumber,
+        winnerId: winnerId,
+        choppedWinners: choppedWinners,
+        mode: mode,
       );
-
-
+      await applyHeroDelta(userId, delta);
     } catch (e) {
       await LoggerService.error('Error updating user stats', e, StackTrace.current);
       // Don't rethrow - stats update failure shouldn't break hand saving
     }
+  }
+
+  /// The ONE hero-stats write for hands (full, preflop-only, promotion).
+  static Future<void> applyHeroDelta(String userId, HeroHandDelta d) {
+    return UserStatsService.updateStatsAtomic(
+      userId: userId,
+      totalHandsDelta: d.totalHands,
+      walksDelta: d.walks,
+      handsDelta: d.hands,
+      vpipDelta: d.vpip,
+      pfrDelta: d.pfr,
+      threeBetDelta: d.threeBet,
+      threeBetOpportunityDelta: d.threeBetOpp,
+      fold3betDelta: d.fold3bet,
+      facing3BetDelta: d.facing3Bet,
+      cbetDelta: d.cbet,
+      cbetOpportunityDelta: d.cbetOpp,
+      stealDelta: d.steal,
+      stealOpportunityDelta: d.stealOpp,
+      checkRaiseFlopDelta: d.checkRaiseFlop,
+      checkRaiseFlopOpportunityDelta: d.checkRaiseFlopOpp,
+      blindDefendCountDelta: d.blindDefend,
+      blindDefendOpportunityDelta: d.blindDefendOpp,
+      wonHandsDelta: d.wonHands,
+      position: d.position,
+    );
   }
 
   /// Update statistics for ALL players in dealer-assisted mode

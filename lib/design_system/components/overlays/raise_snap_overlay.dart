@@ -2,13 +2,21 @@ import 'package:flutter/material.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../constants/colors.dart';
 import '../../constants/typography.dart';
+import '../../../services/sizing_history_store.dart';
 
 /// A snap point for the raise slider.
 class SnapPoint {
   final String label;
   final double amount;
 
-  const SnapPoint({required this.label, required this.amount});
+  /// True for the extra "Same as last" snap added by learned sizing.
+  final bool isSuggestion;
+
+  const SnapPoint({
+    required this.label,
+    required this.amount,
+    this.isSuggestion = false,
+  });
 }
 
 /// What the raise gesture can legally offer given the player's stack (HL-8b).
@@ -38,6 +46,11 @@ class RaiseSnapOverlay extends StatelessWidget {
   final bool isCashGame;
   final VoidCallback? onTapAmount; // Open numpad for custom
 
+  /// Learned sizing (easy logging). Null = today's behaviour, unchanged.
+  /// The extra "Same as last" snap itself is added by [applySuggestion] when
+  /// the caller builds [snapPoints]; here the learned point is highlighted.
+  final SizingSuggestion? suggestion;
+
   const RaiseSnapOverlay({
     Key? key,
     required this.snapPoints,
@@ -48,6 +61,7 @@ class RaiseSnapOverlay extends StatelessWidget {
     required this.formattedAmount,
     required this.isCashGame,
     this.onTapAmount,
+    this.suggestion,
   }) : super(key: key);
 
   @override
@@ -80,7 +94,7 @@ class RaiseSnapOverlay extends StatelessWidget {
                   right: 24,
                   top: 20,
                   bottom: 60,
-                  child: _buildSnapPointTrack(trackHeight),
+                  child: _buildSnapPointTrack(trackHeight, l10n.easyLogSizeUsual),
                 ),
 
                 // Current amount display — centered
@@ -129,11 +143,12 @@ class RaiseSnapOverlay extends StatelessWidget {
     );
   }
 
-  Widget _buildSnapPointTrack(double trackHeight) {
+  Widget _buildSnapPointTrack(double trackHeight, String usualCaption) {
     if (snapPoints.isEmpty) return const SizedBox.shrink();
 
     // Track grows thicker as user drags up: 2px → 6px
     final clampedProgress = dragProgress.clamp(0.0, 1.0);
+    final usualIndex = usualIndexFor(snapPoints, suggestion);
     final baseWidth = 2.0;
     final progressWidth = baseWidth + (clampedProgress * 4.0);
 
@@ -186,7 +201,10 @@ class RaiseSnapOverlay extends StatelessWidget {
             // Key labels (x multipliers, %, Pot, All-In, Min) get bold treatment;
             // round-number labels (plain numbers like 800, 1.6K) are smaller/lighter
             final label = snapPoints[index].label;
-            final isKeyPoint = label.contains('x') ||
+            final isUsual = index == usualIndex;
+            final isKeyPoint = isUsual ||
+                snapPoints[index].isSuggestion ||
+                label.contains('x') ||
                 label.contains('%') ||
                 label == 'Pot' ||
                 label == 'All-In' ||
@@ -198,6 +216,17 @@ class RaiseSnapOverlay extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  if (isUsual && !isActive) ...[
+                    Text(
+                      usualCaption,
+                      style: AppTypography.ibm(
+                        fontSize: 10,
+                        color: AppColors.accentSecondary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                  ],
                   // Label
                   Text(
                     label,
@@ -240,6 +269,47 @@ class RaiseSnapOverlay extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  /// Index of the snap point nearest the learned "usual" size, or null when
+  /// there is no preselect or no point within 3% of it.
+  static int? usualIndexFor(List<SnapPoint> points, SizingSuggestion? s) {
+    final target = s?.preselect;
+    if (target == null || points.isEmpty) return null;
+    int best = 0;
+    for (int i = 1; i < points.length; i++) {
+      if ((points[i].amount - target).abs() <
+          (points[best].amount - target).abs()) {
+        best = i;
+      }
+    }
+    final tol = target.abs() * 0.03;
+    return (points[best].amount - target).abs() <= tol ? best : null;
+  }
+
+  /// Adds EXACTLY ONE "Same as last" snap (sorted by amount) when the learned
+  /// last size is strictly inside the ladder and not already a snap point.
+  /// Otherwise (or with no suggestion) returns [points] untouched.
+  static List<SnapPoint> applySuggestion(
+    List<SnapPoint> points,
+    SizingSuggestion? suggestion, {
+    required String sameAsLastLabel,
+  }) {
+    final a = suggestion?.sameAsLast;
+    if (a == null || points.length < 2) return points;
+    if (a <= points.first.amount || a >= points.last.amount) return points;
+    if (points.any((p) => (p.amount - a).abs() < 1e-6)) return points;
+    final out = List<SnapPoint>.of(points);
+    final at = out.indexWhere((p) => p.amount > a);
+    out.insert(at, SnapPoint(label: sameAsLastLabel, amount: a, isSuggestion: true));
+    return out;
+  }
+
+  /// Numpad pre-fill: the learned size when it is within [min]..[max].
+  static double? numpadPrefill(SizingSuggestion? s,
+      {required double min, required double max}) {
+    final v = s?.preselect;
+    return (v != null && v >= min && v <= max) ? v : null;
   }
 
   /// Decide what the raise gesture may offer (HL-8b).

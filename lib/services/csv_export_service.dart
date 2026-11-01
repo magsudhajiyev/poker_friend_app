@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:csv/csv.dart';
 import 'package:poker_logger/models/game_types.dart';
+import 'package:poker_logger/models/hand_completeness.dart';
 
 /// Service for exporting poker hand and session data to CSV format
 class CSVExportService {
@@ -12,6 +13,11 @@ class CSVExportService {
 
     // Add CSV header
     csv.writeln(_csvHeader);
+
+    // Ticks, stubs and reconstructed hands are never exported.
+    if (!HandCompletenessX.fromHandMap(handData).isAnalyzable) {
+      return csv.toString();
+    }
 
     // Add hand metadata as comment if needed
     if (handData['isChoppedPot'] == true) {
@@ -134,6 +140,7 @@ class CSVExportService {
 
     // Export each hand
     for (final handData in hands) {
+      if (!HandCompletenessX.fromHandMap(handData).isAnalyzable) continue;
       final handCsv = exportHandToCsv(handData);
       final handLines = handCsv.split('\n');
 

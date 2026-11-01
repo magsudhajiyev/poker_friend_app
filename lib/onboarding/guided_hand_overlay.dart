@@ -61,6 +61,10 @@ class GuidedHandOverlay extends StatefulWidget {
   final GlobalKey? tableButtonKey;
   final GlobalKey? blindsPillKey;
   final GlobalKey? nextHandButtonKey;
+
+  /// Flag chip to spotlight (post-hand marks, after Next Hand). Null when
+  /// easy hand logging is off for this user: the step is then skipped.
+  final GlobalKey? flagChipKey;
   final GlobalKey? sessionInfoButtonKey;
   final GlobalKey? menuButtonKey;
   final GlobalKey? drawingAreaKey;
@@ -106,6 +110,7 @@ class GuidedHandOverlay extends StatefulWidget {
     this.tableButtonKey,
     this.blindsPillKey,
     this.nextHandButtonKey,
+    this.flagChipKey,
     this.sessionInfoButtonKey,
     this.menuButtonKey,
     this.drawingAreaKey,
@@ -137,6 +142,7 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
   bool _stackRingTourShown = false;
   bool _drawingBoardShown = false;
   bool _undoTourShown = false;
+  bool _flagTourShown = false;
   int _actionsCompleted = 0; // count of guided actions done
 
   @override
@@ -788,7 +794,36 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
       );
     }
 
-    // 3. Undo button (shown after hand completes, not mid-hand)
+    // 3. Flag chip (only when easy logging is enabled; highlight-only).
+    final flagKey = widget.flagChipKey;
+    if (!_flagTourShown && flagKey != null && flagKey.currentContext != null) {
+      _flagTourShown = true;
+      targets.add(
+        TargetFocus(
+          identify: 'flag_chip',
+          keyTarget: flagKey,
+          shape: ShapeLightFocus.RRect,
+          radius: 40,
+          paddingFocus: 8,
+          contents: [
+            TargetContent(
+              align: ContentAlign.top,
+              builder: (context, controller) {
+                final l10n = AppLocalizations.of(context);
+                return buildTooltip(
+                  title: l10n.guidedFlagTitle,
+                  body: l10n.guidedFlagBody,
+                  onNext: () => controller.next(),
+                  context: context,
+                );
+              },
+            ),
+          ],
+        ),
+      );
+    }
+
+    // 4. Undo button (shown after hand completes, not mid-hand)
     final undoKey = widget.undoButtonKey;
     if (!_undoTourShown && !OnboardingState.isReplay &&
         undoKey != null && undoKey.currentContext != null) {

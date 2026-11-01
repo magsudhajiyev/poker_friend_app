@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:ui';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:poker_logger/models/hand_completeness.dart';
 
 /// Converts hand data from our app format into PokerStars hand history
 /// text format, suitable for import into common solver/study tools.
@@ -927,6 +928,9 @@ class PokerStarsExportService {
     Map<String, dynamic> hand,
     Map<String, dynamic> session,
   ) {
+    // Ticks, stubs and reconstructed hands are never exported.
+    if (!HandCompletenessX.fromHandMap(hand).isAnalyzable) return '';
+
     // Ensure we have playerNames at minimum
     if (_getPlayerNames(hand).isEmpty) {
       return ''; // Cannot export without player info
