@@ -16,6 +16,7 @@ class SessionResultService {
     int? finishedPlace,
     int? fieldSize,
     int? durationMinutes,
+    Map<String, Object>? coverage, // SessionCoverage.compute(...), easy logging
   }) async {
     try {
       final userId = AuthService.currentUser?.uid;
@@ -44,6 +45,7 @@ class SessionResultService {
       AnalyticsService.capture('session_ended', {
         'game_type': gameType,
         if (durationMinutes != null) 'duration_minutes': durationMinutes,
+        if (coverage != null) ...coverage,
       });
 
       debugPrint('✅ Session result added: $amount ($gameType)');

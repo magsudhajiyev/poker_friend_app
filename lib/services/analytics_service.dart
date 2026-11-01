@@ -33,6 +33,13 @@ import 'logger_service.dart';
 ///   daily_challenge_leaderboard_submitted
 /// Engagement notifications (flagged): notif_scheduled, notif_opened,
 ///   notif_converted (play within 2h of the push — the reward signal)
+/// Easy Hand Logging (flagged `easy_hand_logging`): fold_tick,
+///   hand_flagged{tags}, flag_completed{lag_min},
+///   hand_logging_abandoned{street}. Extra props on existing events:
+///   hand_logged{completeness, time_to_log_ms, taps, street_reached, mode}
+///   (mode = live|fold_tick|flag) and
+///   session_ended{hands_logged, est_dealt, coverage, flags_open}.
+///   Helpers live in hand_log_telemetry.dart / hand_coverage.dart.
 /// Plus SDK-automatic: Application Opened/Backgrounded (lifecycle — feeds
 /// the retention chart).
 class AnalyticsService {

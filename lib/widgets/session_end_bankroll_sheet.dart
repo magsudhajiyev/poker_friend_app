@@ -27,6 +27,7 @@ class SessionEndBankrollSheet {
     double? profitLoss,
     required double totalBuyIn,
     int? durationMinutes,
+    Map<String, Object>? coverage, // SessionCoverage.compute, easy logging
   }) async {
     final isCash = gameType == GameType.cash;
     final l10n = AppLocalizations.of(context);
@@ -60,6 +61,7 @@ class SessionEndBankrollSheet {
         finishedPlace: isCash ? null : int.tryParse(positionController.text),
         fieldSize: isCash ? null : int.tryParse(fieldSizeController.text),
         durationMinutes: durationMinutes,
+        coverage: coverage,
       );
       AppDataCache.markHomeDirty();
       AppDataCache.markStatsDirty();

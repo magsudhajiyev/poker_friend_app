@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../config/env_config.dart';
+import '../models/hand_completeness.dart';
 import 'pokerstars_export_service.dart';
 
 /// Service for exporting a full session as PokerStars hand history + stats summary.
@@ -26,7 +27,9 @@ class SessionExportService {
     required Map<String, dynamic> session,
     required List<Map<String, dynamic>> hands,
   }) async {
-    if (hands.isEmpty) throw Exception('No hands to export');
+    if (hands.where(_isExportable).isEmpty) {
+      throw Exception('No hands to export');
+    }
 
     debugPrint('SessionExport: Generating export for ${hands.length} hands...');
 
@@ -75,11 +78,21 @@ class SessionExportService {
   // Stats summary generation
   // ─────────────────────────────────────────────────────────────
 
+  static bool _isExportable(Map<String, dynamic> h) =>
+      HandCompletenessX.fromHandMap(h).isAnalyzable;
+
   /// Generate a plain-text stats summary for the session.
+  ///
+  /// Totals count preflop/reconstructed/full hands; fold ticks are counted
+  /// through the session `skippedHands`; flagged stubs are not counted.
   static String generateStatsSummary(
     Map<String, dynamic> session,
-    List<Map<String, dynamic>> hands,
+    List<Map<String, dynamic>> allHands,
   ) {
+    final hands = allHands.where((h) {
+      final c = HandCompletenessX.fromHandMap(h);
+      return c.countsForHeroTotals && c != HandCompleteness.foldTick;
+    }).toList();
     final sessionName = session['sessionName'] as String? ?? 'Poker Session';
     final gameType = (session['gameType'] as String? ?? 'cash').toLowerCase();
     final sb = session['smallBlind'] ?? 0;

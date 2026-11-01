@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
 import '../models/hand_state_machine.dart';
+import 'easy_logging/board_add_later_bar.dart';
 import '../models/poker_game_state.dart';
 import '../design_system/components/pickers/card_keyboard.dart';
 import '../design_system/components/cards/suit_icon.dart';
@@ -15,8 +16,15 @@ class BoardCardsDialog extends StatefulWidget {
   final List<String> excludedCards;
   final Set<String> usedCards;
 
+  /// Easy logging: offer "Add later" (pops a [BoardAddLater]) and confirm
+  /// automatically when the last card of the street is picked.
+  final bool allowAddLater;
+  final bool autoConfirm;
+
   const BoardCardsDialog({
     Key? key,
+    this.allowAddLater = false,
+    this.autoConfirm = false,
     required this.currentRound,
     this.existingCards,
     this.excludedCards = const [],
@@ -168,6 +176,32 @@ class _BoardCardsDialogState extends State<BoardCardsDialog> {
             ),
           ),
         ),
+        if (widget.allowAddLater) ...[
+          const SizedBox(height: 10),
+          SizedBox(
+            width: double.infinity,
+            height: 48,
+            child: TextButton(
+              onPressed: () => Navigator.pop(context, const BoardAddLater()),
+              style: TextButton.styleFrom(
+                backgroundColor: Colors.transparent,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
+                ),
+                padding: EdgeInsets.zero,
+              ),
+              child: Text(
+                l10n.easyLogBoardAddLater,
+                style: AppTypography.ibm(
+                  color: AppColors.accentPrimary,
+                  fontSize: 17,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: -0.5,
+                ),
+              ),
+            ),
+          ),
+        ],
         const SizedBox(height: 10),
         SizedBox(
           width: double.infinity,
@@ -200,11 +234,19 @@ class _BoardCardsDialogState extends State<BoardCardsDialog> {
     );
   }
 
+  bool _autoSaved = false;
+
   void _onCardCommitted(int slotIndex, String card) {
     setState(() {
       _slots[slotIndex] = card;
       _currentlySelected.add(card);
     });
+    if (widget.autoConfirm && _isValid() && !_autoSaved) {
+      _autoSaved = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _saveCards();
+      });
+    }
   }
 
   void _onCardCleared(int slotIndex) {

@@ -59,6 +59,8 @@ class FeatureFlagService {
   static const String dailyChallenge = 'daily_challenge';
   static const String engagementNotifications = 'engagement_notifications';
   static const String hardPaywall = 'hard_paywall';
+  static const String easyHandLogging = 'easy_hand_logging';
+  static const String liveInsights = 'live_insights';
 
   static const List<FeatureFlag> all = [
     FeatureFlag(
@@ -104,6 +106,20 @@ class FeatureFlagService {
       'use the app). OFF by default — enable to switch the app to the hard '
       'paywall.',
       defaultMode: FlagMode.off,
+    ),
+    FeatureFlag(
+      easyHandLogging,
+      'Easy Hand Logging',
+      'Fold ticker, flag-now-finish-later hands, '
+      'and learned raise sizes on the live hand logger. OFF = the classic logging flow.',
+      defaultMode: FlagMode.adminOnly,
+    ),
+    FeatureFlag(
+      liveInsights,
+      'Live Insights',
+      'Payoff line under the table (how a seat played tonight) and the '
+      'one-line insight after each hand. Needs Easy Hand Logging too.',
+      defaultMode: FlagMode.adminOnly,
     ),
   ];
 

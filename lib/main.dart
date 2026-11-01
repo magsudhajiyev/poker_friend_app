@@ -12,6 +12,7 @@ import 'theme/app_theme.dart';
 import 'design_system/app_scroll_behavior.dart';
 import 'screens/auth_wrapper.dart';
 import 'screens/splash_screen.dart';
+import 'screens/poker_hand_screen.dart' show PokerHandScreen;
 import 'screens/player/player_session_screen.dart';
 import 'screens/training/daily_challenge_screen.dart';
 import 'services/notification_events_service.dart';
@@ -50,6 +51,7 @@ StreamSubscription<bool>? _subscriptionStatusListener;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  PokerHandScreen.registerRecallLauncher();
 
   // Audit M1: debugPrint is NOT a no-op in release builds, and the codebase
   // logs emails/uids through it. Silence it in release — LoggerService and
