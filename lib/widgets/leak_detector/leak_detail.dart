@@ -24,6 +24,9 @@ class LeakCardActions {
   final VoidCallback? onPractice;
   final VoidCallback? onSeeHands;
 
+  /// Append the finding's drill pointer to the fix (drills enabled only).
+  final bool showPracticeHint;
+
   const LeakCardActions({
     required this.onShowBandInfo,
     this.onToggle,
@@ -33,6 +36,7 @@ class LeakCardActions {
     this.onReviewAll,
     this.onPractice,
     this.onSeeHands,
+    this.showPracticeHint = false,
   });
 }
 
@@ -96,7 +100,11 @@ class _LeakDetailState extends State<LeakDetail> {
         color: AppColors.tintBg(AppColors.accentPrimary),
         borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
       ),
-      child: _body(_f.fix),
+      child: _body(
+        widget.actions.showPracticeHint && _f.practiceHint.isNotEmpty
+            ? '${_f.fix} ${_f.practiceHint}'
+            : _f.fix,
+      ),
     );
   }
 

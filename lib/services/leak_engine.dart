@@ -86,6 +86,10 @@ class LeakFinding {
   final String cost;
   final String fix;
 
+  /// Optional drill pointer ("Practice: Training Drills → …"). Kept apart
+  /// from [fix] so the UI shows it only when the drills feature is on.
+  final String practiceHint;
+
   /// Up to [maxExamples] of the player's own hands where the leaky action
   /// happened, with display context for the report UI.
   final List<LeakExample> examples;
@@ -110,6 +114,7 @@ class LeakFinding {
     required this.meaning,
     required this.cost,
     required this.fix,
+    this.practiceHint = '',
     this.examples = const [],
     this.slices = const [],
   });
@@ -167,6 +172,7 @@ class _Detector {
   final int confirmedSample;
   final String meaningHigh, costHigh, fixHigh;
   final String meaningLow, costLow, fixLow;
+  final String practiceHigh, practiceLow;
   /// Slice dimensions: 'texture' and/or 'position'.
   final List<String> sliceBy;
 
@@ -185,6 +191,8 @@ class _Detector {
     this.meaningLow = '',
     this.costLow = '',
     this.fixLow = '',
+    this.practiceHigh = '',
+    this.practiceLow = '',
     this.sliceBy = const [],
   });
 }
@@ -307,8 +315,8 @@ class LeakEngine {
               'become free money for anyone willing to re-raise.',
           fixHigh:
               'Defend your strongest opens: call in position with suited '
-              'broadways and pairs, and 4-bet your premiums. Practice: '
-              'Training Drills → 3-bet spots.',
+              'broadways and pairs, and 4-bet your premiums.',
+          practiceHigh: 'Practice: Training Drills → 3-bet spots.',
           meaningLow:
               'When your open gets 3-bet, you almost always continue.',
           costLow:
@@ -318,8 +326,8 @@ class LeakEngine {
           fixLow:
               'Tighten your continues: fold the weakest opens to 3-bets '
               '(offsuit broadways, weak suited hands), keep calls for '
-              'pairs and strong suited hands, 4-bet premiums. Practice: '
-              'Training Drills → 3-bet spots.',
+              'pairs and strong suited hands, 4-bet premiums.',
+          practiceLow: 'Practice: Training Drills → 3-bet spots.',
           sliceBy: const ['position'],
         ),
         _Detector(
@@ -338,15 +346,16 @@ class LeakEngine {
               'every orbit adds up to a steady bleed.',
           fixHigh:
               'Defend wider vs CO/BTN/SB raises: suited hands, connectors, '
-              'any pair. Practice: Training Drills → blind defense.',
+              'any pair.',
+          practiceHigh: 'Practice: Training Drills → blind defense.',
           meaningLow: 'You defend your big blind against nearly every steal.',
           costLow:
               'Defending everything means playing lots of postflop pots '
               'out of position with weak holdings.',
           fixLow:
               'Keep the wide defense only if your postflop game backs it '
-              'up — drop the worst offsuit junk. Practice: Training Drills '
-              '→ blind defense.',
+              'up — drop the worst offsuit junk.',
+          practiceLow: 'Practice: Training Drills → blind defense.',
         ),
         _Detector(
           id: 'limp_habit',
@@ -364,8 +373,9 @@ class LeakEngine {
               'terms.',
           fixHigh:
               'If a hand is worth playing, it is usually worth raising. '
-              'Compare your limped hands in the Range Grid against the '
-              'open-raise charts in Training Drills.',
+              'Compare your limped hands in the Range Grid against '
+              'standard open-raise charts.',
+          practiceHigh: 'Practice: open-raise charts in Training Drills.',
         ),
         _Detector(
           id: 'wtsd',
@@ -642,6 +652,7 @@ class LeakEngine {
       meaning: above ? d.meaningHigh : d.meaningLow,
       cost: above ? d.costHigh : d.costLow,
       fix: above ? d.fixHigh : d.fixLow,
+      practiceHint: above ? d.practiceHigh : d.practiceLow,
       examples: examples,
       slices: slices,
     );

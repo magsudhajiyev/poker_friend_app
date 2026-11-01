@@ -21,7 +21,8 @@ class RangesTab extends StatelessWidget {
   final String? selectedPos;
   final ValueChanged<String> onSelectPos;
   final ValueChanged<PositionShape> onOpenGrid;
-  final ValueChanged<PositionShape> onPractice;
+  /// Null hides the practice button.
+  final ValueChanged<PositionShape>? onPractice;
   final VoidCallback onInfo;
 
   const RangesTab({
@@ -30,7 +31,7 @@ class RangesTab extends StatelessWidget {
     required this.selectedPos,
     required this.onSelectPos,
     required this.onOpenGrid,
-    required this.onPractice,
+    this.onPractice,
     required this.onInfo,
   });
 
@@ -80,7 +81,8 @@ class RangesTab extends StatelessWidget {
           key: ValueKey(selected.posGroup),
           position: selected,
           onOpenGrid: () => onOpenGrid(selected),
-          onPractice: () => onPractice(selected),
+          onPractice:
+              onPractice == null ? null : () => onPractice!(selected),
         ),
         if (progress.isNotEmpty) ...[
           const SizedBox(height: AppSpacing.xs),
@@ -224,7 +226,7 @@ class _Deviation {
 class ShapeCard extends StatefulWidget {
   final PositionShape position;
   final VoidCallback onOpenGrid;
-  final VoidCallback onPractice;
+  final VoidCallback? onPractice;
 
   static const topCount = 5;
 
@@ -232,7 +234,7 @@ class ShapeCard extends StatefulWidget {
     super.key,
     required this.position,
     required this.onOpenGrid,
-    required this.onPractice,
+    this.onPractice,
   });
 
   @override
@@ -362,6 +364,7 @@ class _ShapeCardState extends State<ShapeCard> {
       leadingIcon: const Icon(Icons.grid_on,
           size: AppIconSize.sm, color: AppColors.textPrimary),
     );
+    if (widget.onPractice == null) return grid;
     final practice = AppButton(
       label: l10n.leakShapePracticeOpens,
       fullWidth: true,

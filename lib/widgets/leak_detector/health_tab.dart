@@ -18,14 +18,15 @@ import 'money_by_position.dart';
 class HealthTab extends StatelessWidget {
   final LeakReport report;
   final List<FixedLeak> fixed;
-  final ValueChanged<SpotNet> onDrill;
+  /// Null hides the per-spot drill buttons.
+  final ValueChanged<SpotNet>? onDrill;
   final VoidCallback onMoneyInfo;
 
   const HealthTab({
     super.key,
     required this.report,
     required this.fixed,
-    required this.onDrill,
+    this.onDrill,
     required this.onMoneyInfo,
   });
 

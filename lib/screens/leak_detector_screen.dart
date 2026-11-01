@@ -13,6 +13,7 @@ import '../design_system/constants/spacing.dart';
 import '../design_system/constants/typography.dart';
 import '../l10n/app_localizations.dart';
 import '../services/analytics_service.dart';
+import '../services/feature_flag_service.dart';
 import '../services/leak_engine.dart';
 import '../services/leak_focus_store.dart';
 import '../services/leak_report_service.dart';
@@ -472,8 +473,11 @@ class _LeakDetectorScreenState extends State<LeakDetectorScreen>
       onClearFocus: isFocus ? () => _clearFocus(f) : null,
       onOpenHand: (ref, hand) => _openHand(f, hand),
       onReviewAll: (hands) => _reviewAll(f, hands),
-      onPractice: _drillPresetFor(f.id) == null ? null : () => _practice(f),
+      onPractice: !_drillsEnabled || _drillPresetFor(f.id) == null
+          ? null
+          : () => _practice(f),
       onSeeHands: _gridFilterFor(f.id) == null ? null : () => _openGrid(f),
+      showPracticeHint: _drillsEnabled,
     );
   }
 
@@ -587,6 +591,11 @@ class _LeakDetectorScreenState extends State<LeakDetectorScreen>
     );
   }
 
+  /// Training drills are hidden everywhere in the Leak Detector unless the
+  /// remote `training_drills` flag is on for this user.
+  bool get _drillsEnabled =>
+      FeatureFlagService.isEnabled(FeatureFlagService.trainingDrills);
+
   /// Preflop leaks map to a preset drill session; postflop spots have no
   /// drill equivalent yet (drills are preflop-only).
   Widget? _drillPresetFor(String findingId) {
@@ -637,17 +646,19 @@ class _LeakDetectorScreenState extends State<LeakDetectorScreen>
           ),
         );
       },
-      onPractice: (p) {
-        AnalyticsService.capture(
-            'leak_shape_practice_tapped', {'pos_group': p.posGroup});
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) =>
-                const DrillSetupScreen(presetStackBB: 40, presetAnte: true),
-          ),
-        );
-      },
+      onPractice: !_drillsEnabled
+          ? null
+          : (p) {
+              AnalyticsService.capture(
+                  'leak_shape_practice_tapped', {'pos_group': p.posGroup});
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const DrillSetupScreen(
+                      presetStackBB: 40, presetAnte: true),
+                ),
+              );
+            },
       onInfo: () => showLeakInfoSheet(
         context,
         title: l10n.leakShapeInfoTitle,
@@ -660,13 +671,15 @@ class _LeakDetectorScreenState extends State<LeakDetectorScreen>
     return HealthTab(
       report: report,
       fixed: _fixed,
-      onDrill: (sp) => Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) =>
-              DrillSetupScreen(presetStackBB: sp.presetStackBB, presetAnte: true),
-        ),
-      ),
+      onDrill: !_drillsEnabled
+          ? null
+          : (sp) => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => DrillSetupScreen(
+                      presetStackBB: sp.presetStackBB, presetAnte: true),
+                ),
+              ),
       onMoneyInfo: () => showLeakInfoSheet(
         context,
         title: l10n.leakMoneyInfoTitle,
