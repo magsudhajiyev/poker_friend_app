@@ -13,12 +13,14 @@ import '../../services/leak_engine.dart';
 /// (the caller wires the explainer sheet).
 class MoneyByPosition extends StatelessWidget {
   final LeakReport report;
-  final ValueChanged<SpotNet> onDrill;
+
+  /// Null hides the per-spot drill buttons.
+  final ValueChanged<SpotNet>? onDrill;
 
   const MoneyByPosition({
     super.key,
     required this.report,
-    required this.onDrill,
+    this.onDrill,
   });
 
   @override
@@ -37,7 +39,8 @@ class MoneyByPosition extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          for (final p in report.positionNets) PositionBarRow(net: p, maxAbs: maxAbs),
+          for (final p in report.positionNets)
+            PositionBarRow(net: p, maxAbs: maxAbs),
           if (report.worstSpots.isNotEmpty) ...[
             const SizedBox(height: AppSpacing.md),
             Text(l10n.leakSectionWorstSpots.toUpperCase(),
@@ -45,7 +48,9 @@ class MoneyByPosition extends StatelessWidget {
                     color: AppColors.textSecondary)),
             const SizedBox(height: AppSpacing.xxs),
             for (final sp in report.worstSpots)
-              _SpotRow(spot: sp, onDrill: () => onDrill(sp)),
+              _SpotRow(
+                  spot: sp,
+                  onDrill: onDrill == null ? null : () => onDrill!(sp)),
           ],
         ],
       ),
@@ -159,8 +164,8 @@ class _DivergingBar extends StatelessWidget {
 
 class _SpotRow extends StatelessWidget {
   final SpotNet spot;
-  final VoidCallback onDrill;
-  const _SpotRow({required this.spot, required this.onDrill});
+  final VoidCallback? onDrill;
+  const _SpotRow({required this.spot, this.onDrill});
 
   @override
   Widget build(BuildContext context) {
@@ -177,27 +182,26 @@ class _SpotRow extends StatelessWidget {
                     style: AppTypography.bodySmMedium(
                         color: AppColors.textPrimary)),
                 Text(
-                  l10n.leakMoneyValue(
-                      _signed(spot.netBBTotal),
-                      spot.netBBTotal.abs().toStringAsFixed(0),
-                      spot.hands),
+                  l10n.leakMoneyValue(_signed(spot.netBBTotal),
+                      spot.netBBTotal.abs().toStringAsFixed(0), spot.hands),
                   style:
                       AppTypography.dataMonoSm(color: AppColors.accentDanger),
                 ),
               ],
             ),
           ),
-          TextButton(
-            onPressed: onDrill,
-            style: TextButton.styleFrom(
-              foregroundColor: AppColors.accentPrimary,
-              minimumSize:
-                  const Size(AppSizes.minTapTarget, AppSizes.minTapTarget),
+          if (onDrill != null)
+            TextButton(
+              onPressed: onDrill,
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.accentPrimary,
+                minimumSize:
+                    const Size(AppSizes.minTapTarget, AppSizes.minTapTarget),
+              ),
+              child: Text(l10n.leakDrill,
+                  style: AppTypography.bodySmMedium(
+                      color: AppColors.accentPrimary)),
             ),
-            child: Text(l10n.leakDrill,
-                style:
-                    AppTypography.bodySmMedium(color: AppColors.accentPrimary)),
-          ),
         ],
       ),
     );

@@ -188,6 +188,40 @@ void main() {
           wonWithoutShowdown: false,
         );
 
+    test('fix text never mentions drills; drill pointer is separate', () {
+      LeakHandFacts f({bool fold3 = false, bool bb = false, bool limp = false}) =>
+          LeakHandFacts(
+            isWalk: false,
+            openedPot: fold3,
+            facedThreeBetAfterOpen: fold3,
+            foldedToThreeBet: fold3,
+            limped: limp,
+            limpFacedRaise: false,
+            limpFolded: false,
+            bbFacedSteal: bb,
+            bbFoldedToSteal: bb,
+            flopFacingResponse: null,
+            turnFacingResponse: null,
+            riverFacingResponse: null,
+            sawFlop: false,
+            wentToShowdown: false,
+            wonAtShowdown: false,
+            wonWithoutShowdown: false,
+          );
+      final report = LeakEngine.analyze([
+        ...List.generate(60, (_) => f(fold3: true)),
+        ...List.generate(60, (_) => f(bb: true)),
+        ...List.generate(120, (_) => f(limp: true)),
+      ]);
+      final withFix = report.findings.where((x) => x.fix.isNotEmpty);
+      expect(withFix, isNotEmpty);
+      for (final x in withFix) {
+        expect(x.fix.toLowerCase(), isNot(contains('drill')), reason: x.id);
+      }
+      expect(report.findings.any((x) => x.practiceHint.contains('Drill')),
+          isTrue);
+    });
+
     test('insufficient data below minimum sample', () {
       final report = LeakEngine.analyze(List.generate(5, (_) => riverFacts('fold')));
       final river =
