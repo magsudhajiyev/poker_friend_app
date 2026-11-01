@@ -6793,5 +6793,7 @@
         "type": "int"
       }
     }
-  }
+  },
+  "replayLegendPreview": "Upcoming (preview)",
+  "@replayLegendPreview": {"description": "Calendar legend (super-admin only): upcoming scheduled day available for preview."}
 }

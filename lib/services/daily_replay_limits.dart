@@ -73,4 +73,27 @@ class DailyReplayLimits {
     final inPastRange = d.isBefore(t) && !d.isBefore(epoch);
     return inPastRange && !isReplayable(day, today);
   }
+
+  /// How many days ahead a super-admin may preview scheduled challenges.
+  static const int adminPreviewHorizonDays = 45;
+
+  /// Admin early access: whether [day] is a FUTURE day (strictly after today,
+  /// within [adminPreviewHorizonDays]) that [isAdmin] may open for unranked
+  /// preview. [hasSchedule] says an `authored_days/{day}` doc exists.
+  /// Non-admins always get false. Pure given [today].
+  static bool isPreviewable(DateTime day, DateTime today,
+      {required bool isAdmin, required bool hasSchedule}) {
+    if (!isAdmin || !hasSchedule) return false;
+    final d = DailyChallengeService.dateOnly(day);
+    final t = DailyChallengeService.dateOnly(today);
+    if (!d.isAfter(t)) return false;
+    final last = DateTime(t.year, t.month, t.day + adminPreviewHorizonDays);
+    return !d.isAfter(last);
+  }
+
+  /// Last day an admin can navigate to in the calendar.
+  static DateTime lastPreviewDay(DateTime today) {
+    final t = DailyChallengeService.dateOnly(today);
+    return DateTime(t.year, t.month, t.day + adminPreviewHorizonDays);
+  }
 }

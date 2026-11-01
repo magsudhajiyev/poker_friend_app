@@ -5794,5 +5794,6 @@
   "easyLogStackBeforeBody": "Oznaczone ręce są nadal otwarte. Wpisz stack, który masz teraz.",
   "stackChartHandsPending": "{count, plural, one{{count} rozdanie czeka} few{{count} rozdania czekają} many{{count} rozdań czeka} other{{count} rozdania czekają}}",
   "stackChartUnlogged": "Niezapisane {amount}",
-  "stackChartPendingTooltip": "Rozdanie #{hand} czeka. Dotknij, aby dokończyć."
+  "stackChartPendingTooltip": "Rozdanie #{hand} czeka. Dotknij, aby dokończyć.",
+  "replayLegendPreview": "Nadchodzące (podgląd)"
 }

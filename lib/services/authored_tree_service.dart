@@ -110,6 +110,23 @@ class AuthoredTreeService {
         trees.isEmpty ? null : trees, schedule.source);
   }
 
+  /// Admin preview: whether a REAL Firestore `authored_days/{dayKey}` doc with
+  /// hands exists (server-confirmed). Ignores the bundled rotation/default,
+  /// which would make every future day look scheduled. Errors → false.
+  static Future<bool> hasScheduledDay(String dayKey) async {
+    try {
+      final snap = await FirebaseFirestore.instance
+          .collection('authored_days')
+          .doc(dayKey)
+          .get(const GetOptions(source: Source.server))
+          .timeout(const Duration(seconds: 4));
+      final ids = handIdsFrom(snap.data());
+      return ids != null && ids.isNotEmpty;
+    } catch (_) {
+      return false;
+    }
+  }
+
   /// Pure source classification. [fetchDoc] returns the Firestore day doc
   /// (data null = server answered, no doc) or throws/times out. A read that
   /// reports [DayDocRead.fromCache] is not a server answer → treated as an

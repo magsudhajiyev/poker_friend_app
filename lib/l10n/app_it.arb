@@ -5839,5 +5839,6 @@
   "easyLogStackBeforeBody": "Ci sono ancora mani segnalate aperte. Inserisci lo stack che hai ora.",
   "stackChartHandsPending": "{count, plural, =1{1 mano in sospeso} other{{count} mani in sospeso}}",
   "stackChartUnlogged": "Non registrato {amount}",
-  "stackChartPendingTooltip": "Mano #{hand} in sospeso. Tocca per completare."
+  "stackChartPendingTooltip": "Mano #{hand} in sospeso. Tocca per completare.",
+  "replayLegendPreview": "In arrivo (anteprima)"
 }

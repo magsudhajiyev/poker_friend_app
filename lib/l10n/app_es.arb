@@ -5794,5 +5794,6 @@
   "easyLogStackBeforeBody": "Aún hay manos marcadas abiertas. Introduce el stack que tienes ahora.",
   "stackChartHandsPending": "{count, plural, =1{1 mano pendiente} other{{count} manos pendientes}}",
   "stackChartUnlogged": "Sin registrar {amount}",
-  "stackChartPendingTooltip": "Mano #{hand} pendiente. Toca para terminar."
+  "stackChartPendingTooltip": "Mano #{hand} pendiente. Toca para terminar.",
+  "replayLegendPreview": "Próximo (vista previa)"
 }

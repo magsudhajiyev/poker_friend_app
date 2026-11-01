@@ -5801,5 +5801,6 @@
   "easyLogStackBeforeBody": "Позначені роздачі ще відкриті. Введіть стек, який у вас зараз.",
   "stackChartHandsPending": "{count, plural, one{{count} роздача чекає} few{{count} роздачі чекають} many{{count} роздач чекають} other{{count} роздачі чекають}}",
   "stackChartUnlogged": "Не записано {amount}",
-  "stackChartPendingTooltip": "Роздача #{hand} не завершена. Торкніться, щоб завершити."
+  "stackChartPendingTooltip": "Роздача #{hand} не завершена. Торкніться, щоб завершити.",
+  "replayLegendPreview": "Незабаром (попередній перегляд)"
 }

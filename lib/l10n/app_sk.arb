@@ -5829,5 +5829,6 @@
   "easyLogStackBeforeBody": "Označené handy sú stále otvorené. Zadajte stack, ktorý máte teraz.",
   "stackChartHandsPending": "{count, plural, one{{count} ruka čaká} few{{count} ruky čakajú} many{{count} rúk čaká} other{{count} rúk čaká}}",
   "stackChartUnlogged": "Nezaznamenané {amount}",
-  "stackChartPendingTooltip": "Ruka #{hand} čaká. Ťuknutím dokončíte."
+  "stackChartPendingTooltip": "Ruka #{hand} čaká. Ťuknutím dokončíte.",
+  "replayLegendPreview": "Nadchádzajúce (náhľad)"
 }

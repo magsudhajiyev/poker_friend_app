@@ -450,8 +450,18 @@ async function main() {
     // Last preflop step → postflop is a call; earlier ones are raises. Only
     // add the edge if the node actually offers that action.
     const node = nodes.find((n) => n.step === step);
+    const nextNode = nodes.find((n) => n.step === next);
     const isLastPre = i === preSteps.length - 1;
-    const edge = isLastPre ? 'call' : 'raise';
+    let edge;
+    if (isLastPre) {
+      // Closing action: a call, or — limped pot, BB option — a check.
+      edge = node && node.actions.includes('call') ? 'call' : 'check';
+    } else {
+      // A step whose successor may CHECK (BB option) faces no bet, so the
+      // transition was a limp/flat (call), not a raise.
+      const limped = nextNode && nextNode.actions.includes('check');
+      edge = limped && node && node.actions.includes('call') ? 'call' : 'raise';
+    }
     if (node && node.actions.includes(edge)) spine[step] = { [edge]: next };
   }
   console.log(
@@ -610,6 +620,24 @@ async function main() {
     for (const a of n.actions)
       if (n.children[a] === null && a !== 'fold') dangling++;
   console.log(`Terminal/unlinked non-fold edges: ${dangling} (fold edges are terminal by design)`);
+  // Reachability: every node should be reachable from the root, or part of
+  // the tree is silently unplayable (limped-pot spine bug 2026-10-30).
+  const reach = new Set([root.id]);
+  const stack = [root.id];
+  while (stack.length) {
+    for (const c of Object.values(treeNodes[stack.pop()].children))
+      if (c && !reach.has(c)) {
+        reach.add(c);
+        stack.push(c);
+      }
+  }
+  console.log(`Reachable nodes: ${reach.size} / ${nodes.length}`);
+  if (reach.size < nodes.length) {
+    console.warn(
+      `!!!!!! WARNING: ${nodes.length - reach.size} node(s) UNREACHABLE from root ` +
+        `(disconnected tree): ${nodes.filter((n) => !reach.has(n.id)).map((n) => n.id).join(',')}`
+    );
+  }
 
   if (UPLOAD) {
     const admin = require('firebase-admin');

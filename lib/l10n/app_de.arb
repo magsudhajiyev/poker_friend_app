@@ -5794,5 +5794,6 @@
   "easyLogStackBeforeBody": "Markierte Hände sind noch offen. Gib den Stack ein, den du jetzt hast.",
   "stackChartHandsPending": "{count, plural, =1{1 Hand offen} other{{count} Hände offen}}",
   "stackChartUnlogged": "Nicht erfasst {amount}",
-  "stackChartPendingTooltip": "Hand #{hand} offen. Tippen zum Abschließen."
+  "stackChartPendingTooltip": "Hand #{hand} offen. Tippen zum Abschließen.",
+  "replayLegendPreview": "Demnächst (Vorschau)"
 }

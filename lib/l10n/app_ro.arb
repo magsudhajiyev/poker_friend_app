@@ -5801,5 +5801,6 @@
   "easyLogStackBeforeBody": "Mai sunt mâini marcate deschise. Introdu stack-ul pe care îl ai acum.",
   "stackChartHandsPending": "{count, plural, =1{1 mână în așteptare} other{{count} mâini în așteptare}}",
   "stackChartUnlogged": "Neînregistrat {amount}",
-  "stackChartPendingTooltip": "Mâna #{hand} în așteptare. Atinge pentru a termina."
+  "stackChartPendingTooltip": "Mâna #{hand} în așteptare. Atinge pentru a termina.",
+  "replayLegendPreview": "Viitoare (previzualizare)"
 }
