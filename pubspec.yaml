@@ -1,7 +1,7 @@
 name: poker_logger
 publish_to: "none"
 description: Final Table - Track your poker hands, stats, and bankroll
-version: 2.1.7+22
+version: 2.1.7+23
 
 
 environment:
