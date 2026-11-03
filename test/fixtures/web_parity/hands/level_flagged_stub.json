@@ -1,0 +1,63 @@
+{
+ "id": "level_flagged_stub",
+ "sessionId": "cash_6max",
+ "handNumber": 70,
+ "buttonPosition": 6,
+ "playerCount": 6,
+ "actions": [],
+ "startTime": "2025-03-01T20:00:00.000Z",
+ "endTime": "2025-03-01T20:00:20Z",
+ "state": "completed",
+ "boardCards": null,
+ "ourHoleCards": null,
+ "showdownData": null,
+ "reachedShowdown": false,
+ "potAmount": 3,
+ "preflopPot": 3,
+ "flopPot": 0,
+ "turnPot": 0,
+ "riverPot": 0,
+ "winnerId": null,
+ "heroPositionName": "HJ",
+ "heroSeatNumber": 4,
+ "isChoppedPot": false,
+ "isSplitPot": false,
+ "choppedWinners": null,
+ "individualShares": null,
+ "sharePerWinner": null,
+ "isStarred": false,
+ "isScouted": false,
+ "tags": [],
+ "notes": "",
+ "gameType": "cash",
+ "smallBlind": 1,
+ "bigBlind": 2,
+ "playerNames": {
+  "1": "Alice",
+  "2": "Bob",
+  "3": "Carol",
+  "4": "Dave",
+  "5": "Erin",
+  "6": "Frank"
+ },
+ "playerIds": {
+  "1": null,
+  "2": null,
+  "3": null,
+  "4": null,
+  "5": null,
+  "6": null
+ },
+ "_tags": [
+  "cash",
+  "completeness-flagged"
+ ],
+ "completeness": "flagged",
+ "flag": {
+  "tags": [
+   "bluff",
+   "review"
+  ],
+  "note": "ran into a set"
+ }
+}

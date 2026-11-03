@@ -1,0 +1,219 @@
+{
+ "id": "tourn_chop_all_in",
+ "sessionId": "tourn_8max",
+ "handNumber": 61,
+ "buttonPosition": 8,
+ "playerCount": 8,
+ "actions": [
+  {
+   "player": 1,
+   "action": "small blind",
+   "street": "preflop",
+   "timestamp": "2025-03-01T20:00:07Z",
+   "buttonPosition": 8,
+   "playerName": "Alice",
+   "playerId": null,
+   "isCurrentUser": true,
+   "playerPosition": "SB",
+   "playerStack": 11700,
+   "amount": 300
+  },
+  {
+   "player": 2,
+   "action": "big blind",
+   "street": "preflop",
+   "timestamp": "2025-03-01T20:00:14Z",
+   "buttonPosition": 8,
+   "playerName": "Bob",
+   "playerId": null,
+   "isCurrentUser": false,
+   "playerPosition": "BB",
+   "playerStack": 59400,
+   "amount": 600
+  },
+  {
+   "player": 3,
+   "action": "fold",
+   "street": "preflop",
+   "timestamp": "2025-03-01T20:00:21Z",
+   "buttonPosition": 8,
+   "playerName": "Carol",
+   "playerId": null,
+   "isCurrentUser": false,
+   "playerPosition": "UTG",
+   "playerStack": 60000,
+   "amount": null
+  },
+  {
+   "player": 4,
+   "action": "fold",
+   "street": "preflop",
+   "timestamp": "2025-03-01T20:00:28Z",
+   "buttonPosition": 8,
+   "playerName": "Dave",
+   "playerId": null,
+   "isCurrentUser": false,
+   "playerPosition": "UTG+1",
+   "playerStack": 60000,
+   "amount": null
+  },
+  {
+   "player": 5,
+   "action": "fold",
+   "street": "preflop",
+   "timestamp": "2025-03-01T20:00:35Z",
+   "buttonPosition": 8,
+   "playerName": "Erin",
+   "playerId": null,
+   "isCurrentUser": false,
+   "playerPosition": "UTG+2",
+   "playerStack": 60000,
+   "amount": null
+  },
+  {
+   "player": 6,
+   "action": "fold",
+   "street": "preflop",
+   "timestamp": "2025-03-01T20:00:42Z",
+   "buttonPosition": 8,
+   "playerName": "Frank",
+   "playerId": null,
+   "isCurrentUser": false,
+   "playerPosition": "HJ",
+   "playerStack": 60000,
+   "amount": null
+  },
+  {
+   "player": 7,
+   "action": "fold",
+   "street": "preflop",
+   "timestamp": "2025-03-01T20:00:49Z",
+   "buttonPosition": 8,
+   "playerName": "Grace",
+   "playerId": null,
+   "isCurrentUser": false,
+   "playerPosition": "CO",
+   "playerStack": 60000,
+   "amount": null
+  },
+  {
+   "player": 8,
+   "action": "all-in",
+   "street": "preflop",
+   "timestamp": "2025-03-01T20:00:56Z",
+   "buttonPosition": 8,
+   "playerName": "Heidi",
+   "playerId": null,
+   "isCurrentUser": false,
+   "playerPosition": "BTN",
+   "playerStack": 12000,
+   "amount": 12000
+  },
+  {
+   "player": 1,
+   "action": "call",
+   "street": "preflop",
+   "timestamp": "2025-03-01T20:01:03Z",
+   "buttonPosition": 8,
+   "playerName": "Alice",
+   "playerId": null,
+   "isCurrentUser": true,
+   "playerPosition": "SB",
+   "playerStack": 11700,
+   "amount": 11700
+  },
+  {
+   "player": 2,
+   "action": "fold",
+   "street": "preflop",
+   "timestamp": "2025-03-01T20:01:10Z",
+   "buttonPosition": 8,
+   "playerName": "Bob",
+   "playerId": null,
+   "isCurrentUser": false,
+   "playerPosition": "BB",
+   "playerStack": 59400,
+   "amount": null
+  }
+ ],
+ "startTime": "2025-03-01T20:00:00.000Z",
+ "endTime": "2025-03-01T20:01:30Z",
+ "state": "completed",
+ "boardCards": {
+  "flop": [
+   "9♣",
+   "6♦",
+   "2♥"
+  ],
+  "turn": "3♠",
+  "river": "J♦"
+ },
+ "ourHoleCards": {
+  "card1": "A♥",
+  "card2": "K♦"
+ },
+ "showdownData": {
+  "playerCards": {
+   "1": {
+    "card1": "A♥",
+    "card2": "K♦"
+   },
+   "8": {
+    "card1": "A♣",
+    "card2": "K♠"
+   }
+  },
+  "winner": null,
+  "handDescription": null
+ },
+ "reachedShowdown": true,
+ "potAmount": 24600,
+ "preflopPot": 24600,
+ "flopPot": 0,
+ "turnPot": 0,
+ "riverPot": 0,
+ "winnerId": null,
+ "heroPositionName": "SB",
+ "heroSeatNumber": 1,
+ "isChoppedPot": true,
+ "isSplitPot": true,
+ "choppedWinners": [
+  1,
+  8
+ ],
+ "individualShares": null,
+ "sharePerWinner": 12300,
+ "isStarred": false,
+ "isScouted": false,
+ "tags": [],
+ "notes": "",
+ "gameType": "tournament",
+ "smallBlind": 300,
+ "bigBlind": 600,
+ "playerNames": {
+  "1": "Alice",
+  "2": "Bob",
+  "3": "Carol",
+  "4": "Dave",
+  "5": "Erin",
+  "6": "Frank",
+  "7": "Grace",
+  "8": "Heidi"
+ },
+ "playerIds": {
+  "1": null,
+  "2": null,
+  "3": null,
+  "4": null,
+  "5": null,
+  "6": null,
+  "7": null,
+  "8": null
+ },
+ "_tags": [
+  "tournament",
+  "chop",
+  "all-in",
+  "showdown"
+ ]
+}

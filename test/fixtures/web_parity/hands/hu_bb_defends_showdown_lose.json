@@ -1,0 +1,216 @@
+{
+ "id": "hu_bb_defends_showdown_lose",
+ "sessionId": "cash_hu",
+ "handNumber": 54,
+ "buttonPosition": 5,
+ "playerCount": 2,
+ "actions": [
+  {
+   "player": 5,
+   "action": "small blind",
+   "street": "preflop",
+   "timestamp": "2025-03-01T20:00:07Z",
+   "buttonPosition": 5,
+   "playerName": "Erin",
+   "playerId": null,
+   "isCurrentUser": false,
+   "playerPosition": "BTN/SB",
+   "playerStack": 995,
+   "amount": 5
+  },
+  {
+   "player": 2,
+   "action": "big blind",
+   "street": "preflop",
+   "timestamp": "2025-03-01T20:00:14Z",
+   "buttonPosition": 5,
+   "playerName": "Bob",
+   "playerId": null,
+   "isCurrentUser": true,
+   "playerPosition": "BB",
+   "playerStack": 990,
+   "amount": 10
+  },
+  {
+   "player": 5,
+   "action": "raise",
+   "street": "preflop",
+   "timestamp": "2025-03-01T20:00:21Z",
+   "buttonPosition": 5,
+   "playerName": "Erin",
+   "playerId": null,
+   "isCurrentUser": false,
+   "playerPosition": "BTN/SB",
+   "playerStack": 995,
+   "amount": 30
+  },
+  {
+   "player": 2,
+   "action": "call",
+   "street": "preflop",
+   "timestamp": "2025-03-01T20:00:28Z",
+   "buttonPosition": 5,
+   "playerName": "Bob",
+   "playerId": null,
+   "isCurrentUser": true,
+   "playerPosition": "BB",
+   "playerStack": 990,
+   "amount": 20
+  },
+  {
+   "player": 2,
+   "action": "check",
+   "street": "flop",
+   "timestamp": "2025-03-01T20:00:35Z",
+   "buttonPosition": 5,
+   "playerName": "Bob",
+   "playerId": null,
+   "isCurrentUser": true,
+   "playerPosition": "BB",
+   "playerStack": 970,
+   "amount": null
+  },
+  {
+   "player": 5,
+   "action": "check",
+   "street": "flop",
+   "timestamp": "2025-03-01T20:00:42Z",
+   "buttonPosition": 5,
+   "playerName": "Erin",
+   "playerId": null,
+   "isCurrentUser": false,
+   "playerPosition": "BTN/SB",
+   "playerStack": 970,
+   "amount": null
+  },
+  {
+   "player": 2,
+   "action": "check",
+   "street": "turn",
+   "timestamp": "2025-03-01T20:00:49Z",
+   "buttonPosition": 5,
+   "playerName": "Bob",
+   "playerId": null,
+   "isCurrentUser": true,
+   "playerPosition": "BB",
+   "playerStack": 970,
+   "amount": null
+  },
+  {
+   "player": 5,
+   "action": "bet",
+   "street": "turn",
+   "timestamp": "2025-03-01T20:00:56Z",
+   "buttonPosition": 5,
+   "playerName": "Erin",
+   "playerId": null,
+   "isCurrentUser": false,
+   "playerPosition": "BTN/SB",
+   "playerStack": 970,
+   "amount": 40
+  },
+  {
+   "player": 2,
+   "action": "call",
+   "street": "turn",
+   "timestamp": "2025-03-01T20:01:03Z",
+   "buttonPosition": 5,
+   "playerName": "Bob",
+   "playerId": null,
+   "isCurrentUser": true,
+   "playerPosition": "BB",
+   "playerStack": 970,
+   "amount": 40
+  },
+  {
+   "player": 2,
+   "action": "check",
+   "street": "river",
+   "timestamp": "2025-03-01T20:01:10Z",
+   "buttonPosition": 5,
+   "playerName": "Bob",
+   "playerId": null,
+   "isCurrentUser": true,
+   "playerPosition": "BB",
+   "playerStack": 930,
+   "amount": null
+  },
+  {
+   "player": 5,
+   "action": "check",
+   "street": "river",
+   "timestamp": "2025-03-01T20:01:17Z",
+   "buttonPosition": 5,
+   "playerName": "Erin",
+   "playerId": null,
+   "isCurrentUser": false,
+   "playerPosition": "BTN/SB",
+   "playerStack": 930,
+   "amount": null
+  }
+ ],
+ "startTime": "2025-03-01T20:00:00.000Z",
+ "endTime": "2025-03-01T20:01:37Z",
+ "state": "completed",
+ "boardCards": {
+  "flop": [
+   "K♦",
+   "7♣",
+   "2♠"
+  ],
+  "turn": "9♥",
+  "river": "K♣"
+ },
+ "ourHoleCards": {
+  "card1": "T♠",
+  "card2": "T♦"
+ },
+ "showdownData": {
+  "playerCards": {
+   "2": {
+    "card1": "T♠",
+    "card2": "T♦"
+   },
+   "5": {
+    "card1": "A♥",
+    "card2": "K♥"
+   }
+  },
+  "winner": 5,
+  "handDescription": null
+ },
+ "reachedShowdown": true,
+ "potAmount": 140,
+ "preflopPot": 60,
+ "flopPot": 60,
+ "turnPot": 140,
+ "riverPot": 140,
+ "winnerId": 5,
+ "heroPositionName": "BB",
+ "heroSeatNumber": 2,
+ "isChoppedPot": false,
+ "isSplitPot": false,
+ "choppedWinners": null,
+ "individualShares": null,
+ "sharePerWinner": null,
+ "isStarred": false,
+ "isScouted": false,
+ "tags": [],
+ "notes": "",
+ "gameType": "cash",
+ "smallBlind": 5,
+ "bigBlind": 10,
+ "playerNames": {
+  "2": "Bob",
+  "5": "Erin"
+ },
+ "playerIds": {
+  "2": null,
+  "5": null
+ },
+ "_tags": [
+  "cash",
+  "heads-up",
+  "showdown"
+ ]
+}
