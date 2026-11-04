@@ -858,6 +858,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
               l10n.paywallProFeature4,
               l10n.paywallProFeature5,
               l10n.paywallProDailyChallenge,
+              l10n.paywallWebDashboard,
             ],
             // Store free trial wins; the launch-promo gift badge otherwise.
             showTrialBadge: _trialFor(0) != null || widget.launchPromo,
@@ -885,6 +886,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
               l10n.paywallEliteFeature7,
               l10n.paywallEliteFeature8,
               l10n.paywallEliteDailyChallenge,
+              l10n.paywallWebDashboard,
             ],
             showTrialBadge: _trialFor(1) != null,
             trialBadgeText: _trialBadge(1, l10n),
@@ -908,6 +910,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
               l10n.paywallClubManagement,
               l10n.paywallLiveDealerVoice,
               l10n.paywallMultiTableEvents,
+              l10n.paywallWebDashboard,
             ],
             showTrialBadge: _trialFor(2) != null,
             trialBadgeText: _trialBadge(2, l10n),

@@ -5546,6 +5546,7 @@
   "vpNoTrialBlurb": "Accédez à toutes les fonctionnalités {tier}.",
   "paywallProDailyChallenge": "Daily Challenge + rejouer les 15 derniers jours",
   "paywallEliteDailyChallenge": "Daily Challenge + rejeux illimités",
+  "paywallWebDashboard": "Tableau de bord web sur ordinateur",
   "replayPastChallenges": "Défis antérieurs",
   "replayCalendarTitle": "Défis antérieurs",
   "replayTitle": "Rejeu · Daily #{number}",

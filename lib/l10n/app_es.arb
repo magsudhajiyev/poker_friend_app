@@ -5546,6 +5546,7 @@
   "vpNoTrialBlurb": "Obtén acceso completo a todas las funciones de {tier}.",
   "paywallProDailyChallenge": "Daily Challenge + repetición de últimos 15 días",
   "paywallEliteDailyChallenge": "Daily Challenge + repeticiones ilimitadas",
+  "paywallWebDashboard": "Panel web en el ordenador",
   "replayPastChallenges": "Desafíos anteriores",
   "replayCalendarTitle": "Desafíos anteriores",
   "replayTitle": "Repetición · Daily #{number}",

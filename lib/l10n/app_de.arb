@@ -5546,6 +5546,7 @@
   "vpNoTrialBlurb": "Erhalte vollen Zugriff auf alle {tier}-Funktionen.",
   "paywallProDailyChallenge": "Daily Challenge + Wiederholung der letzten 15 Tage",
   "paywallEliteDailyChallenge": "Daily Challenge + unbegrenzte Wiederholungen",
+  "paywallWebDashboard": "Web-Dashboard am Desktop",
   "replayPastChallenges": "Vergangene Aufgaben",
   "replayCalendarTitle": "Vergangene Aufgaben",
   "replayTitle": "Wiederholung · Daily #{number}",

@@ -5815,6 +5815,10 @@
   "@paywallEliteDailyChallenge": {
     "description": "Elite/Club plan feature: Daily Challenge with unlimited replay of all past challenges."
   },
+  "paywallWebDashboard": "Web dashboard on desktop",
+  "@paywallWebDashboard": {
+    "description": "Feature line on every paid plan card: access to the web dashboard at finaltable.io/app on desktop."
+  },
   "replayPastChallenges": "Past challenges",
   "@replayPastChallenges": {
     "description": "Button on the Daily Challenge screen that opens the past-challenges replay calendar."
