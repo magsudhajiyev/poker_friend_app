@@ -865,6 +865,7 @@ authored_spots/{spotId}/      — solver game trees for the Daily Challenge; wri
 2. **iOS simulator mismatch**: Flutter 3.38 requires iOS 18.5 runtime, not iOS 26
 3. **Dependency version cascade**: Upgrading Flutter requires upgrading ALL Firebase/plugin deps together
 4. **Debug keystore mismatch**: Different keystore = INSTALL_FAILED_UPDATE_INCOMPATIBLE → uninstall app first
+5. **iOS push needs `aps-environment`**: `Runner.entitlements` = `development` (Debug), `RunnerRelease.entitlements` = `production` (Release + Profile). Without it iOS gets no APNs/FCM token, silently.
 
 ---
 

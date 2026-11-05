@@ -877,7 +877,7 @@ class AuthService {
   /// Setup FCM in background (fire-and-forget)
   static Future<void> _setupFcmInBackground() async {
     try {
-      final token = await FCMService.getToken();
+      final token = await FCMService.getTokenWithRetry();
       if (token != null) {
         await FCMService.storeToken(token);
       }
