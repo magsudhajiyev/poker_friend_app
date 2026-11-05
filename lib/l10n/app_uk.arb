@@ -5553,6 +5553,7 @@
   "vpNoTrialBlurb": "Отримай повний доступ до всіх функцій {tier}.",
   "paywallProDailyChallenge": "Daily Challenge + повтор останніх 15 днів",
   "paywallEliteDailyChallenge": "Daily Challenge + необмежені повтори",
+  "paywallWebDashboard": "Веб-панель на комп'ютері",
   "replayPastChallenges": "Минулі завдання",
   "replayCalendarTitle": "Минулі завдання",
   "replayTitle": "Повтор · Daily #{number}",

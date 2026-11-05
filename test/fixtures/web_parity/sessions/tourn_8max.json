@@ -1,0 +1,13 @@
+{
+ "sessionId": "tourn_8max",
+ "sessionName": "Sunday Tournament",
+ "gameType": "tournament",
+ "smallBlind": 300,
+ "bigBlind": 600,
+ "hasBBante": false,
+ "playerCount": 8,
+ "startTime": "2025-03-01T18:00:00.000Z",
+ "endTime": "2025-03-01T23:00:00.000Z",
+ "totalHands": 6,
+ "buyInAmount": 10
+}

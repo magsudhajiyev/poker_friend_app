@@ -489,15 +489,27 @@ service cloud.firestore {
       allow read, update, delete: if isSuperAdmin();
     }
 
+    // Daily dashboard stats — written by the admin cron (Admin SDK bypasses
+    // rules), read by the super-admin dashboard only.
+    match /daily_stats/{dayId} {
+      allow read: if isSuperAdmin();
+      allow write: if false;
+    }
+
     // ── Social feed (docs/social-feed-spec.md) — PAID-ONLY feature ──
 
     // Tier mirrored onto users/{uid} by the revenuecatWebhook function.
+    // A null/missing expiry means a lifetime entitlement (the webhook
+    // writes null) and counts as active; no paid tier = unpaid.
     function hasMirroredPaidTier() {
       return exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid))
-          .data.get('subscriptionTier', 'free') in ['pro', 'elite', 'club'] &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid))
-          .data.get('subscriptionTierExpiresAt', timestamp.value(0)) > request.time;
+        mirroredTierActive(get(/databases/$(database)/documents/users/$(request.auth.uid)).data);
+    }
+
+    function mirroredTierActive(u) {
+      return u.get('subscriptionTier', 'free') in ['pro', 'elite', 'club'] &&
+        (u.get('subscriptionTierExpiresAt', null) == null ||
+         u.get('subscriptionTierExpiresAt', null) > request.time);
     }
 
     // Admin-granted tiers qualify too. A grant without expiresAt is

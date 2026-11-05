@@ -1,0 +1,303 @@
+{
+ "id": "cash_hero_open_calls_3bet_showdown_win",
+ "sessionId": "cash_6max",
+ "handNumber": 9,
+ "buttonPosition": 6,
+ "playerCount": 6,
+ "actions": [
+  {
+   "player": 1,
+   "action": "small blind",
+   "street": "preflop",
+   "timestamp": "2025-03-01T20:00:07Z",
+   "buttonPosition": 6,
+   "playerName": "Alice",
+   "playerId": null,
+   "isCurrentUser": false,
+   "playerPosition": "SB",
+   "playerStack": 199,
+   "amount": 1
+  },
+  {
+   "player": 2,
+   "action": "big blind",
+   "street": "preflop",
+   "timestamp": "2025-03-01T20:00:14Z",
+   "buttonPosition": 6,
+   "playerName": "Bob",
+   "playerId": null,
+   "isCurrentUser": false,
+   "playerPosition": "BB",
+   "playerStack": 198,
+   "amount": 2
+  },
+  {
+   "player": 3,
+   "action": "fold",
+   "street": "preflop",
+   "timestamp": "2025-03-01T20:00:21Z",
+   "buttonPosition": 6,
+   "playerName": "Carol",
+   "playerId": null,
+   "isCurrentUser": false,
+   "playerPosition": "UTG",
+   "playerStack": 200,
+   "amount": null
+  },
+  {
+   "player": 4,
+   "action": "raise",
+   "street": "preflop",
+   "timestamp": "2025-03-01T20:00:28Z",
+   "buttonPosition": 6,
+   "playerName": "Dave",
+   "playerId": null,
+   "isCurrentUser": true,
+   "playerPosition": "HJ",
+   "playerStack": 200,
+   "amount": 6
+  },
+  {
+   "player": 5,
+   "action": "fold",
+   "street": "preflop",
+   "timestamp": "2025-03-01T20:00:35Z",
+   "buttonPosition": 6,
+   "playerName": "Erin",
+   "playerId": null,
+   "isCurrentUser": false,
+   "playerPosition": "CO",
+   "playerStack": 200,
+   "amount": null
+  },
+  {
+   "player": 6,
+   "action": "raise",
+   "street": "preflop",
+   "timestamp": "2025-03-01T20:00:42Z",
+   "buttonPosition": 6,
+   "playerName": "Frank",
+   "playerId": null,
+   "isCurrentUser": false,
+   "playerPosition": "BTN",
+   "playerStack": 200,
+   "amount": 20
+  },
+  {
+   "player": 1,
+   "action": "fold",
+   "street": "preflop",
+   "timestamp": "2025-03-01T20:00:49Z",
+   "buttonPosition": 6,
+   "playerName": "Alice",
+   "playerId": null,
+   "isCurrentUser": false,
+   "playerPosition": "SB",
+   "playerStack": 199,
+   "amount": null
+  },
+  {
+   "player": 2,
+   "action": "fold",
+   "street": "preflop",
+   "timestamp": "2025-03-01T20:00:56Z",
+   "buttonPosition": 6,
+   "playerName": "Bob",
+   "playerId": null,
+   "isCurrentUser": false,
+   "playerPosition": "BB",
+   "playerStack": 198,
+   "amount": null
+  },
+  {
+   "player": 4,
+   "action": "call",
+   "street": "preflop",
+   "timestamp": "2025-03-01T20:01:03Z",
+   "buttonPosition": 6,
+   "playerName": "Dave",
+   "playerId": null,
+   "isCurrentUser": true,
+   "playerPosition": "HJ",
+   "playerStack": 194,
+   "amount": 14
+  },
+  {
+   "player": 4,
+   "action": "check",
+   "street": "flop",
+   "timestamp": "2025-03-01T20:01:10Z",
+   "buttonPosition": 6,
+   "playerName": "Dave",
+   "playerId": null,
+   "isCurrentUser": true,
+   "playerPosition": "HJ",
+   "playerStack": 180,
+   "amount": null
+  },
+  {
+   "player": 6,
+   "action": "bet",
+   "street": "flop",
+   "timestamp": "2025-03-01T20:01:17Z",
+   "buttonPosition": 6,
+   "playerName": "Frank",
+   "playerId": null,
+   "isCurrentUser": false,
+   "playerPosition": "BTN",
+   "playerStack": 180,
+   "amount": 15
+  },
+  {
+   "player": 4,
+   "action": "call",
+   "street": "flop",
+   "timestamp": "2025-03-01T20:01:24Z",
+   "buttonPosition": 6,
+   "playerName": "Dave",
+   "playerId": null,
+   "isCurrentUser": true,
+   "playerPosition": "HJ",
+   "playerStack": 180,
+   "amount": 15
+  },
+  {
+   "player": 4,
+   "action": "check",
+   "street": "turn",
+   "timestamp": "2025-03-01T20:01:31Z",
+   "buttonPosition": 6,
+   "playerName": "Dave",
+   "playerId": null,
+   "isCurrentUser": true,
+   "playerPosition": "HJ",
+   "playerStack": 165,
+   "amount": null
+  },
+  {
+   "player": 6,
+   "action": "check",
+   "street": "turn",
+   "timestamp": "2025-03-01T20:01:38Z",
+   "buttonPosition": 6,
+   "playerName": "Frank",
+   "playerId": null,
+   "isCurrentUser": false,
+   "playerPosition": "BTN",
+   "playerStack": 165,
+   "amount": null
+  },
+  {
+   "player": 4,
+   "action": "check",
+   "street": "river",
+   "timestamp": "2025-03-01T20:01:45Z",
+   "buttonPosition": 6,
+   "playerName": "Dave",
+   "playerId": null,
+   "isCurrentUser": true,
+   "playerPosition": "HJ",
+   "playerStack": 165,
+   "amount": null
+  },
+  {
+   "player": 6,
+   "action": "bet",
+   "street": "river",
+   "timestamp": "2025-03-01T20:01:52Z",
+   "buttonPosition": 6,
+   "playerName": "Frank",
+   "playerId": null,
+   "isCurrentUser": false,
+   "playerPosition": "BTN",
+   "playerStack": 165,
+   "amount": 30
+  },
+  {
+   "player": 4,
+   "action": "call",
+   "street": "river",
+   "timestamp": "2025-03-01T20:01:59Z",
+   "buttonPosition": 6,
+   "playerName": "Dave",
+   "playerId": null,
+   "isCurrentUser": true,
+   "playerPosition": "HJ",
+   "playerStack": 165,
+   "amount": 30
+  }
+ ],
+ "startTime": "2025-03-01T20:00:00.000Z",
+ "endTime": "2025-03-01T20:02:19Z",
+ "state": "completed",
+ "boardCards": {
+  "flop": [
+   "Q♦",
+   "7♣",
+   "2♥"
+  ],
+  "turn": "9♠",
+  "river": "3♦"
+ },
+ "ourHoleCards": {
+  "card1": "Q♠",
+  "card2": "Q♥"
+ },
+ "showdownData": {
+  "playerCards": {
+   "4": {
+    "card1": "Q♠",
+    "card2": "Q♥"
+   },
+   "6": {
+    "card1": "A♦",
+    "card2": "K♦"
+   }
+  },
+  "winner": 4,
+  "handDescription": null
+ },
+ "reachedShowdown": true,
+ "potAmount": 133,
+ "preflopPot": 43,
+ "flopPot": 73,
+ "turnPot": 73,
+ "riverPot": 133,
+ "winnerId": 4,
+ "heroPositionName": "HJ",
+ "heroSeatNumber": 4,
+ "isChoppedPot": false,
+ "isSplitPot": false,
+ "choppedWinners": null,
+ "individualShares": null,
+ "sharePerWinner": null,
+ "isStarred": false,
+ "isScouted": false,
+ "tags": [],
+ "notes": "",
+ "gameType": "cash",
+ "smallBlind": 1,
+ "bigBlind": 2,
+ "playerNames": {
+  "1": "Alice",
+  "2": "Bob",
+  "3": "Carol",
+  "4": "Dave",
+  "5": "Erin",
+  "6": "Frank"
+ },
+ "playerIds": {
+  "1": null,
+  "2": null,
+  "3": null,
+  "4": null,
+  "5": null,
+  "6": null
+ },
+ "_tags": [
+  "cash",
+  "facing-3bet",
+  "call-3bet",
+  "showdown"
+ ]
+}

@@ -5581,6 +5581,7 @@
   "vpNoTrialBlurb": "Získajte plný prístup ku všetkým funkciám {tier}.",
   "paywallProDailyChallenge": "Daily Challenge + opakovanie posledných 15 dní",
   "paywallEliteDailyChallenge": "Daily Challenge + neobmedzené opakovanie",
+  "paywallWebDashboard": "Webový panel na počítači",
   "replayPastChallenges": "Minulé výzvy",
   "replayCalendarTitle": "Minulé výzvy",
   "replayTitle": "Opakovanie · Daily #{number}",

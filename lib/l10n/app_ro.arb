@@ -5553,6 +5553,7 @@
   "vpNoTrialBlurb": "Obține acces complet la toate funcțiile {tier}.",
   "paywallProDailyChallenge": "Daily Challenge + reluare ultimilor 15 zile",
   "paywallEliteDailyChallenge": "Daily Challenge + reluări nelimitate",
+  "paywallWebDashboard": "Panou web pe desktop",
   "replayPastChallenges": "Provocări anterioare",
   "replayCalendarTitle": "Provocări anterioare",
   "replayTitle": "Reluare · Daily #{number}",

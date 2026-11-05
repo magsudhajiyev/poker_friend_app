@@ -119,6 +119,8 @@ void main() async {
         (e) => debugPrint('Feature flag service init failed: $e')),
   ]);
 
+  CurrencyService.initMirror();
+
   // Install global error handlers for Crashlytics
   FlutterError.onError = (details) {
     if (kDebugMode) FlutterError.dumpErrorToConsole(details);
