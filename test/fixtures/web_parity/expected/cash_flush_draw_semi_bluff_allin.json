@@ -1,0 +1,258 @@
+{
+  "completeness": "full",
+  "csv": "Hand#,Street,Seat,Player,Action,Amount,Pot,Board,HoleCards\n22,preflop,1,Alice,small blind,1.0,0.0,,\n22,preflop,2,Bob,big blind,2.0,0.0,,\n22,preflop,3,Carol,fold,0.0,0.0,,\n22,preflop,4,Dave,fold,0.0,0.0,,\n22,preflop,5,Erin,fold,0.0,0.0,,\n22,preflop,6,Frank,raise,5.0,5.0,,A♥5♥\n22,preflop,1,Alice,fold,0.0,5.0,,\n22,preflop,2,Bob,raise,16.0,21.0,,\n22,preflop,6,Frank,call,11.0,32.0,,A♥5♥\n22,flop,2,Bob,bet,12.0,44.0,K♥9♥2♣,\n22,flop,6,Frank,all-in,92.0,136.0,K♥9♥2♣,A♥5♥\n22,flop,2,Bob,call,92.0,228.0,K♥9♥2♣,\n",
+  "id": "cash_flush_draw_semi_bluff_allin",
+  "leakFacts": {
+    "bbFacedSteal": false,
+    "bbFoldedToSteal": false,
+    "facedThreeBetAfterOpen": true,
+    "flopFacingResponse": "raise",
+    "flopStrength": "draw",
+    "flopTexture": "wet",
+    "foldedToThreeBet": false,
+    "heroVpip": true,
+    "holeCards": "A♥5♥",
+    "isWalk": false,
+    "limpFacedRaise": false,
+    "limpFolded": false,
+    "limped": false,
+    "netBB": -60.0,
+    "openedPot": true,
+    "openerPosGroup": "BB",
+    "posGroup": "BTN",
+    "ref": "cash_6max:22",
+    "riverFacingResponse": null,
+    "sawFlop": true,
+    "stackBB": 60.0,
+    "turnFacingResponse": null,
+    "wentToShowdown": true,
+    "wonAtShowdown": false,
+    "wonWithoutShowdown": false
+  },
+  "pokerstars": "PokerStars Hand #101372903845: Hold'em No Limit ($1/$2 USD) - 2025/03/01 20:00:00\nTable 'Friday Cash 6-max' 6-max Seat #6 is the button\nSeat 1: Alice (200 in chips)\nSeat 2: Bob (180 in chips)\nSeat 3: Carol (200 in chips)\nSeat 4: Dave (200 in chips)\nSeat 5: Erin (200 in chips)\nSeat 6: Hero (120 in chips)\nAlice: posts small blind 1\nBob: posts big blind 2\n*** HOLE CARDS ***\nDealt to Hero [Ah 5h]\nCarol: folds\nDave: folds\nErin: folds\nHero: raises 3 to 5\nAlice: folds\nBob: raises 11 to 16\nHero: calls 11\n*** FLOP *** [Kh 9h 2c]\nBob: bets 12\nHero: raises 92 to 104 and is all-in\nBob: calls 92\n*** SHOW DOWN ***\nHero: shows [Ah 5h]\nBob: shows [Ks Kd]\nBob collected 241 from pot\n*** SUMMARY ***\nTotal pot 241 | Rake 0\nBoard [Kh 9h 2c 3s 8d]\nSeat 1: Alice (small blind) folded before Flop\nSeat 2: Bob (big blind) collected (241)\nSeat 3: Carol folded before Flop (didn't bet)\nSeat 4: Dave folded before Flop (didn't bet)\nSeat 5: Erin folded before Flop (didn't bet)\nSeat 6: Hero (button) mucked",
+  "rangeEntry": {
+    "cloudHandId": "cash_flush_draw_semi_bluff_allin",
+    "gameType": "cash",
+    "handClass": "A5s",
+    "handKey": "cash_6max:22",
+    "posGroup": "BTN",
+    "position": "BTN",
+    "potBB": 120.5,
+    "preflopLine": "Open-raised",
+    "primaryAction": "raise",
+    "scenario": "rfi",
+    "sessionId": "cash_6max",
+    "stackBB": 60.0,
+    "stackBucket": "average",
+    "timestamp": 1740859304000,
+    "userId": "parity-user",
+    "won": false
+  },
+  "rangeLine": {
+    "heroStackBB": 60.0,
+    "line": "Open-raised",
+    "primaryAction": "raise",
+    "scenario": "rfi"
+  },
+  "stats": {
+    "actionFlags": [
+      {
+        "isAggressive": false,
+        "isBet": false,
+        "isBlind": true,
+        "isRaise": false
+      },
+      {
+        "isAggressive": false,
+        "isBet": false,
+        "isBlind": true,
+        "isRaise": false
+      },
+      {
+        "isAggressive": false,
+        "isBet": false,
+        "isBlind": false,
+        "isRaise": false
+      },
+      {
+        "isAggressive": false,
+        "isBet": false,
+        "isBlind": false,
+        "isRaise": false
+      },
+      {
+        "isAggressive": false,
+        "isBet": false,
+        "isBlind": false,
+        "isRaise": false
+      },
+      {
+        "isAggressive": true,
+        "isBet": false,
+        "isBlind": false,
+        "isRaise": true
+      },
+      {
+        "isAggressive": false,
+        "isBet": false,
+        "isBlind": false,
+        "isRaise": false
+      },
+      {
+        "isAggressive": true,
+        "isBet": false,
+        "isBlind": false,
+        "isRaise": true
+      },
+      {
+        "isAggressive": false,
+        "isBet": false,
+        "isBlind": false,
+        "isRaise": false
+      },
+      {
+        "isAggressive": true,
+        "isBet": true,
+        "isBlind": false,
+        "isRaise": false
+      },
+      {
+        "isAggressive": true,
+        "isBet": true,
+        "isBlind": false,
+        "isRaise": true
+      },
+      {
+        "isAggressive": false,
+        "isBet": false,
+        "isBlind": false,
+        "isRaise": false
+      }
+    ],
+    "bigBlindSeat": 2,
+    "hero": {
+      "blindDefend": false,
+      "blindDefendOpportunity": false,
+      "cbet": false,
+      "cbetOpportunity": false,
+      "checkRaise": false,
+      "checkRaiseOpportunity": false,
+      "facedThreeBet": true,
+      "foldToThreeBet": false,
+      "foldedPreflop": false,
+      "isBigBlind": false,
+      "isSmallBlind": false,
+      "steal": true,
+      "stealOpportunity": true,
+      "threeBet": false,
+      "threeBetOpportunity": false
+    },
+    "heroSeat": 6,
+    "isWalk": false,
+    "seats": {
+      "1": {
+        "blindDefend": false,
+        "blindDefendOpportunity": true,
+        "cbet": false,
+        "cbetOpportunity": false,
+        "checkRaise": false,
+        "checkRaiseOpportunity": false,
+        "facedThreeBet": false,
+        "foldToThreeBet": false,
+        "foldedPreflop": true,
+        "isBigBlind": false,
+        "isSmallBlind": true,
+        "steal": false,
+        "stealOpportunity": true,
+        "threeBet": false,
+        "threeBetOpportunity": true
+      },
+      "2": {
+        "blindDefend": true,
+        "blindDefendOpportunity": true,
+        "cbet": true,
+        "cbetOpportunity": true,
+        "checkRaise": false,
+        "checkRaiseOpportunity": false,
+        "facedThreeBet": false,
+        "foldToThreeBet": false,
+        "foldedPreflop": false,
+        "isBigBlind": true,
+        "isSmallBlind": false,
+        "steal": false,
+        "stealOpportunity": false,
+        "threeBet": true,
+        "threeBetOpportunity": true
+      },
+      "3": {
+        "blindDefend": false,
+        "blindDefendOpportunity": false,
+        "cbet": false,
+        "cbetOpportunity": false,
+        "checkRaise": false,
+        "checkRaiseOpportunity": false,
+        "facedThreeBet": false,
+        "foldToThreeBet": false,
+        "foldedPreflop": true,
+        "isBigBlind": false,
+        "isSmallBlind": false,
+        "steal": false,
+        "stealOpportunity": false,
+        "threeBet": false,
+        "threeBetOpportunity": false
+      },
+      "4": {
+        "blindDefend": false,
+        "blindDefendOpportunity": false,
+        "cbet": false,
+        "cbetOpportunity": false,
+        "checkRaise": false,
+        "checkRaiseOpportunity": false,
+        "facedThreeBet": false,
+        "foldToThreeBet": false,
+        "foldedPreflop": true,
+        "isBigBlind": false,
+        "isSmallBlind": false,
+        "steal": false,
+        "stealOpportunity": false,
+        "threeBet": false,
+        "threeBetOpportunity": false
+      },
+      "5": {
+        "blindDefend": false,
+        "blindDefendOpportunity": false,
+        "cbet": false,
+        "cbetOpportunity": false,
+        "checkRaise": false,
+        "checkRaiseOpportunity": false,
+        "facedThreeBet": false,
+        "foldToThreeBet": false,
+        "foldedPreflop": true,
+        "isBigBlind": false,
+        "isSmallBlind": false,
+        "steal": false,
+        "stealOpportunity": true,
+        "threeBet": false,
+        "threeBetOpportunity": false
+      },
+      "6": {
+        "blindDefend": false,
+        "blindDefendOpportunity": false,
+        "cbet": false,
+        "cbetOpportunity": false,
+        "checkRaise": false,
+        "checkRaiseOpportunity": false,
+        "facedThreeBet": true,
+        "foldToThreeBet": false,
+        "foldedPreflop": false,
+        "isBigBlind": false,
+        "isSmallBlind": false,
+        "steal": true,
+        "stealOpportunity": true,
+        "threeBet": false,
+        "threeBetOpportunity": false
+      }
+    },
+    "smallBlindSeat": 1
+  }
+}

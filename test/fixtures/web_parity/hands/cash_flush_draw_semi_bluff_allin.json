@@ -1,0 +1,238 @@
+{
+ "id": "cash_flush_draw_semi_bluff_allin",
+ "sessionId": "cash_6max",
+ "handNumber": 22,
+ "buttonPosition": 6,
+ "playerCount": 6,
+ "actions": [
+  {
+   "player": 1,
+   "action": "small blind",
+   "street": "preflop",
+   "timestamp": "2025-03-01T20:00:07Z",
+   "buttonPosition": 6,
+   "playerName": "Alice",
+   "playerId": null,
+   "isCurrentUser": false,
+   "playerPosition": "SB",
+   "playerStack": 199,
+   "amount": 1
+  },
+  {
+   "player": 2,
+   "action": "big blind",
+   "street": "preflop",
+   "timestamp": "2025-03-01T20:00:14Z",
+   "buttonPosition": 6,
+   "playerName": "Bob",
+   "playerId": null,
+   "isCurrentUser": false,
+   "playerPosition": "BB",
+   "playerStack": 178,
+   "amount": 2
+  },
+  {
+   "player": 3,
+   "action": "fold",
+   "street": "preflop",
+   "timestamp": "2025-03-01T20:00:21Z",
+   "buttonPosition": 6,
+   "playerName": "Carol",
+   "playerId": null,
+   "isCurrentUser": false,
+   "playerPosition": "UTG",
+   "playerStack": 200,
+   "amount": null
+  },
+  {
+   "player": 4,
+   "action": "fold",
+   "street": "preflop",
+   "timestamp": "2025-03-01T20:00:28Z",
+   "buttonPosition": 6,
+   "playerName": "Dave",
+   "playerId": null,
+   "isCurrentUser": false,
+   "playerPosition": "HJ",
+   "playerStack": 200,
+   "amount": null
+  },
+  {
+   "player": 5,
+   "action": "fold",
+   "street": "preflop",
+   "timestamp": "2025-03-01T20:00:35Z",
+   "buttonPosition": 6,
+   "playerName": "Erin",
+   "playerId": null,
+   "isCurrentUser": false,
+   "playerPosition": "CO",
+   "playerStack": 200,
+   "amount": null
+  },
+  {
+   "player": 6,
+   "action": "raise",
+   "street": "preflop",
+   "timestamp": "2025-03-01T20:00:42Z",
+   "buttonPosition": 6,
+   "playerName": "Frank",
+   "playerId": null,
+   "isCurrentUser": true,
+   "playerPosition": "BTN",
+   "playerStack": 120,
+   "amount": 5
+  },
+  {
+   "player": 1,
+   "action": "fold",
+   "street": "preflop",
+   "timestamp": "2025-03-01T20:00:49Z",
+   "buttonPosition": 6,
+   "playerName": "Alice",
+   "playerId": null,
+   "isCurrentUser": false,
+   "playerPosition": "SB",
+   "playerStack": 199,
+   "amount": null
+  },
+  {
+   "player": 2,
+   "action": "raise",
+   "street": "preflop",
+   "timestamp": "2025-03-01T20:00:56Z",
+   "buttonPosition": 6,
+   "playerName": "Bob",
+   "playerId": null,
+   "isCurrentUser": false,
+   "playerPosition": "BB",
+   "playerStack": 178,
+   "amount": 16
+  },
+  {
+   "player": 6,
+   "action": "call",
+   "street": "preflop",
+   "timestamp": "2025-03-01T20:01:03Z",
+   "buttonPosition": 6,
+   "playerName": "Frank",
+   "playerId": null,
+   "isCurrentUser": true,
+   "playerPosition": "BTN",
+   "playerStack": 115,
+   "amount": 11
+  },
+  {
+   "player": 2,
+   "action": "bet",
+   "street": "flop",
+   "timestamp": "2025-03-01T20:01:10Z",
+   "buttonPosition": 6,
+   "playerName": "Bob",
+   "playerId": null,
+   "isCurrentUser": false,
+   "playerPosition": "BB",
+   "playerStack": 164,
+   "amount": 12
+  },
+  {
+   "player": 6,
+   "action": "all-in",
+   "street": "flop",
+   "timestamp": "2025-03-01T20:01:17Z",
+   "buttonPosition": 6,
+   "playerName": "Frank",
+   "playerId": null,
+   "isCurrentUser": true,
+   "playerPosition": "BTN",
+   "playerStack": 104,
+   "amount": 92
+  },
+  {
+   "player": 2,
+   "action": "call",
+   "street": "flop",
+   "timestamp": "2025-03-01T20:01:24Z",
+   "buttonPosition": 6,
+   "playerName": "Bob",
+   "playerId": null,
+   "isCurrentUser": false,
+   "playerPosition": "BB",
+   "playerStack": 152,
+   "amount": 92
+  }
+ ],
+ "startTime": "2025-03-01T20:00:00.000Z",
+ "endTime": "2025-03-01T20:01:44Z",
+ "state": "completed",
+ "boardCards": {
+  "flop": [
+   "K♥",
+   "9♥",
+   "2♣"
+  ],
+  "turn": "3♠",
+  "river": "8♦"
+ },
+ "ourHoleCards": {
+  "card1": "A♥",
+  "card2": "5♥"
+ },
+ "showdownData": {
+  "playerCards": {
+   "6": {
+    "card1": "A♥",
+    "card2": "5♥"
+   },
+   "2": {
+    "card1": "K♠",
+    "card2": "K♦"
+   }
+  },
+  "winner": 2,
+  "handDescription": null
+ },
+ "reachedShowdown": true,
+ "potAmount": 241,
+ "preflopPot": 33,
+ "flopPot": 241,
+ "turnPot": 0,
+ "riverPot": 0,
+ "winnerId": 2,
+ "heroPositionName": "BTN",
+ "heroSeatNumber": 6,
+ "isChoppedPot": false,
+ "isSplitPot": false,
+ "choppedWinners": null,
+ "individualShares": null,
+ "sharePerWinner": null,
+ "isStarred": false,
+ "isScouted": false,
+ "tags": [],
+ "notes": "",
+ "gameType": "cash",
+ "smallBlind": 1,
+ "bigBlind": 2,
+ "playerNames": {
+  "1": "Alice",
+  "2": "Bob",
+  "3": "Carol",
+  "4": "Dave",
+  "5": "Erin",
+  "6": "Frank"
+ },
+ "playerIds": {
+  "1": null,
+  "2": null,
+  "3": null,
+  "4": null,
+  "5": null,
+  "6": null
+ },
+ "_tags": [
+  "cash",
+  "all-in",
+  "draw",
+  "showdown"
+ ]
+}

@@ -1,0 +1,12 @@
+{
+ "sessionId": "cash_9max",
+ "sessionName": "Casino 9-max",
+ "gameType": "cash",
+ "smallBlind": 2,
+ "bigBlind": 5,
+ "hasBBante": false,
+ "playerCount": 9,
+ "startTime": "2025-03-01T18:00:00.000Z",
+ "endTime": "2025-03-01T23:00:00.000Z",
+ "totalHands": 4
+}

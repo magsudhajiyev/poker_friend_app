@@ -26,11 +26,13 @@ import '../../services/daily_rollover.dart';
 import '../../services/feature_flag_service.dart';
 import '../../services/leaderboard_service.dart';
 import '../../services/notification_prefs_service.dart';
+import '../../services/paid_nudge_service.dart';
 import '../../services/streak_saver_service.dart';
 import '../../services/username_service.dart';
 import '../../services/auth_service.dart';
 import '../../widgets/coach_mascot.dart';
 import '../../widgets/hand_micro_animations.dart';
+import '../../widgets/offers_consent_sheet.dart';
 import '../username_setup_screen.dart';
 import 'authored_challenge_screen.dart';
 import 'drill_table_screen.dart';
@@ -374,6 +376,16 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen>
       challengeNumber: DailyChallengeService.challengeNumber(config.day),
       runDay: config.day, // start-day config: a midnight-crossing run keeps D
     ));
+    // Paid nudges (flag `paid_nudges`, opt-in): queue the missed-day push,
+    // and ask for the one-time offers consent after this positive moment.
+    unawaited(PaidNudgeService.onChallengeCompleted(
+        runDay: config.day, coachId: _persona.id));
+    OffersConsentSheet.maybeShow(
+      context,
+      delay: Duration(seconds: result.perfect ? 4 : 2),
+      onAccepted: () => unawaited(PaidNudgeService.onChallengeCompleted(
+          runDay: config.day, coachId: _persona.id)),
+    );
   }
 
   /// The leaderboard name to use when the user skips picking a username: their

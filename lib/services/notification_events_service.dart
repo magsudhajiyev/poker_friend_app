@@ -35,12 +35,15 @@ class NotificationEventsService {
 
   /// Record a scheduled push. [sentAt] is the local fire time the device
   /// scheduled (for server sends it would be the actual send time). Returns
-  /// the event id, or null on failure / signed-out.
+  /// the event id, or null on failure / signed-out. [category] tags offer
+  /// pushes (`'offer'`) so the server scheduler / reward reconcile can tell
+  /// them from streak and leaderboard pushes.
   static Future<String?> logScheduled({
     required EngagementNotifType type,
     required String coach,
     required int variantId,
     required DateTime sentAt,
+    String? category,
   }) async {
     final uid = AuthService.currentUser?.uid;
     if (uid == null) return null;
@@ -54,6 +57,7 @@ class NotificationEventsService {
         'scheduledHourLocal': sentAt.hour,
         'dayKey': _dayKey(sentAt),
         'source': 'device',
+        if (category != null) 'category': category,
         'createdAt': FieldValue.serverTimestamp(),
       });
       AnalyticsService.capture('notif_scheduled', {

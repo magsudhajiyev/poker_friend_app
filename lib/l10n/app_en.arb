@@ -5815,6 +5815,10 @@
   "@paywallEliteDailyChallenge": {
     "description": "Elite/Club plan feature: Daily Challenge with unlimited replay of all past challenges."
   },
+  "paywallWebDashboard": "Web dashboard on desktop",
+  "@paywallWebDashboard": {
+    "description": "Feature line on every paid plan card: access to the web dashboard at finaltable.io/app on desktop."
+  },
   "replayPastChallenges": "Past challenges",
   "@replayPastChallenges": {
     "description": "Button on the Daily Challenge screen that opens the past-challenges replay calendar."
@@ -6795,5 +6799,184 @@
     }
   },
   "replayLegendPreview": "Upcoming (preview)",
-  "@replayLegendPreview": {"description": "Calendar legend (super-admin only): upcoming scheduled day available for preview."}
+  "@replayLegendPreview": {
+    "description": "Calendar legend (super-admin only): upcoming scheduled day available for preview."
+  },
+  "notifOffersTitle": "Offers and reminders",
+  "@notifOffersTitle": {
+    "description": "Settings toggle title: opt-in offer pushes (trial recap, missed-day replay, plan reminders)."
+  },
+  "notifOffersSubtitle": "Trial recap, missed-day replays and plan reminders. Off until you turn it on.",
+  "@notifOffersSubtitle": {
+    "description": "Settings toggle subtitle for the offers opt-in."
+  },
+  "offersConsentTitle": "Want a gentle nudge now and then?",
+  "@offersConsentTitle": {
+    "description": "Title of the one-time consent sheet for offer pushes."
+  },
+  "offersConsentBody": "We can remind you about spots you missed and about your free trial. At most two a week. You can switch this off in Settings at any time.",
+  "@offersConsentBody": {
+    "description": "Body of the one-time consent sheet; at most two offer pushes a week."
+  },
+  "offersConsentAccept": "Yes, remind me",
+  "@offersConsentAccept": {
+    "description": "Consent sheet accept button."
+  },
+  "offersConsentDecline": "No thanks",
+  "@offersConsentDecline": {
+    "description": "Consent sheet decline button."
+  },
+  "nudgeTitleWithCoach": "{coach}: {title}",
+  "@nudgeTitleWithCoach": {
+    "description": "Notification title led by the coach name, e.g. 'Duke: You missed yesterday's spots'.",
+    "placeholders": {
+      "coach": {
+        "type": "String"
+      },
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "nudgeRecapTitle": "Your progress so far",
+  "@nudgeRecapTitle": {
+    "description": "Trial recap notification title."
+  },
+  "nudgeRecapBody": "{summary}. Keep it going.",
+  "@nudgeRecapBody": {
+    "description": "Trial recap body. summary = real figures joined by commas, e.g. '47 hands logged, 3 daily challenges played'.",
+    "placeholders": {
+      "summary": {
+        "type": "String"
+      }
+    }
+  },
+  "nudgeRecapHands": "{count, plural, =1{1 hand logged} other{{count} hands logged}}",
+  "@nudgeRecapHands": {
+    "description": "Recap figure: hands logged during the trial.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "nudgeRecapChallenges": "{count, plural, =1{1 daily challenge played} other{{count} daily challenges played}}",
+  "@nudgeRecapChallenges": {
+    "description": "Recap figure: daily challenges played during the trial.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "nudgeRecapAccuracy": "{pct}% average accuracy",
+  "@nudgeRecapAccuracy": {
+    "description": "Recap figure: average daily challenge accuracy percent.",
+    "placeholders": {
+      "pct": {
+        "type": "int"
+      }
+    }
+  },
+  "nudgeMissedTitle": "You missed yesterday's spots",
+  "@nudgeMissedTitle": {
+    "description": "Missed-day notification title."
+  },
+  "nudgeMissedBody": "Replay them whenever you like. Replays are unranked and never touch your streak.",
+  "@nudgeMissedBody": {
+    "description": "Missed-day notification body: replays are unranked."
+  },
+  "nudgePaywallTitle": "Your plan is waiting",
+  "@nudgePaywallTitle": {
+    "description": "Paywall-return notification title."
+  },
+  "nudgePaywallBodyTrial": "A free trial is available. Cancel anytime in your subscription settings.",
+  "@nudgePaywallBodyTrial": {
+    "description": "Paywall-return body when the store offers a free trial (no length stated)."
+  },
+  "nudgePaywallBody": "Pick a plan whenever you are ready. No rush.",
+  "@nudgePaywallBody": {
+    "description": "Paywall-return body when no free trial is offered."
+  },
+  "spotQuizTitle": "Your move",
+  "@spotQuizTitle": {
+    "description": "One-tap spot notification title (a real past hand, asked as a question)."
+  },
+  "spotQuizBody": "{cards} on {heroPos}. {situation} What do you do?",
+  "@spotQuizBody": {
+    "description": "Spot notification body. cards = hero hole cards e.g. 'J♠ 9♠'; heroPos = hero position e.g. 'BB'; situation = one of the villain sentences or 'Action is on you.'.",
+    "placeholders": {
+      "cards": {
+        "type": "String"
+      },
+      "heroPos": {
+        "type": "String"
+      },
+      "situation": {
+        "type": "String"
+      }
+    }
+  },
+  "spotQuizActionOnYou": "Action is on you.",
+  "@spotQuizActionOnYou": {
+    "description": "Spot notification: the hero acts first."
+  },
+  "spotQuizVillainOpened": "{pos} opened.",
+  "@spotQuizVillainOpened": {
+    "description": "Spot notification sentence: villain opened the betting preflop. pos = villain position e.g. 'BTN'.",
+    "placeholders": {
+      "pos": {
+        "type": "String"
+      }
+    }
+  },
+  "spotQuizVillainRaised": "{pos} raised.",
+  "@spotQuizVillainRaised": {
+    "description": "Spot notification sentence: villain raised. pos = villain position e.g. 'BTN'.",
+    "placeholders": {
+      "pos": {
+        "type": "String"
+      }
+    }
+  },
+  "spotQuizVillainBet": "{pos} bet.",
+  "@spotQuizVillainBet": {
+    "description": "Spot notification sentence: villain bet. pos = villain position e.g. 'BTN'.",
+    "placeholders": {
+      "pos": {
+        "type": "String"
+      }
+    }
+  },
+  "spotQuizVillainCalled": "{pos} called.",
+  "@spotQuizVillainCalled": {
+    "description": "Spot notification sentence: villain called. pos = villain position e.g. 'BTN'.",
+    "placeholders": {
+      "pos": {
+        "type": "String"
+      }
+    }
+  },
+  "spotQuizVillainChecked": "{pos} checked.",
+  "@spotQuizVillainChecked": {
+    "description": "Spot notification sentence: villain checked. pos = villain position e.g. 'BTN'.",
+    "placeholders": {
+      "pos": {
+        "type": "String"
+      }
+    }
+  },
+  "spotQuizVillainAllIn": "{pos} went all-in.",
+  "@spotQuizVillainAllIn": {
+    "description": "Spot notification sentence: villain moved all-in. pos = villain position e.g. 'BTN'.",
+    "placeholders": {
+      "pos": {
+        "type": "String"
+      }
+    }
+  },
+  "offersConsentBodyPaywall": "We can remind you about your plan options if you leave without choosing one. At most two a week. You can turn this off at any time in the app's Settings or your phone's notification settings.",
+  "@offersConsentBodyPaywall": {
+    "description": "Offers consent body shown to a user blocked by the hard paywall (they cannot see daily spots): only plan reminders."
+  }
 }

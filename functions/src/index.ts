@@ -1,5 +1,11 @@
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
-import { mirrorFromSubscriber } from "./subscription_mirror";
+import { mirrorFromSubscriber, SubscriptionMirror } from "./subscription_mirror";
+import {
+  allowedOrigin,
+  isFreshSync,
+  responseFromMirror,
+  responseFromSaved,
+} from "./subscription_sync";
 import { shouldSendTrialReminder, trialReminderCopy } from "./trial_reminder";
 import { dailyAccuracy } from "./daily_accuracy";
 import { onSchedule } from "firebase-functions/v2/scheduler";
@@ -11,7 +17,18 @@ import { getFirestore, FieldValue, Timestamp, QueryDocumentSnapshot } from "fire
 import { getMessaging } from "firebase-admin/messaging";
 import { getStorage } from "firebase-admin/storage";
 import { createHash, randomUUID } from "crypto";
-import { localDayKey, isStreakAlive } from "./local_day";
+import {
+  resolveSlot,
+  isQuietNow,
+  lapsedWholeDays,
+  reEngageDue,
+  sentInLapseCount,
+  dayLimitReached,
+  chooseType,
+  pickReconcileTarget,
+  flagAllows,
+  needsDailyChallengeFlag,
+} from "./engagement_policy";
 import * as functionsV1 from "firebase-functions/v1";
 import { chunk } from "./chunk_refs";
 import { staleCutoffKey, isStaleStreakRow } from "./streak_expiry";
@@ -490,6 +507,43 @@ export const notifyFollowersOnSessionStart = onDocumentCreated(
   }
 );
 
+/** RevenueCat REST call failed (non-2xx). */
+class RcFetchError extends Error {}
+
+/**
+ * Re-fetch the subscriber from the RC REST API and derive the mirror (pure,
+ * unit-tested in src/subscription_mirror.ts). Shared by revenuecatWebhook and
+ * syncSubscription so the two cannot drift.
+ */
+async function fetchSubscriptionMirror(uid: string): Promise<SubscriptionMirror> {
+  const response = await fetch(
+    `https://api.revenuecat.com/v1/subscribers/${encodeURIComponent(uid)}`,
+    { headers: { "Authorization": `Bearer ${revenuecatKey.value()}` } }
+  );
+  if (!response.ok) {
+    const body = await response.text();
+    console.error(`RC subscriber fetch failed for ${uid}: HTTP ${response.status} ${body}`);
+    throw new RcFetchError(`HTTP ${response.status}`);
+  }
+  const subscriber = (await response.json()).subscriber;
+  return mirrorFromSubscriber(subscriber, Date.now());
+}
+
+/** users/{uid} fields the mirror writes (rules + trial reminders read them). */
+function mirrorFields(m: SubscriptionMirror) {
+  return {
+    subscriptionTier: m.tier,
+    subscriptionTierExpiresAt:
+      m.expiresAtMs === null ? null : Timestamp.fromMillis(m.expiresAtMs),
+    // Free-trial mirror — the server-side "trial ends tomorrow"
+    // reminder reads these (hard paywall step 4).
+    subscriptionInTrial: m.inTrial,
+    subscriptionWillRenew: m.willRenew,
+    subscriptionProductId: m.productId,
+    tierSyncedAt: FieldValue.serverTimestamp(),
+  };
+}
+
 /**
  * RevenueCat webhook → mirror the subscription tier onto users/{uid}.
  *
@@ -537,45 +591,87 @@ export const revenuecatWebhook = onRequest(
 
     try {
       for (const uid of uids) {
-        const response = await fetch(
-          `https://api.revenuecat.com/v1/subscribers/${encodeURIComponent(uid)}`,
-          { headers: { "Authorization": `Bearer ${revenuecatKey.value()}` } }
-        );
-        if (!response.ok) {
-          const body = await response.text();
-          console.error(
-            `RC subscriber fetch failed for ${uid}: HTTP ${response.status} ${body}`
-          );
-          // Non-2xx → RevenueCat retries the webhook later.
-          res.status(502).send("RC fetch failed");
-          return;
-        }
-        const subscriber = (await response.json()).subscriber;
-        // Pure + unit-tested (src/subscription_mirror.ts): tier, expiry and
-        // the free-trial state of the highest active entitlement.
-        const m = mirrorFromSubscriber(subscriber, Date.now());
-        const tier = m.tier;
-
-        await db.collection("users").doc(uid).set(
-          {
-            subscriptionTier: tier,
-            subscriptionTierExpiresAt:
-              m.expiresAtMs === null ? null : Timestamp.fromMillis(m.expiresAtMs),
-            // Free-trial mirror — the server-side "trial ends tomorrow"
-            // reminder reads these (hard paywall step 4).
-            subscriptionInTrial: m.inTrial,
-            subscriptionWillRenew: m.willRenew,
-            subscriptionProductId: m.productId,
-            tierSyncedAt: FieldValue.serverTimestamp(),
-          },
-          { merge: true }
-        );
-        console.log(`Mirrored tier for ${uid}: ${tier}`);
+        const m = await fetchSubscriptionMirror(uid);
+        await db.collection("users").doc(uid).set(mirrorFields(m), { merge: true });
+        console.log(`Mirrored tier for ${uid}: ${m.tier}`);
       }
       res.status(200).send("OK");
     } catch (error) {
+      if (error instanceof RcFetchError) {
+        // Non-2xx → RevenueCat retries the webhook later.
+        res.status(502).send("RC fetch failed");
+        return;
+      }
       console.error(`Webhook processing failed for ${appUserId}:`, error);
       res.status(500).send("Internal error");
+    }
+  }
+);
+
+/**
+ * syncSubscription — the web dashboard calls this at login to learn the
+ * user's REAL paid plan (the webhook mirror alone is not trusted yet). The
+ * uid comes only from the verified Firebase ID token. Refreshes the mirror
+ * from RevenueCat, except: a sync under 60 s old is returned as saved, and a
+ * missing users/{uid} doc is never created here (grantFreeMonthOnSignup fires
+ * on create). RC failure → 502 and the mirror is left untouched.
+ */
+export const syncSubscription = onRequest(
+  { secrets: [revenuecatKey], timeoutSeconds: 30 },
+  async (req, res) => {
+    const origin = allowedOrigin(req.headers.origin);
+    if (origin) {
+      res.set("Access-Control-Allow-Origin", origin);
+      res.set("Vary", "Origin");
+      res.set("Access-Control-Allow-Methods", "POST, OPTIONS");
+      res.set("Access-Control-Allow-Headers", "Authorization, Content-Type");
+    }
+    if (req.method === "OPTIONS") {
+      res.status(204).send("");
+      return;
+    }
+    if (req.method !== "POST") {
+      res.status(405).send("Method not allowed");
+      return;
+    }
+
+    const authHeader = req.headers.authorization ?? "";
+    const idToken = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
+    let uid: string;
+    try {
+      uid = (await getAuth().verifyIdToken(idToken)).uid;
+    } catch {
+      res.status(401).send("Unauthorized");
+      return;
+    }
+
+    try {
+      const userRef = db.collection("users").doc(uid);
+      const user = await userRef.get();
+      const syncedAt = user.get("tierSyncedAt") as Timestamp | undefined;
+      if (user.exists && isFreshSync(syncedAt ? syncedAt.toMillis() : null, Date.now())) {
+        const exp = user.get("subscriptionTierExpiresAt") as Timestamp | null | undefined;
+        const saved = responseFromSaved(
+          user.get("subscriptionTier"),
+          exp ? exp.toMillis() : null,
+          user.get("subscriptionInTrial")
+        );
+        if (saved) {
+          res.status(200).json(saved);
+          return;
+        }
+      }
+
+      const m = await fetchSubscriptionMirror(uid);
+      if (user.exists) await userRef.update(mirrorFields(m));
+      res.status(200).json(responseFromMirror(m));
+    } catch (error) {
+      if (error instanceof RcFetchError) {
+        res.status(502).json({ error: "rc_unavailable" });
+        return;
+      }
+      console.error(`syncSubscription failed for ${uid}:`, error);
+      res.status(500).json({ error: "internal" });
     }
   }
 );
@@ -756,26 +852,31 @@ export const validateLeaderboardEntry = onDocumentCreated(
     // on-device). Best-effort — never blocks the score validation below.
     const uid = event.params.uid;
     try {
+      const nowMs = Date.now();
+      // Past-or-now events only (same uid+sentAt index); the pure picker
+      // still skips device, offer and admin events, so fetch a wide window.
       const pending = await db
         .collection("notification_events")
         .where("uid", "==", uid)
+        .where("sentAt", "<=", Timestamp.fromMillis(nowMs))
         .orderBy("sentAt", "desc")
-        .limit(5)
+        .limit(25)
         .get();
-      const nowMs = Date.now();
-      for (const ev of pending.docs) {
+      const candidates = pending.docs.map((ev) => {
         const d = ev.data();
-        if (d.playedAt || d.cancelled) continue;
-        const sentMs =
-          d.sentAt && typeof d.sentAt.toMillis === "function"
-            ? d.sentAt.toMillis()
-            : 0;
-        const within2h = sentMs > 0 && nowMs - sentMs <= 2 * 60 * 60 * 1000;
-        await ev.ref.update({
+        const sentAt = d.sentAt;
+        return {
+          ...d,
+          sentMs: sentAt && typeof sentAt.toMillis === "function" ? sentAt.toMillis() : 0,
+        };
+      });
+      const idx = pickReconcileTarget(candidates, nowMs);
+      if (idx >= 0) {
+        const within2h = nowMs - candidates[idx].sentMs <= 2 * 60 * 60 * 1000;
+        await pending.docs[idx].ref.update({
           playedAt: FieldValue.serverTimestamp(),
           convertedWithin2h: within2h,
         });
-        break; // only the most recent eligible one
       }
     } catch (err) {
       console.error("engagement reconcile failed:", err);
@@ -826,12 +927,6 @@ export const validateLeaderboardEntry = onDocumentCreated(
    See docs/features/engagement-notifications-plan.md §12.
    ──────────────────────────────────────────────────────────────────────── */
 
-// Pure local-hour math (mirrors lib/services/send_time_logic.dart).
-function localHour(utcHour: number, tzOffsetMinutes: number): number {
-  const h = Math.floor((utcHour * 60 + tzOffsetMinutes) / 60) % 24;
-  return h < 0 ? h + 24 : h;
-}
-
 // Coach-voiced copy, server-side (mirrors lib/services/notification_copy.dart
 // for the server-reachable moments). Kept intentionally small; the client
 // catalog is the richer source for device-scheduled pushes.
@@ -868,141 +963,111 @@ const COACH_IMAGE_URL: Record<string, string> = {
   nova: "https://finaltable.io/email/coach-nova.png",
 };
 
-// ~10% stable holdout (matches the client hash intent) — measures true lift.
-function isHoldout(uid: string): boolean {
-  let h = 0;
-  for (let i = 0; i < uid.length; i++) h = (h * 31 + uid.charCodeAt(i)) >>> 0;
-  return h % 10 === 0;
-}
-
 export const scheduleEngagement = onSchedule(
   { schedule: "0 * * * *", timeoutSeconds: 540, memory: "512MiB" },
   async () => {
     const nowMs = Date.now();
     const utcHourNow = new Date(nowMs).getUTCHours();
 
-    // Candidates: users with a computed active hour whose prefs allow pushes.
-    // (A missing notif map = defaults; we require activeHourUtc so we only
-    // target users we have a signal for.)
-    const snap = await db
-      .collection("users")
-      .where("notif.activeHourUtc", ">=", 0)
-      .get();
+    // Flags are read once per run; if that fails, send nothing.
+    let flags: Record<string, unknown>;
+    let adminIds: Set<string>;
+    try {
+      const [flagDoc, admins] = await Promise.all([
+        db.collection("app_config").doc("feature_flags").get(),
+        db.collection("app_admins").get(),
+      ]);
+      flags = (flagDoc.data() || {}) as Record<string, unknown>;
+      adminIds = new Set(admins.docs.map((d) => d.id));
+    } catch (err) {
+      console.error("scheduleEngagement flag read failed:", err);
+      return;
+    }
+
+    // Candidates: users whose send hour (activeHourUtc - 1) is now, plus
+    // admin test sends. Equality filters only, so single-field indexes do.
+    const [dueSnap, forcedSnap] = await Promise.all([
+      db.collection("users").where("notif.activeHourUtc", "==", (utcHourNow + 1) % 24).get(),
+      db.collection("users").where("notif.debugForceSend", "==", true).get(),
+    ]);
+    const candidates = new Map<string, QueryDocumentSnapshot>();
+    for (const d of [...dueSnap.docs, ...forcedSnap.docs]) candidates.set(d.id, d);
 
     let sent = 0;
-    for (const doc of snap.docs) {
+    for (const doc of candidates.values()) {
       try {
         const uid = doc.id;
         const notif = (doc.get("notif") || {}) as Record<string, unknown>;
-        const master = notif.master !== false;
-        if (!master) continue;
 
-        // Admin test hook bypasses the holdout + the send-time window so a
-        // forced push fires on the very next run, whatever the hour.
-        const forced = notif.debugForceSend === true;
-        if (!forced && isHoldout(uid)) continue;
+        // ONE send slot per user (activeHourUtc - 1, UTC). The admin test
+        // hook bypasses the holdout + the slot so a forced push fires on the
+        // very next run, whatever the hour.
+        const slot = resolveSlot(uid, notif, nowMs);
+        if (!slot.evaluate) continue;
+        const forced = slot.forced;
 
-        const activeHourUtc = Number(notif.activeHourUtc);
-        const tzParsed = Number(notif.tzOffsetMinutes ?? 0);
-        const tz = Number.isFinite(tzParsed) ? tzParsed : 0;
-        // The user's LOCAL calendar day (matches the client's lastDayKey);
-        // UTC day when no offset is known.
-        const today = localDayKey(nowMs, tz);
-        const localNow = localHour(utcHourNow, tz);
+        // Dark-launch gate (admin test sends bypass it).
+        const isAdmin = adminIds.has(uid);
+        if (!forced && !flagAllows(flags["engagement_notifications"], isAdmin)) continue;
 
-        // TWO evaluation windows so a daily player who plays early is still
-        // reached (the old single "1h before active hour" window missed them
-        // because they'd already played by then):
-        //   • MORNING (fixed local hour): the "today's five are live" nudge +
-        //     streak-milestone celebration — fires BEFORE they'd play.
-        //   • EVENING (their active hour): the streak-saver + comeback — the
-        //     "it's getting late and you haven't played" moment.
-        const MORNING_HOUR = 10; // local
-        const localActive = localHour(activeHourUtc, tz);
-        const eveningHour = ((localActive - 1) % 24 + 24) % 24;
-        const inMorningWindow = localNow === MORNING_HOUR;
-        const inEveningWindow = localNow === eveningHour;
-        if (!forced && !inMorningWindow && !inEveningWindow) continue;
-
-        // Quiet hours (streak-saver is exempt; evaluated per type below).
-        const qStart = Number(notif.quietStartLocal ?? 22);
-        const qEnd = Number(notif.quietEndLocal ?? 8);
-        const inQuiet =
-          qStart === qEnd
-            ? false
-            : qStart < qEnd
-            ? localNow >= qStart && localNow < qEnd
-            : localNow >= qStart || localNow < qEnd;
-
-        // One engagement push per user per day.
-        const already = await db
-          .collection("notification_events")
-          .where("uid", "==", uid)
-          .where("dayKey", "==", today)
-          .where("source", "==", "server")
+        // Undeliverable users get no event and no push.
+        const tokens = await db
+          .collection("fcm_tokens")
+          .where("userId", "==", uid)
           .limit(1)
           .get();
-        if (!forced && !already.empty) continue;
+        if (tokens.empty) continue;
+
+        // One engagement push per user per day, device or server. Equality
+        // filters only (merged single-field indexes); cancelled device
+        // reminders do not count.
+        const dayEvents = await db
+          .collection("notification_events")
+          .where("uid", "==", uid)
+          .where("dayKey", "==", slot.today)
+          .get();
+        if (!forced && dayLimitReached(dayEvents.docs.map((d) => d.data()))) continue;
 
         // Resolve the eligible moment (priority order; server-reachable set).
         const streakDoc = await db.collection("leaderboard_streak").doc(uid).get();
-        const lastDayKey = String(streakDoc.get("lastDayKey") || "");
-        // A streak not played today/yesterday (local) is dead: count it as 0.
-        const currentStreak = isStreakAlive(lastDayKey, today)
-          ? Number(streakDoc.get("currentStreak") || 0)
-          : 0;
-        const bestStreak = Number(streakDoc.get("bestStreak") || 0);
-        const playedToday = lastDayKey === today;
-        // Milestone = a round-number streak reached today (celebration push).
-        const milestoneHit =
-          playedToday &&
-          [3, 7, 14, 30, 50, 100, 200, 365].includes(currentStreak) &&
-          currentStreak === bestStreak;
-
         const lastActive = doc.get("lastActiveAt") as Timestamp | undefined;
-        const lapsedDays = lastActive
-          ? (Date.now() - lastActive.toMillis()) / 86400000
-          : 99;
+        const lastActiveMs = lastActive ? lastActive.toMillis() : null;
+        const lapsedDays = lapsedWholeDays(lastActiveMs, nowMs);
 
-        let type: string | null = null;
-        if (notif.debugForceSend === true) {
-          // Admin test hook: force a push regardless of eligibility.
-          type = "dc_today_ready";
-        } else if (
-          inEveningWindow &&
-          notif.streak !== false &&
-          currentStreak >= 1 &&
-          !playedToday
-        ) {
-          type = "dc_streak_risk"; // quiet-hours exempt, their active hour
-        } else if (
-          !inQuiet &&
-          notif.leaderboard !== false &&
-          milestoneHit
-        ) {
-          // Celebrate a milestone (either window) — positive, for engaged users.
-          type = "lb_milestone";
-        } else if (
-          inMorningWindow &&
-          !inQuiet &&
-          notif.leaderboard !== false &&
-          !playedToday &&
-          lapsedDays < 2
-        ) {
-          // Morning nudge: today's five are live, before they'd play.
-          type = "dc_today_ready";
-        } else if (
-          !inQuiet &&
-          notif.reengage !== false &&
-          lapsedDays >= 2
-        ) {
-          // Lapsed ≥2 days → gentle comeback (either window).
-          type = "re_engage";
+        // Comeback ladder (days 2/5/14): count this lapse's pushes so far.
+        let reEngageSentInLapse = 0;
+        if (reEngageDue(lapsedDays, 0)) {
+          const prior = await db
+            .collection("notification_events")
+            .where("uid", "==", uid)
+            .where("type", "==", "re_engage")
+            .where("source", "==", "server")
+            .get();
+          reEngageSentInLapse = sentInLapseCount(
+            prior.docs.map((d) => (d.get("sentAt") as Timestamp | undefined)?.toMillis() ?? null),
+            lastActiveMs
+          );
         }
+
+        const { type, currentStreak } = chooseType({
+          notif,
+          slot,
+          quiet: isQuietNow(notif, slot),
+          lastDayKey: String(streakDoc.get("lastDayKey") || ""),
+          streakRaw: Number(streakDoc.get("currentStreak") || 0),
+          bestStreak: Number(streakDoc.get("bestStreak") || 0),
+          lapsedDays,
+          reEngageSentInLapse,
+        });
         if (!type) continue;
+        if (
+          !forced &&
+          needsDailyChallengeFlag(type) &&
+          !flagAllows(flags["daily_challenge"], isAdmin)
+        ) continue;
 
         // Clear the one-shot debug flag so it doesn't re-fire every hour.
-        if (notif.debugForceSend === true) {
+        if (forced) {
           await doc.ref.set(
             { notif: { debugForceSend: false } },
             { merge: true }
@@ -1020,8 +1085,9 @@ export const scheduleEngagement = onSchedule(
           coach,
           variantId: 0,
           source: "server",
-          scheduledHourLocal: localNow,
-          dayKey: today,
+          scheduledHourLocal: slot.localNow,
+          scheduledHourUtc: utcHourNow,
+          dayKey: slot.today,
           sentAt: FieldValue.serverTimestamp(),
           createdAt: FieldValue.serverTimestamp(),
         });

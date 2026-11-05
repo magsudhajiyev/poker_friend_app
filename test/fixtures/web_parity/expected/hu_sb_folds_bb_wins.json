@@ -1,0 +1,136 @@
+{
+  "completeness": "full",
+  "csv": "Hand#,Street,Seat,Player,Action,Amount,Pot,Board,HoleCards\n53,preflop,2,Bob,small blind,5.0,0.0,,\n53,preflop,5,Erin,big blind,10.0,0.0,,Q♣3♦\n53,preflop,2,Bob,fold,0.0,0.0,,\n",
+  "id": "hu_sb_folds_bb_wins",
+  "leakFacts": {
+    "bbFacedSteal": false,
+    "bbFoldedToSteal": false,
+    "facedThreeBetAfterOpen": false,
+    "flopFacingResponse": null,
+    "flopStrength": null,
+    "flopTexture": null,
+    "foldedToThreeBet": false,
+    "heroVpip": false,
+    "holeCards": "Q♣3♦",
+    "isWalk": true,
+    "limpFacedRaise": false,
+    "limpFolded": false,
+    "limped": false,
+    "netBB": 0.5,
+    "openedPot": false,
+    "openerPosGroup": null,
+    "posGroup": "BB",
+    "ref": "cash_hu:53",
+    "riverFacingResponse": null,
+    "sawFlop": false,
+    "stackBB": 99.0,
+    "turnFacingResponse": null,
+    "wentToShowdown": false,
+    "wonAtShowdown": false,
+    "wonWithoutShowdown": false
+  },
+  "pokerstars": "PokerStars Hand #101980797700: Hold'em No Limit ($5/$10 USD) - 2025/03/01 20:00:00\nTable 'Heads-up Duel' 6-max Seat #2 is the button\nSeat 2: Bob (1000 in chips)\nSeat 5: Hero (1000 in chips)\nBob: posts small blind 5\nHero: posts big blind 10\n*** HOLE CARDS ***\nDealt to Hero [Qc 3d]\nBob: folds\nHero collected 15 from pot\n*** SUMMARY ***\nTotal pot 15 | Rake 0\nSeat 2: Bob (button) folded before Flop\nSeat 5: Hero (big blind) collected (15)",
+  "rangeEntry": {
+    "cloudHandId": "hu_sb_folds_bb_wins",
+    "gameType": "cash",
+    "handClass": "Q3o",
+    "handKey": "cash_hu:53",
+    "posGroup": "BB",
+    "position": "BB",
+    "potBB": 1.5,
+    "preflopLine": "No action (walk)",
+    "primaryAction": "check",
+    "scenario": "rfi",
+    "sessionId": "cash_hu",
+    "stackBB": 99.0,
+    "stackBucket": "veryDeep",
+    "timestamp": 1740859241000,
+    "userId": "parity-user",
+    "won": true
+  },
+  "rangeLine": {
+    "heroStackBB": 99.0,
+    "line": "No action (walk)",
+    "primaryAction": "check",
+    "scenario": "rfi"
+  },
+  "stats": {
+    "actionFlags": [
+      {
+        "isAggressive": false,
+        "isBet": false,
+        "isBlind": true,
+        "isRaise": false
+      },
+      {
+        "isAggressive": false,
+        "isBet": false,
+        "isBlind": true,
+        "isRaise": false
+      },
+      {
+        "isAggressive": false,
+        "isBet": false,
+        "isBlind": false,
+        "isRaise": false
+      }
+    ],
+    "bigBlindSeat": 5,
+    "hero": {
+      "blindDefend": false,
+      "blindDefendOpportunity": false,
+      "cbet": false,
+      "cbetOpportunity": false,
+      "checkRaise": false,
+      "checkRaiseOpportunity": false,
+      "facedThreeBet": false,
+      "foldToThreeBet": false,
+      "foldedPreflop": false,
+      "isBigBlind": true,
+      "isSmallBlind": false,
+      "steal": false,
+      "stealOpportunity": false,
+      "threeBet": false,
+      "threeBetOpportunity": false
+    },
+    "heroSeat": 5,
+    "isWalk": true,
+    "seats": {
+      "2": {
+        "blindDefend": false,
+        "blindDefendOpportunity": false,
+        "cbet": false,
+        "cbetOpportunity": false,
+        "checkRaise": false,
+        "checkRaiseOpportunity": false,
+        "facedThreeBet": false,
+        "foldToThreeBet": false,
+        "foldedPreflop": true,
+        "isBigBlind": false,
+        "isSmallBlind": true,
+        "steal": false,
+        "stealOpportunity": false,
+        "threeBet": false,
+        "threeBetOpportunity": false
+      },
+      "5": {
+        "blindDefend": false,
+        "blindDefendOpportunity": false,
+        "cbet": false,
+        "cbetOpportunity": false,
+        "checkRaise": false,
+        "checkRaiseOpportunity": false,
+        "facedThreeBet": false,
+        "foldToThreeBet": false,
+        "foldedPreflop": false,
+        "isBigBlind": true,
+        "isSmallBlind": false,
+        "steal": false,
+        "stealOpportunity": false,
+        "threeBet": false,
+        "threeBetOpportunity": false
+      }
+    },
+    "smallBlindSeat": 2
+  }
+}

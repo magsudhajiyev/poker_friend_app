@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:ui' show Locale, PlatformDispatcher;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
@@ -7,8 +6,8 @@ import 'package:purchases_flutter/purchases_flutter.dart' show PackageType;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../l10n/app_localizations.dart';
+import 'app_l10n_lookup.dart';
 import 'auth_service.dart';
-import 'locale_service.dart';
 import 'notification_service.dart';
 import 'subscription_logic.dart';
 import 'subscription_service.dart';
@@ -120,19 +119,7 @@ class TrialReminderService {
     return (l10n.trialReminderTitle, body);
   }
 
-  /// The user's app language (Settings choice, else the device's), falling
-  /// back to English for anything unsupported.
-  static AppLocalizations _l10n() {
-    final chosen = LocaleService.localeNotifier.value;
-    final device = PlatformDispatcher.instance.locale;
-    for (final l in [chosen, device]) {
-      if (l == null) continue;
-      try {
-        return lookupAppLocalizations(Locale(l.languageCode));
-      } catch (_) {}
-    }
-    return lookupAppLocalizations(const Locale('en'));
-  }
+  static AppLocalizations _l10n() => AppL10nLookup.current();
 
   static Future<void> _stampScheduledFor(int? endsAtMs) async {
     final uid = AuthService.currentUser?.uid;

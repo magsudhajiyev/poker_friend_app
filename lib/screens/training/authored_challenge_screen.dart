@@ -60,6 +60,11 @@ class AuthoredChallengeScreen extends StatefulWidget {
   /// onboarding demo passes "Done" since there's no results screen after it.
   final String? lastHandLabel;
 
+  /// Spot-quiz push: apply this action as the first decision once the table
+  /// is up, when it is still legal at that node (otherwise the player just
+  /// sees the decision). Only ever set on UNRANKED replays.
+  final AuthoredAction? autoFirstAction;
+
   const AuthoredChallengeScreen({
     super.key,
     required this.tree,
@@ -69,6 +74,7 @@ class AuthoredChallengeScreen extends StatefulWidget {
     this.handCount = 1,
     this.onHandComplete,
     this.lastHandLabel,
+    this.autoFirstAction,
   });
 
   @override
@@ -109,12 +115,16 @@ class AuthoredDayRunner extends StatefulWidget {
   /// passes "Done" since no results screen follows.
   final String? lastHandLabel;
 
+  /// Forwarded to the FIRST hand only (see [AuthoredChallengeScreen]).
+  final AuthoredAction? autoFirstAction;
+
   const AuthoredDayRunner(
       {super.key,
       required this.trees,
       required this.persona,
       required this.dayKey,
-      this.lastHandLabel});
+      this.lastHandLabel,
+      this.autoFirstAction});
 
   @override
   State<AuthoredDayRunner> createState() => _AuthoredDayRunnerState();
@@ -143,6 +153,7 @@ class _AuthoredDayRunnerState extends State<AuthoredDayRunner> {
         handCount: widget.trees.length,
         onHandComplete: _onHandComplete,
         lastHandLabel: widget.lastHandLabel,
+        autoFirstAction: _hand == 0 ? widget.autoFirstAction : null,
       );
 }
 
@@ -284,6 +295,15 @@ class _AuthoredChallengeScreenState extends State<AuthoredChallengeScreen> {
       }
     }
     _explainSpot();
+    final auto = widget.autoFirstAction;
+    if (auto != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final node = _walker.current;
+        if (mounted && node != null && node.isHero && node.actions.contains(auto)) {
+          _act(auto);
+        }
+      });
+    }
     AnalyticsService.capture('daily_challenge_authored_started', {
       'spot_id': _tree.id,
     });

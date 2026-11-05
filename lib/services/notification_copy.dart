@@ -23,10 +23,25 @@ enum EngagementNotifType {
   lbMilestone('lb_milestone'),
   lbOvertaken('lb_overtaken'),
   dcTodayReady('dc_today_ready'),
-  reEngage('re_engage');
+  reEngage('re_engage'),
+  // Paid nudges (flag `paid_nudges`, opt-in `notif.offers`). Their copy is
+  // localized through ARB (paid_nudge_service.dart), not this English catalog.
+  trialRecap('trial_recap'),
+  missedDay('missed_day'),
+  paywallReturn('paywall_return'),
+  // One-tap real past spot with action buttons (flag `paid_nudges` + offers).
+  spotQuiz('spot_quiz');
 
   final String id;
   const EngagementNotifType(this.id);
+
+  /// Offer-category pushes: need `notif.offers == true` and are logged with
+  /// `category: 'offer'`.
+  bool get isOffer =>
+      this == trialRecap ||
+      this == missedDay ||
+      this == paywallReturn ||
+      this == spotQuiz;
 
   static EngagementNotifType? fromId(String? id) {
     for (final t in values) {
@@ -62,6 +77,9 @@ class NotificationCopy {
     int? streak,
     int? rank,
   }) {
+    if (type.isOffer) {
+      throw ArgumentError('${type.id} copy is localized via ARB, not here');
+    }
     // Lapsed users always get the gentle neutral voice.
     final voice = (type == EngagementNotifType.reEngage)
         ? neutralVoice

@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Overview
 Flutter/Dart poker hand logging application with Firebase backend, club management, dealer-assisted voice logging, and real-time WebSocket sync. Allows users to track poker hands, sessions, statistics, opponents, and bankroll.
 
-**The app is LIVE** (v2.1.0+14 submitted to Google Play on launch night 2026-07-24; iOS submission pending). Current working version: 2.1.5+19 (Engagement notifications: coach-voiced streak-saver + send-time scheduler, prefs, admin dashboard; flag `engagement_notifications` = admin-only. Plus 2.1.4+18 Daily Challenge leaderboard). **On `main` (2026-10-21): authored solver game-tree Daily Challenge — 5 hands/day, pot-weighted accuracy scoring, casual coach commentary (flag `daily_challenge` = admin-only; Firestore rules + `validateLeaderboardEntry` deploy still pending) — see Key Feature 18c.** **On `main` (2026-10-25, bumped 2.1.5+20): Daily Challenge REPLAYS (tier-gated past-day practice, unranked), hard-paywall value-proposition "free trial" screen, onboarding username-always-asked fix + demo→info-screen step, leaderboard skippable-username prompt — see Key Feature 18d + diary 2026-10-25.** Post-launch work is queued in `ROADMAP.md` — check it before planning any change.
+**The app is LIVE** (v2.1.0+14 submitted to Google Play on launch night 2026-07-24; iOS submission pending). Current working version: 2.1.8+24 (pubspec). Earlier: 2.1.5+19 (Engagement notifications: coach-voiced streak-saver + send-time scheduler, prefs, admin dashboard; flag `engagement_notifications` = admin-only. Plus 2.1.4+18 Daily Challenge leaderboard). **On `main` (2026-10-21): authored solver game-tree Daily Challenge — 5 hands/day, pot-weighted accuracy scoring, casual coach commentary (flag `daily_challenge` = admin-only; Firestore rules + `validateLeaderboardEntry` deploy still pending) — see Key Feature 18c.** **On `main` (2026-10-25, bumped 2.1.5+20): Daily Challenge REPLAYS (tier-gated past-day practice, unranked), hard-paywall value-proposition "free trial" screen, onboarding username-always-asked fix + demo→info-screen step, leaderboard skippable-username prompt — see Key Feature 18d + diary 2026-10-25.** **On `main` (2026-11-01, bumped 2.1.7+22): Easy hand logging (admin flag `easy_hand_logging`: fold tick w/ 4s undo, flag-a-hand + later recall, hand completeness levels with stats applied once at promotion, stack-timeline pending segments; live insights behind `live_insights`), Daily Challenge hardening (create-only leaderboard rules, local-day/DST fixes, cross-device streak merge, offline play block — NOT deployed), super-admin preview of upcoming days, `build_tree.js` limp-spine fix.** Post-launch work is queued in `ROADMAP.md` — check it before planning any change.
 
 ---
 
@@ -53,6 +53,14 @@ firebase deploy --only functions:<functionName>
 # Deploy Firestore rules (editing firestore.rules alone does nothing live)
 firebase deploy --only firestore:rules
 
+# Firestore rules tests on the local emulator (needs Java 21+, Node 20+; never touches prod)
+cd test/rules && npm install
+firebase emulators:exec --only firestore --project demo-rules-test "npm test"   # all *.rules.test.js (leaderboard, social_tier)
+
+# Web-dashboard parity goldens (Dart is the contract for the TS port in final-table-web; see test/web_parity/README.md)
+flutter test test/web_parity/generate_goldens_test.dart                   # fails with stale:/missing:/orphaned: if out of date
+UPDATE_GOLDENS=1 flutter test test/web_parity/generate_goldens_test.dart  # regenerate after changing stats/leak/range/export logic
+
 # Authored Daily Challenge tree: solver sheet export -> JSON -> Firestore (run from tool/gto_export/, see README-tree.md)
 node build_tree.js --sheet <SHEET_ID> --hero 99 --id lj-btn-ts9c4d-99 --out tree.local.json   # review
 node build_tree.js --sheet <SHEET_ID> --hero 99 --id lj-btn-ts9c4d-99 --upload                # write authored_spots/{id}
@@ -66,6 +74,7 @@ node build_tree.js --sheet <SHEET_ID> --hero 99 --id lj-btn-ts9c4d-99 --upload  
 - **DO NOT commit unless explicitly asked by user**
 - **Authoritative docs**: `BUG_TRACKER.md` (live status of hand-logging bugs + features in flight), `test/HAND_LOGGING_SPEC.md` (hand-logging behaviour spec + bug diagnoses), `POKER_SEATING_RULES.md` (seating/dead-button rules), `ROADMAP.md` (post-launch work queue incl. HARD Aug 31 2026 Play Billing deadline + deferred security fixes), `SECURITY_AUDIT_2026-07-23.md` (audit findings + per-item status), `BACKLOG.md` (triaged product backlog with stable B#/U#/F#/M#/G# IDs). Check these before touching hand-logging code, and check ROADMAP.md before planning any update.
 - **`marketing/` folder**: `MARKETING_MASTER.md` is the single-file source of truth for the marketing agent; video scripts and prompts live alongside it. Not app code.
+- **Web parity contract**: `stats_calculator`, `leak_extractor`, `leak_engine`, `board_texture`, `flop_strength`, the pure parts of `range_grid_service`, `pokerstars_export_service` and `csv_export_service` are ported to TypeScript in `final-table-web`. After ANY change to these files, regenerate the goldens (see Commands) and copy `test/fixtures/web_parity/{hands,sessions,expected}` to `final-table-web/src/core/__fixtures__/`.
 - **`docs/` folder**: reference docs (`ARCHITECTURE.md`, `SERVICES.md`, `SCREENS.md`, `NAVIGATION.md`, `STATE.md`, `DESIGN_SYSTEM.md`, `SUBSCRIPTIONS.md`, `GLOSSARY.md`) plus feature specs — **`docs/social-feed-spec.md` is the decision record for the social feed** (D1–D11); any feed/follow change must respect it.
 - Always check `/diary` folder for previously solved bugs before implementing fixes. Treat every entry there as authoritative documentation of the current behaviour — respect it and do not break it. **In particular, `/diary/2026-07-15-in-app-tour-complete-reference.md` is the canonical reference for the in-app tour flow: any change touching onboarding, guided overlays, tour phases, `OnboardingState`, `guided_hand_overlay`, `onboarding_tour`, or the screens the tour highlights (home, session details, poker hand, session end) must preserve the behaviour documented there.**
 - Create diary entry after user confirms a fix
@@ -114,7 +123,7 @@ Full machine setup (tool versions, keystores, step-by-step install) lives in `SE
 ### Tech Stack
 - **Frontend**: Flutter/Dart (300+ Dart files)
 - **Backend**: Firebase (Firestore, Auth, FCM, Cloud Functions in `functions/`) + FastAPI backend (Render)
-- **Local Storage**: SQLite (sqflite, DB schema v19) + SharedPreferences
+- **Local Storage**: SQLite (sqflite, DB schema v20) + SharedPreferences
 - **Real-time**: Socket.IO WebSocket + Firestore Snapshot listeners
 - **Voice Recognition**: Deepgram ASR via backend "Dealer Brain" endpoint
 - **Payments**: RevenueCat SDK
@@ -128,6 +137,10 @@ Node 20 / TypeScript, firebase-functions v7. Deploy each function by name (see C
 - `sendClubNotification` — topic-based FCM to all club members
 - `grantFreeMonthOnSignup` — launch promo: RevenueCat promotional Pro month on `users/{uid}` create, gated by `app_config/promotions.freeMonthOnSignup`
 - `cleanupOldTokens` — daily scheduled FCM token cleanup
+- `sendTrialReminders` — hourly trial-ending reminders (hard paywall trial)
+- `deleteLeaderboardDataOnUserDelete` — GDPR: v1 auth `onDelete`, removes the user's leaderboard entries (uses the `entries.uid` collection-group index)
+- `expireStaleStreaks` — nightly; expires leaderboard streaks that were not extended
+- Shared pure CF logic lives in separate modules (`functions/src/daily_accuracy.ts`, `local_day.ts`); Dart/TS scoring parity is pinned by `test/fixtures/daily_scoring_cases.json`
 - `notifyFollowersOnSessionStart` — social feed: one FCM topic message (`live_{userId}`) on `feed_sessions` create — no per-follower fan-out
 - `revenuecatWebhook` — mirrors subscription tier onto `users/{uid}` (`subscriptionTier` + `subscriptionTierExpiresAt`) by re-fetching the subscriber from the RC REST API on every event; Firestore rules use the mirror to gate paid features (rules can't see RC entitlements)
 - `coachSpeech` — Daily Challenge neural coach voice: ElevenLabs TTS proxy (key in Secret Manager `ELEVENLABS_API_KEY`, never in the app), Firebase-Auth-gated, caches MP3s in Storage keyed by sha256(voiceId|coach|text) with download tokens; persona→voice casting lives server-side (deployed 2026-10-14)
@@ -170,7 +183,7 @@ Four tiers — check via `SubscriptionService`:
 - **Elite** (`isElite`/`isPremium`): unlimited everything, AI analysis, all history
 - **Club** (`isClub`/`isPremium`): like Elite + club creation rights (owner pays; club members operate freely regardless of their own tier)
 
-Feature gates live in `lib/services/free_tier_limits.dart` (hand/opponent caps) and `lib/services/feature_flag_service.dart` (remote Firestore flags for `training_drills`, `ai_hand_analysis`, `leak_detector`, `daily_challenge`, `engagement_notifications`). Use `FreeTierLimits.showHandsLimitDialog()` / `PaywallScreen.show()` for upgrade prompts.
+Feature gates live in `lib/services/free_tier_limits.dart` (hand/opponent caps) and `lib/services/feature_flag_service.dart` (remote Firestore flags for `training_drills`, `ai_hand_analysis`, `leak_detector`, `daily_challenge`, `engagement_notifications`, `hard_paywall`, `easy_hand_logging`, `live_insights`; modes incl. `admin_only`). Use `FreeTierLimits.showHandsLimitDialog()` / `PaywallScreen.show()` for upgrade prompts.
 
 **Partner grants** (`lib/services/partner_grant_service.dart`): super-admin can grant users a free tier (Pro/Elite/Club) with expiry (1 week / 1 month / 3 months). `partnerTier` getter returns `null` for expired grants client-side; `init()` awaits the first Firestore snapshot (3s timeout) and must be `await`ed in sign-in paths (not `unawaited`) or the user briefly appears free-tier. Admin UI: `lib/screens/admin/partner_grants_screen.dart`. See `diary/2026-07-08-partner-grants-system.md`.
 
@@ -420,7 +433,7 @@ Replaces the RNG preflop drill on selected Daily Challenge days with a **real so
 - `lib/models/authored_tree.dart` — `AuthoredTree`/`TreeNode` (Firestore-serializable; nodes keyed by id, `rootId`, `heroHandClass`, per-node `actions` + sizing + per-action frequency grids). `lib/models/authored_spot.dart` — `AuthoredAction` (fold/check/call/raise/allin, `.wire` strings), `AuthoredDecision`; also holds the earlier scripted-line template model (`lib/data/authored_spots_data.dart` is the embedded first-generation LJ-vs-BTN data — **not wired into any screen**; the tree path supersedes it)
 - `lib/services/authored_tree_walker.dart` — drives the tree: hero `applyHeroAction` → grade → auto-`advanceVillains` by the villain's most-likely action until the next hero node or a terminal. An action with NO solved continuation (synthetic options, un-walked side-lines like the 4-bet) is still graded honestly, then the hand **reroutes** along the solver's dominant branch (`lastReroute`) so every run reaches a real terminal; FOLD always ends the hand
 - `lib/services/authored_spot_grader.dart` — frequency-only bands (export carries no EV): ≥0.65 correct / ≥0.15 ok / <0.15 mistake; emits the same `DrillGradeResult` as the RNG grader so verdicts, streaks, coach voice, share and leaderboard work unchanged
-- `lib/services/authored_tree_service.dart` — loads `authored_spots/{id}` from Firestore (4s timeout) with a bundled fallback `assets/authored/{id}.json`. **Day schedule** `loadDay(dayKey)`: Firestore `authored_days/{yyyy-MM-dd}` = `{hands: [≤5 tree ids]}` (written by `tool/gto_export/schedule_day.js`) → bundled `assets/authored/days.json` → null = RNG day. ⚠️ `days.json` `default` is a TESTING bridge (serves the 99 tree every day) — remove before shipping
+- `lib/services/authored_tree_service.dart` — loads `authored_spots/{id}` from Firestore (4s timeout) with a bundled fallback `assets/authored/{id}.json`. **Day schedule** `loadDay(dayKey)`: Firestore `authored_days/{yyyy-MM-dd}` = `{hands: [≤5 tree ids]}` (written by `tool/gto_export/schedule_day.js`) → bundled `assets/authored/days.json` (its old testing `default` was replaced by a deterministic rotation) → null = RNG day. The schedule is read with `Source.server`; offline/timeout blocks play with a Retry card (prevents offline answer peeking)
 - **Scoring** (`lib/services/daily_scoring.dart`, mirrored 1:1 by `dailyAccuracy()` in `validateLeaderboardEntry` — keep in sync): decision BEST 1 / GOOD 0.5 / LEAK 0; **hand accuracy = pot-weighted mean** (weight = pot BB at the decision, floored at 1); **day score = mean of hand accuracies, 0..100%** (each hand counts the same, whatever its line length); `scoreKey` = accuracy ×10; perfect = every decision BEST. Stored as verdict letters grouped by hand with `|` (`ccoc|cc|…`, RNG days `c|c|o|c|m`; no `|` = one hand) + a flat `weights` list aligned with the letters
 - `AuthoredDayRunner` (in `authored_challenge_screen.dart`) plays the day's hands back to back in one route ("Hand 2/5"); closing mid-day records nothing
 - **Coach commentary** (`lib/services/authored_situation.dart`, pure): before every decision the coach talks CASUALLY in the persona's voice (Duke/Prof. Vega/Nova phrase pools) — reacts to the villain's move, reads each new board card + what the hero now holds (`HandReader`: set/overpair/top pair/draws/…, plus "pairs the board / three diamonds / fills straights" warnings), then hands the decision back. It never names the right action and never recaps the hero's own move. Deterministic per spot+coach (shared voice-clip cache). Also `stacks()` (live hero/villain stacks from the history), `facingLabel()`/`actionLabel()` (results rows: "BTN 3-bet to 7.3BB → you call 7.3BB")
@@ -441,6 +454,12 @@ Replaces the RNG preflop drill on selected Daily Challenge days with a **real so
 
 ### 18e. Daily Challenge AI coach feedback (on `main` 2026-10-28, behind `daily_challenge`)
 Persona-driven coach feedback for the authored game-tree days, **pre-generated in batch** (NOT per decision — the app only grades locally + reads one cached Firestore doc; zero LLM calls at play time). Three coaches (Duke/`grinder`, Prof. Vega/`professor`, Nova/`nova`; repo source `coaches/{duke,vega,nova}.json`, display ids map to the stored keys). Lines are grounded ONLY in the solver frequencies + the authored **fact block** (sheet column M = JSON: `hero_hand`, `hand_class`, `solver`, `facts`, `villain_view`, `threats`, `wrong_action_notes`, `key_concept`, `concept_tags`, `level_hints{beginner/intermediate/advanced}`; column N = `mags_note` override). Out-of-band pipeline (`tool/gto_export/`): `build_tree.js` (parses col M → `authored_spots`, **deals the exact `hero_hand` combo**) → `generate_feedback.mjs` (Anthropic **Message Batches** API, prompt-cached system per coach; validates the fact block with 6 content checks and REJECTS the day on any failure; one request per **spot × node × action × coach × level** → 2 variants; number/never_say/opening validation → retry once → `key_concept` fallback; writes `daily_challenge_lines/{dayKey}`; warms voice via the `coachSpeech` CF). **Storage shape: `hands[spotKey][nodeId][action][coachId][level]` — `nodeId` is MANDATORY** (a repeated action across streets would otherwise overwrite; a preflop call once showed flop two-pair text). The generator ABORTS on a key collision. Client: `DailyCoachLinesService.lineForAction({spotKey, nodeId, coachKey, action, level, uid, …})` navigates the nested shape + a deterministic per-user-per-day variant pick (`FNV-1a hash(uid|dayKey|spotKey|nodeId|action|level) % 2`); the authored screen passes the current tree node id + the player's `CoachLevel` (`CoachLevelResolver`). Villain's response is hidden through the feedback card and fades/scales in on "Next" (times with the setup line). A **cost estimate + confirmation** gates every full run (`--yes` skips; `--dry`/`--sample` don't trigger it) — a 5-spot 100BB day ≈ $3-4; regenerate ONLY the changed day, `--dry` first. ⚠️ ElevenLabs quota exhausted (resets ~2026-11-13) → voice silent, coach types. Contract: `tool/gto_export/FEEDBACK-SCHEMA.md`; ops guide: `README-feedback.md`; diary `2026-10-28-daily-challenge-ai-coach-feedback.md`. Tests: `test/services/daily_coach_lines_test.dart`, `authored_situation_test.dart` (BB-defense group).
+
+### 18f. Notification send time, admin push, paid nudges (2.1.8+24, 2026-11-05)
+- **Send time:** `activeHourUtc` is the user's best hour to convert, written nightly by `cron-send-times` in final-table-web (`_send_time_score.js`: plays weigh 3, hand/session 2, opens 1; opens within 30 min of a push ignored; avoids quiet hours; source `scored`, `default` = 20:00 local, or `lastActiveAt`). `POSTHOG_PERSONAL_KEY` + `POSTHOG_PROJECT_ID` are optional and add PostHog signals + timezone backfill. Server and device both send 1 hour before it. The fixed morning window is gone.
+- **Server decisions:** `functions/src/engagement_policy.ts` (pure, tested). Comeback pushes only on lapsed days 2/5/14. One push per user per day across device + server; admin campaigns do not count. No streak push 00:00-07:59 local (the device moves its reminder to 21:00). Users without an `fcm_tokens` doc get no event.
+- **Admin push:** "Send push" tab, `api/admin-push.js` + `_push_campaign.js` in final-table-web. No app update needed, but tap actions are limited to what released apps handle (`daily_challenge`, `open_app`). Mass send is super-admin only. `promotional` reaches only `notif.offers == true`. No tier filter (server tier mirror is empty).
+- **Paid nudges (flag `paid_nudges`, admin-only):** `paid_nudge_service.dart`, `paid_nudge_logic.dart`, `spot_quiz_logic.dart`: `trial_recap`, `missed_day`, `paywall_return`, `spot_quiz` (action buttons, past spots 1-3 days old, unranked). Device-scheduled because only the client knows the true tier. Need `notif.offers` (consent: Settings, one-time sheet after a challenge or on the hard paywall). Caps: 2 offers per rolling 7 days, one push per day, none if inactive 14+ days, never today.
 
 ---
 
@@ -577,7 +596,7 @@ saveHand() called
 | Service | File | Purpose |
 |---------|------|---------|
 | FirebaseService | `lib/services/firebase_service.dart` (1631 lines) | Session/hand CRUD, stats orchestration |
-| LocalStorageService | `lib/services/local_storage_service.dart` | SQLite mirror of Firebase (schema v19) |
+| LocalStorageService | `lib/services/local_storage_service.dart` | SQLite mirror of Firebase (schema v20; v20 = idempotent ADD COLUMN migrations for hand completeness/statsApplied/flagMeta) |
 | UserStatsService | `lib/services/user_stats_service.dart` | Atomic user stat transactions |
 | OpponentStatsService | `lib/services/opponent_stats_service.dart` | Atomic opponent stat transactions |
 | StatsCalculator | `lib/services/stats_calculator.dart` | Pure stat detection functions (testable) |
@@ -611,7 +630,7 @@ saveHand() called
 | FCMService | `lib/services/fcm_service.dart` | Push notifications (fire-and-forget!) |
 | DeepLinkService | `lib/services/deep_link_service.dart` | Email invitation deep links |
 | AiAnalyzerService | `lib/services/ai_analyzer_service.dart` | Hand analysis API calls |
-| FeatureFlagService | `lib/services/feature_flag_service.dart` | Global remote feature flags (Firestore `app_config/feature_flags`, super-admin toggles on Profile, offline cache). Gated: training_drills, ai_hand_analysis, leak_detector, daily_challenge, engagement_notifications |
+| FeatureFlagService | `lib/services/feature_flag_service.dart` | Global remote feature flags (Firestore `app_config/feature_flags`, super-admin toggles on Profile, offline cache). Gated: training_drills, ai_hand_analysis, leak_detector, daily_challenge, engagement_notifications, hard_paywall, easy_hand_logging, live_insights. Re-subscribes to `app_config` on sign-in |
 | AnalyticsService | `lib/services/analytics_service.dart` | PostHog product analytics (EU cloud). distinct_id = Firebase uid (matches RevenueCat customer_id — the warehouse join key); identity auto-follows authStateChanges. Event vocabulary lives in the service header — fire each event at ONE canonical site only. All calls fire-and-forget/no-throw; no-op without `POSTHOG_API_KEY` (tests, dev) |
 | PartnerGrantService | `lib/services/partner_grant_service.dart` | Admin-granted free tiers with expiry (see Subscription section) |
 | SkipHandScoutingService | `lib/services/skip_hand_scouting_service.dart` | On/off toggle for live scouting mode |
@@ -910,7 +929,7 @@ Tests are organized in subdirectories mirroring `lib/`:
 ---
 
 ## Open Items / Known Limitations
-- ⚠️ **Authored game-tree challenge (18c)**: `firestore.rules` (`authored_spots`/`authored_days` read + leaderboard verdict shape) and the `validateLeaderboardEntry` accuracy CF are NOT deployed (deploy together, by name); `assets/authored/days.json` `default` testing bridge must be removed before the flag opens to users; only ONE tree exists so far (5 hands/day needs 4 more exports + `schedule_day.js`); ElevenLabs free quota was exhausted 2026-10-21 (resets 2026-11-13) — coach voice silent until the plan is upgraded
+- ⚠️ **Authored game-tree challenge (18c)**: `firestore.rules` (`authored_spots`/`authored_days` read + leaderboard verdict shape) and the `validateLeaderboardEntry` accuracy CF are NOT deployed (deploy together, by name); only ONE tree exists so far (5 hands/day needs 4 more exports + `schedule_day.js`); ElevenLabs free quota was exhausted 2026-10-21 (resets 2026-11-13) — coach voice silent until the plan is upgraded
 - ⚠️ **Club rules hardening (audit B5, commit 725c067) committed but NOT yet deployed** — run `firebase deploy --only firestore:rules` together with a club smoke test (invitation, approval, role flows)
 - ⚠️ **Social feed lag disabled for testing**: the STASHED `FeedPublisher.lag = Duration.zero` — restore `Duration(hours: 1)` when the feed stash is popped, before ANY release with feed code (see Key Feature 14)
 - Social feed tier-mirror backfill for existing subscribers not run (rules deny paid users until their next RevenueCat event)
@@ -926,6 +945,6 @@ Tests are organized in subdirectories mirroring `lib/`:
 
 ---
 
-**Last Updated**: October 26, 2026
+**Last Updated**: November 5, 2026
 **Maintained by**: User + Claude
 **Update this file**: After major feature additions, architectural changes, or new bug patterns

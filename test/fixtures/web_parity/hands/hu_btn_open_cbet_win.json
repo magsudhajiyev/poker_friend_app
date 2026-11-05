@@ -1,0 +1,151 @@
+{
+ "id": "hu_btn_open_cbet_win",
+ "sessionId": "cash_hu",
+ "handNumber": 52,
+ "buttonPosition": 2,
+ "playerCount": 2,
+ "actions": [
+  {
+   "player": 2,
+   "action": "small blind",
+   "street": "preflop",
+   "timestamp": "2025-03-01T20:00:07Z",
+   "buttonPosition": 2,
+   "playerName": "Bob",
+   "playerId": null,
+   "isCurrentUser": true,
+   "playerPosition": "BTN/SB",
+   "playerStack": 995,
+   "amount": 5
+  },
+  {
+   "player": 5,
+   "action": "big blind",
+   "street": "preflop",
+   "timestamp": "2025-03-01T20:00:14Z",
+   "buttonPosition": 2,
+   "playerName": "Erin",
+   "playerId": null,
+   "isCurrentUser": false,
+   "playerPosition": "BB",
+   "playerStack": 990,
+   "amount": 10
+  },
+  {
+   "player": 2,
+   "action": "raise",
+   "street": "preflop",
+   "timestamp": "2025-03-01T20:00:21Z",
+   "buttonPosition": 2,
+   "playerName": "Bob",
+   "playerId": null,
+   "isCurrentUser": true,
+   "playerPosition": "BTN/SB",
+   "playerStack": 995,
+   "amount": 30
+  },
+  {
+   "player": 5,
+   "action": "call",
+   "street": "preflop",
+   "timestamp": "2025-03-01T20:00:28Z",
+   "buttonPosition": 2,
+   "playerName": "Erin",
+   "playerId": null,
+   "isCurrentUser": false,
+   "playerPosition": "BB",
+   "playerStack": 990,
+   "amount": 20
+  },
+  {
+   "player": 5,
+   "action": "check",
+   "street": "flop",
+   "timestamp": "2025-03-01T20:00:35Z",
+   "buttonPosition": 2,
+   "playerName": "Erin",
+   "playerId": null,
+   "isCurrentUser": false,
+   "playerPosition": "BB",
+   "playerStack": 970,
+   "amount": null
+  },
+  {
+   "player": 2,
+   "action": "bet",
+   "street": "flop",
+   "timestamp": "2025-03-01T20:00:42Z",
+   "buttonPosition": 2,
+   "playerName": "Bob",
+   "playerId": null,
+   "isCurrentUser": true,
+   "playerPosition": "BTN/SB",
+   "playerStack": 970,
+   "amount": 30
+  },
+  {
+   "player": 5,
+   "action": "fold",
+   "street": "flop",
+   "timestamp": "2025-03-01T20:00:49Z",
+   "buttonPosition": 2,
+   "playerName": "Erin",
+   "playerId": null,
+   "isCurrentUser": false,
+   "playerPosition": "BB",
+   "playerStack": 970,
+   "amount": null
+  }
+ ],
+ "startTime": "2025-03-01T20:00:00.000Z",
+ "endTime": "2025-03-01T20:01:09Z",
+ "state": "completed",
+ "boardCards": {
+  "flop": [
+   "K♣",
+   "6♠",
+   "2♦"
+  ],
+  "turn": null,
+  "river": null
+ },
+ "ourHoleCards": {
+  "card1": "K♦",
+  "card2": "9♦"
+ },
+ "showdownData": null,
+ "reachedShowdown": false,
+ "potAmount": 90,
+ "preflopPot": 60,
+ "flopPot": 90,
+ "turnPot": 0,
+ "riverPot": 0,
+ "winnerId": 2,
+ "heroPositionName": "BTN/SB",
+ "heroSeatNumber": 2,
+ "isChoppedPot": false,
+ "isSplitPot": false,
+ "choppedWinners": null,
+ "individualShares": null,
+ "sharePerWinner": null,
+ "isStarred": false,
+ "isScouted": false,
+ "tags": [],
+ "notes": "",
+ "gameType": "cash",
+ "smallBlind": 5,
+ "bigBlind": 10,
+ "playerNames": {
+  "2": "Bob",
+  "5": "Erin"
+ },
+ "playerIds": {
+  "2": null,
+  "5": null
+ },
+ "_tags": [
+  "cash",
+  "heads-up",
+  "cbet"
+ ]
+}

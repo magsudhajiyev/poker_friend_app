@@ -9,6 +9,9 @@ import 'notification_copy.dart';
 import 'notification_events_service.dart';
 import 'notification_prefs_service.dart';
 import 'notification_service.dart';
+import 'personal_hour_service.dart';
+import 'send_time_logic.dart';
+import 'spot_quiz_logic.dart';
 
 /// Device-scheduled streak-saver — Phase 1 of the engagement plan.
 ///
@@ -26,9 +29,13 @@ import 'notification_service.dart';
 class StreakSaverService {
   StreakSaverService._();
 
-  /// Until the Phase-2 send-time job computes a per-user hour, remind at
-  /// 19:00 local — early enough to act, late enough to be "tonight".
-  static const int defaultReminderHour = 19;
+  /// Fallback when the user has no computed active hour (or the read fails):
+  /// 19:00 local — early enough to act, late enough to be "tonight". Normally
+  /// the reminder fires [reminderLeadHours] before `notif.activeHourUtc`.
+  static const int defaultReminderHour = SendTimeLogic.fallbackReminderHour;
+
+  /// Same lead as the server scheduler's evening window.
+  static const int reminderLeadHours = 1;
 
   static const String payloadPrefix = 'engagement:';
 
@@ -54,15 +61,24 @@ class StreakSaverService {
     return at.isAfter(now) ? at : nextReminderTime(now, hour: hour);
   }
 
-  /// Pure: parse an `engagement:{type}:{eventId}` payload.
-  static ({EngagementNotifType type, String eventId})? parsePayload(
-      String? payload) {
+  /// Pure: parse an `engagement:{type}:{eventId}` payload, optionally with a
+  /// third `:{actionId}` segment (a tapped notification button — spot quiz).
+  /// Two-segment payloads (every older push) parse exactly as before.
+  static ({EngagementNotifType type, String eventId, String? action})?
+      parsePayload(String? payload) {
     if (payload == null || !payload.startsWith(payloadPrefix)) return null;
     final parts = payload.substring(payloadPrefix.length).split(':');
-    if (parts.length != 2) return null;
+    if (parts.length != 2 && parts.length != 3) return null;
     final type = EngagementNotifType.fromId(parts[0]);
     if (type == null || parts[1].isEmpty) return null;
-    return (type: type, eventId: parts[1]);
+    // Only the spot quiz carries a button, and only a known one.
+    final action = parts.length == 3 ? parts[2] : null;
+    if (action != null &&
+        (type != EngagementNotifType.spotQuiz ||
+            SpotQuizAction.fromId(action) == null)) {
+      return null;
+    }
+    return (type: type, eventId: parts[1], action: action);
   }
 
   /// Call on every completed Daily Challenge. Settles the previous pending
@@ -88,7 +104,9 @@ class StreakSaverService {
       if (!prefs.categoryEnabled(NotifCategory.streak)) return;
       if (currentStreak < 1) return;
 
-      final at = reminderTimeForRun(runDay, DateTime.now());
+      final hour = SendTimeLogic.clampStreakReminderHour(
+          await PersonalHourService.localHour(leadHours: reminderLeadHours));
+      final at = reminderTimeForRun(runDay, DateTime.now(), hour: hour);
       final copy = NotificationCopy.copyFor(
         EngagementNotifType.dcStreakRisk,
         coachId,
@@ -118,6 +136,42 @@ class StreakSaverService {
       await sp.setInt(_kSentAtMs, at.millisecondsSinceEpoch);
     } catch (e) {
       LoggerService.warning('StreakSaver: scheduling failed: $e');
+    }
+  }
+
+  /// Sign-out cleanup (best-effort, BEFORE the auth sign-out): cancel the
+  /// queued reminder and forget the device-global pending-event keys, so the
+  /// previous account's reminder can never fire for, or be settled by, the
+  /// next account.
+  static Future<void> onSignOut() async {
+    try {
+      final sp = await SharedPreferences.getInstance();
+      final eventId = sp.getString(_kEventId);
+      final fired = DateTime.fromMillisecondsSinceEpoch(
+              sp.getInt(_kSentAtMs) ?? 0)
+          .isBefore(DateTime.now());
+      await NotificationService.cancelEngagementReminder();
+      await sp.remove(_kEventId);
+      await sp.remove(_kSentAtMs);
+      if (eventId != null && !fired) {
+        await NotificationEventsService.markCancelled(eventId)
+            .timeout(const Duration(milliseconds: 800), onTimeout: () {});
+      }
+    } catch (e) {
+      LoggerService.warning('StreakSaver: sign-out cleanup failed: $e');
+    }
+  }
+
+  /// When the currently queued streak reminder is due, or null when none is
+  /// pending. Lets the paid nudges honour "one engagement push per day".
+  static Future<DateTime?> pendingReminderAt() async {
+    try {
+      final sp = await SharedPreferences.getInstance();
+      if (sp.getString(_kEventId) == null) return null;
+      final ms = sp.getInt(_kSentAtMs);
+      return ms == null ? null : DateTime.fromMillisecondsSinceEpoch(ms);
+    } catch (_) {
+      return null;
     }
   }
 

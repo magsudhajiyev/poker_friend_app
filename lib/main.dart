@@ -33,6 +33,8 @@ import 'services/skip_hand_scouting_service.dart';
 import 'services/opponent_service.dart';
 import 'config/env_config.dart';
 import 'services/activity_heartbeat_service.dart';
+import 'services/notification_profile_sync.dart';
+import 'services/paid_nudge_service.dart';
 import 'services/analytics_service.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'l10n/app_localizations.dart';
@@ -96,6 +98,10 @@ void main() async {
   // _AppLifecycleObserver. Feeds the admin dashboard's daily_stats cron.
   ActivityHeartbeatService.init();
 
+  // Timezone offset + app language for the server notification scheduler;
+  // written only when changed (sign-in, resume, language switch).
+  NotificationProfileSync.init();
+
   // Start loading the splash video in parallel with everything else so
   // it's ready by the time SplashScreen mounts (avoids blank frames).
   unawaited(LoopingSplashLogo.warmUp());
@@ -112,6 +118,8 @@ void main() async {
     FeatureFlagService.init().catchError(
         (e) => debugPrint('Feature flag service init failed: $e')),
   ]);
+
+  CurrencyService.initMirror();
 
   // Install global error handlers for Crashlytics
   FlutterError.onError = (details) {
@@ -180,6 +188,7 @@ Future<void> _initServicesInBackground() async {
 
     // "Your free trial ends tomorrow" — re-syncs on every entitlement change.
     TrialReminderService.start();
+    PaidNudgeService.start();
   } catch (e) {
     debugPrint('Subscription service initialization failed: $e');
   }
@@ -414,6 +423,8 @@ class _PokerTrackerAppState extends State<PokerTrackerApp>
     if (state == AppLifecycleState.resumed) {
       SubscriptionService.refreshOnResume();
       unawaited(ActivityHeartbeatService.recordActive());
+      unawaited(NotificationProfileSync.sync());
+      unawaited(PaidNudgeService.sync());
       unawaited(LoggerService.logEvent('app_resume'));
     } else if (state == AppLifecycleState.paused) {
       unawaited(LoggerService.logEvent('app_background'));

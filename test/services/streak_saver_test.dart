@@ -31,6 +31,29 @@ void main() {
     });
   });
 
+  group('personal reminder hour', () {
+    test('reminderTimeForRun honours a personal hour', () {
+      final now = DateTime(2026, 11, 5, 21);
+      final t = StreakSaverService.reminderTimeForRun(DateTime(2026, 11, 5), now,
+          hour: 8);
+      expect(t, DateTime(2026, 11, 6, 8));
+    });
+
+    test('a personal hour that already passed rolls to tomorrow, never past',
+        () {
+      // Run completed after midnight of the next day: runDay+1 at 8h is past.
+      final now = DateTime(2026, 11, 6, 9);
+      final t = StreakSaverService.reminderTimeForRun(DateTime(2026, 11, 5), now,
+          hour: 8);
+      expect(t.isAfter(now), isTrue);
+      expect(t, DateTime(2026, 11, 7, 8));
+    });
+
+    test('lead is one hour, same as the server evening window', () {
+      expect(StreakSaverService.reminderLeadHours, 1);
+    });
+  });
+
   group('reminderTimeForRun', () {
     test('normal run: day D+1 at the reminder hour', () {
       final t = StreakSaverService.reminderTimeForRun(

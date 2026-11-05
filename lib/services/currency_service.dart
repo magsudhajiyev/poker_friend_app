@@ -1,3 +1,7 @@
+import 'dart:async';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/currency.dart';
@@ -22,6 +26,41 @@ class CurrencyService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_key, code);
     currencyNotifier.value = Currency.fromCode(code);
+    unawaited(mirrorToProfile(code));
+  }
+
+  /// Pure: the `users/{uid}` payload that mirrors the effective currency
+  /// code. The app is the single source of truth for the web dashboard, so
+  /// the default (USD) is mirrored too. Unknown codes fall back to USD.
+  static Map<String, dynamic> mirrorPayload(String? code) {
+    final known = Currency.all.any((c) => c.code == code);
+    return {'currency': known ? code : Currency.all.first.code};
+  }
+
+  /// Mirror the EFFECTIVE currency to `users/{uid}.currency` so the web
+  /// dashboard formats money the same way. Fire-and-forget: never throws.
+  /// Rules already allow owner writes to non-tier fields on users/{uid}.
+  static Future<void> mirrorToProfile([String? code]) async {
+    try {
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid == null) return;
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(uid)
+          .set(mirrorPayload(code ?? CurrencyService.code),
+              SetOptions(merge: true))
+          .timeout(const Duration(seconds: 5));
+    } catch (e) {
+      debugPrint('Currency mirror failed: $e');
+    }
+  }
+
+  /// On every sign-in (incl. session restore) mirror the effective currency,
+  /// which also backfills existing users. Call once at startup.
+  static void initMirror() {
+    FirebaseAuth.instance.authStateChanges().listen((user) {
+      if (user != null) unawaited(mirrorToProfile());
+    });
   }
 
   /// Reset to default currency (USD). Called on logout so the next user

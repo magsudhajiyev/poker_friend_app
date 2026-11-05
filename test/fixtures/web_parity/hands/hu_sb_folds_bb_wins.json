@@ -1,0 +1,91 @@
+{
+ "id": "hu_sb_folds_bb_wins",
+ "sessionId": "cash_hu",
+ "handNumber": 53,
+ "buttonPosition": 2,
+ "playerCount": 2,
+ "actions": [
+  {
+   "player": 2,
+   "action": "small blind",
+   "street": "preflop",
+   "timestamp": "2025-03-01T20:00:07Z",
+   "buttonPosition": 2,
+   "playerName": "Bob",
+   "playerId": null,
+   "isCurrentUser": false,
+   "playerPosition": "BTN/SB",
+   "playerStack": 995,
+   "amount": 5
+  },
+  {
+   "player": 5,
+   "action": "big blind",
+   "street": "preflop",
+   "timestamp": "2025-03-01T20:00:14Z",
+   "buttonPosition": 2,
+   "playerName": "Erin",
+   "playerId": null,
+   "isCurrentUser": true,
+   "playerPosition": "BB",
+   "playerStack": 990,
+   "amount": 10
+  },
+  {
+   "player": 2,
+   "action": "fold",
+   "street": "preflop",
+   "timestamp": "2025-03-01T20:00:21Z",
+   "buttonPosition": 2,
+   "playerName": "Bob",
+   "playerId": null,
+   "isCurrentUser": false,
+   "playerPosition": "BTN/SB",
+   "playerStack": 995,
+   "amount": null
+  }
+ ],
+ "startTime": "2025-03-01T20:00:00.000Z",
+ "endTime": "2025-03-01T20:00:41Z",
+ "state": "completed",
+ "boardCards": null,
+ "ourHoleCards": {
+  "card1": "Q♣",
+  "card2": "3♦"
+ },
+ "showdownData": null,
+ "reachedShowdown": false,
+ "potAmount": 15,
+ "preflopPot": 15,
+ "flopPot": 0,
+ "turnPot": 0,
+ "riverPot": 0,
+ "winnerId": 5,
+ "heroPositionName": "BB",
+ "heroSeatNumber": 5,
+ "isChoppedPot": false,
+ "isSplitPot": false,
+ "choppedWinners": null,
+ "individualShares": null,
+ "sharePerWinner": null,
+ "isStarred": false,
+ "isScouted": false,
+ "tags": [],
+ "notes": "",
+ "gameType": "cash",
+ "smallBlind": 5,
+ "bigBlind": 10,
+ "playerNames": {
+  "2": "Bob",
+  "5": "Erin"
+ },
+ "playerIds": {
+  "2": null,
+  "5": null
+ },
+ "_tags": [
+  "cash",
+  "heads-up",
+  "walk"
+ ]
+}

@@ -32,7 +32,14 @@ import 'logger_service.dart';
 ///   daily_challenge_range_viewed, daily_challenge_coach_picked,
 ///   daily_challenge_leaderboard_submitted
 /// Engagement notifications (flagged): notif_scheduled, notif_opened,
-///   notif_converted (play within 2h of the push — the reward signal)
+///   notif_converted (play within 2h of the push — the reward signal).
+///   Paid nudges (flag `paid_nudges`) reuse these with type trial_recap /
+///   missed_day / paywall_return; plus offers_consent{granted, source}
+///   (source = prompt|settings, fired only in setOffers) and paywall_opened
+///   {feature: paywall_return_push} when a paywall-return push is tapped
+///   Spot quiz push (type spot_quiz) adds ONE event: spot_quiz_answered
+///   {action} — a notification button was tapped (fired in
+///   PaidNudgeService.open; a body tap fires only notif_opened)
 /// Easy Hand Logging (flagged `easy_hand_logging`): fold_tick,
 ///   hand_flagged{tags}, flag_completed{lag_min},
 ///   hand_logging_abandoned{street}. Extra props on existing events:

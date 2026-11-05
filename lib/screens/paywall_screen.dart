@@ -18,6 +18,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../design_system/components/modals/confirm_dialog.dart';
 import '../onboarding/onboarding_prefs.dart';
 import 'intro_screen.dart';
+import '../services/paid_nudge_service.dart';
+import '../widgets/offers_consent_sheet.dart';
 import '../services/subscription_service.dart';
 import '../services/subscription_logic.dart' show TrialOffer, TrialUnit;
 import '../services/auth_service.dart';
@@ -147,7 +149,20 @@ class _PaywallScreenState extends State<PaywallScreen> {
     // a trial was used, so re-check every time the paywall opens.)
     SubscriptionService.refreshTrialOffers().then((_) {
       if (mounted) setState(() {});
+      // Paid nudge (flag + opt-in gated): queue the paywall-return push once
+      // the real trial offers are known. No-op for subscribers.
+      unawaited(PaidNudgeService.onPaywallOpened());
     });
+    // Hard-paywall users can never finish a challenge, so this is their only
+    // chance to see the one-time offers consent. Never mid-tour/onboarding,
+    // never over a purchase or restore (checked again when it would show).
+    if (widget.hardGate) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        unawaited(OffersConsentSheet.maybeShowOnPaywall(context,
+            paywallIdle: () => mounted && !_isPurchasing && !_isRestoring));
+      });
+    }
     _offering = SubscriptionService.currentOffering;
     if (_offering == null) {
       _fetchOfferings();
@@ -858,6 +873,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
               l10n.paywallProFeature4,
               l10n.paywallProFeature5,
               l10n.paywallProDailyChallenge,
+              l10n.paywallWebDashboard,
             ],
             // Store free trial wins; the launch-promo gift badge otherwise.
             showTrialBadge: _trialFor(0) != null || widget.launchPromo,
@@ -885,6 +901,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
               l10n.paywallEliteFeature7,
               l10n.paywallEliteFeature8,
               l10n.paywallEliteDailyChallenge,
+              l10n.paywallWebDashboard,
             ],
             showTrialBadge: _trialFor(1) != null,
             trialBadgeText: _trialBadge(1, l10n),
@@ -908,6 +925,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
               l10n.paywallClubManagement,
               l10n.paywallLiveDealerVoice,
               l10n.paywallMultiTableEvents,
+              l10n.paywallWebDashboard,
             ],
             showTrialBadge: _trialFor(2) != null,
             trialBadgeText: _trialBadge(2, l10n),
