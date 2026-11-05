@@ -35,4 +35,33 @@ class SendTimeLogic {
     final target = ((localActive - leadHours) % 24 + 24) % 24;
     return localNow == target;
   }
+
+  /// Fallback local hour when the user has no computed active hour yet.
+  static const int fallbackReminderHour = 19;
+
+  /// The user's personal LOCAL send hour: their active hour (UTC) converted
+  /// with [tzOffsetMinutes], [leadHours] earlier (the streak reminder uses 1,
+  /// same rule as the server scheduler; offers use 0). Falls back to
+  /// [fallbackReminderHour] (the lead is NOT applied: the fallback IS the send
+  /// hour) when [activeHourUtc] is missing or out of range.
+  static int personalHour({
+    required int? activeHourUtc,
+    required int tzOffsetMinutes,
+    int leadHours = 0,
+  }) {
+    if (activeHourUtc == null || activeHourUtc < 0 || activeHourUtc > 23) {
+      return fallbackReminderHour;
+    }
+    final local = localHour(activeHourUtc, tzOffsetMinutes);
+    return ((local - leadHours) % 24 + 24) % 24;
+  }
+
+  /// Streak-reminder hours 00:00-07:59 are moved to this hour the same day:
+  /// "ends tonight" at 02:00 is wrong and wakes people.
+  static const int earlyClampTarget = 21;
+
+  /// Pure: [hour] unchanged unless it lies in 0-7, then [earlyClampTarget].
+  /// Hours 22 and 23 stay (the streak can still be saved before midnight).
+  static int clampStreakReminderHour(int hour) =>
+      (hour >= 0 && hour < 8) ? earlyClampTarget : hour;
 }

@@ -13,7 +13,10 @@ import 'currency_service.dart';
 import 'fcm_service.dart';
 import 'locale_service.dart';
 import 'logger_service.dart';
+import 'notification_prefs_service.dart';
+import 'paid_nudge_service.dart';
 import 'partner_grant_service.dart';
+import 'streak_saver_service.dart';
 import 'subscription_service.dart';
 import 'username_service.dart';
 import 'display_identity_service.dart';
@@ -482,6 +485,16 @@ class AuthService {
     }
   }
   
+  static Future<void> _clearNotificationState() async {
+    try {
+      await Future.wait([
+        StreakSaverService.onSignOut(),
+        PaidNudgeService.onSignOut(),
+      ]).timeout(const Duration(seconds: 2));
+    } catch (_) {}
+    NotificationPrefsService.onSignOut();
+  }
+
   // Sign out
   static Future<void> signOut() async {
     try {
@@ -496,6 +509,11 @@ class AuthService {
       // RevenueCat logout - don't block sign-out
       unawaited(SubscriptionService.logoutUser());
       PartnerGrantService.reset();
+
+      // Cancel this account's queued engagement/nudge pushes and forget its
+      // device-local notification state, before the auth user goes away.
+      // Best-effort and time-boxed: must never fail or hang sign-out.
+      await _clearNotificationState();
 
       clearAccountTypeCache();  // Clear cached account type
       UsernameService.clearCache();

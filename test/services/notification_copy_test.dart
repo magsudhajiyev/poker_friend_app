@@ -8,7 +8,7 @@ void main() {
 
   group('catalog completeness', () {
     test('every type renders for every coach and neutral, all variants', () {
-      for (final type in EngagementNotifType.values) {
+      for (final type in EngagementNotifType.values.where((t) => !t.isOffer)) {
         for (final voice in [...coaches, null, 'retired_coach']) {
           final n = NotificationCopy.variantCount(type, voice);
           expect(n, greaterThanOrEqualTo(1), reason: '${type.id}/$voice');
@@ -23,7 +23,7 @@ void main() {
     });
 
     test('no unresolved placeholders, with or without values', () {
-      for (final type in EngagementNotifType.values) {
+      for (final type in EngagementNotifType.values.where((t) => !t.isOffer)) {
         for (final voice in [...coaches, null]) {
           for (var v = 0; v < 4; v++) {
             for (final args in [

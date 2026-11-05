@@ -19,6 +19,7 @@ import '../services/feature_flag_service.dart';
 import '../services/currency_service.dart';
 import '../services/notification_prefs_service.dart';
 import '../services/skip_hand_scouting_service.dart';
+import '../services/paid_nudge_service.dart';
 import '../services/streak_saver_service.dart';
 import '../services/username_service.dart';
 import '../services/club_service.dart';
@@ -114,7 +115,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     // Engagement-notification prefs (flagged feature) — refresh the cached
     // copy so the toggles reflect Firestore state.
     if (FeatureFlagService.isEnabled(
-        FeatureFlagService.engagementNotifications)) {
+            FeatureFlagService.engagementNotifications) ||
+        FeatureFlagService.isEnabled(FeatureFlagService.paidNudges)) {
       await NotificationPrefsService.load();
       if (mounted) setState(() {});
     }
@@ -992,7 +994,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   // Engagement notifications — flagged experiment;
                   // English-only until GA, matching the flag gating.
                   if (FeatureFlagService.isEnabled(
-                      FeatureFlagService.engagementNotifications)) ...[
+                          FeatureFlagService.engagementNotifications) ||
+                      FeatureFlagService.isEnabled(
+                          FeatureFlagService.paidNudges)) ...[
                     const SizedBox(height: 16),
                     _buildNotifSection(),
                   ],
@@ -1309,8 +1313,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
       if (!updated.categoryEnabled(NotifCategory.streak)) {
         await StreakSaverService.cancelPending();
       }
+      // Master off must also drop any queued offer push.
+      await PaidNudgeService.onOffersChanged();
       if (mounted) setState(() {});
     }
+
+    final engagementOn = FeatureFlagService.isEnabled(
+        FeatureFlagService.engagementNotifications);
+    final offersOn =
+        FeatureFlagService.isEnabled(FeatureFlagService.paidNudges);
 
     return _buildSection(
       label: l10n.notifSectionTitle,
@@ -1323,39 +1334,55 @@ class _SettingsScreenState extends State<SettingsScreen> {
           value: p.master,
           onChanged: (v) => save(p.copyWith(master: v)),
         ),
-        _buildToggleRow(
-          icon: const Icon(Icons.local_fire_department_outlined,
-              color: AppColors.contentInactive, size: 24),
-          title: l10n.notifStreakTitle,
-          subtitle: l10n.notifStreakSubtitle,
-          value: p.streak,
-          onChanged: (v) => save(p.copyWith(streak: v)),
-        ),
-        _buildToggleRow(
-          icon: const Icon(Icons.leaderboard_outlined,
-              color: AppColors.contentInactive, size: 24),
-          title: l10n.notifLeaderboardTitle,
-          subtitle: l10n.notifLeaderboardSubtitle,
-          value: p.leaderboard,
-          onChanged: (v) => save(p.copyWith(leaderboard: v)),
-        ),
-        _buildToggleRow(
-          icon: const Icon(Icons.waving_hand_outlined,
-              color: AppColors.contentInactive, size: 24),
-          title: l10n.notifReengageTitle,
-          subtitle: l10n.notifReengageSubtitle,
-          value: p.reengage,
-          onChanged: (v) => save(p.copyWith(reengage: v)),
-        ),
-        _buildRow(
-          icon: const Icon(Icons.bedtime_outlined,
-              color: AppColors.contentInactive, size: 24),
-          title: l10n.notifQuietHoursTitle,
-          subtitle: l10n.notifQuietHoursValue(
-              _fmtHour(p.quietStartLocal), _fmtHour(p.quietEndLocal)),
-          onTap: _showQuietHoursPicker,
-          isLast: true,
-        ),
+        if (engagementOn) ...[
+          _buildToggleRow(
+            icon: const Icon(Icons.local_fire_department_outlined,
+                color: AppColors.contentInactive, size: 24),
+            title: l10n.notifStreakTitle,
+            subtitle: l10n.notifStreakSubtitle,
+            value: p.streak,
+            onChanged: (v) => save(p.copyWith(streak: v)),
+          ),
+          _buildToggleRow(
+            icon: const Icon(Icons.leaderboard_outlined,
+                color: AppColors.contentInactive, size: 24),
+            title: l10n.notifLeaderboardTitle,
+            subtitle: l10n.notifLeaderboardSubtitle,
+            value: p.leaderboard,
+            onChanged: (v) => save(p.copyWith(leaderboard: v)),
+          ),
+          _buildToggleRow(
+            icon: const Icon(Icons.waving_hand_outlined,
+                color: AppColors.contentInactive, size: 24),
+            title: l10n.notifReengageTitle,
+            subtitle: l10n.notifReengageSubtitle,
+            value: p.reengage,
+            onChanged: (v) => save(p.copyWith(reengage: v)),
+          ),
+        ],
+        if (offersOn)
+          _buildToggleRow(
+            icon: const Icon(Icons.local_offer_outlined,
+                color: AppColors.contentInactive, size: 24),
+            title: l10n.notifOffersTitle,
+            subtitle: l10n.notifOffersSubtitle,
+            value: p.offers,
+            onChanged: (v) async {
+              await NotificationPrefsService.setOffers(v, source: 'settings');
+              await PaidNudgeService.onOffersChanged();
+              if (mounted) setState(() {});
+            },
+          ),
+        if (engagementOn)
+          _buildRow(
+            icon: const Icon(Icons.bedtime_outlined,
+                color: AppColors.contentInactive, size: 24),
+            title: l10n.notifQuietHoursTitle,
+            subtitle: l10n.notifQuietHoursValue(
+                _fmtHour(p.quietStartLocal), _fmtHour(p.quietEndLocal)),
+            onTap: _showQuietHoursPicker,
+            isLast: true,
+          ),
       ],
     );
   }

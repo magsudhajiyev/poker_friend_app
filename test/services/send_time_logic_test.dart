@@ -82,4 +82,90 @@ void main() {
           isTrue);
     });
   });
+
+  group('personalHour', () {
+    test('converts the UTC active hour to local, minus the lead', () {
+      // CET +60: active 18 UTC = 19 local; 1h lead = 18.
+      expect(
+          SendTimeLogic.personalHour(
+              activeHourUtc: 18, tzOffsetMinutes: 60, leadHours: 1),
+          18);
+      expect(
+          SendTimeLogic.personalHour(activeHourUtc: 18, tzOffsetMinutes: 60),
+          19);
+    });
+
+    test('wraps across midnight in both directions', () {
+      expect(
+          SendTimeLogic.personalHour(
+              activeHourUtc: 0, tzOffsetMinutes: 0, leadHours: 1),
+          23);
+      expect(
+          SendTimeLogic.personalHour(activeHourUtc: 23, tzOffsetMinutes: 120),
+          1);
+      expect(
+          SendTimeLogic.personalHour(activeHourUtc: 2, tzOffsetMinutes: -300),
+          21);
+    });
+
+    test('missing or invalid hour falls back to 19:00, with or without a lead',
+        () {
+      for (final bad in [null, -1, 24, 99]) {
+        expect(
+            SendTimeLogic.personalHour(
+                activeHourUtc: bad, tzOffsetMinutes: 600, leadHours: 1),
+            19);
+        expect(
+            SendTimeLogic.personalHour(
+                activeHourUtc: bad, tzOffsetMinutes: 600),
+            19);
+      }
+    });
+
+    test('matches the server window rule (isInSendWindow, lead 1)', () {
+      for (var active = 0; active < 24; active++) {
+        for (final tz in [-480, 0, 60, 330]) {
+          final h = SendTimeLogic.personalHour(
+              activeHourUtc: active, tzOffsetMinutes: tz, leadHours: 1);
+          // The server fires when local-now == that hour; find the UTC hour.
+          final utcNow = ((h * 60 - tz) ~/ 60 % 24 + 24) % 24;
+          if (tz % 60 == 0) {
+            expect(
+                SendTimeLogic.isInSendWindow(
+                    utcHourNow: utcNow,
+                    activeHourUtc: active,
+                    tzOffsetMinutes: tz,
+                    leadHours: 1),
+                isTrue,
+                reason: 'active=$active tz=$tz');
+          }
+        }
+      }
+    });
+  });
+
+  group('clampStreakReminderHour', () {
+    test('00:00-07:59 moves to 21:00; everything else is unchanged', () {
+      for (var h = 0; h < 8; h++) {
+        expect(SendTimeLogic.clampStreakReminderHour(h), 21, reason: '$h');
+      }
+      for (var h = 8; h < 24; h++) {
+        expect(SendTimeLogic.clampStreakReminderHour(h), h, reason: '$h');
+      }
+    });
+
+    test('lead-1 of a 02:00 active hour (01:00) is clamped, 23 stays', () {
+      final early = SendTimeLogic.personalHour(
+          activeHourUtc: 2, tzOffsetMinutes: 0, leadHours: 1);
+      expect(SendTimeLogic.clampStreakReminderHour(early), 21);
+      final late = SendTimeLogic.personalHour(
+          activeHourUtc: 0, tzOffsetMinutes: 0, leadHours: 1);
+      expect(late, 23);
+      expect(SendTimeLogic.clampStreakReminderHour(late), 23);
+    });
+
+    test('the 19:00 fallback is untouched', () {
+      expect(SendTimeLogic.clampStreakReminderHour(19), 19);
+    });
+  });
 }

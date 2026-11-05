@@ -61,6 +61,7 @@ class FeatureFlagService {
   static const String hardPaywall = 'hard_paywall';
   static const String easyHandLogging = 'easy_hand_logging';
   static const String liveInsights = 'live_insights';
+  static const String paidNudges = 'paid_nudges';
 
   static const List<FeatureFlag> all = [
     FeatureFlag(
@@ -121,12 +122,30 @@ class FeatureFlagService {
       'one-line insight after each hand. Needs Easy Hand Logging too.',
       defaultMode: FlagMode.adminOnly,
     ),
+    FeatureFlag(
+      paidNudges,
+      'Paid Nudges',
+      'Opt-in offer pushes: trial recap, missed-day replay and paywall '
+      'return, plus the offers consent prompt and Settings toggle. OFF = '
+      'none of it exists.',
+      defaultMode: FlagMode.adminOnly,
+    ),
   ];
 
   // ── State ─────────────────────────────────────────────────────────────
 
   static final Map<String, FlagMode> _modes = {};
   static const String _cachePrefix = 'feature_flag_mode_';
+
+  static bool _remoteReceived = false;
+
+  /// Whether the flag state AND the admin state are settled for the current
+  /// session: a user is signed in (so [isSuperAdmin] is resolvable) and the
+  /// remote flag document has arrived. Until then [isEnabled] may be wrong
+  /// (cold start: default modes, admin not yet known), so side-effecting
+  /// callers must wait instead of acting on a "false".
+  static bool get stateKnown =>
+      _remoteReceived && AuthService.currentUser != null;
 
   /// Bumps whenever flag values change; rebuild gated UI off this.
   static final ValueNotifier<int> revision = ValueNotifier<int>(0);
@@ -197,6 +216,7 @@ class FeatureFlagService {
   static void _onAuthChanged(User? user) {
     _flagSub?.cancel();
     _flagSub = null;
+    _remoteReceived = false;
     if (user == null) return; // keep current modes + cache
     try {
       _flagSub = FirebaseFirestore.instance
@@ -214,13 +234,17 @@ class FeatureFlagService {
   }
 
   static Future<void> _onRemote(DocumentSnapshot snap) =>
-      applyRemote(snap.data() as Map<String, dynamic>?);
+      // A missing doc still settles the state (all flags at their defaults).
+      applyRemote(snap.data() as Map<String, dynamic>? ?? const {});
 
   /// Applies a remote flag map (bumps [revision], writes the cache).
   @visibleForTesting
   static Future<void> applyRemote(Map<String, dynamic>? data) async {
     if (data == null) return;
-    var changed = false;
+    // First snapshot of this session: announce it even if no value changed,
+    // so listeners waiting on [stateKnown] re-evaluate.
+    var changed = !_remoteReceived;
+    _remoteReceived = true;
     for (final f in all) {
       final m = _decode(data[f.key]);
       if (m != null && _modes[f.key] != m) {

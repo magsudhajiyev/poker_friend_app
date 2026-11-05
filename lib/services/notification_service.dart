@@ -8,6 +8,8 @@ import '../screens/paywall_screen.dart';
 import '../screens/training/daily_challenge_screen.dart';
 import 'auth_service.dart';
 import 'coach_icon_service.dart';
+import 'paid_nudge_service.dart';
+import 'spot_quiz_logic.dart';
 import 'streak_saver_service.dart';
 
 class NotificationService {
@@ -37,13 +39,16 @@ class NotificationService {
           AndroidInitializationSettings('@drawable/ic_notification');
 
       // iOS initialization settings
-      const iosSettings = DarwinInitializationSettings(
+      // The spot-quiz push carries action buttons; iOS fixes a category's
+      // buttons at registration, so every 2-3 button set is registered here.
+      final iosSettings = DarwinInitializationSettings(
         requestAlertPermission: true,
         requestBadgePermission: true,
         requestSoundPermission: true,
+        notificationCategories: _spotQuizCategories(),
       );
 
-      const initSettings = InitializationSettings(
+      final initSettings = InitializationSettings(
         android: androidSettings,
         iOS: iosSettings,
       );
@@ -57,8 +62,9 @@ class NotificationService {
       // when the app was terminated — the payload arrives in launch details.
       final launchDetails =
           await _notifications.getNotificationAppLaunchDetails();
-      final launchPayload =
-          launchDetails?.notificationResponse?.payload;
+      final launchPayload = SpotQuizLogic.payloadWithAction(
+          launchDetails?.notificationResponse?.payload ?? '',
+          launchDetails?.notificationResponse?.actionId);
       debugPrint('📲 Notif init: launchedByNotification='
           '${launchDetails?.didNotificationLaunchApp} payload=$launchPayload');
       if (launchDetails?.didNotificationLaunchApp == true &&
@@ -66,9 +72,8 @@ class NotificationService {
         _openPaywallWhenReady();
       }
       if (launchDetails?.didNotificationLaunchApp == true &&
-          (launchPayload?.startsWith(StreakSaverService.payloadPrefix) ??
-              false)) {
-        _handleEngagementTap(launchPayload!);
+          launchPayload.startsWith(StreakSaverService.payloadPrefix)) {
+        _handleEngagementTap(launchPayload);
       }
 
       _initialized = true;
@@ -84,7 +89,11 @@ class NotificationService {
     if (_promoPayloads.contains(response.payload)) {
       _openPaywallWhenReady();
     }
-    final payload = response.payload;
+    // A tapped action button (spot quiz) rides along as `:{actionId}`.
+    final payload = response.payload == null
+        ? null
+        : SpotQuizLogic.payloadWithAction(
+            response.payload!, response.actionId);
     if (payload != null &&
         payload.startsWith(StreakSaverService.payloadPrefix)) {
       _handleEngagementTap(payload);
@@ -111,9 +120,15 @@ class NotificationService {
       if (nav == null || AuthService.currentUser == null) return;
       // Let the startup gate finish routing before pushing on top of it.
       await Future.delayed(const Duration(milliseconds: 800));
-      await nav.push(
-        MaterialPageRoute(builder: (_) => const DailyChallengeScreen()),
-      );
+      final parsed = StreakSaverService.parsePayload(payload);
+      final handled = parsed != null &&
+          await PaidNudgeService.open(nav, parsed.type, parsed.eventId,
+              action: parsed.action);
+      if (!handled) {
+        await nav.push(
+          MaterialPageRoute(builder: (_) => const DailyChallengeScreen()),
+        );
+      }
     } finally {
       _engagementRoutingInFlight = false;
     }
@@ -381,7 +396,9 @@ class NotificationService {
   /// Build the notification details for an engagement push, showing the
   /// coach mascot as the large (emoji-sized) icon when [coachId] resolves to
   /// one. Falls back to the app launcher icon for the neutral voice.
-  static Future<NotificationDetails> _engagementDetails(String? coachId) async {
+  static Future<NotificationDetails> _engagementDetails(String? coachId,
+      {List<SpotQuizAction> buttons = const []}) async {
+    final shown = SpotQuizLogic.canonicalButtons(buttons);
     final coachPath = await CoachIconService.largeIconPath(coachId);
     final AndroidBitmap<Object> largeIcon = coachPath != null
         ? FilePathAndroidBitmap(coachPath)
@@ -397,14 +414,47 @@ class NotificationService {
         largeIcon: largeIcon,
         styleInformation: const BigTextStyleInformation(''),
         color: AppColors.accentPrimary,
+        // showsUserInterface: tapping a button opens the app (no background
+        // isolate needed); the action id reaches the normal response callback.
+        actions: [
+          for (final b in shown)
+            AndroidNotificationAction(b.id, b.label,
+                showsUserInterface: true, cancelNotification: true),
+        ],
       ),
-      iOS: const DarwinNotificationDetails(
+      iOS: DarwinNotificationDetails(
         presentAlert: true,
         presentBadge: true,
         presentSound: true,
+        categoryIdentifier:
+            shown.length < SpotQuizLogic.minButtons
+                ? null
+                : SpotQuizLogic.categoryId(shown),
       ),
     );
   }
+
+  static List<DarwinNotificationCategory> _spotQuizCategories() => [
+        for (final set in SpotQuizLogic.allCategories())
+          DarwinNotificationCategory(
+            SpotQuizLogic.categoryId(set),
+            actions: [
+              for (final b in set)
+                DarwinNotificationAction.plain(
+                  b.id,
+                  b.label,
+                  options: {DarwinNotificationActionOption.foreground},
+                ),
+            ],
+          ),
+      ];
+
+  /// Notification ids for the engagement pushes. One slot per type so a
+  /// queued paid nudge never replaces the streak reminder (and vice versa).
+  static const int engagementSlotTrialRecap = 777011;
+  static const int engagementSlotMissedDay = 777012;
+  static const int engagementSlotPaywallReturn = 777013;
+  static const int engagementSlotSpotQuiz = 777014;
 
   /// Schedule the single engagement reminder (streak-saver). Fixed id =
   /// idempotent: re-scheduling replaces any queued one. [payload] carries
@@ -416,33 +466,58 @@ class NotificationService {
     required DateTime at,
     required String payload,
     String? coachId,
+  }) =>
+      scheduleEngagementPush(
+        id: _engagementReminderId,
+        title: title,
+        body: body,
+        at: at,
+        payload: payload,
+        coachId: coachId,
+      );
+
+  /// The one funnel every device-scheduled engagement push goes through
+  /// (streak-saver + paid nudges): same channel, coach icon and payload
+  /// contract. Scheduling the same [id] again replaces the queued push.
+  static Future<void> scheduleEngagementPush({
+    required int id,
+    required String title,
+    required String body,
+    required DateTime at,
+    required String payload,
+    String? coachId,
+    List<SpotQuizAction> buttons = const [],
   }) async {
     try {
       if (!_initialized) await initialize();
       await requestPermissions();
       await _notifications.zonedSchedule(
-        _engagementReminderId,
+        id,
         title,
         body,
         tz.TZDateTime.from(at, tz.local),
-        await _engagementDetails(coachId),
+        await _engagementDetails(coachId, buttons: buttons),
         androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
         uiLocalNotificationDateInterpretation:
             UILocalNotificationDateInterpretation.absoluteTime,
         payload: payload,
       );
-      debugPrint('✅ Engagement reminder scheduled for $at');
+      debugPrint('✅ Engagement push $id scheduled for $at');
     } catch (e) {
-      debugPrint('❌ Error scheduling engagement reminder: $e');
+      debugPrint('❌ Error scheduling engagement push $id: $e');
     }
   }
 
   /// Cancel the queued engagement reminder (user played / muted the type).
-  static Future<void> cancelEngagementReminder() async {
+  static Future<void> cancelEngagementReminder() =>
+      cancelEngagementPush(_engagementReminderId);
+
+  /// Cancel the queued engagement push in slot [id].
+  static Future<void> cancelEngagementPush(int id) async {
     try {
-      await _notifications.cancel(_engagementReminderId);
+      await _notifications.cancel(id);
     } catch (e) {
-      debugPrint('Error cancelling engagement reminder: $e');
+      debugPrint('Error cancelling engagement push $id: $e');
     }
   }
 

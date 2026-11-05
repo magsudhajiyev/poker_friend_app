@@ -5,6 +5,7 @@ import '../../design_system/constants/colors.dart';
 import '../../design_system/constants/spacing.dart';
 import '../../design_system/constants/typography.dart';
 import '../../l10n/app_localizations.dart';
+import '../../models/authored_spot.dart' show AuthoredAction;
 import '../../models/drill_models.dart';
 import '../../services/analytics_service.dart';
 import '../../services/authored_tree_service.dart';
@@ -38,7 +39,19 @@ class DailyReplayScreen extends StatefulWidget {
   /// still tap Replay to run it again.
   final DailyChallengeResult? initialResult;
 
-  const DailyReplayScreen({super.key, required this.day, this.initialResult});
+  /// Spot-quiz push: replay ONLY this tree of the day (its hand), with
+  /// [autoAction] pre-applied as the first decision when still legal. Such a
+  /// partial run is shown but never saved (it would replace the day's full
+  /// replay result); "Replay again" then plays the whole day.
+  final String? focusTreeId;
+  final AuthoredAction? autoAction;
+
+  const DailyReplayScreen(
+      {super.key,
+      required this.day,
+      this.initialResult,
+      this.focusTreeId,
+      this.autoAction});
 
   @override
   State<DailyReplayScreen> createState() => _DailyReplayScreenState();
@@ -53,6 +66,10 @@ class _DailyReplayScreenState extends State<DailyReplayScreen> {
   /// [DailyReplayScreen.initialResult]; updated when the user replays.
   late DailyChallengeResult? _result = widget.initialResult;
   bool _started = false;
+
+  /// Consumed by the first run: later runs ("Replay again") play the full day.
+  late String? _focusTreeId = widget.focusTreeId;
+  late AuthoredAction? _autoAction = widget.autoAction;
 
   @override
   void initState() {
@@ -92,21 +109,34 @@ class _DailyReplayScreenState extends State<DailyReplayScreen> {
     HapticFeedback.selectionClick();
     setState(() => _started = true);
     final dayKey = DailyChallengeStore.dayKey(_config.day);
-    final trees = await AuthoredTreeService.loadDay(dayKey);
+    var trees = await AuthoredTreeService.loadDay(dayKey);
     if (!mounted) return;
+    final focusId = _focusTreeId;
+    final autoAction = _autoAction;
+    _focusTreeId = null;
+    _autoAction = null;
+    final focused =
+        focusId != null && trees != null && trees.any((t) => t.id == focusId);
+    if (focused) trees = [trees.firstWhere((t) => t.id == focusId)];
 
     final List<List<DrillDecisionRecord>> hands;
     final List<double> weights;
     List<String> streets = const [];
     List<List<String>> boards = const [];
-    List<String> facing = const [], heroLabels = const [], bestLabels = const [];
+    List<String> facing = const [],
+        heroLabels = const [],
+        bestLabels = const [];
 
     if (trees != null) {
+      final dayTrees = trees;
       final outcomes = await Navigator.push<List<AuthoredHandOutcome>>(
         context,
         MaterialPageRoute(
           builder: (_) => AuthoredDayRunner(
-              trees: trees, persona: _persona, dayKey: dayKey),
+              trees: dayTrees,
+              persona: _persona,
+              dayKey: dayKey,
+              autoFirstAction: focused ? autoAction : null),
         ),
       );
       if (!mounted) return;
@@ -166,7 +196,7 @@ class _DailyReplayScreenState extends State<DailyReplayScreen> {
       heroLabels: heroLabels,
       bestLabels: bestLabels,
     );
-    await DailyReplayStore.save(result); // best-effort; never throws
+    if (!focused) await DailyReplayStore.save(result); // never throws
     if (!mounted) return;
     setState(() => _result = result);
     AnalyticsService.capture('daily_replay_completed', {
@@ -253,13 +283,15 @@ class _DailyReplayScreenState extends State<DailyReplayScreen> {
         // Challenge results (hero card faces, board, verdicts, coach line).
         DailyResultBreakdown(result: result),
         const SizedBox(height: AppSpacing.xl),
-        _ctaButton(label: l10n.replayPlayAgain, onTap: () {
-          setState(() {
-            _result = null;
-            _started = false;
-          });
-          _play();
-        }),
+        _ctaButton(
+            label: l10n.replayPlayAgain,
+            onTap: () {
+              setState(() {
+                _result = null;
+                _started = false;
+              });
+              _play();
+            }),
         const SizedBox(height: AppSpacing.md),
         Center(
           child: TextButton(
@@ -277,7 +309,6 @@ class _DailyReplayScreenState extends State<DailyReplayScreen> {
       ],
     );
   }
-
 
   Widget _ctaButton({required String label, VoidCallback? onTap}) {
     final enabled = onTap != null;
