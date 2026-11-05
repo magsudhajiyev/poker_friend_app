@@ -1,5 +1,11 @@
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
-import { mirrorFromSubscriber } from "./subscription_mirror";
+import { mirrorFromSubscriber, SubscriptionMirror } from "./subscription_mirror";
+import {
+  allowedOrigin,
+  isFreshSync,
+  responseFromMirror,
+  responseFromSaved,
+} from "./subscription_sync";
 import { shouldSendTrialReminder, trialReminderCopy } from "./trial_reminder";
 import { dailyAccuracy } from "./daily_accuracy";
 import { onSchedule } from "firebase-functions/v2/scheduler";
@@ -501,6 +507,43 @@ export const notifyFollowersOnSessionStart = onDocumentCreated(
   }
 );
 
+/** RevenueCat REST call failed (non-2xx). */
+class RcFetchError extends Error {}
+
+/**
+ * Re-fetch the subscriber from the RC REST API and derive the mirror (pure,
+ * unit-tested in src/subscription_mirror.ts). Shared by revenuecatWebhook and
+ * syncSubscription so the two cannot drift.
+ */
+async function fetchSubscriptionMirror(uid: string): Promise<SubscriptionMirror> {
+  const response = await fetch(
+    `https://api.revenuecat.com/v1/subscribers/${encodeURIComponent(uid)}`,
+    { headers: { "Authorization": `Bearer ${revenuecatKey.value()}` } }
+  );
+  if (!response.ok) {
+    const body = await response.text();
+    console.error(`RC subscriber fetch failed for ${uid}: HTTP ${response.status} ${body}`);
+    throw new RcFetchError(`HTTP ${response.status}`);
+  }
+  const subscriber = (await response.json()).subscriber;
+  return mirrorFromSubscriber(subscriber, Date.now());
+}
+
+/** users/{uid} fields the mirror writes (rules + trial reminders read them). */
+function mirrorFields(m: SubscriptionMirror) {
+  return {
+    subscriptionTier: m.tier,
+    subscriptionTierExpiresAt:
+      m.expiresAtMs === null ? null : Timestamp.fromMillis(m.expiresAtMs),
+    // Free-trial mirror — the server-side "trial ends tomorrow"
+    // reminder reads these (hard paywall step 4).
+    subscriptionInTrial: m.inTrial,
+    subscriptionWillRenew: m.willRenew,
+    subscriptionProductId: m.productId,
+    tierSyncedAt: FieldValue.serverTimestamp(),
+  };
+}
+
 /**
  * RevenueCat webhook → mirror the subscription tier onto users/{uid}.
  *
@@ -548,45 +591,87 @@ export const revenuecatWebhook = onRequest(
 
     try {
       for (const uid of uids) {
-        const response = await fetch(
-          `https://api.revenuecat.com/v1/subscribers/${encodeURIComponent(uid)}`,
-          { headers: { "Authorization": `Bearer ${revenuecatKey.value()}` } }
-        );
-        if (!response.ok) {
-          const body = await response.text();
-          console.error(
-            `RC subscriber fetch failed for ${uid}: HTTP ${response.status} ${body}`
-          );
-          // Non-2xx → RevenueCat retries the webhook later.
-          res.status(502).send("RC fetch failed");
-          return;
-        }
-        const subscriber = (await response.json()).subscriber;
-        // Pure + unit-tested (src/subscription_mirror.ts): tier, expiry and
-        // the free-trial state of the highest active entitlement.
-        const m = mirrorFromSubscriber(subscriber, Date.now());
-        const tier = m.tier;
-
-        await db.collection("users").doc(uid).set(
-          {
-            subscriptionTier: tier,
-            subscriptionTierExpiresAt:
-              m.expiresAtMs === null ? null : Timestamp.fromMillis(m.expiresAtMs),
-            // Free-trial mirror — the server-side "trial ends tomorrow"
-            // reminder reads these (hard paywall step 4).
-            subscriptionInTrial: m.inTrial,
-            subscriptionWillRenew: m.willRenew,
-            subscriptionProductId: m.productId,
-            tierSyncedAt: FieldValue.serverTimestamp(),
-          },
-          { merge: true }
-        );
-        console.log(`Mirrored tier for ${uid}: ${tier}`);
+        const m = await fetchSubscriptionMirror(uid);
+        await db.collection("users").doc(uid).set(mirrorFields(m), { merge: true });
+        console.log(`Mirrored tier for ${uid}: ${m.tier}`);
       }
       res.status(200).send("OK");
     } catch (error) {
+      if (error instanceof RcFetchError) {
+        // Non-2xx → RevenueCat retries the webhook later.
+        res.status(502).send("RC fetch failed");
+        return;
+      }
       console.error(`Webhook processing failed for ${appUserId}:`, error);
       res.status(500).send("Internal error");
+    }
+  }
+);
+
+/**
+ * syncSubscription — the web dashboard calls this at login to learn the
+ * user's REAL paid plan (the webhook mirror alone is not trusted yet). The
+ * uid comes only from the verified Firebase ID token. Refreshes the mirror
+ * from RevenueCat, except: a sync under 60 s old is returned as saved, and a
+ * missing users/{uid} doc is never created here (grantFreeMonthOnSignup fires
+ * on create). RC failure → 502 and the mirror is left untouched.
+ */
+export const syncSubscription = onRequest(
+  { secrets: [revenuecatKey], timeoutSeconds: 30 },
+  async (req, res) => {
+    const origin = allowedOrigin(req.headers.origin);
+    if (origin) {
+      res.set("Access-Control-Allow-Origin", origin);
+      res.set("Vary", "Origin");
+      res.set("Access-Control-Allow-Methods", "POST, OPTIONS");
+      res.set("Access-Control-Allow-Headers", "Authorization, Content-Type");
+    }
+    if (req.method === "OPTIONS") {
+      res.status(204).send("");
+      return;
+    }
+    if (req.method !== "POST") {
+      res.status(405).send("Method not allowed");
+      return;
+    }
+
+    const authHeader = req.headers.authorization ?? "";
+    const idToken = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
+    let uid: string;
+    try {
+      uid = (await getAuth().verifyIdToken(idToken)).uid;
+    } catch {
+      res.status(401).send("Unauthorized");
+      return;
+    }
+
+    try {
+      const userRef = db.collection("users").doc(uid);
+      const user = await userRef.get();
+      const syncedAt = user.get("tierSyncedAt") as Timestamp | undefined;
+      if (user.exists && isFreshSync(syncedAt ? syncedAt.toMillis() : null, Date.now())) {
+        const exp = user.get("subscriptionTierExpiresAt") as Timestamp | null | undefined;
+        const saved = responseFromSaved(
+          user.get("subscriptionTier"),
+          exp ? exp.toMillis() : null,
+          user.get("subscriptionInTrial")
+        );
+        if (saved) {
+          res.status(200).json(saved);
+          return;
+        }
+      }
+
+      const m = await fetchSubscriptionMirror(uid);
+      if (user.exists) await userRef.update(mirrorFields(m));
+      res.status(200).json(responseFromMirror(m));
+    } catch (error) {
+      if (error instanceof RcFetchError) {
+        res.status(502).json({ error: "rc_unavailable" });
+        return;
+      }
+      console.error(`syncSubscription failed for ${uid}:`, error);
+      res.status(500).json({ error: "internal" });
     }
   }
 );
