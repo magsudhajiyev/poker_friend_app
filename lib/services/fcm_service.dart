@@ -132,6 +132,46 @@ class FCMService {
     }
   }
 
+  /// Waits between attempts in [getTokenWithRetry] (about 30s in total).
+  /// On iOS the APNs token often arrives a few seconds after launch.
+  @visibleForTesting
+  static const retryDelays = [
+    Duration(seconds: 2),
+    Duration(seconds: 4),
+    Duration(seconds: 8),
+    Duration(seconds: 16),
+  ];
+
+  /// Like [getToken], but retries with delays when no token is ready yet.
+  /// Only call this from fire-and-forget paths (never from startup awaits).
+  /// Never throws. Returns null if all attempts fail.
+  static Future<String?> getTokenWithRetry() => retryForToken(
+        getToken,
+        delays: retryDelays,
+      );
+
+  /// Pure retry loop (testable). Tries once, then once after each delay.
+  @visibleForTesting
+  static Future<String?> retryForToken(
+    Future<String?> Function() fetch, {
+    required List<Duration> delays,
+    Future<void> Function(Duration)? wait,
+  }) async {
+    final sleep = wait ?? Future<void>.delayed;
+    try {
+      var token = await fetch();
+      for (final d in delays) {
+        if (token != null) break;
+        await sleep(d);
+        token = await fetch();
+      }
+      return token;
+    } catch (e) {
+      unawaited(LoggerService.error('FCM: Token retry failed', e));
+      return null;
+    }
+  }
+
   /// Get and store FCM token for current user
   static Future<void> _getAndStoreToken() async {
     final token = await getToken();

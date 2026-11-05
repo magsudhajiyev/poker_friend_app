@@ -234,7 +234,8 @@ void _showInvitationAcceptedNotification(String clubName) {
 /// Setup FCM for already logged-in user (fire-and-forget, runs in background)
 Future<void> _setupFcmForLoggedInUser() async {
   try {
-    final token = await FCMService.getToken();
+    // Retry: on iOS the APNs token can arrive a few seconds late.
+    final token = await FCMService.getTokenWithRetry();
     if (token != null) {
       await FCMService.storeToken(token);
     }
