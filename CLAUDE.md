@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Overview
 Flutter/Dart poker hand logging application with Firebase backend, club management, dealer-assisted voice logging, and real-time WebSocket sync. Allows users to track poker hands, sessions, statistics, opponents, and bankroll.
 
-**The app is LIVE** (v2.1.0+14 submitted to Google Play on launch night 2026-07-24; iOS submission pending). Current working version: 2.1.8+25 (pubspec). Earlier: 2.1.5+19 (Engagement notifications: coach-voiced streak-saver + send-time scheduler, prefs, admin dashboard; flag `engagement_notifications` = admin-only. Plus 2.1.4+18 Daily Challenge leaderboard). **On `main` (2026-10-21): authored solver game-tree Daily Challenge — 5 hands/day, pot-weighted accuracy scoring, casual coach commentary (flag `daily_challenge` = admin-only; Firestore rules + `validateLeaderboardEntry` deploy still pending) — see Key Feature 18c.** **On `main` (2026-10-25, bumped 2.1.5+20): Daily Challenge REPLAYS (tier-gated past-day practice, unranked), hard-paywall value-proposition "free trial" screen, onboarding username-always-asked fix + demo→info-screen step, leaderboard skippable-username prompt — see Key Feature 18d + diary 2026-10-25.** **On `main` (2026-11-01, bumped 2.1.7+22): Easy hand logging (admin flag `easy_hand_logging`: fold tick w/ 4s undo, flag-a-hand + later recall, hand completeness levels with stats applied once at promotion, stack-timeline pending segments; live insights behind `live_insights`), Daily Challenge hardening (create-only leaderboard rules, local-day/DST fixes, cross-device streak merge, offline play block — NOT deployed), super-admin preview of upcoming days, `build_tree.js` limp-spine fix.** Post-launch work is queued in `ROADMAP.md` — check it before planning any change.
+**The app is LIVE** (v2.1.0+14 submitted to Google Play on launch night 2026-07-24; iOS submission pending). Current working version: 2.1.9+26 (pubspec; 2026-11-06 release: dead button / dead small blind per TDA Rule 34 in hand logging + export, iOS push entitlement fix). Earlier: 2.1.5+19 (Engagement notifications: coach-voiced streak-saver + send-time scheduler, prefs, admin dashboard; flag `engagement_notifications` = admin-only. Plus 2.1.4+18 Daily Challenge leaderboard). **On `main` (2026-10-21): authored solver game-tree Daily Challenge — 5 hands/day, pot-weighted accuracy scoring, casual coach commentary (flag `daily_challenge` = admin-only; Firestore rules + `validateLeaderboardEntry` deploy still pending) — see Key Feature 18c.** **On `main` (2026-10-25, bumped 2.1.5+20): Daily Challenge REPLAYS (tier-gated past-day practice, unranked), hard-paywall value-proposition "free trial" screen, onboarding username-always-asked fix + demo→info-screen step, leaderboard skippable-username prompt — see Key Feature 18d + diary 2026-10-25.** **On `main` (2026-11-01, bumped 2.1.7+22): Easy hand logging (admin flag `easy_hand_logging`: fold tick w/ 4s undo, flag-a-hand + later recall, hand completeness levels with stats applied once at promotion, stack-timeline pending segments; live insights behind `live_insights`), Daily Challenge hardening (create-only leaderboard rules, local-day/DST fixes, cross-device streak merge, offline play block — NOT deployed), super-admin preview of upcoming days, `build_tree.js` limp-spine fix.** Post-launch work is queued in `ROADMAP.md` — check it before planning any change.
 
 ---
 
@@ -123,7 +123,7 @@ Full machine setup (tool versions, keystores, step-by-step install) lives in `SE
 ### Tech Stack
 - **Frontend**: Flutter/Dart (300+ Dart files)
 - **Backend**: Firebase (Firestore, Auth, FCM, Cloud Functions in `functions/`) + FastAPI backend (Render)
-- **Local Storage**: SQLite (sqflite, DB schema v20) + SharedPreferences
+- **Local Storage**: SQLite (sqflite, DB schema v21; v21 = hands.bbSeat/sbSeat/smallBlindDead) + SharedPreferences
 - **Real-time**: Socket.IO WebSocket + Firestore Snapshot listeners
 - **Voice Recognition**: Deepgram ASR via backend "Dealer Brain" endpoint
 - **Payments**: RevenueCat SDK
@@ -495,6 +495,9 @@ Persona-driven coach feedback for the authored game-tree days, **pre-generated i
   'individualShares': Map<int, double>?, 'sharePerWinner': double?,
   'isStarred': bool?, 'tags': List<String>?, 'notes': String?,
   'isScouted': bool?  // preflop-only scouting record (hero folded, opponents logged)
+  'bbSeat': int?,           // real BB seat (dead button / dead SB aware); absent on hands saved before 2026-11-06
+  'sbSeat': int?,           // real SB seat; ABSENT when the small blind was dead (nobody posted)
+  'smallBlindDead': bool?   // true only on a dead small blind. Readers: no bbSeat = old hand, use labels/button fallbacks
 }
 ```
 
@@ -596,7 +599,7 @@ saveHand() called
 | Service | File | Purpose |
 |---------|------|---------|
 | FirebaseService | `lib/services/firebase_service.dart` (1631 lines) | Session/hand CRUD, stats orchestration |
-| LocalStorageService | `lib/services/local_storage_service.dart` | SQLite mirror of Firebase (schema v20; v20 = idempotent ADD COLUMN migrations for hand completeness/statsApplied/flagMeta) |
+| LocalStorageService | `lib/services/local_storage_service.dart` | SQLite mirror of Firebase (schema v21; v20 = completeness/statsApplied/flagMeta, v21 = bbSeat/sbSeat/smallBlindDead, idempotent ADD COLUMN) |
 | UserStatsService | `lib/services/user_stats_service.dart` | Atomic user stat transactions |
 | OpponentStatsService | `lib/services/opponent_stats_service.dart` | Atomic opponent stat transactions |
 | StatsCalculator | `lib/services/stats_calculator.dart` | Pure stat detection functions (testable) |
@@ -800,12 +803,14 @@ authored_spots/{spotId}/      — solver game trees for the Daily Challenge; wri
 
 ### Button Position
 - Locked during active hand (cannot be moved)
-- Rotates each hand automatically
-- Used to calculate SB/BB/UTG positions based on active players only
+- Rotates each hand automatically via ONE pure function, `lib/utils/blind_rotation.dart` (TDA Rule 34, cash + tournament, no setting): BB = next live seat after last BB; SB = last BB seat; BTN = last SB seat. Memory = last hand's BB/SB SEAT numbers, kept after the seat empties
+- **Dead button** (last SB seat empty) and **dead small blind** (last BB seat empty, nobody posts, no dead money) are real: `PokerGameState.buttonDead` / `smallBlindDead`, `deadSeats`. `effectiveSBPosition` is the EMPTY seat on a dead SB (check `smallBlindDead` before treating it as a poster). Heads-up: BTN = SB, nobody pays BB twice
+- Advance exactly once per hand (`rotateBlindsForNextHand`: startNewHand, Skip, fold tick). `initializePot` / `recalculateActionOrder` re-derive from the memory and never advance it. Setting `buttonPosition` from outside is a MANUAL move = new baseline (memory restarts from it)
+- Position names in dead hands come from `getPositionNameForActivePlayers(..., deadSeats:)` (empty seats are ring slots: nobody is BTN on a dead button, nobody SB on a dead SB). See POKER_SEATING_RULES.md
 
 ### Empty Seats
 - Table supports up to 9 seats, some may be unoccupied
-- Blinds and action order skip empty/inactive seats
+- Blinds and action order skip empty/inactive seats; an empty seat can still hold the button or the SB (dead button / dead SB)
 - Player count uses active players, NOT total seats
 
 ---
@@ -946,6 +951,6 @@ Tests are organized in subdirectories mirroring `lib/`:
 
 ---
 
-**Last Updated**: November 5, 2026
+**Last Updated**: November 6, 2026
 **Maintained by**: User + Claude
 **Update this file**: After major feature additions, architectural changes, or new bug patterns

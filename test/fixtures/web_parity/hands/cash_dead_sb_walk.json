@@ -1,0 +1,112 @@
+{
+ "id": "cash_dead_sb_walk",
+ "sessionId": "cash_6max",
+ "handNumber": 21,
+ "buttonPosition": 2,
+ "playerCount": 6,
+ "actions": [
+  {
+   "player": 5,
+   "action": "fold",
+   "street": "preflop",
+   "timestamp": "2025-03-01T20:00:07Z",
+   "buttonPosition": 2,
+   "playerName": "Erin",
+   "playerId": null,
+   "isCurrentUser": false,
+   "playerPosition": "UTG",
+   "playerStack": 200,
+   "amount": null
+  },
+  {
+   "player": 6,
+   "action": "fold",
+   "street": "preflop",
+   "timestamp": "2025-03-01T20:00:14Z",
+   "buttonPosition": 2,
+   "playerName": "Frank",
+   "playerId": null,
+   "isCurrentUser": false,
+   "playerPosition": "HJ",
+   "playerStack": 200,
+   "amount": null
+  },
+  {
+   "player": 1,
+   "action": "fold",
+   "street": "preflop",
+   "timestamp": "2025-03-01T20:00:21Z",
+   "buttonPosition": 2,
+   "playerName": "Alice",
+   "playerId": null,
+   "isCurrentUser": true,
+   "playerPosition": "CO",
+   "playerStack": 200,
+   "amount": null
+  },
+  {
+   "player": 2,
+   "action": "fold",
+   "street": "preflop",
+   "timestamp": "2025-03-01T20:00:28Z",
+   "buttonPosition": 2,
+   "playerName": "Bob",
+   "playerId": null,
+   "isCurrentUser": false,
+   "playerPosition": "BTN",
+   "playerStack": 200,
+   "amount": null
+  }
+ ],
+ "startTime": "2025-03-01T20:00:00.000Z",
+ "endTime": "2025-03-01T20:01:09Z",
+ "state": "completed",
+ "boardCards": null,
+ "ourHoleCards": {
+  "card1": "9♠",
+  "card2": "9♥"
+ },
+ "showdownData": null,
+ "reachedShowdown": false,
+ "potAmount": 2,
+ "preflopPot": 2,
+ "flopPot": 0,
+ "turnPot": 0,
+ "riverPot": 0,
+ "winnerId": 4,
+ "heroPositionName": "CO",
+ "heroSeatNumber": 1,
+ "isChoppedPot": false,
+ "isSplitPot": false,
+ "choppedWinners": null,
+ "individualShares": null,
+ "sharePerWinner": null,
+ "isStarred": false,
+ "isScouted": false,
+ "tags": [],
+ "notes": "",
+ "gameType": "cash",
+ "smallBlind": 1,
+ "bigBlind": 2,
+ "playerNames": {
+  "1": "Alice",
+  "2": "Bob",
+  "4": "Dave",
+  "5": "Erin",
+  "6": "Frank"
+ },
+ "playerIds": {
+  "1": null,
+  "2": null,
+  "4": null,
+  "5": null,
+  "6": null
+ },
+ "_tags": [
+  "cash",
+  "walk",
+  "dead-sb"
+ ],
+ "bbSeat": 4,
+ "smallBlindDead": true
+}

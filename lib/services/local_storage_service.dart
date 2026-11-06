@@ -23,7 +23,7 @@ class LocalStorageService {
     
     return await openDatabase(
       dbPath,
-      version: 20,
+      version: 21,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE sessions(
@@ -88,6 +88,9 @@ class LocalStorageService {
             completeness TEXT DEFAULT 'full',
             statsApplied INTEGER DEFAULT 1,
             flagMeta TEXT,
+            bbSeat INTEGER,
+            sbSeat INTEGER,
+            smallBlindDead INTEGER DEFAULT 0,
             FOREIGN KEY (sessionId) REFERENCES sessions (id)
           )
         ''');
@@ -192,6 +195,10 @@ class LocalStorageService {
           // have some of them.
           await _ensureHandsV20Columns(db);
         }
+        if (oldVersion < 21) {
+          // Real blinds per hand (dead button / dead SB). Additive, idempotent.
+          await _ensureHandsV21Columns(db);
+        }
       },
       onOpen: (db) async {
         // Self-healing: the range grid table is derived data and test
@@ -208,6 +215,11 @@ class LocalStorageService {
           await _ensureHandsV20Columns(db);
         } catch (e) {
           debugPrint('Error ensuring hands v20 columns: $e');
+        }
+        try {
+          await _ensureHandsV21Columns(db);
+        } catch (e) {
+          debugPrint('Error ensuring hands v21 columns: $e');
         }
       },
     );
@@ -518,6 +530,10 @@ class LocalStorageService {
     HandCompleteness completeness = HandCompleteness.full,
     bool statsApplied = true,
     Map<String, dynamic>? flagMeta,
+    // Real blinds (dead button / dead SB aware); null = not recorded.
+    int? bbSeat,
+    int? sbSeat,
+    bool smallBlindDead = false,
   }) async {
     try {
       final db = await database;
@@ -566,6 +582,9 @@ class LocalStorageService {
           'completeness': completeness.wire,
           'statsApplied': statsApplied ? 1 : 0,
           'flagMeta': flagMeta != null ? _safeJsonEncode(flagMeta) : null,
+          'bbSeat': bbSeat,
+          'sbSeat': sbSeat,
+          'smallBlindDead': smallBlindDead ? 1 : 0,
         },
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
@@ -620,6 +639,29 @@ class LocalStorageService {
           if (!existing.contains(e.key))
             'ALTER TABLE hands ADD COLUMN ${e.key} ${e.value}',
       ];
+
+  /// v20 -> v21 columns of `hands` (additive only): column -> definition.
+  static const Map<String, String> kHandsV21Columns = {
+    'bbSeat': 'INTEGER',
+    'sbSeat': 'INTEGER',
+    'smallBlindDead': 'INTEGER DEFAULT 0',
+  };
+
+  /// Pure: the ALTER statements still needed given the [existing] columns.
+  static List<String> missingHandsV21Statements(Set<Object?> existing) => [
+        for (final e in kHandsV21Columns.entries)
+          if (!existing.contains(e.key))
+            'ALTER TABLE hands ADD COLUMN ${e.key} ${e.value}',
+      ];
+
+  static Future<void> _ensureHandsV21Columns(Database db) async {
+    final cols = (await db.rawQuery('PRAGMA table_info(hands)'))
+        .map((r) => r['name'])
+        .toSet();
+    for (final stmt in missingHandsV21Statements(cols)) {
+      await db.execute(stmt);
+    }
+  }
 
   static Future<void> _ensureHandsV20Columns(Database db) async {
     final cols = (await db.rawQuery('PRAGMA table_info(hands)'))
@@ -841,6 +883,7 @@ class LocalStorageService {
     // Easy hand logging columns (missing / null = legacy full hand)
     result['completeness'] = result['completeness'] ?? 'full';
     result['statsApplied'] = (result['statsApplied'] as int?) != 0;
+    result['smallBlindDead'] = (result['smallBlindDead'] as int?) == 1;
     final rawFlag = result.remove('flagMeta');
     if (rawFlag is String && rawFlag.isNotEmpty) {
       try {
