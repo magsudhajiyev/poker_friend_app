@@ -38,6 +38,9 @@ class TableSnapshot {
   final List<bool> folded;
   final List<bool> active;
 
+  /// Dead button / dead SB rotation memory, so Undo restores it too.
+  final (int, int)? blindMemory;
+
   TableSnapshot._({
     required this.handNumber,
     required this.buttonPosition,
@@ -45,6 +48,7 @@ class TableSnapshot {
     required this.bbSeat,
     required this.folded,
     required this.active,
+    required this.blindMemory,
   });
 
   static TableSnapshot capture(PokerGameState g) {
@@ -56,6 +60,7 @@ class TableSnapshot {
       bbSeat: g.effectiveBBPosition,
       folded: [for (final p in g.players) p.hasFolded],
       active: [for (final p in g.players) p.isActive],
+      blindMemory: g.blindMemory,
     );
   }
 
@@ -65,7 +70,8 @@ class TableSnapshot {
       g.players[i].hasFolded = folded[i];
       g.players[i].isActive = active[i];
     }
-    g.buttonPosition = buttonPosition;
+    // Stacks first: the blind derivation counts a seat as live by its chips.
     g.restoreFromStreetSnapshot();
+    g.restoreBlinds(buttonPosition, blindMemory);
   }
 }

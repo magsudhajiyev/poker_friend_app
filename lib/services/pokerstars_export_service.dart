@@ -113,6 +113,15 @@ class PokerStarsExportService {
     int? sbSeat;
     int? bbSeat;
 
+    // Hands saved since dead button / dead SB support record the real blinds.
+    // sb seat 0 = dead small blind: nobody posted it. Older hands lack the
+    // fields and use the label / button fallbacks below, unchanged.
+    final recordedBB = hand['bbSeat'];
+    if (recordedBB is int) {
+      final recordedSB = hand['sbSeat'];
+      return (sb: recordedSB is int ? recordedSB : 0, bb: recordedBB);
+    }
+
     // First try: look at playerPosition in actions
     for (final a in actions) {
       final pos = (a['playerPosition'] as String?)?.toUpperCase() ?? '';
@@ -390,7 +399,10 @@ class PokerStarsExportService {
       }
     }
 
-    buf.writeln('$sbName: posts small blind ${_fmtAmt(sb)}');
+    // sb seat 0 = dead small blind: nobody posts it.
+    if (blinds.sb != 0) {
+      buf.writeln('$sbName: posts small blind ${_fmtAmt(sb)}');
+    }
     buf.writeln('$bbName: posts big blind ${_fmtAmt(bb)}');
     return buf.toString().trimRight();
   }
@@ -481,7 +493,7 @@ class PokerStarsExportService {
       if (street == 'preflop') {
         // Blinds set the initial bet level
         currentBetLevel = bb;
-        committed[blinds.sb] = sb;
+        if (blinds.sb != 0) committed[blinds.sb] = sb;
         committed[blinds.bb] = bb;
         if (hasBBante) {
           // BB ante goes into pot but doesn't change the bet level

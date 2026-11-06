@@ -559,6 +559,52 @@ build('scouted_preflop_completeness', scouted=True, completeness='preflop',
       tags=['cash', 'scouted', 'completeness-preflop'], **B6)
 
 
+def dead_blind_hands():
+    """Hands as the app saves them since dead button / dead SB support: NO
+    blind-post actions, plus the real blinds (bbSeat / sbSeat / smallBlindDead).
+    Hand-written (not simulated) so the stored fields are exactly what the app
+    writes. Seat 3 is empty in both."""
+    names = {'1': 'Alice', '2': 'Bob', '4': 'Dave', '5': 'Erin', '6': 'Frank'}
+    base = next(h for h in HANDS if h['id'] == 'cash_walk_hero_bb')
+
+    def act(i, seat, a, pos, btn, stack, amount=None):
+        return {'player': seat, 'action': a, 'street': 'preflop',
+                'timestamp': '2025-03-01T20:00:%02dZ' % (7 * (i + 1)),
+                'buttonPosition': btn, 'playerName': names[str(seat)],
+                'playerId': None, 'isCurrentUser': seat == 1,
+                'playerPosition': pos, 'playerStack': stack, 'amount': amount}
+
+    def make(hid, number, btn, hero_pos, acts, extra, win, pot, tags):
+        d = dict(base)
+        d.update({
+            'id': hid, 'handNumber': number, 'buttonPosition': btn,
+            'heroPositionName': hero_pos, 'heroSeatNumber': 1,
+            'ourHoleCards': {'card1': '9' + SUITS['s'], 'card2': '9' + SUITS['h']},
+            'winnerId': win, 'potAmount': pot, 'preflopPot': pot,
+            'playerNames': names, 'playerIds': {k: None for k in names},
+            'actions': acts, '_tags': tags,
+            'endTime': '2025-03-01T20:01:09Z'})
+        d.update(extra)
+        return d
+
+    # Dead SB walk: BTN2 live, SB seat 3 empty, BB4 never acts.
+    walk = [act(0, 5, 'fold', 'UTG', 2, 200), act(1, 6, 'fold', 'HJ', 2, 200),
+            act(2, 1, 'fold', 'CO', 2, 200), act(3, 2, 'fold', 'BTN', 2, 200)]
+    # Dead button: seat 3 empty holds the button; SB4, BB5; CO2 steals.
+    steal = [act(0, 6, 'fold', 'UTG', 3, 200), act(1, 1, 'fold', 'HJ', 3, 200),
+             act(2, 2, 'raise', 'CO', 3, 200, 6),
+             act(3, 4, 'fold', 'SB', 3, 199), act(4, 5, 'fold', 'BB', 3, 198)]
+    HANDS.append(make('cash_dead_sb_walk', 21, 2, 'CO', walk,
+                      {'bbSeat': 4, 'smallBlindDead': True}, 4, 2,
+                      ['cash', 'walk', 'dead-sb']))
+    HANDS.append(make('cash_dead_button_steal', 22, 3, 'HJ', steal,
+                      {'bbSeat': 5, 'sbSeat': 4}, 2, 9,
+                      ['cash', 'steal', 'dead-button']))
+
+
+dead_blind_hands()
+
+
 def main():
     hands_dir = os.path.join(HERE, 'hands')
     os.makedirs(hands_dir, exist_ok=True)

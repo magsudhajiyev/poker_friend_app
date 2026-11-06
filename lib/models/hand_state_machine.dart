@@ -14,6 +14,7 @@ import '../services/opponent_stats_service.dart';
 import '../services/user_stats_service.dart';
 import '../services/logger_service.dart';
 import '../services/range_grid_service.dart';
+import '../utils/blind_rotation.dart';
 import '../utils/poker_positions.dart';
 import '../onboarding/onboarding_state.dart';
 
@@ -183,7 +184,7 @@ class ShowdownData {
 
 class HandRecord {
   final int handNumber;
-  final int buttonPosition;
+  int buttonPosition; // may change on a pre-action seat change (heads-up to 3-handed)
   final int playerCount;
   final List<ActionRecord> actions;
   final DateTime startTime;
@@ -204,6 +205,13 @@ class HandRecord {
   int? winnerId;
   String? heroPositionName; // Position name (UTG, BTN, etc.) calculated once at hand start
   int? heroSeatNumber; // Hero's seat number for player comparison
+
+  /// Real blinds of this hand (dead button / dead SB aware). Null on hands
+  /// saved before 2026-11-06: readers then fall back to position labels.
+  /// [sbSeat] is null on a dead small blind (nobody posted it).
+  int? bbSeat;
+  int? sbSeat;
+  bool smallBlindDead = false;
 
   // Chopped pot fields
   bool isChoppedPot = false;
@@ -331,6 +339,9 @@ class HandRecord {
       'winnerId': winnerId,
       'heroPositionName': heroPositionName,
       'heroSeatNumber': heroSeatNumber,
+      if (bbSeat != null) 'bbSeat': bbSeat,
+      if (sbSeat != null) 'sbSeat': sbSeat,
+      if (smallBlindDead) 'smallBlindDead': true,
       'isChoppedPot': isChoppedPot,
       'isSplitPot': isSplitPot,
       'choppedWinners': choppedWinners,
@@ -371,6 +382,10 @@ class HandRecord {
       heroPositionName: map['heroPositionName'] as String?,
       heroSeatNumber: map['heroSeatNumber'] as int?,
     );
+
+    hand.bbSeat = map['bbSeat'] as int?;
+    hand.sbSeat = map['sbSeat'] as int?;
+    hand.smallBlindDead = map['smallBlindDead'] == true;
 
     // Set chopped pot fields
     hand.isChoppedPot = map['isChoppedPot'] ?? false;
@@ -482,6 +497,10 @@ class PokerSessionManager {
   String? eventId; // Links to club events for tournament session grouping
   int? actualSBSeat; // Track who actually posted SB (may differ from calculated)
   int? actualBBSeat; // Track who actually posted BB (may differ from calculated)
+  /// EMPTY seats that still hold a role this hand (dead button / dead SB).
+  /// A dead SB leaves [actualSBSeat] pointing at its empty seat; nobody
+  /// posts. Position names count these seats as ring slots.
+  Set<int> deadSeats = {};
 
   // Opponent session tracking
   Set<String> opponentsSeenThisSession = {}; // Track opponents for session count
@@ -673,6 +692,7 @@ class PokerSessionManager {
     this.buttonPosition = buttonPosition;
     this.actualSBSeat = sbSeat;
     this.actualBBSeat = bbSeat;
+    deadSeats = _deadSeatsFor(buttonPosition, sbSeat);
 
     currentHand = HandRecord(
       handNumber: handNumber,
@@ -682,6 +702,7 @@ class PokerSessionManager {
     );
     currentHand!.state = HandState.inProgress;
     currentHand!.tableNumber = currentTableNumber;
+    _stampBlinds(currentHand!, sbSeat, bbSeat);
 
     // CRITICAL: Explicitly ensure board cards are null for new hand
     currentHand!.boardCards = null;
@@ -695,6 +716,7 @@ class PokerSessionManager {
         ourSeatNumber!,
         buttonPosition,
         activeSeats.toList(),
+        deadSeats: deadSeats,
       );
       currentHand!.heroPositionName = heroPos;
       currentHand!.heroSeatNumber = ourSeatNumber;
@@ -732,7 +754,8 @@ class PokerSessionManager {
     final playerPosition = PokerPositions.getPositionNameForActivePlayers(
       player,
       buttonPosition,
-      activeSeats.toList()
+      activeSeats.toList(),
+      deadSeats: deadSeats,
     );
 
     // Determine if this is the current user and get their ID
@@ -1087,16 +1110,48 @@ class PokerSessionManager {
     }
   }
 
-  String? _heroPositionFor(int button) {
+  String? _heroPositionFor(int button, {Set<int>? dead}) {
     final seat = ourSeatNumber;
     if (seat == null) return null;
     return PokerPositions.getPositionNameForActivePlayers(
-        seat, button, activeSeats.toList());
+        seat, button, activeSeats.toList(),
+        deadSeats: dead ?? deadSeats);
   }
 
-  /// Rotates the button to the next active seat (used only when a tick or
-  /// stub is recorded without a hand in progress).
+  /// Record the real blinds on [hand] (SB seat is the EMPTY seat on a dead SB).
+  void _stampBlinds(HandRecord hand, int? sb, int? bb) {
+    if (bb == null || sb == null) return;
+    final dead = !activeSeats.contains(sb);
+    hand.bbSeat = bb;
+    hand.sbSeat = dead ? null : sb;
+    hand.smallBlindDead = dead;
+  }
+
+  /// Empty seats that hold a role for a hand with this button and SB seat.
+  Set<int> _deadSeatsFor(int button, int? sbSeat) => {
+        if (!activeSeats.contains(button)) button,
+        if (sbSeat != null && !activeSeats.contains(sbSeat)) sbSeat,
+      };
+
+  /// Next hand's blinds from the last hand's BB/SB seats: the same pure
+  /// rotation the engine uses (used only when a tick or stub is recorded
+  /// without a hand in progress). Null when it cannot be derived.
+  BlindAssignment? _nextAssignment() {
+    final bb = actualBBSeat;
+    final sb = actualSBSeat;
+    if (bb == null || sb == null) return null;
+    return BlindRotation.next(
+        live: activeSeats.toList(),
+        tableSize: playerCount,
+        lastBB: bb,
+        lastSB: sb);
+  }
+
+  /// Rotates the button for a tick or stub recorded without a hand in
+  /// progress. Falls back to the next active seat if no rotation memory.
   int _rotatedButton() {
+    final next = _nextAssignment();
+    if (next != null) return next.buttonSeat;
     final seats = activeSeats.toList()..sort();
     if (seats.isEmpty) return buttonPosition;
     return seats.firstWhere((x) => x > buttonPosition, orElse: () => seats.first);
@@ -1110,16 +1165,26 @@ class PokerSessionManager {
     final inProgress = live != null && live.state == HandState.inProgress;
     final number = inProgress ? live.handNumber : _nextHandNumber;
     final button = inProgress ? live.buttonPosition : _rotatedButton();
+    final heroPos = inProgress
+        ? live.heroPositionName
+        : _heroPositionFor(button,
+            dead: _deadSeatsFor(button, _nextAssignment()?.sbSeat));
     final record = HandRecord(
       handNumber: number,
       buttonPosition: button,
       playerCount: playerCount,
       startTime: inProgress ? live.startTime : DateTime.now(),
       heroSeatNumber: ourSeatNumber,
-      heroPositionName:
-          inProgress ? live.heroPositionName : _heroPositionFor(button),
+      heroPositionName: heroPos,
     );
     record.tableNumber = currentTableNumber;
+    if (inProgress) {
+      record.bbSeat = live.bbSeat;
+      record.sbSeat = live.sbSeat;
+      record.smallBlindDead = live.smallBlindDead;
+    } else {
+      _stampBlinds(record, _nextAssignment()?.sbSeat, _nextAssignment()?.bbSeat);
+    }
     if (inProgress) {
       record.ourHoleCards = live.ourHoleCards;
       record.actions.addAll(live.actions);
@@ -1449,6 +1514,9 @@ class PokerSessionManager {
       completeness: hand.completeness,
       statsApplied: hand.statsApplied,
       flagMeta: hand.flagMeta,
+      bbSeat: hand.bbSeat,
+      sbSeat: hand.sbSeat,
+      smallBlindDead: hand.smallBlindDead,
     );
 
     hand.localHandId = localHandId;
@@ -1514,6 +1582,9 @@ class PokerSessionManager {
         skipHeroStats: skipHeroStats,
         completeness: hand.completeness,
         flagMeta: hand.flagMeta,
+        bbSeat: hand.bbSeat,
+        sbSeat: hand.sbSeat,
+        smallBlindDead: hand.smallBlindDead,
         analyticsExtras: analyticsExtras,
       );
 
@@ -1792,10 +1863,14 @@ class PokerSessionManager {
     // Check if we are actually posting blinds or button
     if (ourSeatNumber == actualBBSeat) {
       return 'BB';
-    } else if (ourSeatNumber == actualSBSeat) {
+    } else if (ourSeatNumber == actualSBSeat && !deadSeats.contains(actualSBSeat)) {
       return 'SB';
     } else if (ourSeatNumber == handButtonPosition) {
       return 'BTN';
+    } else if (deadSeats.isNotEmpty) {
+      return PokerPositions.getPositionNameForActivePlayers(
+          ourSeatNumber!, handButtonPosition, activeSeatsList,
+          deadSeats: deadSeats);
     } else {
       // For non-blind positions, calculate based on active players only
       int activeButtonIndex = activeSeatsList.indexOf(handButtonPosition);
@@ -1978,12 +2053,19 @@ class PokerSessionManager {
   void refreshPreActionPositions(PokerGameState gameState) {
     actualSBSeat = gameState.effectiveSBPosition;
     actualBBSeat = gameState.effectiveBBPosition;
+    buttonPosition = gameState.buttonPosition;
+    deadSeats = gameState.deadSeats.toSet();
     final hand = currentHand;
+    if (hand != null && hand.actions.isEmpty) {
+      hand.buttonPosition = buttonPosition;
+      _stampBlinds(hand, actualSBSeat, actualBBSeat);
+    }
     if (hand != null && hand.actions.isEmpty && ourSeatNumber != null) {
       hand.heroPositionName = PokerPositions.getPositionNameForActivePlayers(
         ourSeatNumber!,
         buttonPosition,
         activeSeats.toList(),
+        deadSeats: deadSeats,
       );
       hand.heroSeatNumber = ourSeatNumber;
     }
@@ -2116,10 +2198,14 @@ class PokerSessionManager {
     String currentPosition;
     if (seatNumber == actualBBSeat) {
       currentPosition = 'BB';
-    } else if (seatNumber == actualSBSeat) {
+    } else if (seatNumber == actualSBSeat && !deadSeats.contains(seatNumber)) {
       currentPosition = 'SB';
     } else if (seatNumber == buttonPosition) {
       currentPosition = 'BTN';
+    } else if (deadSeats.isNotEmpty) {
+      currentPosition = PokerPositions.getPositionNameForActivePlayers(
+          seatNumber, buttonPosition, activeSeatsList,
+          deadSeats: deadSeats);
     } else {
       // For non-blind positions, we need to calculate based on active players only
       // Find the player's position in the active seats relative to button

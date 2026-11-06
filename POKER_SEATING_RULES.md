@@ -1,8 +1,30 @@
 # Poker Seating Rules — deferred correctness work
 
 Cases the app should eventually enforce around players joining/leaving the table.
-**Not implemented yet** — captured here so the initial seating fix (2026-07-21)
-stays simple. See `test/HAND_LOGGING_SPEC.md` for the implemented boundary rule.
+Dead button and dead small blind are IMPLEMENTED (below). Everything under
+"NOT yet enforced" is still future work. See `test/HAND_LOGGING_SPEC.md` for the
+implemented boundary rule.
+
+## Dead button and dead small blind (IMPLEMENTED, founder decision 2026-11-06)
+
+Cash AND tournament, no setting. Rule: TDA Rule 34. Sources:
+https://www.pokertda.com/view-poker-tda-rules/ and
+https://cardplayer.com/rules-of-poker/buttons-and-blinds
+
+Code: `lib/utils/blind_rotation.dart` (pure) used by `PokerGameState`; tests
+`test/dead_button_rotation_test.dart` (vectors), `dead_button_engine_test.dart`,
+`dead_button_session_test.dart`.
+
+- Memory = last hand's BB seat and SB seat (seat numbers, kept when vacated). Live = seat with a player with chips.
+- Next hand: BB = first live seat after last BB. SB = last BB seat (empty = dead SB: nobody posts, no dead money). BTN = last SB seat (empty = dead button).
+- Exactly 2 live: BTN = SB = the other live seat. Nobody pays BB twice in a row.
+- BB posts BB + full BB ante in dead SB and dead button hands.
+- Preflop first: heads-up BTN, else first live after BB. Postflop first: heads-up BB, else first live seat after the button SEAT (empty or not); last: last live seat at or before it.
+- Position names are real: dead button = nobody is BTN; dead SB = nobody is SB.
+- Heads-up back to 3+ can make the remembered SB equal the new BB. Then the button goes to the last live seat before the SB (the entrant joins behind the button).
+- Manual button move (before any action) restarts the memory from that button. Dropping it on an empty seat is not possible in the UI (drop targets are live seats); the engine would treat it as a dead button.
+- A player seated pre-action in the dead SB seat makes that seat live: they post the SB. No entry-eligibility rules (still future work, below).
+- Removing the current BB before any action re-derives the blinds as if they left before the hand.
 
 ## Implemented today (baseline)
 
@@ -30,14 +52,10 @@ without ever posting blinds). They enter behind the button / when the BB
 naturally reaches them.
 
 ### 3. Related cases to specify when we pick this up
-- **Dead button rule:** when the SB busts/leaves, next hand the button points at
-  an empty seat ("dead button") rather than skipping ahead — nobody gets to be
-  BTN twice / skip blinds.
-- **Dead small blind:** BB busts → who posts what next hand.
+- ~~Dead button rule~~ and ~~dead small blind~~: done, see top of this file.
 - **Missed blinds:** player sits out through their blinds and returns — post
   both / wait for BB (house-rule choice).
-- **Heads-up transitions:** 3-handed → heads-up blind assignment when a player
-  leaves mid-orbit.
+- ~~Heads-up transitions~~: done (see top). Entry-eligibility for the returning/new player is still open.
 
 ## Where this will live when implemented
 

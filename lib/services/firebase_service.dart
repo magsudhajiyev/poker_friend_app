@@ -179,6 +179,10 @@ class FirebaseService {
     Map<String, dynamic>? flagMeta,
     // Extra props merged into the single `hand_logged` event (package B).
     Map<String, Object>? analyticsExtras,
+    // Real blinds (dead button / dead SB aware); null = not recorded.
+    int? bbSeat,
+    int? sbSeat,
+    bool smallBlindDead = false,
   }) async {
     try {
       final handData = {
@@ -191,6 +195,10 @@ class FirebaseService {
         'createdAt': FieldValue.serverTimestamp(),
       };
       
+      if (bbSeat != null) handData['bbSeat'] = bbSeat;
+      if (sbSeat != null) handData['sbSeat'] = sbSeat;
+      if (smallBlindDead) handData['smallBlindDead'] = true;
+
       if (boardCards != null) {
         handData['boardCards'] = boardCards;
       }

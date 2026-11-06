@@ -13,8 +13,9 @@ import 'package:poker_logger/utils/poker_positions.dart';
 ///    the engine only learns about it via flushPendingSeats() at next hand
 ///    start. Same rule for the hero (deferHeroReseat).
 ///
-/// Deeper entry rules (can't enter as SB, no BTN next hand, dead button) are
-/// intentionally NOT implemented — see POKER_SEATING_RULES.md.
+/// Deeper entry rules (can't enter as SB, no BTN next hand) are intentionally
+/// NOT implemented. Dead button / dead small blind ARE (2026-11-06, see
+/// dead_button_*_test.dart); see POKER_SEATING_RULES.md.
 
 void check(bool cond, String msg) {
   if (!cond) throw 'ASSERT: $msg';

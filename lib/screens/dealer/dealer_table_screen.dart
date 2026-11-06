@@ -411,6 +411,18 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
 
   List<int> get _activePlayers => _gameState?.getActivePlayers() ?? [];
 
+  /// DealerService.completeHand advances the stored button by plain rotation.
+  /// The engine owns the real rule (dead button / dead SB), so store its value
+  /// right after it rotates; a reopened table then resumes from the same button.
+  void _persistEngineButton() {
+    final button = _gameState!.buttonPosition;
+    _dealerSession = _dealerSession.copyWith(buttonPosition: button);
+    unawaited(DealerService.updateSessionButtonPosition(
+      sessionId: _dealerSession.id,
+      buttonPosition: button,
+    ).catchError((_) {}));
+  }
+
   Future<void> _startNewHand() async {
     if (_isLoading) return;
 
@@ -619,6 +631,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
         currentSeat,
         recordButton,
         activeSeats,
+        deadSeats: _gameState!.deadSeats,
       );
 
       unawaited(DealerService.logAction(
@@ -1092,6 +1105,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
         // Step 7: Check for busted players and prepare for next hand
         await _checkForBustedPlayers();
         _gameState!.startNewHand();
+        _persistEngineButton();
         await _updateSeatChipStacks();
 
         setState(() {
@@ -1166,6 +1180,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
 
       // Now prepare for next hand (this will deactivate any remaining busted players)
       _gameState!.startNewHand();
+      _persistEngineButton();
 
       // Update seat chip stacks in Firebase
       await _updateSeatChipStacks();
@@ -1249,6 +1264,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
 
       // Now prepare for next hand (this will deactivate any remaining busted players)
       _gameState!.startNewHand();
+      _persistEngineButton();
 
       // Update seat chip stacks
       await _updateSeatChipStacks();

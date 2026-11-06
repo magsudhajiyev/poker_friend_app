@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'dart:math';
 import '../services/currency_service.dart';
+import '../utils/blind_rotation.dart';
 import '../utils/poker_positions.dart';
 import 'stack_bucket.dart';
 
@@ -172,19 +173,67 @@ class PokerGameState {
   Map<BettingRound, double> streetPots = {};
   List<SidePot> activeSidePots = []; // Display-only side pot breakdown for UI pills
   int _effectiveBBPosition = 1; // Track who actually posted BB
-  int _effectiveSBPosition = 1; // Track who actually posted SB
+  // SB seat for this hand. On a dead small blind this is the EMPTY seat that
+  // owns the blind and nobody posts (see [smallBlindDead]).
+  int _effectiveSBPosition = 1;
   bool _isInitializing = true; // CRITICAL: Flag to prevent premature action order calculation
   _StreetSnapshot? _preStreetSnapshot; // Snapshot for rollback on card dialog cancel
+
+  // Dead button / dead small blind (TDA Rule 34). The memory is the PREVIOUS
+  // hand's BB and SB seats, kept even when those seats were vacated. The
+  // current hand's [_assignment] is always derived from it (or from the
+  // button, while the memory is null), so re-posting blinds in the same hand
+  // can never advance the rotation. Only [rotateBlindsForNextHand] does.
+  int? _memBB;
+  int? _memSB;
+  BlindAssignment? _assignment;
 
   // Getters for effective blind positions
   int get effectiveBBPosition => _effectiveBBPosition;
   int get effectiveSBPosition => _effectiveSBPosition;
 
-  // Button position property
+  /// True when the SB seat is empty this hand: nobody posts the small blind.
+  bool get smallBlindDead => _assignment?.sbDead ?? false;
+
+  /// True when the button sits on an empty seat this hand.
+  bool get buttonDead => _assignment?.buttonDead ?? false;
+
+  /// Empty seats that still hold a role (dead button / dead SB) this hand.
+  List<int> get deadSeats => [
+        if (buttonDead) _buttonPosition,
+        if (smallBlindDead) _effectiveSBPosition,
+      ];
+
+  /// Previous hand's (BB, SB) seats, for table snapshots. Null until the
+  /// first rotation, or after a manual button move.
+  (int, int)? get blindMemory =>
+      (_memBB != null && _memSB != null) ? (_memBB!, _memSB!) : null;
+
+  /// Put the button and rotation memory back exactly as captured (undo).
+  void restoreBlinds(int button, (int, int)? memory) {
+    _buttonPosition = button;
+    _memBB = memory?.$1;
+    _memSB = memory?.$2;
+    _refreshAssignment();
+  }
+
+  /// Rebuild a recalled table whose hand had a dead small blind: the button
+  /// stays where it was and [sbSeat] (empty) owns the unposted small blind.
+  void seedDeadSmallBlind({required int button, required int sbSeat}) {
+    _buttonPosition = button;
+    _memBB = sbSeat;
+    _memSB = button;
+    _refreshAssignment();
+  }
+
+  // Button position property. Setting it from outside is a MANUAL move: it
+  // becomes the new baseline and the rotation memory restarts from it.
   int get buttonPosition => _buttonPosition;
   set buttonPosition(int value) {
     if (_buttonPosition != value) {
       _buttonPosition = value;
+      _memBB = null;
+      _memSB = null;
       // CRITICAL: Recalculate action order when button position changes
       // BUT ONLY if we're not still initializing
       if (!_isInitializing && currentRound == BettingRound.preflop && !bettingRoundComplete) {
@@ -261,8 +310,8 @@ class PokerGameState {
   }
 
   void _setInitialActionOrder() {
-
-    List<int> activePlayers = getActivePlayers();
+    _refreshAssignment();
+    List<int> activePlayers = _liveSeats();
     debugPrint('[ACTION_ORDER] _setInitialActionOrder called: hand#=$handNumber, activePlayers=$activePlayers (${activePlayers.length}), btn=$buttonPosition');
 
     if (activePlayers.length < 2) {
@@ -282,10 +331,7 @@ class PokerGameState {
       debugPrint('[ACTION_ORDER] Heads-up: btn=$buttonPosition, currentPlayer=$currentPlayer');
     } else {
       // Multi-way: UTG (Under The Gun) acts first
-      // Find effective SB and BB positions among active players using proper calculation
-      _effectiveSBPosition = _findSBSeatFromActivePlayers(activePlayers);
-      _effectiveBBPosition = _findBBSeatFromActivePlayers(activePlayers);
-
+      // Effective SB/BB seats come from the rotation (_refreshAssignment above)
       // UTG is the first active player after BB
       int utgPosition = _findNextActivePlayerAfter(_effectiveBBPosition);
 
@@ -351,83 +397,53 @@ class PokerGameState {
     return startingPosition;
   }
 
-  // Helper method to determine who will post the BB (before actually posting)
-  int _determineEffectiveBBPosition() {
-    // Get list of active players
-    List<int> activePlayers = getActivePlayers();
-    if (activePlayers.length < 2) {
-      return activePlayers.isNotEmpty ? activePlayers.first : 1;
+  /// A seat is live when it has a player with chips (chips already in the
+  /// pot this hand count, so a posted all-in blind stays live on re-post).
+  bool _isSeatLive(PlayerState p) =>
+      p.isActive && (p.currentStack + p.betThisRound + p.totalContribution) > 0;
+
+  /// Live seats in seat order: THE set the rotation, the blind posting and the
+  /// preflop action order all use, so they can never disagree about who plays.
+  List<int> _liveSeats() => [
+        for (final p in players)
+          if (_isSeatLive(p)) p.playerId
+      ];
+
+  /// Current hand's blinds from the rotation memory, or from the button
+  /// while the memory is null (first hand, manual button move).
+  BlindAssignment? _computeAssignment() {
+    final live = _liveSeats();
+    final bb = _memBB;
+    final sb = _memSB;
+    if (bb != null && sb != null) {
+      return BlindRotation.next(
+          live: live, tableSize: numberOfPlayers, lastBB: bb, lastSB: sb);
     }
-
-
-    // Find BB position using active players only
-    int bbSeat = _findBBSeatFromActivePlayers(activePlayers);
-
-    PlayerState bbPlayer = _getPlayer(bbSeat);
-
-    if (bbPlayer.isActive && bbPlayer.currentStack > 0) {
-      return bbSeat;
-    } else {
-      // Find next active player to post BB
-      int nextBB = _findNextActivePlayer(bbSeat);
-      return nextBB;
-    }
+    return BlindRotation.fromButton(
+        live: live, tableSize: numberOfPlayers, button: _buttonPosition);
   }
 
-  // Helper method to find SB seat based on active players only
-  int _findSBSeatFromActivePlayers(List<int> activePlayers) {
-    if (activePlayers.length < 2) {
-      return activePlayers.isNotEmpty ? activePlayers.first : 1;
-    }
-
-    // Sort active players for consistent ordering
-    List<int> sortedActivePlayers = List<int>.from(activePlayers)..sort();
-
-    // Find button index in sorted active players
-    int buttonIndex = sortedActivePlayers.indexOf(buttonPosition);
-    if (buttonIndex == -1) {
-      // Button is not active, find next active seat clockwise
-      buttonIndex = 0;
-      for (int i = 0; i < sortedActivePlayers.length; i++) {
-        if (sortedActivePlayers[i] > buttonPosition) {
-          buttonIndex = i;
-          break;
-        }
-      }
-    }
-
-    // SB is 1 position clockwise from button in active player order
-    int sbIndex = (buttonIndex + 1) % sortedActivePlayers.length;
-    return sortedActivePlayers[sbIndex];
+  /// Idempotent: derives this hand's button/SB/BB from the memory without
+  /// changing it. With fewer than 2 live seats the previous values stay.
+  void _refreshAssignment() {
+    final a = _computeAssignment();
+    _assignment = a;
+    if (a == null) return;
+    _buttonPosition = a.buttonSeat;
+    _effectiveSBPosition = a.sbSeat;
+    _effectiveBBPosition = a.bbSeat;
   }
 
-  // Helper method to find BB seat based on active players only
-  int _findBBSeatFromActivePlayers(List<int> activePlayers) {
-    if (activePlayers.length < 2) {
-      return activePlayers.isNotEmpty ? activePlayers.first : 1;
+  /// Advance the rotation by exactly one hand: this hand's BB/SB seats
+  /// become the memory and the next hand's button and blinds are derived.
+  /// Called once per new hand (startNewHand, Skip, fold-tick reset).
+  void rotateBlindsForNextHand() {
+    final current = _assignment;
+    if (current != null) {
+      _memBB = current.bbSeat;
+      _memSB = current.sbSeat;
     }
-
-    // Sort active players for consistent ordering
-    List<int> sortedActivePlayers = List<int>.from(activePlayers)..sort();
-
-    // Find button index in sorted active players
-    int buttonIndex = sortedActivePlayers.indexOf(buttonPosition);
-    if (buttonIndex == -1) {
-      // Button is not active, find next active seat clockwise
-      buttonIndex = 0;
-      for (int i = 0; i < sortedActivePlayers.length; i++) {
-        if (sortedActivePlayers[i] > buttonPosition) {
-          buttonIndex = i;
-          break;
-        }
-      }
-    }
-
-    // Heads-up: BB is 1 position from button (the other player).
-    // Multi-way: BB is 2 positions from button (Button → SB → BB).
-    final int offset = sortedActivePlayers.length == 2 ? 1 : 2;
-    int bbIndex = (buttonIndex + offset) % sortedActivePlayers.length;
-    return sortedActivePlayers[bbIndex];
+    _refreshAssignment();
   }
 
   PlayerState _getPlayer(int playerId) {
@@ -1133,20 +1149,8 @@ class PokerGameState {
 
     handNumber++;
 
-    // Only move button for subsequent hands (not the first hand)
-    if (handNumber > 1) {
-      // Move button to next active player
-      int nextButton = buttonPosition;
-      int attempts = 0;
-      do {
-        nextButton = (nextButton % numberOfPlayers) + 1;
-        attempts++;
-      } while ((!players[nextButton - 1].isActive || players[nextButton - 1].currentStack <= 0) && attempts < numberOfPlayers);
-
-      if (attempts < numberOfPlayers) {
-        buttonPosition = nextButton;
-      }
-    }
+    // Rotate button and blinds once for this new hand (dead button / dead SB)
+    rotateBlindsForNextHand();
 
     // Reset all players
     for (PlayerState player in players) {
@@ -1167,6 +1171,53 @@ class PokerGameState {
     // This ensures newly added players are included in blind rotation
 
     // Set action order for new hand
+    _setInitialActionOrder();
+  }
+
+  /// Skip / fold-tick table reset: the hand is abandoned, every chip goes
+  /// back, the hero pays the blind they owed, busted seats leave, and the
+  /// next hand's blinds are posted. Rotation and posting see the same live
+  /// seats because busted players are deactivated AFTER the refund and
+  /// BEFORE the rotation (as startNewHand does).
+  void skipToNextHand({int? heroSeat}) {
+    double heroOwes = 0.0;
+    if (heroSeat != null) {
+      if (heroSeat == _effectiveSBPosition && !smallBlindDead) {
+        heroOwes = smallBlind;
+      } else if (heroSeat == _effectiveBBPosition) {
+        heroOwes = bigBlind + (hasBBante ? bigBlind : 0.0);
+      }
+    }
+
+    for (final player in players) {
+      if (!player.isActive) continue;
+      final committed = player.betThisRound + player.totalContribution;
+      if (committed > 0) player.currentStack += committed;
+    }
+
+    // The blind is a cost even if the hand is not played out (capped to stack)
+    if (heroSeat != null && heroOwes > 0) {
+      final hero = _getPlayer(heroSeat);
+      hero.currentStack -= heroOwes > hero.currentStack ? hero.currentStack : heroOwes;
+    }
+
+    // Busted seats leave, but the hero stays seated at 0 so the bust dialog
+    // and the session manager still see them (the blind may have emptied them).
+    for (final player in players) {
+      if (player.playerId != heroSeat && player.isActive && player.currentStack <= 0.0) {
+        player.isActive = false;
+      }
+    }
+    rotateBlindsForNextHand();
+    for (final player in players) {
+      player.reset();
+    }
+    currentRound = BettingRound.preflop;
+    bettingRoundComplete = false;
+    hasBetThisRound = false;
+    currentPot = 0.0;
+    currentBet = 0.0;
+    initializePot();
     _setInitialActionOrder();
   }
 
@@ -1414,22 +1465,23 @@ class PokerGameState {
     activeSidePots = [];
     currentBet = bigBlind;
     _lastRaiseSize = bigBlind; // BB is the initial raise size
-    _effectiveBBPosition = _determineEffectiveBBPosition(); // Set before posting
+    _refreshAssignment(); // Blind seats from the rotation memory (idempotent)
 
     // Post blinds — use active player count (not total seats) so heads-up
     // rules apply even on a 6-max or 9-max table with only 2 players seated.
-    final activePlayerCount = getActivePlayers().length;
+    final activePlayerCount = _liveSeats().length;
     if (activePlayerCount > 2) {
       // Multi-way: Use active players for SB/BB positions
-      List<int> activePlayers = getActivePlayers();
-      int sbPosition = _findSBSeatFromActivePlayers(activePlayers);
+      int sbPosition = _effectiveSBPosition;
       int bbPosition = _effectiveBBPosition; // Already calculated above
 
       PlayerState sbPlayer = _getPlayer(sbPosition);
       PlayerState bbPlayer = _getPlayer(bbPosition);
 
-      // Check if SB seat is active and has chips to post blind
-      if (sbPlayer.isActive && sbPlayer.currentStack > 0) {
+      // Dead small blind: the SB seat is empty, so nobody posts (no dead money)
+      if (smallBlindDead) {
+        // fall through to the BB
+      } else if (sbPlayer.isActive && sbPlayer.currentStack > 0) {
         // Small blind posts
         double sbAmount = smallBlind;
         if (sbPlayer.currentStack < sbAmount) {
@@ -1721,7 +1773,9 @@ class PokerGameState {
   void trackPositionActivity(int playerId, PlayerAction action) {
     // Get list of active players for accurate position calculation
     List<int> activePlayers = getActivePlayers();
-    String positionName = PokerPositions.getPositionNameForActivePlayers(playerId, buttonPosition, activePlayers);
+    String positionName = PokerPositions.getPositionNameForActivePlayers(
+        playerId, buttonPosition, activePlayers,
+        deadSeats: deadSeats);
 
     // Only track non-fold actions for activity
     if (action != PlayerAction.fold && action != PlayerAction.none) {
@@ -1787,7 +1841,9 @@ class PokerGameState {
   /// Get the position name for a specific player considering current active players
   String getPlayerPositionName(int playerId) {
     List<int> activePlayers = getActivePlayers();
-    return PokerPositions.getPositionNameForActivePlayers(playerId, buttonPosition, activePlayers);
+    return PokerPositions.getPositionNameForActivePlayers(
+        playerId, buttonPosition, activePlayers,
+        deadSeats: deadSeats);
   }
 
   // === Pot & Stack Info Panel Helper Methods ===

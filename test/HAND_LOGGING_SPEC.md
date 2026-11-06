@@ -62,7 +62,11 @@ Status: ✅ tested · ⚠️ enforced but untested · ❌ nothing protects it
 ### Blinds, button, positions
 | # | Invariant | Enforced at | Test |
 |---|---|---|---|
-| I6 | Button rotates to next ACTIVE non-busted seat | pgs:1113-1125 | ✅ |
+| I6 | Blinds/button rotate by TDA Rule 34 from the previous hand's BB/SB SEATS (cash + tournament): BB = next live after last BB, SB = last BB seat, BTN = last SB seat. Empty SB seat = dead SB (nobody posts); empty BTN seat = dead button. 2 live: BTN = SB | `lib/utils/blind_rotation.dart`, pgs `rotateBlindsForNextHand` | ✅ `dead_button_*_test.dart` |
+| I6a | Rotation advances exactly once per new hand (startNewHand, Skip, fold tick). `initializePot` / `recalculateActionOrder` re-derive from the memory and never advance it; BB removed pre-action == left before the hand | pgs `_refreshAssignment` | ✅ |
+| I6b | Manual button move (pre-action only, I12) restarts the memory from that button; later hands continue from it. Undo/fold-tick restore puts the memory back (`restoreBlinds`) | pgs `buttonPosition=`, `TableSnapshot` | ✅ |
+| I6c | Dead hands: position names are real (no BTN on dead button, no SB on dead SB; empty seats are ring slots), stored once at hand start (I11) | `PokerPositions.getPositionNameForActivePlayers(deadSeats:)`, hsm `deadSeats` | ✅ |
+| I6d | Known gaps (shipped 2.1.9): a reopened dealer table loses a pending dead SB (only the button is persisted; `seedDeadSmallBlind` is not fed on reopen). AI analyzer `_calculatePosition` fallback can mislabel a player with no recorded action in a dead hand | `ai_analyzer_service`, dealer table reopen | ⚠️ open |
 | I7 | Blinds posted from CURRENT active players (HU special case: BTN=SB) | pgs:1378-1418 | ✅ A-series |
 | I8 | `initializePot` idempotent (double-call refunds prior blinds) | pgs:1381-1387 | ⚠️ |
 | I9 | `initializePot` never called inside `startNewHand` (late seat changes) | convention, pgs:1141-1144 | ❌ |

@@ -54,6 +54,10 @@ class FlagTableSnapshot {
   final String gameType;
   final List<FlagSeat> seats;
 
+  /// Empty seat that owned the small blind when the hand was dealt (dead
+  /// small blind, nobody posted). Null for normal hands and old snapshots.
+  final int? deadSbSeat;
+
   const FlagTableSnapshot({
     required this.buttonPosition,
     required this.heroSeat,
@@ -62,6 +66,7 @@ class FlagTableSnapshot {
     required this.hasBBante,
     required this.gameType,
     required this.seats,
+    this.deadSbSeat,
   });
 
   Map<String, dynamic> toMap() => {
@@ -72,6 +77,7 @@ class FlagTableSnapshot {
         'hasBBante': hasBBante,
         'gameType': gameType,
         'seats': [for (final s in seats) s.toMap()],
+        if (deadSbSeat != null) 'deadSbSeat': deadSbSeat,
       };
 
   static FlagTableSnapshot? fromMap(Object? raw) {
@@ -87,6 +93,7 @@ class FlagTableSnapshot {
         seats: [
           for (final s in (raw['seats'] as List)) FlagSeat.fromMap(s as Map),
         ],
+        deadSbSeat: (raw['deadSbSeat'] as num?)?.toInt(),
       );
     } catch (_) {
       return null;
@@ -146,7 +153,8 @@ class FlagTableSnapshot {
         active: isActive,
         position: isActive
             ? PokerPositions.getPositionNameForActivePlayers(
-                i, g.buttonPosition, active)
+                i, g.buttonPosition, active,
+                deadSeats: g.deadSeats)
             : null,
         name: sm.playerNames[i],
         playerId: sm.playerIds[i],
@@ -163,6 +171,7 @@ class FlagTableSnapshot {
       hasBBante: g.hasBBante,
       gameType: sm.gameType.name,
       seats: seats,
+      deadSbSeat: g.smallBlindDead ? g.effectiveSBPosition : null,
     );
   }
 }

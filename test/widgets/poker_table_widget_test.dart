@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:poker_logger/widgets/poker_table_widget.dart';
 
@@ -57,5 +58,24 @@ void main() {
     // Centered horizontally (within a small tolerance) and in the lower half.
     expect((seat5.dx - area.width / 2).abs(), lessThan(area.width * 0.1));
     expect(seat5.dy, greaterThan(area.height / 2));
+  });
+
+  testWidgets('dead button: chip renders on an EMPTY seat without crashing',
+      (tester) async {
+    // Seat 3 is empty (its player busted) but still holds the button.
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: PokerTableWidget(
+            activeSeatMap: const {1: true, 2: true, 4: true, 5: true},
+            buttonPosition: 3,
+            seatBuilder: (seat, active) => const SizedBox(width: 24, height: 24),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(tester.takeException(), isNull);
+    expect(find.byType(SvgPicture), findsOneWidget);
   });
 }

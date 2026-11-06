@@ -3168,6 +3168,14 @@
               "raise": 0,
               "total": 1
             },
+            "99": {
+              "allIn": 0,
+              "call": 0,
+              "check": 0,
+              "fold": 1,
+              "raise": 0,
+              "total": 1
+            },
             "A9s": {
               "allIn": 1,
               "call": 0,
@@ -3400,9 +3408,9 @@
           "hasDeviations": false,
           "looseOpens": [],
           "missedOpens": [],
-          "playerOpenFreq": 0.75,
+          "playerOpenFreq": 0.6666666666666666,
           "posGroup": "MP",
-          "sampledSpots": 8,
+          "sampledSpots": 9,
           "sufficient": false
         },
         {
@@ -3437,6 +3445,14 @@
               "check": 0,
               "fold": 0,
               "raise": 1,
+              "total": 1
+            },
+            "99": {
+              "allIn": 0,
+              "call": 0,
+              "check": 0,
+              "fold": 1,
+              "raise": 0,
               "total": 1
             },
             "A2s": {
@@ -3743,9 +3759,9 @@
           "hasDeviations": false,
           "looseOpens": [],
           "missedOpens": [],
-          "playerOpenFreq": 1.0,
+          "playerOpenFreq": 0.9629629629629629,
           "posGroup": "CO",
-          "sampledSpots": 26,
+          "sampledSpots": 27,
           "sufficient": true
         },
         {
@@ -4457,6 +4473,14 @@
               "raise": 0,
               "total": 20
             },
+            "99": {
+              "allIn": 0,
+              "call": 0,
+              "check": 0,
+              "fold": 20,
+              "raise": 0,
+              "total": 20
+            },
             "A9s": {
               "allIn": 20,
               "call": 0,
@@ -4578,7 +4602,7 @@
             "97s": "noData",
             "98o": "noData",
             "98s": "noData",
-            "99": "noData",
+            "99": "missed",
             "A2o": "noData",
             "A2s": "noData",
             "A3o": "noData",
@@ -4686,12 +4710,18 @@
             "TT": "alignedOpen"
           },
           "chartOpenPct": 0.21266968325791855,
-          "hasDeviations": false,
+          "hasDeviations": true,
           "looseOpens": [],
-          "missedOpens": [],
-          "playerOpenFreq": 0.75,
+          "missedOpens": [
+            {
+              "handClass": "99",
+              "offActions": 20,
+              "spots": 20
+            }
+          ],
+          "playerOpenFreq": 0.6666666666666666,
           "posGroup": "MP",
-          "sampledSpots": 160,
+          "sampledSpots": 180,
           "sufficient": true
         },
         {
@@ -4726,6 +4756,14 @@
               "check": 0,
               "fold": 0,
               "raise": 20,
+              "total": 20
+            },
+            "99": {
+              "allIn": 0,
+              "call": 0,
+              "check": 0,
+              "fold": 20,
+              "raise": 0,
               "total": 20
             },
             "A2s": {
@@ -4921,7 +4959,7 @@
             "97s": "noData",
             "98o": "noData",
             "98s": "alignedOpen",
-            "99": "noData",
+            "99": "missed",
             "A2o": "noData",
             "A2s": "alignedOpen",
             "A3o": "noData",
@@ -5037,10 +5075,16 @@
               "spots": 20
             }
           ],
-          "missedOpens": [],
-          "playerOpenFreq": 1.0,
+          "missedOpens": [
+            {
+              "handClass": "99",
+              "offActions": 20,
+              "spots": 20
+            }
+          ],
+          "playerOpenFreq": 0.9629629629629629,
           "posGroup": "CO",
-          "sampledSpots": 520,
+          "sampledSpots": 540,
           "sufficient": true
         },
         {
@@ -5758,6 +5802,14 @@
               "raise": 0,
               "total": 6
             },
+            "99": {
+              "allIn": 0,
+              "call": 0,
+              "check": 0,
+              "fold": 6,
+              "raise": 0,
+              "total": 6
+            },
             "A9s": {
               "allIn": 6,
               "call": 0,
@@ -5879,7 +5931,7 @@
             "97s": "noData",
             "98o": "noData",
             "98s": "noData",
-            "99": "noData",
+            "99": "missed",
             "A2o": "noData",
             "A2s": "noData",
             "A3o": "noData",
@@ -5987,12 +6039,18 @@
             "TT": "alignedOpen"
           },
           "chartOpenPct": 0.21266968325791855,
-          "hasDeviations": false,
+          "hasDeviations": true,
           "looseOpens": [],
-          "missedOpens": [],
-          "playerOpenFreq": 0.75,
+          "missedOpens": [
+            {
+              "handClass": "99",
+              "offActions": 6,
+              "spots": 6
+            }
+          ],
+          "playerOpenFreq": 0.6666666666666666,
           "posGroup": "MP",
-          "sampledSpots": 48,
+          "sampledSpots": 54,
           "sufficient": true
         },
         {
@@ -6027,6 +6085,14 @@
               "check": 0,
               "fold": 0,
               "raise": 6,
+              "total": 6
+            },
+            "99": {
+              "allIn": 0,
+              "call": 0,
+              "check": 0,
+              "fold": 6,
+              "raise": 0,
               "total": 6
             },
             "A2s": {
@@ -6222,7 +6288,7 @@
             "97s": "noData",
             "98o": "noData",
             "98s": "alignedOpen",
-            "99": "noData",
+            "99": "missed",
             "A2o": "noData",
             "A2s": "alignedOpen",
             "A3o": "noData",
@@ -6338,10 +6404,16 @@
               "spots": 6
             }
           ],
-          "missedOpens": [],
-          "playerOpenFreq": 1.0,
+          "missedOpens": [
+            {
+              "handClass": "99",
+              "offActions": 6,
+              "spots": 6
+            }
+          ],
+          "playerOpenFreq": 0.9629629629629629,
           "posGroup": "CO",
-          "sampledSpots": 156,
+          "sampledSpots": 162,
           "sufficient": true
         },
         {

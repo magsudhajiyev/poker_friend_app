@@ -112,6 +112,10 @@ sent yet, so funnels/retention can't be built and the report's example
     dead-end silently offline; relaunch recovery exists).
 15. Test-suite build-out phases 0-4 from `test/HAND_LOGGING_SPEC.md`
     (mocking deps, SessionManager lifecycle, widget tests).
+16. Dead button follow-ups (shipped 2.1.9, see BUG_TRACKER DB-1): persist the
+    BB/SB seats so a reopened dealer table keeps a pending dead SB; fix the AI
+    analyzer `_calculatePosition` fallback that can mislabel a player with no
+    recorded action in a dead hand.
 
 ## Update 4 — Daily Challenge authored hands (code on main 2026-10-21)
 

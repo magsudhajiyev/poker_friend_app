@@ -32,45 +32,57 @@ class PokerPositions {
   }
 
   /// Get the position name for a seat considering only active players
-  /// This method calculates positions based on which seats are actually active
-  static String getPositionNameForActivePlayers(int seatNumber, int buttonPosition, List<int> activeSeats) {
+  /// This method calculates positions based on which seats are actually active.
+  ///
+  /// [deadSeats] are EMPTY seats that still hold a table role this hand (a
+  /// dead button or dead small blind). They count as ring slots, so nobody
+  /// is mislabelled: with a dead button no one is BTN, with a dead SB no one
+  /// is SB, and everyone else keeps their true name.
+  static String getPositionNameForActivePlayers(
+    int seatNumber,
+    int buttonPosition,
+    List<int> activeSeats, {
+    Iterable<int> deadSeats = const [],
+  }) {
     if (!activeSeats.contains(seatNumber)) {
       return 'Empty';
     }
 
-    final activePlayerCount = activeSeats.length;
-
-    if (activePlayerCount < 2) {
+    if (activeSeats.length < 2) {
       return seatNumber == buttonPosition ? 'BTN' : 'P1';
     }
 
-    // Sort active seats to get consistent ordering
-    final sortedActiveSeats = List<int>.from(activeSeats)..sort();
+    // Ring = live seats plus empty seats that still hold a role this hand.
+    final ring = <int>{
+      ...activeSeats,
+      ...deadSeats.where((s) => !activeSeats.contains(s)),
+    }.toList()
+      ..sort();
+    final ringSize = ring.length;
 
-    // Find button position in the sorted active seats
-    int buttonIndex = sortedActiveSeats.indexOf(buttonPosition);
+    // Find button position in the ring
+    int buttonIndex = ring.indexOf(buttonPosition);
     if (buttonIndex == -1) {
-      // Button is not active, find the next active seat clockwise
-      buttonIndex = 0; // Default to first active seat
-      for (int i = 0; i < sortedActiveSeats.length; i++) {
-        if (sortedActiveSeats[i] > buttonPosition) {
+      // Button is not in the ring, find the next seat clockwise
+      buttonIndex = 0; // Default to first seat
+      for (int i = 0; i < ring.length; i++) {
+        if (ring[i] > buttonPosition) {
           buttonIndex = i;
           break;
         }
       }
     }
 
-    // Find current seat position in the sorted active seats
-    int seatIndex = sortedActiveSeats.indexOf(seatNumber);
+    int seatIndex = ring.indexOf(seatNumber);
     if (seatIndex == -1) {
       return 'Empty';
     }
 
     // Calculate relative position (0 = button, 1 = SB, 2 = BB, etc.)
-    int relativePosition = (seatIndex - buttonIndex + activePlayerCount) % activePlayerCount;
+    int relativePosition = (seatIndex - buttonIndex + ringSize) % ringSize;
 
-    // Convert to position name based on active player count
-    switch (activePlayerCount) {
+    // Convert to position name based on ring size
+    switch (ringSize) {
       case 2: // Heads-up
         return _getHeadsUpPosition(relativePosition);
       case 3: // 3-handed
@@ -88,7 +100,7 @@ class PokerPositions {
       case 9: // 9-handed
         return _get9HandedPosition(relativePosition);
       default:
-        return _getGenericPosition(relativePosition, activePlayerCount);
+        return _getGenericPosition(relativePosition, ringSize);
     }
   }
 

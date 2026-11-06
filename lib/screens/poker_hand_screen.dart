@@ -2679,29 +2679,8 @@ class _PokerHandScreenState extends State<PokerHandScreen>
       // Refund old blinds, recalculate positions, and re-post new blinds
       gameState.initializePot();
 
-      // Sync sessionManager blind positions with gameState
-      final activePlayers = gameState.getActivePlayers();
-      if (activePlayers.length >= 2) {
-        if (activePlayers.length == 2) {
-          sessionManager.actualSBSeat = newLogicalSeat;
-          sessionManager.actualBBSeat =
-              activePlayers.firstWhere((p) => p != newLogicalSeat);
-        } else {
-          int sb = newLogicalSeat;
-          for (int i = 0; i < gameState.numberOfPlayers; i++) {
-            sb = (sb % gameState.numberOfPlayers) + 1;
-            if (activePlayers.contains(sb)) break;
-          }
-          sessionManager.actualSBSeat = sb;
-
-          int bb = sb;
-          for (int i = 0; i < gameState.numberOfPlayers; i++) {
-            bb = (bb % gameState.numberOfPlayers) + 1;
-            if (activePlayers.contains(bb)) break;
-          }
-          sessionManager.actualBBSeat = bb;
-        }
-      }
+      // Sync blind seats, dead seats and the frozen hero position
+      sessionManager.refreshPreActionPositions(gameState);
     });
   }
 
@@ -2775,6 +2754,13 @@ class _PokerHandScreenState extends State<PokerHandScreen>
           sessionManager.playerIds.remove(seatNumber);
           sessionManager.pendingSeats.remove(seatNumber);
           gameState.setPlayerActive(seatNumber, false);
+          if (!handInProgress) {
+            // Same as if the player had left before the hand was dealt:
+            // refund their blind, re-derive blinds from the rotation memory.
+            gameState.initializePot();
+            gameState.recalculateActionOrder();
+            sessionManager.refreshPreActionPositions(gameState);
+          }
           setState(() {});
           return;
         }
@@ -4795,69 +4781,7 @@ class _PokerHandScreenState extends State<PokerHandScreen>
   /// next blinds and starts the next hand. [nextHandNumber] is true for fold
   /// ticks (the tick record owns the old number); the legacy skip reuses it.
   void _resetTableForSkippedHand({bool nextHandNumber = false}) {
-    // Determine hero's blind obligation for THIS hand (before refunding)
-    final ourSeat = sessionManager.ourSeatNumber;
-    double heroBlindDeduction = 0.0;
-    if (ourSeat != null) {
-      if (ourSeat == gameState.effectiveSBPosition) {
-        heroBlindDeduction = gameState.smallBlind;
-      } else if (ourSeat == gameState.effectiveBBPosition) {
-        heroBlindDeduction = gameState.bigBlind;
-        if (gameState.hasBBante) {
-          heroBlindDeduction += gameState.bigBlind;
-        }
-      }
-    }
-
-    // Move button to next active player
-    int nextButton = gameState.buttonPosition;
-    int attempts = 0;
-    do {
-      nextButton = (nextButton % gameState.numberOfPlayers) + 1;
-      attempts++;
-    } while ((!gameState.players[nextButton - 1].isActive ||
-            gameState.players[nextButton - 1].currentStack <= 0) &&
-        attempts < gameState.numberOfPlayers);
-
-    if (attempts < gameState.numberOfPlayers) {
-      gameState.buttonPosition = nextButton;
-    }
-
-    // Refund all pot contributions back to players before resetting
-    for (var player in gameState.players) {
-      if (player.isActive) {
-        final totalContribution =
-            player.betThisRound + player.totalContribution;
-        if (totalContribution > 0) {
-          player.currentStack += totalContribution;
-        }
-      }
-    }
-
-    // Deduct hero's blind from the skipped hand (blinds are a cost even if hand is not played out)
-    if (ourSeat != null && heroBlindDeduction > 0) {
-      final heroPlayer = gameState.players[ourSeat - 1];
-      // Cap deduction to hero's stack (in case of all-in for less)
-      final actualDeduction = heroBlindDeduction > heroPlayer.currentStack
-          ? heroPlayer.currentStack
-          : heroBlindDeduction;
-      heroPlayer.currentStack -= actualDeduction;
-    }
-
-    // Reset all players
-    for (var player in gameState.players) {
-      player.reset();
-    }
-
-    // Reset game state
-    gameState.currentRound = BettingRound.preflop;
-    gameState.bettingRoundComplete = false;
-    gameState.hasBetThisRound = false;
-    gameState.currentPot = 0.0;
-    gameState.currentBet = 0.0;
-
-    // Initialize pot with blinds for new hand
-    gameState.initializePot();
+    gameState.skipToNextHand(heroSeat: sessionManager.ourSeatNumber);
 
     // Update sessionManager with new blind positions so position names show correctly
     sessionManager.actualSBSeat = gameState.effectiveSBPosition;
@@ -4877,38 +4801,6 @@ class _PokerHandScreenState extends State<PokerHandScreen>
       sbSeat: gameState.effectiveSBPosition,
       bbSeat: gameState.effectiveBBPosition,
     );
-
-    // Set initial action order manually (can't call private _setInitialActionOrder)
-    List<int> activePlayers = gameState.getActivePlayers();
-    if (activePlayers.length >= 2) {
-      if (activePlayers.length == 2) {
-        // Heads up: button acts first preflop
-        gameState.currentPlayer =
-            activePlayers.contains(gameState.buttonPosition)
-                ? gameState.buttonPosition
-                : activePlayers[0];
-      } else {
-        // Multi-way: UTG acts first (first active player after BB)
-        int bbPosition = gameState.effectiveBBPosition;
-        int utgPosition = gameState.currentPlayer; // Will be set properly
-
-        // Find first active player after BB
-        int nextPlayer = bbPosition;
-        int attempts = 0;
-        do {
-          nextPlayer = (nextPlayer % gameState.numberOfPlayers) + 1;
-          attempts++;
-          if (activePlayers.contains(nextPlayer)) {
-            utgPosition = nextPlayer;
-            break;
-          }
-        } while (attempts < gameState.numberOfPlayers);
-
-        gameState.currentPlayer = utgPosition;
-      }
-    } else if (activePlayers.isNotEmpty) {
-      gameState.currentPlayer = activePlayers[0];
-    }
   }
 
   // ─── Easy logging: payoff line, insight, learned sizing ───────────
@@ -5063,6 +4955,10 @@ class _PokerHandScreenState extends State<PokerHandScreen>
     }
     gameState.handNumber = ref.handNumber;
     gameState.buttonPosition = t.buttonPosition;
+    final deadSb = t.deadSbSeat;
+    if (deadSb != null) {
+      gameState.seedDeadSmallBlind(button: t.buttonPosition, sbSeat: deadSb);
+    }
     gameState.finalizeInitialization();
     gameState.initializePot();
     sessionManager.startHand(
@@ -5315,6 +5211,7 @@ class _PokerHandScreenState extends State<PokerHandScreen>
       sessionManager.actualSBSeat = entry.snapshot.sbSeat;
       sessionManager.actualBBSeat = entry.snapshot.bbSeat;
       sessionManager.buttonPosition = entry.snapshot.buttonPosition;
+      sessionManager.deadSeats = gameState.deadSeats.toSet();
       final live = sessionManager.lastUndoneLiveHand;
       if (live != null) {
         // Swap the empty next hand for the one the tick consumed.
@@ -8281,110 +8178,6 @@ class _PokerHandScreenState extends State<PokerHandScreen>
     return "${sessionManager.getPlayerNameWithPosition(gameState.currentPlayer)} to act";
   }
 
-  void _adjustButtonForRemovedPlayer(int removedPlayerId) {
-    // If the removed player had the button, move it to the next active player
-    if (gameState.buttonPosition == removedPlayerId) {
-      int nextButton = gameState.buttonPosition;
-      int attempts = 0;
-      do {
-        nextButton = (nextButton % gameState.numberOfPlayers) + 1;
-        attempts++;
-      } while (!gameState.players[nextButton - 1].isActive &&
-          attempts < gameState.numberOfPlayers);
-
-      if (attempts < gameState.numberOfPlayers) {
-        gameState.buttonPosition = nextButton;
-        // addAction removed
-      }
-    }
-  }
-
-  void _adjustPositionsAfterPlayerLeaves(int removedPlayerId) {
-    // The core logic: when a player leaves, the positions shift to fill the gap
-    // This affects blind obligations in the next hand
-
-    // Get current position of the removed player
-    String removedPosition =
-        sessionManager.getPlayerNameWithPosition(removedPlayerId);
-
-    // Get all active players (excluding the one who just left)
-    List<int> activePlayers = gameState.getActivePlayers();
-    int activePlayerCount = activePlayers.length;
-
-    if (activePlayerCount < 2) {
-      // End game if less than 2 players
-      // addAction removed
-      return;
-    }
-
-    // addAction removed
-
-    // The position adjustment happens automatically when the next hand starts
-    // because getPositionName() calculates positions based on active players
-    // But we log it here for clarity
-    String nextBBSeat = _findNextBBAfterRemoval(removedPlayerId);
-    if (nextBBSeat.isNotEmpty) {
-      // addAction removed
-    }
-  }
-
-  String _findNextBBAfterRemoval(int removedPlayerId) {
-    // Find which seat will be BB in the next hand due to the position shift
-    try {
-      // Advance button to next hand position
-      int nextButton = gameState.buttonPosition;
-      int attempts = 0;
-      do {
-        nextButton = (nextButton % gameState.numberOfPlayers) + 1;
-        attempts++;
-      } while (!gameState.players[nextButton - 1].isActive &&
-          attempts < gameState.numberOfPlayers);
-
-      if (attempts >= gameState.numberOfPlayers) return "";
-
-      // Find BB position (clockwise from button)
-      List<int> activePlayers = gameState.getActivePlayers();
-      if (activePlayers.length < 2) return "";
-
-      // In heads-up: button is SB, other player is BB
-      if (activePlayers.length == 2) {
-        int otherPlayer = activePlayers.firstWhere((p) => p != nextButton);
-        return sessionManager.getPlayerNameWithPosition(otherPlayer);
-      }
-
-      // Multi-way: BB is 2nd clockwise from button
-      int bbSeat = nextButton;
-      int count = 0;
-      do {
-        bbSeat = (bbSeat % gameState.numberOfPlayers) + 1;
-        if (gameState.players[bbSeat - 1].isActive) {
-          count++;
-        }
-      } while (count < 2 && attempts < gameState.numberOfPlayers * 2);
-
-      if (count == 2 && gameState.players[bbSeat - 1].isActive) {
-        return sessionManager.getPlayerNameWithPosition(bbSeat);
-      }
-
-      return "";
-    } catch (e) {
-      return "";
-    }
-  }
-
-  void _checkSpecialBlindSituation(int removedPlayerId) {
-    // Calculate who would be SB and BB based on current button
-    int sbPosition = (gameState.buttonPosition % gameState.numberOfPlayers) + 1;
-    int bbPosition = (sbPosition % gameState.numberOfPlayers) + 1;
-
-    // Check if removed player was supposed to be SB or BB
-    if (removedPlayerId == sbPosition) {
-      // addAction removed
-    } else if (removedPlayerId == bbPosition) {
-      // addAction removed
-    }
-  }
-
   Future<void> _checkForBustedPlayers() async {
     if (_recallMode) return; // recall never offers rebuys
     final l10n = AppLocalizations.of(context);
@@ -8441,16 +8234,10 @@ class _PokerHandScreenState extends State<PokerHandScreen>
           // Remove from session manager's active seats
           sessionManager.removePlayer(playerId);
 
-          // Adjust button position if needed
-          _adjustButtonForRemovedPlayer(playerId);
+          // The button is NOT moved here: the next hand's rotation keeps
+          // the dead button / dead SB rules (a second move would skip a seat).
 
-          // Adjust positions after player removal
-          _adjustPositionsAfterPlayerLeaves(playerId);
-
-          // addAction removed
-
-          // If this was SB or BB, note special blind situation
-          _checkSpecialBlindSituation(playerId);
+          // Positions and blinds follow from the rotation at the next hand.
         }
       }
     }
