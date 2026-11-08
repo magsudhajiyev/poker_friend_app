@@ -25,7 +25,7 @@ Baseline (2026-07-05, before phase 1): **2,379 hardcoded `Color(0x…)` across
 
 ## Phase 2 — DONE (mechanical, zero visual change, 2026-07-05)
 
-2,904 replacements across 108 files via `tool/design_migrate_phase2.py`:
+2,904 replacements across 108 files via a one-time script (`tool/design_migrate_phase2.py`, removed 2026-11-08):
 - **Fonts (1,484)**: every inline `GoogleFonts.*` call now routes through
   `AppTypography.ibm/mono/grotesk(...)` wrappers (pure name swap — pixel
   identical). Off-system fonts surfaced: `interLegacy` (10 uses),
