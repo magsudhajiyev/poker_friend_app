@@ -125,7 +125,7 @@ class _HardPaywallGateState extends State<HardPaywallGate> {
                   // The paywall's own success flow updates the entitlement,
                   // which re-emits on premiumStatusStream and rebuilds this
                   // to [child].
-                  return const PaywallScreen(hardGate: true);
+                  return const PaywallScreen(hardGate: true, source: 'hard_gate');
                 }
                 return widget.child;
               },

@@ -5823,5 +5823,87 @@
   "spotQuizVillainCalled": "{pos} sprawdził.",
   "spotQuizVillainChecked": "{pos} czekał.",
   "spotQuizVillainAllIn": "{pos} poszedł all-in.",
-  "offersConsentBodyPaywall": "Możemy przypomnieć ci o opcjach planu, jeśli wyjdziesz bez wyboru. Najwyżej dwa tygodniowo. Możesz to wyłączyć w dowolnej chwili w Ustawieniach aplikacji lub w ustawieniach powiadomień telefonu."
+  "offersConsentBodyPaywall": "Możemy przypomnieć ci o opcjach planu, jeśli wyjdziesz bez wyboru. Najwyżej dwa tygodniowo. Możesz to wyłączyć w dowolnej chwili w Ustawieniach aplikacji lub w ustawieniach powiadomień telefonu.",
+  "singleHandCardTitle": "Zapisz rozdanie",
+  "singleHandCardSubtitle": "Jedno rozdanie, bez sesji. Zajmuje sekundy.",
+  "singleHandFeature1": "Szybka konfiguracja",
+  "singleHandFeature2": "Grupowane według gry",
+  "singleHandFeature3": "Nie wlicza się do statystyk",
+  "singleHandAddingTo": "Dodaj do: {name}",
+  "singleHandNewGroup": "Nowa grupa",
+  "singleHandChange": "Zmień",
+  "singleHandGroupHands": "Rozdań: {count}",
+  "singleHandChooseGroup": "Dodaj rozdanie do",
+  "singleHandCash": "Cash",
+  "singleHandTourney": "Turniej",
+  "singleHandBlinds": "Blindy",
+  "singleHandBBAnte": "Ante BB",
+  "singleHandCustomBlinds": "Inne…",
+  "singleHandEdit": "Edytuj",
+  "singleHandPlayers": "Gracze",
+  "singleHandYouAre": "Twoja pozycja",
+  "singleHandStack": "Stack",
+  "singleHandStackUnit": "BB, wszyscy gracze",
+  "singleHandStackUnitYours": "BB, twój stack",
+  "singleHandUnitChips": "Żetony",
+  "singleHandStackEqualsBB": "= {value} BB",
+  "@singleHandStackEqualsBB": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "singleHandStackEqualsChips": "= {value} żetonów",
+  "@singleHandStackEqualsChips": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "singleHandStackWarnChips": "To {bb} BB. Czy chodziło o żetony?",
+  "@singleHandStackWarnChips": {
+    "placeholders": {
+      "bb": {
+        "type": "String"
+      }
+    }
+  },
+  "singleHandStackWarnMoney": "To {bb} BB. Czy chodziło o kwotę w pieniądzach?",
+  "@singleHandStackWarnMoney": {
+    "placeholders": {
+      "bb": {
+        "type": "String"
+      }
+    }
+  },
+  "singleHandStackWarnLow": "Mniej niż 1 BB. Sprawdź jednostkę.",
+  "singleHandUseChips": "Użyj żetonów",
+  "singleHandUseMoney": "Użyj pieniędzy",
+  "singleHandUseBB": "Użyj BB",
+  "singleHandSpreadSame": "Takie same",
+  "singleHandSpreadNear": "Zbliżone",
+  "singleHandSpreadSimilar": "Podobne",
+  "singleHandCards": "Twoje karty (opcjonalnie)",
+  "singleHandAddCards": "Dodaj karty",
+  "singleHandStart": "Zacznij rozdanie",
+  "singleHandSmallBlind": "Small blind",
+  "singleHandBigBlind": "Big blind",
+  "singleHandBanner": "Pojedyncze rozdanie · nie wlicza się do statystyk",
+  "singleHandLeaveTitle": "Odrzucić to rozdanie?",
+  "singleHandLeaveBody": "Zapisane rozdanie nie zostanie zachowane.",
+  "singleHandLeave": "Odrzuć",
+  "singleHandSavedTitle": "Rozdanie zapisane",
+  "singleHandNotesHint": "Dodaj notatkę",
+  "singleHandTags": "Tagi",
+  "singleHandTagBluff": "Blef",
+  "singleHandTagHeroCall": "Hero call",
+  "singleHandTagBadBeat": "Bad beat",
+  "singleHandTagBigPot": "Duża pula",
+  "singleHandTagReview": "Do analizy",
+  "singleHandViewHand": "Zobacz rozdanie",
+  "singleHandLogAnother": "Zapisz kolejne",
+  "singleHandDone": "Gotowe",
+  "sessionHandsBadge": "Rozdania"
 }

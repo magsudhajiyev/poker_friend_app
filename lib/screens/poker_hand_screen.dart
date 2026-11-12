@@ -76,6 +76,10 @@ import '../services/villain_tracker.dart';
 import '../widgets/easy_logging/villain_line_strip.dart';
 import '../services/hand_flag_service.dart';
 import '../services/recall_finisher.dart';
+import '../models/single_hand_setup.dart';
+import '../services/analytics_service.dart';
+import '../services/single_hand_service.dart';
+import '../widgets/single_hand/single_hand_result_sheet.dart';
 
 class PokerHandScreen extends StatefulWidget {
   final double smallBlind;
@@ -102,6 +106,31 @@ class PokerHandScreen extends StatefulWidget {
   /// live session.
   final FlaggedHandRef? recall;
   final FlagTableSnapshot? recallTable;
+
+  /// Single-hand mode ("Log a hand"): one hand on a throw-away table built
+  /// from [singleHand]; saved into [singleGroupId] (null = new group). Pops a
+  /// [SingleHandOutcome], or null when the hand was discarded.
+  final SingleHandSetup? singleHand;
+  final String? singleGroupId;
+
+  /// Opens single-hand mode; null when the player left without saving.
+  static Future<SingleHandOutcome?> openSingleHand(
+    BuildContext context,
+    SingleHandSetup setup, {
+    String? groupId,
+  }) {
+    return Navigator.of(context).push<SingleHandOutcome>(MaterialPageRoute(
+      builder: (_) => PokerHandScreen(
+        smallBlind: setup.smallBlind,
+        bigBlind: setup.bigBlind,
+        numberOfPlayers: setup.playerCount,
+        gameType: setup.gameType,
+        hasBBante: setup.hasBBante,
+        singleHand: setup,
+        singleGroupId: groupId,
+      ),
+    ));
+  }
 
   /// Opens recall mode for [ref]; true when the hand was saved.
   static Future<bool> openRecall(
@@ -143,6 +172,8 @@ class PokerHandScreen extends StatefulWidget {
     this.isHubMode = false,
     this.recall,
     this.recallTable,
+    this.singleHand,
+    this.singleGroupId,
   });
 
   @override
@@ -312,8 +343,9 @@ class _PokerHandScreenState extends State<PokerHandScreen>
     );
 
     // Initialize session manager - use the one passed from SeatSetupScreen if available
-    if (widget.recall != null) {
-      // Recall: a fresh manager with no session id, so nothing can be saved.
+    if (widget.recall != null || widget.singleHand != null) {
+      // Recall / single hand: a fresh manager with no session id, so nothing
+      // can be saved by the session machinery.
       sessionManager = PokerSessionManager(
         smallBlind: widget.smallBlind,
         bigBlind: widget.bigBlind,
@@ -350,6 +382,10 @@ class _PokerHandScreenState extends State<PokerHandScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_recallMode) {
         _initializeRecall();
+        return;
+      }
+      if (_singleMode) {
+        _initializeSingle();
         return;
       }
       // If we have initial seat info from session setup, skip seat selection
@@ -1172,6 +1208,10 @@ class _PokerHandScreenState extends State<PokerHandScreen>
       await _leaveRecall();
       return;
     }
+    if (_singleMode) {
+      await _leaveSingle();
+      return;
+    }
     _isNavigatingAway = true;
 
     if (!_hasUnsavedSessionData()) {
@@ -1434,7 +1474,7 @@ class _PokerHandScreenState extends State<PokerHandScreen>
                   final baseSubtitle =
                       '${gameState.currentRound.name.toUpperCase()} • ${gameState.getActivePlayers().length} players';
                   final showFreeCounter =
-                      !SubscriptionService.isPremium && !_recallMode;
+                      !SubscriptionService.isPremium && !_throwawayTable;
                   final handsUsed = sessionManager.completedHands.length;
                   final subtitle = showFreeCounter
                       ? '$baseSubtitle • ${l10n.handFreeCounter(handsUsed, FreeTierLimits.maxHandsPerSession)}'
@@ -1450,6 +1490,7 @@ class _PokerHandScreenState extends State<PokerHandScreen>
                 }),
 
                 if (_recallMode) _buildRecallBanner(),
+                if (_singleMode) _buildSingleBanner(),
                 // Table area — no background container
                 Expanded(
                   flex: 2,
@@ -1640,7 +1681,7 @@ class _PokerHandScreenState extends State<PokerHandScreen>
                                   Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      if (!_recallMode) ...[
+                                      if (!_throwawayTable) ...[
                                         // Session info button
                                         GestureDetector(
                                           key: _sessionInfoButtonKey,
@@ -3276,7 +3317,7 @@ class _PokerHandScreenState extends State<PokerHandScreen>
       iconColor: AppColors.accentDanger,
     ));
 
-    if (_recallMode) {
+    if (_throwawayTable) {
       items
         ..clear()
         ..add(_buildMenuItem(
@@ -4933,6 +4974,18 @@ class _PokerHandScreenState extends State<PokerHandScreen>
     final t = widget.recallTable ??
         ref.table ??
         FlagTableSnapshot.fromLegacyMeta(ref.flagMeta);
+    _seedThrowawayTable(t, ref.handNumber);
+    final c = ref.heroCards;
+    if (c != null) {
+      sessionManager.currentHand?.ourHoleCards =
+          HoleCards(card1: c['card1'] as String?, card2: c['card2'] as String?);
+    }
+    if (mounted) setState(() {});
+  }
+
+  /// Seats [t] on the throw-away manager and deals hand [handNumber].
+  /// Shared by recall and single-hand mode.
+  void _seedThrowawayTable(FlagTableSnapshot t, int handNumber) {
     sessionManager.ourSeatNumber = t.heroSeat;
     for (final seat in t.seats) {
       final i = seat.seat;
@@ -4953,7 +5006,7 @@ class _PokerHandScreenState extends State<PokerHandScreen>
         sessionManager.activeSeats.remove(i);
       }
     }
-    gameState.handNumber = ref.handNumber;
+    gameState.handNumber = handNumber;
     gameState.buttonPosition = t.buttonPosition;
     final deadSb = t.deadSbSeat;
     if (deadSb != null) {
@@ -4962,20 +5015,132 @@ class _PokerHandScreenState extends State<PokerHandScreen>
     gameState.finalizeInitialization();
     gameState.initializePot();
     sessionManager.startHand(
-      ref.handNumber,
+      handNumber,
       gameState.buttonPosition,
       sbSeat: gameState.effectiveSBPosition,
       bbSeat: gameState.effectiveBBPosition,
     );
-    final c = ref.heroCards;
-    if (c != null) {
+  }
+
+  bool _recallSaving = false;
+
+  // ─── Single-hand mode ("Log a hand") ───────────────────────────────
+
+  bool get _singleMode => widget.singleHand != null;
+
+  /// Recall and single-hand mode both play on a throw-away table.
+  bool get _throwawayTable => _recallMode || _singleMode;
+
+  Widget _buildSingleBanner() {
+    return Container(
+      width: double.infinity,
+      color: AppColors.bgElevated,
+      padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md, vertical: AppSpacing.xxs),
+      child: Text(
+        AppLocalizations.of(context).singleHandBanner,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: AppTypography.ibm(
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+          color: AppColors.accentPrimary,
+        ),
+      ),
+    );
+  }
+
+  /// Seats the setup's table and pre-fills the hero's cards.
+  void _initializeSingle() {
+    final setup = widget.singleHand!;
+    try {
+      setup.heroName = DisplayIdentityService.cachedDisplayIdentity;
+    } catch (_) {
+      setup.heroName = null; // identity unavailable: hero stays by position
+    }
+    _seedThrowawayTable(setup.toSnapshot(), 1);
+    final c1 = setup.card1;
+    final c2 = setup.card2;
+    if (c1 != null && c2 != null) {
       sessionManager.currentHand?.ourHoleCards =
-          HoleCards(card1: c['card1'] as String?, card2: c['card2'] as String?);
+          HoleCards(card1: c1, card2: c2);
     }
     if (mounted) setState(() {});
   }
 
-  bool _recallSaving = false;
+  /// Saves the finished hand into its group, shows the result sheet, leaves.
+  Future<void> _finishSingle() async {
+    if (_recallSaving) return;
+    final setup = widget.singleHand!;
+    final hand = sessionManager.lastFinishedHand;
+    final l10n = AppLocalizations.of(context);
+    if (hand == null) {
+      Navigator.of(context).pop();
+      return;
+    }
+    setState(() => _recallSaving = true);
+    SingleHandSaveResult? saved;
+    Object? error;
+    try {
+      hand.heroSeatNumber ??= 1;
+      if ((hand.heroPositionName ?? '').isEmpty) {
+        hand.heroPositionName = setup.heroPosition;
+      }
+      saved = await SingleHandService.saveHand(
+        hand: hand,
+        setup: setup,
+        groupId: widget.singleGroupId,
+        playerNames: Map.of(sessionManager.playerNames),
+        playerIds: Map.of(sessionManager.playerIds),
+        // Used only when a new group is created.
+        groupName: SingleHandService.defaultGroupName(setup, DateTime.now(),
+            kind: setup.gameType == GameType.cash
+                ? l10n.statsCash
+                : l10n.statsTournament,
+            locale: l10n.localeName),
+      );
+    } catch (e) {
+      error = e;
+    }
+    if (!mounted) return;
+    setState(() => _recallSaving = false);
+    if (saved == null) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(
+            error != null ? UserFacingError.message(error) : l10n.errorGeneric),
+        behavior: SnackBarBehavior.floating,
+      ));
+      Navigator.of(context).pop();
+      return;
+    }
+    final choice = await SingleHandResultSheet.show(context,
+        hand: hand, saved: saved);
+    if (!mounted) return;
+    Navigator.of(context).pop(SingleHandOutcome(
+        choice ?? SingleHandChoice.done, saved.group));
+  }
+
+  /// Back from single-hand mode: confirm only when actions exist.
+  Future<void> _leaveSingle() async {
+    final l10n = AppLocalizations.of(context);
+    final hasActions = sessionManager.currentHand?.actions.isNotEmpty == true;
+    if (!hasActions) {
+      Navigator.of(context).pop();
+      return;
+    }
+    await ConfirmDialog.show(
+      context,
+      title: l10n.singleHandLeaveTitle,
+      message: l10n.singleHandLeaveBody,
+      confirmLabel: l10n.singleHandLeave,
+      onConfirm: () {
+        AnalyticsService.singleHandAbandoned(
+            street: gameState.currentRound.name);
+        if (mounted) Navigator.of(context).pop();
+      },
+    );
+  }
+
 
   /// Blocking "Saving hand…" layer shown while the stub is promoted.
   Widget _buildRecallSavingOverlay() {
@@ -5113,7 +5278,7 @@ class _PokerHandScreenState extends State<PokerHandScreen>
 
   /// Hand boundary: re-read the flag, restart telemetry, forget deferred boards.
   void _beginEasyHand() {
-    _easy = !_recallMode && EasyLogging.active;
+    _easy = !_throwawayTable && EasyLogging.active;
     _insights = _easy && EasyLogging.insightsActive;
     _telemetry = HandLogTelemetry();
     _pendingBoardStreets.clear();
@@ -5929,7 +6094,7 @@ class _PokerHandScreenState extends State<PokerHandScreen>
         action == PlayerAction.fold &&
         gameState.currentRound == BettingRound.preflop &&
         actingSeat == sessionManager.ourSeatNumber &&
-        !_recallMode &&
+        !_throwawayTable &&
         !_scoutingMode) {
       _scoutingMode = true;
     }
@@ -7478,6 +7643,11 @@ class _PokerHandScreenState extends State<PokerHandScreen>
       unawaited(_finishRecall());
       return true;
     }
+    // Single hand: save it, show the result sheet, leave. No next hand.
+    if (_singleMode) {
+      unawaited(_finishSingle());
+      return true;
+    }
     // Scouting mode never carries into the next hand.
     _scoutingMode = false;
     if (_freeTierLocked ||
@@ -8179,7 +8349,7 @@ class _PokerHandScreenState extends State<PokerHandScreen>
   }
 
   Future<void> _checkForBustedPlayers() async {
-    if (_recallMode) return; // recall never offers rebuys
+    if (_throwawayTable) return; // recall / single hand never offer rebuys
     final l10n = AppLocalizations.of(context);
     // Find all busted players (stack = 0 or negative) who are still active
     List<int> bustedPlayers = [];

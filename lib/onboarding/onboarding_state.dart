@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import '../models/poker_game_state.dart'; // PlayerAction
+import '../services/analytics_service.dart';
 
 /// Guided hand phases for phase 4 of onboarding.
 ///
@@ -104,6 +105,7 @@ class OnboardingState {
   // ---------------------------------------------------------------------------
 
   static void start() {
+    AnalyticsService.tourStarted();
     isOnboardingActive = true;
     currentPhase = 0;
     seatDialogTourPending = false;
@@ -173,6 +175,12 @@ class OnboardingState {
   /// Does NOT mark onboarding as seen on completion.
   static bool _isReplay = false;
   static bool get isReplay => _isReplay;
+
+  /// Where the tour is right now, for analytics: the phase number, or
+  /// `4_<GuidedPhase>` inside the guided hand.
+  static String get analyticsPhase => currentPhase == 4
+      ? '4_${guidedHandPhase.name}'
+      : '$currentPhase';
 
   static void startFromPhase(int phase) {
     isOnboardingActive = true;

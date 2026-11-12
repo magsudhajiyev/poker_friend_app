@@ -5830,5 +5830,87 @@
   "spotQuizVillainCalled": "{pos} a plătit.",
   "spotQuizVillainChecked": "{pos} a dat check.",
   "spotQuizVillainAllIn": "{pos} a mers all-in.",
-  "offersConsentBodyPaywall": "Îți putem aminti opțiunile de plan dacă ieși fără să alegi unul. Cel mult două pe săptămână. Poți dezactiva oricând din Setările aplicației sau din setările de notificări ale telefonului."
+  "offersConsentBodyPaywall": "Îți putem aminti opțiunile de plan dacă ieși fără să alegi unul. Cel mult două pe săptămână. Poți dezactiva oricând din Setările aplicației sau din setările de notificări ale telefonului.",
+  "singleHandCardTitle": "Înregistrează o mână",
+  "singleHandCardSubtitle": "O mână, fără sesiune. Durează câteva secunde.",
+  "singleHandFeature1": "Configurare rapidă",
+  "singleHandFeature2": "Grupate pe joc",
+  "singleHandFeature3": "Nu intră în statistici",
+  "singleHandAddingTo": "Adaugă la: {name}",
+  "singleHandNewGroup": "Grup nou",
+  "singleHandChange": "Schimbă",
+  "singleHandGroupHands": "Mâini: {count}",
+  "singleHandChooseGroup": "Adaugă mâna la",
+  "singleHandCash": "Cash",
+  "singleHandTourney": "Turneu",
+  "singleHandBlinds": "Blinds",
+  "singleHandBBAnte": "Ante BB",
+  "singleHandCustomBlinds": "Altul…",
+  "singleHandEdit": "Editează",
+  "singleHandPlayers": "Jucători",
+  "singleHandYouAre": "Tu ești",
+  "singleHandStack": "Stack",
+  "singleHandStackUnit": "BB, toți jucătorii",
+  "singleHandStackUnitYours": "BB, stack-ul tău",
+  "singleHandUnitChips": "Jetoane",
+  "singleHandStackEqualsBB": "= {value} BB",
+  "@singleHandStackEqualsBB": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "singleHandStackEqualsChips": "= {value} jetoane",
+  "@singleHandStackEqualsChips": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "singleHandStackWarnChips": "Sunt {bb} BB. Ai vrut să spui jetoane?",
+  "@singleHandStackWarnChips": {
+    "placeholders": {
+      "bb": {
+        "type": "String"
+      }
+    }
+  },
+  "singleHandStackWarnMoney": "Sunt {bb} BB. Ai vrut să spui o sumă de bani?",
+  "@singleHandStackWarnMoney": {
+    "placeholders": {
+      "bb": {
+        "type": "String"
+      }
+    }
+  },
+  "singleHandStackWarnLow": "Mai puțin de 1 BB. Verifică unitatea.",
+  "singleHandUseChips": "Folosește jetoane",
+  "singleHandUseMoney": "Folosește bani",
+  "singleHandUseBB": "Folosește BB",
+  "singleHandSpreadSame": "La fel",
+  "singleHandSpreadNear": "Apropiat",
+  "singleHandSpreadSimilar": "Similar",
+  "singleHandCards": "Cărțile tale (opțional)",
+  "singleHandAddCards": "Adaugă cărți",
+  "singleHandStart": "Începe mâna",
+  "singleHandSmallBlind": "Small blind",
+  "singleHandBigBlind": "Big blind",
+  "singleHandBanner": "Mână singură · nu intră în statistici",
+  "singleHandLeaveTitle": "Renunți la această mână?",
+  "singleHandLeaveBody": "Mâna înregistrată nu va fi salvată.",
+  "singleHandLeave": "Renunță",
+  "singleHandSavedTitle": "Mână salvată",
+  "singleHandNotesHint": "Adaugă o notiță",
+  "singleHandTags": "Etichete",
+  "singleHandTagBluff": "Bluff",
+  "singleHandTagHeroCall": "Hero call",
+  "singleHandTagBadBeat": "Bad beat",
+  "singleHandTagBigPot": "Pot mare",
+  "singleHandTagReview": "De revizuit",
+  "singleHandViewHand": "Vezi mâna",
+  "singleHandLogAnother": "Înregistrează alta",
+  "singleHandDone": "Gata",
+  "sessionHandsBadge": "Mâini"
 }

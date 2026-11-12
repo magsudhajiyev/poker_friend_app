@@ -1126,7 +1126,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return GestureDetector(
       onTap: () => Navigator.push(
         context,
-        MaterialPageRoute(builder: (_) => PaywallScreen(preselectedTier: preselected)),
+        MaterialPageRoute(builder: (_) => PaywallScreen(
+            preselectedTier: preselected, source: 'settings')),
       ),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),

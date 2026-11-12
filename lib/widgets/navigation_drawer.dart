@@ -316,7 +316,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
               final preselected = tierIndex[SubscriptionService.effectiveTier];
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => PaywallScreen(preselectedTier: preselected)),
+                MaterialPageRoute(builder: (context) => PaywallScreen(preselectedTier: preselected, source: 'drawer')),
               );
             },
             child: Container(

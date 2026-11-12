@@ -5823,5 +5823,87 @@
   "spotQuizVillainCalled": "{pos} hat gecallt.",
   "spotQuizVillainChecked": "{pos} hat gecheckt.",
   "spotQuizVillainAllIn": "{pos} ging All-in.",
-  "offersConsentBodyPaywall": "Wir können dich an deine Plan-Optionen erinnern, falls du gehst, ohne einen zu wählen. Höchstens zwei pro Woche. Du kannst das jederzeit in den Einstellungen der App oder in den Benachrichtigungseinstellungen deines Telefons ausschalten."
+  "offersConsentBodyPaywall": "Wir können dich an deine Plan-Optionen erinnern, falls du gehst, ohne einen zu wählen. Höchstens zwei pro Woche. Du kannst das jederzeit in den Einstellungen der App oder in den Benachrichtigungseinstellungen deines Telefons ausschalten.",
+  "singleHandCardTitle": "Hand erfassen",
+  "singleHandCardSubtitle": "Eine Hand, keine Session. Dauert nur Sekunden.",
+  "singleHandFeature1": "Schnelles Setup",
+  "singleHandFeature2": "Nach Spiel gruppiert",
+  "singleHandFeature3": "Zählt nicht für Statistiken",
+  "singleHandAddingTo": "Hinzufügen zu: {name}",
+  "singleHandNewGroup": "Neue Gruppe",
+  "singleHandChange": "Ändern",
+  "singleHandGroupHands": "Hände: {count}",
+  "singleHandChooseGroup": "Hand hinzufügen zu",
+  "singleHandCash": "Cash",
+  "singleHandTourney": "Turnier",
+  "singleHandBlinds": "Blinds",
+  "singleHandBBAnte": "BB-Ante",
+  "singleHandCustomBlinds": "Eigene…",
+  "singleHandEdit": "Bearbeiten",
+  "singleHandPlayers": "Spieler",
+  "singleHandYouAre": "Du bist",
+  "singleHandStack": "Stack",
+  "singleHandStackUnit": "BB, alle Spieler",
+  "singleHandStackUnitYours": "BB, dein Stack",
+  "singleHandUnitChips": "Chips",
+  "singleHandStackEqualsBB": "= {value} BB",
+  "@singleHandStackEqualsBB": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "singleHandStackEqualsChips": "= {value} Chips",
+  "@singleHandStackEqualsChips": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "singleHandStackWarnChips": "Das sind {bb} BB. Meintest du Chips?",
+  "@singleHandStackWarnChips": {
+    "placeholders": {
+      "bb": {
+        "type": "String"
+      }
+    }
+  },
+  "singleHandStackWarnMoney": "Das sind {bb} BB. Meintest du einen Geldbetrag?",
+  "@singleHandStackWarnMoney": {
+    "placeholders": {
+      "bb": {
+        "type": "String"
+      }
+    }
+  },
+  "singleHandStackWarnLow": "Weniger als 1 BB. Prüfe die Einheit.",
+  "singleHandUseChips": "Chips nutzen",
+  "singleHandUseMoney": "Geld nutzen",
+  "singleHandUseBB": "BB nutzen",
+  "singleHandSpreadSame": "Gleich",
+  "singleHandSpreadNear": "Nah",
+  "singleHandSpreadSimilar": "Ähnlich",
+  "singleHandCards": "Deine Karten (optional)",
+  "singleHandAddCards": "Karten hinzufügen",
+  "singleHandStart": "Hand starten",
+  "singleHandSmallBlind": "Small Blind",
+  "singleHandBigBlind": "Big Blind",
+  "singleHandBanner": "Einzelne Hand · zählt nicht für Statistiken",
+  "singleHandLeaveTitle": "Diese Hand verwerfen?",
+  "singleHandLeaveBody": "Die erfasste Hand wird nicht gespeichert.",
+  "singleHandLeave": "Verwerfen",
+  "singleHandSavedTitle": "Hand gespeichert",
+  "singleHandNotesHint": "Notiz hinzufügen",
+  "singleHandTags": "Tags",
+  "singleHandTagBluff": "Bluff",
+  "singleHandTagHeroCall": "Hero Call",
+  "singleHandTagBadBeat": "Bad Beat",
+  "singleHandTagBigPot": "Großer Pot",
+  "singleHandTagReview": "Analysieren",
+  "singleHandViewHand": "Hand ansehen",
+  "singleHandLogAnother": "Weitere erfassen",
+  "singleHandDone": "Fertig",
+  "sessionHandsBadge": "Hände"
 }

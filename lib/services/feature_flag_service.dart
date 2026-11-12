@@ -62,6 +62,7 @@ class FeatureFlagService {
   static const String easyHandLogging = 'easy_hand_logging';
   static const String liveInsights = 'live_insights';
   static const String paidNudges = 'paid_nudges';
+  static const String singleHand = 'single_hand';
 
   static const List<FeatureFlag> all = [
     FeatureFlag(
@@ -130,6 +131,13 @@ class FeatureFlagService {
       'none of it exists.',
       defaultMode: FlagMode.adminOnly,
     ),
+    FeatureFlag(
+      singleHand,
+      'Log a hand',
+      'One-hand logging from the + button: no session, no stats, hands are '
+      'grouped into hand groups. OFF = the entry card does not exist.',
+      defaultMode: FlagMode.adminOnly,
+    ),
   ];
 
   // ── State ─────────────────────────────────────────────────────────────
@@ -161,6 +169,9 @@ class FeatureFlagService {
               orElse: () => const FeatureFlag('', '', '',
                   defaultMode: FlagMode.on))
           .defaultMode;
+
+  /// Single-hand logging ("Log a hand") entry, for the UI to gate on.
+  static bool get singleHandEnabled => isEnabled(singleHand);
 
   /// Whether the feature is visible for the CURRENT user.
   static bool isEnabled(String key) => switch (modeOf(key)) {

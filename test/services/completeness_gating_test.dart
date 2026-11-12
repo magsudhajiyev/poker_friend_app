@@ -235,9 +235,9 @@ void main() {
       expect(src.substring(a, b).contains('ADD COLUMN'), isFalse);
     });
 
-    test('schema version is 21 (v20 easy logging, v21 real blinds)', () {
+    test('schema version is 22 (v20 easy logging, v21 real blinds, v22 hand groups)', () {
       final src = File('lib/services/local_storage_service.dart').readAsStringSync();
-      expect(src, contains('version: 21,'));
+      expect(src, contains('version: 22,'));
     });
   });
 

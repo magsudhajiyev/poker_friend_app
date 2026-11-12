@@ -5823,5 +5823,87 @@
   "spotQuizVillainCalled": "{pos} pagou.",
   "spotQuizVillainChecked": "{pos} passou.",
   "spotQuizVillainAllIn": "{pos} foi all-in.",
-  "offersConsentBodyPaywall": "Podemos lembrar você das opções de plano se sair sem escolher uma. No máximo dois por semana. Você pode desativar isso a qualquer momento nas Configurações do app ou nas configurações de notificação do telefone."
+  "offersConsentBodyPaywall": "Podemos lembrar você das opções de plano se sair sem escolher uma. No máximo dois por semana. Você pode desativar isso a qualquer momento nas Configurações do app ou nas configurações de notificação do telefone.",
+  "singleHandCardTitle": "Registar uma mão",
+  "singleHandCardSubtitle": "Uma mão, sem sessão. Leva segundos.",
+  "singleHandFeature1": "Configuração rápida",
+  "singleHandFeature2": "Agrupadas por jogo",
+  "singleHandFeature3": "Não conta nas estatísticas",
+  "singleHandAddingTo": "Adicionar a: {name}",
+  "singleHandNewGroup": "Novo grupo",
+  "singleHandChange": "Alterar",
+  "singleHandGroupHands": "Mãos: {count}",
+  "singleHandChooseGroup": "Adicionar mão a",
+  "singleHandCash": "Cash",
+  "singleHandTourney": "Torneio",
+  "singleHandBlinds": "Blinds",
+  "singleHandBBAnte": "Ante do BB",
+  "singleHandCustomBlinds": "Outro…",
+  "singleHandEdit": "Editar",
+  "singleHandPlayers": "Jogadores",
+  "singleHandYouAre": "Você está",
+  "singleHandStack": "Stack",
+  "singleHandStackUnit": "BB, todos os jogadores",
+  "singleHandStackUnitYours": "BB, o seu stack",
+  "singleHandUnitChips": "Fichas",
+  "singleHandStackEqualsBB": "= {value} BB",
+  "@singleHandStackEqualsBB": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "singleHandStackEqualsChips": "= {value} fichas",
+  "@singleHandStackEqualsChips": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "singleHandStackWarnChips": "São {bb} BB. Querias dizer fichas?",
+  "@singleHandStackWarnChips": {
+    "placeholders": {
+      "bb": {
+        "type": "String"
+      }
+    }
+  },
+  "singleHandStackWarnMoney": "São {bb} BB. Querias dizer um valor em dinheiro?",
+  "@singleHandStackWarnMoney": {
+    "placeholders": {
+      "bb": {
+        "type": "String"
+      }
+    }
+  },
+  "singleHandStackWarnLow": "Menos de 1 BB. Verifica a unidade.",
+  "singleHandUseChips": "Usar fichas",
+  "singleHandUseMoney": "Usar dinheiro",
+  "singleHandUseBB": "Usar BB",
+  "singleHandSpreadSame": "Igual",
+  "singleHandSpreadNear": "Próximo",
+  "singleHandSpreadSimilar": "Semelhante",
+  "singleHandCards": "Suas cartas (opcional)",
+  "singleHandAddCards": "Adicionar cartas",
+  "singleHandStart": "Iniciar mão",
+  "singleHandSmallBlind": "Small blind",
+  "singleHandBigBlind": "Big blind",
+  "singleHandBanner": "Mão avulsa · não conta nas estatísticas",
+  "singleHandLeaveTitle": "Descartar esta mão?",
+  "singleHandLeaveBody": "A mão registada não será guardada.",
+  "singleHandLeave": "Descartar",
+  "singleHandSavedTitle": "Mão guardada",
+  "singleHandNotesHint": "Adicionar uma nota",
+  "singleHandTags": "Etiquetas",
+  "singleHandTagBluff": "Bluff",
+  "singleHandTagHeroCall": "Hero call",
+  "singleHandTagBadBeat": "Bad beat",
+  "singleHandTagBigPot": "Pote grande",
+  "singleHandTagReview": "Rever",
+  "singleHandViewHand": "Ver mão",
+  "singleHandLogAnother": "Registar outra",
+  "singleHandDone": "Concluído",
+  "sessionHandsBadge": "Mãos"
 }

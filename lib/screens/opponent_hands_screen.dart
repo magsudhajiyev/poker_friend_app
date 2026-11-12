@@ -195,7 +195,8 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
     List<Map<String, dynamic>> sessions;
     bool useFirebase = true;
     try {
-      sessions = await FirebaseService.getAllSessions();
+      sessions =
+          await FirebaseService.getAllSessions(includeHandGroups: true);
     } catch (_) {
       useFirebase = false;
       final db = await LocalStorageService.database;

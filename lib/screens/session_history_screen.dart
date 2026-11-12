@@ -1,3 +1,4 @@
+import 'session_hands_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
@@ -212,10 +213,10 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
       List<Map<String, dynamic>> loadedSessions;
       try {
         // Try Firebase first
-        loadedSessions = await FirebaseService.getAllSessions();
+        loadedSessions = await FirebaseService.getAllSessions(includeHandGroups: true);
       } catch (e) {
         // Fallback to local storage
-        loadedSessions = await LocalStorageService.getUserSessions();
+        loadedSessions = await LocalStorageService.getUserSessions(includeHandGroups: true);
       }
 
       // Store in cache
@@ -684,6 +685,9 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
     final l10n = AppLocalizations.of(context);
     final startTime = DateTime.parse(session['startTime']);
     final isTournament = (session['gameType'] ?? 'cash').toLowerCase() == 'tournament';
+    // "Log a hand" groups: no money, no duration, opens the hands list.
+    final isHandGroup = session['sessionType'] == 'hand_group';
+    final handCount = (session['totalHands'] as num?)?.toInt() ?? 0;
 
     final sessionName = session['sessionName'] != null && session['sessionName'].isNotEmpty
         ? session['sessionName']
@@ -745,10 +749,12 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
         await Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => SessionAnalyticsScreen(
-              sessionData: session,
-              sessionId: session['id'],
-            ),
+            builder: (context) => isHandGroup
+                ? SessionHandsScreen(session: session)
+                : SessionAnalyticsScreen(
+                    sessionData: session,
+                    sessionId: session['id'],
+                  ),
           ),
         );
         if (mounted && AppDataCache.isSessionsDirty) {
@@ -793,6 +799,28 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
+                            if (isHandGroup) ...[
+                              const SizedBox(width: 6),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: AppColors.accentPrimary
+                                      .withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(
+                                      AppDecorations.radiusFull),
+                                ),
+                                child: Text(
+                                  l10n.sessionHandsBadge,
+                                  style: AppTypography.ibm(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.accentPrimary,
+                                    height: 14 / 11,
+                                  ),
+                                ),
+                              ),
+                            ],
                             if (session['isTutorial'] == true) ...[
                               const SizedBox(width: 6),
                               Container(
@@ -818,22 +846,28 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
                           ],
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      Text(
-                        plText,
-                        style: AppTypography.ibm(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          color: plColor,
-                          height: 22 / 15,
+                      if (!isHandGroup) ...[
+                        const SizedBox(width: 8),
+                        Text(
+                          plText,
+                          style: AppTypography.ibm(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: plColor,
+                            height: 22 / 15,
+                          ),
                         ),
-                      ),
+                      ],
                     ],
                   ),
                   const SizedBox(height: 6),
                   Row(
                     children: [
-                      _buildChip('icons/figma_icons/clock.svg', duration),
+                      _buildChip(
+                          'icons/figma_icons/clock.svg',
+                          isHandGroup
+                              ? l10n.singleHandGroupHands(handCount)
+                              : duration),
                       const SizedBox(width: 6),
                       _buildChip('icons/figma_icons/calendar.svg', dateText),
                     ],
