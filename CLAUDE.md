@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Overview
 Flutter/Dart poker hand logging application with Firebase backend, club management, dealer-assisted voice logging, and real-time WebSocket sync. Allows users to track poker hands, sessions, statistics, opponents, and bankroll.
 
-**The app is LIVE** (v2.1.0+14 submitted to Google Play on launch night 2026-07-24; iOS submission pending). Current working version: 2.1.9+27 (pubspec; 2026-11-06 release: dead button / dead small blind per TDA Rule 34 in hand logging + export, iOS push entitlement fix). Earlier: 2.1.5+19 (Engagement notifications: coach-voiced streak-saver + send-time scheduler, prefs, admin dashboard; flag `engagement_notifications` = admin-only. Plus 2.1.4+18 Daily Challenge leaderboard). **On `main` (2026-10-21): authored solver game-tree Daily Challenge — 5 hands/day, pot-weighted accuracy scoring, casual coach commentary (flag `daily_challenge` = admin-only; Firestore rules + `validateLeaderboardEntry` deploy still pending) — see Key Feature 18c.** **On `main` (2026-10-25, bumped 2.1.5+20): Daily Challenge REPLAYS (tier-gated past-day practice, unranked), hard-paywall value-proposition "free trial" screen, onboarding username-always-asked fix + demo→info-screen step, leaderboard skippable-username prompt — see Key Feature 18d + diary 2026-10-25.** **On `main` (2026-11-01, bumped 2.1.7+22): Easy hand logging (admin flag `easy_hand_logging`: fold tick w/ 4s undo, flag-a-hand + later recall, hand completeness levels with stats applied once at promotion, stack-timeline pending segments; live insights behind `live_insights`), Daily Challenge hardening (create-only leaderboard rules, local-day/DST fixes, cross-device streak merge, offline play block — NOT deployed), super-admin preview of upcoming days, `build_tree.js` limp-spine fix.** Post-launch work is queued in `ROADMAP.md` — check it before planning any change.
+**The app is LIVE** (v2.1.0+14 submitted to Google Play on launch night 2026-07-24; iOS submission pending). Current working version: 2.2.0+28 (pubspec; 2026-11-12 release: "Log a hand" single-hand logging behind flag `single_hand` + tour/paywall analytics fix — see Key Feature 1c). Previous: 2.1.9+27 (2026-11-06: dead button / dead small blind per TDA Rule 34 in hand logging + export, iOS push entitlement fix). Earlier: 2.1.5+19 (Engagement notifications: coach-voiced streak-saver + send-time scheduler, prefs, admin dashboard; flag `engagement_notifications` = admin-only. Plus 2.1.4+18 Daily Challenge leaderboard). **On `main` (2026-10-21): authored solver game-tree Daily Challenge — 5 hands/day, pot-weighted accuracy scoring, casual coach commentary (flag `daily_challenge` = admin-only; Firestore rules + `validateLeaderboardEntry` deploy still pending) — see Key Feature 18c.** **On `main` (2026-10-25, bumped 2.1.5+20): Daily Challenge REPLAYS (tier-gated past-day practice, unranked), hard-paywall value-proposition "free trial" screen, onboarding username-always-asked fix + demo→info-screen step, leaderboard skippable-username prompt — see Key Feature 18d + diary 2026-10-25.** **On `main` (2026-11-01, bumped 2.1.7+22): Easy hand logging (admin flag `easy_hand_logging`: fold tick w/ 4s undo, flag-a-hand + later recall, hand completeness levels with stats applied once at promotion, stack-timeline pending segments; live insights behind `live_insights`), Daily Challenge hardening (create-only leaderboard rules, local-day/DST fixes, cross-device streak merge, offline play block — NOT deployed), super-admin preview of upcoming days, `build_tree.js` limp-spine fix.** Post-launch work is queued in `ROADMAP.md` — check it before planning any change.
 
 ---
 
@@ -123,7 +123,7 @@ Full machine setup (tool versions, keystores, step-by-step install) lives in `SE
 ### Tech Stack
 - **Frontend**: Flutter/Dart (300+ Dart files)
 - **Backend**: Firebase (Firestore, Auth, FCM, Cloud Functions in `functions/`) + FastAPI backend (Render)
-- **Local Storage**: SQLite (sqflite, DB schema v21; v21 = hands.bbSeat/sbSeat/smallBlindDead) + SharedPreferences
+- **Local Storage**: SQLite (sqflite, DB schema v22; v21 = hands.bbSeat/sbSeat/smallBlindDead, v22 = sessions.sessionType) + SharedPreferences
 - **Real-time**: Socket.IO WebSocket + Firestore Snapshot listeners
 - **Voice Recognition**: Deepgram ASR via backend "Dealer Brain" endpoint
 - **Payments**: RevenueCat SDK
@@ -183,7 +183,7 @@ Four tiers — check via `SubscriptionService`:
 - **Elite** (`isElite`/`isPremium`): unlimited everything, AI analysis, all history
 - **Club** (`isClub`/`isPremium`): like Elite + club creation rights (owner pays; club members operate freely regardless of their own tier)
 
-Feature gates live in `lib/services/free_tier_limits.dart` (hand/opponent caps) and `lib/services/feature_flag_service.dart` (remote Firestore flags for `training_drills`, `ai_hand_analysis`, `leak_detector`, `daily_challenge`, `engagement_notifications`, `hard_paywall`, `easy_hand_logging`, `live_insights`; modes incl. `admin_only`). Use `FreeTierLimits.showHandsLimitDialog()` / `PaywallScreen.show()` for upgrade prompts.
+Feature gates live in `lib/services/free_tier_limits.dart` (hand/opponent caps) and `lib/services/feature_flag_service.dart` (remote Firestore flags for `training_drills`, `ai_hand_analysis`, `leak_detector`, `daily_challenge`, `engagement_notifications`, `hard_paywall`, `easy_hand_logging`, `live_insights`, `paid_nudges`, `single_hand`; modes incl. `admin_only`). Use `FreeTierLimits.showHandsLimitDialog()` / `PaywallScreen.show()` for upgrade prompts.
 
 **Partner grants** (`lib/services/partner_grant_service.dart`): super-admin can grant users a free tier (Pro/Elite/Club) with expiry (1 week / 1 month / 3 months). `partnerTier` getter returns `null` for expired grants client-side; `init()` awaits the first Firestore snapshot (3s timeout) and must be `await`ed in sign-in paths (not `unawaited`) or the user briefly appears free-tier. Admin UI: `lib/screens/admin/partner_grants_screen.dart`. See `diary/2026-07-08-partner-grants-system.md`.
 
@@ -284,6 +284,13 @@ Top offenders still to migrate (Phase 4): `dealer/dealer_table_screen` (158), `p
 - Opt-in setting (`SkipHandScoutingService`, gated behind the `training_drills` feature flag): when the hero folds preflop, the logger enters scouting mode — keep logging opponents' real preflop actions (type-only, no bet sizes) and finish the hand early
 - Saved as a preflop-only record with `isScouted: true`; feeds **opponent** stats (incl. winner → Showdown stat) but hero stat gating is split so scouted hands don't distort hero postflop stats
 - Entry points: `poker_hand_screen.dart` `_scoutingMode` / `_finishScoutedHand`
+
+### 1c. Log a Hand — single-hand logging (feature-flagged: `single_hand`, 2.2.0)
+- Third card under + (`LoggingModeSelectionScreen`, hidden during the tour): full-height setup sheet (`lib/widgets/single_hand/`) → `PokerHandScreen` single mode (throw-away table, built on recall mode: `_throwawayTable` = recall || single) → result sheet. Spec + decisions: `docs/features/single-hand-logging.md`; diary `2026-11-12-single-hand-logging.md`.
+- Hands are saved into a **hand group** = a session doc with `sessionType: 'hand_group'` (`SingleHandService`; joins the latest group when < 12 h old, same game type, same cash blinds, under the tier cap). Every hand reader works unchanged.
+- **Single hands never update stats** (hero/opponent stats, range grid, Leak Detector, bankroll, `session_results`, play time) — selection bias. `getAllSessions`/`getUserSessions` hide hand groups unless `includeHandGroups: true` (Session History, opponent hand list, opponent shown-cards range pass it). Any new session aggregate must keep them out.
+- Seat names: hero = nickname, villains = position labels unless the player picked a real opponent on the table (`SingleHandService.mergeNames`).
+- Stack field has a unit (tournament Chips|BB, cash $|BB) + guard; spread Same/Near/Similar rolled once at Start. Wheels = design-system `AppWheelPicker` (reports on scroll end).
 
 ### 2. Individual Session Tracking (Quick Logging)
 - Quick profit/loss tracking without full hand details
@@ -599,7 +606,7 @@ saveHand() called
 | Service | File | Purpose |
 |---------|------|---------|
 | FirebaseService | `lib/services/firebase_service.dart` (1631 lines) | Session/hand CRUD, stats orchestration |
-| LocalStorageService | `lib/services/local_storage_service.dart` | SQLite mirror of Firebase (schema v21; v20 = completeness/statsApplied/flagMeta, v21 = bbSeat/sbSeat/smallBlindDead, idempotent ADD COLUMN) |
+| LocalStorageService | `lib/services/local_storage_service.dart` | SQLite mirror of Firebase (schema v22; v20 = completeness/statsApplied/flagMeta, v21 = bbSeat/sbSeat/smallBlindDead, v22 = sessions.sessionType, idempotent ADD COLUMN) |
 | UserStatsService | `lib/services/user_stats_service.dart` | Atomic user stat transactions |
 | OpponentStatsService | `lib/services/opponent_stats_service.dart` | Atomic opponent stat transactions |
 | StatsCalculator | `lib/services/stats_calculator.dart` | Pure stat detection functions (testable) |
@@ -633,7 +640,7 @@ saveHand() called
 | FCMService | `lib/services/fcm_service.dart` | Push notifications (fire-and-forget!) |
 | DeepLinkService | `lib/services/deep_link_service.dart` | Email invitation deep links |
 | AiAnalyzerService | `lib/services/ai_analyzer_service.dart` | Hand analysis API calls |
-| FeatureFlagService | `lib/services/feature_flag_service.dart` | Global remote feature flags (Firestore `app_config/feature_flags`, super-admin toggles on Profile, offline cache). Gated: training_drills, ai_hand_analysis, leak_detector, daily_challenge, engagement_notifications, hard_paywall, easy_hand_logging, live_insights. Re-subscribes to `app_config` on sign-in |
+| FeatureFlagService | `lib/services/feature_flag_service.dart` | Global remote feature flags (Firestore `app_config/feature_flags`, super-admin toggles on Profile, offline cache). Gated: training_drills, ai_hand_analysis, leak_detector, daily_challenge, engagement_notifications, hard_paywall, easy_hand_logging, live_insights, paid_nudges, single_hand. Re-subscribes to `app_config` on sign-in |
 | AnalyticsService | `lib/services/analytics_service.dart` | PostHog product analytics (EU cloud). distinct_id = Firebase uid (matches RevenueCat customer_id — the warehouse join key); identity auto-follows authStateChanges. Event vocabulary lives in the service header — fire each event at ONE canonical site only. All calls fire-and-forget/no-throw; no-op without `POSTHOG_API_KEY` (tests, dev) |
 | PartnerGrantService | `lib/services/partner_grant_service.dart` | Admin-granted free tiers with expiry (see Subscription section) |
 | SkipHandScoutingService | `lib/services/skip_hand_scouting_service.dart` | On/off toggle for live scouting mode |
@@ -951,6 +958,6 @@ Tests are organized in subdirectories mirroring `lib/`:
 
 ---
 
-**Last Updated**: November 6, 2026
+**Last Updated**: November 12, 2026
 **Maintained by**: User + Claude
 **Update this file**: After major feature additions, architectural changes, or new bug patterns

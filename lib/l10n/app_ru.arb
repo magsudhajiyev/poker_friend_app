@@ -5823,5 +5823,87 @@
   "spotQuizVillainCalled": "{pos} заколлировал.",
   "spotQuizVillainChecked": "{pos} сделал чек.",
   "spotQuizVillainAllIn": "{pos} пошёл all-in.",
-  "offersConsentBodyPaywall": "Мы можем напомнить вам о вариантах тарифа, если вы уйдёте, не выбрав ни одного. Не больше двух в неделю. Это можно отключить в любой момент в Настройках приложения или в настройках уведомлений телефона."
+  "offersConsentBodyPaywall": "Мы можем напомнить вам о вариантах тарифа, если вы уйдёте, не выбрав ни одного. Не больше двух в неделю. Это можно отключить в любой момент в Настройках приложения или в настройках уведомлений телефона.",
+  "singleHandCardTitle": "Записать раздачу",
+  "singleHandCardSubtitle": "Одна раздача, без сессии. Займёт секунды.",
+  "singleHandFeature1": "Быстрая настройка",
+  "singleHandFeature2": "Группировка по игре",
+  "singleHandFeature3": "Не влияет на статистику",
+  "singleHandAddingTo": "Добавить в: {name}",
+  "singleHandNewGroup": "Новая группа",
+  "singleHandChange": "Изменить",
+  "singleHandGroupHands": "Раздач: {count}",
+  "singleHandChooseGroup": "Добавить раздачу в",
+  "singleHandCash": "Кэш",
+  "singleHandTourney": "Турнир",
+  "singleHandBlinds": "Блайнды",
+  "singleHandBBAnte": "Анте BB",
+  "singleHandCustomBlinds": "Другое…",
+  "singleHandEdit": "Изменить",
+  "singleHandPlayers": "Игроки",
+  "singleHandYouAre": "Вы на позиции",
+  "singleHandStack": "Стек",
+  "singleHandStackUnit": "BB, все игроки",
+  "singleHandStackUnitYours": "BB, ваш стек",
+  "singleHandUnitChips": "Фишки",
+  "singleHandStackEqualsBB": "= {value} BB",
+  "@singleHandStackEqualsBB": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "singleHandStackEqualsChips": "= {value} фишек",
+  "@singleHandStackEqualsChips": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "singleHandStackWarnChips": "Это {bb} BB. Вы имели в виду фишки?",
+  "@singleHandStackWarnChips": {
+    "placeholders": {
+      "bb": {
+        "type": "String"
+      }
+    }
+  },
+  "singleHandStackWarnMoney": "Это {bb} BB. Вы имели в виду сумму денег?",
+  "@singleHandStackWarnMoney": {
+    "placeholders": {
+      "bb": {
+        "type": "String"
+      }
+    }
+  },
+  "singleHandStackWarnLow": "Меньше 1 BB. Проверьте единицу.",
+  "singleHandUseChips": "Использовать фишки",
+  "singleHandUseMoney": "Использовать деньги",
+  "singleHandUseBB": "Использовать BB",
+  "singleHandSpreadSame": "Одинаково",
+  "singleHandSpreadNear": "Близко",
+  "singleHandSpreadSimilar": "Похоже",
+  "singleHandCards": "Ваши карты (необязательно)",
+  "singleHandAddCards": "Добавить карты",
+  "singleHandStart": "Начать раздачу",
+  "singleHandSmallBlind": "Малый блайнд",
+  "singleHandBigBlind": "Большой блайнд",
+  "singleHandBanner": "Одна раздача · не влияет на статистику",
+  "singleHandLeaveTitle": "Отменить эту раздачу?",
+  "singleHandLeaveBody": "Записанная раздача не будет сохранена.",
+  "singleHandLeave": "Отменить",
+  "singleHandSavedTitle": "Раздача сохранена",
+  "singleHandNotesHint": "Добавить заметку",
+  "singleHandTags": "Теги",
+  "singleHandTagBluff": "Блеф",
+  "singleHandTagHeroCall": "Хиро-колл",
+  "singleHandTagBadBeat": "Бэд-бит",
+  "singleHandTagBigPot": "Большой банк",
+  "singleHandTagReview": "Разобрать",
+  "singleHandViewHand": "Открыть раздачу",
+  "singleHandLogAnother": "Записать ещё",
+  "singleHandDone": "Готово",
+  "sessionHandsBadge": "Раздачи"
 }

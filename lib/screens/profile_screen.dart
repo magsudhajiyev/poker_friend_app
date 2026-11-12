@@ -1099,7 +1099,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
               MaterialPageRoute(
                 fullscreenDialog: true,
                 builder: (_) =>
-                    const PaywallScreen(showSkip: true, launchPromo: true),
+                    const PaywallScreen(
+                        showSkip: true,
+                        launchPromo: true,
+                        source: 'profile_promo'),
               ),
             );
           }),

@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import '../models/single_hand_group.dart';
 import 'auth_service.dart';
 import 'leak_engine.dart';
 import 'leak_extractor.dart';
@@ -44,6 +45,9 @@ class LeakReportService {
         final data = session.data();
         if (data['isTutorial'] == true) continue;
         if (data['isIndividualSession'] == true) continue;
+        // Single hands are hand-picked (mostly played hands): they would bias
+        // every frequency band.
+        if (isHandGroupSession(data)) continue;
         if ((data['totalHands'] as num? ?? 0) == 0) continue;
 
         final hands = await firestore

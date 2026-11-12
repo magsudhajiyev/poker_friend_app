@@ -70,6 +70,7 @@ TutorialCoachMark createOnboardingCoachMark({
     ),
     onSkip: () {
       final wasReplay = OnboardingState.isReplay;
+      if (!wasReplay) AnalyticsService.tourSkipped(OnboardingState.analyticsPhase);
       OnboardingState.cancel();
       OnboardingPrefs.markOnboardingSeen();
       if (!wasReplay) {
@@ -80,7 +81,9 @@ TutorialCoachMark createOnboardingCoachMark({
         // happened on (launch-promo variant included when the free month
         // is live). Small delay lets the overlay dismiss cleanly.
         Future.delayed(const Duration(milliseconds: 350), () {
-          if (context.mounted) maybeShowPostTourPaywall(context);
+          if (context.mounted) {
+            maybeShowPostTourPaywall(context, source: 'tour_skipped');
+          }
         });
       }
       onSkip?.call();
@@ -886,7 +889,8 @@ void _schedulePromoReminders(BuildContext context, TierEntitlements entitlement)
 /// being handled now.
 bool _postTourPaywallInFlight = false;
 
-Future<void> maybeShowPostTourPaywall(BuildContext context) async {
+Future<void> maybeShowPostTourPaywall(BuildContext context,
+    {String source = 'post_tour'}) async {
   // Reentrancy guard (audit H2): two near-simultaneous callers both passing
   // the read-then-write flag check would stack two paywalls.
   if (_postTourPaywallInFlight) return;
@@ -912,8 +916,9 @@ Future<void> maybeShowPostTourPaywall(BuildContext context) async {
       MaterialPageRoute(
         fullscreenDialog: true,
         builder: (_) => hardGate
-            ? const PaywallScreen(hardGate: true)
-            : PaywallScreen(showSkip: true, launchPromo: launchPromo),
+            ? PaywallScreen(hardGate: true, source: source)
+            : PaywallScreen(
+                showSkip: true, launchPromo: launchPromo, source: source),
       ),
     );
   } finally {

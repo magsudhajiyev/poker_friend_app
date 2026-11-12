@@ -53,6 +53,9 @@ export 'components/sheets/sheet_header.dart';
 // Drawers (legacy wrapper — delegates to AppSheet)
 export 'components/form_drawer.dart';
 
+// Pickers
+export 'components/pickers/app_wheel_picker.dart';
+
 // Toggles
 export 'components/app_toggle.dart';
 

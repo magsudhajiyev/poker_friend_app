@@ -138,8 +138,11 @@ class AppSheet extends StatelessWidget {
       final effectivePadding = bodyPadding.copyWith(
         bottom: bodyPadding.bottom + safeBottom + AppSpacing.xl,
       );
+      // Flexible: content-sized when it fits, scrolls when taller than the cap.
       bodyBlock = scrollable
-          ? SingleChildScrollView(padding: effectivePadding, child: body)
+          ? Flexible(
+              child: SingleChildScrollView(
+                  padding: effectivePadding, child: body))
           : Padding(padding: effectivePadding, child: body);
     } else {
       bodyBlock = Expanded(

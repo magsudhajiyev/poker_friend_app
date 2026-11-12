@@ -5830,5 +5830,87 @@
   "spotQuizVillainCalled": "{pos} заколював.",
   "spotQuizVillainChecked": "{pos} зробив чек.",
   "spotQuizVillainAllIn": "{pos} пішов all-in.",
-  "offersConsentBodyPaywall": "Ми можемо нагадати вам про варіанти плану, якщо ви підете, нічого не обравши. Не більше двох на тиждень. Це можна вимкнути будь-коли в Налаштуваннях застосунку або в налаштуваннях сповіщень телефону."
+  "offersConsentBodyPaywall": "Ми можемо нагадати вам про варіанти плану, якщо ви підете, нічого не обравши. Не більше двох на тиждень. Це можна вимкнути будь-коли в Налаштуваннях застосунку або в налаштуваннях сповіщень телефону.",
+  "singleHandCardTitle": "Записати роздачу",
+  "singleHandCardSubtitle": "Одна роздача, без сесії. Займе секунди.",
+  "singleHandFeature1": "Швидке налаштування",
+  "singleHandFeature2": "Групування за грою",
+  "singleHandFeature3": "Не впливає на статистику",
+  "singleHandAddingTo": "Додати до: {name}",
+  "singleHandNewGroup": "Нова група",
+  "singleHandChange": "Змінити",
+  "singleHandGroupHands": "Роздач: {count}",
+  "singleHandChooseGroup": "Додати роздачу до",
+  "singleHandCash": "Кеш",
+  "singleHandTourney": "Турнір",
+  "singleHandBlinds": "Блайнди",
+  "singleHandBBAnte": "Анте BB",
+  "singleHandCustomBlinds": "Інше…",
+  "singleHandEdit": "Редагувати",
+  "singleHandPlayers": "Гравці",
+  "singleHandYouAre": "Ви на позиції",
+  "singleHandStack": "Стек",
+  "singleHandStackUnit": "BB, усі гравці",
+  "singleHandStackUnitYours": "BB, ваш стек",
+  "singleHandUnitChips": "Фішки",
+  "singleHandStackEqualsBB": "= {value} BB",
+  "@singleHandStackEqualsBB": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "singleHandStackEqualsChips": "= {value} фішок",
+  "@singleHandStackEqualsChips": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "singleHandStackWarnChips": "Це {bb} BB. Ви мали на увазі фішки?",
+  "@singleHandStackWarnChips": {
+    "placeholders": {
+      "bb": {
+        "type": "String"
+      }
+    }
+  },
+  "singleHandStackWarnMoney": "Це {bb} BB. Ви мали на увазі суму грошей?",
+  "@singleHandStackWarnMoney": {
+    "placeholders": {
+      "bb": {
+        "type": "String"
+      }
+    }
+  },
+  "singleHandStackWarnLow": "Менше 1 BB. Перевірте одиницю.",
+  "singleHandUseChips": "Використати фішки",
+  "singleHandUseMoney": "Використати гроші",
+  "singleHandUseBB": "Використати BB",
+  "singleHandSpreadSame": "Однакові",
+  "singleHandSpreadNear": "Близькі",
+  "singleHandSpreadSimilar": "Схожі",
+  "singleHandCards": "Ваші карти (необов’язково)",
+  "singleHandAddCards": "Додати карти",
+  "singleHandStart": "Почати роздачу",
+  "singleHandSmallBlind": "Малий блайнд",
+  "singleHandBigBlind": "Великий блайнд",
+  "singleHandBanner": "Одна роздача · не впливає на статистику",
+  "singleHandLeaveTitle": "Скасувати цю роздачу?",
+  "singleHandLeaveBody": "Записана роздача не буде збережена.",
+  "singleHandLeave": "Скасувати",
+  "singleHandSavedTitle": "Роздачу збережено",
+  "singleHandNotesHint": "Додати нотатку",
+  "singleHandTags": "Теги",
+  "singleHandTagBluff": "Блеф",
+  "singleHandTagHeroCall": "Хіро-колл",
+  "singleHandTagBadBeat": "Бед-біт",
+  "singleHandTagBigPot": "Великий банк",
+  "singleHandTagReview": "Розібрати",
+  "singleHandViewHand": "Відкрити роздачу",
+  "singleHandLogAnother": "Записати ще",
+  "singleHandDone": "Готово",
+  "sessionHandsBadge": "Роздачі"
 }

@@ -10,6 +10,7 @@ import '../onboarding/onboarding_progress_bar.dart';
 import 'training/drill_setup_screen.dart';
 import 'unified_session_setup_screen.dart';
 import '../services/feature_flag_service.dart';
+import '../widgets/single_hand/single_hand_flow.dart';
 import '../design_system/components/sheets/sheet_header.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/typography.dart';
@@ -56,6 +57,13 @@ class LoggingModeSelectionScreen extends StatefulWidget {
     );
   }
 
+  /// "Log a hand" card: flag on, and never while the onboarding tour runs
+  /// (the tour highlights the Full logging card).
+  @visibleForTesting
+  static bool singleHandCardVisible(
+          {required bool flagOn, required bool tourActive}) =>
+      flagOn && !tourActive;
+
   @override
   State<LoggingModeSelectionScreen> createState() =>
       _LoggingModeSelectionScreenState();
@@ -83,6 +91,17 @@ class _LoggingModeSelectionScreenState
     });
   }
 
+  bool get _showSingleHandCard =>
+      LoggingModeSelectionScreen.singleHandCardVisible(
+        flagOn: FeatureFlagService.isEnabled(FeatureFlagService.singleHand),
+        tourActive: OnboardingState.isOnboardingActive,
+      );
+
+  Future<void> _startSingleHand() async {
+    final done = await SingleHandFlow.run(context);
+    if (done && mounted) Navigator.pop(context);
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -98,82 +117,110 @@ class _LoggingModeSelectionScreenState
               child: const SizedBox.expand(),
             ),
           ),
-          // Modal panel (dark surface)
-          Container(
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: AppColors.bgPrimary,
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(AppDecorations.radiusXl),
-                topRight: Radius.circular(AppDecorations.radiusXl),
+          // Modal panel (dark surface), scrolls on short screens
+          ConstrainedBox(
+            constraints: BoxConstraints(
+                maxHeight: MediaQuery.sizeOf(context).height * 0.85),
+            child: Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: AppColors.bgPrimary,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(AppDecorations.radiusXl),
+                  topRight: Radius.circular(AppDecorations.radiusXl),
+                ),
+                border: Border.all(color: AppColors.borderStrong),
               ),
-              border: Border.all(color: AppColors.borderStrong),
-            ),
-            child: SafeArea(
-              top: false,
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Header: title + glass X
-                    SheetHeader(
-                      title: l10n.loggingModeChooseMode,
-                      onClose: () => Navigator.pop(context),
-                    ),
-                    const SizedBox(height: 16),
+              child: SafeArea(
+                top: false,
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Header: title + glass X
+                        SheetHeader(
+                          title: l10n.loggingModeChooseMode,
+                          onClose: () => Navigator.pop(context),
+                        ),
+                        const SizedBox(height: 16),
 
-                    // Logging Mode card
-                    _buildModeCard(
-                      key: _fullModeCardKey,
-                      title: l10n.loggingModeFullTitle,
-                      subtitle: l10n.loggingModeFullSubtitle,
-                      features: [
-                        l10n.loggingModeFullFeature1,
-                        l10n.loggingModeFullFeature2,
-                        l10n.loggingModeFullFeature3,
-                        l10n.loggingModeFullFeature4,
-                      ],
-                      onChoose: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                const UnifiedSessionSetupScreen(),
-                          ),
-                        );
-                      },
-                    ),
-
-                    // Training Drills entry (premium, feature-flagged)
-                    ValueListenableBuilder<int>(
-                      valueListenable: FeatureFlagService.revision,
-                      builder: (context, _, __) => FeatureFlagService
-                              .isEnabled(FeatureFlagService.trainingDrills)
-                          ? Column(children: [
-                              const SizedBox(height: 16),
-                              _buildModeCard(
-                                title: l10n.loggingTrainingDrills,
-                                subtitle: l10n.loggingTrainingDrillsSubtitle,
-                                features: [
-                                  l10n.loggingTrainingDrillsFeature1,
-                                  l10n.loggingTrainingDrillsFeature2,
-                                  l10n.loggingTrainingDrillsFeature3,
-                                ],
-                                badge: l10n.loggingPro,
-                                onChoose: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (_) =>
-                                            const DrillSetupScreen()),
-                                  );
-                                },
+                        // Logging Mode card
+                        _buildModeCard(
+                          key: _fullModeCardKey,
+                          title: l10n.loggingModeFullTitle,
+                          subtitle: l10n.loggingModeFullSubtitle,
+                          features: [
+                            l10n.loggingModeFullFeature1,
+                            l10n.loggingModeFullFeature2,
+                            l10n.loggingModeFullFeature3,
+                            l10n.loggingModeFullFeature4,
+                          ],
+                          onChoose: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const UnifiedSessionSetupScreen(),
                               ),
-                            ])
-                          : const SizedBox.shrink(),
+                            );
+                          },
+                        ),
+
+                        // Log a hand entry (feature-flagged, hidden during the tour)
+                        ValueListenableBuilder<int>(
+                          valueListenable: FeatureFlagService.revision,
+                          builder: (context, _, __) => _showSingleHandCard
+                              ? Column(children: [
+                                  const SizedBox(height: 16),
+                                  _buildModeCard(
+                                    title: l10n.singleHandCardTitle,
+                                    subtitle: l10n.singleHandCardSubtitle,
+                                    features: [
+                                      l10n.singleHandFeature1,
+                                      l10n.singleHandFeature2,
+                                      l10n.singleHandFeature3,
+                                    ],
+                                    onChoose: _startSingleHand,
+                                  ),
+                                ])
+                              : const SizedBox.shrink(),
+                        ),
+
+                        // Training Drills entry (premium, feature-flagged)
+                        ValueListenableBuilder<int>(
+                          valueListenable: FeatureFlagService.revision,
+                          builder: (context, _, __) =>
+                              FeatureFlagService.isEnabled(
+                                      FeatureFlagService.trainingDrills)
+                                  ? Column(children: [
+                                      const SizedBox(height: 16),
+                                      _buildModeCard(
+                                        title: l10n.loggingTrainingDrills,
+                                        subtitle:
+                                            l10n.loggingTrainingDrillsSubtitle,
+                                        features: [
+                                          l10n.loggingTrainingDrillsFeature1,
+                                          l10n.loggingTrainingDrillsFeature2,
+                                          l10n.loggingTrainingDrillsFeature3,
+                                        ],
+                                        badge: l10n.loggingPro,
+                                        onChoose: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                                builder: (_) =>
+                                                    const DrillSetupScreen()),
+                                          );
+                                        },
+                                      ),
+                                    ])
+                                  : const SizedBox.shrink(),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               ),
             ),
@@ -318,8 +365,8 @@ class _ModeCardState extends State<_ModeCard> {
                           horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
                         color: AppColors.bgPrimary,
-                        borderRadius: BorderRadius.circular(
-                            AppDecorations.pillRadius),
+                        borderRadius:
+                            BorderRadius.circular(AppDecorations.pillRadius),
                       ),
                       child: Text(
                         widget.badge!,

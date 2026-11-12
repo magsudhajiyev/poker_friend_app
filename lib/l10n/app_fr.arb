@@ -5823,5 +5823,87 @@
   "spotQuizVillainCalled": "{pos} a suivi.",
   "spotQuizVillainChecked": "{pos} a checké.",
   "spotQuizVillainAllIn": "{pos} a fait tapis.",
-  "offersConsentBodyPaywall": "Nous pouvons vous rappeler vos formules si vous partez sans en choisir une. Deux par semaine au maximum. Vous pouvez le désactiver à tout moment dans les réglages de l'app ou dans les réglages de notification de votre téléphone."
+  "offersConsentBodyPaywall": "Nous pouvons vous rappeler vos formules si vous partez sans en choisir une. Deux par semaine au maximum. Vous pouvez le désactiver à tout moment dans les réglages de l'app ou dans les réglages de notification de votre téléphone.",
+  "singleHandCardTitle": "Enregistrer une main",
+  "singleHandCardSubtitle": "Une main, sans session. Quelques secondes.",
+  "singleHandFeature1": "Réglage rapide",
+  "singleHandFeature2": "Groupées par partie",
+  "singleHandFeature3": "Hors statistiques",
+  "singleHandAddingTo": "Ajouter à : {name}",
+  "singleHandNewGroup": "Nouveau groupe",
+  "singleHandChange": "Changer",
+  "singleHandGroupHands": "Mains : {count}",
+  "singleHandChooseGroup": "Ajouter la main à",
+  "singleHandCash": "Cash",
+  "singleHandTourney": "Tournoi",
+  "singleHandBlinds": "Blinds",
+  "singleHandBBAnte": "Ante BB",
+  "singleHandCustomBlinds": "Autre…",
+  "singleHandEdit": "Modifier",
+  "singleHandPlayers": "Joueurs",
+  "singleHandYouAre": "Vous êtes",
+  "singleHandStack": "Tapis",
+  "singleHandStackUnit": "BB, tous les joueurs",
+  "singleHandStackUnitYours": "BB, ton stack",
+  "singleHandUnitChips": "Jetons",
+  "singleHandStackEqualsBB": "= {value} BB",
+  "@singleHandStackEqualsBB": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "singleHandStackEqualsChips": "= {value} jetons",
+  "@singleHandStackEqualsChips": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "singleHandStackWarnChips": "Cela fait {bb} BB. Voulais-tu dire des jetons ?",
+  "@singleHandStackWarnChips": {
+    "placeholders": {
+      "bb": {
+        "type": "String"
+      }
+    }
+  },
+  "singleHandStackWarnMoney": "Cela fait {bb} BB. Voulais-tu dire un montant en argent ?",
+  "@singleHandStackWarnMoney": {
+    "placeholders": {
+      "bb": {
+        "type": "String"
+      }
+    }
+  },
+  "singleHandStackWarnLow": "Moins de 1 BB. Vérifie l'unité.",
+  "singleHandUseChips": "Utiliser les jetons",
+  "singleHandUseMoney": "Utiliser l'argent",
+  "singleHandUseBB": "Utiliser BB",
+  "singleHandSpreadSame": "Identique",
+  "singleHandSpreadNear": "Proche",
+  "singleHandSpreadSimilar": "Similaire",
+  "singleHandCards": "Vos cartes (facultatif)",
+  "singleHandAddCards": "Ajouter les cartes",
+  "singleHandStart": "Démarrer la main",
+  "singleHandSmallBlind": "Petite blind",
+  "singleHandBigBlind": "Grosse blind",
+  "singleHandBanner": "Main isolée · hors statistiques",
+  "singleHandLeaveTitle": "Abandonner cette main ?",
+  "singleHandLeaveBody": "La main enregistrée ne sera pas sauvegardée.",
+  "singleHandLeave": "Abandonner",
+  "singleHandSavedTitle": "Main sauvegardée",
+  "singleHandNotesHint": "Ajouter une note",
+  "singleHandTags": "Tags",
+  "singleHandTagBluff": "Bluff",
+  "singleHandTagHeroCall": "Hero call",
+  "singleHandTagBadBeat": "Bad beat",
+  "singleHandTagBigPot": "Gros pot",
+  "singleHandTagReview": "À revoir",
+  "singleHandViewHand": "Voir la main",
+  "singleHandLogAnother": "En enregistrer une autre",
+  "singleHandDone": "Terminé",
+  "sessionHandsBadge": "Mains"
 }

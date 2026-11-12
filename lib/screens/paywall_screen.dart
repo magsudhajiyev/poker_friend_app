@@ -57,6 +57,11 @@ class PaywallScreen extends StatefulWidget {
   /// the `hard_paywall` flag is on and the user has no access.
   final bool hardGate;
 
+  /// Where this paywall was opened from, for analytics only (post_tour,
+  /// tour_skipped, hard_gate…). Used as the `feature` of `paywall_opened`
+  /// when [featureName] is null.
+  final String? source;
+
   const PaywallScreen({
     super.key,
     this.featureName,
@@ -65,6 +70,7 @@ class PaywallScreen extends StatefulWidget {
     this.launchPromo = false,
     this.mockPurchase = false,
     this.hardGate = false,
+    this.source,
   });
 
   static Future<bool?> show(
@@ -74,11 +80,6 @@ class PaywallScreen extends StatefulWidget {
     bool launchPromo = false,
     bool mockPurchase = false,
   }) {
-    AnalyticsService.capture('paywall_opened', {
-      if (featureName != null) 'feature': featureName,
-      if (preselectedTier != null) 'preselected_tier': preselectedTier,
-      'launch_promo': launchPromo,
-    });
     return Navigator.of(context).push<bool>(
       MaterialPageRoute(
         fullscreenDialog: true,
@@ -145,6 +146,12 @@ class _PaywallScreenState extends State<PaywallScreen> {
   @override
   void initState() {
     super.initState();
+    // The ONE canonical paywall_opened site: every mount counts once.
+    AnalyticsService.paywallOpened(
+      feature: widget.featureName ?? widget.source,
+      preselectedTier: widget.preselectedTier,
+      launchPromo: widget.launchPromo,
+    );
     // Which free trials can this user still start? (Eligibility changes once
     // a trial was used, so re-check every time the paywall opens.)
     SubscriptionService.refreshTrialOffers().then((_) {

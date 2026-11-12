@@ -262,7 +262,8 @@ class OpponentRangeService {
     final seen = <String>{};
 
     try {
-      final sessions = await FirebaseService.getAllSessions();
+      final sessions =
+          await FirebaseService.getAllSessions(includeHandGroups: true);
       for (final session in sessions) {
         final sessionId =
             (session['id'] ?? session['sessionId'])?.toString() ?? '';

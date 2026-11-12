@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/poker_game_state.dart';
 import '../models/game_types.dart';
 import '../models/hand_completeness.dart';
+import '../models/single_hand_group.dart';
 import 'auth_service.dart';
 import 'display_identity_service.dart';
 import 'local_storage_service.dart';
@@ -25,6 +26,11 @@ class FirebaseService {
   static const String _sessionsCollection = 'poker_sessions';
   static const String _handsCollection = 'poker_hands';
 
+  /// New session id without a server round trip: lets a caller create the doc
+  /// offline (the write queues) and keep using the id.
+  static String newSessionId() =>
+      _firestore.collection(_sessionsCollection).doc().id;
+
   // Create a new poker session
   static Future<String> createSession({
     required double smallBlind,
@@ -40,6 +46,8 @@ class FirebaseService {
     String? dealerSessionId, // Links to dealer_sessions for hole card lookup
     String? eventId, // Links to club event for tournament session grouping
     bool isTutorial = false, // First-run tour session: badged, excluded from stats
+    String? sessionType, // 'hand_group' = single-hand group (no stats/money)
+    String? sessionId, // Client-generated id (see newSessionId): offline-safe
   }) async {
     try {
       final userId = AuthService.userId;
@@ -68,6 +76,13 @@ class FirebaseService {
         sessionData['isTutorial'] = true;
       }
 
+      // A hand group is never an active session: endTime is set from the start
+      // (the single-hand service moves it on every saved hand).
+      if (sessionType != null) {
+        sessionData['sessionType'] = sessionType;
+        sessionData['endTime'] = FieldValue.serverTimestamp();
+      }
+
       // For live sessions, initialize participant tracking
       if (isLive) {
         sessionData['participantIds'] = <String>[]; // Will be populated when players join
@@ -92,11 +107,22 @@ class FirebaseService {
         sessionData['startingStack'] = startingStack;
       }
 
-      final sessionRef = await _firestore.collection(_sessionsCollection).add(sessionData);
+      final String createdId;
+      if (sessionId != null) {
+        await _firestore
+            .collection(_sessionsCollection)
+            .doc(sessionId)
+            .set(sessionData);
+        createdId = sessionId;
+      } else {
+        createdId =
+            (await _firestore.collection(_sessionsCollection).add(sessionData))
+                .id;
+      }
       AppDataCache.markHomeDirty();
       AppDataCache.markSessionsDirty();
       AppDataCache.markStatsDirty();
-      return sessionRef.id;
+      return createdId;
     } catch (e) {
       await LoggerService.error('Error creating session', e, StackTrace.current);
       rethrow;
@@ -359,7 +385,11 @@ class FirebaseService {
       unawaited(LoggerService.logEvent('hand_saved', parameters: {
         'session_id': sessionId,
         'hand_number': handNumber,
-        if (skipStats) 'is_tutorial': true,
+        // Single hands skip stats too, but they are not tutorial hands.
+        if (analyticsExtras?['mode'] == 'single')
+          'mode': 'single'
+        else if (skipStats)
+          'is_tutorial': true,
       }));
 
       AppDataCache.markHomeDirty();
@@ -779,7 +809,13 @@ class FirebaseService {
 
   // Get all sessions for current user (for session history)
   // Includes both owned sessions and sessions where user participated (dealer events)
-  static Future<List<Map<String, dynamic>>> getAllSessions() async {
+  //
+  // Hand groups (`sessionType == 'hand_group'`, single-hand logging) are left
+  // out unless [includeHandGroups]: they have no money, stats or play time, so
+  // every aggregator (stats recompute, bankroll, home, range grid) must not see
+  // them. Only the session history list asks for them.
+  static Future<List<Map<String, dynamic>>> getAllSessions(
+      {bool includeHandGroups = false}) async {
     try {
       final userId = AuthService.userId;
       if (userId == null) throw 'User not authenticated';
@@ -855,6 +891,10 @@ class FirebaseService {
         };
       }).toList();
 
+      if (!includeHandGroups) {
+        sessions = sessions.where((s) => !isHandGroupSession(s)).toList();
+      }
+
       // Apply session history filtering based on subscription tier
       final cutoff = FreeTierLimits.sessionHistoryCutoff();
       if (cutoff != null) {
@@ -874,7 +914,8 @@ class FirebaseService {
 
       // Fallback to local storage
       try {
-        var localSessions = await LocalStorageService.getUserSessions();
+        var localSessions = await LocalStorageService.getUserSessions(
+            includeHandGroups: includeHandGroups);
 
         // Apply session history filtering to local storage fallback
         final cutoff = FreeTierLimits.sessionHistoryCutoff();

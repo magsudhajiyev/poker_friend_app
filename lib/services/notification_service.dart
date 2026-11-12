@@ -179,7 +179,8 @@ class NotificationService {
     await nav.push(
       MaterialPageRoute(
         fullscreenDialog: true,
-        builder: (_) => const PaywallScreen(showSkip: true, preselectedTier: 0),
+        builder: (_) => const PaywallScreen(
+            showSkip: true, preselectedTier: 0, source: 'notification'),
       ),
     );
   }

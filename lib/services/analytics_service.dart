@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:posthog_flutter/posthog_flutter.dart';
 
 import '../config/env_config.dart';
@@ -21,8 +22,16 @@ import 'logger_service.dart';
 /// names below in sync with the PostHog dashboard insights.
 ///
 /// Event vocabulary (fire at the ONE canonical site each):
-///   signup, tour_completed, hand_logged, session_ended, paywall_opened,
-///   subscribed, ai_analysis_used, promo_redeemed
+///   signup, tour_started, tour_completed, tour_skipped, hand_logged,
+///   session_ended, paywall_opened, subscribed, ai_analysis_used,
+///   promo_redeemed
+/// Onboarding funnel: tour_started (OnboardingState.start(), real runs only,
+///   never replay) -> tour_completed | tour_skipped{phase} (phase = tour
+///   phase number, or `4_<GuidedPhase>` inside the guided hand; both skip
+///   paths, never replay). paywall_opened fires ONCE per PaywallScreen mount
+///   (initState) with {feature?, preselected_tier?, launch_promo}; feature is
+///   the caller's featureName or a source label: post_tour, tour_skipped,
+///   hard_gate, profile_promo, settings, notification, drawer.
 /// Leak Detector (flagged): leak_report_viewed, leak_tab_viewed,
 ///   leak_grid_opened, leak_review_queue_opened, leak_goal_set/_fixed/
 ///   _cleared, leak_shape_viewed/_grid_opened/_practice_tapped,
@@ -47,6 +56,10 @@ import 'logger_service.dart';
 ///   (mode = live|fold_tick|flag) and
 ///   session_ended{hands_logged, est_dealt, coverage, flags_open}.
 ///   Helpers live in hand_log_telemetry.dart / hand_coverage.dart.
+/// Single-hand logging (flagged `single_hand`): single_hand_started{new_group},
+///   single_hand_abandoned{street}, single_hand_post_action{action}
+///   (action = view|log_another|done|star|note|tag). hand_logged carries
+///   mode 'single' (plus group_hand_number) for these hands.
 /// Plus SDK-automatic: Application Opened/Backgrounded (lifecycle — feeds
 /// the retention chart).
 class AnalyticsService {
@@ -126,11 +139,47 @@ class AnalyticsService {
     _identify(user);
   }
 
+  /// Test seam: receives every captured event, even with analytics disabled.
+  @visibleForTesting
+  static void Function(String event, Map<String, Object>? props)? debugSink;
+
   /// Capture a product event. [properties] values must be JSON-safe.
   static void capture(String event, [Map<String, Object>? properties]) {
+    debugSink?.call(event, properties);
     if (!_enabled) return;
     _swallow(() => Posthog().capture(eventName: event, properties: properties));
   }
+
+  /// Onboarding: the guided tour really started (never a replay).
+  static void tourStarted() => capture('tour_started');
+
+  /// Onboarding: the tour was skipped at [phase] (never a replay).
+  static void tourSkipped(String phase) =>
+      capture('tour_skipped', {'phase': phase});
+
+  /// A paywall was shown. [feature] = featureName or the source label.
+  static void paywallOpened({
+    String? feature,
+    int? preselectedTier,
+    bool launchPromo = false,
+  }) =>
+      capture('paywall_opened', {
+        if (feature != null) 'feature': feature,
+        if (preselectedTier != null) 'preselected_tier': preselectedTier,
+        'launch_promo': launchPromo,
+      });
+
+  /// Single-hand logging: the setup sheet's "Start hand" was tapped.
+  static void singleHandStarted({required bool newGroup}) =>
+      capture('single_hand_started', {'new_group': newGroup});
+
+  /// Single-hand logging: the table was left with actions logged but no save.
+  static void singleHandAbandoned({String? street}) =>
+      capture('single_hand_abandoned', {if (street != null) 'street': street});
+
+  /// Single-hand logging: what the player did on the result sheet.
+  static void singleHandPostAction(String action) =>
+      capture('single_hand_post_action', {'action': action});
 
   static void _swallow(Future<void> Function() call) {
     try {

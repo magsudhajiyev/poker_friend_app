@@ -5858,5 +5858,87 @@
   "spotQuizVillainCalled": "{pos} vyrovnal.",
   "spotQuizVillainChecked": "{pos} čekoval.",
   "spotQuizVillainAllIn": "{pos} išiel all-in.",
-  "offersConsentBodyPaywall": "Môžeme ti pripomenúť možnosti plánu, ak odídeš bez výberu. Najviac dve týždenne. Vypnúť to môžeš kedykoľvek v Nastaveniach aplikácie alebo v nastaveniach upozornení telefónu."
+  "offersConsentBodyPaywall": "Môžeme ti pripomenúť možnosti plánu, ak odídeš bez výberu. Najviac dve týždenne. Vypnúť to môžeš kedykoľvek v Nastaveniach aplikácie alebo v nastaveniach upozornení telefónu.",
+  "singleHandCardTitle": "Zapísať handu",
+  "singleHandCardSubtitle": "Jedna handa, bez session. Trvá to pár sekúnd.",
+  "singleHandFeature1": "Rýchle nastavenie",
+  "singleHandFeature2": "Zoskupené podľa hry",
+  "singleHandFeature3": "Nezapočíta sa do štatistík",
+  "singleHandAddingTo": "Pridať do: {name}",
+  "singleHandNewGroup": "Nová skupina",
+  "singleHandChange": "Zmeniť",
+  "singleHandGroupHands": "Hand: {count}",
+  "singleHandChooseGroup": "Pridať handu do",
+  "singleHandCash": "Cash",
+  "singleHandTourney": "Turnaj",
+  "singleHandBlinds": "Blindy",
+  "singleHandBBAnte": "Ante BB",
+  "singleHandCustomBlinds": "Iné…",
+  "singleHandEdit": "Upraviť",
+  "singleHandPlayers": "Hráči",
+  "singleHandYouAre": "Ty si",
+  "singleHandStack": "Stack",
+  "singleHandStackUnit": "BB, všetci hráči",
+  "singleHandStackUnitYours": "BB, tvoj stack",
+  "singleHandUnitChips": "Žetóny",
+  "singleHandStackEqualsBB": "= {value} BB",
+  "@singleHandStackEqualsBB": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "singleHandStackEqualsChips": "= {value} žetónov",
+  "@singleHandStackEqualsChips": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "singleHandStackWarnChips": "To je {bb} BB. Mal si na mysli žetóny?",
+  "@singleHandStackWarnChips": {
+    "placeholders": {
+      "bb": {
+        "type": "String"
+      }
+    }
+  },
+  "singleHandStackWarnMoney": "To je {bb} BB. Mal si na mysli sumu peňazí?",
+  "@singleHandStackWarnMoney": {
+    "placeholders": {
+      "bb": {
+        "type": "String"
+      }
+    }
+  },
+  "singleHandStackWarnLow": "Menej ako 1 BB. Skontroluj jednotku.",
+  "singleHandUseChips": "Použiť žetóny",
+  "singleHandUseMoney": "Použiť peniaze",
+  "singleHandUseBB": "Použiť BB",
+  "singleHandSpreadSame": "Rovnaké",
+  "singleHandSpreadNear": "Blízke",
+  "singleHandSpreadSimilar": "Podobné",
+  "singleHandCards": "Tvoje karty (voliteľné)",
+  "singleHandAddCards": "Pridať karty",
+  "singleHandStart": "Spustiť handu",
+  "singleHandSmallBlind": "Small blind",
+  "singleHandBigBlind": "Big blind",
+  "singleHandBanner": "Jedna handa · nezapočíta sa do štatistík",
+  "singleHandLeaveTitle": "Zahodiť túto handu?",
+  "singleHandLeaveBody": "Zaznamenaná handa sa neuloží.",
+  "singleHandLeave": "Zahodiť",
+  "singleHandSavedTitle": "Handa uložená",
+  "singleHandNotesHint": "Pridať poznámku",
+  "singleHandTags": "Tagy",
+  "singleHandTagBluff": "Blef",
+  "singleHandTagHeroCall": "Hero call",
+  "singleHandTagBadBeat": "Bad beat",
+  "singleHandTagBigPot": "Veľký pot",
+  "singleHandTagReview": "Na rozbor",
+  "singleHandViewHand": "Zobraziť handu",
+  "singleHandLogAnother": "Zapísať ďalšiu",
+  "singleHandDone": "Hotovo",
+  "sessionHandsBadge": "Handy"
 }

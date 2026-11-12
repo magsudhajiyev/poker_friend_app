@@ -4,6 +4,7 @@ import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/typography.dart';
 import '../models/poker_game_state.dart'; // PlayerAction, BettingRound
+import '../services/analytics_service.dart';
 import 'onboarding_state.dart';
 import 'onboarding_prefs.dart';
 import 'onboarding_tour.dart'; // buildTooltip, createOnboardingCoachMark
@@ -1012,6 +1013,10 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
 
   void _finishOnboarding() {
     final wasReplay = OnboardingState.isReplay;
+    // Phase already `done` = the tour moved on by itself, not a skip.
+    if (!wasReplay && OnboardingState.guidedHandPhase != GuidedPhase.done) {
+      AnalyticsService.tourSkipped(OnboardingState.analyticsPhase);
+    }
     OnboardingState.guidedHandPhase = GuidedPhase.done;
     OnboardingState.complete();
     OnboardingPrefs.markOnboardingSeen();
@@ -1022,7 +1027,9 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
       // live.
       OnboardingPrefs.setPostTourPaywallPending();
       Future.delayed(const Duration(milliseconds: 350), () {
-        if (mounted) maybeShowPostTourPaywall(context);
+        if (mounted) {
+          maybeShowPostTourPaywall(context, source: 'tour_skipped');
+        }
       });
     }
     // Notify parent so it can rebuild (e.g. hide progress bar).

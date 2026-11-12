@@ -23,7 +23,7 @@ class LocalStorageService {
     
     return await openDatabase(
       dbPath,
-      version: 21,
+      version: 22,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE sessions(
@@ -47,7 +47,8 @@ class LocalStorageService {
             handsLogged INTEGER DEFAULT 0,
             biggestPot REAL DEFAULT 0,
             skippedHands INTEGER DEFAULT 0,
-            isTutorial INTEGER DEFAULT 0
+            isTutorial INTEGER DEFAULT 0,
+            sessionType TEXT
           )
         ''');
         
@@ -199,6 +200,11 @@ class LocalStorageService {
           // Real blinds per hand (dead button / dead SB). Additive, idempotent.
           await _ensureHandsV21Columns(db);
         }
+        if (oldVersion < 22) {
+          // Hand groups (single-hand logging): sessions.sessionType. Additive,
+          // idempotent.
+          await _addColumnIfMissing(db, 'sessions', 'sessionType', 'TEXT');
+        }
       },
       onOpen: (db) async {
         // Self-healing: the range grid table is derived data and test
@@ -220,6 +226,11 @@ class LocalStorageService {
           await _ensureHandsV21Columns(db);
         } catch (e) {
           debugPrint('Error ensuring hands v21 columns: $e');
+        }
+        try {
+          await _addColumnIfMissing(db, 'sessions', 'sessionType', 'TEXT');
+        } catch (e) {
+          debugPrint('Error ensuring sessions sessionType column: $e');
         }
       },
     );
@@ -389,7 +400,8 @@ class LocalStorageService {
 
   /// All locally stored hands with the fields needed to backfill the range
   /// grid, joined with their session for userId/gameType fallbacks.
-  /// JSON columns are decoded.
+  /// JSON columns are decoded. Hand-group hands (single-hand logging) are
+  /// left out: they must never reach the range grid.
   static Future<List<Map<String, dynamic>>> getHandsForRangeBackfill() async {
     try {
       final db = await database;
@@ -400,6 +412,7 @@ class LocalStorageService {
                s.userId, s.gameType, s.bigBlind
         FROM hands h
         LEFT JOIN sessions s ON s.id = h.sessionId
+        WHERE s.sessionType IS NULL OR s.sessionType != 'hand_group'
       ''');
 
       return rows.map((row) {
@@ -439,6 +452,8 @@ class LocalStorageService {
     GameType gameType = GameType.cash,
     double? buyInAmount,
     bool isTutorial = false,
+    String? sessionType, // 'hand_group' for single-hand groups, else null
+    String? sessionName,
   }) async {
     try {
       final db = await database;
@@ -458,6 +473,8 @@ class LocalStorageService {
         'userName': AuthService.userDisplayName,
         'gameType': gameType.value,
         'isTutorial': isTutorial ? 1 : 0,
+        if (sessionType != null) 'sessionType': sessionType,
+        if (sessionName != null) 'sessionName': sessionName,
       };
 
       if (buyInAmount != null) {
@@ -769,7 +786,12 @@ class LocalStorageService {
   }
 
   // Get all sessions for current user
-  static Future<List<Map<String, dynamic>>> getUserSessions() async {
+  ///
+  /// Hand groups (single-hand logging, `sessionType == 'hand_group'`) are
+  /// left out unless [includeHandGroups]: they carry no money, stats or play
+  /// time, so aggregators must never see them. Only the session list asks.
+  static Future<List<Map<String, dynamic>>> getUserSessions(
+      {bool includeHandGroups = false}) async {
     try {
       final db = await database;
       final userId = AuthService.userId ?? 'anonymous';
@@ -780,6 +802,10 @@ class LocalStorageService {
         whereArgs: [userId],
         orderBy: 'startTime DESC',
       );
+      if (!includeHandGroups) {
+        sessions =
+            sessions.where((s) => s['sessionType'] != 'hand_group').toList();
+      }
 
       // Apply session history filtering based on subscription tier
       final cutoff = FreeTierLimits.sessionHistoryCutoff();

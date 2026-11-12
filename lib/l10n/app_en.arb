@@ -6978,5 +6978,101 @@
   "offersConsentBodyPaywall": "We can remind you about your plan options if you leave without choosing one. At most two a week. You can turn this off at any time in the app's Settings or your phone's notification settings.",
   "@offersConsentBodyPaywall": {
     "description": "Offers consent body shown to a user blocked by the hard paywall (they cannot see daily spots): only plan reminders."
-  }
+  },
+  "singleHandCardTitle": "Log a hand",
+  "singleHandCardSubtitle": "One hand, no session. Takes seconds.",
+  "singleHandFeature1": "Quick setup",
+  "singleHandFeature2": "Grouped by game",
+  "singleHandFeature3": "Not counted in stats",
+  "singleHandAddingTo": "Adding to: {name}",
+  "@singleHandAddingTo": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "singleHandNewGroup": "New group",
+  "singleHandChange": "Change",
+  "singleHandGroupHands": "Hands: {count}",
+  "@singleHandGroupHands": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "singleHandChooseGroup": "Add hand to",
+  "singleHandCash": "Cash",
+  "singleHandTourney": "Tourney",
+  "singleHandBlinds": "Blinds",
+  "singleHandBBAnte": "BB ante",
+  "singleHandCustomBlinds": "Custom…",
+  "singleHandEdit": "Edit",
+  "singleHandPlayers": "Players",
+  "singleHandYouAre": "You are",
+  "singleHandStack": "Stack",
+  "singleHandStackUnit": "BB, all players",
+  "singleHandStackUnitYours": "BB, your stack",
+  "singleHandUnitChips": "Chips",
+  "singleHandStackEqualsBB": "= {value} BB",
+  "@singleHandStackEqualsBB": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "singleHandStackEqualsChips": "= {value} chips",
+  "@singleHandStackEqualsChips": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "singleHandStackWarnChips": "That's {bb} BB. Did you mean chips?",
+  "@singleHandStackWarnChips": {
+    "placeholders": {
+      "bb": {
+        "type": "String"
+      }
+    }
+  },
+  "singleHandStackWarnMoney": "That's {bb} BB. Did you mean an amount of money?",
+  "@singleHandStackWarnMoney": {
+    "placeholders": {
+      "bb": {
+        "type": "String"
+      }
+    }
+  },
+  "singleHandStackWarnLow": "Less than 1 BB. Check the unit.",
+  "singleHandUseChips": "Use chips",
+  "singleHandUseMoney": "Use money",
+  "singleHandUseBB": "Use BB",
+  "singleHandSpreadSame": "Same",
+  "singleHandSpreadNear": "Near",
+  "singleHandSpreadSimilar": "Similar",
+  "singleHandCards": "Your cards (optional)",
+  "singleHandAddCards": "Add cards",
+  "singleHandStart": "Start hand",
+  "singleHandSmallBlind": "Small blind",
+  "singleHandBigBlind": "Big blind",
+  "singleHandBanner": "Single hand · not counted in stats",
+  "singleHandLeaveTitle": "Discard this hand?",
+  "singleHandLeaveBody": "The hand you logged will not be saved.",
+  "singleHandLeave": "Discard",
+  "singleHandSavedTitle": "Hand saved",
+  "singleHandNotesHint": "Add a note",
+  "singleHandTags": "Tags",
+  "singleHandTagBluff": "Bluff",
+  "singleHandTagHeroCall": "Hero call",
+  "singleHandTagBadBeat": "Bad beat",
+  "singleHandTagBigPot": "Big pot",
+  "singleHandTagReview": "Review",
+  "singleHandViewHand": "View hand",
+  "singleHandLogAnother": "Log another",
+  "singleHandDone": "Done",
+  "sessionHandsBadge": "Hands"
 }
