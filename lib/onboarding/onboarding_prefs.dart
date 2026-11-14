@@ -7,7 +7,6 @@ class OnboardingPrefs {
   static const _analysisField = 'tourAnalysisUsed';
   static const _paywallShownField = 'postTourPaywallShown';
   static const _paywallPendingField = 'postTourPaywallPending';
-  static const _signupRequiredField = 'postTourSignupRequired';
   static const _bankrollTourField = 'bankrollTourPending';
   static const _wrapUpPendingField = 'postTourWrapUpPending';
   static const _promoCongratsField = 'promoCongratsPending';
@@ -106,24 +105,6 @@ class OnboardingPrefs {
 
   static Future<void> clearPostTourPaywallPending() =>
       _writeFlag(_paywallPendingField, false);
-
-  // ── Post-tour sign-up gate (guests) ───────────────────────────────────
-  // Set when an anonymous guest finishes the tour, so that if they kill the
-  // app before linking an account, the next launch forces them back into the
-  // required sign-up instead of letting them keep using the app as a guest.
-  // Cleared once they successfully link. Persisted on the user doc (survives
-  // app kill / reinstall). Fails open on read error to avoid bricking an
-  // offline user; the flag is written while online at tour completion and
-  // served from Firestore's local cache thereafter.
-
-  static Future<bool> isPostTourSignupRequired() =>
-      _readFlag(_signupRequiredField, onError: false);
-
-  static Future<void> setPostTourSignupRequired() =>
-      _writeFlag(_signupRequiredField, true);
-
-  static Future<void> clearPostTourSignupRequired() =>
-      _writeFlag(_signupRequiredField, false);
 
   // ── Post-tour bankroll card tip ─────────────────────────────────────
   // Set at tour completion so the next Home visit shows the bankroll

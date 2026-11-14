@@ -159,7 +159,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
         card1 != null && card2 != null && card1.isNotEmpty && card2.isNotEmpty;
 
     // Mark the tour as pending completion up front: don't finish here (let the
-    // user read the analysis) — the completion dialog + guest sign-up fire only
+    // user read the analysis) — the completion dialog fires only
     // once they LEAVE this screen (SessionHandsScreen runs finishOnboardingTour
     // on return). Setting it before the await means leaving mid-analysis still
     // triggers completion.

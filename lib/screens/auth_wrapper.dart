@@ -13,8 +13,6 @@ import 'intro_screen.dart';
 import '../widgets/main_shell.dart';
 import 'hard_paywall_gate.dart';
 import 'onboarding/onboarding_flow.dart';
-import '../onboarding/onboarding_prefs.dart';
-import '../onboarding/onboarding_tour.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/typography.dart';
 import '../design_system/constants/decorations.dart';
@@ -144,6 +142,14 @@ class _AuthWrapperState extends State<AuthWrapper> {
           _loggedUnexpectedLogout = false;
           _wasSignedIn = true;  // Remember user was signed in
           _waitingForRecovery = false;
+          // Guest mode is removed. A legacy anonymous session (from a build
+          // before 2026-07-15) is signed out, and the user sees the Welcome
+          // screen. Do this before any service binds to the anonymous uid.
+          if (snapshot.data!.isAnonymous) {
+            _signOutLegacyGuest();
+            return _buildLoadingScreen(context);
+          }
+
           AuthService.clearExplicitLogoutFlag();
 
           // Process any pending deep link invitations
@@ -156,19 +162,6 @@ class _AuthWrapperState extends State<AuthWrapper> {
             PartnerGrantService.init(snapshot.data!.uid);
           });
 
-          // Anonymous guests skip the username/onboarding gates and go straight
-          // to Home, where the guided tour auto-starts (value-first funnel). Sign-up
-          // and the onboarding questions are deferred until AFTER the tour finishes.
-          // But once a guest has FINISHED the tour, sign-up is mandatory: if they
-          // killed the app before linking, force them back into it here (the flag
-          // is persisted, so it survives an app kill).
-          // Hard sign-up gate: anonymous sessions can no longer use the
-          // app. Any stray guest (pre-gate installs) is upgraded in place —
-          // GuestSignupGate links the account (uid preserved, data kept),
-          // then runs the onboarding questions + paywall.
-          if (AuthService.isAnonymous) {
-            return const GuestSignupGate();
-          }
 
           // Single combined gate: username + onboarding checked together
           _startupGateFuture ??= _checkStartupGate();
@@ -240,6 +233,20 @@ class _AuthWrapperState extends State<AuthWrapper> {
       },
     ),
     );
+  }
+
+  bool _signingOutLegacyGuest = false;
+
+  void _signOutLegacyGuest() {
+    if (_signingOutLegacyGuest) return;
+    _signingOutLegacyGuest = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      try {
+        await AuthService.signOut();
+      } finally {
+        _signingOutLegacyGuest = false;
+      }
+    });
   }
 
   Widget _buildLoadingScreen(BuildContext context) {

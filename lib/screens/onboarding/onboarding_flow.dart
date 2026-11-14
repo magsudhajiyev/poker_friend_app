@@ -28,16 +28,10 @@ class OnboardingFlow extends StatefulWidget {
   /// If true, skip Firestore writes and pop back when done (for dev testing).
   final bool testMode;
 
-  /// If true, pop back to the caller (with `true`) on completion instead of
-  /// resetting the nav stack to Home. Lets the guest post-tour chain continue
-  /// into the paywall after the questions finish.
-  final bool popOnComplete;
-
   const OnboardingFlow({
     super.key,
     this.skipNickname = false,
     this.testMode = false,
-    this.popOnComplete = false,
   });
 
   @override
@@ -213,9 +207,6 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
     if (widget.testMode) {
       // In test mode, just pop back to profile
       Navigator.pop(context);
-    } else if (widget.popOnComplete) {
-      // Guest post-tour chain: pop back so the caller can continue to the paywall.
-      Navigator.pop(context, true);
     } else {
       // In real flow, go to home. Drop the startup prefetch snapshot first —
       // it predates the flag writes above, and the gate re-runs after this

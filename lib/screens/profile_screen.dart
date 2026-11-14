@@ -20,7 +20,6 @@ import '../services/subscription_service.dart';
 import '../models/hand_state_machine.dart';
 import '../models/game_types.dart';
 import 'intro_screen.dart';
-import 'auth_screen_experimental.dart';
 import 'help_support_screen.dart';
 import 'username_setup_screen.dart';
 import 'poker_hand_screen.dart';
@@ -211,11 +210,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   void _showSignOutConfirmation() {
     final l10n = AppLocalizations.of(context);
-    // Guests lose access to their data permanently when signing out —
-    // there is no credential to sign back in with
-    final message = AuthService.isAnonymous
-        ? l10n.anonSignOutWarning
-        : l10n.profileSignOutConfirmation;
+    final message = l10n.profileSignOutConfirmation;
     ConfirmDialog.show(
       context,
       title: l10n.profileSignOut,
@@ -224,7 +219,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       onConfirm: () async {
         // Navigate to Intro FIRST so the logout registers on the first tap
         // regardless of auth-stream timing. Awaiting signOut() before
-        // navigating meant its auth-stream churn (worse for guests) could
+        // navigating meant its auth-stream churn could
         // trip AuthWrapper's "unexpected logout" recovery loading and leave
         // the user on the same screen. Removing AuthWrapper from the stack
         // here bypasses that; the sign-out clears the session in the
@@ -317,71 +312,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // ── Guest upgrade card ─────────────────────────────────────────────────────
-
-  Widget _buildGuestUpgradeCard(AppLocalizations l10n) {
-    return GestureDetector(
-      onTap: () async {
-        final linked = await Navigator.push<bool>(
-          context,
-          MaterialPageRoute(
-            builder: (_) => AuthScreenExperimental(linkMode: true),
-          ),
-        );
-        if (linked == true && mounted) {
-          setState(() {});
-          _showSnack(l10n.linkAccountSuccess, isSuccess: true);
-        }
-      },
-      behavior: HitTestBehavior.opaque,
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppColors.accentPrimary.withValues(alpha: 0.10),
-          borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
-          border: Border.all(
-            color: AppColors.accentPrimary.withValues(alpha: 0.35),
-          ),
-        ),
-        child: Row(
-          children: [
-            const Icon(Icons.cloud_upload_outlined,
-                color: AppColors.accentPrimary, size: 28),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    l10n.linkAccountTitle,
-                    style: AppTypography.ibm(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    l10n.linkAccountBody,
-                    style: AppTypography.ibm(
-                      fontSize: 13,
-                      color: _secondary,
-                      height: 20 / 13,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 8),
-            const Icon(Icons.chevron_right,
-                color: AppColors.accentPrimary, size: 22),
-          ],
-        ),
-      ),
-    );
-  }
-
   // ── Build ──────────────────────────────────────────────────────────────────
 
   @override
@@ -451,12 +381,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // ── Guest upgrade card ──────────────────────────────────
-                  if (AuthService.isAnonymous) ...[
-                    _buildGuestUpgradeCard(l10n),
-                    const SizedBox(height: 24),
-                  ],
-
                   // ── Avatar ──────────────────────────────────────────────
                   Center(
                     child: SizedBox(

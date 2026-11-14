@@ -64,8 +64,7 @@ class OnboardingState {
   /// SessionDetailsScreen after both tour hands are complete.
   static bool stackChartReturnTourPending = false;
 
-  /// Set after the phase-6 AI-analysis step so the tour completion (and guest
-  /// sign-up) fires only once the user LEAVES the hand-details screen — not
+  /// Set after the phase-6 AI-analysis step so the tour completion fires only once the user LEAVES the hand-details screen — not
   /// while they're still reading the analysis. Consumed on return to the
   /// hand-list screen.
   static bool tourCompletionPending = false;
