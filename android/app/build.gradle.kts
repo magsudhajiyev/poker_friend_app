@@ -18,6 +18,23 @@ if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 }
 
+// Meta SDK client token: root .env (META_CLIENT_TOKEN=...), then
+// android/local.properties (meta.clientToken), then the environment (CI).
+// Never committed, never logged.
+val metaClientToken: String = run {
+    val envFile = rootProject.file("../.env")
+    val fromEnvFile = if (envFile.exists()) {
+        envFile.readLines()
+            .firstOrNull { it.startsWith("META_CLIENT_TOKEN=") }
+            ?.substringAfter("=")?.trim()?.trim('"', '\'')
+    } else null
+    val localProps = Properties()
+    val localFile = rootProject.file("local.properties")
+    if (localFile.exists()) FileInputStream(localFile).use { localProps.load(it) }
+    listOf(fromEnvFile, localProps.getProperty("meta.clientToken"), System.getenv("META_CLIENT_TOKEN"))
+        .firstOrNull { !it.isNullOrBlank() } ?: ""
+}
+
 android {
     namespace = "com.finaltable.app"
     compileSdk = flutter.compileSdkVersion
@@ -44,6 +61,7 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        resValue("string", "facebook_client_token", metaClientToken)
     }
 
     signingConfigs {
@@ -64,6 +82,21 @@ android {
                 "proguard-rules.pro"
             )
             signingConfig = signingConfigs.getByName("release")
+        }
+    }
+}
+
+// Release builds must carry the Meta client token; debug only warns.
+gradle.taskGraph.whenReady {
+    val isRelease = allTasks.any { it.name.contains("Release", ignoreCase = true) && it.project == project }
+    if (metaClientToken.isEmpty()) {
+        if (isRelease) {
+            throw GradleException(
+                "META_CLIENT_TOKEN is missing. Add META_CLIENT_TOKEN=... to the repo-root .env " +
+                    "(or meta.clientToken to android/local.properties) before building a release."
+            )
+        } else {
+            logger.warn("WARNING: META_CLIENT_TOKEN missing; Meta SDK client token is empty (debug build).")
         }
     }
 }

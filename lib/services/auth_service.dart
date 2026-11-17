@@ -21,6 +21,7 @@ import 'subscription_service.dart';
 import 'username_service.dart';
 import 'display_identity_service.dart';
 import 'analytics_service.dart';
+import 'meta_attribution_service.dart';
 
 /// Thrown when Google sign-in detects an existing email/password account.
 /// The UI should catch this and show a password dialog to link accounts.
@@ -414,6 +415,8 @@ class AuthService {
               ? _auth.currentUser!.providerData.first.providerId
               : 'password');
       AnalyticsService.capture('signup', {'method': provider});
+      // New account only (this runs solely when the user doc is created).
+      MetaAttributionService.logRegistration(provider);
       unawaited(LoggerService.debug('User document created successfully for $uid'));
     } catch (e) {
       await LoggerService.error('Error creating user document', e, StackTrace.current);

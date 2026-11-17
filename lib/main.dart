@@ -36,6 +36,7 @@ import 'services/activity_heartbeat_service.dart';
 import 'services/notification_profile_sync.dart';
 import 'services/paid_nudge_service.dart';
 import 'services/analytics_service.dart';
+import 'services/meta_attribution_service.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'l10n/app_localizations.dart';
 import 'design_system/poker_friend_theme.dart';
@@ -92,6 +93,11 @@ void main() async {
   // PostHog product analytics — after EnvConfig (key) and Firebase (auth
   // stream drives identify/reset). Fire-and-forget; no-op without a key.
   unawaited(AnalyticsService.init());
+
+  // Meta SDK (install attribution + app events). Non-blocking; the iOS ATT
+  // prompt waits for a safe moment (after tour/paywall/sign-in).
+  MetaAttributionService.init();
+  MetaAttributionService.requestTrackingWhenSafe();
 
   // DAU heartbeat: stamps users/{uid}.lastActiveAt on sign-in (incl. the
   // persisted-session restore at launch); resume hook lives in
