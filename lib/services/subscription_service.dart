@@ -9,6 +9,7 @@ import 'partner_grant_service.dart';
 import 'revenuecat_client.dart';
 import 'subscription_logic.dart' as logic;
 import 'analytics_service.dart';
+import 'meta_attribution_service.dart';
 
 /// Service for managing subscriptions via RevenueCat
 ///
@@ -449,6 +450,19 @@ class SubscriptionService {
         'package_id': package.identifier,
         'tier': currentTier,
       });
+      // Meta attribution: start_trial OR purchase, at this one canonical
+      // site (never on restore). inTrial = the entitlement just bought is in
+      // its free-trial period, read from RevenueCat's periodType.
+      final price = outcome.priceAmount;
+      final currency = outcome.currencyCode;
+      if (price != null && currency != null) {
+        MetaAttributionService.logSubscription(
+          price: price,
+          currency: currency,
+          inTrial: outcome.entitlements!.topInTrial,
+          packageId: package.identifier,
+        );
+      }
       unawaited(LoggerService.logEvent('purchase_success', parameters: {
         'package_id': package.identifier,
         'tier': currentTier,

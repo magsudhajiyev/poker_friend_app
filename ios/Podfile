@@ -1,6 +1,9 @@
 # Uncomment this line to define a global platform for your project
 platform :ios, '15.5'
 
+# Regenerate ios/Flutter/Meta.xcconfig (Meta client token from .env) on every pod install.
+system('sh', File.expand_path('../../tool/gen_meta_config.sh', __FILE__)) or raise 'tool/gen_meta_config.sh failed'
+
 # CocoaPods analytics sends network stats synchronously affecting flutter build latency.
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
 

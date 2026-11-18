@@ -1,7 +1,7 @@
 name: poker_logger
 publish_to: "none"
 description: Final Table - Track your poker hands, stats, and bankroll
-version: 2.2.0+28
+version: 2.2.1+29
 
 
 environment:
@@ -61,6 +61,8 @@ dependencies:
   url_launcher: ^6.2.5  # Open URLs in browser (T&C, privacy policy)
   video_player: ^2.9.3  # Loading screen video animation
   posthog_flutter: ^5.36.2
+  facebook_app_events: ^0.32.0
+  app_tracking_transparency: ^2.0.7
 
 dependency_overrides:
   # Fix Linux plugin incompatibility (not needed for iOS/Android/macOS development)

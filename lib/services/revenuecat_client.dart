@@ -66,7 +66,18 @@ class PurchaseOutcome {
   final bool cancelled;
   final Object? error;
 
-  const PurchaseOutcome({this.entitlements, this.cancelled = false, this.error});
+  /// Store price + ISO currency of the purchased package (for attribution
+  /// events). Null when unknown.
+  final double? priceAmount;
+  final String? currencyCode;
+
+  const PurchaseOutcome({
+    this.entitlements,
+    this.cancelled = false,
+    this.error,
+    this.priceAmount,
+    this.currencyCode,
+  });
 
   bool get isSuccess => entitlements != null && !cancelled && error == null;
 }
@@ -156,7 +167,10 @@ class LiveRevenueCatClient implements RevenueCatClient {
       final result =
           await Purchases.purchase(PurchaseParams.package(package));
       return PurchaseOutcome(
-          entitlements: _fromCustomerInfo(result.customerInfo));
+        entitlements: _fromCustomerInfo(result.customerInfo),
+        priceAmount: package.storeProduct.price,
+        currencyCode: package.storeProduct.currencyCode,
+      );
     } on PlatformException catch (e) {
       // Canonical 9.x check, with the legacy details flag as fallback.
       final code = PurchasesErrorHelper.getErrorCode(e);

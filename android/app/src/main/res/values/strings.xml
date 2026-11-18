@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Meta (Facebook) SDK: app id is public. The client token is NOT here;
+         it is injected at build time as facebook_client_token (see build.gradle.kts). -->
+    <string name="facebook_app_id" translatable="false">1697608125404107</string>
+</resources>
