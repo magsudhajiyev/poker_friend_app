@@ -26,9 +26,11 @@ const ACTIONS = ['raise', 'call', 'check', 'fold', 'allin'];
 
 // Max hero decisions on any root->terminal path. A day is up to 5 hands and
 // firestore.rules for leaderboard_daily entries cap `verdicts` at 60 chars and
-// `weights` at 50 items: 5x10 letters + 4 '|' separators = 54 <= 60; 5x10
-// weights = 50 <= 50. Longer trees would silently fail the leaderboard write.
-const MAX_HERO_DECISIONS_PER_HAND = 10;
+// `weights` at 50 items. Each hand may ALSO carry one Range Read answer (one
+// extra verdict letter + weight), so a hand is up to 9 decisions + 1 = 10
+// letters: 5x(9+1) = 50 weights <= 50; 5x10 letters + 4 '|' separators = 54
+// chars <= 60. Longer trees would silently fail the leaderboard write.
+const MAX_HERO_DECISIONS_PER_HAND = 9;
 
 // Longest chain of hero decisions along any path (follows every child).
 // `nodes` = object keyed by id or array of nodes with {id, actor, children}.
@@ -206,13 +208,13 @@ function historyPath(spot, heroPos, villainPos) {
     const body = seg.slice(sm.index + sm[0].length);
     // Order matters: AI and multi-char tokens before single letters.
     const re = new RegExp(
-      `(${actorAlt})\\s+(AI(?:\\s*\\d+%?)?|b\\d*%?|r\\d*%?|x|c|f)\\b`,
+      `(${actorAlt})\\s+(AI(?:\\s*\\d+%?)?|Allin(?:\\s*[\\d.]+)?|Bet(?:\\s*[\\d.]+)?|Raise(?:\\s*[\\d.]+)?|b\\d*%?|r\\d*%?|x|c|f)\\b`,
       'g'
     );
     let m;
     while ((m = re.exec(body))) {
       let a = m[2].toLowerCase();
-      if (a.startsWith('ai')) a = 'ai';
+      if (a.startsWith('ai') || a.startsWith('allin')) a = 'ai';
       else if (a.startsWith('b')) a = 'b';
       else if (a.startsWith('r')) a = 'r';
       else if (a.startsWith('x')) a = 'x';
@@ -354,9 +356,6 @@ async function main() {
     }
     // Sizing sanity (the client needs a size for every real raise/bet).
     if ((row[ci.actor] === meta.heroPos ? 'hero' : 'villain') === 'hero') {
-      if (actions.includes('raise') && sizing.raise === undefined) {
-        console.warn(`WARN step ${row[ci.step]}: hero raise without a size`);
-      }
       if (
         sizing.raise !== undefined &&
         sizing.allin !== undefined &&
@@ -393,6 +392,7 @@ async function main() {
       rawActions,
       sizing,
       pot: potFromSizing,
+      spotPre: (row[ci.spot] || '').split(/→|->/)[0],
       prompt: (row[ci.spot] || '').split(/→|->/).slice(-1)[0].trim(),
       path: historyPath(row[ci.spot], meta.heroPos, meta.villainPos),
       freq: parseRange(row[ci.range]),
@@ -491,6 +491,27 @@ async function main() {
         .join('|');
       const child = byPath.get(childPath);
       n.children[a] = child ? child.id : null;
+    }
+  }
+
+  // Newer exports leave the bet size blank ("; bet recorded in raise slot")
+  // and only print it in the child's Spot history ("Flop: SB Bet 3.2, CO c").
+  // Recover it from there (same solver export, absolute bb), then warn for
+  // any hero raise that still has no size.
+  const byId = new Map(nodes.map((x) => [x.id, x]));
+  for (const n of nodes) {
+    if (!n.actions.includes('raise') || n.sizing.raise !== undefined) continue;
+    const child = byId.get(n.children.raise);
+    const who = n.actor === 'hero' ? meta.heroPos : meta.villainPos;
+    const seg = child && child.spotPre.split('|').pop();
+    const hits = seg
+      ? [...seg.matchAll(new RegExp(`\\b${reEsc(who)}\\s+(?:Bet|Raise)\\s+([\\d.]+)`, 'g'))]
+      : [];
+    if (hits.length) {
+      n.sizing.raise = parseFloat(hits[hits.length - 1][1]);
+      console.log(`derived size step ${n.step}: ${n.sizing.raise}bb (from child spot)`);
+    } else if (n.actor === 'hero') {
+      console.warn(`WARN step ${n.step}: hero raise without a size`);
     }
   }
 

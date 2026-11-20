@@ -56,6 +56,9 @@ const NO_VOICE = process.argv.includes('--no-voice');
 // Skip the interactive cost confirmation (for scripted/automated runs).
 const YES = process.argv.includes('--yes') || process.argv.includes('-y');
 const CSV = arg('csv', null);
+// --coach grinder|professor|nova: regenerate ONE coach only. The Firestore
+// write is a deep merge, so the other coaches' lines in the doc stay as-is.
+const ONLY_COACH = arg('coach', null);
 // check 10: --sample [N] generates feedback for N random hero nodes (default
 // 10) and writes a CSV for review — does NOT submit the full day, write
 // Firestore, or warm voice. Run this first, eyeball the CSV, then run for real.
@@ -96,9 +99,13 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 // ── personas ────────────────────────────────────────────────────────────────
 function loadCoaches() {
-  return ['duke.json', 'vega.json', 'nova.json'].map((f) =>
+  const all = ['duke.json', 'vega.json', 'nova.json'].map((f) =>
     JSON.parse(fs.readFileSync(path.join(COACHES_DIR, f), 'utf8'))
   );
+  if (!ONLY_COACH) return all;
+  const only = all.filter((c) => c.coachKey === ONLY_COACH);
+  if (!only.length) throw new Error(`--coach ${ONLY_COACH}: unknown coachKey`);
+  return only;
 }
 
 // ── solver bands (mirror AuthoredSpotGrader) ────────────────────────────────
@@ -321,8 +328,10 @@ async function loadHistory(coachKey) {
   const data = doc.exists ? doc.data() : {};
   const cutoff = daysAgoKey(DAY, 7);
   return {
-    openings: (data.openings || []).filter((o) => o.day >= cutoff),
-    concepts: (data.concepts || []).filter((c) => c.day >= cutoff),
+    // Skip this day's own entries so a re-run is not penalised for (or does
+    // not duplicate) the openings of its earlier run.
+    openings: (data.openings || []).filter((o) => o.day >= cutoff && o.day !== DAY),
+    concepts: (data.concepts || []).filter((c) => c.day >= cutoff && c.day !== DAY),
   };
 }
 async function saveHistory(coachKey, history, newOpenings, newConcepts) {
