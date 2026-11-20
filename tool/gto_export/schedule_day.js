@@ -53,7 +53,8 @@ async function main() {
   if (ids.length === 0 || ids.length > MAX_HANDS) {
     throw new Error(`--hands needs 1..${MAX_HANDS} tree ids (got ${ids.length})`);
   }
-  // Leaderboard rules cap a day at 50 weights (one per hero decision).
+  // Leaderboard rules cap a day at 50 weights (one per hero decision, plus one
+  // per hand for its optional Range Read answer).
   const { maxHeroDecisions } = require('./build_tree.js');
   const MAX_DAY_DECISIONS = 50;
   let total = 0;
@@ -62,11 +63,11 @@ async function main() {
     if (!spot.exists) throw new Error(`authored_spots/${id} does not exist — upload it first`);
     const d = spot.data();
     const tree = d.treeJson ? JSON.parse(d.treeJson) : d;
-    total += maxHeroDecisions(tree.nodes, tree.rootId);
+    total += maxHeroDecisions(tree.nodes, tree.rootId) + 1; // +1 Range Read
   }
   if (total > MAX_DAY_DECISIONS) {
     throw new Error(
-      `Day worst case is ${total} hero decisions (max ${MAX_DAY_DECISIONS}): ` +
+      `Day worst case is ${total} verdict letters (decisions + Range Reads) (max ${MAX_DAY_DECISIONS}): ` +
         'leaderboard writes would fail the rules limits. Pick shorter trees.'
     );
   }

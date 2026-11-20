@@ -5912,5 +5912,13 @@
   "singleHandViewHand": "Vezi mâna",
   "singleHandLogAnother": "Înregistrează alta",
   "singleHandDone": "Gata",
-  "sessionHandsBadge": "Mâini"
+  "sessionHandsBadge": "Mâini",
+  "rangeReadTitle": "Citirea range-ului",
+  "rangeReadQuestionAlso": "Care dintre aceste mâini ar face și ea {action} aici?",
+  "rangeReadQuestionNot": "Care dintre aceste mâini NU ar face {action} aici?",
+  "rangeReadFreq": "{pct}% {action}",
+  "rangeReadResultAlso": "Care mână ar face și ea {action}?",
+  "rangeReadResultNot": "Care mână NU ar face {action}?",
+  "rangeReadYouPicked": "Ai ales {hand}",
+  "rangeReadAnswerIs": "Răspuns: {hand} ({pct}%)"
 }

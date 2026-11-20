@@ -9,6 +9,7 @@ import '../l10n/app_localizations.dart';
 import '../services/daily_challenge_store.dart';
 import '../services/daily_scoring.dart';
 import 'playing_card_face.dart';
+import 'range_read_result_row.dart';
 
 /// The per-hand, street-by-street results breakdown for a Daily Challenge day.
 ///
@@ -193,6 +194,9 @@ class _DailyResultBreakdownState extends State<DailyResultBreakdown> {
   }
 
   Widget _spotRow(int n, DailySpotSummary spot) {
+    if (spot.isRangeRead) {
+      return RangeReadResultRow(number: n, spot: spot);
+    }
     final l10n = AppLocalizations.of(context);
     final (color, label) = switch (spot.verdict) {
       'c' => (AppColors.accentPrimary, l10n.dailyChallengeVerdictBest),

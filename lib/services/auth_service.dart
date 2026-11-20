@@ -278,10 +278,7 @@ class AuthService {
         nonce: nonce,
       );
 
-      final oauthCredential = OAuthProvider('apple.com').credential(
-        idToken: appleCredential.identityToken,
-        rawNonce: rawNonce,
-      );
+      final oauthCredential = _appleFirebaseCredential(appleCredential, rawNonce);
 
       final linked = await user.linkWithCredential(oauthCredential);
       if (linked.user != null) {
@@ -290,15 +287,18 @@ class AuthService {
         await _finalizeAnonymousLink(currentUser!, 'apple');
       }
       return linked;
-    } on FirebaseAuthException catch (e) {
+    } on FirebaseAuthException catch (e, st) {
       if (_isLinkConflict(e)) throw const AnonymousLinkConflictException();
+      unawaited(LoggerService.error('Apple link Firebase error: ${e.code}', e, st));
       throw _getAuthException(e);
-    } on SignInWithAppleAuthorizationException catch (e) {
+    } on SignInWithAppleAuthorizationException catch (e, st) {
       if (e.code == AuthorizationErrorCode.canceled) return null;
+      unawaited(LoggerService.error('Apple link failed: ${e.code}', e, st));
       throw 'Apple sign-in failed. Please try again.';
-    } catch (e) {
+    } catch (e, st) {
       if (e is AnonymousLinkConflictException) rethrow;
       if (e.toString().contains('AuthorizationErrorCode.canceled')) return null;
+      unawaited(LoggerService.error('Apple link failed', e, st));
       throw 'Apple sign-in failed. Please try again.';
     }
   }
@@ -689,6 +689,29 @@ class AuthService {
     return List.generate(length, (_) => charset[random.nextInt(charset.length)]).join();
   }
 
+  /// Firebase credential for an Apple ID result. Uses the Apple-specific
+  /// [AppleAuthProvider.credentialWithIDToken]: the generic
+  /// `OAuthProvider('apple.com').credential(idToken:, rawNonce:)` fails on iOS
+  /// with firebase_auth >= 5.2 ("Invalid OAuth response from apple.com",
+  /// flutterfire #13242), which blocked every Apple sign-in.
+  static OAuthCredential _appleFirebaseCredential(
+    AuthorizationCredentialAppleID appleCredential,
+    String rawNonce,
+  ) {
+    final idToken = appleCredential.identityToken;
+    if (idToken == null || idToken.isEmpty) {
+      throw 'Apple sign-in failed. Please try again.';
+    }
+    return AppleAuthProvider.credentialWithIDToken(
+      idToken,
+      rawNonce,
+      AppleFullPersonName(
+        givenName: appleCredential.givenName,
+        familyName: appleCredential.familyName,
+      ),
+    );
+  }
+
   /// SHA-256 hash of input string, returned as hex.
   static String _sha256ofString(String input) {
     final bytes = utf8.encode(input);
@@ -714,10 +737,7 @@ class AuthService {
         nonce: nonce,
       );
 
-      final oauthCredential = OAuthProvider('apple.com').credential(
-        idToken: appleCredential.identityToken,
-        rawNonce: rawNonce,
-      );
+      final oauthCredential = _appleFirebaseCredential(appleCredential, rawNonce);
 
       UserCredential userCredential;
 
@@ -749,17 +769,20 @@ class AuthService {
       return userCredential;
     } on AppleSignInAccountLinkException {
       rethrow; // Let UI handle this
-    } on SignInWithAppleAuthorizationException catch (e) {
+    } on SignInWithAppleAuthorizationException catch (e, st) {
       if (e.code == AuthorizationErrorCode.canceled) {
         return null; // User cancelled
       }
+      unawaited(LoggerService.error('Apple sign-in failed: ${e.code}', e, st));
       throw 'Apple sign-in failed. Please try again.';
-    } on FirebaseAuthException catch (e) {
+    } on FirebaseAuthException catch (e, st) {
+      unawaited(LoggerService.error('Apple sign-in Firebase error: ${e.code}', e, st));
       throw _getAuthException(e);
-    } catch (e) {
+    } catch (e, st) {
       if (e.toString().contains('AuthorizationErrorCode.canceled')) {
         return null;
       }
+      unawaited(LoggerService.error('Apple sign-in failed', e, st));
       throw 'Apple sign-in failed. Please try again.';
     }
   }

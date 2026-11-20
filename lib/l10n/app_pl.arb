@@ -5905,5 +5905,13 @@
   "singleHandViewHand": "Zobacz rozdanie",
   "singleHandLogAnother": "Zapisz kolejne",
   "singleHandDone": "Gotowe",
-  "sessionHandsBadge": "Rozdania"
+  "sessionHandsBadge": "Rozdania",
+  "rangeReadTitle": "Czytanie rangi",
+  "rangeReadQuestionAlso": "Która z tych rąk też zagrałaby tutaj {action}?",
+  "rangeReadQuestionNot": "Która z tych rąk NIE zagrałaby tutaj {action}?",
+  "rangeReadFreq": "{pct}% {action}",
+  "rangeReadResultAlso": "Która ręka też zagrałaby {action}?",
+  "rangeReadResultNot": "Która ręka NIE zagrałaby {action}?",
+  "rangeReadYouPicked": "Wybrano {hand}",
+  "rangeReadAnswerIs": "Odpowiedź: {hand} ({pct}%)"
 }

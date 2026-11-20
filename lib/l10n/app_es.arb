@@ -5905,5 +5905,13 @@
   "singleHandViewHand": "Ver mano",
   "singleHandLogAnother": "Registrar otra",
   "singleHandDone": "Listo",
-  "sessionHandsBadge": "Manos"
+  "sessionHandsBadge": "Manos",
+  "rangeReadTitle": "Lectura de rango",
+  "rangeReadQuestionAlso": "¿Cuál de estas manos también haría {action} aquí?",
+  "rangeReadQuestionNot": "¿Cuál de estas manos NO haría {action} aquí?",
+  "rangeReadFreq": "{pct}% {action}",
+  "rangeReadResultAlso": "¿Qué mano también haría {action}?",
+  "rangeReadResultNot": "¿Qué mano NO haría {action}?",
+  "rangeReadYouPicked": "Elegiste {hand}",
+  "rangeReadAnswerIs": "Respuesta: {hand} ({pct}%)"
 }

@@ -12,6 +12,7 @@ import '../../services/authored_tree_service.dart';
 import '../../services/coach_persona.dart';
 import '../../services/daily_challenge_service.dart';
 import '../../services/daily_challenge_store.dart';
+import '../../services/range_read_logic.dart';
 import '../../widgets/daily_result_breakdown.dart';
 import 'authored_challenge_screen.dart';
 import 'drill_table_screen.dart';
@@ -126,6 +127,7 @@ class _DailyReplayScreenState extends State<DailyReplayScreen> {
     List<String> facing = const [],
         heroLabels = const [],
         bestLabels = const [];
+    List<List<RangeReadAnswer>> quizzes = const [];
 
     if (trees != null) {
       final dayTrees = trees;
@@ -151,6 +153,7 @@ class _DailyReplayScreenState extends State<DailyReplayScreen> {
       facing = [for (final o in outcomes) ...o.facing];
       heroLabels = [for (final o in outcomes) ...o.heroLabels];
       bestLabels = [for (final o in outcomes) ...o.bestLabels];
+      quizzes = [for (final o in outcomes) o.quizzes];
     } else {
       final records = await Navigator.push<List<DrillDecisionRecord>>(
         context,
@@ -195,6 +198,7 @@ class _DailyReplayScreenState extends State<DailyReplayScreen> {
       facing: facing,
       heroLabels: heroLabels,
       bestLabels: bestLabels,
+      quizzes: quizzes,
     );
     if (!focused) await DailyReplayStore.save(result); // never throws
     if (!mounted) return;

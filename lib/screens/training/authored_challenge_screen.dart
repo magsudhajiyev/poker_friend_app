@@ -22,10 +22,14 @@ import '../../services/coach_level_resolver.dart';
 import '../../services/coach_persona.dart';
 import '../../services/coach_voice_service.dart';
 import '../../services/daily_coach_lines_service.dart';
+import '../../services/feature_flag_service.dart';
 import '../../services/logger_service.dart';
+import '../../services/range_read_logic.dart';
+import '../../services/range_read_phrases.dart';
 import '../../widgets/authored_range_grid.dart';
 import '../../widgets/coach_mascot.dart';
 import '../../widgets/hand_micro_animations.dart';
+import '../../widgets/playing_card_face.dart';
 import '../../utils/coach_text.dart';
 import '../../widgets/poker_table_widget.dart';
 
@@ -65,6 +69,10 @@ class AuthoredChallengeScreen extends StatefulWidget {
   /// sees the decision). Only ever set on UNRANKED replays.
   final AuthoredAction? autoFirstAction;
 
+  /// Whether this run MAY ask a Range Read question (also needs the remote
+  /// `range_read` flag). The onboarding demo passes false.
+  final bool rangeRead;
+
   const AuthoredChallengeScreen({
     super.key,
     required this.tree,
@@ -75,6 +83,7 @@ class AuthoredChallengeScreen extends StatefulWidget {
     this.onHandComplete,
     this.lastHandLabel,
     this.autoFirstAction,
+    this.rangeRead = true,
   });
 
   @override
@@ -96,8 +105,13 @@ class AuthoredHandOutcome {
   final List<String> facing;
   final List<String> heroLabels;
   final List<String> bestLabels;
+
+  /// Range Read answers of this hand (at most one), each tagged with the
+  /// decision index it followed. Empty when none was asked.
+  final List<RangeReadAnswer> quizzes;
   const AuthoredHandOutcome(this.records, this.potWeights, this.streets,
-      this.boards, this.facing, this.heroLabels, this.bestLabels);
+      this.boards, this.facing, this.heroLabels, this.bestLabels,
+      [this.quizzes = const []]);
 }
 
 /// Plays the day's authored hands back to back in ONE route: each hand is a
@@ -118,8 +132,12 @@ class AuthoredDayRunner extends StatefulWidget {
   /// Forwarded to the FIRST hand only (see [AuthoredChallengeScreen]).
   final AuthoredAction? autoFirstAction;
 
+  /// See [AuthoredChallengeScreen.rangeRead].
+  final bool rangeRead;
+
   const AuthoredDayRunner(
       {super.key,
+      this.rangeRead = true,
       required this.trees,
       required this.persona,
       required this.dayKey,
@@ -154,6 +172,7 @@ class _AuthoredDayRunnerState extends State<AuthoredDayRunner> {
         onHandComplete: _onHandComplete,
         lastHandLabel: widget.lastHandLabel,
         autoFirstAction: _hand == 0 ? widget.autoFirstAction : null,
+        rangeRead: widget.rangeRead,
       );
 }
 
@@ -179,6 +198,33 @@ class _AuthoredChallengeScreenState extends State<AuthoredChallengeScreen> {
   final List<String> _facing = [];
   final List<String> _heroLabels = [];
   final List<String> _bestLabels = [];
+
+  // ── Range Read (one optional coach question per hand) ───────────────────
+  /// This hand's answers (at most one), and bookkeeping for which eligible
+  /// decision gets the question (see [RangeReadLogic.plan]).
+  final List<RangeReadAnswer> _rrAnswers = [];
+  int _rrEligibleSeen = 0;
+  bool _rrAsked = false;
+
+  /// The question of the decision currently in feedback (null = none) and the
+  /// option the player tapped (null = unanswered).
+  RangeReadQuestion? _rrQuestion;
+  int? _rrChosen;
+  bool _rrSpoken = false;
+
+  /// True once THIS decision's verdict has really been revealed (the shared
+  /// `_verdictRevealed` flag can be stale-true right after acting).
+  bool _rrReady = false;
+
+  bool get _rangeReadOn => RangeReadLogic.enabled(
+      screenAllows: widget.rangeRead,
+      flagOn: FeatureFlagService.isEnabled(FeatureFlagService.rangeRead));
+
+  /// Question shown but not answered yet — gates Show range / Next.
+  bool get _rrPending => _rrQuestion != null && _rrChosen == null;
+
+  String get _rrSeed =>
+      '${widget.dayKey}|${_tree.id}|${_lastGradedNode?.id ?? ''}';
 
   bool get _lastHand => widget.handNumber >= widget.handCount;
   int _index = 0; // decisions made so far (persona lead rotation + numbering)
@@ -375,6 +421,28 @@ class _AuthoredChallengeScreenState extends State<AuthoredChallengeScreen> {
       scenario: DrillScenario.vsRaise, // nominal; not used by the host
       result: grade,
     ));
+    _rrQuestion = null;
+    _rrChosen = null;
+    _rrSpoken = false;
+    _rrReady = false;
+    if (_rangeReadOn) {
+      final plan = RangeReadLogic.plan(
+        dayKey: widget.dayKey,
+        tree: _tree,
+        node: node,
+        picked: action,
+        eligibleSeen: _rrEligibleSeen,
+        alreadyAsked: _rrAsked,
+        handOver: _walker.isOver,
+        letterCount: _records.length + _rrAnswers.length,
+      );
+      if (plan.ask) {
+        _rrQuestion = plan.question;
+        _rrAsked = true;
+      } else if (plan.eligible) {
+        _rrEligibleSeen++;
+      }
+    }
     // Record the hero's committed chip/tag at their seat — and remember it
     // per-street so the chip survives into the next decision on the same
     // street (e.g. the preflop open while facing the 3-bet).
@@ -448,6 +516,7 @@ class _AuthoredChallengeScreenState extends State<AuthoredChallengeScreen> {
   }
 
   void _next() {
+    if (_rrPending) return;
     HapticFeedback.selectionClick();
     if (_done) {
       final outcome = AuthoredHandOutcome(
@@ -458,6 +527,7 @@ class _AuthoredChallengeScreenState extends State<AuthoredChallengeScreen> {
         List<String>.unmodifiable(_facing),
         List<String>.unmodifiable(_heroLabels),
         List<String>.unmodifiable(_bestLabels),
+        List<RangeReadAnswer>.unmodifiable(_rrAnswers),
       );
       if (!_lastHand && widget.onHandComplete != null) {
         // Next hand: its own setup line replaces this clip (no stop() —
@@ -478,6 +548,8 @@ class _AuthoredChallengeScreenState extends State<AuthoredChallengeScreen> {
     setState(() {
       _phase = _Phase.acting;
       _lastGrade = null;
+      _rrQuestion = null;
+      _rrChosen = null;
       _heroActionTaken = null;
       // Reveal the villain's response now (animates in with the setup line).
       _villainRevealed = true;
@@ -599,7 +671,39 @@ class _AuthoredChallengeScreenState extends State<AuthoredChallengeScreen> {
         _sawVoiceLoading &&
         !_verdictRevealed) {
       _revealVerdict(); // fetch failed or muted mid-flight — show anyway
+    } else if (state == CoachSpeechState.idle) {
+      _speakRangeReadQuestion(); // verdict clip ended → ask the question
     }
+  }
+
+  /// Speaks the Range Read intro + question once, after the verdict clip has
+  /// finished. Fire-and-forget: a failed/muted voice just leaves the text.
+  void _speakRangeReadQuestion() {
+    final q = _rrQuestion;
+    if (q == null || _rrSpoken || _rrChosen != null || !_rrReady) {
+      return;
+    }
+    if (_phase != _Phase.feedback) return;
+    _rrSpoken = true;
+    final intro = RangeReadPhrases.intro(widget.persona.id, _rrSeed);
+    CoachVoiceService.speak('$intro ${RangeReadPhrases.spokenQuestion(q)}',
+        coachId: widget.persona.id);
+  }
+
+  /// The player tapped option [i] of the Range Read question.
+  void _answerRangeRead(int i) {
+    final q = _rrQuestion;
+    if (q == null || _rrChosen != null || !_rrReady) return;
+    final answer = RangeReadAnswer(
+        question: q, chosen: i, afterDecision: _records.length - 1);
+    _rrAnswers.add(answer);
+    setState(() => _rrChosen = i);
+    HapticFeedback.mediumImpact();
+    ChallengeSoundService.playVerdict(
+        answer.right ? DrillGrade.correct : DrillGrade.mistake);
+    CoachVoiceService.speak(
+        RangeReadPhrases.reaction(widget.persona.id, answer.right, _rrSeed),
+        coachId: widget.persona.id);
   }
 
   void _revealVerdict() {
@@ -607,7 +711,10 @@ class _AuthoredChallengeScreenState extends State<AuthoredChallengeScreen> {
     _revealCap?.cancel();
     if (_verdictRevealed || !mounted) return;
     final grade = _lastGrade;
-    setState(() => _verdictRevealed = true);
+    setState(() {
+      _verdictRevealed = true;
+      _rrReady = true;
+    });
     if (grade == null) return;
     // Melody + haptic fire AT the reveal (they're a verdict spoiler otherwise).
     HapticFeedback.mediumImpact();
@@ -1390,9 +1497,15 @@ class _AuthoredChallengeScreenState extends State<AuthoredChallengeScreen> {
       DrillGrade.ok => (_gold, 'GOOD'),
       DrillGrade.mistake => (_red, 'LEAK'),
     };
-    final expression = revealed
-        ? CoachMascot.expressionFor(grade.grade)
-        : CoachExpression.idle;
+    final rrAnswered = _rrQuestion != null && _rrChosen != null;
+    final expression = rrAnswered
+        ? CoachMascot.expressionFor(
+            _rrChosen == _rrQuestion!.correctIndex
+                ? DrillGrade.correct
+                : DrillGrade.mistake)
+        : revealed
+            ? CoachMascot.expressionFor(grade.grade)
+            : CoachExpression.idle;
 
     // The WHOLE coach section is tinted by the verdict (green/gold/red) —
     // neutral while still "evaluating" so the color doesn't spoil the verdict.
@@ -1431,7 +1544,8 @@ class _AuthoredChallengeScreenState extends State<AuthoredChallengeScreen> {
                   // table above (the buttons below stay pinned). ~26% of the
                   // screen keeps the table roomy on every device.
                   constraints: BoxConstraints(
-                    maxHeight: MediaQuery.sizeOf(context).height * 0.26,
+                    maxHeight: MediaQuery.sizeOf(context).height *
+                        (_rrQuestion != null ? 0.18 : 0.26),
                   ),
                   padding: EdgeInsets.only(left: mascot),
                   // NO alignment: an `alignment` here would make the Container
@@ -1516,7 +1630,11 @@ class _AuthoredChallengeScreenState extends State<AuthoredChallengeScreen> {
                   ),
                 ),
                 const SizedBox(height: AppSpacing.sm),
-                if (revealed)
+                if (revealed && _rrQuestion != null && _rrReady) ...[
+                  _rangeReadPanel(l10n),
+                  const SizedBox(height: AppSpacing.sm),
+                ],
+                if (revealed && !_rrPending)
                   Row(
                     children: [
                       Expanded(
@@ -1560,6 +1678,123 @@ class _AuthoredChallengeScreenState extends State<AuthoredChallengeScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  /// The Range Read question: coach line, localized question, three hand
+  /// options. After the tap each option shows its solver frequency and the
+  /// right/wrong colouring, and the coach's reaction replaces the intro.
+  Widget _rangeReadPanel(AppLocalizations l10n) {
+    final q = _rrQuestion!;
+    final chosen = _rrChosen;
+    final answered = chosen != null;
+    final right = answered && chosen == q.correctIndex;
+    final question = q.type == RangeReadType.also
+        ? l10n.rangeReadQuestionAlso(q.actionWord)
+        : l10n.rangeReadQuestionNot(q.actionWord);
+    final coachLine = answered
+        ? RangeReadPhrases.reaction(widget.persona.id, right, _rrSeed)
+        : RangeReadPhrases.intro(widget.persona.id, _rrSeed);
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '${l10n.rangeReadTitle.toUpperCase()} · $coachLine',
+          style: AppTypography.ibm(
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+              color: AppColors.textSecondary),
+        ),
+        const SizedBox(height: 2),
+        Text(question,
+            style: AppTypography.ibm(
+                fontSize: 14.5,
+                fontWeight: FontWeight.w600,
+                height: 1.3,
+                color: Colors.white)),
+        const SizedBox(height: AppSpacing.xxs),
+        Row(
+          children: [
+            for (var i = 0; i < q.options.length; i++) ...[
+              if (i > 0) const SizedBox(width: AppSpacing.xxs),
+              Expanded(child: _rangeReadOption(l10n, q, i)),
+            ],
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _rangeReadOption(
+      AppLocalizations l10n, RangeReadQuestion q, int i) {
+    final o = q.options[i];
+    final answered = _rrChosen != null;
+    final isCorrect = i == q.correctIndex;
+    final isChosen = _rrChosen == i;
+    final color = !answered
+        ? Colors.white.withValues(alpha: 0.35)
+        : isCorrect
+            ? _green
+            : isChosen
+                ? _red
+                : Colors.white.withValues(alpha: 0.15);
+    return Material(
+      color: color.withValues(alpha: answered ? 0.14 : 0.06),
+      borderRadius: BorderRadius.circular(AppDecorations.cardRadius),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(AppDecorations.cardRadius),
+        onTap: answered ? null : () => _answerRangeRead(i),
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+              vertical: AppSpacing.xs, horizontal: AppSpacing.xxxs),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(AppDecorations.cardRadius),
+            border: Border.all(color: color, width: isChosen || (answered && isCorrect) ? 2 : 1),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (o.cards.length == 2)
+                LayoutBuilder(builder: (context, c) {
+                  final w = (c.maxWidth * 0.32).clamp(18.0, 28.0);
+                  return Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      PlayingCardFace(o.cards[0], width: w),
+                      const SizedBox(width: AppSpacing.xxxs / 2),
+                      PlayingCardFace(o.cards[1], width: w),
+                    ],
+                  );
+                })
+              else
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(o.hand,
+                      style: AppTypography.mono(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white)),
+                ),
+              if (answered) ...[
+                const SizedBox(height: 2),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    l10n.rangeReadFreq(
+                        (o.freq * 100).round().toString(), q.actionWord),
+                    style: AppTypography.ibm(
+                        fontSize: 11.5,
+                        color: isCorrect
+                            ? _green
+                            : (isChosen ? _red : AppColors.textSecondary)),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
       ),
     );
   }

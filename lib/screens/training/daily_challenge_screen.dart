@@ -22,6 +22,7 @@ import '../../services/coach_persona.dart';
 import '../../services/coach_voice_service.dart';
 import '../../services/daily_challenge_service.dart';
 import '../../services/daily_challenge_store.dart';
+import '../../services/range_read_logic.dart';
 import '../../services/daily_rollover.dart';
 import '../../services/feature_flag_service.dart';
 import '../../services/leaderboard_service.dart';
@@ -30,6 +31,7 @@ import '../../services/paid_nudge_service.dart';
 import '../../services/streak_saver_service.dart';
 import '../../services/username_service.dart';
 import '../../services/auth_service.dart';
+import '../../widgets/range_read_result_row.dart';
 import '../../widgets/coach_mascot.dart';
 import '../../widgets/hand_micro_animations.dart';
 import '../../widgets/offers_consent_sheet.dart';
@@ -285,6 +287,7 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen>
     List<String> facing = const [],
         heroLabels = const [],
         bestLabels = const [];
+    List<List<RangeReadAnswer>> quizzes = const [];
     if (trees != null) {
       final outcomes = await Navigator.push<List<AuthoredHandOutcome>>(
         context,
@@ -303,6 +306,7 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen>
       facing = [for (final o in outcomes) ...o.facing];
       heroLabels = [for (final o in outcomes) ...o.heroLabels];
       bestLabels = [for (final o in outcomes) ...o.bestLabels];
+      quizzes = [for (final o in outcomes) o.quizzes];
     } else {
       final records = await Navigator.push<List<DrillDecisionRecord>>(
         context,
@@ -341,6 +345,7 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen>
       facing: facing,
       heroLabels: heroLabels,
       bestLabels: bestLabels,
+      quizzes: quizzes,
     );
     await DailyChallengeStore.save(result);
     final streaks = await DailyChallengeStore.streaks(config.day);
@@ -1258,6 +1263,9 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen>
   static bool _isRed(String card) => card.endsWith('♥') || card.endsWith('♦');
 
   Widget _spotRow(int n, DailySpotSummary spot) {
+    if (spot.isRangeRead) {
+      return RangeReadResultRow(number: n, spot: spot);
+    }
     final l10n = AppLocalizations.of(context);
     final (color, label) = switch (spot.verdict) {
       'c' => (AppColors.accentPrimary, l10n.dailyChallengeVerdictBest),

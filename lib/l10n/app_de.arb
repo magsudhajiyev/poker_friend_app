@@ -5905,5 +5905,13 @@
   "singleHandViewHand": "Hand ansehen",
   "singleHandLogAnother": "Weitere erfassen",
   "singleHandDone": "Fertig",
-  "sessionHandsBadge": "Hände"
+  "sessionHandsBadge": "Hände",
+  "rangeReadTitle": "Range-Read",
+  "rangeReadQuestionAlso": "Welche dieser Hände würde hier ebenfalls {action} spielen?",
+  "rangeReadQuestionNot": "Welche dieser Hände würde hier NICHT {action} spielen?",
+  "rangeReadFreq": "{pct}% {action}",
+  "rangeReadResultAlso": "Welche Hand würde ebenfalls {action} spielen?",
+  "rangeReadResultNot": "Welche Hand würde NICHT {action} spielen?",
+  "rangeReadYouPicked": "Du hast {hand} gewählt",
+  "rangeReadAnswerIs": "Antwort: {hand} ({pct}%)"
 }

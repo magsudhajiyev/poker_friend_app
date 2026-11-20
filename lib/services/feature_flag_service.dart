@@ -63,6 +63,7 @@ class FeatureFlagService {
   static const String liveInsights = 'live_insights';
   static const String paidNudges = 'paid_nudges';
   static const String singleHand = 'single_hand';
+  static const String rangeRead = 'range_read';
 
   static const List<FeatureFlag> all = [
     FeatureFlag(
@@ -137,6 +138,14 @@ class FeatureFlagService {
       'One-hand logging from the + button: no session, no stats, hands are '
       'grouped into hand groups. OFF = the entry card does not exist.',
       defaultMode: FlagMode.adminOnly,
+    ),
+    FeatureFlag(
+      rangeRead,
+      'Range Read',
+      'Daily Challenge (authored days): about once per hand the coach asks '
+      'which of 3 hands would also/not take the action you picked; the '
+      'answer counts in the day score. OFF = no question.',
+      defaultMode: FlagMode.off,
     ),
   ];
 

@@ -7074,5 +7074,68 @@
   "singleHandViewHand": "View hand",
   "singleHandLogAnother": "Log another",
   "singleHandDone": "Done",
-  "sessionHandsBadge": "Hands"
+  "sessionHandsBadge": "Hands",
+  "rangeReadTitle": "Range read",
+  "rangeReadQuestionAlso": "Which of these hands would also {action} here?",
+  "@rangeReadQuestionAlso": {
+    "placeholders": {
+      "action": {
+        "type": "String"
+      }
+    }
+  },
+  "rangeReadQuestionNot": "Which of these hands would NOT {action} here?",
+  "@rangeReadQuestionNot": {
+    "placeholders": {
+      "action": {
+        "type": "String"
+      }
+    }
+  },
+  "rangeReadFreq": "{pct}% {action}",
+  "@rangeReadFreq": {
+    "placeholders": {
+      "pct": {
+        "type": "String"
+      },
+      "action": {
+        "type": "String"
+      }
+    }
+  },
+  "rangeReadResultAlso": "Which hand would also {action}?",
+  "@rangeReadResultAlso": {
+    "placeholders": {
+      "action": {
+        "type": "String"
+      }
+    }
+  },
+  "rangeReadResultNot": "Which hand would NOT {action}?",
+  "@rangeReadResultNot": {
+    "placeholders": {
+      "action": {
+        "type": "String"
+      }
+    }
+  },
+  "rangeReadYouPicked": "You picked {hand}",
+  "@rangeReadYouPicked": {
+    "placeholders": {
+      "hand": {
+        "type": "String"
+      }
+    }
+  },
+  "rangeReadAnswerIs": "Answer: {hand} ({pct}%)",
+  "@rangeReadAnswerIs": {
+    "placeholders": {
+      "hand": {
+        "type": "String"
+      },
+      "pct": {
+        "type": "String"
+      }
+    }
+  }
 }
