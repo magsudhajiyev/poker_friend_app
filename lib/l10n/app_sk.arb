@@ -5940,5 +5940,13 @@
   "singleHandViewHand": "Zobraziť handu",
   "singleHandLogAnother": "Zapísať ďalšiu",
   "singleHandDone": "Hotovo",
-  "sessionHandsBadge": "Handy"
+  "sessionHandsBadge": "Handy",
+  "rangeReadTitle": "Čítanie rozsahu",
+  "rangeReadQuestionAlso": "Ktorá z týchto rúk by tu tiež zahrala {action}?",
+  "rangeReadQuestionNot": "Ktorá z týchto rúk by tu NEzahrala {action}?",
+  "rangeReadFreq": "{pct}% {action}",
+  "rangeReadResultAlso": "Ktorá ruka by tiež zahrala {action}?",
+  "rangeReadResultNot": "Ktorá ruka by NEzahrala {action}?",
+  "rangeReadYouPicked": "Vybrali ste {hand}",
+  "rangeReadAnswerIs": "Odpoveď: {hand} ({pct}%)"
 }

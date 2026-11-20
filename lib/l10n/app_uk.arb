@@ -5912,5 +5912,13 @@
   "singleHandViewHand": "Відкрити роздачу",
   "singleHandLogAnother": "Записати ще",
   "singleHandDone": "Готово",
-  "sessionHandsBadge": "Роздачі"
+  "sessionHandsBadge": "Роздачі",
+  "rangeReadTitle": "Читання рейнджу",
+  "rangeReadQuestionAlso": "Яка з цих рук теж зробила б {action} тут?",
+  "rangeReadQuestionNot": "Яка з цих рук НЕ зробила б {action} тут?",
+  "rangeReadFreq": "{pct}% {action}",
+  "rangeReadResultAlso": "Яка рука теж зробила б {action}?",
+  "rangeReadResultNot": "Яка рука НЕ зробила б {action}?",
+  "rangeReadYouPicked": "Ви обрали {hand}",
+  "rangeReadAnswerIs": "Відповідь: {hand} ({pct}%)"
 }

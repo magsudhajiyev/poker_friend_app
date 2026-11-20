@@ -91,6 +91,8 @@ class _DemoChallengeStepState extends State<DemoChallengeStep> {
               trees: [trees.first],
               persona: persona,
               dayKey: dayKey,
+              // The taster never asks a Range Read question.
+              rangeRead: false,
               // Demo has no results screen after it → the final button just
               // finishes and advances the onboarding flow.
               lastHandLabel: AppLocalizations.of(context).onboardingDemoDone,

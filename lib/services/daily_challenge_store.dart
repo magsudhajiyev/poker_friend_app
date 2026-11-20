@@ -7,6 +7,7 @@ import '../models/drill_models.dart';
 import 'auth_service.dart';
 import 'daily_challenge_service.dart';
 import 'daily_scoring.dart';
+import 'range_read_logic.dart';
 
 /// One completed day of the Daily Challenge, as persisted.
 class DailyChallengeResult {
@@ -82,6 +83,12 @@ class DailyChallengeResult {
   /// detail, flattened and aligned (empty on RNG days). [trees] is the
   /// authored day's trees (null on RNG days) — used for real card faces and
   /// the 'LJ vs BTN' matchup label.
+  ///
+  /// [quizzes] (authored days, optional) holds each hand's Range Read answers.
+  /// Each becomes ONE extra verdict letter placed right after the decision it
+  /// followed, weighted with that decision's pot, plus its own summary row
+  /// (`kind` 'rr'). [weights] and the per-decision detail lists stay indexed
+  /// by DECISION; the merge happens here.
   static DailyChallengeResult build({
     required String dayKey,
     required int seed,
@@ -94,38 +101,70 @@ class DailyChallengeResult {
     List<String> facing = const [],
     List<String> heroLabels = const [],
     List<String> bestLabels = const [],
+    List<List<RangeReadAnswer>> quizzes = const [],
   }) {
     String letter(DrillDecisionRecord r) =>
         DailyChallengeService.verdictLetter(r.result.grade);
+    final letters = <String>[];
+    final outWeights = <double>[];
+    final spots = <DailySpotSummary>[];
     var flat = 0; // index into the flattened per-decision detail lists
+    var wOffset = 0; // index into the flat decision weights
+    for (var i = 0; i < hands.length; i++) {
+      final qs = i < quizzes.length ? quizzes[i] : const <RangeReadAnswer>[];
+      final hasTree = trees != null && i < trees.length;
+      final heroCards = hasTree ? trees[i].heroCards.join(' ') : '';
+      final pos = hasTree
+          ? '${trees[i].heroPosition} vs ${trees[i].villainPosition}'
+          : '';
+      final handLetters = StringBuffer();
+      for (var j = 0; j < hands[i].length; j++) {
+        final r = hands[i][j];
+        final f = flat++;
+        final w = wOffset + j < weights.length ? weights[wOffset + j] : 1.0;
+        final street = f < streets.length ? streets[f] : '';
+        final board = f < boards.length ? boards[f] : const <String>[];
+        handLetters.write(letter(r));
+        if (weights.isNotEmpty) outWeights.add(w);
+        spots.add(DailySpotSummary(
+          handClass: hasTree ? heroCards : r.handClass,
+          position: hasTree ? pos : r.position,
+          heroAction: r.result.heroAction,
+          recommendedAction: r.result.recommendedAction,
+          verdict: letter(r),
+          hand: i,
+          board: board,
+          facing: f < facing.length ? facing[f] : '',
+          heroLabel: f < heroLabels.length ? heroLabels[f] : '',
+          recommendedLabel: f < bestLabels.length ? bestLabels[f] : '',
+          street: street,
+        ));
+        for (final q in qs.where((q) => q.afterDecision == j)) {
+          handLetters.write(q.letter);
+          if (weights.isNotEmpty) outWeights.add(w);
+          spots.add(DailySpotSummary(
+            handClass: heroCards,
+            position: pos,
+            heroAction: '',
+            recommendedAction: '',
+            verdict: q.letter,
+            hand: i,
+            board: board,
+            street: street,
+            rangeRead: q,
+          ));
+        }
+      }
+      wOffset += hands[i].length;
+      letters.add(handLetters.toString());
+    }
     return DailyChallengeResult(
       dayKey: dayKey,
       seed: seed,
-      verdicts:
-          DailyScoring.encode([for (final h in hands) h.map(letter).join()]),
-      weights: weights,
+      verdicts: DailyScoring.encode(letters),
+      weights: outWeights,
       durationMs: durationMs,
-      spots: [
-        for (var i = 0; i < hands.length; i++)
-          for (final r in hands[i])
-            DailySpotSummary(
-              handClass: trees != null && i < trees.length
-                  ? trees[i].heroCards.join(' ')
-                  : r.handClass,
-              position: trees != null && i < trees.length
-                  ? '${trees[i].heroPosition} vs ${trees[i].villainPosition}'
-                  : r.position,
-              heroAction: r.result.heroAction,
-              recommendedAction: r.result.recommendedAction,
-              verdict: letter(r),
-              hand: i,
-              board: flat < boards.length ? boards[flat] : const [],
-              facing: flat < facing.length ? facing[flat] : '',
-              heroLabel: flat < heroLabels.length ? heroLabels[flat] : '',
-              recommendedLabel: flat < bestLabels.length ? bestLabels[flat] : '',
-              street: flat < streets.length ? streets[flat++] : '',
-            ),
-      ],
+      spots: spots,
     );
   }
 }
@@ -155,6 +194,13 @@ class DailySpotSummary {
   final String heroLabel;
   final String recommendedLabel;
 
+  /// Non-null on a Range Read row (kind 'rr'): the question + the player's
+  /// answer. Such a row has no hero/recommended action. Old stored results
+  /// have no kind and parse as ordinary decisions.
+  final RangeReadAnswer? rangeRead;
+
+  bool get isRangeRead => rangeRead != null;
+
   const DailySpotSummary({
     required this.handClass,
     required this.position,
@@ -167,6 +213,7 @@ class DailySpotSummary {
     this.facing = '',
     this.heroLabel = '',
     this.recommendedLabel = '',
+    this.rangeRead,
   });
 
   Map<String, dynamic> toJson() => {
@@ -181,6 +228,8 @@ class DailySpotSummary {
         if (facing.isNotEmpty) 'fc': facing,
         if (heroLabel.isNotEmpty) 'hl': heroLabel,
         if (recommendedLabel.isNotEmpty) 'rl': recommendedLabel,
+        if (rangeRead != null) 'k': 'rr',
+        if (rangeRead != null) 'rr': rangeRead!.toJson(),
       };
 
   factory DailySpotSummary.fromJson(Map<String, dynamic> json) =>
@@ -195,6 +244,10 @@ class DailySpotSummary {
         facing: json['fc']?.toString() ?? '',
         heroLabel: json['hl']?.toString() ?? '',
         recommendedLabel: json['rl']?.toString() ?? '',
+        rangeRead: json['k'] == 'rr' && json['rr'] is Map
+            ? RangeReadAnswer.fromJson(
+                (json['rr'] as Map).cast<String, dynamic>())
+            : null,
         board: [
           for (final c in (json['bd'] as List? ?? const [])) c.toString(),
         ],
