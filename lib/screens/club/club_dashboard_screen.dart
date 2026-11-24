@@ -1355,7 +1355,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
         color: AppColors.surfaceDark,
         borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
         border: isActive
-            ? Border.all(color: const Color(0xFF54E98A).withValues(alpha: 0.5))
+            ? Border.all(color: AppColors.accentPrimary.withValues(alpha: 0.5))
             : null,
       ),
       child: Row(
@@ -1406,7 +1406,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
               color: isActive
-                  ? const Color(0xFF54E98A).withValues(alpha: 0.15)
+                  ? AppColors.accentPrimary.withValues(alpha: 0.15)
                   : AppColors.neutral800,
               borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
             ),
@@ -1417,7 +1417,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
                   width: 6,
                   height: 6,
                   decoration: BoxDecoration(
-                    color: isActive ? const Color(0xFF54E98A) : AppColors.textDisabled,
+                    color: isActive ? AppColors.accentPrimary : AppColors.textDisabled,
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -1426,7 +1426,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
                   isActive ? AppLocalizations.of(context).clubDashboardActiveLabel : AppLocalizations.of(context).clubDashboardIdleLabel,
                   style: AppTypography.ibm(
                     fontSize: 12,
-                    color: isActive ? const Color(0xFF54E98A) : AppColors.textDisabled,
+                    color: isActive ? AppColors.accentPrimary : AppColors.textDisabled,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -1673,7 +1673,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(AppLocalizations.of(context).clubDashboardInvitationSentTo(email)),
-            backgroundColor: const Color(0xFF54E98A),
+            backgroundColor: AppColors.accentPrimary,
           ),
         );
       }

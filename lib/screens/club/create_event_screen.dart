@@ -411,9 +411,9 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
               height: 38,
               decoration: BoxDecoration(
                 color: _isSubmitting
-                    ? const Color(0xFF54E98A).withValues(alpha: 0.5)
+                    ? AppColors.accentPrimary.withValues(alpha: 0.5)
                     : _isFormValid
-                        ? const Color(0xFF54E98A)
+                        ? AppColors.accentPrimary
                         : AppColors.neutral700,
                 shape: BoxShape.circle,
               ),

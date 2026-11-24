@@ -45,7 +45,7 @@ class CalendarDayCell extends StatelessWidget {
           shape: BoxShape.circle,
           border: isSelected
               ? Border.all(
-                  color: const Color(0xFF89F1EC).withValues(alpha: 0.5),
+                  color: AppColors.accentSecondary.withValues(alpha: 0.5),
                   width: 1.5,
                 )
               : null,
@@ -69,7 +69,7 @@ class CalendarDayCell extends StatelessWidget {
                   width: dotSize,
                   height: dotSize,
                   decoration: const BoxDecoration(
-                    color: Color(0xFF89F1EC),
+                    color: AppColors.accentSecondary,
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -85,7 +85,7 @@ class CalendarDayCell extends StatelessWidget {
       return AppColors.labelTertiary;
     }
     if (isSelected || isToday) {
-      return const Color(0xFF89F1EC);
+      return AppColors.accentSecondary;
     }
     return AppColors.textPrimary;
   }
