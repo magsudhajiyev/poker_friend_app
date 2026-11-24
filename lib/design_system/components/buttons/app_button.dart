@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../constants/colors.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 enum AppButtonVariant {
@@ -123,14 +124,14 @@ class AppButton extends StatelessWidget {
     switch (v) {
       case AppButtonVariant.primaryLarge:
         return _ButtonSpec(
-          bgColor: const Color(0xFF4CDE78),
+          bgColor: AppColors.accentPrimary,
           textColor: const Color(0xFF0C0C0C),
           fontSize: 15,
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         );
       case AppButtonVariant.primarySmall:
         return _ButtonSpec(
-          bgColor: const Color(0xFF4CDE78),
+          bgColor: AppColors.accentPrimary,
           textColor: const Color(0xFF0C0C0C),
           fontSize: 13,
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
@@ -161,7 +162,7 @@ class AppButton extends StatelessWidget {
       case AppButtonVariant.ghost:
         return _ButtonSpec(
           bgColor: Colors.transparent,
-          textColor: const Color(0xFF4CDE78),
+          textColor: AppColors.accentPrimary,
           fontSize: 15,
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         );

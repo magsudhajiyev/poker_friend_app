@@ -94,7 +94,7 @@ class CalendarHeader extends StatelessWidget {
                         width: 44,
                         height: 44,
                         decoration: const BoxDecoration(
-                          color: Color(0xFF89F1EC),
+                          color: AppColors.accentSecondary,
                           shape: BoxShape.circle,
                         ),
                         child: Center(

@@ -14,9 +14,14 @@ class AppColors {
   static const Color _gray500   = Color(0xFFB9B9B9);
   static const Color _gray900   = Color(0xFFEBEBF0);
   static const Color _grayWhite = Color(0xFFFFFFFF);
-  static const Color _green500  = Color(0xFF4CDE78);
-  static const Color _green300  = Color(0xFFA3FF78);
-  static const Color _greenBrand = Color(0xFFA3FF78);  // NEW brand primary
+  // Jade ramp — tokens v2 (2026-11-24). Muted "felt" green chosen for dim card
+  // rooms: ~50% less chroma and ~20% less light than the old neon lime, black
+  // label stays AAA (9.5:1). See Figma "Primary button colour — low-light options".
+  static const Color _jade500 = Color(0xFF66C093);  // fills: primary buttons, progress, chart line
+  static const Color _jade400 = Color(0xFF7ACCA1);  // pressed / hover
+  static const Color _jade300 = Color(0xFF8ED7B0);  // text + icons on dark (profit, links)
+  // Calm data colours (Figma data/series-*)
+  static const Color _slate400 = Color(0xFF8FA3B8); // data/series-secondary
   static const Color _red500    = Color(0xFFFF3B30);
   static const Color _blue500   = Color(0xFF007AFF);
   static const Color _orange500 = Color(0xFFFF8A54);
@@ -49,12 +54,14 @@ class AppColors {
   static const Color borderOnInverseSubtle = _gray100; // semantic/border/on-inverse-subtle
 
   // Accents
-  static const Color accentPrimary   = _greenBrand; // semantic/accent/primary — brand green
-  static const Color accentSecondary = _green300;   // semantic/accent/secondary
+  static const Color accentPrimary   = _jade500;    // semantic/accent/primary — jade (tokens v2)
+  static const Color accentSecondary = _jade300;    // semantic/accent/secondary — light jade for text/icons
   static const Color accentDanger    = _red500;     // semantic/accent/danger
   static const Color accentInfo      = _blue500;    // semantic/accent/info
   static const Color accentTertiary  = _orange500;  // semantic/accent/tertiary
   static const Color accentPurple    = _purple500;  // semantic/accent/purple
+  /// Pressed / highlighted state of an accentPrimary fill.
+  static const Color accentPrimaryPressed = _jade400;
   /// Red suit ink for WHITE card faces. accentDanger (#FF3B30) is only ~3.6:1
   /// on white; this darker red clears WCAG AA (~5.6:1).
   static const Color cardFaceRed     = Color(0xFFC62828);
@@ -91,7 +98,7 @@ class AppColors {
   static const Color paper       = Color(0xFF02050B);  // App background "Paper"
   static const Color surfaceDark = Color(0xFF101115);  // Card/sheet surface
   static const Color textMuted   = Color(0xFF9A9A9A);  // Tertiary/muted text
-  static const Color profitGreen  = Color(0xFF5AC95A);  // Positive amounts
+  static const Color profitGreen  = _jade300;           // Positive amounts (tokens v2: light jade)
   static const Color lossRed      = Color(0xFFFF4444);  // Negative amounts
   static const Color warningAmber = Color(0xFFFFB74D);  // Caution/preview states
 
@@ -130,8 +137,8 @@ class AppColors {
   static const Color warningText  = Color(0xFFBD8F2D);
 
   // Chart
-  static const Color tournamentBlue = Color(0xFF00C3FF);
-  static const Color cashGameGreen  = Color(0xFF44EC49);
+  static const Color tournamentBlue = _slate400;  // tokens v2: calm slate (data/series-secondary)
+  static const Color cashGameGreen  = _jade500;   // tokens v2: jade (data/series-primary)
 
   // Home screen stat card icon backgrounds
   static const Color cardIconBlue   = Color(0xFF4879FF);

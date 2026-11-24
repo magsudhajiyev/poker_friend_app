@@ -227,7 +227,7 @@ class ObservedRangeSheet extends StatelessWidget {
       spacing: 8,
       runSpacing: 8,
       children: [
-        chip(l10n.rangePremium, range.premiumCount, const Color(0xFF54E98A)),
+        chip(l10n.rangePremium, range.premiumCount, AppColors.accentPrimary),
         chip(l10n.rangeStrong, range.strongCount, AppColors.accentPrimary),
         chip(l10n.rangeMedium, range.mediumCount, const Color(0xFFFFC857)),
         chip(l10n.rangeWeak, range.wideCount, const Color(0xFFE85D5D)),

@@ -131,10 +131,10 @@ class _HoleCardsDialogState extends State<HoleCardsDialog> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF54E98A).withValues(alpha: 0.15),
+                            color: AppColors.accentPrimary.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
                             border: Border.all(
-                              color: const Color(0xFF54E98A).withValues(alpha: 0.4),
+                              color: AppColors.accentPrimary.withValues(alpha: 0.4),
                               width: 1,
                             ),
                           ),
@@ -142,7 +142,7 @@ class _HoleCardsDialogState extends State<HoleCardsDialog> {
                             l10n.holeCardsWinnerBadge,
                             style: AppTypography.ibm(
                               fontSize: 10,
-                              color: const Color(0xFF54E98A),
+                              color: AppColors.accentPrimary,
                               fontWeight: FontWeight.w700,
                               letterSpacing: 0.5,
                             ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../constants/colors.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 /// Player name + position badge chip matching Figma v2 spec (Player Chip).
@@ -22,7 +23,7 @@ class PlayerChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final posColor = (position != null && _accentPositions.contains(position))
-        ? const Color(0xFFA3FF78)
+        ? AppColors.accentPrimary
         : const Color(0xFFB9B9B9);
 
     return Container(
