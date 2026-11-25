@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import '../models/tracked_session.dart';
 import 'dart:isolate';
 import '../models/opponent_stats.dart';
 import 'firebase_service.dart';
@@ -233,6 +234,8 @@ class StatsMigrationService {
       }
 
       for (final session in sessions) {
+        // Tracked sessions never reach opponent stats.
+        if (isTrackedSession(session)) continue;
         bool foundInSession = false;
         List<Map<String, dynamic>> hands;
 

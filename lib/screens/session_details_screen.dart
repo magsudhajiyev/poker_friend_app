@@ -43,6 +43,14 @@ import '../services/hand_flag_service.dart';
 import '../services/flag_resolution_loader.dart';
 import '../services/stack_timeline.dart';
 import '../widgets/easy_logging/pending_flags_card.dart';
+import '../models/tracked_session.dart';
+import '../services/local_storage_service.dart';
+import '../services/hand_delete_service.dart';
+import '../services/tracked_session_service.dart';
+import '../widgets/playing_card_face.dart';
+import '../widgets/tracked_session_widgets.dart';
+import '../widgets/single_hand/single_hand_flow.dart';
+import 'hand_actions_screen.dart';
 
 class SessionDetailsScreen extends StatefulWidget {
   final String sessionName;
@@ -70,6 +78,10 @@ class SessionDetailsScreen extends StatefulWidget {
   final int? initialButtonPosition;
   final double? ante;
 
+  /// "Track a session" mode: no seats, blinds or session manager. The main
+  /// button is always Log a hand (single-hand flow, saved inside this session).
+  final TrackedSession? tracked;
+
   const SessionDetailsScreen({
     super.key,
     required this.sessionName,
@@ -88,6 +100,7 @@ class SessionDetailsScreen extends StatefulWidget {
     this.heroSeat,
     this.initialButtonPosition,
     this.ante,
+    this.tracked,
   });
 
   @override
@@ -98,6 +111,12 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
   /// Hub mode: SessionDetailsScreen is the base screen, launched from setup.
   /// Legacy mode: pushed on top of PokerHandScreen via ⓘ button.
   bool get _isHubMode => widget.sessionManager != null;
+
+  /// Track-a-session hub (see [SessionDetailsScreen.tracked]).
+  bool get _tracked => widget.tracked != null;
+
+  // Tracked mode: the hands saved inside this session.
+  List<Map<String, dynamic>> _trackedHands = [];
 
   // Stack management
   late double _currentStack;
@@ -197,7 +216,10 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
     _startTimer();
     _initEasyLogging();
 
-    if (_isHubMode) {
+    if (_tracked) {
+      _loadTrackedHands();
+      HandDeleteService.deletions.addListener(_onHandsDeleted);
+    } else if (_isHubMode) {
       _scheduleSessionDetailsHubTour();
     } else {
       _scheduleSessionDetailsTour();
@@ -225,6 +247,7 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
   /// Snapshot at call time: a mid-session flag flip applies at the next
   /// screen visit, never mid-interaction.
   bool get _easy =>
+      !_tracked &&
       _easySessionId != null &&
       EasyLogging.supportsSession(
         isDealer: false,
@@ -744,7 +767,9 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
         if (sessionData != null) {
           setState(() {
             _totalBuyIn = sessionData!['totalBuyIn']?.toDouble() ?? _totalBuyIn;
-            _handsLogged = sessionData['handsLogged'] ?? 0;
+            _handsLogged = _tracked
+                ? (sessionData['totalHands'] as num?)?.toInt() ?? 0
+                : sessionData['handsLogged'] ?? 0;
             _biggestPot = sessionData['biggestPot']?.toDouble() ?? 0.0;
 
             if (widget.gameType == GameType.tournament) {
@@ -796,6 +821,7 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
 
   @override
   void dispose() {
+    if (_tracked) HandDeleteService.deletions.removeListener(_onHandsDeleted);
     _timer?.cancel();
     super.dispose();
   }
@@ -1064,6 +1090,38 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
                         _showAddOnDialog();
                       },
                     ),
+                    if (_tracked) ...[
+                      Container(
+                        height: 1,
+                        color: Colors.white.withValues(alpha: 0.06),
+                      ),
+                      _MenuActionRow(
+                        icon: Icons.stop_circle_outlined,
+                        iconColor: AppColors.accentDanger,
+                        label: l10n.sessionDetailsEndSession,
+                        labelColor: AppColors.accentDanger,
+                        destructive: true,
+                        onTap: () {
+                          Navigator.pop(context);
+                          _endTracked();
+                        },
+                      ),
+                      Container(
+                        height: 1,
+                        color: Colors.white.withValues(alpha: 0.06),
+                      ),
+                      _MenuActionRow(
+                        icon: Icons.delete_outline,
+                        iconColor: AppColors.accentDanger,
+                        label: l10n.trackedDiscardMenu,
+                        labelColor: AppColors.accentDanger,
+                        destructive: true,
+                        onTap: () {
+                          Navigator.pop(context);
+                          _discardTracked();
+                        },
+                      ),
+                    ],
                     if (_isHubMode) ...[
                       Container(
                         height: 1,
@@ -1211,7 +1269,163 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
     }
   }
 
+  // ─── Track a session ───
+
+  Future<void> _loadTrackedHands() async {
+    final id = widget.sessionId;
+    if (id == null) return;
+    final hands = await TrackedSessionService.loadHands(id);
+    if (!mounted) return;
+    setState(() {
+      _trackedHands = hands;
+      _handsLogged = hands.length;
+    });
+  }
+
+  Future<void> _logHandInSession() async {
+    final t = widget.tracked!;
+    await SingleHandFlow.run(
+      context,
+      session: SingleHandSessionTarget(t.id, t.name, t.gameType),
+    );
+    if (mounted) _loadTrackedHands();
+  }
+
+  Future<void> _endTracked() async {
+    final t = widget.tracked!;
+    final cash = t.gameType == GameType.cash;
+    final minutes = _sessionDuration.inMinutes;
+    final res = await SessionEndBankrollSheet.show(
+      context: context,
+      gameType: t.gameType,
+      profitLoss: cash ? _currentStack - _totalBuyIn : null,
+      totalBuyIn: _totalBuyIn,
+      durationMinutes: minutes,
+    );
+    // X on the sheet = cancel: the session keeps running.
+    if (res == null || !mounted) return;
+    try {
+      await TrackedSessionService.finish(t,
+          totalBuyIn: _totalBuyIn,
+          result: TrackedSessionResult.fromSheet(res));
+      if (!mounted) return;
+      await SessionSummaryCard.show(
+        context: context,
+        data: SessionSummaryData(
+          sessionName: t.name,
+          gameType: t.gameType,
+          profitLoss: (res['profitLoss'] as num?)?.toDouble() ?? 0,
+          totalBuyIn: _totalBuyIn,
+          handsPlayed: _handsLogged,
+          biggestPot: 0,
+          durationMinutes: minutes,
+          finishedPlace: res['finishedPlace'] as int?,
+          fieldSize: res['fieldSize'] as int?,
+          prizeWon: res['prizeWon'] as double?,
+        ),
+      );
+      if (mounted) Navigator.of(context).popUntil((r) => r.isFirst);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(UserFacingError.message(e)),
+        backgroundColor: Colors.red,
+      ));
+    }
+  }
+
+  /// D24: discarding a session with logged hands says how many go with it.
+  Future<void> _discardTracked() async {
+    final t = widget.tracked!;
+    final count = await TrackedSessionService.handCount(t.id);
+    if (!mounted) return;
+    final ok = await TrackedDiscardDialog.confirm(context, count);
+    if (!ok || !mounted) return;
+    try {
+      await TrackedSessionService.discard(t.id);
+      if (mounted) Navigator.of(context).popUntil((r) => r.isFirst);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(UserFacingError.message(e)),
+        backgroundColor: Colors.red,
+      ));
+    }
+  }
+
+  Future<void> _openTrackedHand(Map<String, dynamic> hand) async {
+    final seat = hand['heroSeatNumber'];
+    await Navigator.of(context).push(MaterialPageRoute(
+      builder: (_) =>
+          HandActionsScreen(hand: hand, ourSeat: seat is int ? seat : null),
+    ));
+    // Back from hand details (a hand may have been deleted there).
+    if (mounted) _loadTrackedHands();
+  }
+
+  void _onHandsDeleted() {
+    if (mounted) _loadTrackedHands();
+  }
+
+  Widget _buildTrackedHands(AppLocalizations l10n) {
+    final w = PlayingCardFace.responsiveWidth(context) * 0.6;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
+          child: Text(
+            l10n.trackedHandsTitle(_trackedHands.length),
+            style: AppTypography.ibm(
+                fontSize: 17,
+                color: Colors.white,
+                fontWeight: FontWeight.w600),
+          ),
+        ),
+        for (final h in _trackedHands)
+          GestureDetector(
+            key: ValueKey('tracked-hand-${h['handNumber']}'),
+            behavior: HitTestBehavior.opaque,
+            onTap: () => _openTrackedHand(h),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+              child: Row(
+                children: [
+                  Text('#${h['handNumber']}',
+                      style: AppTypography.ibm(
+                          fontSize: 15, color: AppColors.textSecondary)),
+                  const SizedBox(width: 12),
+                  for (final c in _heroCards(h))
+                    Padding(
+                      padding: const EdgeInsets.only(right: 4),
+                      child: PlayingCardFace(c, width: w),
+                    ),
+                  const Spacer(),
+                  Text('${h['heroPositionName'] ?? ''}',
+                      style: AppTypography.ibm(
+                          fontSize: 14, color: AppColors.textSecondary)),
+                ],
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  List<String> _heroCards(Map<String, dynamic> hand) {
+    final c = hand['ourHoleCards'];
+    if (c is! Map) return const [];
+    return [
+      for (final k in const ['card1', 'card2'])
+        if ('${c[k] ?? ''}'.isNotEmpty) '${c[k]}'
+    ];
+  }
+
   void _goBackToHand() {
+    if (_tracked) {
+      _logHandInSession();
+      return;
+    }
     if (OnboardingState.isOnboardingActive && !_isHubMode) {
       // During tour, stop button ends session — pop with endSession flag
       // so PokerHandScreen handles the actual session end.
@@ -1809,11 +2023,32 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
                     padding: const EdgeInsets.only(top: 16, bottom: 24),
                     child: Row(
                       children: [
+                        if (_tracked) ...[
+                          // Leave the screen; the session keeps running.
+                          GestureDetector(
+                            key: const ValueKey('tracked-back'),
+                            onTap: () => Navigator.of(context).maybePop(),
+                            behavior: HitTestBehavior.opaque,
+                            child: Container(
+                              width: 44,
+                              height: 44,
+                              decoration: const BoxDecoration(
+                                color: AppColors.bgSurface,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(Icons.arrow_back,
+                                  color: AppColors.textPrimary, size: 22),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                        ],
                         // Stop / end-session button — self-contained 44px red
                         // stop badge (svg has its own red bg + white icon).
                         GestureDetector(
                           key: _backButtonKey,
-                          onTap: _isHubMode ? _handleHubBackButton : _goBackToHand,
+                          onTap: _tracked
+                              ? _endTracked
+                              : (_isHubMode ? _handleHubBackButton : _goBackToHand),
                           behavior: HitTestBehavior.opaque,
                           child: SvgPicture.asset(
                             'assets/icons/card icons/stop.svg',
@@ -1852,7 +2087,7 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
                         // Matches canonical top-nav circle style (44px, bgSurface).
                         GestureDetector(
                           key: _dotsKey,
-                          onTap: _isHubMode
+                          onTap: (_isHubMode || _tracked)
                               ? _showOptionsMenu
                               : (widget.gameType == GameType.cash
                                   ? _showAddOnDialog
@@ -1866,7 +2101,9 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
                               shape: BoxShape.circle,
                             ),
                             child: Icon(
-                              _isHubMode ? Icons.more_vert : Icons.add,
+                              (_isHubMode || _tracked)
+                                  ? Icons.more_vert
+                                  : Icons.add,
                               color: AppColors.textPrimary,
                               size: 22,
                             ),
@@ -1876,7 +2113,8 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
                     ),
                   ),
 
-                  // BB Mode Toggle — flat inline row
+                  // BB Mode Toggle — flat inline row (no blinds when tracked)
+                  if (!_tracked)
                   Padding(
                     padding: const EdgeInsets.fromLTRB(4, 0, 4, 20),
                     child: Row(
@@ -2064,8 +2302,10 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
                                     _buildDivider(),
                                     _buildStatRow(l10n.individualTotalInvested, CurrencyService.formatCash(_totalBuyIn)),
                                     _buildDivider(),
-                                    _buildClickableStatRow(l10n.individualBlindsLabel, '${formatBlindValue(_currentSmallBlind)}/${formatBlindValue(_currentBigBlind)}', _showUpdateBlindsDialog),
-                                    _buildDivider(),
+                                    if (!_tracked) ...[
+                                      _buildClickableStatRow(l10n.individualBlindsLabel, '${formatBlindValue(_currentSmallBlind)}/${formatBlindValue(_currentBigBlind)}', _showUpdateBlindsDialog),
+                                      _buildDivider(),
+                                    ],
                                     _buildStatRow(l10n.individualHandsLogged, '$_handsLogged'),
                                   ],
                                 )
@@ -2085,11 +2325,11 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       decoration: BoxDecoration(
-                        color: (_isHubMode && _handsLogged == 0)
+                        color: (_tracked || (_isHubMode && _handsLogged == 0))
                             ? AppColors.accentPrimary
                             : AppColors.bgSurface,
                         borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
-                        border: (_isHubMode && _handsLogged == 0)
+                        border: (_tracked || (_isHubMode && _handsLogged == 0))
                             ? null
                             : Border.all(color: Colors.white.withOpacity(0.1)),
                       ),
@@ -2099,7 +2339,7 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
                           // Hub-mode "Log a Hand" is a clean text-only
                           // primary CTA — resume mode keeps the back arrow
                           // to signal returning to an active hand.
-                          if (!(_isHubMode && _handsLogged == 0)) ...[
+                          if (!(_tracked || (_isHubMode && _handsLogged == 0))) ...[
                             const Icon(
                               Icons.arrow_back,
                               color: Colors.white,
@@ -2108,13 +2348,13 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
                             const SizedBox(width: 8),
                           ],
                           Text(
-                            (_isHubMode && _handsLogged == 0)
+                            (_tracked || (_isHubMode && _handsLogged == 0))
                                 ? l10n.sessionDetailsLogAHand
                                 : l10n.individualGoBackToHand,
                             style: AppTypography.ibm(
                               fontSize: 17,
                               fontWeight: FontWeight.w600,
-                              color: (_isHubMode && _handsLogged == 0)
+                              color: (_tracked || (_isHubMode && _handsLogged == 0))
                                   ? Colors.black
                                   : Colors.white,
                             ),
@@ -2123,6 +2363,11 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
                       ),
                     ),
                   ),
+
+                  if (_tracked && _trackedHands.isNotEmpty) ...[
+                    const SizedBox(height: 24),
+                    _buildTrackedHands(l10n),
+                  ],
 
                   const SizedBox(height: 100),
                 ],

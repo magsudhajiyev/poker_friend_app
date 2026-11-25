@@ -32,12 +32,21 @@ class SingleHandSaveResult {
   /// Seat -> name as saved (position labels, see [SingleHandService.seatNames]).
   final Map<int, String> playerNames;
 
+  /// This hand started a NEW group (the player still has to name it).
+  final bool newGroup;
+
+  /// The hand went into a running tracked session, not a hand group
+  /// ([group] then carries the session's name and counters).
+  final bool inSession;
+
   const SingleHandSaveResult({
     required this.sessionId,
     required this.handId,
     required this.handNumber,
     required this.group,
     this.playerNames = const {},
+    this.newGroup = false,
+    this.inSession = false,
   });
 }
 
@@ -90,6 +99,12 @@ abstract class SingleHandMoveBackend {
   });
 }
 
+/// Renaming a group (both stores). Separate from [SingleHandBackend] so
+/// existing fakes of that interface keep compiling.
+abstract class SingleHandRenameBackend {
+  Future<void> renameGroup(String groupId, String name);
+}
+
 /// Target group already holds the most hands the tier allows.
 class SingleHandGroupFullException implements Exception {
   const SingleHandGroupFullException();
@@ -126,6 +141,9 @@ class SingleHandService {
 
   @visibleForTesting
   static SingleHandMoveBackend moveBackend = FirebaseSingleHandBackend();
+
+  @visibleForTesting
+  static SingleHandRenameBackend renameBackend = FirebaseSingleHandBackend();
 
   /// Clock, id and tier cap seams for tests.
   @visibleForTesting
@@ -260,6 +278,7 @@ class SingleHandService {
 
     final String id;
     final String name;
+    final bool createdGroup = groupId == null;
     if (groupId == null) {
       id = newGroupId();
       name = groupName ?? defaultGroupName(setup, at);
@@ -298,7 +317,99 @@ class SingleHandService {
       handNumber: handNumber,
       group: group,
       playerNames: names,
+      newGroup: createdGroup,
     );
+  }
+
+  /// Saves one hand INSIDE a running tracked session ([sessionId]). Same
+  /// hand writes as [saveHand] (no stats, no money), but the session's
+  /// `endTime`, stack and counters other than `totalHands` stay untouched and
+  /// the session never becomes the "last hand group". Throws
+  /// [SingleHandGroupFullException] when the tier hand cap is reached.
+  static Future<SingleHandSaveResult> saveHandInSession({
+    required HandRecord hand,
+    required SingleHandSetup setup,
+    required String sessionId,
+    required String sessionName,
+    Map<int, String>? playerNames,
+    Map<int, String>? playerIds,
+  }) async {
+    final existing = await _safeCount(sessionId);
+    if (!canAddHand(existing)) throw const SingleHandGroupFullException();
+    final names = mergeNames(setup, playerNames);
+    final ids = {
+      for (final e in (playerIds ?? const <int, String>{}).entries)
+        if (e.key <= setup.playerCount && e.value.isNotEmpty) e.key: e.value
+    };
+    final handNumber = existing + 1;
+    final (cloudId, localId) = await backend.writeHand(
+        groupId: sessionId,
+        handNumber: handNumber,
+        hand: hand,
+        setup: setup,
+        playerNames: names,
+        playerIds: ids.isEmpty ? null : ids);
+    AppDataCache.markSessionsDirty();
+    FirebaseService.invalidateSessionsCache();
+    AppDataCache.markHomeDirty();
+    return SingleHandSaveResult(
+      sessionId: sessionId,
+      handId: cloudId ?? localId ?? '',
+      handNumber: handNumber,
+      group: SingleHandGroup(
+        sessionId: sessionId,
+        name: sessionName,
+        gameType: setup.gameType,
+        smallBlind: setup.smallBlind,
+        bigBlind: setup.bigBlind,
+        handCount: handNumber,
+        lastHandAt: now(),
+      ),
+      playerNames: names,
+      inSession: true,
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Naming
+  // ---------------------------------------------------------------------------
+
+  /// Names of the player's earlier groups, newest first, without duplicates
+  /// and without unnamed ones (chips on the naming field).
+  static Future<List<String>> recentGroupNames({int limit = 6}) async {
+    final groups = await _sortedGroups();
+    final seen = <String>{};
+    final out = <String>[];
+    for (final g in groups) {
+      final n = g.name.trim();
+      if (isUnnamedGroupName(n) || !seen.add(n.toLowerCase())) continue;
+      out.add(n);
+      if (out.length >= limit) break;
+    }
+    return out;
+  }
+
+  /// Groups still carrying the temporary name, newest first. Used to ask the
+  /// player again after the app was killed before naming.
+  static Future<List<SingleHandGroup>> unnamedGroups() async {
+    final groups = await _sortedGroups();
+    return groups.where((g) => g.needsName && g.handCount > 0).toList();
+  }
+
+  /// Stores [name] (trimmed, non-empty) on the group in both stores.
+  static Future<void> renameGroup(String groupId, String name) async {
+    final clean = name.trim();
+    if (clean.isEmpty) throw ArgumentError('Group name is empty');
+    await renameBackend.renameGroup(groupId, clean);
+    try {
+      final cached = await _cachedLastGroup();
+      if (cached != null && cached.sessionId == groupId) {
+        await _cacheLastGroup(cached.copyWith(name: clean));
+      }
+    } catch (_) {}
+    AppDataCache.markSessionsDirty();
+    FirebaseService.invalidateSessionsCache();
+    AppDataCache.markHomeDirty();
   }
 
   /// Moves a saved single hand to [toGroupId], or into a NEW group when it is
@@ -441,7 +552,7 @@ class SingleHandService {
 /// Firestore + SQLite implementation. Offline: Firestore writes queue, so
 /// every awaited cloud write gets a timeout and a timeout is not an error.
 class FirebaseSingleHandBackend
-    implements SingleHandBackend, SingleHandMoveBackend {
+    implements SingleHandBackend, SingleHandMoveBackend, SingleHandRenameBackend {
   static const Duration _cloudWait = Duration(seconds: 4);
   static final FirebaseFirestore _db = FirebaseFirestore.instance;
 
@@ -627,6 +738,12 @@ class FirebaseSingleHandBackend
           e, StackTrace.current);
     }
     return (cloudId, localId);
+  }
+
+  @override
+  Future<void> renameGroup(String groupId, String name) async {
+    await LocalStorageService.updateSessionName(groupId, name);
+    await _queued(FirebaseService.updateSessionName(groupId, name), 'group rename');
   }
 
   @override

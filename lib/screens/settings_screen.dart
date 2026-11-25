@@ -19,6 +19,7 @@ import '../services/feature_flag_service.dart';
 import '../services/currency_service.dart';
 import '../services/notification_prefs_service.dart';
 import '../services/skip_hand_scouting_service.dart';
+import '../services/session_hand_info_pref.dart';
 import '../services/paid_nudge_service.dart';
 import '../services/streak_saver_service.dart';
 import '../services/username_service.dart';
@@ -59,6 +60,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   int _pendingSupportCount = 0;
   List<Club> _clubs = [];
   bool _scoutingEnabled = false;
+  bool _sessionHandInfoShown = true;
   StreamSubscription<bool>? _premiumSub;
 
   static const _bg = AppColors.bgPrimary;
@@ -111,6 +113,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (mounted) {
       setState(() => _scoutingEnabled = SkipHandScoutingService.isEnabled);
     }
+    final infoHidden = await SessionHandInfoPref.hidden();
+    if (mounted) setState(() => _sessionHandInfoShown = !infoHidden);
 
     // Engagement-notification prefs (flagged feature) — refresh the cached
     // copy so the toggles reflect Firestore state.
@@ -976,7 +980,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         onTap: _showCurrencyPicker,
                         // Currency is the last row when hand scouting is hidden
                         // (scouting is gated behind the Training Drills flag).
-                        isLast: !FeatureFlagService.isEnabled(FeatureFlagService.trainingDrills),
+                        isLast: !FeatureFlagService.isEnabled(FeatureFlagService.trainingDrills) &&
+                            !FeatureFlagService.trackedSessionEnabled,
                       ),
                       // Hand scouting shares the Training Drills feature flag.
                       if (FeatureFlagService.isEnabled(FeatureFlagService.trainingDrills))
@@ -988,6 +993,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           onChanged: (v) async {
                             await SkipHandScoutingService.setEnabled(v);
                             setState(() => _scoutingEnabled = v);
+                          },
+                          isLast: !FeatureFlagService.trackedSessionEnabled,
+                        ),
+                      // "AI analysis and sharing unlock when the session ends"
+                      // note on the hand-saved dialog (Track a session).
+                      if (FeatureFlagService.trackedSessionEnabled)
+                        _buildToggleRow(
+                          icon: const Icon(Icons.info_outline_rounded, color: AppColors.contentInactive, size: 24),
+                          title: l10n.settingsSessionHandInfo,
+                          subtitle: l10n.settingsSessionHandInfoDesc,
+                          value: _sessionHandInfoShown,
+                          onChanged: (v) async {
+                            await SessionHandInfoPref.setHidden(!v);
+                            setState(() => _sessionHandInfoShown = v);
                           },
                           isLast: true,
                         ),

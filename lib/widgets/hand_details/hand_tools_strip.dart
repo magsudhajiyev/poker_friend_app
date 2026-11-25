@@ -18,6 +18,13 @@ class HandToolsStrip extends StatelessWidget {
   final VoidCallback onShare;
   final bool isSharing;
 
+  /// The hand's session is still running: export and share are disabled
+  /// (dimmed, no tap) until it ends.
+  final bool locked;
+
+  /// Tap on a dimmed (locked) tool: explains why, never silent.
+  final VoidCallback? onLockedTap;
+
   const HandToolsStrip({
     super.key,
     required this.showBB,
@@ -26,6 +33,8 @@ class HandToolsStrip extends StatelessWidget {
     required this.onExport,
     required this.onShare,
     this.isSharing = false,
+    this.locked = false,
+    this.onLockedTap,
   });
 
   @override
@@ -45,15 +54,21 @@ class HandToolsStrip extends StatelessWidget {
         ),
         Row(mainAxisSize: MainAxisSize.min, children: [
           _IconTool(
-            tooltip: l10n.handActionsExportHand,
-            onTap: onExport,
+            tooltip: locked
+                ? l10n.runningSessionLockedLine
+                : l10n.handActionsExportHand,
+            onTap: locked ? onLockedTap : onExport,
+            dimmed: locked,
             child: const Icon(Icons.download,
                 color: AppColors.textPrimary, size: 22),
           ),
           const SizedBox(width: 8),
           _IconTool(
-            tooltip: l10n.handActionsShareHand,
-            onTap: onShare,
+            tooltip: locked
+                ? l10n.runningSessionLockedLine
+                : l10n.handActionsShareHand,
+            onTap: locked ? onLockedTap : onShare,
+            dimmed: locked,
             child: isSharing
                 ? const SizedBox(
                     width: 20,
@@ -140,11 +155,15 @@ class _Segmented extends StatelessWidget {
 
 class _IconTool extends StatelessWidget {
   final String tooltip;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
   final Widget child;
+  final bool dimmed;
 
   const _IconTool(
-      {required this.tooltip, required this.onTap, required this.child});
+      {required this.tooltip,
+      required this.onTap,
+      required this.child,
+      this.dimmed = false});
 
   @override
   Widget build(BuildContext context) {
@@ -152,16 +171,21 @@ class _IconTool extends StatelessWidget {
       message: tooltip,
       child: Semantics(
         button: true,
+        enabled: !dimmed,
         label: tooltip,
         excludeSemantics: true,
         onTap: onTap,
-        child: Material(
-          color: AppColors.bgPrimary,
-          shape: const CircleBorder(),
-          child: InkWell(
-            customBorder: const CircleBorder(),
-            onTap: onTap,
-            child: SizedBox(width: 44, height: 44, child: Center(child: child)),
+        child: Opacity(
+          opacity: dimmed ? 0.35 : 1,
+          child: Material(
+            color: AppColors.bgPrimary,
+            shape: const CircleBorder(),
+            child: InkWell(
+              customBorder: const CircleBorder(),
+              onTap: onTap,
+              child:
+                  SizedBox(width: 44, height: 44, child: Center(child: child)),
+            ),
           ),
         ),
       ),

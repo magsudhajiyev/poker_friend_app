@@ -34,6 +34,9 @@ TutorialCoachMark createOnboardingCoachMark({
   required BuildContext context,
   bool hideSkip = false,
   bool showSkipInLastTarget = true,
+  // Put the skip pill at the top instead (the target sits at the bottom of
+  // the screen, where the pill would cover it: Choose mode sheet).
+  bool skipAtTop = false,
 }) {
   final l10n = AppLocalizations.of(context);
   return TutorialCoachMark(
@@ -44,10 +47,13 @@ TutorialCoachMark createOnboardingCoachMark({
     hideSkip: hideSkip,
     showSkipInLastTarget: showSkipInLastTarget,
     // Bottom-center so it never overlaps tooltips (which now render centered).
-    alignSkip: Alignment.bottomCenter,
+    alignSkip: skipAtTop ? Alignment.topCenter : Alignment.bottomCenter,
     skipWidget: Padding(
       padding: EdgeInsets.only(
-          left: 24, right: 24, bottom: MediaQuery.of(context).padding.bottom),
+          left: 24,
+          right: 24,
+          top: skipAtTop ? MediaQuery.of(context).padding.top + 12 : 0,
+          bottom: skipAtTop ? 0 : MediaQuery.of(context).padding.bottom),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -356,6 +362,40 @@ class LoggingModeTour {
     required this.fullModeCardKey,
   });
 
+  /// Spotlight geometry of the Full logging row (`_ModeRow` is a
+  /// radiusXl rounded surface).
+  static const double spotlightPadding = 4;
+  static const double spotlightRadius =
+      AppDecorations.radiusXl + spotlightPadding;
+
+  /// Room between the top Skip pill and the spotlight, for the bubble.
+  double _roomAbove(BuildContext context) {
+    final box = fullModeCardKey.currentContext?.findRenderObject();
+    if (box is! RenderBox || !box.hasSize) return double.infinity;
+    final top = box.localToGlobal(Offset.zero).dy;
+    // Skip pill: safe top + its offset and height (28 at big text) + air.
+    final skipZone = MediaQuery.of(context).padding.top + 60;
+    // The coach mark leaves ~44 pt between the bubble and the row's top.
+    return (top - 44 - skipZone).clamp(80.0, double.infinity);
+  }
+
+  /// Keeps the bubble inside the room above the row: it scales down on tiny
+  /// screens / big text instead of running off the top or over the row.
+  Widget _fitAboveRow(BuildContext context, Widget tip) {
+    final w = MediaQuery.of(context).size.width;
+    return SizedBox(
+      width: w,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxHeight: _roomAbove(context)),
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.bottomCenter,
+          child: SizedBox(width: w, child: tip),
+        ),
+      ),
+    );
+  }
+
   void show(BuildContext context) {
     if (!OnboardingState.isOnboardingActive ||
         OnboardingState.currentPhase != 1) return;
@@ -368,18 +408,27 @@ class LoggingModeTour {
           identify: 'full_mode',
           keyTarget: fullModeCardKey,
           shape: ShapeLightFocus.RRect,
-          radius: AppDecorations.radiusXl,
-          paddingFocus: 4,
+          // Row corner radius + the focus padding below, so the spotlight
+          // hugs the row's rounded corners.
+          radius: LoggingModeTour.spotlightRadius,
+          paddingFocus: LoggingModeTour.spotlightPadding,
           contents: [
-            centeredTooltipContent(
-              (context, controller) {
+            // Above the row: the sheet sits at the bottom of the screen, so a
+            // screen-centred bubble could land on the row (small phones, big
+            // text). The skip pill moves to the top for the same reason.
+            TargetContent(
+              align: ContentAlign.top,
+              builder: (context, controller) {
                 final l10n = AppLocalizations.of(context);
-                return buildTooltip(
-                  title: l10n.onboardingFullModeTitle,
-                  body: l10n.onboardingFullModeBody,
-                  onNext: () => controller.next(),
-                  context: context,
-                  isLast: true,
+                return _fitAboveRow(
+                  context,
+                  buildTooltip(
+                    title: l10n.onboardingFullModeTitle,
+                    body: l10n.onboardingFullModeBody,
+                    onNext: () => controller.next(),
+                    context: context,
+                    isLast: true,
+                  ),
                 );
               },
             ),
@@ -393,6 +442,7 @@ class LoggingModeTour {
     final coach = createOnboardingCoachMark(
       targets: targets,
       context: context,
+      skipAtTop: true,
       onFinish: () {
         OnboardingState.advanceTo(2);
       },

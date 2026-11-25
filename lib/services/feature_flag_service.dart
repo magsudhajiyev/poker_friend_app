@@ -65,6 +65,7 @@ class FeatureFlagService {
   static const String singleHand = 'single_hand';
   static const String rangeRead = 'range_read';
   static const String singleHandV2 = 'single_hand_v2';
+  static const String trackedSession = 'tracked_session';
 
   static const List<FeatureFlag> all = [
     FeatureFlag(
@@ -155,6 +156,15 @@ class FeatureFlagService {
       'mini table). OFF = the old setup sheet.',
       defaultMode: FlagMode.off,
     ),
+    FeatureFlag(
+      trackedSession,
+      'Track a session',
+      'New "Track a session" card under +: a running session (buy-in, '
+      'rebuys, cash-out) where hands are logged one at a time with '
+      '"Log a hand". Hands never update stats; money and time count. '
+      'OFF = the card does not exist.',
+      defaultMode: FlagMode.adminOnly,
+    ),
   ];
 
   // ── State ─────────────────────────────────────────────────────────────
@@ -189,6 +199,9 @@ class FeatureFlagService {
 
   /// Single-hand logging ("Log a hand") entry, for the UI to gate on.
   static bool get singleHandEnabled => isEnabled(singleHand);
+
+  /// "Track a session" entry card, for the UI to gate on.
+  static bool get trackedSessionEnabled => isEnabled(trackedSession);
 
   /// New setup screen for "Log a hand" (v2), instead of the setup sheet.
   static bool get singleHandV2Enabled => isEnabled(singleHandV2);

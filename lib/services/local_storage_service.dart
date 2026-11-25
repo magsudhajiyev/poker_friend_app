@@ -439,8 +439,8 @@ class LocalStorageService {
 
   /// All locally stored hands with the fields needed to backfill the range
   /// grid, joined with their session for userId/gameType fallbacks.
-  /// JSON columns are decoded. Hand-group hands (single-hand logging) are
-  /// left out: they must never reach the range grid.
+  /// JSON columns are decoded. Hand-group and tracked-session hands
+  /// (single-hand logging) are left out: they must never reach the range grid.
   static Future<List<Map<String, dynamic>>> getHandsForRangeBackfill() async {
     try {
       final db = await database;
@@ -451,7 +451,8 @@ class LocalStorageService {
                s.userId, s.gameType, s.bigBlind
         FROM hands h
         LEFT JOIN sessions s ON s.id = h.sessionId
-        WHERE s.sessionType IS NULL OR s.sessionType != 'hand_group'
+        WHERE s.sessionType IS NULL
+           OR s.sessionType NOT IN ('hand_group', 'tracked')
       ''');
 
       return rows.map((row) {
@@ -738,6 +739,63 @@ class LocalStorageService {
     } catch (e) {
       debugPrint('Error moving hand locally: $e');
       return null;
+    }
+  }
+
+  /// Deletes one hand (by [handId], else by session + [handNumber]) and moves
+  /// the session counters down by one, in one transaction. For hands that
+  /// never touched stats only (single hands, tracked sessions). With
+  /// [touchEndTime] the session `endTime` becomes the latest remaining hand
+  /// (hand groups; a tracked session keeps its own end). True when a hand was
+  /// removed.
+  static Future<bool> deleteHandCounted({
+    required String sessionId,
+    String? handId,
+    int? handNumber,
+    bool touchEndTime = false,
+  }) async {
+    try {
+      final db = await database;
+      return await db.transaction((txn) async {
+        var rows = handId == null
+            ? <Map<String, Object?>>[]
+            : await txn.query('hands',
+                where: 'id = ? AND sessionId = ?',
+                whereArgs: [handId, sessionId],
+                limit: 1);
+        if (rows.isEmpty && handNumber != null) {
+          rows = await txn.query('hands',
+              where: 'sessionId = ? AND handNumber = ?',
+              whereArgs: [sessionId, handNumber],
+              orderBy: 'startTime DESC',
+              limit: 1);
+        }
+        if (rows.isEmpty) return false;
+        await txn.delete('hands', where: 'id = ?', whereArgs: [rows.first['id']]);
+        await txn.rawUpdate(
+            'UPDATE sessions SET totalHands = MAX(COALESCE(totalHands, 0) - 1, 0), '
+            'handsLogged = MAX(COALESCE(handsLogged, 0) - 1, 0) WHERE id = ?',
+            [sessionId]);
+        if (touchEndTime) {
+          final last = await txn.query('hands',
+              columns: ['startTime', 'endTime'],
+              where: 'sessionId = ?',
+              whereArgs: [sessionId],
+              orderBy: 'startTime DESC',
+              limit: 1);
+          if (last.isNotEmpty) {
+            final t = last.first['endTime'] ?? last.first['startTime'];
+            if (t != null) {
+              await txn.update('sessions', {'endTime': t},
+                  where: 'id = ?', whereArgs: [sessionId]);
+            }
+          }
+        }
+        return true;
+      });
+    } catch (e) {
+      debugPrint('Error deleting hand locally: $e');
+      return false;
     }
   }
 

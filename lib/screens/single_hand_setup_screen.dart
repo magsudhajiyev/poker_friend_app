@@ -15,6 +15,7 @@ import '../models/hand_state_machine.dart';
 import '../models/poker_game_state.dart' show formatBlindValue;
 import '../models/single_hand_group.dart';
 import '../models/single_hand_setup.dart';
+import '../models/tracked_session.dart';
 import '../services/analytics_service.dart';
 import '../services/currency_service.dart';
 import '../services/logger_service.dart';
@@ -22,6 +23,7 @@ import '../services/single_hand_service.dart';
 import '../utils/decimal_input.dart';
 import '../widgets/hole_cards_dialog.dart';
 import '../widgets/playing_card_face.dart';
+import '../widgets/single_hand/saving_to_sheet.dart';
 import '../widgets/single_hand/single_hand_setup_sheet.dart' show SingleHandStart;
 import '../widgets/single_hand/v2/game_pill_sheet.dart';
 import '../widgets/single_hand/v2/mini_table_seat_picker.dart';
@@ -39,11 +41,21 @@ class SingleHandSetupScreen extends StatefulWidget {
   final SingleHandGroup? initialGroup;
   final bool keepGroup;
 
+  /// A running tracked session the hand is saved inside (D23). Its game type
+  /// is locked; the "Saving to" line lets the player pick a hand group.
+  final SingleHandSessionTarget? session;
+
+  /// One line shown instead of the "Saving to" line (e.g. the running full
+  /// session cannot be resumed, so the hand goes to a hand group).
+  final String? note;
+
   const SingleHandSetupScreen({
     super.key,
     required this.setup,
     this.initialGroup,
     this.keepGroup = false,
+    this.session,
+    this.note,
   });
 
   static const String hintPrefsKey = 'single_hand_v2_stack_hint_seen';
@@ -55,6 +67,8 @@ class SingleHandSetupScreen extends StatefulWidget {
     SingleHandSetup? setup,
     SingleHandGroup? group,
     bool keepGroup = false,
+    SingleHandSessionTarget? session,
+    String? note,
   }) async {
     final s = setup ?? await SingleHandSetup.loadLastUsed();
     if (!context.mounted) return null;
@@ -65,6 +79,8 @@ class SingleHandSetupScreen extends StatefulWidget {
           setup: s,
           initialGroup: group,
           keepGroup: keepGroup,
+          session: session,
+          note: note,
         ),
       ),
     );
@@ -80,6 +96,13 @@ class _SingleHandSetupScreenState extends State<SingleHandSetupScreen> {
   late final bool _groupLocked = widget.keepGroup;
   bool _starting = false;
 
+  /// Tracked session target; null once the player picked a hand group.
+  late SingleHandSessionTarget? _session = widget.session;
+
+
+  /// The player chose a group (or "new") on the Saving-to sheet: no suggestion.
+  bool _pickedGroup = false;
+
   /// Blinds the player had on each game type (restored when switching back).
   final Map<GameType, BlindLevel> _remembered = {};
   final Set<BlindLevel> _extras = {};
@@ -90,12 +113,20 @@ class _SingleHandSetupScreenState extends State<SingleHandSetupScreen> {
   void initState() {
     super.initState();
     _group = widget.initialGroup;
+    final locked =
+        widget.session?.isFull == true ? null : widget.session?.gameType;
+    if (locked != null && _s.gameType != locked) {
+      _s.gameType = locked;
+      _applyLevel(BlindLevel.defaultFor(locked));
+    }
     _extras.add(_level);
-    if (!_groupLocked && _group == null) _refreshSuggestion();
+    if (!_groupLocked && _group == null && _session == null) {
+      _refreshSuggestion();
+    }
   }
 
   Future<void> _refreshSuggestion() async {
-    if (_groupLocked) return;
+    if (_groupLocked || _session != null || _pickedGroup) return;
     try {
       final g = await SingleHandService.suggestedGroup(_s);
       if (mounted && !_groupLocked) setState(() => _group = g);
@@ -115,8 +146,11 @@ class _SingleHandSetupScreenState extends State<SingleHandSetupScreen> {
     });
   }
 
+  /// The session fixes the game type; a hand group does not.
+  bool get _gameLocked => _session != null && !_session!.isFull;
+
   void _setGame(GameType t) {
-    if (_s.gameType == t) return;
+    if (_s.gameType == t || _gameLocked) return;
     _remembered[_s.gameType] = _level;
     setState(() {
       _s.gameType = t;
@@ -145,7 +179,31 @@ class _SingleHandSetupScreenState extends State<SingleHandSetupScreen> {
         onBlinds: _setBlinds,
         onAnte: (v) => setState(() => _s.hasBBante = v),
         onPlayers: _setPlayers,
+        lockGameType: _gameLocked,
       );
+
+  Future<void> _pickTarget() async {
+    final session = widget.session;
+    if (session == null) return;
+    final choice = await SavingToSheet.show(context,
+        session: session, sessionSelected: _session != null);
+    if (choice == null || !mounted) return;
+    setState(() {
+      if (choice.session) {
+        _session = session;
+        _pickedGroup = false;
+        _group = null;
+        if (!session.isFull && _s.gameType != session.gameType) {
+          _s.gameType = session.gameType;
+          _applyLevel(BlindLevel.defaultFor(session.gameType));
+        }
+      } else {
+        _session = null;
+        _pickedGroup = true;
+        _group = choice.group;
+      }
+    });
+  }
 
   String _fmt(double v) =>
       NumberFormat('#,##0.##', Localizations.localeOf(context).toString())
@@ -203,16 +261,39 @@ class _SingleHandSetupScreenState extends State<SingleHandSetupScreen> {
     });
   }
 
+  /// A session-forced game type (and its blinds) must not become the player's
+  /// last-used setup: keep the stored game type and blinds, save the rest.
+  Future<void> _saveLastUsed() async {
+    if (widget.session == null || widget.session!.isFull) {
+      return _s.saveAsLastUsed();
+    }
+    final last = await SingleHandSetup.loadLastUsed();
+    final type = _s.gameType, sb = _s.smallBlind, bb = _s.bigBlind;
+    _s.gameType = last.gameType;
+    _s.smallBlind = last.smallBlind;
+    _s.bigBlind = last.bigBlind;
+    try {
+      await _s.saveAsLastUsed();
+    } finally {
+      _s.gameType = type;
+      _s.smallBlind = sb;
+      _s.bigBlind = bb;
+    }
+  }
+
   Future<void> _start() async {
     if (_starting) return;
     _starting = true;
     try {
-      await _s.saveAsLastUsed();
+      await _saveLastUsed();
     } catch (e) {
       LoggerService.log('SingleHand save setup: $e', level: LogLevel.WARNING);
     }
-    AnalyticsService.singleHandStarted(newGroup: _group == null, variant: 'v2');
-    if (mounted) Navigator.pop(context, SingleHandStart(_s, _group));
+    AnalyticsService.singleHandStarted(
+        newGroup: _group == null && _session == null, variant: 'v2');
+    if (mounted) {
+      Navigator.pop(context, SingleHandStart(_s, _group, session: _session));
+    }
   }
 
   @override
@@ -235,6 +316,17 @@ class _SingleHandSetupScreenState extends State<SingleHandSetupScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   _topBar(l10n),
+                  if (widget.session != null) _savingTo(l10n),
+                  if (widget.session == null && widget.note != null)
+                    Padding(
+                      padding:
+                          const EdgeInsets.symmetric(vertical: AppSpacing.xxs),
+                      child: Text(widget.note!,
+                          key: const ValueKey('setup-note'),
+                          textAlign: TextAlign.center,
+                          style: AppTypography.bodySmall(
+                              color: AppColors.textSecondary)),
+                    ),
                   _table(l10n),
                   _stack(l10n),
                   _cardsRow(l10n),
@@ -268,6 +360,43 @@ class _SingleHandSetupScreenState extends State<SingleHandSetupScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  /// "Saving to <session>" line (D23): tap to pick a hand group instead.
+  Widget _savingTo(AppLocalizations l10n) {
+    final inSession = _session != null;
+    return Semantics(
+      button: true,
+      child: GestureDetector(
+        key: const ValueKey('saving-to'),
+        behavior: HitTestBehavior.opaque,
+        onTap: _pickTarget,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: AppSpacing.xxs),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Flexible(
+                child: Text(
+                  inSession
+                      ? (_session!.isFull
+                          ? l10n.trackedSavingToResumeTable(_session!.name)
+                          : l10n.trackedSavingTo(_session!.name))
+                      : l10n.trackedSavingToGroup,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style:
+                      AppTypography.bodySmall(color: AppColors.textSecondary),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.xxxs),
+              const Icon(Icons.keyboard_arrow_down_rounded,
+                  size: 18, color: AppColors.textSecondary),
+            ],
+          ),
+        ),
+      ),
     );
   }
 

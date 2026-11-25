@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../models/tracked_session.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 import '../models/opponent.dart';
@@ -112,6 +113,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
 
       for (final session in sessions) {
         final sessionId = session['id'] as String;
+        if (isTrackedSession(session)) continue; // never opponent stats
         final playerNames = session['playerNames'] as Map<String, dynamic>?;
 
         if (playerNames != null) {

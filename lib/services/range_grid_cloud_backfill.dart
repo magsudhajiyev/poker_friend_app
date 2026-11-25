@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../models/tracked_session.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -54,6 +55,8 @@ class RangeGridCloudBackfill {
         final session = sessions[sessionIdx];
         final sessionId = session['id'] as String?;
         if (sessionId == null) continue;
+        // Tracked-session hands never reach the range grid.
+        if (isTrackedSession(session)) continue;
 
         final sessionGameType = session['gameType'] as String? ?? 'cash';
         final sessionBigBlind = (session['bigBlind'] as num?)?.toDouble();

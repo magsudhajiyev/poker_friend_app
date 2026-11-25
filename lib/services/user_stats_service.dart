@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import '../models/tracked_session.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/user_stats.dart';
 import '../services/firebase_service.dart';
@@ -200,6 +201,9 @@ class UserStatsService {
           totalPlayTimeMinutes += end.difference(start).inMinutes;
         }
 
+        // Tracked sessions count for sessions/play time, never for hand stats.
+        if (isTrackedSession(session)) continue;
+
         // Get hands for this session
         List<Map<String, dynamic>> hands;
         try {
@@ -359,6 +363,9 @@ class UserStatsService {
             await LoggerService.error('Error parsing session times for $sessionId', e, StackTrace.current);
           }
         }
+
+        // Tracked sessions count for sessions/play time, never for hand stats.
+        if (isTrackedSession(session)) continue;
 
         // Get hands for this session
         List<Map<String, dynamic>> hands;

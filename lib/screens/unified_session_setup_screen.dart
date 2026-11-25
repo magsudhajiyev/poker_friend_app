@@ -17,6 +17,9 @@ import '../onboarding/onboarding_tour.dart';
 import '../onboarding/onboarding_progress_bar.dart';
 import 'poker_hand_screen.dart';
 import 'session_details_screen.dart';
+import '../widgets/running_session_guard.dart';
+import '../services/session_navigation.dart';
+import '../services/session_start_gate.dart';
 import '../design_system/constants/typography.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/decorations.dart';
@@ -215,8 +218,14 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
 
   // ─── SESSION START ───────────────────────────────────────────────
 
-  void _startSession() {
+  Future<void> _startSession() async {
     if (!_isFormValid) return;
+    // One running session at a time (never blocks the tour).
+    if (!OnboardingState.isOnboardingActive &&
+        !await RunningSessionGuard.ensureFree(context)) {
+      return;
+    }
+    if (!mounted) return;
 
     final buyIn = parseDecimal(_buyInController.text) ?? 0.0;
     final startingStack = _gameType == GameType.cash
@@ -267,9 +276,7 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
       OnboardingState.sessionDetailsHubTourPending = true;
     }
 
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
+    final hubRoute = MaterialPageRoute<void>(
         builder: (context) => SessionDetailsScreen(
           sessionName: sessionName,
           buyInAmount: buyIn,
@@ -284,8 +291,14 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
           initialButtonPosition: buttonPos,
           ante: _hasBBante ? _bigBlind : 0,
         ),
-      ),
     );
+    // The running full session's hub: "Log a hand" can pop back to it.
+    SessionNavigation.track(SessionNavigation.fullHubKey, hubRoute);
+    SessionStartGate.pendingFull = (
+      name: sessionName,
+      gameType: _gameType == GameType.tournament ? 'tournament' : 'cash',
+    );
+    Navigator.pushReplacement(context, hubRoute);
   }
 
   // ─── SEAT TAP HANDLER ───────────────────────────────────────────

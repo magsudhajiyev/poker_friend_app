@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import '../models/tracked_session.dart';
 import '../models/single_hand_group.dart';
 import 'auth_service.dart';
 import 'leak_engine.dart';
@@ -50,7 +51,7 @@ class LeakReportService {
         if (data['isIndividualSession'] == true) continue;
         // Single hands are hand-picked (mostly played hands): they would bias
         // every frequency band.
-        if (isHandGroupSession(data)) continue;
+        if (skipsHandStats(data)) continue;
         if ((data['totalHands'] as num? ?? 0) == 0) continue;
         eligible.add(session);
       }

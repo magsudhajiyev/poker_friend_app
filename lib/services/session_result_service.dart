@@ -17,6 +17,7 @@ class SessionResultService {
     int? fieldSize,
     int? durationMinutes,
     Map<String, Object>? coverage, // SessionCoverage.compute(...), easy logging
+    DateTime? endTime, // real end time chosen by the player (default: now)
   }) async {
     try {
       final userId = AuthService.currentUser?.uid;
@@ -30,8 +31,10 @@ class SessionResultService {
         'userEmail': userEmail,
         'amount': amount,
         'gameType': gameType,
-        'timestamp': FieldValue.serverTimestamp(),
-        'createdAt': DateTime.now().toIso8601String(),
+        'timestamp': endTime != null
+            ? Timestamp.fromDate(endTime)
+            : FieldValue.serverTimestamp(),
+        'createdAt': (endTime ?? DateTime.now()).toIso8601String(),
       };
 
       if (buyInAmount != null) data['buyInAmount'] = buyInAmount;

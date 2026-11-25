@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest_all.dart' as tz;
@@ -8,6 +9,8 @@ import '../screens/paywall_screen.dart';
 import '../screens/training/daily_challenge_screen.dart';
 import 'auth_service.dart';
 import 'coach_icon_service.dart';
+import 'live_session_logic.dart';
+import 'live_session_notification_service.dart';
 import 'paid_nudge_service.dart';
 import 'spot_quiz_logic.dart';
 import 'streak_saver_service.dart';
@@ -17,6 +20,9 @@ class NotificationService {
       FlutterLocalNotificationsPlugin();
 
   static bool _initialized = false;
+
+  /// The shared plugin instance (live-session notification posts through it).
+  static FlutterLocalNotificationsPlugin get plugin => _notifications;
 
   /// Root navigator key, injected from main.dart before [initialize] so
   /// notification taps can route (e.g. promo expiry → paywall).
@@ -75,6 +81,13 @@ class NotificationService {
           launchPayload.startsWith(StreakSaverService.payloadPrefix)) {
         _handleEngagementTap(launchPayload);
       }
+      if (launchDetails?.didNotificationLaunchApp == true) {
+        final r = launchDetails?.notificationResponse;
+        if (r?.payload?.startsWith(LiveSessionLogic.payloadPrefix) == true) {
+          unawaited(LiveSessionNotificationService.onTapped(
+              r!.payload, r.actionId));
+        }
+      }
 
       _initialized = true;
       debugPrint('✅ Notification service initialized');
@@ -86,6 +99,11 @@ class NotificationService {
   /// Handle notification tap
   static void _onNotificationTapped(NotificationResponse response) {
     debugPrint('📲 Notification tapped: ${response.payload}');
+    if (response.payload?.startsWith(LiveSessionLogic.payloadPrefix) == true) {
+      unawaited(LiveSessionNotificationService.onTapped(
+          response.payload, response.actionId));
+      return;
+    }
     if (_promoPayloads.contains(response.payload)) {
       _openPaywallWhenReady();
     }

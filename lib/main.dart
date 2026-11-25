@@ -1,3 +1,5 @@
+import 'screens/tracked_session_hub.dart';
+import 'services/live_session_notification_service.dart';
 import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/foundation.dart';
@@ -180,6 +182,9 @@ Future<void> _initNotificationChain() async {
     NotificationService.navigatorKey = navigatorKey;
     await NotificationService.initialize();
     await NotificationService.requestPermissions();
+    // Re-post the running-session notification (some skins drop it on swipe).
+    TrackedSessionHub.registerHooks();
+    unawaited(LiveSessionNotificationService.restoreOnLaunch());
     debugPrint('Local notification service initialized successfully');
   } catch (e) {
     debugPrint('Local notification initialization failed: $e');

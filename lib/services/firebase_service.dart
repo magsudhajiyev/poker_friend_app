@@ -47,7 +47,7 @@ class FirebaseService {
     String? dealerSessionId, // Links to dealer_sessions for hole card lookup
     String? eventId, // Links to club event for tournament session grouping
     bool isTutorial = false, // First-run tour session: badged, excluded from stats
-    String? sessionType, // 'hand_group' = single-hand group (no stats/money)
+    String? sessionType, // 'hand_group' = single-hand group, 'tracked' = tracked session
     String? sessionId, // Client-generated id (see newSessionId): offline-safe
   }) async {
     try {
@@ -79,9 +79,12 @@ class FirebaseService {
 
       // A hand group is never an active session: endTime is set from the start
       // (the single-hand service moves it on every saved hand).
+      // A tracked session IS an active session: its endTime stays null.
       if (sessionType != null) {
         sessionData['sessionType'] = sessionType;
-        sessionData['endTime'] = FieldValue.serverTimestamp();
+        if (sessionType != 'tracked') {
+          sessionData['endTime'] = FieldValue.serverTimestamp();
+        }
       }
 
       // For live sessions, initialize participant tracking
@@ -648,13 +651,17 @@ class FirebaseService {
   }
 
   // End a session
-  static Future<void> endSession(String sessionId) async {
+  /// [endTime]: a real end time the player chose (play time and `endTime`
+  /// use it); null = now.
+  static Future<void> endSession(String sessionId, {DateTime? endTime}) async {
     try {
       // Get session data to calculate duration
       final sessionDoc = await _firestore.collection(_sessionsCollection).doc(sessionId).get();
 
       await _firestore.collection(_sessionsCollection).doc(sessionId).update({
-        'endTime': FieldValue.serverTimestamp(),
+        'endTime': endTime != null
+            ? Timestamp.fromDate(endTime)
+            : FieldValue.serverTimestamp(),
       });
       invalidateSessionsCache();
 
@@ -676,13 +683,16 @@ class FirebaseService {
           // 3. They logged at least one hand
           final userParticipated = ourSeatNumber != null ||
               participantIds.contains(userId) ||
-              totalHands > 0;
+              totalHands > 0 ||
+              sessionData['sessionType'] == 'tracked';
 
           // Tutorial sessions never count toward session/play-time stats
           final isTutorial = sessionData['isTutorial'] == true;
 
           if (userParticipated && !isTutorial) {
-            final duration = DateTime.now().difference(startTime.toDate()).inMinutes;
+            final duration = (endTime ?? DateTime.now())
+                .difference(startTime.toDate())
+                .inMinutes;
             await UserStatsService.updateStatsAtomic(
               userId: userId,
               sessionsDelta: 1,

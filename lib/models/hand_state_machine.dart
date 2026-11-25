@@ -19,6 +19,8 @@ import '../utils/blind_rotation.dart';
 import '../utils/poker_positions.dart';
 import '../utils/stack_sources.dart';
 import '../onboarding/onboarding_state.dart';
+import '../services/live_session_notification_service.dart';
+import '../services/live_session_logic.dart' show LiveSessionRecord;
 
 enum HandState {
   notStarted,
@@ -696,6 +698,19 @@ class PokerSessionManager {
     _addStackHistoryEntry(startingStack, 'initial', 0.0, 0);
 
     sessionState = SessionState.active;
+
+    // Live indicator (notification + Home bar). Not for the tour's tutorial
+    // session or dealer/live club sessions. Never throws.
+    final liveId = sessionId;
+    if (!isTutorial && !isLive && liveId != null) {
+      unawaited(LiveSessionNotificationService.start(
+        sessionId: liveId,
+        name: sessionName ?? '',
+        gameType: gameType == GameType.tournament ? 'tournament' : 'cash',
+        startTime: sessionStartTime!,
+        kind: LiveSessionRecord.kindFull,
+      ));
+    }
   }
 
   // Start a new hand
@@ -1796,6 +1811,9 @@ class PokerSessionManager {
 
     sessionEndTime = DateTime.now();
     sessionState = SessionState.ended;
+    if (sessionId != null) {
+      unawaited(LiveSessionNotificationService.stop(sessionId!));
+    }
 
     // Local first: stack history + endTime are saved before anything touches
     // the network, so the summary never waits on cloud round trips.
