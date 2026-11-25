@@ -190,7 +190,9 @@ class UserStatsService {
       totalSessions = sessions.length;
 
       // Process each session
-      for (var session in sessions) {
+      final handsPrefetch = <String, Future<Object>>{};
+      for (var sessionIdx = 0; sessionIdx < sessions.length; sessionIdx++) {
+        final session = sessions[sessionIdx];
         // Calculate session duration
         if (session['endTime'] != null && session['startTime'] != null) {
           final start = DateTime.parse(session['startTime']);
@@ -201,7 +203,8 @@ class UserStatsService {
         // Get hands for this session
         List<Map<String, dynamic>> hands;
         try {
-          hands = await FirebaseService.getSessionHands(session['id']);
+          hands = await FirebaseService.getSessionHandsPrefetched(
+              sessions, sessionIdx, handsPrefetch);
         } catch (e) {
           await LoggerService.error('Error fetching hands for session ${session['id']}', e, StackTrace.current);
           continue;
@@ -327,7 +330,9 @@ class UserStatsService {
       debugPrint('📊 Found ${sessions.length} sessions to process');
 
       // Process each session
-      for (var session in sessions) {
+      final handsPrefetch = <String, Future<Object>>{};
+      for (var sessionIdx = 0; sessionIdx < sessions.length; sessionIdx++) {
+        final session = sessions[sessionIdx];
         final sessionId = session['id'] as String?;
         if (sessionId == null) continue;
 
@@ -358,7 +363,8 @@ class UserStatsService {
         // Get hands for this session
         List<Map<String, dynamic>> hands;
         try {
-          hands = await FirebaseService.getSessionHands(sessionId);
+          hands = await FirebaseService.getSessionHandsPrefetched(
+              sessions, sessionIdx, handsPrefetch);
         } catch (e) {
           await LoggerService.error('Error fetching hands for session $sessionId', e, StackTrace.current);
           continue;

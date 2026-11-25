@@ -119,14 +119,16 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen>
     WidgetsBinding.instance.addObserver(this);
     _load();
     CoachPersonas.load().then((p) {
-      if (mounted) setState(() => _persona = p);
+      if (!mounted) return;
+      setState(() => _persona = p);
+      _precacheMascots(p.id);
     });
     // Warm the greeting clips while the intro is on screen, so tapping a
     // coach speaks instantly instead of after a synthesis round-trip.
     for (final p in CoachPersonas.all) {
       CoachVoiceService.prefetch(p.greeting, coachId: p.id);
     }
-    ChallengeSoundService.loadEnabled();
+    ChallengeSoundService.preload();
     AnalyticsService.capture('daily_challenge_opened', {
       'challenge_number': DailyChallengeService.challengeNumber(_config.day),
     });
@@ -173,14 +175,20 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen>
   Future<void> _load() async {
     final config = _config;
     final requestId = ++_planRequestId;
-    final result = await DailyChallengeStore.resultFor(config.day);
-    final streaks = await DailyChallengeStore.streaks(config.day);
-    // Authored day? Name it from the real GTO data, not the RNG weekday theme.
     final dayKey = DailyChallengeStore.dayKey(config.day);
-    // No local result: has this account already played today elsewhere?
-    // Skipped for admin day-override runs (they never post).
-    final remote = await _fetchRemote(dayKey, result);
-    final plan = await AuthoredTreeService.loadDaySchedule(dayKey);
+    // Independent reads run together. The remote check only depends on the
+    // local result, so it chains onto that read instead of waiting for all.
+    final resultAndRemote = () async {
+      final r = await DailyChallengeStore.resultFor(config.day);
+      // No local result: has this account already played today elsewhere?
+      // Skipped for admin day-override runs (they never post).
+      return (r, await _fetchRemote(dayKey, r));
+    }();
+    final streaksF = DailyChallengeStore.streaks(config.day);
+    final planF = AuthoredTreeService.loadDaySchedule(dayKey);
+    final (result, remote) = await resultAndRemote;
+    final streaks = await streaksF;
+    final plan = await planF;
     final trees = plan.trees;
     String? headline, subtitle;
     if (trees != null && trees.isNotEmpty) {
@@ -209,6 +217,16 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen>
       .replaceAll('·', ' ')
       .replaceAll('  ', ' ')
       .trim();
+
+  /// Decode the active coach's expressions now so the verdict reveal never
+  /// waits on an image decode (intro size + the larger in-run size).
+  void _precacheMascots(String personaId) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      CoachMascot.precache(context, personaId, _mascotSize);
+      CoachMascot.precache(context, personaId, 92);
+    });
+  }
 
   @override
   void dispose() {
@@ -832,6 +850,7 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen>
       _justPicked = true;
     });
     CoachPersonas.save(p);
+    _precacheMascots(p.id);
     // Mirror to the user doc so server engagement pushes can be coach-voiced.
     unawaited(NotificationPrefsService.saveCoachId(p.id));
     // Audible preview — the coach introduces themself in their real voice.

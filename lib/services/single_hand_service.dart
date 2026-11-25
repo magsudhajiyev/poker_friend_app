@@ -248,6 +248,7 @@ class SingleHandService {
     );
     await _cacheLastGroup(group);
     AppDataCache.markSessionsDirty();
+    FirebaseService.invalidateSessionsCache();
     AppDataCache.markHomeDirty();
     return SingleHandSaveResult(
       sessionId: id,

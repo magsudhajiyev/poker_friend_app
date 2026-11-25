@@ -24,6 +24,8 @@ class LeakReportBundle {
 class LeakReportService {
   LeakReportService._();
 
+  static const int _fetchChunk = 8;
+
   static Future<LeakReportBundle> generate() async {
     final userId = AuthService.userId;
     if (userId == null) {
@@ -41,6 +43,7 @@ class LeakReportService {
           .where('userId', isEqualTo: userId)
           .get();
 
+      final eligible = <QueryDocumentSnapshot<Map<String, dynamic>>>[];
       for (final session in sessions.docs) {
         final data = session.data();
         if (data['isTutorial'] == true) continue;
@@ -49,20 +52,29 @@ class LeakReportService {
         // every frequency band.
         if (isHandGroupSession(data)) continue;
         if ((data['totalHands'] as num? ?? 0) == 0) continue;
+        eligible.add(session);
+      }
 
-        final hands = await firestore
+      // Bounded parallel fetch; results are consumed in the original session
+      // order so the output is identical to the old serial loop.
+      for (var i = 0; i < eligible.length; i += _fetchChunk) {
+        final chunk = eligible.skip(i).take(_fetchChunk).toList();
+        final snaps = await Future.wait(chunk.map((session) => firestore
             .collection('poker_sessions')
             .doc(session.id)
             .collection('poker_hands')
-            .get();
-        for (final hand in hands.docs) {
-          final data = hand.data();
-          // Same key shape as the range grid uses for hand lookups.
-          final ref = '${session.id}:${data['handNumber'] ?? hand.id}';
-          final extracted = LeakExtractor.extract(data, ref: ref);
-          if (extracted != null) {
-            facts.add(extracted);
-            handsByRef[ref] = data;
+            .get()));
+        for (var j = 0; j < chunk.length; j++) {
+          final sessionId = chunk[j].id;
+          for (final hand in snaps[j].docs) {
+            final data = hand.data();
+            // Same key shape as the range grid uses for hand lookups.
+            final ref = '$sessionId:${data['handNumber'] ?? hand.id}';
+            final extracted = LeakExtractor.extract(data, ref: ref);
+            if (extracted != null) {
+              facts.add(extracted);
+              handsByRef[ref] = data;
+            }
           }
         }
       }

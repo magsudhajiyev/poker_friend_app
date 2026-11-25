@@ -63,32 +63,18 @@ void main() async {
     debugPrint = (String? message, {int? wrapWidth}) {};
   }
 
-  // Lock to portrait globally. Individual chart screens (earnings, stack,
-  // public leaderboard) opt into landscape and restore this lock on dispose.
-  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+  // Independent startup work runs together. Orientation lock is not awaited
+  // for the first frame (individual chart screens restore it on dispose).
+  unawaited(SystemChrome.setPreferredOrientations(
+      [DeviceOrientation.portraitUp]));
 
-  // Load environment configuration
-  try {
-    await EnvConfig.load();
-  } catch (e) {
-    debugPrint('Environment config load failed: $e');
-  }
-
-  // Firebase must init before runApp (AuthWrapper depends on it)
-  try {
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
-    debugPrint('Firebase initialized successfully');
-
-    FirebaseFirestore.instance.settings = const Settings(
-      persistenceEnabled: true,
-      cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
-    );
-    debugPrint('Firestore offline persistence enabled');
-  } catch (e) {
-    debugPrint('Firebase initialization failed: $e');
-  }
+  // EnvConfig.load must finish before AnalyticsService.init reads it, so it
+  // is joined below. Firestore settings are applied right after Firebase init
+  // inside the same future, before any Firestore use.
+  final envFuture = EnvConfig.load().catchError(
+      (e) => debugPrint('Environment config load failed: $e'));
+  final firebaseFuture = _initFirebase();
+  await Future.wait([envFuture, firebaseFuture]);
 
   // PostHog product analytics — after EnvConfig (key) and Firebase (auth
   // stream drives identify/reset). Fire-and-forget; no-op without a key.
@@ -146,9 +132,49 @@ void main() async {
   unawaited(_initServicesInBackground());
 }
 
+/// Firebase init + Firestore settings (must precede any Firestore use).
+Future<void> _initFirebase() async {
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    debugPrint('Firebase initialized successfully');
+
+    FirebaseFirestore.instance.settings = const Settings(
+      persistenceEnabled: true,
+      cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
+    );
+    debugPrint('Firestore offline persistence enabled');
+  } catch (e) {
+    debugPrint('Firebase initialization failed: $e');
+  }
+}
+
 /// Initialize non-critical services in background after app is already visible.
 /// Each service is wrapped in try/catch so failures don't affect the app.
 Future<void> _initServicesInBackground() async {
+  // Notification chain: local notifications (+ permission dialog) then FCM.
+  // Kept sequential so the two OS prompts do not collide, but it no longer
+  // blocks any other service.
+  final notificationChain = _initNotificationChain();
+
+  // Everything else starts immediately, in parallel.
+  await Future.wait([
+    _initLogger(),
+    _initSubscriptions(),
+    _initDeepLinks(),
+  ]);
+
+  // Process pending notification after services are ready
+  await notificationChain;
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    Future.delayed(const Duration(seconds: 1), () {
+      FCMService.processPendingInitialMessage();
+    });
+  });
+}
+
+Future<void> _initNotificationChain() async {
   // Local notifications
   try {
     NotificationService.navigatorKey = navigatorKey;
@@ -173,18 +199,20 @@ Future<void> _initServicesInBackground() async {
   } catch (e) {
     debugPrint('FCM initialization failed: $e');
   }
+}
 
-  // Logger
+Future<void> _initLogger() async {
   try {
     await LoggerService.initialize();
-    await LoggerService.info('App started - Logger initialized');
+    unawaited(LoggerService.info('App started - Logger initialized'));
     unawaited(LoggerService.logEvent('app_open'));
     debugPrint('Logger service initialized successfully');
   } catch (e) {
     debugPrint('Logger initialization failed: $e');
   }
+}
 
-  // RevenueCat subscriptions
+Future<void> _initSubscriptions() async {
   try {
     await SubscriptionService.initialize();
     debugPrint('Subscription service initialized successfully');
@@ -198,8 +226,9 @@ Future<void> _initServicesInBackground() async {
   } catch (e) {
     debugPrint('Subscription service initialization failed: $e');
   }
+}
 
-  // Deep links
+Future<void> _initDeepLinks() async {
   try {
     await DeepLinkService.initialize(
       navigatorKey: navigatorKey,
@@ -211,13 +240,6 @@ Future<void> _initServicesInBackground() async {
   } catch (e) {
     debugPrint('Deep link initialization failed: $e');
   }
-
-  // Process pending notification after services are ready
-  WidgetsBinding.instance.addPostFrameCallback((_) {
-    Future.delayed(const Duration(seconds: 1), () {
-      FCMService.processPendingInitialMessage();
-    });
-  });
 }
 
 /// Show a notification when an invitation is accepted via deep link

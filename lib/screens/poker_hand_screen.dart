@@ -277,7 +277,13 @@ class _PokerHandScreenState extends State<PokerHandScreen>
   Animation<double>? _actionFlashSlide;
   Animation<double>? _actionFlashOpacity;
   // Fold swipe animation state
-  double _foldSwipeDx = 0.0; // horizontal displacement during swipe
+  // Horizontal displacement during swipe. Backed by a notifier so per-move
+  // updates repaint only the FOLD indicator, not the whole screen.
+  final ValueNotifier<double> _foldSwipeDxNotifier = ValueNotifier<double>(0.0);
+  double get _foldSwipeDx => _foldSwipeDxNotifier.value;
+  set _foldSwipeDx(double v) => _foldSwipeDxNotifier.value = v;
+  // Bumped on every raise-snap drag move; the overlay listens to it.
+  final ValueNotifier<int> _raiseSnapTick = ValueNotifier<int>(0);
   bool _isFoldSwiping = false;
   // Tap flash animation state (check/call ripple)
   AnimationController? _tapFlashController;
@@ -289,6 +295,9 @@ class _PokerHandScreenState extends State<PokerHandScreen>
   int _scatterSeed = 0;
   // Breathing glow on the current player's seat indicator
   AnimationController? _turnPulseController;
+  bool _pulseWanted = false;
+  bool _pulseSyncScheduled = false;
+  bool _appPaused = false;
   // Chip flight overlay (bets flying to pot, pot flying to winner)
   final List<GlobalKey> _seatAnchorKeys =
       List.generate(9, (_) => GlobalKey(debugLabel: 'seatAnchor'));
@@ -376,7 +385,7 @@ class _PokerHandScreenState extends State<PokerHandScreen>
     _turnPulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1100),
-    )..repeat(reverse: true);
+    );
 
     // Start session and first hand
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -1030,6 +1039,25 @@ class _PokerHandScreenState extends State<PokerHandScreen>
         state == AppLifecycleState.detached) {
       _flushFoldTicks();
     }
+    // Stop the seat glow while backgrounded; the build re-syncs on resume.
+    if (state == AppLifecycleState.resumed) {
+      _appPaused = false;
+      _syncTurnPulse(_pulseWanted);
+    } else if (state == AppLifecycleState.paused) {
+      _appPaused = true;
+      _syncTurnPulse(false);
+    }
+  }
+
+  /// Runs the turn-glow pulse only while a seat is actually pulsing.
+  void _syncTurnPulse(bool wanted) {
+    final c = _turnPulseController;
+    if (c == null) return;
+    if (wanted && !c.isAnimating) {
+      c.repeat(reverse: true);
+    } else if (!wanted && c.isAnimating) {
+      c.stop();
+    }
   }
 
   @override
@@ -1043,6 +1071,8 @@ class _PokerHandScreenState extends State<PokerHandScreen>
     _tapFlashController?.dispose();
     _nextHandSweepController?.dispose();
     _turnPulseController?.dispose();
+    _foldSwipeDxNotifier.dispose();
+    _raiseSnapTick.dispose();
     for (final flight in _chipFlights) {
       flight.controller.dispose();
     }
@@ -1456,6 +1486,16 @@ class _PokerHandScreenState extends State<PokerHandScreen>
 
     final screenWidth = MediaQuery.of(context).size.width;
 
+    // Seat builders flag _pulseWanted during layout; sync the controller after.
+    _pulseWanted = false;
+    if (!_pulseSyncScheduled) {
+      _pulseSyncScheduled = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _pulseSyncScheduled = false;
+        if (mounted && !_appPaused) _syncTurnPulse(_pulseWanted);
+      });
+    }
+
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, result) async {
@@ -1569,65 +1609,69 @@ class _PokerHandScreenState extends State<PokerHandScreen>
                             if (_isFoldSwiping)
                               Positioned.fill(
                                 child: IgnorePointer(
-                                  child: LayoutBuilder(
-                                    builder: (context, constraints) {
-                                      final progress = (_foldSwipeDx.abs() /
-                                              (constraints.maxWidth * 0.4))
-                                          .clamp(0.0, 1.0);
-                                      final direction =
-                                          _foldSwipeDx >= 0 ? 1.0 : -1.0;
-                                      return Stack(
-                                        children: [
-                                          // Directional gradient overlay
-                                          Positioned.fill(
-                                            child: DecoratedBox(
-                                              decoration: BoxDecoration(
-                                                gradient: LinearGradient(
-                                                  begin: direction > 0
-                                                      ? Alignment.centerLeft
-                                                      : Alignment.centerRight,
-                                                  end: direction > 0
-                                                      ? Alignment.centerRight
-                                                      : Alignment.centerLeft,
-                                                  colors: [
-                                                    Colors.transparent,
-                                                    Color(0xFFE85D5D)
-                                                        .withValues(
-                                                            alpha: 0.12 *
-                                                                progress),
-                                                  ],
+                                  child: ValueListenableBuilder<double>(
+                                    valueListenable: _foldSwipeDxNotifier,
+                                    builder: (context, _, __) => LayoutBuilder(
+                                      builder: (context, constraints) {
+                                        final progress = (_foldSwipeDx.abs() /
+                                                (constraints.maxWidth * 0.4))
+                                            .clamp(0.0, 1.0);
+                                        final direction =
+                                            _foldSwipeDx >= 0 ? 1.0 : -1.0;
+                                        return Stack(
+                                          children: [
+                                            // Directional gradient overlay
+                                            Positioned.fill(
+                                              child: DecoratedBox(
+                                                decoration: BoxDecoration(
+                                                  gradient: LinearGradient(
+                                                    begin: direction > 0
+                                                        ? Alignment.centerLeft
+                                                        : Alignment.centerRight,
+                                                    end: direction > 0
+                                                        ? Alignment.centerRight
+                                                        : Alignment.centerLeft,
+                                                    colors: [
+                                                      Colors.transparent,
+                                                      Color(0xFFE85D5D)
+                                                          .withValues(
+                                                              alpha: 0.12 *
+                                                                  progress),
+                                                    ],
+                                                  ),
                                                 ),
                                               ),
                                             ),
-                                          ),
-                                          // "FOLD" text that slides with swipe
-                                          Center(
-                                            child: Transform.translate(
-                                              offset:
-                                                  Offset(_foldSwipeDx * 0.3, 0),
-                                              child: Opacity(
-                                                opacity: progress * 0.7,
-                                                child: Transform.rotate(
-                                                  angle: direction *
-                                                      -0.08 *
-                                                      progress,
-                                                  child: Text(
-                                                    l10n.handFoldLabel,
-                                                    style: AppTypography.ibm(
-                                                      fontSize: 32,
-                                                      fontWeight:
-                                                          FontWeight.w800,
-                                                      color: Color(0xFFE85D5D),
-                                                      letterSpacing: 6,
+                                            // "FOLD" text that slides with swipe
+                                            Center(
+                                              child: Transform.translate(
+                                                offset: Offset(
+                                                    _foldSwipeDx * 0.3, 0),
+                                                child: Opacity(
+                                                  opacity: progress * 0.7,
+                                                  child: Transform.rotate(
+                                                    angle: direction *
+                                                        -0.08 *
+                                                        progress,
+                                                    child: Text(
+                                                      l10n.handFoldLabel,
+                                                      style: AppTypography.ibm(
+                                                        fontSize: 32,
+                                                        fontWeight:
+                                                            FontWeight.w800,
+                                                        color:
+                                                            Color(0xFFE85D5D),
+                                                        letterSpacing: 6,
+                                                      ),
                                                     ),
                                                   ),
                                                 ),
                                               ),
                                             ),
-                                          ),
-                                        ],
-                                      );
-                                    },
+                                          ],
+                                        );
+                                      },
+                                    ),
                                   ),
                                 ),
                               ),
@@ -1864,20 +1908,23 @@ class _PokerHandScreenState extends State<PokerHandScreen>
 
                             // Raise snap overlay (quick swipe mode)
                             if (_isRaiseSnapping)
-                              RaiseSnapOverlay(
-                                snapPoints: _raiseSnapPoints,
-                                currentAmount: _raiseSnapAmount,
-                                activeSnapIndex: _activeSnapIndex,
-                                dragProgress: _raiseSnapProgress,
-                                actionLabel:
-                                    _raiseSnapAction == PlayerAction.raise
-                                        ? l10n.handRaiseLabel
-                                        : l10n.handBetLabel,
-                                formattedAmount:
-                                    gameState.formatCurrency(_raiseSnapAmount),
-                                isCashGame: gameState.isCashGame,
-                                onTapAmount: _openNumpadFromSnap,
-                                suggestion: _raiseSnapSuggestion,
+                              ValueListenableBuilder<int>(
+                                valueListenable: _raiseSnapTick,
+                                builder: (context, _, __) => RaiseSnapOverlay(
+                                  snapPoints: _raiseSnapPoints,
+                                  currentAmount: _raiseSnapAmount,
+                                  activeSnapIndex: _activeSnapIndex,
+                                  dragProgress: _raiseSnapProgress,
+                                  actionLabel:
+                                      _raiseSnapAction == PlayerAction.raise
+                                          ? l10n.handRaiseLabel
+                                          : l10n.handBetLabel,
+                                  formattedAmount: gameState
+                                      .formatCurrency(_raiseSnapAmount),
+                                  isCashGame: gameState.isCashGame,
+                                  onTapAmount: _openNumpadFromSnap,
+                                  suggestion: _raiseSnapSuggestion,
+                                ),
                               ),
 
                             // Settling overlay between hands — backdrop fades in,
@@ -2469,10 +2516,13 @@ class _PokerHandScreenState extends State<PokerHandScreen>
           ),
         );
 
+    if (isCurrentPlayer) _pulseWanted = true;
     final circle = isCurrentPlayer && _turnPulseController != null
-        ? AnimatedBuilder(
-            animation: _turnPulseController!,
-            builder: (context, _) => buildCircle(_turnPulseController!.value),
+        ? RepaintBoundary(
+            child: AnimatedBuilder(
+              animation: _turnPulseController!,
+              builder: (context, _) => buildCircle(_turnPulseController!.value),
+            ),
           )
         : buildCircle(0.0);
 
@@ -3806,7 +3856,7 @@ class _PokerHandScreenState extends State<PokerHandScreen>
       if (!_isFoldSwiping) {
         setState(() => _isFoldSwiping = true);
       }
-      setState(() => _foldSwipeDx = dx);
+      _foldSwipeDx = dx; // notifier: no whole-screen rebuild per move
     } else if (_isFoldSwiping && dy < -30) {
       // User changed direction to vertical — cancel fold visual
       setState(() {
@@ -3995,12 +4045,13 @@ class _PokerHandScreenState extends State<PokerHandScreen>
       HapticFeedback.selectionClick();
     }
 
-    setState(() {
-      _raiseSnapProgress = clampedProgress;
-      _raiseSnapRawProgress = progress;
-      _activeSnapIndex = newSnapIndex;
-      _raiseSnapAmount = newAmount;
-    });
+    // Per-move state lives in plain fields + a tick notifier so only the
+    // overlay rebuilds (not the whole screen).
+    _raiseSnapProgress = clampedProgress;
+    _raiseSnapRawProgress = progress;
+    _activeSnapIndex = newSnapIndex;
+    _raiseSnapAmount = newAmount;
+    _raiseSnapTick.value++;
   }
 
   /// Cancel raise snap mode without performing action.
@@ -5113,11 +5164,11 @@ class _PokerHandScreenState extends State<PokerHandScreen>
       Navigator.of(context).pop();
       return;
     }
-    final choice = await SingleHandResultSheet.show(context,
-        hand: hand, saved: saved);
+    final choice =
+        await SingleHandResultSheet.show(context, hand: hand, saved: saved);
     if (!mounted) return;
-    Navigator.of(context).pop(SingleHandOutcome(
-        choice ?? SingleHandChoice.done, saved.group));
+    Navigator.of(context)
+        .pop(SingleHandOutcome(choice ?? SingleHandChoice.done, saved.group));
   }
 
   /// Back from single-hand mode: confirm only when actions exist.
@@ -5140,7 +5191,6 @@ class _PokerHandScreenState extends State<PokerHandScreen>
       },
     );
   }
-
 
   /// Blocking "Saving hand…" layer shown while the stub is promoted.
   Widget _buildRecallSavingOverlay() {

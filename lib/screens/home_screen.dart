@@ -2445,6 +2445,21 @@ class _HomeScreenState extends State<HomeScreen>
   /// admin-flagged (Leak Detector precedent).
   int _dailyChallengeReload = 0;
 
+  /// Cached card future: recreated only when the reload counter or the day
+  /// changes, never on unrelated Home rebuilds.
+  Future<(DailyChallengeResult?, DailyChallengeStreaks, String?)>? _dcFuture;
+  String? _dcFutureKey;
+
+  Future<(DailyChallengeResult?, DailyChallengeStreaks, String?)>
+      _dailyChallengeFuture(DateTime day) {
+    final key = '$_dailyChallengeReload|${DailyChallengeStore.dayKey(day)}';
+    if (_dcFuture == null || _dcFutureKey != key) {
+      _dcFutureKey = key;
+      _dcFuture = _loadDailyChallengeState(day);
+    }
+    return _dcFuture!;
+  }
+
   Future<(DailyChallengeResult?, DailyChallengeStreaks, String?)>
       _loadDailyChallengeState(DateTime day) async {
     final result = await DailyChallengeStore.resultFor(day);
@@ -2479,7 +2494,7 @@ class _HomeScreenState extends State<HomeScreen>
         return FutureBuilder<
             (DailyChallengeResult?, DailyChallengeStreaks, String?)>(
           key: ValueKey('daily_challenge_$_dailyChallengeReload'),
-          future: _loadDailyChallengeState(config.day),
+          future: _dailyChallengeFuture(config.day),
           builder: (context, snap) {
             final result = snap.data?.$1;
             final streak = snap.data?.$2.current ?? 0;

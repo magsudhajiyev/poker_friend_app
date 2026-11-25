@@ -125,21 +125,22 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> with SingleTicker
 
   Future<void> _loadOpponents({bool useCache = false}) async {
     try {
-      setState(() {
-        isLoading = true;
-        error = null;
-      });
-
-      // Use cache if available and requested
+      // Use cache if available and requested (single setState, no skeleton flash)
       if (useCache && MyOpponentsScreen._cachedOpponents != null && MyOpponentsScreen._cachedHandsCounts != null && MyOpponentsScreen._cachedStats != null) {
         setState(() {
           opponents = MyOpponentsScreen._cachedOpponents!;
           opponentHandsCounts = MyOpponentsScreen._cachedHandsCounts!;
           opponentStats = MyOpponentsScreen._cachedStats!;
           isLoading = false;
+          error = null;
         });
         return;
       }
+
+      setState(() {
+        isLoading = true;
+        error = null;
+      });
 
       // Load basic opponent data (name, color, notes, dates) - fast operation
       final loadedOpponents = await OpponentService.getAllOpponents();

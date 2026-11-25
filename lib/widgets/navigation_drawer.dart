@@ -823,6 +823,8 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
         borderRadius: BorderRadius.circular(size / 2),
         child: CachedNetworkImage(
           imageUrl: photoURL,
+          memCacheWidth: (size * MediaQuery.devicePixelRatioOf(context)).round(),
+          memCacheHeight: (size * MediaQuery.devicePixelRatioOf(context)).round(),
           width: size,
           height: size,
           fit: BoxFit.cover,

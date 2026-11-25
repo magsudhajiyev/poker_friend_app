@@ -32,6 +32,30 @@ class CoachMascot extends StatefulWidget {
         DrillGrade.mistake => CoachExpression.upset,
       };
 
+  /// Decode width in physical px for a mascot shown at [size] logical px.
+  /// Bucketed (and padded for the 1.14 bounce) so precache and display share
+  /// one ImageCache key and the 400px source is never decoded at full size.
+  static int cacheWidthFor(double size, double dpr) =>
+      ((size * dpr * 1.15) / 32).ceil() * 32;
+
+  /// The exact provider the widget renders (use it for precaching).
+  static ImageProvider providerFor(
+      String personaId, CoachExpression expression, double size, double dpr) {
+    final asset = AssetImage('assets/mascots/${personaId}_${expression.name}.png');
+    final w = cacheWidthFor(size, dpr);
+    // Never upscale past the 400px source.
+    return ResizeImage(asset, width: w > 400 ? 400 : w);
+  }
+
+  /// Warms all four expressions of [personaId]. Best-effort, never throws.
+  static void precache(BuildContext context, String personaId, double size) {
+    final dpr = MediaQuery.devicePixelRatioOf(context);
+    for (final e in CoachExpression.values) {
+      precacheImage(providerFor(personaId, e, size, dpr), context,
+          onError: (_, __) {}).catchError((_) {});
+    }
+  }
+
   @override
   State<CoachMascot> createState() => _CoachMascotState();
 }
@@ -84,15 +108,19 @@ class _CoachMascotState extends State<CoachMascot>
           // Damped head-shake.
           dx = widget.size * 0.06 * math.sin(t * math.pi * 4) * (1 - t);
         }
-        return Transform.translate(
+        return RepaintBoundary(
+            child: Transform.translate(
           offset: Offset(dx, 0),
           child: Transform.scale(
             scale: scale,
             child: SizedBox.square(
               dimension: widget.size,
-              child: Image.asset(
-                'assets/mascots/${widget.personaId}_'
-                '${widget.expression.name}.png',
+              child: Image(
+                image: CoachMascot.providerFor(
+                    widget.personaId,
+                    widget.expression,
+                    widget.size,
+                    MediaQuery.devicePixelRatioOf(context)),
                 fit: BoxFit.contain,
                 filterQuality: FilterQuality.medium,
                 errorBuilder: (context, _, __) => CustomPaint(
@@ -105,7 +133,7 @@ class _CoachMascotState extends State<CoachMascot>
               ),
             ),
           ),
-        );
+        ));
       },
     );
   }

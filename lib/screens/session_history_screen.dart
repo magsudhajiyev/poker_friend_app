@@ -57,11 +57,40 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
   ScrollController _controllerFor(String gameType) =>
       _scrollControllers.putIfAbsent(gameType, () => ScrollController());
 
-  List<Map<String, dynamic>> get cashSessions => _filterSessionsForTier(
-      sessions.where((session) => session['gameType'] == 'cash').toList());
+  // Memoized per (sessions list identity, length, tier cutoff) so build and
+  // scroll setState do not re-filter / re-parse dates every frame.
+  List<Map<String, dynamic>>? _memoSource;
+  int _memoLength = -1;
+  DateTime? _memoCutoff;
+  List<Map<String, dynamic>> _memoCash = const [];
+  List<Map<String, dynamic>> _memoTournament = const [];
 
-  List<Map<String, dynamic>> get tournamentSessions => _filterSessionsForTier(
-      sessions.where((session) => session['gameType'] == 'tournament').toList());
+  void _refreshMemo() {
+    final cutoff = FreeTierLimits.sessionHistoryCutoff();
+    if (identical(_memoSource, sessions) &&
+        _memoLength == sessions.length &&
+        _memoCutoff == cutoff) {
+      return;
+    }
+    _memoSource = sessions;
+    _memoLength = sessions.length;
+    _memoCutoff = cutoff;
+    _memoCash = _filterSessionsForTier(
+        sessions.where((session) => session['gameType'] == 'cash').toList());
+    _memoTournament = _filterSessionsForTier(sessions
+        .where((session) => session['gameType'] == 'tournament')
+        .toList());
+  }
+
+  List<Map<String, dynamic>> get cashSessions {
+    _refreshMemo();
+    return _memoCash;
+  }
+
+  List<Map<String, dynamic>> get tournamentSessions {
+    _refreshMemo();
+    return _memoTournament;
+  }
 
   /// Filter sessions based on user's subscription tier.
   /// Elite/Club: all time. Pro: 90 days. Free: 30 days.

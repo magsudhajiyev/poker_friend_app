@@ -36,7 +36,11 @@ class LoggerService {
   static String? _currentScreen;
 
   /// Initialize the logger (call this at app startup)
-  static Future<void> initialize() async {
+  static Future<void> initialize() => _initFuture ??= _doInitialize();
+
+  static Future<void>? _initFuture;
+
+  static Future<void> _doInitialize() async {
     if (_initialized) return;
 
     try {
@@ -51,10 +55,10 @@ class LoggerService {
       _initialized = true;
 
       // Log initialization
-      await _writeToFile('=' * 80);
-      await _writeToFile('POKER LOGGER SESSION STARTED');
-      await _writeToFile('Timestamp: ${DateTime.now().toIso8601String()}');
-      await _writeToFile('=' * 80);
+      _enqueue('=' * 80);
+      _enqueue('POKER LOGGER SESSION STARTED');
+      _enqueue('Timestamp: ${DateTime.now().toIso8601String()}');
+      _enqueue('=' * 80);
     } catch (e) {
       debugPrint('Failed to initialize LoggerService file logging: $e');
     }
@@ -94,8 +98,15 @@ class LoggerService {
             : const Duration(hours: 12),
       ));
 
-      await _remoteConfig!.fetchAndActivate();
+      // Defaults are in place; apply whatever is already activated, then let
+      // the network fetch land in the background (never block init on it).
       _applyRemoteConfig();
+      unawaited(_remoteConfig!.fetchAndActivate().then((_) {
+        _applyRemoteConfig();
+      }).catchError((Object e) {
+        debugPrint('Remote Config fetch failed (using defaults): $e');
+        return;
+      }));
 
       // Listen for real-time Remote Config updates
       _remoteConfig!.onConfigUpdated.listen((event) async {
@@ -153,21 +164,58 @@ class LoggerService {
   /// restarted — crude rotation, but bounds disk (and iCloud backup) usage.
   static const int _maxLogFileBytes = 2 * 1024 * 1024; // 2 MB
 
-  /// Write a message to the log file
+  // Buffered writer: lines are queued in order and appended in one batch, so
+  // callers never wait on file IO (exists + length + append per line before).
+  static final StringBuffer _buffer = StringBuffer();
+  static Future<void>? _flushing;
+  static bool _flushScheduled = false;
+  static int _flushesSinceSizeCheck = 0;
+  static const int _sizeCheckEvery = 20;
+
+  static void _enqueue(String message) {
+    _buffer.write('$message\n');
+    if (_flushScheduled) return;
+    _flushScheduled = true;
+    Timer(const Duration(milliseconds: 150), () {
+      _flushScheduled = false;
+      unawaited(_flush());
+    });
+  }
+
+  /// Flush queued lines to disk, preserving order. Safe to call anytime.
+  static Future<void> _flush() async {
+    while (_flushing != null) {
+      await _flushing;
+    }
+    if (_buffer.isEmpty || _logFile == null) return;
+    final completer = Completer<void>();
+    _flushing = completer.future;
+    try {
+      final text = _buffer.toString();
+      _buffer.clear();
+      if (++_flushesSinceSizeCheck >= _sizeCheckEvery) {
+        _flushesSinceSizeCheck = 0;
+        if (await _logFile!.exists() &&
+            await _logFile!.length() > _maxLogFileBytes) {
+          await _logFile!.writeAsString('[log rotated]\n');
+        }
+      }
+      await _logFile!.writeAsString(text, mode: FileMode.append);
+    } catch (e) {
+      debugPrint('Failed to write to log file: $e');
+    } finally {
+      _flushing = null;
+      completer.complete();
+    }
+  }
+
+  /// Queue a message for the log file (does not wait for disk IO).
   static Future<void> _writeToFile(String message) async {
     if (_logFile == null) {
       await initialize();
     }
-
-    try {
-      if (await _logFile!.exists() &&
-          await _logFile!.length() > _maxLogFileBytes) {
-        await _logFile!.writeAsString('[log rotated]\n');
-      }
-      await _logFile!.writeAsString('$message\n', mode: FileMode.append);
-    } catch (e) {
-      debugPrint('Failed to write to log file: $e');
-    }
+    if (_logFile == null) return;
+    _enqueue(message);
   }
 
   /// Format a log message with timestamp and level
@@ -184,6 +232,8 @@ class LoggerService {
 
     final formattedMessage = _formatMessage(message, level);
     await _writeToFile(formattedMessage);
+    // Warnings/errors hit disk immediately so a crash does not lose them.
+    if (level.index >= LogLevel.WARNING.index) unawaited(_flush());
 
     // Console print in debug mode only
     if (kDebugMode) {
@@ -466,6 +516,7 @@ class LoggerService {
     }
 
     try {
+      await _flush();
       if (await _logFile!.exists()) {
         return await _logFile!.readAsString();
       } else {
@@ -483,8 +534,11 @@ class LoggerService {
     }
 
     try {
+      await _flush();
       if (await _logFile!.exists()) {
         await _logFile!.writeAsString('');
+        _initialized = false;
+        _initFuture = null;
         await initialize(); // Re-write header
         await info('Logs cleared');
       }
@@ -500,6 +554,7 @@ class LoggerService {
     }
 
     try {
+      await _flush();
       if (await _logFile!.exists()) {
         final size = await _logFile!.length();
         return size / (1024 * 1024); // Convert to MB

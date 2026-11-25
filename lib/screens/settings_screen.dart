@@ -151,6 +151,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         borderRadius: BorderRadius.circular(size / 2),
         child: CachedNetworkImage(
           imageUrl: photoURL,
+          memCacheWidth: (size * MediaQuery.devicePixelRatioOf(context)).round(),
+          memCacheHeight: (size * MediaQuery.devicePixelRatioOf(context)).round(),
           width: size,
           height: size,
           fit: BoxFit.cover,

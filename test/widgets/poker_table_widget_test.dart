@@ -12,7 +12,9 @@ void main() {
     // The table surface is the only Image in the widget (dealer button is
     // off here). Grab its provider to assert the asset path.
     final image = tester.widget<Image>(find.byType(Image).first);
-    return image.image as AssetImage;
+    final provider = image.image;
+    return (provider is ResizeImage ? provider.imageProvider : provider)
+        as AssetImage;
   }
 
   testWidgets('renders neon logo asset when showLogo is true',

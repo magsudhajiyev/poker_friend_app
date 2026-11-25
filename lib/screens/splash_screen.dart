@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../widgets/looping_splash_logo.dart';
 import '../services/auth_service.dart';
 import 'auth_wrapper.dart';
@@ -28,9 +29,32 @@ class _SplashScreenState extends State<SplashScreen> {
   bool _loopCompleted = false;
   bool _navigated = false;
 
+  /// Returning users (splash already shown once) skip the forced full video
+  /// loop: they leave after auth resolves + a short minimum.
+  static const _kSplashSeenKey = 'splash_seen_v1';
+  static const _returningMinimum = Duration(milliseconds: 600);
+  bool _returning = false;
+  bool _minElapsed = false;
+
+  Future<void> _loadReturningFlag() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      _returning = prefs.getBool(_kSplashSeenKey) ?? false;
+      if (!_returning) unawaited(prefs.setBool(_kSplashSeenKey, true));
+    } catch (_) {
+      _returning = false;
+    }
+    _maybeNavigate();
+  }
+
   @override
   void initState() {
     super.initState();
+    unawaited(_loadReturningFlag());
+    Future.delayed(_returningMinimum, () {
+      _minElapsed = true;
+      _maybeNavigate();
+    });
     // Wait for the first auth state event — after this, AuthWrapper can
     // render the correct screen without showing its own loading state.
     // As soon as auth resolves, pre-fetch the user document so later
@@ -62,7 +86,8 @@ class _SplashScreenState extends State<SplashScreen> {
 
   void _maybeNavigate() {
     if (_navigated || !mounted) return;
-    if (!_authResolved || !_loopCompleted) return;
+    if (!_authResolved) return;
+    if (!_loopCompleted && !(_returning && _minElapsed)) return;
     _navigated = true;
     // Extend MaterialPageRoute to disable the slide animation so the
     // splash logo doesn't shift left during the transition. We must use
