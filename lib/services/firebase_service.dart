@@ -1,3 +1,4 @@
+import '../utils/stack_sources.dart';
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -222,6 +223,8 @@ class FirebaseService {
     int? bbSeat,
     int? sbSeat,
     bool smallBlindDead = false,
+    // Single-hand logs only: seat -> 'set' | 'default'. Absent otherwise.
+    Map<int, String>? stackSources,
   }) async {
     try {
       final handData = {
@@ -237,6 +240,8 @@ class FirebaseService {
       if (bbSeat != null) handData['bbSeat'] = bbSeat;
       if (sbSeat != null) handData['sbSeat'] = sbSeat;
       if (smallBlindDead) handData['smallBlindDead'] = true;
+      final sources = stackSourcesToMap(stackSources);
+      if (sources != null) handData['stackSources'] = sources;
 
       if (boardCards != null) {
         handData['boardCards'] = boardCards;

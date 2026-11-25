@@ -17,6 +17,7 @@ import '../services/logger_service.dart';
 import '../services/range_grid_service.dart';
 import '../utils/blind_rotation.dart';
 import '../utils/poker_positions.dart';
+import '../utils/stack_sources.dart';
 import '../onboarding/onboarding_state.dart';
 
 enum HandState {
@@ -64,6 +65,22 @@ class ActionRecord {
     this.amount,
     this.synthetic = false,
   });
+
+  /// Copy with the recorded stack-behind moved by [delta] (null stays null).
+  ActionRecord withStackShift(double delta) => ActionRecord(
+        player: player,
+        action: action,
+        street: street,
+        timestamp: timestamp,
+        buttonPosition: buttonPosition,
+        playerName: playerName,
+        playerId: playerId,
+        isCurrentUser: isCurrentUser,
+        playerPosition: playerPosition,
+        playerStack: playerStack == null ? null : playerStack! + delta,
+        amount: amount,
+        synthetic: synthetic,
+      );
 
   Map<String, dynamic> toMap() {
     return {
@@ -214,6 +231,10 @@ class HandRecord {
   int? sbSeat;
   bool smallBlindDead = false;
 
+  /// Single-hand logs only: seat -> 'set' | 'default' (see
+  /// `utils/stack_sources.dart`). Null on every other hand.
+  Map<int, String>? stackSources;
+
   // Chopped pot fields
   bool isChoppedPot = false;
   List<int>? choppedWinners;
@@ -343,6 +364,7 @@ class HandRecord {
       if (bbSeat != null) 'bbSeat': bbSeat,
       if (sbSeat != null) 'sbSeat': sbSeat,
       if (smallBlindDead) 'smallBlindDead': true,
+      if (stackSources != null) 'stackSources': stackSourcesToMap(stackSources),
       'isChoppedPot': isChoppedPot,
       'isSplitPot': isSplitPot,
       'choppedWinners': choppedWinners,
@@ -387,6 +409,7 @@ class HandRecord {
     hand.bbSeat = map['bbSeat'] as int?;
     hand.sbSeat = map['sbSeat'] as int?;
     hand.smallBlindDead = map['smallBlindDead'] == true;
+    hand.stackSources = parseStackSources(map['stackSources']);
 
     // Set chopped pot fields
     hand.isChoppedPot = map['isChoppedPot'] ?? false;
@@ -765,8 +788,11 @@ class PokerSessionManager {
 
     if (isCurrentUser) {
       // This is the current user - use their Firebase user ID
-      final currentUser = FirebaseAuth.instance.currentUser;
-      playerId = currentUser?.uid;
+      try {
+        playerId = FirebaseAuth.instance.currentUser?.uid;
+      } catch (_) {
+        playerId = null; // Firebase not initialised (widget tests)
+      }
     } else {
       // This is an opponent - use their name as ID for now (will be improved with opponent ID system)
       playerId = playerName;
@@ -2215,6 +2241,29 @@ class PokerSessionManager {
 
   double? getPlayerStack(int seatNumber) {
     return playerStacks[seatNumber];
+  }
+
+  /// Changes [seat]'s pre-hand stack to [totalStack] while the hand is live
+  /// (single-hand villain stacks). Committed chips stay in the pot, so pots,
+  /// call amounts and side pots follow from the new stack behind. The seat's
+  /// already-recorded actions shift by the same delta, so every
+  /// "stack at time of action" stays consistent. Returns the applied total.
+  double setSeatStackMidHand(
+      PokerGameState gameState, int seat, double totalStack) {
+    final before = gameState.players[seat - 1];
+    final oldTotal = before.startingStack;
+    final applied = gameState.setStackKeepingCommitted(seat, totalStack);
+    playerStacks[seat] = applied;
+    final hand = currentHand;
+    final delta = applied - oldTotal;
+    if (hand != null && delta != 0) {
+      for (var i = 0; i < hand.actions.length; i++) {
+        if (hand.actions[i].player == seat) {
+          hand.actions[i] = hand.actions[i].withStackShift(delta);
+        }
+      }
+    }
+    return applied;
   }
 
   String getPlayerName(int seatNumber) {

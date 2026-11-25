@@ -7137,5 +7137,124 @@
         "type": "String"
       }
     }
-  }
+  },
+  "singleHandV2Players": "{count} players",
+  "@singleHandV2Players": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "singleHandV2You": "You",
+  "singleHandV2SeatHint": "Tap your seat · swipe the table",
+  "singleHandV2SeatYou": "Your seat, {position}",
+  "@singleHandV2SeatYou": {
+    "placeholders": {
+      "position": {
+        "type": "String"
+      }
+    }
+  },
+  "singleHandV2SeatSit": "Sit on {position}",
+  "@singleHandV2SeatSit": {
+    "placeholders": {
+      "position": {
+        "type": "String"
+      }
+    }
+  },
+  "singleHandV2PrevSeat": "Previous seat",
+  "singleHandV2NextSeat": "Next seat",
+  "singleHandV2StackLabel": "Your stack",
+  "singleHandV2StackHint": "Drag up or down · tap the number to type",
+  "singleHandV2StackUp": "Bigger stack",
+  "singleHandV2StackDown": "Smaller stack",
+  "singleHandV2ExactTitle": "Exact stack",
+  "singleHandV2GameTitle": "Game",
+  "singleHandV2BBValue": "{value} BB",
+  "@singleHandV2BBValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "singleHandV2VillainTitle": "{position} stack",
+  "@singleHandV2VillainTitle": {
+    "placeholders": {
+      "position": {
+        "type": "String"
+      }
+    }
+  },
+  "singleHandV2VillainSubtitle": "How deep are they compared to you?",
+  "singleHandV2VillainHint": "Drag up or down",
+  "singleHandV2VillainSet": "Set stack",
+  "singleHandV2VillainKeepEqual": "Keep equal to me",
+  "singleHandV2VillainAllInTitle": "{position} is all-in",
+  "@singleHandV2VillainAllInTitle": {
+    "placeholders": {
+      "position": {
+        "type": "String"
+      }
+    }
+  },
+  "singleHandV2VillainAllInSubtitle": "Set their stack first, so the all-in and side pots are right.",
+  "singleHandV2VillainAllInConfirm": "Confirm and log all-in",
+  "singleHandV2VillainMultiple": "{value}× you",
+  "@singleHandV2VillainMultiple": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "singleHandV2VillainEqual": "Same as you",
+  "singleHandV2VillainStackLabel": "Opponent stack",
+  "singleHandV2VillainBadgeLabel": "{position} stack not set, assumed {stack}. Tap to set.",
+  "@singleHandV2VillainBadgeLabel": {
+    "placeholders": {
+      "position": {
+        "type": "String"
+      },
+      "stack": {
+        "type": "String"
+      }
+    }
+  },
+  "singleHandV2VillainSubCash": "{bb} BB · {amount}",
+  "@singleHandV2VillainSubCash": {
+    "placeholders": {
+      "bb": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "singleHandV2VillainSubChips": "{bb} BB · {chips} chips",
+  "@singleHandV2VillainSubChips": {
+    "placeholders": {
+      "bb": {
+        "type": "String"
+      },
+      "chips": {
+        "type": "String"
+      }
+    }
+  },
+  "singleHandV2SavedTo": "{count, plural, one{Saved to {group} · {count} hand} other{Saved to {group} · {count} hands}}",
+  "@singleHandV2SavedTo": {
+    "placeholders": {
+      "group": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "singleHandV2MoveTitle": "Move hand to"
 }

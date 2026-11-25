@@ -31,7 +31,7 @@ SingleHandGroup _group({
 
 bool _cap50(int n) => n < 50;
 
-class _FakeBackend implements SingleHandBackend {
+class _FakeBackend implements SingleHandBackend, SingleHandMoveBackend {
   final List<SingleHandGroup> groups;
   final Map<String, int> counts;
   final calls = <String>[];
@@ -74,6 +74,20 @@ class _FakeBackend implements SingleHandBackend {
   @override
   Future<void> touchGroup(String groupId, DateTime at) async =>
       calls.add('touch:$groupId');
+
+  bool moveFindsHand = true;
+
+  @override
+  Future<(String?, String?)> moveHand({
+    required String fromGroupId,
+    required String toGroupId,
+    required String handId,
+    required int handNumber,
+    required int newHandNumber,
+  }) async {
+    calls.add('move:$fromGroupId>$toGroupId:$handNumber>$newHandNumber');
+    return moveFindsHand ? ('c$newHandNumber', 'l$newHandNumber') : (null, null);
+  }
 }
 
 HandRecord _hand() => HandRecord(
@@ -246,6 +260,80 @@ void main() {
                   gameType: GameType.tournament, smallBlind: 25, bigBlind: 50),
               _t0),
           'Nov 12 · 25/50 Tournament');
+    });
+  });
+
+  group('moveHandToGroup', () {
+    test('existing group: becomes count + 1, target touched, no create', () async {
+      final b = _FakeBackend(counts: {'g2': 4});
+      SingleHandService.backend = b;
+      SingleHandService.moveBackend = b;
+      final r = await SingleHandService.moveHandToGroup(
+          fromGroupId: 'g1', handId: 'hand_2_1', handNumber: 2, toGroupId: 'g2');
+      expect(r.sessionId, 'g2');
+      expect(r.handNumber, 5);
+      expect(r.handId, 'c5');
+      expect(r.group.handCount, 5);
+      expect(b.calls, ['move:g1>g2:2>5', 'touch:g2']);
+    });
+
+    test('existing group: real name and blinds come from the group doc',
+        () async {
+      final b = _FakeBackend(groups: [
+        SingleHandGroup(
+            sessionId: 'g2',
+            name: 'Friday game',
+            gameType: GameType.tournament,
+            smallBlind: 25,
+            bigBlind: 50,
+            handCount: 4,
+            lastHandAt: _t0)
+      ], counts: {
+        'g2': 4
+      });
+      SingleHandService.backend = b;
+      SingleHandService.moveBackend = b;
+      final r = await SingleHandService.moveHandToGroup(
+          fromGroupId: 'g1', handId: 'h', handNumber: 2, toGroupId: 'g2');
+      expect(r.group.name, 'Friday game');
+      expect(r.group.gameType, GameType.tournament);
+      expect(r.group.bigBlind, 50);
+    });
+
+    test('new group: created first, hand number 1', () async {
+      final b = _FakeBackend();
+      SingleHandService.backend = b;
+      SingleHandService.moveBackend = b;
+      final r = await SingleHandService.moveHandToGroup(
+          fromGroupId: 'g1',
+          handId: 'hand_2_1',
+          handNumber: 2,
+          setup: SingleHandSetup());
+      expect(r.sessionId, 'new-id');
+      expect(r.handNumber, 1);
+      expect(b.calls.first, startsWith('create:new-id:'));
+      expect(b.calls[1], 'move:g1>new-id:2>1');
+    });
+
+    test('same group, missing setup, full target, missing hand all fail',
+        () async {
+      final b = _FakeBackend(counts: {'g2': 50});
+      SingleHandService.backend = b;
+      SingleHandService.moveBackend = b;
+      Future<SingleHandMoveResult> move({String? to, SingleHandSetup? s}) =>
+          SingleHandService.moveHandToGroup(
+              fromGroupId: 'g1',
+              handId: 'h',
+              handNumber: 1,
+              toGroupId: to,
+              setup: s);
+      await expectLater(move(to: 'g1'), throwsArgumentError);
+      await expectLater(move(), throwsArgumentError);
+      await expectLater(move(to: 'g2'),
+          throwsA(isA<SingleHandGroupFullException>()));
+      expect(b.calls, isEmpty);
+      b.moveFindsHand = false;
+      await expectLater(move(s: SingleHandSetup()), throwsStateError);
     });
   });
 }

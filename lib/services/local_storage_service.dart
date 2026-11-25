@@ -1,3 +1,4 @@
+import '../utils/stack_sources.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:convert';
 import 'package:sqflite/sqflite.dart';
@@ -23,7 +24,7 @@ class LocalStorageService {
 
     return await openDatabase(
       dbPath,
-      version: 22,
+      version: 23,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE sessions(
@@ -92,6 +93,7 @@ class LocalStorageService {
             bbSeat INTEGER,
             sbSeat INTEGER,
             smallBlindDead INTEGER DEFAULT 0,
+            stackSources TEXT,
             FOREIGN KEY (sessionId) REFERENCES sessions (id)
           )
         ''');
@@ -216,6 +218,10 @@ class LocalStorageService {
           // idempotent.
           await _addColumnIfMissing(db, 'sessions', 'sessionType', 'TEXT');
         }
+        if (oldVersion < 23) {
+          // Single-hand per-seat stack source (JSON). Additive, idempotent.
+          await _addColumnIfMissing(db, 'hands', 'stackSources', 'TEXT');
+        }
       },
       onOpen: (db) async {
         // Self-healing: the range grid table is derived data and test
@@ -242,6 +248,11 @@ class LocalStorageService {
           await _addColumnIfMissing(db, 'sessions', 'sessionType', 'TEXT');
         } catch (e) {
           debugPrint('Error ensuring sessions sessionType column: $e');
+        }
+        try {
+          await _addColumnIfMissing(db, 'hands', 'stackSources', 'TEXT');
+        } catch (e) {
+          debugPrint('Error ensuring hands stackSources column: $e');
         }
         // Lookup indexes (hands by session, sessions by user). Created in
         // onOpen so existing installs get them without a schema bump;
@@ -581,6 +592,8 @@ class LocalStorageService {
     int? bbSeat,
     int? sbSeat,
     bool smallBlindDead = false,
+    // Single-hand logs only: seat -> 'set' | 'default'. Null = not recorded.
+    Map<int, String>? stackSources,
   }) async {
     try {
       final db = await database;
@@ -643,6 +656,9 @@ class LocalStorageService {
             'bbSeat': bbSeat,
             'sbSeat': sbSeat,
             'smallBlindDead': smallBlindDead ? 1 : 0,
+            'stackSources': stackSourcesToMap(stackSources) != null
+                ? _safeJsonEncode(stackSourcesToMap(stackSources))
+                : null,
           },
           conflictAlgorithm: ConflictAlgorithm.replace,
         );
@@ -662,6 +678,65 @@ class LocalStorageService {
       return handId;
     } catch (e) {
       debugPrint('Error saving hand locally: $e');
+      return null;
+    }
+  }
+
+  /// Pure: a copy of the hands [row] re-homed into [toSessionId] as hand
+  /// [newHandNumber] under [newId] (every other column is kept).
+  @visibleForTesting
+  static Map<String, Object?> rehomedHandRow(
+    Map<String, Object?> row, {
+    required String newId,
+    required String toSessionId,
+    required int newHandNumber,
+  }) =>
+      {
+        ...row,
+        'id': newId,
+        'sessionId': toSessionId,
+        'handNumber': newHandNumber,
+      };
+
+  /// Moves one hand row between sessions (single-hand groups): insert the
+  /// copy, delete the original, move the `totalHands` counter. One
+  /// transaction. Returns the new local hand id, or null when the hand row
+  /// is not in this DB. Never touches stats.
+  static Future<String?> moveHand({
+    required String fromSessionId,
+    required int handNumber,
+    required String toSessionId,
+    required int newHandNumber,
+  }) async {
+    try {
+      final db = await database;
+      return await db.transaction((txn) async {
+        final rows = await txn.query('hands',
+            where: 'sessionId = ? AND handNumber = ?',
+            whereArgs: [fromSessionId, handNumber],
+            orderBy: 'startTime DESC',
+            limit: 1);
+        if (rows.isEmpty) return null;
+        final newId =
+            '${toSessionId}_hand_${newHandNumber}_${DateTime.now().millisecondsSinceEpoch}';
+        await txn.insert(
+            'hands',
+            rehomedHandRow(rows.first,
+                newId: newId,
+                toSessionId: toSessionId,
+                newHandNumber: newHandNumber),
+            conflictAlgorithm: ConflictAlgorithm.replace);
+        await txn.delete('hands', where: 'id = ?', whereArgs: [rows.first['id']]);
+        await txn.rawUpdate(
+            'UPDATE sessions SET totalHands = MAX(COALESCE(totalHands, 0) - 1, 0) WHERE id = ?',
+            [fromSessionId]);
+        await txn.rawUpdate(
+            'UPDATE sessions SET totalHands = COALESCE(totalHands, 0) + 1 WHERE id = ?',
+            [toSessionId]);
+        return newId;
+      });
+    } catch (e) {
+      debugPrint('Error moving hand locally: $e');
       return null;
     }
   }
@@ -956,6 +1031,12 @@ class LocalStorageService {
     result['completeness'] = result['completeness'] ?? 'full';
     result['statsApplied'] = (result['statsApplied'] as int?) != 0;
     result['smallBlindDead'] = (result['smallBlindDead'] as int?) == 1;
+    final rawSources = result.remove('stackSources');
+    if (rawSources is String && rawSources.isNotEmpty) {
+      try {
+        result['stackSources'] = jsonDecode(rawSources);
+      } catch (_) {}
+    }
     final rawFlag = result.remove('flagMeta');
     if (rawFlag is String && rawFlag.isNotEmpty) {
       try {

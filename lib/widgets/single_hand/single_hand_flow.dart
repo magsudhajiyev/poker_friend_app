@@ -3,10 +3,13 @@ import 'package:flutter/material.dart';
 import '../../models/single_hand_group.dart';
 import '../../models/single_hand_setup.dart';
 import '../../screens/poker_hand_screen.dart';
+import '../../screens/single_hand_setup_screen.dart';
+import '../../services/analytics_service.dart';
+import '../../services/feature_flag_service.dart';
 import 'single_hand_result_sheet.dart';
 import 'single_hand_setup_sheet.dart';
 
-/// "Log a hand" flow: setup sheet -> hand table -> result sheet, looping on
+/// "Log a hand" flow: setup screen (flag `single_hand_v2`) or sheet -> hand table -> result sheet, looping on
 /// "Log another" with the same values and group.
 class SingleHandFlow {
   SingleHandFlow._();
@@ -18,12 +21,21 @@ class SingleHandFlow {
     SingleHandGroup? group;
     var keepGroup = false;
     while (true) {
-      final start = await SingleHandSetupSheet.show(
-        context,
-        setup: setup,
-        group: group,
-        keepGroup: keepGroup,
-      );
+      final v2 = FeatureFlagService.singleHandV2Enabled;
+      AnalyticsService.singleHandSetupOpened(variant: v2 ? 'v2' : 'v1');
+      final start = v2
+          ? await SingleHandSetupScreen.show(
+              context,
+              setup: setup,
+              group: group,
+              keepGroup: keepGroup,
+            )
+          : await SingleHandSetupSheet.show(
+              context,
+              setup: setup,
+              group: group,
+              keepGroup: keepGroup,
+            );
       if (start == null || !context.mounted) return false;
       final outcome = await PokerHandScreen.openSingleHand(
         context,

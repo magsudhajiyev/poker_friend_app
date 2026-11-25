@@ -106,3 +106,6 @@ lib/screens/admin/coach_level_tester_screen.dart
 
 # Temporary Daily Challenge preview harness — local dev entry point only
 lib/preview_drill_table.dart
+
+# FVM Version Cache
+.fvm/

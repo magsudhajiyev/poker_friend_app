@@ -16,8 +16,12 @@ import '../../screens/hand_actions_screen.dart';
 import '../../services/analytics_service.dart';
 import '../../services/firebase_service.dart';
 import '../../services/logger_service.dart';
+import '../../design_system/components/dividers/list_separator.dart';
 import '../../models/single_hand_group.dart';
+import '../../models/single_hand_setup.dart';
+import '../../services/free_tier_limits.dart';
 import '../../services/single_hand_service.dart';
+import '../../utils/user_facing_error.dart';
 
 /// What the player chose on the result sheet.
 enum SingleHandChoice { another, done }
@@ -35,10 +39,23 @@ class SingleHandResultSheet extends StatefulWidget {
   final HandRecord hand;
   final SingleHandSaveResult saved;
 
+  /// Setup v2 only: shows "Saved to <group>" with a Change action. [setup]
+  /// and [newGroupName] describe a new group when the player picks one.
+  final bool showGroupChange;
+  final SingleHandSetup? setup;
+  final String? newGroupName;
+
+  /// Called after the hand was moved, so the caller can follow the new group.
+  final ValueChanged<SingleHandMoveResult>? onMoved;
+
   const SingleHandResultSheet({
     super.key,
     required this.hand,
     required this.saved,
+    this.showGroupChange = false,
+    this.setup,
+    this.newGroupName,
+    this.onMoved,
   });
 
   /// Null (system back) counts as [SingleHandChoice.done].
@@ -46,6 +63,10 @@ class SingleHandResultSheet extends StatefulWidget {
     BuildContext context, {
     required HandRecord hand,
     required SingleHandSaveResult saved,
+    bool showGroupChange = false,
+    SingleHandSetup? setup,
+    String? newGroupName,
+    ValueChanged<SingleHandMoveResult>? onMoved,
   }) {
     return showModalBottomSheet<SingleHandChoice>(
       context: context,
@@ -53,7 +74,14 @@ class SingleHandResultSheet extends StatefulWidget {
       isDismissible: false,
       enableDrag: false,
       backgroundColor: Colors.transparent,
-      builder: (_) => SingleHandResultSheet(hand: hand, saved: saved),
+      builder: (_) => SingleHandResultSheet(
+        hand: hand,
+        saved: saved,
+        showGroupChange: showGroupChange,
+        setup: setup,
+        newGroupName: newGroupName,
+        onMoved: onMoved,
+      ),
     );
   }
 
@@ -67,8 +95,11 @@ class _SingleHandResultSheetState extends State<SingleHandResultSheet> {
   bool _starred = false;
   String _savedNotes = '';
 
-  String get _sessionId => widget.saved.sessionId;
-  String get _handId => widget.saved.handId;
+  late String _sessionId = widget.saved.sessionId;
+  late String _handId = widget.saved.handId;
+  late int _handNumber = widget.saved.handNumber;
+  late SingleHandGroup _group = widget.saved.group;
+  bool _moving = false;
 
   @override
   void dispose() {
@@ -115,6 +146,107 @@ class _SingleHandResultSheetState extends State<SingleHandResultSheet> {
     await _write(notes: text);
   }
 
+  /// Moves the saved hand to another recent group, or to a new one.
+  Future<void> _changeGroup() async {
+    if (_moving) return;
+    final l10n = AppLocalizations.of(context);
+    List<SingleHandGroup> groups = const [];
+    try {
+      groups = await SingleHandService.recentGroups();
+    } catch (e) {
+      LoggerService.log('SingleHand recent groups failed: $e',
+          level: LogLevel.WARNING);
+    }
+    if (!mounted) return;
+    final pick = await AppSheet.show<_MovePick>(
+      context: context,
+      title: l10n.singleHandV2MoveTitle,
+      heightFraction: null,
+      body: _MoveGroupList(
+          groups: groups.where((g) => g.sessionId != _sessionId).toList()),
+    );
+    if (pick == null || !mounted) return;
+    await _move(pick.group);
+  }
+
+  Future<void> _move(SingleHandGroup? to) async {
+    setState(() => _moving = true);
+    try {
+      final r = await SingleHandService.moveHandToGroup(
+        fromGroupId: _sessionId,
+        handId: _handId,
+        handNumber: _handNumber,
+        toGroupId: to?.sessionId,
+        setup: widget.setup,
+        groupName: widget.newGroupName,
+      );
+      if (!mounted) return;
+      final g = r.group;
+      setState(() {
+        _sessionId = r.sessionId;
+        _handId = r.handId;
+        _handNumber = r.handNumber;
+        _group = g;
+      });
+      widget.onMoved?.call(SingleHandMoveResult(
+        handId: r.handId,
+        sessionId: r.sessionId,
+        handNumber: r.handNumber,
+        group: g,
+      ));
+    } on SingleHandGroupFullException {
+      if (mounted) await FreeTierLimits.showHandsLimitDialog(context);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(UserFacingError.message(e)),
+          behavior: SnackBarBehavior.floating,
+        ));
+      }
+    } finally {
+      if (mounted) setState(() => _moving = false);
+    }
+  }
+
+  Widget _savedToRow(AppLocalizations l10n) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.md),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              l10n.singleHandV2SavedTo(_group.name, _group.handCount),
+              key: const ValueKey('saved-to'),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: AppTypography.bodySmall(color: AppColors.textSecondary),
+            ),
+          ),
+          const SizedBox(width: AppSpacing.xxs),
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: _moving ? null : _changeGroup,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.xxs, vertical: AppSpacing.xxs),
+              child: Text(
+                l10n.singleHandChange,
+                key: const ValueKey('saved-to-change'),
+                style: AppTypography.ibm(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: _moving
+                      ? AppColors.contentDisabled
+                      : AppColors.accentPrimary,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _finish(SingleHandChoice choice, String action) async {
     await _flushNotes();
     AnalyticsService.singleHandPostAction(action);
@@ -128,7 +260,7 @@ class _SingleHandResultSheetState extends State<SingleHandResultSheet> {
     final map = widget.hand.toMap()
       ..['id'] = _handId
       ..['sessionId'] = _sessionId
-      ..['handNumber'] = widget.saved.handNumber
+      ..['handNumber'] = _handNumber
       ..['playerNames'] = {
         for (final e in widget.saved.playerNames.entries) '${e.key}': e.value
       };
@@ -162,6 +294,7 @@ class _SingleHandResultSheetState extends State<SingleHandResultSheet> {
         body: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (widget.showGroupChange) _savedToRow(l10n),
             AppTextField(
               label: l10n.singleHandNotesHint,
               hint: l10n.singleHandNotesHint,
@@ -280,6 +413,56 @@ class _TagChip extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _MovePick {
+  final SingleHandGroup? group; // null = new group
+  const _MovePick(this.group);
+}
+
+class _MoveGroupList extends StatelessWidget {
+  final List<SingleHandGroup> groups;
+  const _MoveGroupList({required this.groups});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    Widget row(String title, String? sub, SingleHandGroup? g) {
+      return GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () => Navigator.pop(context, _MovePick(g)),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title, style: AppTypography.listRowLabel()),
+                    if (sub != null)
+                      Text(sub,
+                          style: AppTypography.bodySmall(
+                              color: AppColors.textSecondary)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Column(
+      children: [
+        row(l10n.singleHandNewGroup, null, null),
+        for (final g in groups) ...[
+          const ListSeparator(),
+          row(g.name, l10n.singleHandGroupHands(g.handCount), g),
+        ],
+      ],
     );
   }
 }

@@ -1,3 +1,4 @@
+import '../../utils/stack_sources.dart';
 import 'package:flutter/material.dart';
 
 import '../../design_system/constants/colors.dart';
@@ -94,6 +95,8 @@ class HandActionRow extends StatelessWidget {
             ? l10n.handActionsToAmount(fmt.amount(action['amount']))
             : fmt.amount(action['amount']));
     final stackText = fmt.stack(action['playerStack'] ?? action['stack']);
+    // Single-hand logs: a stack nobody entered is assumed equal to the hero's.
+    final stackAssumed = isAssumedStack(data.hand, seat);
 
     final badge = _PositionBadge(position, highlighted: isHero);
     final nameText = Row(
@@ -127,7 +130,10 @@ class HandActionRow extends StatelessWidget {
         TextSpan(
             text: stackText,
             style: AppTypography.dataMono(
-                fontSize: 14, color: AppColors.textSecondary)),
+                fontSize: 14,
+                color: stackAssumed
+                    ? AppColors.textDisabled
+                    : AppColors.textSecondary)),
       ]),
       maxLines: 1,
       overflow: TextOverflow.ellipsis,

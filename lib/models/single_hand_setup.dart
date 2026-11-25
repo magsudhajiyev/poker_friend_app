@@ -1,22 +1,10 @@
 import 'dart:convert';
-import 'dart:math';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../utils/poker_positions.dart';
 import 'flag_table_snapshot.dart';
 import 'game_types.dart';
-
-/// How villain stacks differ from the hero's: [same] = identical, [near] =
-/// up to +-10%, [similar] = up to +-25% (whole BB, at least 1 BB).
-enum StackSpread {
-  same(0),
-  near(0.10),
-  similar(0.25);
-
-  final double maxDeviation;
-  const StackSpread(this.maxDeviation);
-}
 
 /// Unit the player types the stack in: [amount] = chips (tournament) or money
 /// (cash), [bb] = big blinds. `stackBB` stays the stored truth.
@@ -40,8 +28,6 @@ class SingleHandSetup {
   /// Hero's display name (nickname). Set by the screen when the hand starts;
   /// never stored with the last-used values. Villains are named by position.
   String? heroName;
-
-  StackSpread stackSpread;
 
   /// Last-used input unit per game type (tournament players think in chips,
   /// cash players in BB by default).
@@ -68,9 +54,29 @@ class SingleHandSetup {
   /// BB -> chips / money at [bigBlind].
   static double bbToAmount(double bb, double bigBlind) => bb * bigBlind;
 
-  /// Villain stacks in chips, rolled ONCE by [rollStacks] when the hand
-  /// starts; null = everyone has [stackBB]. Never stored.
-  Map<int, double>? villainStacks;
+  /// Snap steps (in BB) for the one-drag hero stack, by game type. Cash steps
+  /// are BB multiples (the screen shows them as money = step * bigBlind).
+  static List<double> stackStepsBB(GameType t) => t == GameType.cash
+      ? const [20, 30, 40, 50, 60, 75, 100, 125, 150, 200, 250, 300, 400, 500]
+      : const [
+          5, 8, 10, 12, 15, 20, 25, 30, 40, 50, 60, 80, 100, 125, 150, 200,
+          250, 300
+        ];
+
+  /// Index of the step closest to [value]; the lower step wins a tie.
+  /// [steps] must not be empty.
+  static int nearestStepIndex(List<double> steps, double value) {
+    var best = 0;
+    for (var i = 1; i < steps.length; i++) {
+      if ((steps[i] - value).abs() < (steps[best] - value).abs()) best = i;
+    }
+    return best;
+  }
+
+  /// Villain stack overlay scale: multiples of the hero stack.
+  static const List<double> relativeStackSteps = [
+    0.25, 0.5, 0.75, 1.0, 1.5, 2.0, 3.0
+  ];
 
   SingleHandSetup({
     this.gameType = GameType.cash,
@@ -80,7 +86,6 @@ class SingleHandSetup {
     this.playerCount = 6,
     this.heroPosition = 'BTN',
     this.stackBB = 100,
-    this.stackSpread = StackSpread.same,
     this.cashStackUnit = StackUnit.bb,
     this.tournamentStackUnit = StackUnit.amount,
     this.card1,
@@ -138,34 +143,11 @@ class SingleHandSetup {
             position: PokerPositions.getPositionNameForActivePlayers(
                 s, button, active),
             name: _seatName(s, button, active),
-            stack: s == heroSeat
-                ? stackBB * bigBlind
-                : (villainStacks?[s] ?? stackBB * bigBlind),
+            stack: stackBB * bigBlind,
           ),
       ],
     );
   }
-
-  /// Rolls each villain's stack once: X * (1 + u * maxDeviation), u uniform in
-  /// [-1, 1], rounded to whole BB (min 1 BB). The hero keeps exactly X.
-  /// Pass a seeded [rng] in tests.
-  void rollStacks([Random? rng]) {
-    final max = stackSpread.maxDeviation;
-    if (max == 0 || bigBlind <= 0) {
-      villainStacks = null;
-      return;
-    }
-    final r = rng ?? Random();
-    villainStacks = {
-      for (var seat = 1; seat <= playerCount; seat++)
-        if (seat != heroSeat)
-          seat: _wholeBB(stackBB * (1 + (r.nextDouble() * 2 - 1) * max)) *
-              bigBlind,
-    };
-  }
-
-  static double _wholeBB(double bb) =>
-      bb.roundToDouble().clamp(1.0, double.infinity);
 
   /// Hero = nickname (when known), villains = their position label.
   String _seatName(int seat, int button, List<int> active) {
@@ -182,7 +164,6 @@ class SingleHandSetup {
     int? playerCount,
     String? heroPosition,
     double? stackBB,
-    StackSpread? stackSpread,
     String? card1,
     String? card2,
   }) =>
@@ -194,14 +175,11 @@ class SingleHandSetup {
         playerCount: playerCount ?? this.playerCount,
         heroPosition: heroPosition ?? this.heroPosition,
         stackBB: stackBB ?? this.stackBB,
-        stackSpread: stackSpread ?? this.stackSpread,
         cashStackUnit: cashStackUnit,
         tournamentStackUnit: tournamentStackUnit,
         card1: card1 ?? this.card1,
         card2: card2 ?? this.card2,
-      )
-        ..heroName = heroName
-        ..villainStacks = villainStacks;
+      )..heroName = heroName;
 
   /// Last-used values only: cards belong to one hand and are never stored.
   Map<String, dynamic> toMap() => {
@@ -212,7 +190,6 @@ class SingleHandSetup {
         'playerCount': playerCount,
         'heroPosition': heroPosition,
         'stackBB': stackBB,
-        'stackSpread': stackSpread.name,
         'cashStackUnit': cashStackUnit.name,
         'tournamentStackUnit': tournamentStackUnit.name,
       };
@@ -243,9 +220,6 @@ class SingleHandSetup {
       tournamentStackUnit: StackUnit.values.firstWhere(
           (v) => v.name == m['tournamentStackUnit'],
           orElse: () => StackUnit.amount),
-      stackSpread: StackSpread.values.firstWhere(
-          (v) => v.name == m['stackSpread'],
-          orElse: () => StackSpread.same),
     );
   }
 

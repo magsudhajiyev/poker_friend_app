@@ -80,6 +80,9 @@ import '../models/single_hand_setup.dart';
 import '../services/analytics_service.dart';
 import '../services/single_hand_service.dart';
 import '../widgets/single_hand/single_hand_result_sheet.dart';
+import '../widgets/single_hand/v2/villain_stack_badge.dart';
+import '../widgets/single_hand/v2/villain_stack_sheet.dart';
+import '../utils/stack_sources.dart';
 
 class PokerHandScreen extends StatefulWidget {
   final double smallBlind;
@@ -2568,6 +2571,9 @@ class _PokerHandScreenState extends State<PokerHandScreen>
         ? 'P$seatNumber'
         : (label.length > 7 ? '${label.substring(0, 5)}..' : label);
 
+    final showBadge =
+        !isFolded && !isHero && _badgeSeats.contains(seatNumber);
+
     // Name + stack plate — WPT/888-style dark pill that hangs below the
     // avatar (replaces the old off-palette blue name badge). Name on top,
     // live stack below; the stack rolls smoothly as chips move.
@@ -2600,17 +2606,20 @@ class _PokerHandScreenState extends State<PokerHandScreen>
               height: 1.1,
             ),
           ),
-          AnimatedAmountText(
-            value: stack,
-            formatter: _formatCompactAmount,
-            duration: const Duration(milliseconds: 350),
-            style: AppTypography.mono(
-              color: isFolded ? Colors.white38 : AppColors.textSecondary,
-              fontSize: 9,
-              fontWeight: FontWeight.w500,
-              height: 1.1,
+          if (showBadge)
+            VillainStackBadge(label: _badgeLabel())
+          else
+            AnimatedAmountText(
+              value: stack,
+              formatter: _formatCompactAmount,
+              duration: const Duration(milliseconds: 350),
+              style: AppTypography.mono(
+                color: isFolded ? Colors.white38 : AppColors.textSecondary,
+                fontSize: 9,
+                fontWeight: FontWeight.w500,
+                height: 1.1,
+              ),
             ),
-          ),
         ],
       ),
     );
@@ -2654,7 +2663,20 @@ class _PokerHandScreenState extends State<PokerHandScreen>
           activeCircle,
           Transform.translate(
             offset: const Offset(0, -3),
-            child: namePlate,
+            child: showBadge
+                ? Semantics(
+                    button: true,
+                    label: AppLocalizations.of(context)
+                        .singleHandV2VillainBadgeLabel(
+                            displayName, _badgeLabel().replaceAll('?', '')),
+                    excludeSemantics: true,
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => _editVillainStack(seatNumber),
+                      child: namePlate,
+                    ),
+                  )
+                : namePlate,
           ),
         ],
       ),
@@ -4633,6 +4655,8 @@ class _PokerHandScreenState extends State<PokerHandScreen>
       return;
     }
 
+    if (_deferVillainAllIn(action, amount)) return;
+
     // Chip-fly animation for chip-moving actions.
     if (action == PlayerAction.call ||
         action == PlayerAction.bet ||
@@ -5079,6 +5103,117 @@ class _PokerHandScreenState extends State<PokerHandScreen>
 
   bool get _singleMode => widget.singleHand != null;
 
+  /// Single-hand setup v2: villain stacks are set during the hand (D2/D7/D8).
+  /// Read once when the hand starts; false in full sessions, recall and v1.
+  bool _v2Stacks = false;
+
+  /// Seat -> [kStackSet] / [kStackDefault] for the live single hand (D10).
+  final Map<int, String> _stackSources = {};
+
+  /// Villains who voluntarily put chips in (call / bet / raise; blinds are
+  /// not actions) and whose stack is still the default: they get the badge.
+  Set<int> get _badgeSeats {
+    if (!_v2Stacks) return const {};
+    final hand = sessionManager.currentHand;
+    if (hand == null) return const {};
+    final hero = sessionManager.ourSeatNumber;
+    final out = <int>{};
+    for (final a in hand.actions) {
+      final chips = a.action == PlayerAction.call ||
+          a.action == PlayerAction.bet ||
+          a.action == PlayerAction.raise;
+      if (chips &&
+          !a.synthetic &&
+          a.player != hero &&
+          _stackSources[a.player] != kStackSet) {
+        out.add(a.player);
+      }
+    }
+    return out;
+  }
+
+  @visibleForTesting
+  Map<int, String> get stackSourcesForTest => Map.unmodifiable(_stackSources);
+
+  double get _singleHeroStack =>
+      widget.singleHand!.stackBB * widget.singleHand!.bigBlind;
+
+  /// Default stack label of the badge: "100 BB?" (tournament), "$200?" (cash).
+  String _badgeLabel() {
+    final setup = widget.singleHand!;
+    if (setup.gameType != GameType.cash) {
+      final bb = setup.stackBB;
+      final text = bb == bb.roundToDouble()
+          ? '${bb.toInt()}'
+          : bb.toStringAsFixed(1);
+      return '${AppLocalizations.of(context).singleHandV2BBValue(text)}?';
+    }
+    final amount = _singleHeroStack;
+    return '${amount == amount.roundToDouble() ? CurrencyService.formatCashRounded(amount) : CurrencyService.formatCash(amount)}?';
+  }
+
+  /// Opens the villain stack sheet for [seat]. True when a stack was applied.
+  Future<bool> _editVillainStack(int seat, {bool allIn = false}) async {
+    final setup = widget.singleHand!;
+    final mult = await VillainStackSheet.show(
+      context,
+      position: sessionManager.getPlayerName(seat),
+      heroStack: _singleHeroStack,
+      bigBlind: setup.bigBlind,
+      cash: setup.gameType == GameType.cash,
+      allIn: allIn,
+    );
+    if (!mounted || mult == null) return false;
+    var total = _singleHeroStack * mult;
+    total = setup.gameType == GameType.cash
+        ? (total * 100).round() / 100
+        : total.roundToDouble();
+    // Chips already committed this hand stay in the pot; only the amount
+    // behind changes (see PokerGameState.setStackKeepingCommitted).
+    sessionManager.setSeatStackMidHand(gameState, seat, total);
+    setState(() => _stackSources[seat] = kStackSet);
+    return true;
+  }
+
+  /// D8: a villain ALL-IN while the seat's stack is still the default opens
+  /// the stack sheet BEFORE any chips move. True = the action was deferred to
+  /// [_resolveVillainAllIn]; the caller must stop.
+  bool _deferVillainAllIn(PlayerAction action, double? amount) {
+    if (!_v2Stacks) return false;
+    final seat = gameState.currentPlayer;
+    if (seat == sessionManager.ourSeatNumber ||
+        _stackSources[seat] == kStackSet) {
+      return false;
+    }
+    final p = gameState.players[seat - 1];
+    final double toPut;
+    if (action == PlayerAction.call) {
+      toPut = gameState.getCurrentBet() - p.betThisRound;
+    } else if (action == PlayerAction.bet || action == PlayerAction.raise) {
+      toPut = (amount ?? 0) - p.betThisRound;
+    } else {
+      return false;
+    }
+    if (p.currentStack <= 0 || toPut < p.currentStack - 1e-9) return false;
+    unawaited(_resolveVillainAllIn(action, seat));
+    return true;
+  }
+
+  /// Sheet -> confirmed stack -> the all-in is logged with that stack.
+  /// Dismissing the sheet cancels: nothing is logged.
+  Future<void> _resolveVillainAllIn(PlayerAction action, int seat) async {
+    final ok = await _editVillainStack(seat, allIn: true);
+    if (!ok || !mounted || gameState.currentPlayer != seat) return;
+    final p = gameState.players[seat - 1];
+    final allInTo = p.currentStack + p.betThisRound;
+    if (action == PlayerAction.call || allInTo <= gameState.getCurrentBet()) {
+      // A call, or a stack that cannot cover the bet: all-in CALL (HL-8b).
+      _performPokerAction(PlayerAction.call);
+    } else {
+      _performPokerActionWithAmount(action, allInTo);
+    }
+  }
+
   /// Recall and single-hand mode both play on a throw-away table.
   bool get _throwawayTable => _recallMode || _singleMode;
 
@@ -5110,6 +5245,14 @@ class _PokerHandScreenState extends State<PokerHandScreen>
       setup.heroName = null; // identity unavailable: hero stays by position
     }
     _seedThrowawayTable(setup.toSnapshot(), 1);
+    _v2Stacks = FeatureFlagService.singleHandV2Enabled;
+    _stackSources.clear();
+    if (_v2Stacks) {
+      for (final seat in sessionManager.activeSeats) {
+        _stackSources[seat] =
+            seat == SingleHandSetup.heroSeat ? kStackSet : kStackDefault;
+      }
+    }
     final c1 = setup.card1;
     final c2 = setup.card2;
     if (c1 != null && c2 != null) {
@@ -5134,6 +5277,7 @@ class _PokerHandScreenState extends State<PokerHandScreen>
     Object? error;
     try {
       hand.heroSeatNumber ??= 1;
+      if (_v2Stacks) hand.stackSources = Map.of(_stackSources);
       if ((hand.heroPositionName ?? '').isEmpty) {
         hand.heroPositionName = setup.heroPosition;
       }
@@ -5144,11 +5288,7 @@ class _PokerHandScreenState extends State<PokerHandScreen>
         playerNames: Map.of(sessionManager.playerNames),
         playerIds: Map.of(sessionManager.playerIds),
         // Used only when a new group is created.
-        groupName: SingleHandService.defaultGroupName(setup, DateTime.now(),
-            kind: setup.gameType == GameType.cash
-                ? l10n.statsCash
-                : l10n.statsTournament,
-            locale: l10n.localeName),
+        groupName: _newGroupName(setup, l10n),
       );
     } catch (e) {
       error = e;
@@ -5164,12 +5304,27 @@ class _PokerHandScreenState extends State<PokerHandScreen>
       Navigator.of(context).pop();
       return;
     }
-    final choice =
-        await SingleHandResultSheet.show(context, hand: hand, saved: saved);
+    var group = saved.group;
+    final choice = await SingleHandResultSheet.show(
+      context,
+      hand: hand,
+      saved: saved,
+      showGroupChange: _v2Stacks,
+      setup: setup,
+      newGroupName: _newGroupName(setup, l10n),
+      onMoved: (r) => group = r.group,
+    );
     if (!mounted) return;
     Navigator.of(context)
-        .pop(SingleHandOutcome(choice ?? SingleHandChoice.done, saved.group));
+        .pop(SingleHandOutcome(choice ?? SingleHandChoice.done, group));
   }
+
+  String _newGroupName(SingleHandSetup setup, AppLocalizations l10n) =>
+      SingleHandService.defaultGroupName(setup, DateTime.now(),
+          kind: setup.gameType == GameType.cash
+              ? l10n.statsCash
+              : l10n.statsTournament,
+          locale: l10n.localeName);
 
   /// Back from single-hand mode: confirm only when actions exist.
   Future<void> _leaveSingle() async {
@@ -6093,6 +6248,8 @@ class _PokerHandScreenState extends State<PokerHandScreen>
       // addAction removed
       return;
     }
+
+    if (_deferVillainAllIn(action, null)) return;
 
     // Chip-fly animation for chip-moving actions.
     if (action == PlayerAction.call ||
