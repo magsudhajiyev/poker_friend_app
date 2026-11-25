@@ -1,3 +1,4 @@
+import 'dart:ui' show ImageFilter;
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'dart:math' as math;
@@ -42,6 +43,10 @@ import '../widgets/hand_details/hand_summary_card.dart';
 import '../widgets/hand_details/hand_tools_strip.dart';
 import '../services/currency_service.dart';
 import '../widgets/hand_details/hand_view_data.dart';
+import '../services/running_session_lock.dart';
+import '../services/screen_capture_guard.dart';
+import '../services/hand_delete_service.dart';
+import '../design_system/components/modals/confirm_dialog.dart';
 
 class HandActionsScreen extends StatefulWidget {
   final Map<String, dynamic> hand;
@@ -67,6 +72,15 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
   late bool _isStarred;
   bool _showBB = HandDisplayPrefs.showBB;
   bool _isSharing = false;
+
+  /// The hand's session is still running: no AI analysis, share, export or
+  /// screen capture until it ends (fair play).
+  bool _locked = false;
+
+  /// Single / tracked-session hands only (they never fed stats).
+  bool _canDelete = false;
+  bool _isDeleting = false;
+  final CaptureHold _capture = CaptureHold();
   late List<String> _tags;
   String? _notes;
 
@@ -77,6 +91,10 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
     final rawTags = widget.hand['tags'];
     _tags = rawTags is List ? rawTags.cast<String>() : [];
     _notes = widget.hand['notes'] as String?;
+    _locked = RunningSessionLock.lockedHand(widget.hand);
+    _capture.update(_locked);
+    RunningSessionLock.changes.addListener(_onLockChanged);
+    _loadCanDelete();
     _loadShowBB();
     _loadExistingAnalysis();
     _scheduleOnboardingTour();
@@ -170,8 +188,62 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
     }
   }
 
+  Future<void> _loadCanDelete() async {
+    final ok = await HandDeleteService.canDelete(
+        widget.hand['sessionId'] as String?);
+    if (mounted && ok != _canDelete) setState(() => _canDelete = ok);
+  }
+
+  Future<void> _deleteHand() async {
+    if (_isDeleting || !_canDelete) return;
+    final l10n = AppLocalizations.of(context);
+    final confirmed = await ConfirmDialog.confirm(
+      context,
+      title: l10n.handActionsDeleteTitle,
+      message: l10n.handActionsDeleteBody,
+      confirmLabel: l10n.commonDelete,
+    );
+    if (!confirmed || !mounted) return;
+    setState(() => _isDeleting = true);
+    try {
+      await HandDeleteService.delete(
+        sessionId: widget.hand['sessionId'] as String,
+        handId: widget.hand['id'] as String?,
+        handNumber: (widget.hand['handNumber'] as num?)?.toInt(),
+      );
+      if (mounted) Navigator.pop(context, true);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isDeleting = false);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(UserFacingError.message(e)),
+        backgroundColor: AppColors.accentDanger,
+      ));
+    }
+  }
+
+  /// Tapping a dimmed control explains why it is dimmed.
+  void _showLockedInfo(String message) {
+    final m = ScaffoldMessenger.of(context);
+    m.clearSnackBars();
+    m.showSnackBar(SnackBar(
+      content: Text(message),
+      behavior: SnackBarBehavior.floating,
+      duration: const Duration(seconds: 3),
+    ));
+  }
+
+  void _onLockChanged() {
+    final now = RunningSessionLock.lockedHand(widget.hand);
+    if (now == _locked || !mounted) return;
+    setState(() => _locked = now);
+    _capture.update(now);
+  }
+
   @override
   void dispose() {
+    RunningSessionLock.changes.removeListener(_onLockChanged);
+    _capture.dispose();
     _scrollController.dispose();
     super.dispose();
   }
@@ -209,7 +281,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
   }
 
   Future<void> _handleShareButtonTap() async {
-    if (_isSharing) return;
+    if (_isSharing || _locked) return;
     final l10n = AppLocalizations.of(context);
 
     // Standard drawer with a single "Show hole cards" toggle; the checkmark
@@ -323,6 +395,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
   static const String _exportMonthKey = 'monthly_export_month';
 
   Future<void> _handleExportButtonTap() async {
+    if (_locked) return;
     // Gate free users at the paywall
     if (!SubscriptionService.isPremium) {
       final purchased = await PaywallScreen.show(context, featureName: 'Hand Export');
@@ -626,10 +699,15 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                     ],
                     if (data.streets.isNotEmpty) ...[
                       const SizedBox(height: 24),
-                      SectionHeader(title: l10n.handActionsAction),
-                      const SizedBox(height: 12),
-                      for (final block in data.streets)
-                        HandStreetSection(block: block, data: data),
+                      _maybeBlurActions(Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SectionHeader(title: l10n.handActionsAction),
+                          const SizedBox(height: 12),
+                          for (final block in data.streets)
+                            HandStreetSection(block: block, data: data),
+                        ],
+                      )),
                     ],
                     const SizedBox(height: 8),
                     if (_completeness == HandCompleteness.reconstructed) ...[
@@ -653,6 +731,47 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  /// iOS cannot block screenshots: while the hand's session runs, the action
+  /// list sits behind a frosted layer. Android keeps FLAG_SECURE, no blur.
+  Widget _maybeBlurActions(Widget actions) {
+    if (!_locked || !RunningSessionLock.blursActions) return actions;
+    final l10n = AppLocalizations.of(context);
+    return Stack(
+      children: [
+        actions,
+        Positioned.fill(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
+            child: BackdropFilter(
+              key: const ValueKey('actions-blur'),
+              filter: ImageFilter.blur(
+                  sigmaX: AppDecorations.blurLight,
+                  sigmaY: AppDecorations.blurLight),
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => _showLockedInfo(l10n.handLockedActionsInfo),
+                child: Container(
+                  color: AppColors.bgPrimary.withValues(alpha: 0.35),
+                  alignment: Alignment.center,
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  child: Text(
+                    l10n.handLockedActionsInfo,
+                    textAlign: TextAlign.center,
+                    style: AppTypography.ibm(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -701,6 +820,22 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
             ),
           ),
           const SizedBox(width: 8),
+          if (_canDelete) ...[
+            _ToolButton(
+              tooltip: l10n.handActionsDeleteHand,
+              onTap: _deleteHand,
+              child: _isDeleting
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: AppColors.textPrimary),
+                    )
+                  : const Icon(Icons.delete_outline,
+                      color: AppColors.textPrimary, size: 22),
+            ),
+            const SizedBox(width: 8),
+          ],
           _ToolButton(
             tooltip:
                 _isStarred ? l10n.handActionsUnstarHand : l10n.handActionsStarHand,
@@ -736,6 +871,9 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
         onExport: _handleExportButtonTap,
         onShare: _handleShareButtonTap,
         isSharing: _isSharing,
+        locked: _locked,
+        onLockedTap: () => _showLockedInfo(
+            AppLocalizations.of(context).handLockedShareInfo),
       ),
     );
   }
@@ -875,18 +1013,40 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
             const ColorFilter.mode(AppColors.textPrimary, BlendMode.srcIn),
       );
     }
-    final enabled = !_isAnalyzing && hasHeroCards && _aiAnalysis == null;
+    final enabled =
+        !_isAnalyzing && hasHeroCards && _aiAnalysis == null && !_locked;
 
     // The keyed box is the tour's spotlight target for the AI step.
     return SizedBox(
       key: _aiButtonKey,
       width: double.infinity,
-      child: AppButton(
-        label: label,
-        variant: variant,
-        fullWidth: true,
-        leadingIcon: icon,
-        onTap: enabled ? _handleAnalyzeButtonTap : null,
+      child: Column(
+        children: [
+          Opacity(
+            opacity: _locked && _aiAnalysis == null ? 0.5 : 1,
+            child: AppButton(
+              label: label,
+              variant: variant,
+              fullWidth: true,
+              leadingIcon: icon,
+              onTap: enabled
+                  ? _handleAnalyzeButtonTap
+                  : (_locked && hasHeroCards && _aiAnalysis == null
+                      ? () => _showLockedInfo(l10n.handLockedAiInfo)
+                      : null),
+            ),
+          ),
+          if (_locked && _aiAnalysis == null)
+            Padding(
+              padding: const EdgeInsets.only(top: AppSpacing.xxs),
+              child: Text(
+                l10n.runningSessionLockedLine,
+                key: const ValueKey('ai-locked-line'),
+                textAlign: TextAlign.center,
+                style: AppTypography.caption(color: AppColors.textSecondary),
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -943,6 +1103,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
   }
 
   Future<void> _handleAnalyzeButtonTap() async {
+    if (_locked) return;
     // One free analysis for non-premium users — the tour's taste of the
     // premium feature. Consumed only on success; persisted on the user doc
     // so it survives reinstall and account linking.

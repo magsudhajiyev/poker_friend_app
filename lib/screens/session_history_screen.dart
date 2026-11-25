@@ -1,4 +1,5 @@
 import 'session_hands_screen.dart';
+import '../services/live_session_notification_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
@@ -29,6 +30,12 @@ import '../utils/user_facing_error.dart';
 import '../onboarding/onboarding_state.dart';
 import '../onboarding/onboarding_tour.dart';
 import '../widgets/main_shell.dart';
+import '../models/single_hand_group.dart';
+import '../models/tracked_session.dart';
+import '../services/single_hand_service.dart';
+import '../widgets/single_hand/group_name_field.dart';
+import 'tracked_session_hub.dart';
+import '../widgets/tracked_session_widgets.dart';
 
 class SessionHistoryScreen extends StatefulWidget {
   final String? targetSessionId;
@@ -666,6 +673,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
         try {
           await FirebaseService.deleteSession(sessionId);
           await LocalStorageService.deleteSession(sessionId);
+          await LiveSessionNotificationService.stop(sessionId);
         } catch (_) {}
         if (!mounted) return;
         AppDataCache.markSessionsDirty();
@@ -710,17 +718,44 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
     );
   }
 
+  /// Renames a hand group (Firestore + SQLite), then refreshes the list.
+  Future<void> _renameGroup(Map<String, dynamic> session) async {
+    final l10n = AppLocalizations.of(context);
+    final current = '${session['sessionName'] ?? ''}';
+    final name = await GroupNameSheet.show(
+      context,
+      title: l10n.groupRenameTitle,
+      initial: isUnnamedGroupName(current) ? '' : current,
+    );
+    if (name == null || !mounted) return;
+    try {
+      await SingleHandService.renameGroup('${session['id']}', name);
+      if (mounted) await _loadSessions();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(UserFacingError.message(e)),
+        behavior: SnackBarBehavior.floating,
+      ));
+    }
+  }
+
   Widget _buildSessionCard(Map<String, dynamic> session) {
     final l10n = AppLocalizations.of(context);
     final startTime = DateTime.parse(session['startTime']);
     final isTournament = (session['gameType'] ?? 'cash').toLowerCase() == 'tournament';
     // "Log a hand" groups: no money, no duration, opens the hands list.
     final isHandGroup = session['sessionType'] == 'hand_group';
+    // "Track a session": a real session (money, time) holding single hands.
+    final isTracked = isTrackedSession(session);
     final handCount = (session['totalHands'] as num?)?.toInt() ?? 0;
 
-    final sessionName = session['sessionName'] != null && session['sessionName'].isNotEmpty
-        ? session['sessionName']
-        : l10n.sessionHistorySessionId(session['id'].substring(0, 8));
+    final rawName = '${session['sessionName'] ?? ''}';
+    final sessionName = isHandGroup && isUnnamedGroupName(rawName)
+        ? l10n.groupUnnamed
+        : rawName.isNotEmpty
+            ? rawName
+            : l10n.sessionHistorySessionId(session['id'].substring(0, 8));
 
     // P/L calculation.
     // Tournament rule (see diary 2026-05-15): chips are NOT money — never
@@ -774,7 +809,14 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
       key: session['id'] == _tourHighlightSessionId
           ? _tourSessionCardKey
           : null,
+      onLongPress: isHandGroup ? () => _renameGroup(session) : null,
       onTap: () async {
+        // A tracked session that is still running reopens its hub.
+        if (isTracked && session['endTime'] == null) {
+          await TrackedSessionHub.openAndWait(Navigator.of(context), session['id']);
+          if (mounted && AppDataCache.isSessionsDirty) _loadSessions();
+          return;
+        }
         await Navigator.push(
           context,
           MaterialPageRoute(
@@ -850,6 +892,10 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
                                 ),
                               ),
                             ],
+                            if (isTracked && handCount > 0) ...[
+                              const SizedBox(width: 6),
+                              TrackedHandsBadge(handCount),
+                            ],
                             if (session['isTutorial'] == true) ...[
                               const SizedBox(width: 6),
                               Container(
@@ -905,6 +951,19 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
               ),
             ),
             const SizedBox(width: 12),
+            if (isHandGroup) ...[
+              GestureDetector(
+                key: ValueKey('rename-group-${session['id']}'),
+                behavior: HitTestBehavior.opaque,
+                onTap: () => _renameGroup(session),
+                child: const Padding(
+                  padding: EdgeInsets.all(8),
+                  child: Icon(Icons.edit_outlined,
+                      size: 18, color: AppColors.contentInactive),
+                ),
+              ),
+              const SizedBox(width: 4),
+            ],
             SvgPicture.asset(
               'assets/icons/CaretRight.svg',
               width: 16,

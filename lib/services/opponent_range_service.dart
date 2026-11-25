@@ -1,4 +1,5 @@
 import '../models/hand_state_machine.dart';
+import '../models/tracked_session.dart';
 import '../models/observed_range.dart';
 import '../models/stack_bucket.dart';
 import 'drill_hand_strength.dart';
@@ -268,6 +269,8 @@ class OpponentRangeService {
         final sessionId =
             (session['id'] ?? session['sessionId'])?.toString() ?? '';
         if (sessionId.isEmpty) continue;
+        // Tracked-session hands never feed the opponent range.
+        if (isTrackedSession(session)) continue;
         final fallbackBB = (session['bigBlind'] as num?)?.toDouble();
         final fallbackGt = session['gameType'] as String?;
 

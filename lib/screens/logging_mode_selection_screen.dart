@@ -6,15 +6,19 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../l10n/app_localizations.dart';
 import '../onboarding/onboarding_state.dart';
 import '../onboarding/onboarding_tour.dart';
-import '../onboarding/onboarding_progress_bar.dart';
 import 'training/drill_setup_screen.dart';
 import 'unified_session_setup_screen.dart';
 import '../services/feature_flag_service.dart';
 import '../widgets/single_hand/single_hand_flow.dart';
+import '../services/live_session_logic.dart';
+import '../utils/running_session_label.dart';
+import '../widgets/running_session_guard.dart';
+import 'tracked_session_setup_screen.dart';
 import '../design_system/components/sheets/sheet_header.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/typography.dart';
 import '../design_system/constants/decorations.dart';
+import '../design_system/constants/spacing.dart';
 
 class LoggingModeSelectionScreen extends StatefulWidget {
   const LoggingModeSelectionScreen({super.key});
@@ -64,6 +68,12 @@ class LoggingModeSelectionScreen extends StatefulWidget {
           {required bool flagOn, required bool tourActive}) =>
       flagOn && !tourActive;
 
+  /// "Track a session" card: flag on, and never while the tour runs.
+  @visibleForTesting
+  static bool trackedSessionCardVisible(
+          {required bool flagOn, required bool tourActive}) =>
+      flagOn && !tourActive;
+
   @override
   State<LoggingModeSelectionScreen> createState() =>
       _LoggingModeSelectionScreenState();
@@ -73,10 +83,31 @@ class _LoggingModeSelectionScreenState
     extends State<LoggingModeSelectionScreen> {
   final GlobalKey _fullModeCardKey = GlobalKey(debugLabel: 'fullModeCard');
 
+  /// Session that runs right now, for the top banner (never during the tour).
+  LiveSessionRecord? _running;
+
   @override
   void initState() {
     super.initState();
     _scheduleOnboardingTour();
+    _loadRunning();
+  }
+
+  Future<void> _loadRunning() async {
+    if (OnboardingState.isOnboardingActive) return;
+    try {
+      final r = await RunningSessionGuard.current();
+      if (mounted) setState(() => _running = r);
+    } catch (_) {
+      // The banner is a convenience; the gate still guards the rows.
+    }
+  }
+
+  Future<void> _goToRunning() async {
+    final r = _running;
+    if (r == null) return;
+    await RunningSessionGuard.goTo(Navigator.of(context), r);
+    if (mounted) _loadRunning();
   }
 
   void _scheduleOnboardingTour() {
@@ -97,15 +128,53 @@ class _LoggingModeSelectionScreenState
         tourActive: OnboardingState.isOnboardingActive,
       );
 
+  bool get _showTrackedCard =>
+      LoggingModeSelectionScreen.trackedSessionCardVisible(
+        flagOn: FeatureFlagService.trackedSessionEnabled,
+        tourActive: OnboardingState.isOnboardingActive,
+      );
+
+  /// A session may only start when none runs: the warning comes BEFORE any
+  /// setup screen (never during the tour). No "continue anyway".
+  Future<bool> _mayStartSession() async {
+    if (OnboardingState.isOnboardingActive) return true;
+    final free = await RunningSessionGuard.ensureFree(context);
+    return free && mounted;
+  }
+
+  Future<void> _startTrackedSession() async {
+    if (!await _mayStartSession()) return;
+    if (!mounted) return;
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const TrackedSessionSetupScreen()),
+    );
+  }
+
+  Future<void> _startFullLogging() async {
+    if (!await _mayStartSession()) return;
+    if (!mounted) return;
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const UnifiedSessionSetupScreen()),
+    );
+  }
+
   Future<void> _startSingleHand() async {
     final done = await SingleHandFlow.run(context);
     if (done && mounted) Navigator.pop(context);
   }
 
+  void _openDrills() => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const DrillSetupScreen()),
+      );
+
+  static const double _maxContentWidth = 560;
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: Column(
@@ -117,10 +186,9 @@ class _LoggingModeSelectionScreenState
               child: const SizedBox.expand(),
             ),
           ),
-          // Modal panel (dark surface), scrolls on short screens
           ConstrainedBox(
             constraints: BoxConstraints(
-                maxHeight: MediaQuery.sizeOf(context).height * 0.85),
+                maxHeight: MediaQuery.sizeOf(context).height * 0.9),
             child: Container(
               width: double.infinity,
               decoration: BoxDecoration(
@@ -133,92 +201,35 @@ class _LoggingModeSelectionScreenState
               ),
               child: SafeArea(
                 top: false,
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: SingleChildScrollView(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // Header: title + glass X
-                        SheetHeader(
-                          title: l10n.loggingModeChooseMode,
-                          onClose: () => Navigator.pop(context),
-                        ),
-                        const SizedBox(height: 16),
-
-                        // Logging Mode card
-                        _buildModeCard(
-                          key: _fullModeCardKey,
-                          title: l10n.loggingModeFullTitle,
-                          subtitle: l10n.loggingModeFullSubtitle,
-                          features: [
-                            l10n.loggingModeFullFeature1,
-                            l10n.loggingModeFullFeature2,
-                            l10n.loggingModeFullFeature3,
-                            l10n.loggingModeFullFeature4,
+                // heightFactor 1: hug the content (a plain Center would fill the
+                // whole max height and leave gaps above and below the rows).
+                child: Align(
+                  alignment: Alignment.topCenter,
+                  heightFactor: 1,
+                  child: ConstrainedBox(
+                    constraints:
+                        const BoxConstraints(maxWidth: _maxContentWidth),
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                          AppSpacing.md, AppSpacing.md, AppSpacing.md,
+                          AppSpacing.xl),
+                      child: SingleChildScrollView(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            SheetHeader(
+                              title: l10n.loggingModeChooseMode,
+                              onClose: () => Navigator.pop(context),
+                            ),
+                            const SizedBox(height: AppSpacing.xs),
+                            ValueListenableBuilder<int>(
+                              valueListenable: FeatureFlagService.revision,
+                              builder: (context, _, __) => _list(l10n),
+                            ),
                           ],
-                          onChoose: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    const UnifiedSessionSetupScreen(),
-                              ),
-                            );
-                          },
                         ),
-
-                        // Log a hand entry (feature-flagged, hidden during the tour)
-                        ValueListenableBuilder<int>(
-                          valueListenable: FeatureFlagService.revision,
-                          builder: (context, _, __) => _showSingleHandCard
-                              ? Column(children: [
-                                  const SizedBox(height: 16),
-                                  _buildModeCard(
-                                    title: l10n.singleHandCardTitle,
-                                    subtitle: l10n.singleHandCardSubtitle,
-                                    features: [
-                                      l10n.singleHandFeature1,
-                                      l10n.singleHandFeature2,
-                                      l10n.singleHandFeature3,
-                                    ],
-                                    onChoose: _startSingleHand,
-                                  ),
-                                ])
-                              : const SizedBox.shrink(),
-                        ),
-
-                        // Training Drills entry (premium, feature-flagged)
-                        ValueListenableBuilder<int>(
-                          valueListenable: FeatureFlagService.revision,
-                          builder: (context, _, __) =>
-                              FeatureFlagService.isEnabled(
-                                      FeatureFlagService.trainingDrills)
-                                  ? Column(children: [
-                                      const SizedBox(height: 16),
-                                      _buildModeCard(
-                                        title: l10n.loggingTrainingDrills,
-                                        subtitle:
-                                            l10n.loggingTrainingDrillsSubtitle,
-                                        features: [
-                                          l10n.loggingTrainingDrillsFeature1,
-                                          l10n.loggingTrainingDrillsFeature2,
-                                          l10n.loggingTrainingDrillsFeature3,
-                                        ],
-                                        badge: l10n.loggingPro,
-                                        onChoose: () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                                builder: (_) =>
-                                                    const DrillSetupScreen()),
-                                          );
-                                        },
-                                      ),
-                                    ])
-                                  : const SizedBox.shrink(),
-                        ),
-                      ],
+                      ),
                     ),
                   ),
                 ),
@@ -230,214 +241,237 @@ class _LoggingModeSelectionScreenState
     );
   }
 
-  Widget _buildModeCard({
-    required String title,
-    required String subtitle,
-    required List<String> features,
-    required VoidCallback onChoose,
-    Key? key,
-    String? badge,
-  }) {
-    return _ModeCard(
-      key: key,
-      title: title,
-      subtitle: subtitle,
-      features: features,
-      badge: badge,
-      chooseLabel: AppLocalizations.of(context).loggingChoose,
-      onChoose: onChoose,
-      chipBuilder: _buildChip,
+  Widget _list(AppLocalizations l10n) {
+    final drills = FeatureFlagService.isEnabled(FeatureFlagService.trainingDrills);
+    final rows = <Widget>[
+      if (_showSingleHandCard)
+        _ModeRow(
+          iconAsset: 'assets/icons/HandSwipeRight.svg',
+          title: l10n.singleHandCardTitle,
+          subtitle: l10n.singleHandCardSubtitle,
+          onTap: _startSingleHand,
+        ),
+      if (_showTrackedCard)
+        _ModeRow(
+          iconAsset: 'assets/icons/ClockUser.svg',
+          title: l10n.trackedCardTitle,
+          subtitle: l10n.loggingModeRowTrackedSubtitle,
+          onTap: _startTrackedSession,
+        ),
+      _ModeRow(
+        key: _fullModeCardKey,
+        iconAsset: 'assets/icons/Table.svg',
+        title: l10n.loggingModeFullTitle,
+        subtitle: l10n.loggingModeRowFullSubtitle,
+        onTap: _startFullLogging,
+      ),
+    ];
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (_running != null) _runningBanner(l10n),
+        for (var i = 0; i < rows.length; i++) ...[
+          if (i > 0) const SizedBox(height: AppSpacing.xxs),
+          rows[i],
+        ],
+        if (drills) ...[
+          const SizedBox(height: AppSpacing.xl),
+          Padding(
+            padding: const EdgeInsets.only(
+                left: AppSpacing.xxs, bottom: AppSpacing.xxs),
+            child: Text(l10n.loggingModePractice.toUpperCase(),
+                style: AppTypography.sectionHeader()),
+          ),
+          _ModeRow(
+            iconAsset: 'assets/icons/GameController.svg',
+            title: l10n.loggingTrainingDrills,
+            subtitle: l10n.loggingModeRowDrillsSubtitle,
+            badge: l10n.loggingPro,
+            onTap: _openDrills,
+          ),
+        ],
+      ],
     );
   }
 
-  Widget _buildChip(String text) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
-      decoration: BoxDecoration(
-        border: Border.all(color: AppColors.borderStrong),
-        borderRadius: BorderRadius.circular(AppDecorations.navBarRadius),
-      ),
-      child: Text(
-        text,
-        style: AppTypography.ibm(
-          fontSize: 13,
-          fontWeight: FontWeight.w400,
-          color: AppColors.textPrimary,
-          height: 20 / 13,
+  Widget _runningBanner(AppLocalizations l10n) {
+    final name = runningSessionLabel(l10n, _running!);
+    final text = _showSingleHandCard
+        ? l10n.loggingModeRunningBanner(name)
+        : l10n.loggingModeRunningBannerShort(name);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+      child: Semantics(
+        button: true,
+        label: '$text. ${l10n.trackedRunningGoTo}',
+        excludeSemantics: true,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: _goToRunning,
+          child: Container(
+            constraints: const BoxConstraints(minHeight: 48),
+            padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.md, vertical: AppSpacing.xxs),
+            decoration: BoxDecoration(
+              color: AppColors.accentPrimary.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
+              border: Border.all(
+                  color: AppColors.accentPrimary.withValues(alpha: 0.4)),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(text,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.bodySmall(
+                          color: AppColors.textPrimary)),
+                ),
+                const SizedBox(width: AppSpacing.xxs),
+                SvgPicture.asset(
+                  'assets/icons/CaretRight.svg',
+                  width: 14,
+                  height: 14,
+                  colorFilter: const ColorFilter.mode(
+                      AppColors.accentPrimary, BlendMode.srcIn),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
   }
 }
 
-/// Mode selection card — the whole surface is one tap target.
-///
-/// Micro-interactions on press:
-/// - Card scales to 0.98 (spring settle on release).
-/// - Chevron slides 4px right and fades label to full opacity.
-/// - Haptic selection tick on release.
-///
-/// Together they make the card unmistakably tappable without needing a
-/// dedicated button inside.
-class _ModeCard extends StatefulWidget {
+/// One compact, full-width mode row: icon, title, one subtitle line, chevron.
+/// Press feedback: a slight scale, accent border and a haptic tick.
+class _ModeRow extends StatefulWidget {
+  final String iconAsset;
   final String title;
   final String subtitle;
-  final List<String> features;
   final String? badge;
-  final String chooseLabel;
-  final VoidCallback onChoose;
-  final Widget Function(String) chipBuilder;
+  final VoidCallback onTap;
 
-  const _ModeCard({
+  const _ModeRow({
     super.key,
+    required this.iconAsset,
     required this.title,
     required this.subtitle,
-    required this.features,
-    required this.chooseLabel,
-    required this.onChoose,
-    required this.chipBuilder,
+    required this.onTap,
     this.badge,
   });
 
   @override
-  State<_ModeCard> createState() => _ModeCardState();
+  State<_ModeRow> createState() => _ModeRowState();
 }
 
-class _ModeCardState extends State<_ModeCard> {
+class _ModeRowState extends State<_ModeRow> {
   bool _pressed = false;
 
-  void _setPressed(bool value) {
-    if (!mounted || _pressed == value) return;
-    setState(() => _pressed = value);
+  void _setPressed(bool v) {
+    if (mounted && _pressed != v) setState(() => _pressed = v);
   }
 
   @override
   Widget build(BuildContext context) {
-    const pressCurve = Curves.easeOut;
-    const releaseCurve = Curves.elasticOut;
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTapDown: (_) => _setPressed(true),
-      onTapUp: (_) => _setPressed(false),
-      onTapCancel: () => _setPressed(false),
-      onTap: () {
-        HapticFeedback.selectionClick();
-        widget.onChoose();
-      },
-      child: AnimatedScale(
-        scale: _pressed ? 0.98 : 1.0,
-        duration: Duration(milliseconds: _pressed ? 120 : 260),
-        curve: _pressed ? pressCurve : releaseCurve,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
+    return Semantics(
+      button: true,
+      label: '${widget.title}. ${widget.subtitle}',
+      excludeSemantics: true,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTapDown: (_) => _setPressed(true),
+        onTapUp: (_) => _setPressed(false),
+        onTapCancel: () => _setPressed(false),
+        onTap: () {
+          HapticFeedback.selectionClick();
+          widget.onTap();
+        },
+        child: AnimatedScale(
+          scale: _pressed ? 0.98 : 1.0,
+          duration: const Duration(milliseconds: 120),
           curve: Curves.easeOut,
-          width: double.infinity,
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: AppColors.bgSurface,
-            border: Border.all(
-              color: _pressed
-                  ? AppColors.accentPrimary.withOpacity(0.5)
-                  : AppColors.borderStrong,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 160),
+            constraints: const BoxConstraints(minHeight: 72),
+            padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.md, vertical: AppSpacing.xs),
+            decoration: BoxDecoration(
+              color: _pressed ? AppColors.bgElevated : AppColors.bgSurface,
+              borderRadius: BorderRadius.circular(AppDecorations.radiusXl),
+              border: Border.all(
+                  color: _pressed
+                      ? AppColors.accentPrimary.withValues(alpha: 0.5)
+                      : AppColors.borderStrong),
             ),
-            borderRadius: BorderRadius.circular(AppDecorations.radiusXl),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Title + optional badge
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      widget.title,
-                      style: AppTypography.ibm(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
-                        height: 22 / 17,
-                      ),
-                    ),
-                  ),
-                  if (widget.badge != null)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: AppColors.bgPrimary,
-                        borderRadius:
-                            BorderRadius.circular(AppDecorations.pillRadius),
-                      ),
-                      child: Text(
-                        widget.badge!,
-                        style: AppTypography.ibm(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 1.0,
-                          color: AppColors.accentPrimary,
-                        ),
-                      ),
-                    ),
+            child: Row(
+              children: [
+                _icon(),
+                const SizedBox(width: AppSpacing.xs),
+                Expanded(child: _texts()),
+                if (widget.badge != null) ...[
+                  const SizedBox(width: AppSpacing.xxs),
+                  _badge(widget.badge!),
                 ],
-              ),
-              const SizedBox(height: 2),
-              Text(
-                widget.subtitle,
-                style: AppTypography.ibm(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w400,
-                  color: AppColors.textPrimary,
-                  height: 22 / 15,
+                const SizedBox(width: AppSpacing.xxs),
+                SvgPicture.asset(
+                  'assets/icons/CaretRight.svg',
+                  width: 14,
+                  height: 14,
+                  colorFilter: const ColorFilter.mode(
+                      AppColors.textSecondary, BlendMode.srcIn),
                 ),
-              ),
-              const SizedBox(height: 16),
-              // Feature chips
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: widget.features.map(widget.chipBuilder).toList(),
-              ),
-              const SizedBox(height: 16),
-              // Trailing "Choose ›" affordance — chevron nudges + label
-              // brightens on press.
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  AnimatedDefaultTextStyle(
-                    duration: const Duration(milliseconds: 180),
-                    curve: Curves.easeOut,
-                    style: AppTypography.ibm(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: _pressed
-                          ? AppColors.accentPrimary
-                          : AppColors.accentPrimary.withOpacity(0.85),
-                      height: 20 / 15,
-                    ),
-                    child: Text(widget.chooseLabel),
-                  ),
-                  const SizedBox(width: 6),
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 220),
-                    curve: Curves.easeOut,
-                    transform: Matrix4.translationValues(
-                        _pressed ? 4.0 : 0.0, 0.0, 0.0),
-                    child: SvgPicture.asset(
-                      'assets/icons/CaretRight.svg',
-                      width: 14,
-                      height: 14,
-                      colorFilter: const ColorFilter.mode(
-                        AppColors.accentPrimary,
-                        BlendMode.srcIn,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
     );
   }
+
+  Widget _icon() => Container(
+        width: 44,
+        height: 44,
+        alignment: Alignment.center,
+        decoration: const BoxDecoration(
+            shape: BoxShape.circle, color: AppColors.bgPrimary),
+        child: SvgPicture.asset(
+          widget.iconAsset,
+          width: 24,
+          height: 24,
+          colorFilter: const ColorFilter.mode(
+              AppColors.accentPrimary, BlendMode.srcIn),
+        ),
+      );
+
+  Widget _texts() => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(widget.title,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: AppTypography.listRowLabel()
+                  .copyWith(fontWeight: FontWeight.w600)),
+          const SizedBox(height: 2),
+          Text(widget.subtitle,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: AppTypography.bodySmall(color: AppColors.textSecondary)),
+        ],
+      );
+
+  Widget _badge(String text) => Container(
+        padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.xxs, vertical: AppSpacing.xxxs),
+        decoration: BoxDecoration(
+          color: AppColors.bgPrimary,
+          borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
+        ),
+        child: Text(text,
+            style: AppTypography.sectionHeader()
+                .copyWith(fontWeight: FontWeight.w700)),
+      );
 }

@@ -130,6 +130,24 @@ void main() {
     expect(log.where((e) => e.startsWith('blinds:')), isEmpty);
   });
 
+  testWidgets('"+ Custom blinds" is visible, opens the form, cancel keeps level',
+      (t) async {
+    await pump(t, size: const Size(320, 568), textScale: 1.3);
+    final btn = find.text('+ Custom blinds');
+    expect(btn, findsOneWidget);
+    expect(t.getSize(find.ancestor(of: btn, matching: find.byType(Container)).first).height,
+        greaterThanOrEqualTo(44));
+    await t.tap(btn);
+    await t.pumpAndSettle();
+    expect(find.text('Small blind'), findsOneWidget);
+    await t.tapAt(const Offset(10, 10));
+    await t.pumpAndSettle();
+    expect(find.text('Small blind'), findsNothing);
+    expect(log.where((e) => e.startsWith('blinds:')), isEmpty);
+    expect(s.bigBlind, 2);
+    expect(t.takeException(), isNull);
+  });
+
   testWidgets('Custom blinds typed in the form apply', (t) async {
     await pump(t);
     await t.fling(blindsWheel(), const Offset(0, -3000), 4000);

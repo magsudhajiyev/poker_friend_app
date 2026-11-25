@@ -76,11 +76,16 @@ import '../services/villain_tracker.dart';
 import '../widgets/easy_logging/villain_line_strip.dart';
 import '../services/hand_flag_service.dart';
 import '../services/recall_finisher.dart';
+import '../models/single_hand_group.dart';
 import '../models/single_hand_setup.dart';
+import '../models/tracked_session.dart';
 import '../services/analytics_service.dart';
+import '../services/live_session_notification_service.dart';
 import '../services/single_hand_service.dart';
 import '../widgets/single_hand/single_hand_result_sheet.dart';
 import '../widgets/single_hand/v2/villain_stack_badge.dart';
+import '../utils/seat_plate_scale.dart';
+import '../widgets/turn_glow.dart';
 import '../widgets/single_hand/v2/villain_stack_sheet.dart';
 import '../utils/stack_sources.dart';
 
@@ -116,11 +121,16 @@ class PokerHandScreen extends StatefulWidget {
   final SingleHandSetup? singleHand;
   final String? singleGroupId;
 
+  /// Single-hand mode inside a running tracked session: the hand is saved
+  /// INSIDE it (no group, no naming). Takes precedence over [singleGroupId].
+  final SingleHandSessionTarget? singleSession;
+
   /// Opens single-hand mode; null when the player left without saving.
   static Future<SingleHandOutcome?> openSingleHand(
     BuildContext context,
     SingleHandSetup setup, {
     String? groupId,
+    SingleHandSessionTarget? session,
   }) {
     return Navigator.of(context).push<SingleHandOutcome>(MaterialPageRoute(
       builder: (_) => PokerHandScreen(
@@ -131,6 +141,7 @@ class PokerHandScreen extends StatefulWidget {
         hasBBante: setup.hasBBante,
         singleHand: setup,
         singleGroupId: groupId,
+        singleSession: session,
       ),
     ));
   }
@@ -177,6 +188,7 @@ class PokerHandScreen extends StatefulWidget {
     this.recallTable,
     this.singleHand,
     this.singleGroupId,
+    this.singleSession,
   });
 
   @override
@@ -1253,6 +1265,7 @@ class _PokerHandScreenState extends State<PokerHandScreen>
       if (sessionId != null) {
         await FirebaseService.deleteSession(sessionId);
         await LocalStorageService.deleteSession(sessionId);
+        unawaited(LiveSessionNotificationService.stop(sessionId));
       }
       sessionManager.sessionState = SessionState.ended;
       if (isBackButton) {
@@ -1347,6 +1360,7 @@ class _PokerHandScreenState extends State<PokerHandScreen>
       if (sessionId != null) {
         await FirebaseService.deleteSession(sessionId);
         await LocalStorageService.deleteSession(sessionId);
+        unawaited(LiveSessionNotificationService.stop(sessionId));
       }
       sessionManager.sessionState = SessionState.ended;
 
@@ -2478,7 +2492,7 @@ class _PokerHandScreenState extends State<PokerHandScreen>
     } else if (isFolded) {
       borderColor = AppColors.accentSecondary.withValues(alpha: 0.3);
     } else if (isCurrentPlayer) {
-      borderColor = Colors.amber;
+      borderColor = TurnGlow.color;
     } else if (isHero) {
       borderColor = AppColors.accentPrimary;
     } else {
@@ -2500,12 +2514,7 @@ class _PokerHandScreenState extends State<PokerHandScreen>
             border: Border.all(
                 color: borderColor, width: isCurrentPlayer ? 2.5 : 2),
             boxShadow: isCurrentPlayer
-                ? [
-                    BoxShadow(
-                      color: Colors.amber.withValues(alpha: 0.25 + 0.3 * glow),
-                      blurRadius: 6 + 6 * glow,
-                    ),
-                  ]
+                ? TurnGlow.shadows(glow)
                 : null,
           ),
           child: Text(
@@ -2577,9 +2586,12 @@ class _PokerHandScreenState extends State<PokerHandScreen>
     // Name + stack plate — WPT/888-style dark pill that hangs below the
     // avatar (replaces the old off-palette blue name badge). Name on top,
     // live stack below; the stack rolls smoothly as chips move.
+    final plateScale = seatPlateScale(MediaQuery.sizeOf(context).width);
     final namePlate = Container(
-      constraints: const BoxConstraints(maxWidth: 76),
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+      key: ValueKey('seat-plate-$seatNumber'),
+      constraints: BoxConstraints(maxWidth: 84 * plateScale),
+      padding: EdgeInsets.symmetric(
+          horizontal: 8 * plateScale, vertical: 3.5 * plateScale),
       decoration: BoxDecoration(
         color: AppColors.bgSurface.withValues(alpha: 0.92),
         borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
@@ -2601,13 +2613,14 @@ class _PokerHandScreenState extends State<PokerHandScreen>
               color: isFolded
                   ? Colors.white38
                   : (isHero ? AppColors.accentPrimary : Colors.white),
-              fontSize: 10,
+              fontSize: 11.5 * plateScale,
               fontWeight: FontWeight.w600,
               height: 1.1,
             ),
           ),
           if (showBadge)
-            VillainStackBadge(label: _badgeLabel())
+            VillainStackBadge(
+                label: _badgeLabel(), fontSize: 10.5 * plateScale)
           else
             AnimatedAmountText(
               value: stack,
@@ -2615,7 +2628,7 @@ class _PokerHandScreenState extends State<PokerHandScreen>
               duration: const Duration(milliseconds: 350),
               style: AppTypography.mono(
                 color: isFolded ? Colors.white38 : AppColors.textSecondary,
-                fontSize: 9,
+                fontSize: 10.5 * plateScale,
                 fontWeight: FontWeight.w500,
                 height: 1.1,
               ),
@@ -5245,7 +5258,8 @@ class _PokerHandScreenState extends State<PokerHandScreen>
       setup.heroName = null; // identity unavailable: hero stays by position
     }
     _seedThrowawayTable(setup.toSnapshot(), 1);
-    _v2Stacks = FeatureFlagService.singleHandV2Enabled;
+    _v2Stacks = FeatureFlagService.singleHandV2Enabled ||
+        widget.singleSession != null;
     _stackSources.clear();
     if (_v2Stacks) {
       for (final seat in sessionManager.activeSeats) {
@@ -5281,15 +5295,35 @@ class _PokerHandScreenState extends State<PokerHandScreen>
       if ((hand.heroPositionName ?? '').isEmpty) {
         hand.heroPositionName = setup.heroPosition;
       }
-      saved = await SingleHandService.saveHand(
-        hand: hand,
-        setup: setup,
-        groupId: widget.singleGroupId,
-        playerNames: Map.of(sessionManager.playerNames),
-        playerIds: Map.of(sessionManager.playerIds),
-        // Used only when a new group is created.
-        groupName: _newGroupName(setup, l10n),
-      );
+      final target = widget.singleSession;
+      saved = target != null
+          ? await SingleHandService.saveHandInSession(
+              hand: hand,
+              setup: setup,
+              sessionId: target.id,
+              sessionName: target.name,
+              playerNames: Map.of(sessionManager.playerNames),
+              playerIds: Map.of(sessionManager.playerIds),
+            )
+          : await SingleHandService.saveHand(
+              hand: hand,
+              setup: setup,
+              groupId: widget.singleGroupId,
+              playerNames: Map.of(sessionManager.playerNames),
+              playerIds: Map.of(sessionManager.playerIds),
+              // Used only when a new group is created. Setup v2: the player
+              // names it on the result sheet, so it starts unnamed (D15).
+              groupName: _v2Stacks
+                  ? kUnnamedGroupName
+                  : _newGroupName(setup, l10n),
+            );
+    } on SingleHandGroupFullException {
+      if (mounted) {
+        setState(() => _recallSaving = false);
+        await FreeTierLimits.showHandsLimitDialog(context);
+        if (mounted) Navigator.of(context).pop();
+      }
+      return;
     } catch (e) {
       error = e;
     }
@@ -5305,14 +5339,11 @@ class _PokerHandScreenState extends State<PokerHandScreen>
       return;
     }
     var group = saved.group;
-    final choice = await SingleHandResultSheet.show(
+    final choice = await SingleHandSavedDialog.show(
       context,
-      hand: hand,
       saved: saved,
-      showGroupChange: _v2Stacks,
-      setup: setup,
-      newGroupName: _newGroupName(setup, l10n),
-      onMoved: (r) => group = r.group,
+      nameNewGroup: _v2Stacks,
+      onNamed: (g) => group = g,
     );
     if (!mounted) return;
     Navigator.of(context)

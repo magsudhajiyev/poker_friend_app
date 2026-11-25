@@ -18,6 +18,7 @@ import '../../models/game_types.dart';
 import '../../models/hand_state_machine.dart';
 import '../../models/poker_game_state.dart' show formatBlindValue;
 import '../../models/single_hand_group.dart';
+import '../../models/tracked_session.dart';
 import '../../models/single_hand_setup.dart';
 import '../../services/analytics_service.dart';
 import '../../services/logger_service.dart';
@@ -33,7 +34,10 @@ import '../playing_card_face.dart';
 class SingleHandStart {
   final SingleHandSetup setup;
   final SingleHandGroup? group;
-  const SingleHandStart(this.setup, this.group);
+
+  /// A running tracked session the hand is saved INSIDE (null = a hand group).
+  final SingleHandSessionTarget? session;
+  const SingleHandStart(this.setup, this.group, {this.session});
 }
 
 /// Setup sheet of the "Log a hand" flow: game, blinds, players, hero

@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import '../models/tracked_session.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../services/auth_service.dart';
 import '../services/firebase_service.dart';
@@ -79,6 +80,12 @@ class StatsVerificationService {
           } catch (e) {
             debugPrint('⚠️  Error parsing session times: $e');
           }
+        }
+
+        // Tracked sessions never reach hand stats.
+        if (isTrackedSession(session)) {
+          debugPrint('Tracked session: hands excluded from hand stats\n');
+          continue;
         }
 
         // Fetch hands for this session

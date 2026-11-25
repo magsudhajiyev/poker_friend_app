@@ -86,6 +86,9 @@ class GamePillSheet extends StatefulWidget {
   final ValueChanged<bool> onAnte;
   final ValueChanged<int> onPlayers;
 
+  /// Tracked session: the session fixes the game type (Cash/Tournament).
+  final bool lockGameType;
+
   const GamePillSheet({
     super.key,
     required this.setup,
@@ -94,6 +97,7 @@ class GamePillSheet extends StatefulWidget {
     required this.onBlinds,
     required this.onAnte,
     required this.onPlayers,
+    this.lockGameType = false,
   });
 
   static Future<void> show(
@@ -104,6 +108,7 @@ class GamePillSheet extends StatefulWidget {
     required ValueChanged<BlindLevel> onBlinds,
     required ValueChanged<bool> onAnte,
     required ValueChanged<int> onPlayers,
+    bool lockGameType = false,
   }) {
     return AppSheet.show<void>(
       context: context,
@@ -119,6 +124,7 @@ class GamePillSheet extends StatefulWidget {
         onBlinds: onBlinds,
         onAnte: onAnte,
         onPlayers: onPlayers,
+        lockGameType: lockGameType,
       ),
     );
   }
@@ -176,7 +182,7 @@ class _GamePillSheetState extends State<GamePillSheet>
     setState(() {});
   }
 
-  static const double _wheelFraction = 0.24;
+  static const double _wheelFraction = 0.2;
   static const double _wheelMax = 220;
 
   @override
@@ -190,9 +196,15 @@ class _GamePillSheetState extends State<GamePillSheet>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        AnimatedSegmentedTabs(
-          controller: _tabs,
-          labels: [l10n.singleHandCash, l10n.singleHandTourney],
+        IgnorePointer(
+          ignoring: widget.lockGameType,
+          child: Opacity(
+            opacity: widget.lockGameType ? 0.5 : 1,
+            child: AnimatedSegmentedTabs(
+              controller: _tabs,
+              labels: [l10n.singleHandCash, l10n.singleHandTourney],
+            ),
+          ),
         ),
         const SizedBox(height: AppSpacing.xs),
         Row(
@@ -212,6 +224,7 @@ class _GamePillSheetState extends State<GamePillSheet>
                     : '${_compact(b.sb)}/${_compact(b.bb)}',
                 onChanged: _pickLevel,
               ),
+              footer: _customButton(l10n),
             ),
             const SizedBox(width: AppSpacing.xxs),
             _wheelColumn(
@@ -252,9 +265,31 @@ class _GamePillSheetState extends State<GamePillSheet>
     );
   }
 
-  Widget _wheelColumn(int flex, String label, Widget wheel) => Expanded(
+  Widget _wheelColumn(int flex, String label, Widget wheel, {Widget? footer}) =>
+      Expanded(
         flex: flex,
-        child: Column(children: [_label(label), wheel]),
+        child: Column(children: [_label(label), wheel, if (footer != null) footer]),
+      );
+
+  /// Always-visible way into the custom blinds form (the wheel's last item
+  /// is easy to miss).
+  Widget _customButton(AppLocalizations l10n) => Semantics(
+        button: true,
+        label: l10n.singleHandV2CustomBlinds,
+        excludeSemantics: true,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: _custom,
+          child: Container(
+            constraints: const BoxConstraints(minHeight: 44),
+            alignment: Alignment.center,
+            child: Text(l10n.singleHandV2CustomBlinds,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style:
+                    AppTypography.labelChip(color: AppColors.accentPrimary)),
+          ),
+        ),
       );
 
   Widget _label(String text) => Padding(

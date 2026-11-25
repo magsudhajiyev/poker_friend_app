@@ -81,6 +81,8 @@ import '../services/logger_service.dart';
 import '../l10n/app_localizations.dart';
 import '../utils/user_facing_error.dart';
 import '../services/analytics_service.dart';
+import '../services/live_session_notification_service.dart';
+import '../widgets/live_session_bar.dart';
 
 /// Home screen
 class HomeScreen extends StatefulWidget {
@@ -1654,6 +1656,9 @@ class _HomeScreenState extends State<HomeScreen>
                       // Space for header so content starts below it
                       SizedBox(height: headerHeight + 8),
 
+                        // Running session (hidden when none / during the tour)
+                        const LiveSessionBar(),
+
                         // Bankroll Card (standalone)
                         _buildBankrollCard(),
 
@@ -3132,6 +3137,7 @@ class _HomeScreenState extends State<HomeScreen>
         try {
           await FirebaseService.deleteSession(sessionId);
           await LocalStorageService.deleteSession(sessionId);
+          unawaited(LiveSessionNotificationService.stop(sessionId));
         } catch (_) {}
         if (!mounted) return;
         setState(() {

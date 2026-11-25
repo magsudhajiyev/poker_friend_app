@@ -118,6 +118,24 @@ void main() {
       expect(find.byType(VillainStackBadge), findsNWidgets(2));
     });
 
+    testWidgets('badge fits inside the bigger seat plate on a 320 pt phone',
+        (t) async {
+      await _flag('on');
+      await _open(t, SingleHandSetup(playerCount: 9, heroPosition: 'BTN'));
+      t.view.physicalSize = const Size(320, 640) * 3;
+      await t.pump();
+      await _tapFelt(t);
+      final badge = t.getRect(find.byType(VillainStackBadge));
+      final plates = [
+        for (var i = 1; i <= 9; i++)
+          if (find.byKey(ValueKey('seat-plate-$i')).evaluate().isNotEmpty)
+            t.getRect(find.byKey(ValueKey('seat-plate-$i')))
+      ];
+      expect(plates.any((p) => p.inflate(0.5).contains(badge.center) &&
+          badge.left >= p.left - 0.5 && badge.right <= p.right + 0.5), isTrue);
+      expect(t.takeException(), isNull);
+    });
+
     testWidgets('tournament badge reads BB', (t) async {
       await _flag('on');
       await _open(

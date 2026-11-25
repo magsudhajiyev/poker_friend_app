@@ -7256,5 +7256,89 @@
       }
     }
   },
-  "singleHandV2MoveTitle": "Move hand to"
+  "singleHandV2MoveTitle": "Move hand to",
+  "liveSessionActionLogHand": "Log a hand",
+  "liveSessionActionOpen": "Open session",
+  "liveSessionBarResume": "Resume",
+  "liveSessionStillPlayingTitle": "Still playing?",
+  "liveSessionStillPlayingBody": "{name} has been running for {elapsed}. Is it still going?",
+  "@liveSessionStillPlayingBody": {"placeholders": {"name": {"type": "String"}, "elapsed": {"type": "String"}}},
+  "liveSessionEndNow": "End now",
+  "liveSessionSetEndTime": "Set the real end time",
+  "liveSessionStillPlaying": "Still playing",
+  "liveSessionPickEndTimeHelp": "When did the session end?",
+  "liveSessionEndTimeBeforeStart": "The end time must be after the start.",
+  "liveSessionEndTimeInFuture": "The end time can't be in the future.",
+  "groupNameTitle": "Name this group",
+  "groupNameLabel": "Name this group",
+  "groupNameHint": "e.g. Friday home game",
+  "groupNameEarlier": "Earlier groups",
+  "groupRenameTitle": "Rename group",
+  "groupUnnamed": "Unnamed group",
+  "groupNameAskTitle": "Name your last group",
+  "singleHandSavedToSession": "Saved to {session}",
+  "@singleHandSavedToSession": {"placeholders": {"session": {"type": "String"}}},
+  "trackedCardTitle": "Track a session",
+  "trackedCardSubtitle": "Time and money for a whole session, hands one at a time",
+  "trackedFeature1": "Buy-in and rebuys",
+  "trackedFeature2": "Log a hand any time",
+  "trackedFeature3": "Cash-out and result",
+  "trackedSetupTitle": "Track a session",
+  "trackedOptional": "optional",
+  "trackedSavingTo": "Saving to {name}",
+  "@trackedSavingTo": {"placeholders": {"name": {"type": "String"}}},
+  "trackedSavingToGroup": "Saving to a hand group",
+  "trackedSavingToTitle": "Save this hand to",
+  "trackedSavingToSessionSub": "Running session",
+  "trackedNewHandGroup": "New hand group",
+  "trackedHandsTitle": "Hands ({count})",
+  "@trackedHandsTitle": {"placeholders": {"count": {"type": "int"}}},
+  "trackedHandsBadge": "{count, plural, one{{count} hand} other{{count} hands}}",
+  "@trackedHandsBadge": {"placeholders": {"count": {"type": "int"}}},
+  "trackedDiscardMenu": "Discard session",
+  "trackedDiscardTitle": "Discard session?",
+  "trackedDiscardMessage": "The session is deleted and nothing is saved.",
+  "trackedDiscardConfirm": "Discard",
+  "trackedDiscardHands": "{count, plural, one{This also deletes {count} logged hand.} other{This also deletes {count} logged hands.}}",
+  "@trackedDiscardHands": {"placeholders": {"count": {"type": "int"}}},
+  "trackedRunningTitle": "A session is running",
+  "runningSessionLockedLine": "Available when the session ends.",
+  "singleHandSavedSessionInfo": "AI analysis and sharing unlock when the session ends.",
+  "singleHandDontShowAgain": "Don't show again",
+  "settingsSessionHandInfo": "Session hand note",
+  "settingsSessionHandInfoDesc": "Show a note after saving a hand into a running session",
+  "trackedRunningBlockMessage": "{name} is still running. End it before you start a new session.",
+  "@trackedRunningBlockMessage": {"placeholders": {"name": {"type": "String"}}},
+  "trackedRunningGoTo": "Go to session",
+  "trackedSavingToResumeTable": "Saving to {name} (resume table)",
+  "@trackedSavingToResumeTable": {"placeholders": {"name": {"type": "String"}}},
+  "trackedSavingToResumeSub": "Resume its logging table",
+  "trackedResumeUnavailable": "That session's table can't be resumed after the app restarted. Saving to a hand group.",
+  "handActionsDeleteHand": "Delete hand",
+  "handActionsDeleteTitle": "Delete this hand?",
+  "handActionsDeleteBody": "This hand is removed for good. This cannot be undone.",
+  "handLockedShareInfo": "You can share and download this hand after the session ends.",
+  "handLockedAiInfo": "AI analysis is available after the session ends.",
+  "handLockedActionsInfo": "Actions are visible after the session ends.",
+  "singleHandV2CustomBlinds": "+ Custom blinds",
+  "loggingModeRowTrackedSubtitle": "Time, buy-ins and your key hands.",
+  "loggingModeRowFullSubtitle": "Every hand, full stats.",
+  "loggingModeRowDrillsSubtitle": "Practice preflop spots.",
+  "loggingModePractice": "Practice",
+  "loggingModeRunningBanner": "{name} is running · Log a hand saves there",
+  "@loggingModeRunningBanner": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "loggingModeRunningBannerShort": "{name} is running",
+  "@loggingModeRunningBannerShort": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  }
 }

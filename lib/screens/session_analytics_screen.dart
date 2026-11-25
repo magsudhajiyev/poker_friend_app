@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/live_session_notification_service.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'dart:ui' as ui;
 import '../models/game_types.dart';
@@ -30,7 +31,8 @@ import '../design_system/components/modals/confirm_dialog.dart';
 import '../utils/user_facing_error.dart';
 import '../onboarding/onboarding_state.dart';
 import '../onboarding/onboarding_tour.dart';
-
+import '../services/live_session_logic.dart';
+import '../services/running_session_lock.dart';
 
 class SessionAnalyticsScreen extends StatefulWidget {
   final Map<String, dynamic> sessionData;
@@ -113,6 +115,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
     try {
       await FirebaseService.deleteSession(widget.sessionId);
       await LocalStorageService.deleteSession(widget.sessionId);
+      await LiveSessionNotificationService.stop(widget.sessionId);
 
       AppDataCache.markSessionsDirty();
       AppDataCache.markHomeDirty();
@@ -157,6 +160,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
 
   Future<void> _handleSessionExport() async {
     if (_isExporting || _hands.isEmpty) return;
+    if (RunningSessionLock.isRunning(widget.sessionId)) return;
 
     // Gate free users at paywall
     if (!SubscriptionService.isPremium) {
@@ -217,7 +221,8 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(AppLocalizations.of(context).sessionAnalyticsNoEmailFound),
+            content:
+                Text(AppLocalizations.of(context).sessionAnalyticsNoEmailFound),
             backgroundColor: Colors.red,
           ),
         );
@@ -252,7 +257,8 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(AppLocalizations.of(context).sessionAnalyticsExportSent(email)),
+            content: Text(
+                AppLocalizations.of(context).sessionAnalyticsExportSent(email)),
             backgroundColor: Colors.green,
           ),
         );
@@ -261,7 +267,8 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(AppLocalizations.of(context).sessionAnalyticsExportFailed(UserFacingError.message(e))),
+            content: Text(AppLocalizations.of(context)
+                .sessionAnalyticsExportFailed(UserFacingError.message(e))),
             backgroundColor: Colors.red,
           ),
         );
@@ -281,8 +288,9 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
       }
 
       List<Map<String, dynamic>> hands;
-      final dealerSessionIds = (widget.sessionData['dealerSessionIds'] as List<dynamic>?)
-          ?.cast<String>();
+      final dealerSessionIds =
+          (widget.sessionData['dealerSessionIds'] as List<dynamic>?)
+              ?.cast<String>();
       final dealerSessionId = widget.sessionData['dealerSessionId'] as String?;
 
       try {
@@ -302,8 +310,8 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
             hands.addAll(sessionHands);
             handOffset += maxHandNum;
           }
-          hands.sort((a, b) =>
-              (a['startTime'] ?? '').compareTo(b['startTime'] ?? ''));
+          hands.sort(
+              (a, b) => (a['startTime'] ?? '').compareTo(b['startTime'] ?? ''));
         } else if (dealerSessionId != null) {
           hands = await DealerService.getSessionHands(dealerSessionId);
         } else {
@@ -313,8 +321,10 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
         hands = await LocalStorageService.getSessionHands(widget.sessionId);
       }
 
-      final stackHistory = List<Map<String, dynamic>>.from(sessionDetails?['stackHistory'] ?? []);
-      var rebuys = List<Map<String, dynamic>>.from(sessionDetails?['rebuys'] ?? []);
+      final stackHistory = List<Map<String, dynamic>>.from(
+          sessionDetails?['stackHistory'] ?? []);
+      var rebuys =
+          List<Map<String, dynamic>>.from(sessionDetails?['rebuys'] ?? []);
       if (rebuys.isEmpty) {
         // Full hand-logging sessions don't persist a 'rebuys' array, but every
         // rebuy is recorded in stackHistory — derive them (same as DealerService)
@@ -350,24 +360,31 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
     if (_stackHistory.isNotEmpty) {
       _finalStack = _stackHistory.last['stackSize']?.toDouble() ?? 0.0;
     } else {
-      _finalStack = widget.sessionData['finalStack']?.toDouble() ?? widget.sessionData['currentStack']?.toDouble() ?? 0.0;
+      _finalStack = widget.sessionData['finalStack']?.toDouble() ??
+          widget.sessionData['currentStack']?.toDouble() ??
+          0.0;
     }
 
     if (isCashGame) {
-      final sessionTotalBuyIn = widget.sessionData['totalBuyIn']?.toDouble() ?? 0.0;
+      final sessionTotalBuyIn =
+          widget.sessionData['totalBuyIn']?.toDouble() ?? 0.0;
       final initialBuyIn = widget.sessionData['buyInAmount']?.toDouble() ?? 0.0;
-      final totalRebuyAmount = _rebuys.fold<double>(0.0, (sum, rebuy) => sum + (rebuy['amount']?.toDouble() ?? 0.0));
+      final totalRebuyAmount = _rebuys.fold<double>(
+          0.0, (sum, rebuy) => sum + (rebuy['amount']?.toDouble() ?? 0.0));
       final calculatedTotal = initialBuyIn + totalRebuyAmount;
-      _totalInvested = (sessionTotalBuyIn > calculatedTotal) ? sessionTotalBuyIn : calculatedTotal;
+      _totalInvested = (sessionTotalBuyIn > calculatedTotal)
+          ? sessionTotalBuyIn
+          : calculatedTotal;
       _profitLoss = _finalStack - _totalInvested;
     } else {
-      _totalInvested = widget.sessionData['totalBuyIn']?.toDouble()
-          ?? widget.sessionData['buyInAmount']?.toDouble()
-          ?? 0.0;
+      _totalInvested = widget.sessionData['totalBuyIn']?.toDouble() ??
+          widget.sessionData['buyInAmount']?.toDouble() ??
+          0.0;
       _profitLoss = widget.sessionData['averageGrowth']?.toDouble() ?? 0.0;
 
       if (_profitLoss == 0.0 && _stackHistory.length > 1) {
-        double startingStack = widget.sessionData['startingStack']?.toDouble() ?? 0.0;
+        double startingStack =
+            widget.sessionData['startingStack']?.toDouble() ?? 0.0;
         if (startingStack == 0.0 && _stackHistory.isNotEmpty) {
           final initialEntry = _stackHistory.firstWhere(
             (entry) => entry['changeType'] == 'initial',
@@ -379,10 +396,13 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
           double totalGrowth = 0.0;
           int growthCount = 0;
           for (int i = 1; i < _stackHistory.length; i++) {
-            final currentStack = _stackHistory[i]['stackSize']?.toDouble() ?? 0.0;
-            final previousStack = _stackHistory[i - 1]['stackSize']?.toDouble() ?? startingStack;
+            final currentStack =
+                _stackHistory[i]['stackSize']?.toDouble() ?? 0.0;
+            final previousStack =
+                _stackHistory[i - 1]['stackSize']?.toDouble() ?? startingStack;
             if (previousStack > 0) {
-              final handGrowth = ((currentStack - previousStack) / previousStack) * 100;
+              final handGrowth =
+                  ((currentStack - previousStack) / previousStack) * 100;
               totalGrowth += handGrowth;
               growthCount++;
             }
@@ -435,7 +455,8 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
   String _formatHourlyRate() {
     final startTime = widget.sessionData['startTime'];
     final endTime = widget.sessionData['endTime'];
-    if (startTime == null || endTime == null) return AppLocalizations.of(context).commonNotAvailable;
+    if (startTime == null || endTime == null)
+      return AppLocalizations.of(context).commonNotAvailable;
     try {
       final start = DateTime.parse(startTime);
       final end = DateTime.parse(endTime);
@@ -476,19 +497,19 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
       body: Stack(
         children: [
           Column(
-              children: [
-                // Header — matches TopNavBar geometry (statusBar + 56 + 12).
-                // Wrapped in a Hero paired with the source card in
-                // SessionHistoryScreen so tapping a session grows the
-                // card into this header instead of a plain push.
-                Hero(
-                  tag: 'sessionCard_${widget.sessionId}',
-                  flightShuttleBuilder:
-                      (context, animation, direction, from, to) => Material(
-                    color: Colors.transparent,
-                    child: to.widget,
-                  ),
-                  child: Container(
+            children: [
+              // Header — matches TopNavBar geometry (statusBar + 56 + 12).
+              // Wrapped in a Hero paired with the source card in
+              // SessionHistoryScreen so tapping a session grows the
+              // card into this header instead of a plain push.
+              Hero(
+                tag: 'sessionCard_${widget.sessionId}',
+                flightShuttleBuilder:
+                    (context, animation, direction, from, to) => Material(
+                  color: Colors.transparent,
+                  child: to.widget,
+                ),
+                child: Container(
                   padding: EdgeInsets.only(
                     top: MediaQuery.of(context).padding.top,
                     bottom: 12,
@@ -498,141 +519,169 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Row(
-                    children: [
-                      SizedBox(
-                        width: 44,
-                        height: 44,
-                        child: Center(
-                          child: BackButtonCircle(
-                            onPressed: () => Navigator.pop(context),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              l10n.sessionAnalyticsTitle,
-                              style: AppTypography.ibm(
-                                fontSize: 17,
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600,
-                                height: 22 / 17,
-                                letterSpacing: -0.43,
+                        children: [
+                          SizedBox(
+                            width: 44,
+                            height: 44,
+                            child: Center(
+                              child: BackButtonCircle(
+                                onPressed: () => Navigator.pop(context),
                               ),
                             ),
-                            Text(
-                              l10n.sessionAnalyticsHandsLogged(widget.sessionData['handsLogged'] ?? widget.sessionData['totalHands'] ?? _hands.length),
-                              style: AppTypography.ibm(
-                                fontSize: 13,
-                                color: AppColors.textSecondary,
-                                fontWeight: FontWeight.w400,
-                                height: 18 / 13,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      GestureDetector(
-                        onTap: _isExporting || _hands.isEmpty ? null : _handleSessionExport,
-                        child: Container(
-                          width: 44,
-                          height: 44,
-                          decoration: const BoxDecoration(
-                            color: AppColors.bgSurface,
-                            shape: BoxShape.circle,
                           ),
-                          child: Center(
-                            child: _isExporting
-                                ? const SizedBox(
-                                    width: 20,
-                                    height: 20,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                          AppColors.accentPrimary),
-                                    ),
-                                  )
-                                : Icon(Icons.ios_share,
-                                    color: _hands.isEmpty
-                                        ? Colors.white.withValues(alpha: 0.25)
-                                        : Colors.white,
-                                    size: 20),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      GestureDetector(
-                        onTap: _isDeleting ? null : _handleDeleteSession,
-                        child: Container(
-                          width: 44,
-                          height: 44,
-                          decoration: const BoxDecoration(
-                            color: AppColors.bgSurface,
-                            shape: BoxShape.circle,
-                          ),
-                          child: Center(
-                            child: _isDeleting
-                                ? const SizedBox(
-                                    width: 18,
-                                    height: 18,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 1.5,
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                          AppColors.accentDanger),
-                                    ),
-                                  )
-                                : SvgPicture.asset(
-                                    'icons/figma_icons/delete.svg',
-                                    width: 20,
-                                    height: 20,
-                                    colorFilter: const ColorFilter.mode(
-                                        AppColors.accentDanger, BlendMode.srcIn),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  l10n.sessionAnalyticsTitle,
+                                  style: AppTypography.ibm(
+                                    fontSize: 17,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w600,
+                                    height: 22 / 17,
+                                    letterSpacing: -0.43,
                                   ),
+                                ),
+                                Text(
+                                  l10n.sessionAnalyticsHandsLogged(
+                                      widget.sessionData['handsLogged'] ??
+                                          widget.sessionData['totalHands'] ??
+                                          _hands.length),
+                                  style: AppTypography.ibm(
+                                    fontSize: 13,
+                                    color: AppColors.textSecondary,
+                                    fontWeight: FontWeight.w400,
+                                    height: 18 / 13,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
+                          const SizedBox(width: 8),
+                          ValueListenableBuilder<LiveSessionRecord?>(
+                            valueListenable: RunningSessionLock.changes,
+                            builder: (context, _, child) {
+                              final running = RunningSessionLock.isRunning(
+                                  widget.sessionId);
+                              return Opacity(
+                                opacity: running ? 0.35 : 1,
+                                child: Tooltip(
+                                  message: running
+                                      ? AppLocalizations.of(context)
+                                          .runningSessionLockedLine
+                                      : '',
+                                  child: AbsorbPointer(
+                                      absorbing: running, child: child),
+                                ),
+                              );
+                            },
+                            child: GestureDetector(
+                              onTap: _isExporting || _hands.isEmpty
+                                  ? null
+                                  : _handleSessionExport,
+                              child: Container(
+                                width: 44,
+                                height: 44,
+                                decoration: const BoxDecoration(
+                                  color: AppColors.bgSurface,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Center(
+                                  child: _isExporting
+                                      ? const SizedBox(
+                                          width: 20,
+                                          height: 20,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            valueColor:
+                                                AlwaysStoppedAnimation<Color>(
+                                                    AppColors.accentPrimary),
+                                          ),
+                                        )
+                                      : Icon(Icons.ios_share,
+                                          color: _hands.isEmpty
+                                              ? Colors.white
+                                                  .withValues(alpha: 0.25)
+                                              : Colors.white,
+                                          size: 20),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          GestureDetector(
+                            onTap: _isDeleting ? null : _handleDeleteSession,
+                            child: Container(
+                              width: 44,
+                              height: 44,
+                              decoration: const BoxDecoration(
+                                color: AppColors.bgSurface,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Center(
+                                child: _isDeleting
+                                    ? const SizedBox(
+                                        width: 18,
+                                        height: 18,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 1.5,
+                                          valueColor:
+                                              AlwaysStoppedAnimation<Color>(
+                                                  AppColors.accentDanger),
+                                        ),
+                                      )
+                                    : SvgPicture.asset(
+                                        'icons/figma_icons/delete.svg',
+                                        width: 20,
+                                        height: 20,
+                                        colorFilter: const ColorFilter.mode(
+                                            AppColors.accentDanger,
+                                            BlendMode.srcIn),
+                                      ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
                     ),
                   ),
                 ),
-                ),
-                // Content
-                Expanded(
-                  child: _isLoading
-                      ? Center(
-                          child: CircularProgressIndicator(
-                            valueColor: AlwaysStoppedAnimation<Color>(AppColors.accentPrimary),
-                          ),
-                        )
-                      : SingleChildScrollView(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: Column(
-                            children: [
-                              _buildSessionOverview(),
-                              // Section divider — replaces the card
-                              // boundary the two blocks used to have.
-                              const SizedBox(height: 28),
-                              Container(
-                                height: 1,
-                                color: Colors.white.withValues(alpha: 0.06),
-                              ),
-                              const SizedBox(height: 24),
-                              _buildStackChart(),
-                              const SizedBox(height: 32),
-                              _buildLoggedHandsButton(),
-                              const SizedBox(height: 100),
-                            ],
-                          ),
+              ),
+              // Content
+              Expanded(
+                child: _isLoading
+                    ? Center(
+                        child: CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                              AppColors.accentPrimary),
                         ),
-                ),
-              ],
-            ),
+                      )
+                    : SingleChildScrollView(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Column(
+                          children: [
+                            _buildSessionOverview(),
+                            // Section divider — replaces the card
+                            // boundary the two blocks used to have.
+                            const SizedBox(height: 28),
+                            Container(
+                              height: 1,
+                              color: Colors.white.withValues(alpha: 0.06),
+                            ),
+                            const SizedBox(height: 24),
+                            _buildStackChart(),
+                            const SizedBox(height: 32),
+                            _buildLoggedHandsButton(),
+                            const SizedBox(height: 100),
+                          ],
+                        ),
+                      ),
+              ),
+            ],
+          ),
         ],
       ),
     );
@@ -664,7 +713,8 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
         children: [
           // Session name
           Text(
-            widget.sessionData['sessionName'] ?? l10n.sessionAnalyticsPokerSession,
+            widget.sessionData['sessionName'] ??
+                l10n.sessionAnalyticsPokerSession,
             style: AppTypography.ibm(
               fontSize: 17,
               fontWeight: FontWeight.w600,
@@ -680,9 +730,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
           // "Profit/Loss" split.
           if (pl != null)
             Text(
-              pl >= 0
-                  ? l10n.sessionAnalyticsProfit
-                  : l10n.sessionAnalyticsLoss,
+              pl >= 0 ? l10n.sessionAnalyticsProfit : l10n.sessionAnalyticsLoss,
               style: AppTypography.ibm(
                 color: plColor,
                 fontSize: 13,
@@ -714,12 +762,14 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
           // 2x2 label rows — bare, no inner cards
           Row(
             children: [
-              Expanded(child: _buildMetricTile(
+              Expanded(
+                  child: _buildMetricTile(
                 l10n.sessionAnalyticsTotalInvested,
                 _formatTotalInvested(_totalInvested),
               )),
               const SizedBox(width: 16),
-              Expanded(child: _buildMetricTile(
+              Expanded(
+                  child: _buildMetricTile(
                 l10n.sessionAnalyticsCashout,
                 _isCashGame()
                     ? _formatCurrency(_finalStack)
@@ -732,12 +782,18 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
           const SizedBox(height: 16),
           Row(
             children: [
-              Expanded(child: _isCashGame()
-                  ? _buildMetricTile(l10n.sessionAnalyticsHourlyRate, _formatHourlyRate())
-                  : _buildMetricTile(l10n.sessionAnalyticsFinished, _formatFinished())),
+              Expanded(
+                  child: _isCashGame()
+                      ? _buildMetricTile(
+                          l10n.sessionAnalyticsHourlyRate, _formatHourlyRate())
+                      : _buildMetricTile(
+                          l10n.sessionAnalyticsFinished, _formatFinished())),
               const SizedBox(width: 16),
-              Expanded(child: _buildMetricTile(
-                _isCashGame() ? l10n.sessionAnalyticsAddons : l10n.sessionAnalyticsRebuys,
+              Expanded(
+                  child: _buildMetricTile(
+                _isCashGame()
+                    ? l10n.sessionAnalyticsAddons
+                    : l10n.sessionAnalyticsRebuys,
                 '${_rebuys.length}',
                 valueColor: _rebuys.isNotEmpty ? AppColors.accentPrimary : null,
               )),
@@ -811,7 +867,9 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
           const SizedBox(height: 20),
           SizedBox(
             height: 250,
-            child: _stackHistory.length >= 2 ? _buildLineChart() : _buildNoDataChart(),
+            child: _stackHistory.length >= 2
+                ? _buildLineChart()
+                : _buildNoDataChart(),
           ),
         ],
       ),
@@ -866,16 +924,19 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
     final hand = _findHandByNumber(handNumber);
     if (hand == null) return;
     final index = _hands.indexOf(hand);
-    Navigator.push(
+    Navigator.push<bool>(
       context,
       MaterialPageRoute(
         builder: (context) => HandActionsPageView(
           hands: _hands,
           initialIndex: index < 0 ? 0 : index,
-          ourSeat: null, // Use per-hand heroSeatNumber instead of stale session-level seat
+          ourSeat:
+              null, // Use per-hand heroSeatNumber instead of stale session-level seat
         ),
       ),
-    );
+    ).then((deleted) {
+      if (deleted == true && mounted) _loadSessionAnalytics();
+    });
   }
 
   Map<String, dynamic>? _findHandByNumber(int handNumber) {
@@ -935,7 +996,8 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
         builder: (context) => SessionHandsScreen(
           session: {
             'id': widget.sessionId,
-            'sessionName': widget.sessionData['sessionName'] ?? AppLocalizations.of(context).sessionAnalyticsPokerSession,
+            'sessionName': widget.sessionData['sessionName'] ??
+                AppLocalizations.of(context).sessionAnalyticsPokerSession,
             ...widget.sessionData,
           },
         ),

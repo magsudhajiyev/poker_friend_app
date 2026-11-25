@@ -8,6 +8,14 @@ const String kHandGroupSessionType = 'hand_group';
 bool isHandGroupSession(Map<String, dynamic> session) =>
     session['sessionType'] == kHandGroupSessionType;
 
+/// Temporary name of a group the player has not named yet (app killed on the
+/// result sheet). Stored as the group's `sessionName`; shown localized.
+const String kUnnamedGroupName = 'Unnamed group';
+
+/// True when [name] is empty or the temporary marker.
+bool isUnnamedGroupName(String name) =>
+    name.trim().isEmpty || name.trim() == kUnnamedGroupName;
+
 /// A hand group as the single-hand UI sees it.
 class SingleHandGroup {
   final String sessionId;
@@ -46,10 +54,14 @@ class SingleHandGroup {
     );
   }
 
-  SingleHandGroup copyWith({int? handCount, DateTime? lastHandAt}) =>
+  /// True while the group still carries the temporary name.
+  bool get needsName => isUnnamedGroupName(name);
+
+  SingleHandGroup copyWith(
+          {String? name, int? handCount, DateTime? lastHandAt}) =>
       SingleHandGroup(
         sessionId: sessionId,
-        name: name,
+        name: name ?? this.name,
         gameType: gameType,
         smallBlind: smallBlind,
         bigBlind: bigBlind,

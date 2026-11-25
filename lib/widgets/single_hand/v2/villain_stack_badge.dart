@@ -10,7 +10,9 @@ import '../../../design_system/constants/typography.dart';
 /// system asks for reduced motion.
 class VillainStackBadge extends StatefulWidget {
   final String label;
-  const VillainStackBadge({super.key, required this.label});
+  final double fontSize;
+  const VillainStackBadge(
+      {super.key, required this.label, this.fontSize = 9});
 
   @override
   State<VillainStackBadge> createState() => _VillainStackBadgeState();
@@ -62,7 +64,7 @@ class _VillainStackBadgeState extends State<VillainStackBadge>
           overflow: TextOverflow.ellipsis,
           style: AppTypography.mono(
             color: AppColors.accentPrimary,
-            fontSize: 9,
+            fontSize: widget.fontSize,
             fontWeight: FontWeight.w700,
             height: 1.1,
           ),

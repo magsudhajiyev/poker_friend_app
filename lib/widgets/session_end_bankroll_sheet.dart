@@ -28,6 +28,7 @@ class SessionEndBankrollSheet {
     required double totalBuyIn,
     int? durationMinutes,
     Map<String, Object>? coverage, // SessionCoverage.compute, easy logging
+    DateTime? endTime, // real end time (default: now)
   }) async {
     final isCash = gameType == GameType.cash;
     final l10n = AppLocalizations.of(context);
@@ -62,6 +63,7 @@ class SessionEndBankrollSheet {
         fieldSize: isCash ? null : int.tryParse(fieldSizeController.text),
         durationMinutes: durationMinutes,
         coverage: coverage,
+        endTime: endTime,
       );
       AppDataCache.markHomeDirty();
       AppDataCache.markStatsDirty();
