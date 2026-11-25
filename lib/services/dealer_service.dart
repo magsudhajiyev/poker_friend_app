@@ -1,3 +1,4 @@
+import 'firebase_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/dealer_session.dart';
@@ -640,6 +641,7 @@ class DealerService {
 
     // Invalidate cache so session history and home screen show fresh data
     AppDataCache.markSessionsDirty();
+    FirebaseService.invalidateSessionsCache();
     AppDataCache.markHomeDirty();
   }
 

@@ -34,6 +34,48 @@ class OpponentService {
   /// Get current user ID
   static String? get _userId => _auth.currentUser?.uid;
 
+  // Short-lived in-memory copy of the opponent list, used ONLY by the name
+  // lookup helpers (findOpponentByName / updateLastSeen / saveOpponent's
+  // duplicate pre-check). Without it, every hand completion and every seat
+  // save paid several full-collection reads. getAllOpponents() stays
+  // uncached so screens always see fresh data; it refreshes this copy.
+  static const Duration _lookupCacheTtl = Duration(seconds: 60);
+  static List<Opponent>? _lookupCache;
+  static DateTime? _lookupCacheAt;
+  static String? _lookupCacheUid;
+
+  /// Drop the lookup cache (call after any external opponent mutation).
+  static void invalidateLookupCache() {
+    _lookupCache = null;
+    _lookupCacheAt = null;
+    _lookupCacheUid = null;
+  }
+
+  static void _storeLookupCache(List<Opponent> list) {
+    _lookupCache = List<Opponent>.of(list);
+    _lookupCacheAt = DateTime.now();
+    _lookupCacheUid = _userId;
+  }
+
+  static bool get _lookupCacheValid =>
+      _lookupCache != null &&
+      _lookupCacheAt != null &&
+      _lookupCacheUid == _userId &&
+      DateTime.now().difference(_lookupCacheAt!) < _lookupCacheTtl;
+
+  /// Opponent list for name lookups: cache when fresh, else a full load.
+  static Future<List<Opponent>> _opponentsForLookup() async {
+    if (_lookupCacheValid) return _lookupCache!;
+    return getAllOpponents();
+  }
+
+  /// Keep a valid cache in step with a save (replace by id, else add).
+  static void _patchLookupCache(Opponent saved, {String? replacedId}) {
+    if (!_lookupCacheValid) return;
+    _lookupCache!.removeWhere((o) => o.id == saved.id || o.id == replacedId);
+    _lookupCache!.add(saved);
+  }
+
   /// Save or update opponent in both Firebase and local storage.
   ///
   /// Names are normalized (trimmed, internal whitespace collapsed) and
@@ -60,6 +102,7 @@ class OpponentService {
     // Offline, findOpponentByName falls back to the local list and may miss a
     // Firestore-only opponent — but the deterministic doc id below still makes
     // the eventual sync merge onto the same doc, so no duplicate is created.
+    final originalId = opponent.id;
     final existing = await findOpponentByName(opponent.name);
     if (existing != null && existing.id != opponent.id) {
       if (throwOnDuplicate) {
@@ -80,6 +123,7 @@ class OpponentService {
     }
 
     await _saveOpponentToLocal(opponent);
+    _patchLookupCache(opponent, replacedId: originalId);
     AppDataCache.markOpponentsDirty();
     return opponent;
   }
@@ -108,12 +152,15 @@ class OpponentService {
       // Try Firebase first
       final firebaseOpponents = await _getOpponentsFromFirebase();
       debugPrint('📊 Loaded ${firebaseOpponents.length} opponents from Firebase');
+      _storeLookupCache(firebaseOpponents);
       return firebaseOpponents;
     } catch (e) {
       debugPrint('⚠️ Firebase load failed, using local storage: $e');
       // Fallback to local storage
       final localOpponents = await _getOpponentsFromLocal();
       debugPrint('📊 Loaded ${localOpponents.length} opponents from local storage');
+      // Offline fallback list is not cached: retry the cloud next time.
+      invalidateLookupCache();
       return localOpponents;
     }
   }
@@ -130,13 +177,14 @@ class OpponentService {
     
     // Delete from local storage
     await _deleteOpponentFromLocal(opponentId);
+    invalidateLookupCache();
     AppDataCache.markOpponentsDirty();
     debugPrint('🗑️ Opponent deleted locally: $opponentId');
   }
 
   /// Find opponent by name (case insensitive)
   static Future<Opponent?> findOpponentByName(String name) async {
-    final opponents = await getAllOpponents();
+    final opponents = await _opponentsForLookup();
     try {
       return opponents.firstWhere(
         (opponent) => opponent.name.toLowerCase() == name.toLowerCase()
@@ -148,7 +196,7 @@ class OpponentService {
 
   /// Update opponent's lastSeenAt timestamp
   static Future<void> updateLastSeen(String opponentId) async {
-    final opponents = await getAllOpponents();
+    final opponents = await _opponentsForLookup();
     final opponent = opponents.cast<Opponent?>().firstWhere(
       (o) => o?.id == opponentId,
       orElse: () => null,
@@ -184,6 +232,7 @@ class OpponentService {
       debugPrint('⚠️ Error clearing Firebase opponents: $e');
     }
 
+    invalidateLookupCache();
     // Clear local storage
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_localOpponentsKey);

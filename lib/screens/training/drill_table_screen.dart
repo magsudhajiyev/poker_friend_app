@@ -88,6 +88,10 @@ class _DrillTableScreenState extends State<DrillTableScreen>
 
   // Chip flight animation state
   final List<_DrillChipFlight> _chipFlights = [];
+
+  /// Bumped when flights are added/removed; the overlay rebuilds from this and
+  /// from the flight controllers, so the whole screen never rebuilds per frame.
+  final ValueNotifier<int> _flightsRev = ValueNotifier<int>(0);
   final GlobalKey _tableAreaKey = GlobalKey();
   int _chipSeed = 0;
 
@@ -215,9 +219,7 @@ class _DrillTableScreenState extends State<DrillTableScreen>
 
   /// Reverse lookup: visual position → actual seat number.
   int _actualSeat(int visualSeat) {
-    return _visualSeatMap.entries
-        .firstWhere((e) => e.value == visualSeat)
-        .key;
+    return _visualSeatMap.entries.firstWhere((e) => e.value == visualSeat).key;
   }
 
   /// Builds a mapping from actual seat numbers to visual positions (1-9)
@@ -225,8 +227,7 @@ class _DrillTableScreenState extends State<DrillTableScreen>
   /// Other seats are evenly distributed around the remaining positions.
   Map<int, int> _buildVisualSeatMap() {
     final sorted = widget.seats.map((s) => s.seatNumber).toList()..sort();
-    final heroActual =
-        widget.seats.firstWhere((s) => s.isHero).seatNumber;
+    final heroActual = widget.seats.firstWhere((s) => s.isHero).seatNumber;
     final n = sorted.length;
     final heroIdx = sorted.indexOf(heroActual);
 
@@ -266,6 +267,7 @@ class _DrillTableScreenState extends State<DrillTableScreen>
     for (final f in _chipFlights) {
       f.controller.dispose();
     }
+    _flightsRev.dispose();
     super.dispose();
   }
 
@@ -424,8 +426,7 @@ class _DrillTableScreenState extends State<DrillTableScreen>
     // records back to the Daily Challenge host, whatever state the hand is in.
     if (_challengeDone) {
       ChallengeSoundService.playComplete();
-      Navigator.pop(
-          context, List<DrillDecisionRecord>.unmodifiable(_records));
+      Navigator.pop(context, List<DrillDecisionRecord>.unmodifiable(_records));
       return;
     }
     // Daily Challenge: exactly ONE graded decision per spot. After
@@ -446,9 +447,8 @@ class _DrillTableScreenState extends State<DrillTableScreen>
       return;
     }
     setState(() {
-      _phase = (update?.awaitingHero ?? false)
-          ? _Phase.acting
-          : _Phase.handOver;
+      _phase =
+          (update?.awaitingHero ?? false) ? _Phase.acting : _Phase.handOver;
     });
   }
 
@@ -540,10 +540,10 @@ class _DrillTableScreenState extends State<DrillTableScreen>
                         fontSize: 16 * s,
                         fontWeight: FontWeight.w600)),
                 Text(
-                  l10n.drillHandedLabel(widget.stackBB.toInt(), widget.seats.length),
+                  l10n.drillHandedLabel(
+                      widget.stackBB.toInt(), widget.seats.length),
                   style: AppTypography.ibm(
-                      color: AppColors.textSecondary,
-                      fontSize: 12 * s),
+                      color: AppColors.textSecondary, fontSize: 12 * s),
                 ),
               ],
             ),
@@ -570,12 +570,11 @@ class _DrillTableScreenState extends State<DrillTableScreen>
               onTap: _showSummary,
               child: Container(
                 padding: EdgeInsets.symmetric(
-                    horizontal: AppSpacing.xs * s,
-                    vertical: 6 * s),
+                    horizontal: AppSpacing.xs * s, vertical: 6 * s),
                 decoration: BoxDecoration(
                   color: AppColors.whiteOverlay(opacity: 0.08),
-                  borderRadius: BorderRadius.circular(
-                      AppDecorations.pillRadius),
+                  borderRadius:
+                      BorderRadius.circular(AppDecorations.pillRadius),
                 ),
                 child: Text(
                   '$_correct/$total',
@@ -619,8 +618,7 @@ class _DrillTableScreenState extends State<DrillTableScreen>
               border: i >= coloredCount
                   ? Border.all(
                       color: i == coloredCount &&
-                              (_phase == _Phase.acting ||
-                                  !_verdictRevealed)
+                              (_phase == _Phase.acting || !_verdictRevealed)
                           ? _accent
                           : AppColors.whiteOverlay(opacity: 0.25),
                       width: 1.5,
@@ -650,9 +648,8 @@ class _DrillTableScreenState extends State<DrillTableScreen>
       for (final seat in widget.seats) _visualSeatMap[seat.seatNumber]!: true,
     };
     // Map dealer button to its visual position
-    final visualButton = _engine.handNumber > 0
-        ? _visualSeatMap[_engine.buttonSeat]
-        : null;
+    final visualButton =
+        _engine.handNumber > 0 ? _visualSeatMap[_engine.buttonSeat] : null;
 
     return Padding(
       padding: EdgeInsets.symmetric(
@@ -675,30 +672,43 @@ class _DrillTableScreenState extends State<DrillTableScreen>
             showLogo: false,
             seatWidthFraction: _seatW,
             seatHeightFraction: _seatH,
-            seatBuilder: (visualSeat, isActive) =>
-                isActive ? _buildSeat(_actualSeat(visualSeat), s) : const SizedBox.shrink(),
+            seatBuilder: (visualSeat, isActive) => isActive
+                ? _buildSeat(_actualSeat(visualSeat), s)
+                : const SizedBox.shrink(),
             centerContent: _buildPot(s, l10n),
           ),
           // Chip flight overlay — painted above the table
-          if (_chipFlights.isNotEmpty)
-            Positioned.fill(
-              child: IgnorePointer(
-                child: CustomPaint(
-                  painter: ChipFlightPainter(
-                    flights: _chipFlights
-                        .map((f) => ChipFlightFrame(
-                              start: f.start,
-                              end: f.end,
-                              color: f.color,
-                              progress: f.controller.value,
-                              seed: f.seed,
-                              chipCount: f.chipCount,
-                            ))
-                        .toList(),
+          Positioned.fill(
+            child: ValueListenableBuilder<int>(
+              valueListenable: _flightsRev,
+              builder: (context, _, __) {
+                if (_chipFlights.isEmpty) return const SizedBox.shrink();
+                final flights = List<_DrillChipFlight>.of(_chipFlights);
+                return RepaintBoundary(
+                  child: IgnorePointer(
+                    child: AnimatedBuilder(
+                      animation: Listenable.merge(
+                          flights.map((f) => f.controller).toList()),
+                      builder: (context, _) => CustomPaint(
+                        painter: ChipFlightPainter(
+                          flights: flights
+                              .map((f) => ChipFlightFrame(
+                                    start: f.start,
+                                    end: f.end,
+                                    color: f.color,
+                                    progress: f.controller.value,
+                                    seed: f.seed,
+                                    chipCount: f.chipCount,
+                                  ))
+                              .toList(),
+                        ),
+                      ),
+                    ),
                   ),
-                ),
-              ),
+                );
+              },
             ),
+          ),
         ],
       ),
     );
@@ -733,8 +743,7 @@ class _DrillTableScreenState extends State<DrillTableScreen>
   Widget _buildSeat(int actualSeatNumber, double s) {
     final seatNumber = actualSeatNumber;
     final visualSeat = _visualSeatMap[seatNumber]!;
-    final seat =
-        widget.seats.firstWhere((s) => s.seatNumber == seatNumber);
+    final seat = widget.seats.firstWhere((s) => s.seatNumber == seatNumber);
     final folded = _foldedSeats.contains(seatNumber);
     final action = _lastAction[seatNumber];
     final heroActing = seat.isHero && _phase == _Phase.acting;
@@ -798,12 +807,10 @@ class _DrillTableScreenState extends State<DrillTableScreen>
         delay: Duration(milliseconds: _actionDelayMs[seatNumber] ?? 0),
         duration: const Duration(milliseconds: 200),
         child: Container(
-          padding: EdgeInsets.symmetric(
-              horizontal: 5.5 * s, vertical: 2 * s),
+          padding: EdgeInsets.symmetric(horizontal: 5.5 * s, vertical: 2 * s),
           decoration: BoxDecoration(
             color: AppColors.bgSurface,
-            borderRadius: BorderRadius.circular(
-                AppDecorations.radiusSm),
+            borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
             border: Border.all(color: pillColor.withOpacity(0.55)),
             boxShadow: [
               BoxShadow(
@@ -1048,18 +1055,16 @@ class _DrillTableScreenState extends State<DrillTableScreen>
       chipCount: chipCount,
     );
 
-    controller.addListener(() {
-      if (mounted) setState(() {});
-    });
     controller.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
         _chipFlights.remove(flight);
         controller.dispose();
-        if (mounted) setState(() {});
+        if (mounted) _flightsRev.value++;
       }
     });
 
     _chipFlights.add(flight);
+    _flightsRev.value++;
     controller.forward();
   }
 
@@ -1132,9 +1137,7 @@ class _DrillTableScreenState extends State<DrillTableScreen>
         children: [
           Text(rank,
               style: AppTypography.mono(
-                  color: color,
-                  fontSize: 15 * s,
-                  fontWeight: FontWeight.w700)),
+                  color: color, fontSize: 15 * s, fontWeight: FontWeight.w700)),
           Text(suit, style: TextStyle(color: color, fontSize: 12 * s)),
         ],
       ),
@@ -1145,8 +1148,7 @@ class _DrillTableScreenState extends State<DrillTableScreen>
 
   Widget _buildBottomPanel(double s, AppLocalizations l10n) {
     return Container(
-      padding: EdgeInsets.fromLTRB(
-          AppSpacing.md * s, AppSpacing.xxs * s,
+      padding: EdgeInsets.fromLTRB(AppSpacing.md * s, AppSpacing.xxs * s,
           AppSpacing.md * s, AppSpacing.md * s),
       // Phase changes slide-fade in (feedback card rising feels deliberate,
       // not popping) — keyed by phase + decision count so each new grade
@@ -1168,9 +1170,8 @@ class _DrillTableScreenState extends State<DrillTableScreen>
         child: KeyedSubtree(
           key: ValueKey('$_phase|${_records.length}'),
           child: switch (_phase) {
-            _Phase.feedback => _isChallenge
-                ? _buildCoachFeedback(s)
-                : _buildFeedback(s, l10n),
+            _Phase.feedback =>
+              _isChallenge ? _buildCoachFeedback(s) : _buildFeedback(s, l10n),
             _Phase.acting => _buildActions(s, l10n),
             _Phase.handOver => _buildHandOver(s, l10n),
           },
@@ -1210,8 +1211,7 @@ class _DrillTableScreenState extends State<DrillTableScreen>
               SizedBox(width: AppSpacing.xxs * s),
               Text(l10n.drillYouChose(grade.heroAction),
                   style: AppTypography.ibm(
-                      color: AppColors.textSecondary,
-                      fontSize: 12 * s)),
+                      color: AppColors.textSecondary, fontSize: 12 * s)),
               const Spacer(),
               Text(
                 '${_engine.heroHandClass} = ${l10n.drillTopPercent(grade.handTopPercent.round())}',
@@ -1228,8 +1228,8 @@ class _DrillTableScreenState extends State<DrillTableScreen>
                   vertical: AppSpacing.xxxs * s),
               decoration: BoxDecoration(
                 color: _accent.withOpacity(0.12),
-                borderRadius: BorderRadius.circular(
-                    AppDecorations.radiusSm * s),
+                borderRadius:
+                    BorderRadius.circular(AppDecorations.radiusSm * s),
               ),
               child: Text(
                 l10n.drillLineupChanges(grade.gtoAction, grade.exploitAction),
@@ -1278,12 +1278,11 @@ class _DrillTableScreenState extends State<DrillTableScreen>
             onTap: _dismissFeedback,
             child: Container(
               width: double.infinity,
-              padding: EdgeInsets.symmetric(
-                  vertical: AppSpacing.xs * s),
+              padding: EdgeInsets.symmetric(vertical: AppSpacing.xs * s),
               decoration: BoxDecoration(
                 color: color,
-                borderRadius: BorderRadius.circular(
-                    AppDecorations.buttonRadius),
+                borderRadius:
+                    BorderRadius.circular(AppDecorations.buttonRadius),
               ),
               child: Center(
                 child: Text(
@@ -1381,8 +1380,7 @@ class _DrillTableScreenState extends State<DrillTableScreen>
                 height: 10,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  border: Border.all(
-                      color: AppColors.accentPrimary, width: 2),
+                  border: Border.all(color: AppColors.accentPrimary, width: 2),
                 ),
               ),
               const SizedBox(width: 4),
@@ -1443,8 +1441,7 @@ class _DrillTableScreenState extends State<DrillTableScreen>
             color: revealed
                 ? verdictColor.withOpacity(0.08)
                 : Colors.white.withValues(alpha: 0.04),
-            borderRadius:
-                BorderRadius.circular(AppDecorations.radiusLg * s),
+            borderRadius: BorderRadius.circular(AppDecorations.radiusLg * s),
             border: Border.all(
                 color: revealed
                     ? verdictColor.withOpacity(0.35)
@@ -1466,8 +1463,8 @@ class _DrillTableScreenState extends State<DrillTableScreen>
                             horizontal: AppSpacing.xs * s, vertical: 4 * s),
                         decoration: BoxDecoration(
                           color: verdictColor,
-                          borderRadius: BorderRadius.circular(
-                              AppDecorations.pillRadius),
+                          borderRadius:
+                              BorderRadius.circular(AppDecorations.pillRadius),
                         ),
                         child: Text(label,
                             style: AppTypography.ibm(
@@ -1522,102 +1519,102 @@ class _DrillTableScreenState extends State<DrillTableScreen>
                       color: AppColors.textSecondary, fontSize: 11 * s),
                 ),
               ),
-          SizedBox(height: AppSpacing.xs * s),
-          ConstrainedBox(
-            constraints: BoxConstraints(
-                maxHeight: MediaQuery.of(context).size.height * 0.22),
-            child: SingleChildScrollView(
-              child: Stack(
-                children: [
-                  // Invisible full text reserves the final layout so the
-                  // card never jumps when the line reveals.
-                  Opacity(
-                    opacity: 0,
-                    child: Text(line,
-                        style: AppTypography.ibm(
-                            color: AppColors.textPrimary,
-                            fontSize: 15.5 * s,
-                            height: 1.4)),
-                  ),
-                  if (revealed)
-                    _TypedText(
-                      // Keyed by decision count so each grade retypes.
-                      key: ValueKey('coach_${_records.length}'),
-                      text: line,
-                      style: AppTypography.ibm(
-                          color: AppColors.textPrimary,
-                          fontSize: 15.5 * s,
-                          height: 1.4),
-                    ),
-                ],
-              ),
-            ),
-          ),
-          SizedBox(height: 10 * s),
-          // Action buttons wait for the verdict too — skipping ahead of
-          // the evaluation would defeat the suspense (max 4s).
-          Opacity(
-            opacity: revealed ? 1 : 0.15,
-            child: IgnorePointer(
-              ignoring: !revealed,
-              child: Row(
-            children: [
-              GestureDetector(
-                onTap: _showRangeSheet,
-                child: Container(
-                  padding: EdgeInsets.symmetric(
-                      horizontal: AppSpacing.md * s,
-                      vertical: AppSpacing.xs * s),
-                  decoration: BoxDecoration(
-                    borderRadius:
-                        BorderRadius.circular(AppDecorations.buttonRadius),
-                    border: Border.all(color: color.withOpacity(0.6)),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
+              SizedBox(height: AppSpacing.xs * s),
+              ConstrainedBox(
+                constraints: BoxConstraints(
+                    maxHeight: MediaQuery.of(context).size.height * 0.22),
+                child: SingleChildScrollView(
+                  child: Stack(
                     children: [
-                      Icon(Icons.grid_on_rounded,
-                          size: 14 * s, color: color),
-                      SizedBox(width: 6 * s),
-                      Text('Show range',
+                      // Invisible full text reserves the final layout so the
+                      // card never jumps when the line reveals.
+                      Opacity(
+                        opacity: 0,
+                        child: Text(line,
+                            style: AppTypography.ibm(
+                                color: AppColors.textPrimary,
+                                fontSize: 15.5 * s,
+                                height: 1.4)),
+                      ),
+                      if (revealed)
+                        _TypedText(
+                          // Keyed by decision count so each grade retypes.
+                          key: ValueKey('coach_${_records.length}'),
+                          text: line,
                           style: AppTypography.ibm(
-                              color: color,
-                              fontSize: 14 * s,
-                              fontWeight: FontWeight.w600)),
+                              color: AppColors.textPrimary,
+                              fontSize: 15.5 * s,
+                              height: 1.4),
+                        ),
                     ],
                   ),
                 ),
               ),
-              SizedBox(width: AppSpacing.xs * s),
-              Expanded(
-                child: GestureDetector(
-                  onTap: _dismissFeedback,
-                  child: Container(
-                    padding:
-                        EdgeInsets.symmetric(vertical: AppSpacing.xs * s),
-                    decoration: BoxDecoration(
-                      color: color,
-                      borderRadius:
-                          BorderRadius.circular(AppDecorations.buttonRadius),
-                    ),
-                    child: Center(
-                      child: Text(
-                        isLast ? 'See my result' : 'Next spot',
-                        style: AppTypography.ibm(
-                            color: AppColors.textInverse,
-                            fontSize: 15 * s,
-                            fontWeight: FontWeight.w600),
+              SizedBox(height: 10 * s),
+              // Action buttons wait for the verdict too — skipping ahead of
+              // the evaluation would defeat the suspense (max 4s).
+              Opacity(
+                opacity: revealed ? 1 : 0.15,
+                child: IgnorePointer(
+                  ignoring: !revealed,
+                  child: Row(
+                    children: [
+                      GestureDetector(
+                        onTap: _showRangeSheet,
+                        child: Container(
+                          padding: EdgeInsets.symmetric(
+                              horizontal: AppSpacing.md * s,
+                              vertical: AppSpacing.xs * s),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(
+                                AppDecorations.buttonRadius),
+                            border: Border.all(color: color.withOpacity(0.6)),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.grid_on_rounded,
+                                  size: 14 * s, color: color),
+                              SizedBox(width: 6 * s),
+                              Text('Show range',
+                                  style: AppTypography.ibm(
+                                      color: color,
+                                      fontSize: 14 * s,
+                                      fontWeight: FontWeight.w600)),
+                            ],
+                          ),
+                        ),
                       ),
-                    ),
+                      SizedBox(width: AppSpacing.xs * s),
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: _dismissFeedback,
+                          child: Container(
+                            padding: EdgeInsets.symmetric(
+                                vertical: AppSpacing.xs * s),
+                            decoration: BoxDecoration(
+                              color: color,
+                              borderRadius: BorderRadius.circular(
+                                  AppDecorations.buttonRadius),
+                            ),
+                            child: Center(
+                              child: Text(
+                                isLast ? 'See my result' : 'Next spot',
+                                style: AppTypography.ibm(
+                                    color: AppColors.textInverse,
+                                    fontSize: 15 * s,
+                                    fontWeight: FontWeight.w600),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
             ],
-              ),
-            ),
           ),
-        ],
-      ),
         ),
         // The mascot holds its idle face while evaluating, then reacts
         // once at the reveal (bounce on BEST, head-shake on LEAK).
@@ -1640,8 +1637,7 @@ class _DrillTableScreenState extends State<DrillTableScreen>
           child: revealed
               ? const SizedBox.shrink()
               : _ThinkingDots(
-                  size: 7 * s,
-                  color: Colors.white.withValues(alpha: 0.7)),
+                  size: 7 * s, color: Colors.white.withValues(alpha: 0.7)),
         ),
       ],
     );
@@ -1651,7 +1647,8 @@ class _DrillTableScreenState extends State<DrillTableScreen>
   /// action coloured by type, the range cutoff, and the reasoning.
   Widget _evalRow(String tag, Color tagColor, String action,
       double rangePercent, String reason,
-      {required bool highlight, required double s,
+      {required bool highlight,
+      required double s,
       required AppLocalizations l10n}) {
     final actionColor = switch (action) {
       'raise' => _gold,
@@ -1663,9 +1660,7 @@ class _DrillTableScreenState extends State<DrillTableScreen>
       decoration: BoxDecoration(
         color: highlight ? _accent.withOpacity(0.07) : Colors.transparent,
         borderRadius: BorderRadius.circular(10 * s),
-        border: highlight
-            ? Border.all(color: _accent.withOpacity(0.3))
-            : null,
+        border: highlight ? Border.all(color: _accent.withOpacity(0.3)) : null,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1690,8 +1685,7 @@ class _DrillTableScreenState extends State<DrillTableScreen>
               if (rangePercent > 0 && rangePercent < 100)
                 Text(l10n.drillTopPercent(rangePercent.round()),
                     style: AppTypography.mono(
-                        color: AppColors.textSecondary,
-                        fontSize: 10 * s)),
+                        color: AppColors.textSecondary, fontSize: 10 * s)),
             ],
           ),
           if (reason.isNotEmpty) ...[
@@ -1719,8 +1713,7 @@ class _DrillTableScreenState extends State<DrillTableScreen>
             children: [
               Text(l10n.drillRaiseTo,
                   style: AppTypography.ibm(
-                      color: AppColors.textSecondary,
-                      fontSize: 13 * s)),
+                      color: AppColors.textSecondary, fontSize: 13 * s)),
               const Spacer(),
               GestureDetector(
                 onTap: () => setState(() => _showRaiseSizes = false),
@@ -1860,90 +1853,88 @@ class _DrillSummarySheet extends StatelessWidget {
     final correct =
         records.where((r) => r.result.grade == DrillGrade.correct).length;
     final ok = records.where((r) => r.result.grade == DrillGrade.ok).length;
-    final mistakes = records
-        .where((r) => r.result.grade == DrillGrade.mistake)
-        .toList();
+    final mistakes =
+        records.where((r) => r.result.grade == DrillGrade.mistake).toList();
     final accuracy = records.isEmpty
         ? 0
         : ((correct + ok * 0.5) / records.length * 100).round();
 
     return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-              children: [
-                _stat(l10n.drillAccuracy, '$accuracy%', AppColors.accentPrimary),
-                _stat(l10n.drillDecisions, '${records.length}',
-                    AppColors.textPrimary),
-                _stat(l10n.drillCorrectLabel, '$correct', AppColors.accentPrimary),
-                _stat(l10n.drillCloseLabel, '$ok', AppColors.accentTertiary),
-                _stat(l10n.drillMistakes, '${mistakes.length}',
-                    AppColors.accentDanger),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.md),
-            if (mistakes.isNotEmpty) ...[
-              Text(l10n.drillWhereYouLeaked,
-                  style: AppTypography.sectionHeader()),
-              const SizedBox(height: AppSpacing.xxs),
-              Flexible(
-                child: ListView.separated(
-                  shrinkWrap: true,
-                  itemCount: mistakes.length,
-                  separatorBuilder: (_, __) => Container(
-                      height: AppDecorations.borderThin,
-                      color: AppColors.separatorDark),
-                  itemBuilder: (context, i) {
-                    final m = mistakes[i];
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(
-                          vertical: AppSpacing.xxs),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            l10n.drillMistakeDetail(m.handClass, m.position, m.result.heroAction, m.result.recommendedAction),
-                            style: AppTypography.bodySmall(
-                                color: AppColors.textPrimary),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            m.result.explanation,
-                            style: AppTypography.ibm(
-                                color: AppColors.textSecondary,
-                                fontSize: 13,
-                                height: 1.35),
-                          ),
-                        ],
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            _stat(l10n.drillAccuracy, '$accuracy%', AppColors.accentPrimary),
+            _stat(l10n.drillDecisions, '${records.length}',
+                AppColors.textPrimary),
+            _stat(l10n.drillCorrectLabel, '$correct', AppColors.accentPrimary),
+            _stat(l10n.drillCloseLabel, '$ok', AppColors.accentTertiary),
+            _stat(l10n.drillMistakes, '${mistakes.length}',
+                AppColors.accentDanger),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.md),
+        if (mistakes.isNotEmpty) ...[
+          Text(l10n.drillWhereYouLeaked, style: AppTypography.sectionHeader()),
+          const SizedBox(height: AppSpacing.xxs),
+          Flexible(
+            child: ListView.separated(
+              shrinkWrap: true,
+              itemCount: mistakes.length,
+              separatorBuilder: (_, __) => Container(
+                  height: AppDecorations.borderThin,
+                  color: AppColors.separatorDark),
+              itemBuilder: (context, i) {
+                final m = mistakes[i];
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.xxs),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.drillMistakeDetail(m.handClass, m.position,
+                            m.result.heroAction, m.result.recommendedAction),
+                        style: AppTypography.bodySmall(
+                            color: AppColors.textPrimary),
                       ),
-                    );
-                  },
-                ),
-              ),
-            ],
-            const SizedBox(height: AppSpacing.md),
-            Row(
-              children: [
-                Expanded(
-                  child: AppButton(
-                    label: l10n.drillKeepDrilling,
-                    variant: AppButtonVariant.secondaryLarge,
-                    fullWidth: true,
-                    onTap: () => Navigator.pop(context, false),
+                      const SizedBox(height: 2),
+                      Text(
+                        m.result.explanation,
+                        style: AppTypography.ibm(
+                            color: AppColors.textSecondary,
+                            fontSize: 13,
+                            height: 1.35),
+                      ),
+                    ],
                   ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: AppButton(
-                    label: l10n.drillEndDrill,
-                    variant: AppButtonVariant.white,
-                    fullWidth: true,
-                    onTap: () => Navigator.pop(context, true),
-                  ),
-                ),
-              ],
+                );
+              },
+            ),
           ),
         ],
+        const SizedBox(height: AppSpacing.md),
+        Row(
+          children: [
+            Expanded(
+              child: AppButton(
+                label: l10n.drillKeepDrilling,
+                variant: AppButtonVariant.secondaryLarge,
+                fullWidth: true,
+                onTap: () => Navigator.pop(context, false),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: AppButton(
+                label: l10n.drillEndDrill,
+                variant: AppButtonVariant.white,
+                fullWidth: true,
+                onTap: () => Navigator.pop(context, true),
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 
@@ -1956,8 +1947,8 @@ class _DrillSummarySheet extends StatelessWidget {
                   color: color, fontSize: 18, fontWeight: FontWeight.w700)),
           const SizedBox(height: 2),
           Text(label,
-              style: AppTypography.bodyXsMedium(
-                  color: AppColors.textSecondary)),
+              style:
+                  AppTypography.bodyXsMedium(color: AppColors.textSecondary)),
         ],
       ),
     );
@@ -2009,8 +2000,7 @@ class _ThinkingDotsState extends State<_ThinkingDots>
               if (i > 0) SizedBox(width: d * 0.6),
               Opacity(
                 opacity: 0.25 +
-                    0.75 *
-                        (0.5 + 0.5 * sin((_c.value * 2 * pi) - i * 0.9)),
+                    0.75 * (0.5 + 0.5 * sin((_c.value * 2 * pi) - i * 0.9)),
                 child: Container(
                   width: d,
                   height: d,
@@ -2044,8 +2034,8 @@ class _TypedTextState extends State<_TypedText>
   late final AnimationController _controller = AnimationController(
     vsync: this,
     // ~18ms per character, capped so long coach lines don't drag.
-    duration: Duration(
-        milliseconds: (widget.text.length * 18).clamp(300, 1800)),
+    duration:
+        Duration(milliseconds: (widget.text.length * 18).clamp(300, 1800)),
   )..forward();
 
   @override
@@ -2062,15 +2052,13 @@ class _TypedTextState extends State<_TypedText>
       child: AnimatedBuilder(
         animation: _controller,
         builder: (context, _) {
-          final chars =
-              (widget.text.length * _controller.value).round();
+          final chars = (widget.text.length * _controller.value).round();
           return Stack(
             children: [
               // Invisible full text reserves the final layout so the bubble
               // doesn't grow line-by-line while typing.
               Opacity(
-                  opacity: 0,
-                  child: Text(widget.text, style: widget.style)),
+                  opacity: 0, child: Text(widget.text, style: widget.style)),
               Text(widget.text.substring(0, chars), style: widget.style),
             ],
           );

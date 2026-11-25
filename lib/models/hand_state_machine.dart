@@ -6,6 +6,7 @@ import '../models/poker_game_state.dart';
 import '../models/game_types.dart';
 import '../models/hand_completeness.dart';
 import '../services/fold_tick_queue.dart';
+import '../services/app_data_cache.dart';
 import '../services/firebase_service.dart';
 import '../services/hand_log_telemetry.dart';
 import '../services/local_storage_service.dart';
@@ -1655,37 +1656,69 @@ class PokerSessionManager {
     }
   }
 
+  /// Cloud writes never block the UI: bounded wait + logged failure.
+  static const Duration _cloudTimeout = Duration(seconds: 5);
+
+  /// Latest in-flight cloud progress write (never throws; errors are logged).
+  /// The detached cloud session end waits for it so the server still sees
+  /// handsLogged/stackHistory before it evaluates participation.
+  Future<void>? _lastCloudProgress;
+
   // Update session with current progress (hand count, etc.)
-  Future<void> _updateSessionProgress() async {
+  //
+  // Local SQLite is written FIRST (crash safety: the saved timeline must not
+  // wait for a server ack), then the cloud copy. [awaitCloud] false (end
+  // session) runs the cloud part detached; it is still sent, never dropped.
+  Future<void> _updateSessionProgress({bool awaitCloud = true}) async {
     if (sessionId == null) return;
+    final id = sessionId!;
+    final handsLogged = completedHands.length;
+    // Snapshot: a detached cloud write must not see later mutations.
+    final history = List<Map<String, dynamic>>.of(stackHistory);
 
-    try {
-      // Update Firebase session with stack history, totalBuyIn, and stats
-      await FirebaseService.updateSession(
-        sessionId: sessionId!,
-        handsLogged: completedHands.length,
-        biggestPot: biggestPot,
-        biggestPotBB: biggestPotBB,
-        stackHistory: stackHistory,
-        totalBuyIn: totalBuyIn,
-      );
-    } catch (e) {
-      await LoggerService.error('Error updating session progress in Firebase', e, StackTrace.current);
-    }
-
-    // Always update local storage with stack history, totalBuyIn, and stats.
-    // Dual storage: a local SQLite failure must never block ending a session
-    // (the cloud copy above is already saved).
+    // Dual storage: a local SQLite failure must never block ending a session.
     try {
       await LocalStorageService.updateSession(
-        sessionId: sessionId!,
-        handsLogged: completedHands.length,
+        sessionId: id,
+        handsLogged: handsLogged,
         biggestPot: biggestPot,
-        stackHistory: stackHistory,
+        stackHistory: history,
         totalBuyIn: totalBuyIn,
       );
     } catch (e) {
       await LoggerService.error('Error updating session locally', e, StackTrace.current);
+    }
+
+    final cloud = _pushSessionProgressToCloud(
+      id, handsLogged, history, biggestPot, biggestPotBB, totalBuyIn);
+    _lastCloudProgress = cloud;
+    if (awaitCloud) {
+      await cloud;
+    } else {
+      unawaited(cloud);
+    }
+  }
+
+  Future<void> _pushSessionProgressToCloud(
+    String id,
+    int handsLogged,
+    List<Map<String, dynamic>> history,
+    double biggestPotValue,
+    double biggestPotBBValue,
+    double buyIn,
+  ) async {
+    try {
+      // Update Firebase session with stack history, totalBuyIn, and stats
+      await FirebaseService.updateSession(
+        sessionId: id,
+        handsLogged: handsLogged,
+        biggestPot: biggestPotValue,
+        biggestPotBB: biggestPotBBValue,
+        stackHistory: history,
+        totalBuyIn: buyIn,
+      ).timeout(_cloudTimeout);
+    } catch (e) {
+      await LoggerService.error('Error updating session progress in Firebase', e, StackTrace.current);
     }
   }
 
@@ -1738,24 +1771,31 @@ class PokerSessionManager {
     sessionEndTime = DateTime.now();
     sessionState = SessionState.ended;
 
-    // Save final stack history before ending
-    await _updateSessionProgress();
-
-    // Always update local storage
-    if (sessionId != null) {
-      await LocalStorageService.endSession(sessionId!, sessionEndTime!.toIso8601String());
-    }
-    
-    // End session in Firebase
-    if (sessionId != null && !sessionId!.startsWith('offline_')) {
-      try {
-        await FirebaseService.endSession(sessionId!);
-      } catch (e) {
-        await LoggerService.error('Error ending Firebase session', e, StackTrace.current);
-      }
-    } else {
+    // Local first: stack history + endTime are saved before anything touches
+    // the network, so the summary never waits on cloud round trips.
+    final id = sessionId;
+    await _updateSessionProgress(awaitCloud: false);
+    if (id != null) {
+      await LocalStorageService.endSession(id, sessionEndTime!.toIso8601String());
     }
 
+    // Cloud session end (endTime + session/play-time stats) is still sent,
+    // detached and logged on failure. Firestore queues it offline.
+    if (id != null && !id.startsWith('offline_')) {
+      unawaited(_endCloudSession(id));
+    }
+  }
+
+  Future<void> _endCloudSession(String id) async {
+    try {
+      await _lastCloudProgress;
+      await FirebaseService.endSession(id).timeout(_cloudTimeout);
+    } catch (e) {
+      await LoggerService.error('Error ending Firebase session', e, StackTrace.current);
+    }
+    AppDataCache.markHomeDirty();
+    AppDataCache.markSessionsDirty();
+    AppDataCache.markStatsDirty();
   }
 
   // Add a rebuy to the session

@@ -163,8 +163,7 @@ class PokerTableWidget extends StatelessWidget {
   }
 
   /// Compute the angle for a seat (used for button offset).
-  static double getSeatAngle(int seatNumber,
-      {double angleOffset = 0.0}) {
+  static double getSeatAngle(int seatNumber, {double angleOffset = 0.0}) {
     final double angleStep = (2 * math.pi) / 9;
     const double startAngle = math.pi * 1.25 + (2 * math.pi) / 9 + math.pi / 12;
     return startAngle + (angleStep * (seatNumber - 1)) + angleOffset;
@@ -193,7 +192,7 @@ class PokerTableWidget extends StatelessWidget {
           children: [
             // Table surface
             Center(
-              child: _buildTableSurface(tableWidth, tableHeight),
+              child: _buildTableSurface(context, tableWidth, tableHeight),
             ),
 
             // Seats
@@ -223,15 +222,14 @@ class PokerTableWidget extends StatelessWidget {
               _buildDealerButton(areaSize, constraints, effSeatW, effSeatH),
 
             // Center content
-            if (centerContent != null)
-              Center(child: centerContent!),
+            if (centerContent != null) Center(child: centerContent!),
           ],
         );
       },
     );
   }
 
-  Widget _buildTableSurface(double width, double height) {
+  Widget _buildTableSurface(BuildContext context, double width, double height) {
     // Neon 3D table render. BoxFit.contain (not fill) preserves the oval's
     // proportions — the asset is authored at the table ratio (266:367) and
     // sits on #02050B, so the letterbox margins blend into the app
@@ -245,6 +243,12 @@ class PokerTableWidget extends StatelessWidget {
             ? 'assets/icons/table_neon.png'
             : 'assets/icons/table_neon_clean.png',
         fit: BoxFit.contain,
+        // Decode at rendered size, not the 800px source (cap at source width).
+        cacheWidth: width.isFinite && width > 0
+            ? (width * MediaQuery.devicePixelRatioOf(context))
+                .round()
+                .clamp(1, 800)
+            : null,
       ),
     );
   }
@@ -258,9 +262,8 @@ class PokerTableWidget extends StatelessWidget {
         color: AppColors.bgSurface,
         borderRadius: BorderRadius.circular(35),
         border: Border.all(
-          color: isActive
-              ? AppColors.accentSecondary
-              : AppColors.borderOnInverse,
+          color:
+              isActive ? AppColors.accentSecondary : AppColors.borderOnInverse,
           width: 2,
         ),
       ),
@@ -275,7 +278,8 @@ class PokerTableWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildDefaultSeatLabel(BuildContext context, int seatNumber, bool isActive, String label) {
+  Widget _buildDefaultSeatLabel(
+      BuildContext context, int seatNumber, bool isActive, String label) {
     final l10n = AppLocalizations.of(context);
     final isDefaultName =
         label.isEmpty || RegExp(r'^Player\s*\d*$').hasMatch(label);
@@ -341,7 +345,8 @@ class PokerTableWidget extends StatelessWidget {
     const double badgeH = 20.5;
     final variant = getSeatLayoutVariant(seatNumber);
     final label = seatLabels[seatNumber] ?? '';
-    final isDefaultName = label.isEmpty || RegExp(r'^Player\s*\d*$').hasMatch(label);
+    final isDefaultName =
+        label.isEmpty || RegExp(r'^Player\s*\d*$').hasMatch(label);
     final showBadge = isActive && !isDefaultName;
 
     final circleWidget = Positioned(
@@ -399,7 +404,8 @@ class PokerTableWidget extends StatelessWidget {
             child: GestureDetector(
               onTap: onSeatTap != null ? () => onSeatTap!(seatNumber) : null,
               child: Center(
-                  child: _buildDefaultSeatLabel(context, seatNumber, isActive, label)),
+                  child: _buildDefaultSeatLabel(
+                      context, seatNumber, isActive, label)),
             ),
           ),
         );
@@ -420,7 +426,8 @@ class PokerTableWidget extends StatelessWidget {
             onTap: onSeatTap != null ? () => onSeatTap!(seatNumber) : null,
             child: FractionalTranslation(
               translation: const Offset(-1.0, 0.0),
-              child: _buildDefaultSeatLabel(context, seatNumber, isActive, label),
+              child:
+                  _buildDefaultSeatLabel(context, seatNumber, isActive, label),
             ),
           ),
         );
@@ -459,8 +466,8 @@ class PokerTableWidget extends StatelessWidget {
         widthFraction: effSeatW,
         heightFraction: effSeatH,
         angleOffset: seatAngleOffset);
-    final seatAngle = getSeatAngle(buttonPosition!,
-        angleOffset: seatAngleOffset);
+    final seatAngle =
+        getSeatAngle(buttonPosition!, angleOffset: seatAngleOffset);
 
     // Offset button toward center (enough to sit inside the rail, on felt).
     final buttonOffset = dealerButtonSize * 2.2;
@@ -501,8 +508,7 @@ class PokerTableWidget extends StatelessWidget {
                 child: buttonImage,
               ),
               onDragEnd: (details) {
-                _handleDealerButtonDrop(
-                    details, buttonContext, areaSize);
+                _handleDealerButtonDrop(details, buttonContext, areaSize);
               },
               child: buttonImage,
             );

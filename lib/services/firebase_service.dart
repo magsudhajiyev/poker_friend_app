@@ -121,11 +121,25 @@ class FirebaseService {
       }
       AppDataCache.markHomeDirty();
       AppDataCache.markSessionsDirty();
+      invalidateSessionsCache();
       AppDataCache.markStatsDirty();
       return createdId;
     } catch (e) {
       await LoggerService.error('Error creating session', e, StackTrace.current);
       rethrow;
+    }
+  }
+
+  /// Deletes docs in WriteBatches of at most 500 ops (hands before session).
+  static Future<void> _batchDeleteRefs(
+      Iterable<DocumentReference<Map<String, dynamic>>> refs) async {
+    final list = refs.toList();
+    for (var i = 0; i < list.length; i += 500) {
+      final batch = _firestore.batch();
+      for (final ref in list.skip(i).take(500)) {
+        batch.delete(ref);
+      }
+      await batch.commit();
     }
   }
 
@@ -146,12 +160,11 @@ class FirebaseService {
 
       // Delete any hands in this session
       final handsSnapshot = await sessionRef.collection(_handsCollection).get();
-      for (final handDoc in handsSnapshot.docs) {
-        await handDoc.reference.delete();
-      }
+      await _batchDeleteRefs(handsSnapshot.docs.map((d) => d.reference));
 
       // Delete the session
       await sessionRef.delete();
+      invalidateSessionsCache();
     } catch (e) {
       // Silently fail - deletion errors are not critical
     }
@@ -394,6 +407,7 @@ class FirebaseService {
 
       AppDataCache.markHomeDirty();
       AppDataCache.markSessionsDirty();
+      invalidateSessionsCache();
       if (!skipStats) {
         // Hero stats cache only when hero stats actually changed.
         if (!skipHeroStats) {
@@ -420,6 +434,7 @@ class FirebaseService {
     } else if (completeness != HandCompleteness.flagged) {
       await ref.update({'totalHands': FieldValue.increment(1)});
     }
+    invalidateSessionsCache();
   }
 
   /// Hero + opponent stats for a freshly saved hand, gated by completeness.
@@ -517,7 +532,8 @@ class FirebaseService {
     return _firestore
         .collection(_sessionsCollection)
         .doc(sessionId)
-        .update({'totalHands': FieldValue.increment(1)});
+        .update({'totalHands': FieldValue.increment(1)}).whenComplete(
+            invalidateSessionsCache);
   }
 
   /// Promotion of a flagged stub: the full hero computation, run ONCE by
@@ -635,6 +651,7 @@ class FirebaseService {
       await _firestore.collection(_sessionsCollection).doc(sessionId).update({
         'endTime': FieldValue.serverTimestamp(),
       });
+      invalidateSessionsCache();
 
       // Update user stats with session count and duration (only if user actually participated)
       if (sessionDoc.exists) {
@@ -672,6 +689,7 @@ class FirebaseService {
 
       AppDataCache.markHomeDirty();
       AppDataCache.markSessionsDirty();
+      invalidateSessionsCache();
       AppDataCache.markStatsDirty();
     } catch (e) {
       await LoggerService.error('Error ending session', e, StackTrace.current);
@@ -694,6 +712,33 @@ class FirebaseService {
   }
 
   // Get all hands for a session
+  /// Sliding-window prefetch for full-history scans (recalc, backfills).
+  /// Call with the same [cache] for every session in order; hands for the
+  /// next [chunk] sessions are fetched concurrently. Errors are captured and
+  /// rethrown only when THIS session's hands are requested, so the caller's
+  /// per-session try/catch behaves exactly as with [getSessionHands].
+  static Future<List<Map<String, dynamic>>> getSessionHandsPrefetched(
+    List<Map<String, dynamic>> sessions,
+    int index,
+    Map<String, Future<Object>> cache, {
+    int chunk = 8,
+  }) async {
+    final id = sessions[index]['id'] as String;
+    if (!cache.containsKey(id)) {
+      for (var i = index; i < sessions.length && i < index + chunk; i++) {
+        final sid = sessions[i]['id'] as String?;
+        if (sid == null || cache.containsKey(sid)) continue;
+        cache[sid] = getSessionHands(sid)
+            .then<Object>((h) => h, onError: (Object e, StackTrace st) => _HandsFetchError(e, st));
+      }
+    }
+    final result = await cache.remove(id)!;
+    if (result is _HandsFetchError) {
+      Error.throwWithStackTrace(result.error, result.stack);
+    }
+    return result as List<Map<String, dynamic>>;
+  }
+
   static Future<List<Map<String, dynamic>>> getSessionHands(String sessionId) async {
     try {
       final querySnapshot = await _firestore
@@ -816,21 +861,71 @@ class FirebaseService {
   // them. Only the session history list asks for them.
   static Future<List<Map<String, dynamic>>> getAllSessions(
       {bool includeHandGroups = false}) async {
+    final uid = AuthService.userId;
+    if (uid == null) return _fetchAllSessions(includeHandGroups);
+    final key = '$uid|$includeHandGroups';
+    final hit = _sessionsCache[key];
+    if (hit != null &&
+        _sessionsCacheGen == hit.gen &&
+        DateTime.now().difference(hit.at) < _sessionsCacheTtl) {
+      return _copySessions(await hit.future);
+    }
+    final gen = _sessionsCacheGen;
+    final future = _fetchAllSessions(includeHandGroups);
+    _sessionsCache[key] = _SessionsCacheEntry(future, DateTime.now(), gen);
+    try {
+      return _copySessions(await future);
+    } catch (e) {
+      _sessionsCache.remove(key);
+      rethrow;
+    }
+  }
+
+  // Short-TTL in-memory cache for getAllSessions (same idea as AppDataCache:
+  // every write path in this file calls invalidateSessionsCache()). The TTL
+  // bounds staleness from writers outside this file.
+  static const Duration _sessionsCacheTtl = Duration(seconds: 8);
+  static final Map<String, _SessionsCacheEntry> _sessionsCache = {};
+  static int _sessionsCacheGen = 0;
+
+  /// Drops cached [getAllSessions] results. Call after ANY poker_sessions write.
+  static void invalidateSessionsCache() {
+    _sessionsCacheGen++;
+    _sessionsCache.clear();
+  }
+
+  // Callers may mutate the returned list/maps, so hand out copies.
+  static List<Map<String, dynamic>> _copySessions(
+          List<Map<String, dynamic>> src) =>
+      src.map((m) => _deepCopy(m) as Map<String, dynamic>).toList();
+
+  static dynamic _deepCopy(dynamic v) {
+    if (v is Map) {
+      return v.map((k, val) => MapEntry(k, _deepCopy(val)));
+    }
+    if (v is List) return v.map(_deepCopy).toList();
+    return v;
+  }
+
+  static Future<List<Map<String, dynamic>>> _fetchAllSessions(
+      bool includeHandGroups) async {
     try {
       final userId = AuthService.userId;
       if (userId == null) throw 'User not authenticated';
 
       // Query 1: Sessions the user owns (manual logging, individual sessions)
-      final ownedSnapshot = await _firestore
+      final ownedFuture = _firestore
           .collection(_sessionsCollection)
           .where('userId', isEqualTo: userId)
           .get();
 
       // Query 2: Sessions the user participated in (dealer events)
-      final participatedSnapshot = await _firestore
+      final participatedFuture = _firestore
           .collection(_sessionsCollection)
           .where('participantIds', arrayContains: userId)
           .get();
+      final ownedSnapshot = await ownedFuture;
+      final participatedSnapshot = await participatedFuture;
 
       // Combine and deduplicate (use Map to avoid duplicates)
       final allDocs = <String, QueryDocumentSnapshot<Map<String, dynamic>>>{};
@@ -949,6 +1044,7 @@ class FirebaseService {
       await _firestore.collection(_sessionsCollection).doc(sessionId).update({
         'participantIds': FieldValue.arrayUnion([participantId]),
       });
+      invalidateSessionsCache();
 
       // Then, add the participation period
       // Firestore doesn't support arrayUnion on nested fields, so we need to read and update
@@ -1082,6 +1178,7 @@ class FirebaseService {
         'sessionName': sessionName,
         'updatedAt': FieldValue.serverTimestamp(),
       });
+      invalidateSessionsCache();
       
     } catch (e) {
       await LoggerService.error('Error updating session name', e, StackTrace.current);
@@ -1139,6 +1236,7 @@ class FirebaseService {
       }
 
       await _firestore.collection(_sessionsCollection).doc(sessionId).update(updateData);
+      invalidateSessionsCache();
 
     } catch (e) {
       await LoggerService.error('Error updating session', e, StackTrace.current);
@@ -1216,6 +1314,7 @@ class FirebaseService {
       }
 
       await _firestore.collection(_sessionsCollection).doc(sessionId).update(updateData);
+      invalidateSessionsCache();
 
     } catch (e) {
       await LoggerService.error('Error updating individual session', e, StackTrace.current);
@@ -1277,6 +1376,7 @@ class FirebaseService {
         'totalBuyIn': newTotalBuyIn,
         'updatedAt': FieldValue.serverTimestamp(),
       });
+      invalidateSessionsCache();
 
     } catch (e) {
       await LoggerService.error('Error adding rebuy to session', e, StackTrace.current);
@@ -1307,13 +1407,12 @@ class FirebaseService {
             .collection(_handsCollection)
             .get();
         
-        for (final handDoc in handsSnapshot.docs) {
-          await handDoc.reference.delete();
-        }
+        await _batchDeleteRefs(handsSnapshot.docs.map((d) => d.reference));
         
         // Delete the session itself
         await sessionDoc.reference.delete();
       }
+      invalidateSessionsCache();
     } catch (e) {
       await LoggerService.error('Error clearing user sessions from Firebase', e, StackTrace.current);
       rethrow;
@@ -1841,6 +1940,7 @@ class FirebaseService {
             sessionData,
             SetOptions(merge: true),
           );
+          invalidateSessionsCache();
 
           // Also sync associated hands if any
           final localHands = await LocalStorageService.getSessionHands(sessionId);
@@ -1884,4 +1984,17 @@ class FirebaseService {
       };
     }
   }
+}
+
+class _SessionsCacheEntry {
+  final Future<List<Map<String, dynamic>>> future;
+  final DateTime at;
+  final int gen;
+  _SessionsCacheEntry(this.future, this.at, this.gen);
+}
+
+class _HandsFetchError {
+  final Object error;
+  final StackTrace stack;
+  _HandsFetchError(this.error, this.stack);
 }

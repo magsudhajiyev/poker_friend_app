@@ -11,16 +11,16 @@ import '../models/hand_completeness.dart';
 
 class LocalStorageService {
   static Database? _database;
-  
+
   static Future<Database> get database async {
     if (_database != null) return _database!;
     _database = await _initDatabase();
     return _database!;
   }
-  
+
   static Future<Database> _initDatabase() async {
     String dbPath = path.join(await getDatabasesPath(), 'poker_logger.db');
-    
+
     return await openDatabase(
       dbPath,
       version: 22,
@@ -51,7 +51,7 @@ class LocalStorageService {
             sessionType TEXT
           )
         ''');
-        
+
         await db.execute('''
           CREATE TABLE hands(
             id TEXT PRIMARY KEY,
@@ -110,13 +110,15 @@ class LocalStorageService {
         }
         if (oldVersion < 4) {
           // Add gameType column if missing
-          await _addColumnIfMissing(db, 'sessions', 'gameType', "TEXT DEFAULT 'cash'");
+          await _addColumnIfMissing(
+              db, 'sessions', 'gameType', "TEXT DEFAULT 'cash'");
         }
         if (oldVersion < 5) {
           // Add new columns for hole cards and showdown data
           await _addColumnIfMissing(db, 'hands', 'ourHoleCards', 'TEXT');
           await _addColumnIfMissing(db, 'hands', 'showdownData', 'TEXT');
-          await _addColumnIfMissing(db, 'hands', 'reachedShowdown', 'INTEGER DEFAULT 0');
+          await _addColumnIfMissing(
+              db, 'hands', 'reachedShowdown', 'INTEGER DEFAULT 0');
         }
         if (oldVersion < 6) {
           // Add new columns for pot amount, winner, hero position, and player names
@@ -133,14 +135,16 @@ class LocalStorageService {
         }
         if (oldVersion < 8) {
           // Add per-street pot tracking columns
-          await _addColumnIfMissing(db, 'hands', 'preflopPot', 'REAL DEFAULT 0');
+          await _addColumnIfMissing(
+              db, 'hands', 'preflopPot', 'REAL DEFAULT 0');
           await _addColumnIfMissing(db, 'hands', 'flopPot', 'REAL DEFAULT 0');
           await _addColumnIfMissing(db, 'hands', 'turnPot', 'REAL DEFAULT 0');
           await _addColumnIfMissing(db, 'hands', 'riverPot', 'REAL DEFAULT 0');
         }
         if (oldVersion < 9) {
           // Add chopped pot tracking columns
-          await _addColumnIfMissing(db, 'hands', 'isChoppedPot', 'INTEGER DEFAULT 0');
+          await _addColumnIfMissing(
+              db, 'hands', 'isChoppedPot', 'INTEGER DEFAULT 0');
           await _addColumnIfMissing(db, 'hands', 'choppedWinners', 'TEXT');
           await _addColumnIfMissing(db, 'hands', 'individualShares', 'TEXT');
           await _addColumnIfMissing(db, 'hands', 'sharePerWinner', 'REAL');
@@ -156,14 +160,17 @@ class LocalStorageService {
         }
         if (oldVersion < 12) {
           // Add hand annotation columns for review/tagging
-          await _addColumnIfMissing(db, 'hands', 'isStarred', 'INTEGER DEFAULT 0');
+          await _addColumnIfMissing(
+              db, 'hands', 'isStarred', 'INTEGER DEFAULT 0');
           await _addColumnIfMissing(db, 'hands', 'tags', 'TEXT');
           await _addColumnIfMissing(db, 'hands', 'notes', 'TEXT');
         }
         if (oldVersion < 13) {
           // Add handsLogged and biggestPot columns to sessions table
-          await _addColumnIfMissing(db, 'sessions', 'handsLogged', 'INTEGER DEFAULT 0');
-          await _addColumnIfMissing(db, 'sessions', 'biggestPot', 'REAL DEFAULT 0');
+          await _addColumnIfMissing(
+              db, 'sessions', 'handsLogged', 'INTEGER DEFAULT 0');
+          await _addColumnIfMissing(
+              db, 'sessions', 'biggestPot', 'REAL DEFAULT 0');
         }
         if (oldVersion < 15) {
           // Range grid index v2 — keyed by (sessionId, handNumber) so the
@@ -174,21 +181,25 @@ class LocalStorageService {
         }
         if (oldVersion < 16) {
           // B11: split-pot flag (winners of separate side pots, not a chop)
-          await _addColumnIfMissing(db, 'hands', 'isSplitPot', 'INTEGER DEFAULT 0');
+          await _addColumnIfMissing(
+              db, 'hands', 'isSplitPot', 'INTEGER DEFAULT 0');
         }
         if (oldVersion < 17) {
           // Hands folded preflop + skipped (no hand record) — needed for
           // honest VPIP/PFR denominators in session exports.
-          await _addColumnIfMissing(db, 'sessions', 'skippedHands', 'INTEGER DEFAULT 0');
+          await _addColumnIfMissing(
+              db, 'sessions', 'skippedHands', 'INTEGER DEFAULT 0');
         }
         if (oldVersion < 18) {
           // First-run tour sessions — badged in history, excluded from stats
-          await _addColumnIfMissing(db, 'sessions', 'isTutorial', 'INTEGER DEFAULT 0');
+          await _addColumnIfMissing(
+              db, 'sessions', 'isTutorial', 'INTEGER DEFAULT 0');
         }
         if (oldVersion < 19) {
           // Scouting hands — hero folded preflop, board skipped, preflop-only
           // record that feeds opponent stats but is excluded from hero summary.
-          await _addColumnIfMissing(db, 'hands', 'isScouted', 'INTEGER DEFAULT 0');
+          await _addColumnIfMissing(
+              db, 'hands', 'isScouted', 'INTEGER DEFAULT 0');
         }
         if (oldVersion < 20) {
           // Easy hand logging: completeness level, stub stats guard, flag meta.
@@ -232,8 +243,25 @@ class LocalStorageService {
         } catch (e) {
           debugPrint('Error ensuring sessions sessionType column: $e');
         }
+        // Lookup indexes (hands by session, sessions by user). Created in
+        // onOpen so existing installs get them without a schema bump;
+        // IF NOT EXISTS makes it a no-op afterwards.
+        try {
+          await _ensureLookupIndexes(db);
+        } catch (e) {
+          debugPrint('Error ensuring lookup indexes: $e');
+        }
       },
     );
+  }
+
+  /// Additive, idempotent indexes for the hot lookups
+  /// (`hands WHERE sessionId = ?`, `sessions WHERE userId = ?`).
+  static Future<void> _ensureLookupIndexes(Database db) async {
+    await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_hands_session ON hands(sessionId, handNumber)');
+    await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(userId, startTime)');
   }
 
   /// Creates the range grid table when missing, and recreates it when an
@@ -439,7 +467,7 @@ class LocalStorageService {
       return [];
     }
   }
-  
+
   // Save session locally
   static Future<void> saveSession({
     required String sessionId,
@@ -482,10 +510,12 @@ class LocalStorageService {
         sessionData['totalBuyIn'] = buyInAmount;
       }
 
-      await db.insert('sessions', sessionData,
+      await db.insert(
+        'sessions',
+        sessionData,
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
-      
+
       debugPrint('Session saved locally: $sessionId');
     } catch (e) {
       debugPrint('Error saving session locally: $e');
@@ -555,68 +585,80 @@ class LocalStorageService {
     try {
       final db = await database;
       // Use timestamp to ensure unique handId even if sessionId changes mid-session
-      final handId = '${sessionId}_hand_${handNumber}_${DateTime.now().millisecondsSinceEpoch}';
+      final handId =
+          '${sessionId}_hand_${handNumber}_${DateTime.now().millisecondsSinceEpoch}';
 
-      
-      
-      await db.insert(
-        'hands',
-        {
-          'id': handId,
-          'sessionId': sessionId,
-          'handNumber': handNumber,
-          'buttonPosition': buttonPosition,
-          'playerCount': playerCount,
-          'startTime': startTime,
-          'endTime': endTime,
-          'actions': _safeJsonEncode(actions),
-          'boardCards': boardCards != null ? _safeJsonEncode(boardCards) : null,
-          'ourHoleCards': ourHoleCards != null ? _safeJsonEncode(ourHoleCards) : null,
-          'showdownData': showdownData != null ? _safeJsonEncode(showdownData) : null,
-          'reachedShowdown': reachedShowdown == true ? 1 : 0,
-          'potAmount': potAmount ?? 0,
-          'preflopPot': preflopPot ?? 0,
-          'flopPot': flopPot ?? 0,
-          'turnPot': turnPot ?? 0,
-          'riverPot': riverPot ?? 0,
-          'winnerId': winnerId,
-          'heroPosition': heroPosition,
-          'playerNames': playerNames != null ? _safeJsonEncode(playerNames) : null,
-          'handSmallBlind': smallBlind,
-          'handBigBlind': bigBlind,
-          'handGameType': gameType,
-          // Chopped pot fields
-          'isChoppedPot': (isChoppedPot == true) ? 1 : 0,
-          'isSplitPot': (isSplitPot == true) ? 1 : 0,
-          'choppedWinners': choppedWinners != null ? _safeJsonEncode(choppedWinners) : null,
-          'individualShares': individualShares != null ? _safeJsonEncode(_convertKeysToStrings(individualShares)) : null,
-          'sharePerWinner': sharePerWinner,
-          // Hand annotations
-          'isStarred': (isStarred == true) ? 1 : 0,
-          'isScouted': (isScouted == true) ? 1 : 0,
-          'tags': tags != null && tags.isNotEmpty ? _safeJsonEncode(tags) : null,
-          'notes': notes,
-          'completeness': completeness.wire,
-          'statsApplied': statsApplied ? 1 : 0,
-          'flagMeta': flagMeta != null ? _safeJsonEncode(flagMeta) : null,
-          'bbSeat': bbSeat,
-          'sbSeat': sbSeat,
-          'smallBlindDead': smallBlindDead ? 1 : 0,
-        },
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
-
-      // Session counters: ticks bump skippedHands, stubs nothing, the rest
-      // bump totalHands (mirrors FirebaseService._updateSessionCounters).
+      // One transaction = one journal commit for the insert + counter bump
+      // (atomic too: no hand row without its session counter).
       final counter = sessionCounterColumn(completeness);
-      if (counter != null) {
-        await db.rawUpdate(
-          'UPDATE sessions SET $counter = COALESCE($counter, 0) + 1 WHERE id = ?',
-          [sessionId],
+      await db.transaction((txn) async {
+        await txn.insert(
+          'hands',
+          {
+            'id': handId,
+            'sessionId': sessionId,
+            'handNumber': handNumber,
+            'buttonPosition': buttonPosition,
+            'playerCount': playerCount,
+            'startTime': startTime,
+            'endTime': endTime,
+            'actions': _safeJsonEncode(actions),
+            'boardCards':
+                boardCards != null ? _safeJsonEncode(boardCards) : null,
+            'ourHoleCards':
+                ourHoleCards != null ? _safeJsonEncode(ourHoleCards) : null,
+            'showdownData':
+                showdownData != null ? _safeJsonEncode(showdownData) : null,
+            'reachedShowdown': reachedShowdown == true ? 1 : 0,
+            'potAmount': potAmount ?? 0,
+            'preflopPot': preflopPot ?? 0,
+            'flopPot': flopPot ?? 0,
+            'turnPot': turnPot ?? 0,
+            'riverPot': riverPot ?? 0,
+            'winnerId': winnerId,
+            'heroPosition': heroPosition,
+            'playerNames':
+                playerNames != null ? _safeJsonEncode(playerNames) : null,
+            'handSmallBlind': smallBlind,
+            'handBigBlind': bigBlind,
+            'handGameType': gameType,
+            // Chopped pot fields
+            'isChoppedPot': (isChoppedPot == true) ? 1 : 0,
+            'isSplitPot': (isSplitPot == true) ? 1 : 0,
+            'choppedWinners':
+                choppedWinners != null ? _safeJsonEncode(choppedWinners) : null,
+            'individualShares': individualShares != null
+                ? _safeJsonEncode(_convertKeysToStrings(individualShares))
+                : null,
+            'sharePerWinner': sharePerWinner,
+            // Hand annotations
+            'isStarred': (isStarred == true) ? 1 : 0,
+            'isScouted': (isScouted == true) ? 1 : 0,
+            'tags':
+                tags != null && tags.isNotEmpty ? _safeJsonEncode(tags) : null,
+            'notes': notes,
+            'completeness': completeness.wire,
+            'statsApplied': statsApplied ? 1 : 0,
+            'flagMeta': flagMeta != null ? _safeJsonEncode(flagMeta) : null,
+            'bbSeat': bbSeat,
+            'sbSeat': sbSeat,
+            'smallBlindDead': smallBlindDead ? 1 : 0,
+          },
+          conflictAlgorithm: ConflictAlgorithm.replace,
         );
-      }
-      
-      debugPrint('Hand saved locally: $handId with potAmount: ${potAmount ?? 0}');
+
+        // Session counters: ticks bump skippedHands, stubs nothing, the rest
+        // bump totalHands (mirrors FirebaseService._updateSessionCounters).
+        if (counter != null) {
+          await txn.rawUpdate(
+            'UPDATE sessions SET $counter = COALESCE($counter, 0) + 1 WHERE id = ?',
+            [sessionId],
+          );
+        }
+      });
+
+      debugPrint(
+          'Hand saved locally: $handId with potAmount: ${potAmount ?? 0}');
       return handId;
     } catch (e) {
       debugPrint('Error saving hand locally: $e');
@@ -709,7 +751,8 @@ class LocalStorageService {
         'statsApplied': 1,
       };
       void put(String k, Object? v) {
-        if (v != null) row[k] = v is String || v is num ? v : _safeJsonEncode(v);
+        if (v != null)
+          row[k] = v is String || v is num ? v : _safeJsonEncode(v);
       }
 
       put('actions', fields['actions']);
@@ -724,7 +767,8 @@ class LocalStorageService {
       put('winnerId', fields['winnerId']);
       put('endTime', fields['endTime']);
       put('flagMeta', fields['flag']);
-      final rows = await db.update('hands', row, where: 'id = ?', whereArgs: [handId]);
+      final rows =
+          await db.update('hands', row, where: 'id = ?', whereArgs: [handId]);
       if (rows > 0) {
         final sid = fields['sessionId'];
         if (sid is String) {
@@ -834,12 +878,13 @@ class LocalStorageService {
       return [];
     }
   }
-  
+
   // Get hands for a session
-  static Future<List<Map<String, dynamic>>> getSessionHands(String sessionId) async {
+  static Future<List<Map<String, dynamic>>> getSessionHands(
+      String sessionId) async {
     try {
       final db = await database;
-      
+
       // First get the session data as fallback for old hands
       final sessionData = await db.query(
         'sessions',
@@ -847,7 +892,7 @@ class LocalStorageService {
         whereArgs: [sessionId],
         limit: 1,
       );
-      
+
       Map<String, dynamic> sessionDefaults = {};
       if (sessionData.isNotEmpty) {
         final session = sessionData.first;
@@ -864,16 +909,17 @@ class LocalStorageService {
           'gameType': 'cash',
         };
       }
-      
+
       final hands = await db.query(
         'hands',
         where: 'sessionId = ?',
         whereArgs: [sessionId],
         orderBy: 'handNumber ASC',
       );
-      
-      
-      return hands.map((hand) => _decodeHandRow(hand, sessionDefaults)).toList();
+
+      return hands
+          .map((hand) => _decodeHandRow(hand, sessionDefaults))
+          .toList();
     } catch (e) {
       debugPrint('Error getting session hands: $e');
       return [];
@@ -927,23 +973,27 @@ class LocalStorageService {
     result['heroPosition'] = result['heroPosition'];
 
     // Use hand-level session data (preferred) or fall back to session-level data
-    result['smallBlind'] = result['handSmallBlind'] ?? sessionDefaults['smallBlind'];
+    result['smallBlind'] =
+        result['handSmallBlind'] ?? sessionDefaults['smallBlind'];
     result['bigBlind'] = result['handBigBlind'] ?? sessionDefaults['bigBlind'];
     result['gameType'] = result['handGameType'] ?? sessionDefaults['gameType'];
 
     // Parse chopped pot fields
     result['isChoppedPot'] = (result['isChoppedPot'] == 1);
     result['isSplitPot'] = (result['isSplitPot'] == 1);
-    if (result['choppedWinners'] != null && result['choppedWinners'].isNotEmpty) {
+    if (result['choppedWinners'] != null &&
+        result['choppedWinners'].isNotEmpty) {
       try {
         result['choppedWinners'] = jsonDecode(result['choppedWinners']);
       } catch (e) {
         result['choppedWinners'] = null;
       }
     }
-    if (result['individualShares'] != null && result['individualShares'].isNotEmpty) {
+    if (result['individualShares'] != null &&
+        result['individualShares'].isNotEmpty) {
       try {
-        final sharesMap = jsonDecode(result['individualShares']) as Map<String, dynamic>;
+        final sharesMap =
+            jsonDecode(result['individualShares']) as Map<String, dynamic>;
         result['individualShares'] = sharesMap;
       } catch (e) {
         result['individualShares'] = null;
@@ -995,25 +1045,25 @@ class LocalStorageService {
       return null;
     }
   }
-  
+
   // Update session end time
   static Future<void> endSession(String sessionId, String endTime) async {
     try {
       final db = await database;
-      
+
       await db.update(
         'sessions',
         {'endTime': endTime},
         where: 'id = ?',
         whereArgs: [sessionId],
       );
-      
+
       debugPrint('Session ended locally: $sessionId');
     } catch (e) {
       debugPrint('Error ending session locally: $e');
     }
   }
-  
+
   // Clear all local data (for testing)
   static Future<void> clearAllData() async {
     try {
@@ -1031,7 +1081,7 @@ class LocalStorageService {
     try {
       final db = await database;
       final userId = AuthService.userId ?? 'anonymous';
-      
+
       // First get all session IDs for this user
       final sessions = await db.query(
         'sessions',
@@ -1039,7 +1089,7 @@ class LocalStorageService {
         where: 'userId = ?',
         whereArgs: [userId],
       );
-      
+
       // Delete all hands for these sessions
       for (final session in sessions) {
         await db.delete(
@@ -1048,14 +1098,14 @@ class LocalStorageService {
           whereArgs: [session['id']],
         );
       }
-      
+
       // Delete all sessions for this user
       await db.delete(
         'sessions',
         where: 'userId = ?',
         whereArgs: [userId],
       );
-      
+
       debugPrint('All user sessions cleared from local storage');
     } catch (e) {
       debugPrint('Error clearing user sessions: $e');
@@ -1063,7 +1113,8 @@ class LocalStorageService {
   }
 
   // Update session name
-  static Future<void> updateSessionName(String sessionId, String sessionName) async {
+  static Future<void> updateSessionName(
+      String sessionId, String sessionName) async {
     try {
       final db = await database;
       await db.update(
@@ -1075,7 +1126,7 @@ class LocalStorageService {
         where: 'id = ?',
         whereArgs: [sessionId],
       );
-      
+
       debugPrint('Session name updated locally: $sessionId -> $sessionName');
     } catch (e) {
       debugPrint('Error updating session name locally: $e');
@@ -1125,7 +1176,6 @@ class LocalStorageService {
         where: 'id = ?',
         whereArgs: [sessionId],
       );
-
     } catch (e) {
       debugPrint('Error updating session locally: $e');
       rethrow;
@@ -1142,7 +1192,8 @@ class LocalStorageService {
         return jsonEncode(_makeJsonSafe(data));
       } catch (e2) {
         debugPrint('Warning: Failed to JSON encode data, using toString: $e2');
-        return jsonEncode({'error': 'Failed to encode', 'data': data.toString()});
+        return jsonEncode(
+            {'error': 'Failed to encode', 'data': data.toString()});
       }
     }
   }

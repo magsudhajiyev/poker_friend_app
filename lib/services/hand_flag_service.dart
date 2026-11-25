@@ -1,3 +1,4 @@
+import 'firebase_service.dart';
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -331,6 +332,7 @@ class HandFlagService {
       _onDiscarded?.call(cloudId ?? localId);
       _onResolved?.call();
       AppDataCache.markSessionsDirty();
+      FirebaseService.invalidateSessionsCache();
       return true;
     } catch (e, st) {
       await LoggerService.error('Flag discard failed', e, st);

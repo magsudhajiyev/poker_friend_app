@@ -46,10 +46,26 @@ class MainShellState extends State<MainShell> {
   /// SessionHistoryScreen to trigger the phase-6 onboarding tour.
   final ValueNotifier<int> sessionsTabNotifier = ValueNotifier<int>(0);
 
+  /// Tabs built so far. Home and Sessions are always built (the in-app tour
+  /// relies on SessionHistoryScreen listeners being alive from the start);
+  /// the other tabs are built on first visit, then kept alive.
+  final Set<int> _built = {0, 3};
+
+  /// Stable child instances: identical widgets let Flutter skip rebuilding
+  /// every tab on each shell setState (tab switch / nav visibility).
+  late final List<Widget> _tabs = <Widget>[
+    HomeScreen(),
+    MyOpponentsScreen(),
+    StatisticsScreen(),
+    SessionHistoryScreen(),
+    const NotificationsScreen(),
+  ];
+
   @override
   void initState() {
     super.initState();
     _currentIndex = widget.initialIndex;
+    _built.add(_currentIndex);
   }
 
   String get currentScreen => _screens[_currentIndex];
@@ -58,7 +74,10 @@ class MainShellState extends State<MainShell> {
   bool setTabByScreen(String screen) {
     final idx = _screens.indexOf(screen);
     if (idx < 0 || idx == _currentIndex) return false;
-    setState(() => _currentIndex = idx);
+    setState(() {
+      _currentIndex = idx;
+      _built.add(idx);
+    });
     if (screen == 'sessions') {
       sessionsTabNotifier.value++;
     }
@@ -82,11 +101,8 @@ class MainShellState extends State<MainShell> {
           IndexedStack(
             index: _currentIndex,
             children: [
-              HomeScreen(),
-              MyOpponentsScreen(),
-              StatisticsScreen(),
-              SessionHistoryScreen(),
-              const NotificationsScreen(),
+              for (var i = 0; i < _tabs.length; i++)
+                _built.contains(i) ? _tabs[i] : const SizedBox.shrink(),
             ],
           ),
           // Bottom fade: content scrolling behind the nav dims into

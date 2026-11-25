@@ -49,7 +49,9 @@ class RangeGridCloudBackfill {
       int indexed = 0;
       bool anySaveFailed = false;
 
-      for (final session in sessions) {
+      final handsPrefetch = <String, Future<Object>>{};
+      for (var sessionIdx = 0; sessionIdx < sessions.length; sessionIdx++) {
+        final session = sessions[sessionIdx];
         final sessionId = session['id'] as String?;
         if (sessionId == null) continue;
 
@@ -59,7 +61,8 @@ class RangeGridCloudBackfill {
 
         List<Map<String, dynamic>> hands;
         try {
-          hands = await FirebaseService.getSessionHands(sessionId);
+          hands = await FirebaseService.getSessionHandsPrefetched(
+              sessions, sessionIdx, handsPrefetch);
         } catch (_) {
           continue; // Skip unreadable sessions, keep syncing the rest
         }

@@ -23,9 +23,9 @@ class ChallengeSoundService {
   static bool _prefLoaded = false;
   static bool _contextConfigured = false;
 
-  /// One reusable low-latency player — SFX are short and never overlap
-  /// meaningfully (a verdict then, much later, a completion fanfare).
-  static AudioPlayer? _player;
+  /// One preloaded low-latency player PER cue, so a cue never reloads its
+  /// asset on play and the fanfare cannot cut a verdict cue.
+  static final Map<String, AudioPlayer> _players = {};
 
   static const Map<DrillGrade, String> _verdictAsset = {
     DrillGrade.correct: 'sounds/correct.wav',
@@ -56,7 +56,9 @@ class ChallengeSoundService {
     _prefLoaded = true;
     if (!value) {
       try {
-        await _player?.stop();
+        for (final p in _players.values) {
+          await p.stop();
+        }
       } catch (_) {}
     }
     try {
@@ -77,14 +79,41 @@ class ChallengeSoundService {
     try {
       await loadEnabled();
       if (!_enabled) return;
-      await _configureContext();
-      final player = _player ??= AudioPlayer()
-        ..setPlayerMode(PlayerMode.lowLatency);
+      final player = await _playerFor(asset);
       await player.stop();
-      await player.play(AssetSource(asset), volume: 0.9);
+      try {
+        await player.resume();
+      } catch (_) {
+        // Source was released by the platform: reload once.
+        await player.play(AssetSource(asset), volume: 0.9);
+      }
     } catch (_) {
       // Fire-and-forget: a failed cue must never break the challenge.
     }
+  }
+
+  /// Creates (once) the player for [asset] with its source already loaded.
+  static Future<AudioPlayer> _playerFor(String asset) async {
+    final existing = _players[asset];
+    if (existing != null) return existing;
+    await _configureContext();
+    final player = AudioPlayer();
+    await player.setPlayerMode(PlayerMode.lowLatency);
+    await player.setReleaseMode(ReleaseMode.stop);
+    await player.setVolume(0.9);
+    await player.setSource(AssetSource(asset));
+    return _players[asset] = player;
+  }
+
+  /// Warm all cues (call when the challenge screen opens). Never throws.
+  static Future<void> preload() async {
+    try {
+      await loadEnabled();
+      if (!_enabled) return;
+      for (final a in [..._verdictAsset.values, _completeAsset]) {
+        await _playerFor(a);
+      }
+    } catch (_) {}
   }
 
   /// One-time audio session config. Plays over the iOS silent switch (the
@@ -110,12 +139,15 @@ class ChallengeSoundService {
     _contextConfigured = true;
   }
 
-  /// Release the player (e.g. on screen dispose). Safe to call when unset.
+  /// Release the players (e.g. on screen dispose). Safe to call when unset.
   static Future<void> dispose() async {
-    try {
-      await _player?.dispose();
-    } catch (_) {}
-    _player = null;
+    final all = _players.values.toList();
+    _players.clear();
+    for (final p in all) {
+      try {
+        await p.dispose();
+      } catch (_) {}
+    }
   }
 
   @visibleForTesting
@@ -123,6 +155,6 @@ class ChallengeSoundService {
     _enabled = true;
     _prefLoaded = false;
     _contextConfigured = false;
-    _player = null;
+    _players.clear();
   }
 }

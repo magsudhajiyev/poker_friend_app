@@ -80,6 +80,7 @@ flutter:
     - assets/mascots/
     - assets/sounds/
     - assets/authored/
+    - assets/google_fonts/
     - assets/play_style/
     - "assets/loading screen.aep_AME/"
     - icons/
