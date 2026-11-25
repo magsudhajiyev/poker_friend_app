@@ -1,4 +1,3 @@
-import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -140,76 +139,37 @@ void main() {
     });
   });
 
-  group('stack spread', () {
-    SingleHandSetup mk(StackSpread sp,
-            {GameType t = GameType.cash, double sb = 1, double bb = 2}) =>
-        SingleHandSetup(
-            gameType: t,
-            smallBlind: sb,
-            bigBlind: bb,
-            stackBB: 100,
-            playerCount: 9,
-            stackSpread: sp);
-
-    test('same: everyone has X, no rolled map', () {
-      final s = mk(StackSpread.same)..rollStacks(Random(1));
-      expect(s.villainStacks, isNull);
+  group('stack', () {
+    test('every seat has exactly the hero stack', () {
+      final s = SingleHandSetup(stackBB: 100, playerCount: 9);
       for (final seat in s.toSnapshot().seats) {
         expect(seat.stack, 200);
       }
     });
 
-    for (final (spread, pct) in [
-      (StackSpread.near, 0.10),
-      (StackSpread.similar, 0.25),
-    ]) {
-      for (final (t, sb, bb) in [
-        (GameType.cash, 1.0, 2.0),
-        (GameType.tournament, 100.0, 200.0),
-      ]) {
-        test('${spread.name} ${t.name}: hero X, villains within +-$pct', () {
-          for (var seed = 0; seed < 50; seed++) {
-            final s = mk(spread, t: t, sb: sb, bb: bb)
-              ..rollStacks(Random(seed));
-            final seats = {for (final x in s.toSnapshot().seats) x.seat: x};
-            expect(seats[1]!.stack, 100 * bb);
-            for (var i = 2; i <= 9; i++) {
-              final inBB = seats[i]!.stack / bb;
-              expect(inBB, inBB.roundToDouble());
-              expect(inBB, greaterThanOrEqualTo(100 * (1 - pct) - 0.5));
-              expect(inBB, lessThanOrEqualTo(100 * (1 + pct) + 0.5));
-            }
-          }
-        });
-      }
-    }
-
-    test('villain stacks never drop below 1 BB', () {
-      final s = SingleHandSetup(
-          stackBB: 1, playerCount: 9, stackSpread: StackSpread.similar);
-      for (var seed = 0; seed < 50; seed++) {
-        s.rollStacks(Random(seed));
-        for (final v in s.villainStacks!.values) {
-          expect(v / s.bigBlind, greaterThanOrEqualTo(1));
-        }
-      }
+    test('old stackSpread key in stored values is ignored', () {
+      final s = SingleHandSetup.fromMap({'stackSpread': 'near'});
+      expect(s.toMap().containsKey('stackSpread'), isFalse);
     });
 
-    test('stable: snapshot and a copy use the same rolled stacks', () {
-      final s = mk(StackSpread.similar)..rollStacks(Random(7));
-      final a = s.toSnapshot().seats.map((x) => x.stack).toList();
-      final b = s.copyWith().toSnapshot().seats.map((x) => x.stack).toList();
-      expect(b, a);
-      expect(s.toSnapshot().seats.map((x) => x.stack).toList(), a);
+    test('steps per game type', () {
+      expect(SingleHandSetup.stackStepsBB(GameType.tournament).first, 5);
+      expect(SingleHandSetup.stackStepsBB(GameType.tournament).last, 300);
+      expect(SingleHandSetup.stackStepsBB(GameType.cash).first, 20);
+      expect(SingleHandSetup.stackStepsBB(GameType.cash).last, 500);
     });
 
-    test('spread is persisted, villain stacks are not', () {
-      final s = mk(StackSpread.near)..rollStacks(Random(3));
-      final m = s.toMap();
-      expect(m['stackSpread'], 'near');
-      expect(m.containsKey('villainStacks'), isFalse);
-      expect(SingleHandSetup.fromMap(m).stackSpread, StackSpread.near);
-      expect(SingleHandSetup.fromMap({}).stackSpread, StackSpread.same);
+    test('nearestStepIndex', () {
+      final st = SingleHandSetup.stackStepsBB(GameType.cash);
+      expect(st[SingleHandSetup.nearestStepIndex(st, 100)], 100);
+      expect(st[SingleHandSetup.nearestStepIndex(st, 1)], 20);
+      expect(st[SingleHandSetup.nearestStepIndex(st, 9999)], 500);
+      expect(st[SingleHandSetup.nearestStepIndex(st, 110)], 100);
+      expect(st[SingleHandSetup.nearestStepIndex(st, 120)], 125);
+    });
+
+    test('relative steps include 1.0', () {
+      expect(SingleHandSetup.relativeStackSteps, contains(1.0));
     });
   });
 

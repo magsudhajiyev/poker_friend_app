@@ -64,6 +64,7 @@ class FeatureFlagService {
   static const String paidNudges = 'paid_nudges';
   static const String singleHand = 'single_hand';
   static const String rangeRead = 'range_read';
+  static const String singleHandV2 = 'single_hand_v2';
 
   static const List<FeatureFlag> all = [
     FeatureFlag(
@@ -147,6 +148,13 @@ class FeatureFlagService {
       'answer counts in the day score. OFF = no question.',
       defaultMode: FlagMode.off,
     ),
+    FeatureFlag(
+      singleHandV2,
+      'Log a hand setup v2',
+      'New full-screen setup for "Log a hand" (one-drag stack, tap-your-seat '
+      'mini table). OFF = the old setup sheet.',
+      defaultMode: FlagMode.off,
+    ),
   ];
 
   // ── State ─────────────────────────────────────────────────────────────
@@ -181,6 +189,9 @@ class FeatureFlagService {
 
   /// Single-hand logging ("Log a hand") entry, for the UI to gate on.
   static bool get singleHandEnabled => isEnabled(singleHand);
+
+  /// New setup screen for "Log a hand" (v2), instead of the setup sheet.
+  static bool get singleHandV2Enabled => isEnabled(singleHandV2);
 
   /// Whether the feature is visible for the CURRENT user.
   static bool isEnabled(String key) => switch (modeOf(key)) {

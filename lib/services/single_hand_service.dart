@@ -74,6 +74,45 @@ abstract class SingleHandBackend {
   Future<void> touchGroup(String groupId, DateTime at);
 }
 
+/// Moving a saved hand between groups. Separate from [SingleHandBackend] so
+/// existing fakes of that interface keep compiling.
+abstract class SingleHandMoveBackend {
+  /// Re-homes hand [handNumber] (cloud doc id [handId]) from [fromGroupId]
+  /// into [toGroupId] as hand [newHandNumber] (copy + delete, both stores,
+  /// counters of both groups). Returns `(cloudHandId, localHandId)`; either
+  /// may be null when the hand is not in that store.
+  Future<(String?, String?)> moveHand({
+    required String fromGroupId,
+    required String toGroupId,
+    required String handId,
+    required int handNumber,
+    required int newHandNumber,
+  });
+}
+
+/// Target group already holds the most hands the tier allows.
+class SingleHandGroupFullException implements Exception {
+  const SingleHandGroupFullException();
+  @override
+  String toString() => 'SingleHandGroupFullException';
+}
+
+/// Result of [SingleHandService.moveHandToGroup].
+class SingleHandMoveResult {
+  /// Cloud doc id, falling back to the SQLite id (as in [SingleHandSaveResult]).
+  final String handId;
+  final String sessionId;
+  final int handNumber;
+  final SingleHandGroup group;
+
+  const SingleHandMoveResult({
+    required this.handId,
+    required this.sessionId,
+    required this.handNumber,
+    required this.group,
+  });
+}
+
 class SingleHandService {
   SingleHandService._();
 
@@ -84,6 +123,9 @@ class SingleHandService {
 
   @visibleForTesting
   static SingleHandBackend backend = FirebaseSingleHandBackend();
+
+  @visibleForTesting
+  static SingleHandMoveBackend moveBackend = FirebaseSingleHandBackend();
 
   /// Clock, id and tier cap seams for tests.
   @visibleForTesting
@@ -259,6 +301,76 @@ class SingleHandService {
     );
   }
 
+  /// Moves a saved single hand to [toGroupId], or into a NEW group when it is
+  /// null ([setup] then describes the new group: blinds, game type). The hand
+  /// becomes hand `target count + 1`; the source group's counter drops by one.
+  /// Never touches stats. Throws [ArgumentError] for the same group,
+  /// [SingleHandGroupFullException] when the target is at the tier cap, and
+  /// [StateError] when the hand cannot be found in either store.
+  static Future<SingleHandMoveResult> moveHandToGroup({
+    required String fromGroupId,
+    required String handId,
+    required int handNumber,
+    String? toGroupId,
+    SingleHandSetup? setup,
+    String? groupName,
+  }) async {
+    if (toGroupId == fromGroupId) {
+      throw ArgumentError('Target group is the source group');
+    }
+    if (toGroupId == null && setup == null) {
+      throw ArgumentError('setup is required for a new group');
+    }
+    final at = now();
+    var existing = 0;
+    if (toGroupId != null) {
+      existing = await _safeCount(toGroupId);
+      if (!canAddHand(existing)) throw const SingleHandGroupFullException();
+    }
+    final String id = toGroupId ?? newGroupId();
+    final String name;
+    SingleHandGroup? known;
+    if (toGroupId == null) {
+      name = groupName ?? defaultGroupName(setup!, at);
+      await backend.createGroup(groupId: id, name: name, setup: setup!);
+    } else {
+      known = await _knownGroup(id);
+      name = known?.name ?? await _nameOf(id);
+    }
+
+    final newNumber = existing + 1;
+    final (cloudId, localId) = await moveBackend.moveHand(
+        fromGroupId: fromGroupId,
+        toGroupId: id,
+        handId: handId,
+        handNumber: handNumber,
+        newHandNumber: newNumber);
+    if (cloudId == null && localId == null) {
+      throw StateError('Hand to move was not found');
+    }
+    await backend.touchGroup(id, at);
+
+    final group = SingleHandGroup(
+      sessionId: id,
+      name: name,
+      gameType: setup?.gameType ?? known?.gameType ?? GameType.cash,
+      smallBlind: setup?.smallBlind ?? known?.smallBlind ?? 0,
+      bigBlind: setup?.bigBlind ?? known?.bigBlind ?? 0,
+      handCount: newNumber,
+      lastHandAt: at,
+    );
+    await _cacheLastGroup(group);
+    AppDataCache.markSessionsDirty();
+    FirebaseService.invalidateSessionsCache();
+    AppDataCache.markHomeDirty();
+    return SingleHandMoveResult(
+      handId: cloudId ?? localId ?? '',
+      sessionId: id,
+      handNumber: newNumber,
+      group: group,
+    );
+  }
+
   static Future<int> _safeCount(String groupId) async {
     try {
       return await backend.handCount(groupId);
@@ -268,7 +380,23 @@ class SingleHandService {
     }
   }
 
+  /// The stored group doc, or null when it is unknown or the lookup fails.
+  static Future<SingleHandGroup?> _knownGroup(String groupId) async {
+    try {
+      for (final g in await backend.loadGroups()) {
+        if (g.sessionId == groupId) return g;
+      }
+    } catch (e) {
+      await LoggerService.warning('Single hand: group lookup failed: $e');
+    }
+    return null;
+  }
+
+  /// Name of an existing group: the stored group doc first, the last-group
+  /// cache when offline, empty when neither knows it.
   static Future<String> _nameOf(String groupId) async {
+    final known = await _knownGroup(groupId);
+    if (known != null && known.name.isNotEmpty) return known.name;
     final cached = await _cachedLastGroup();
     return cached?.sessionId == groupId ? cached!.name : '';
   }
@@ -312,7 +440,8 @@ class SingleHandService {
 
 /// Firestore + SQLite implementation. Offline: Firestore writes queue, so
 /// every awaited cloud write gets a timeout and a timeout is not an error.
-class FirebaseSingleHandBackend implements SingleHandBackend {
+class FirebaseSingleHandBackend
+    implements SingleHandBackend, SingleHandMoveBackend {
   static const Duration _cloudWait = Duration(seconds: 4);
   static final FirebaseFirestore _db = FirebaseFirestore.instance;
 
@@ -445,6 +574,7 @@ class FirebaseSingleHandBackend implements SingleHandBackend {
       bbSeat: hand.bbSeat,
       sbSeat: hand.sbSeat,
       smallBlindDead: hand.smallBlindDead,
+      stackSources: hand.stackSources,
     );
     hand.localHandId = localId;
 
@@ -486,6 +616,7 @@ class FirebaseSingleHandBackend implements SingleHandBackend {
         bbSeat: hand.bbSeat,
         sbSeat: hand.sbSeat,
         smallBlindDead: hand.smallBlindDead,
+        stackSources: hand.stackSources,
         analyticsExtras: {'mode': 'single', 'group_hand_number': handNumber},
       ).timeout(_cloudWait);
       hand.cloudHandId = cloudId;
@@ -512,5 +643,50 @@ class FirebaseSingleHandBackend implements SingleHandBackend {
     } catch (e) {
       await LoggerService.warning('Single hand: group touch failed: $e');
     }
+  }
+
+  @override
+  Future<(String?, String?)> moveHand({
+    required String fromGroupId,
+    required String toGroupId,
+    required String handId,
+    required int handNumber,
+    required int newHandNumber,
+  }) async {
+    final localId = await LocalStorageService.moveHand(
+        fromSessionId: fromGroupId,
+        handNumber: handNumber,
+        toSessionId: toGroupId,
+        newHandNumber: newHandNumber);
+    String? cloudId;
+    try {
+      final from = _db.collection('poker_sessions').doc(fromGroupId);
+      var src = await from.collection('poker_hands').doc(handId).get();
+      if (!src.exists) {
+        // handId may be the SQLite id (cloud ack was pending): find by number.
+        final q = await from
+            .collection('poker_hands')
+            .where('handNumber', isEqualTo: handNumber)
+            .limit(1)
+            .get();
+        if (q.docs.isNotEmpty) src = q.docs.first;
+      }
+      if (src.exists) {
+        cloudId = 'hand_${newHandNumber}_${DateTime.now().millisecondsSinceEpoch}';
+        final to = _db.collection('poker_sessions').doc(toGroupId);
+        final batch = _db.batch()
+          ..set(to.collection('poker_hands').doc(cloudId),
+              {...?src.data(), 'handNumber': newHandNumber})
+          ..delete(src.reference)
+          ..update(from, {'totalHands': FieldValue.increment(-1)})
+          ..update(to, {'totalHands': FieldValue.increment(1)});
+        await _queued(batch.commit(), 'hand move');
+      }
+    } catch (e) {
+      cloudId = null;
+      await LoggerService.error(
+          'Single hand: cloud move failed', e, StackTrace.current);
+    }
+    return (cloudId, localId);
   }
 }

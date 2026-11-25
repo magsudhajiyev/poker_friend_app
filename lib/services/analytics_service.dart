@@ -56,7 +56,8 @@ import 'logger_service.dart';
 ///   (mode = live|fold_tick|flag) and
 ///   session_ended{hands_logged, est_dealt, coverage, flags_open}.
 ///   Helpers live in hand_log_telemetry.dart / hand_coverage.dart.
-/// Single-hand logging (flagged `single_hand`): single_hand_started{new_group},
+/// Single-hand logging (flagged `single_hand`): single_hand_setup_opened{variant},
+///   single_hand_started{new_group, variant?},
 ///   single_hand_abandoned{street}, single_hand_post_action{action}
 ///   (action = view|log_another|done|star|note|tag). hand_logged carries
 ///   mode 'single' (plus group_hand_number) for these hands.
@@ -170,8 +171,16 @@ class AnalyticsService {
       });
 
   /// Single-hand logging: the setup sheet's "Start hand" was tapped.
-  static void singleHandStarted({required bool newGroup}) =>
-      capture('single_hand_started', {'new_group': newGroup});
+  static void singleHandStarted({required bool newGroup, String? variant}) =>
+      capture('single_hand_started', {
+        'new_group': newGroup,
+        if (variant != null) 'variant': variant,
+      });
+
+  /// Single-hand logging: the setup screen/sheet was shown. [variant] is
+  /// 'v1' (sheet) or 'v2' (screen).
+  static void singleHandSetupOpened({required String variant}) =>
+      capture('single_hand_setup_opened', {'variant': variant});
 
   /// Single-hand logging: the table was left with actions logged but no save.
   static void singleHandAbandoned({String? street}) =>

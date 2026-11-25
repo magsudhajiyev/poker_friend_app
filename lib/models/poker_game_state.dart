@@ -1387,6 +1387,23 @@ class PokerGameState {
     player.handsSinceLastObservation = 0;
   }
 
+  /// Mid-hand stack correction ("villain stack" in single-hand logging):
+  /// [totalStack] is the seat's stack as it was before the hand. Chips already
+  /// committed this hand (current bet + earlier streets) stay in the pot; only
+  /// the amount behind changes. The total never drops below what the seat has
+  /// committed. Returns the applied total, so callers can mirror it.
+  double setStackKeepingCommitted(int playerId, double totalStack) {
+    final player = _getPlayer(playerId);
+    final committed = player.betThisRound + player.totalContribution;
+    final total = totalStack < committed ? committed : totalStack;
+    player.startingStack = total;
+    player.currentStack = total - committed;
+    player._updateAllInStatus();
+    player.stackConfidence = StackConfidence.high;
+    recalculateActiveSidePots();
+    return total;
+  }
+
   void setPlayerActive(int playerId, bool isActive) {
     PlayerState player = _getPlayer(playerId);
     player.isActive = isActive;

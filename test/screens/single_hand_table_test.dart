@@ -1,4 +1,3 @@
-import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -78,24 +77,5 @@ void main() {
   test('without a nickname the hero is saved by position', () {
     final s = SingleHandSetup(heroPosition: 'BTN');
     expect(SingleHandService.seatNames(s)[1], 'BTN');
-  });
-
-  testWidgets('rolled villain stacks show on the table', (t) async {
-    final s = SingleHandSetup(
-        playerCount: 6, heroPosition: 'BTN', stackSpread: StackSpread.similar)
-      ..rollStacks(Random(5));
-    await _open(t, s);
-    final texts = _texts(t).toList();
-    final rolled = s.villainStacks!.values.map((v) => v.toInt()).toSet();
-    // At least one villain shows a rolled value that is not X (200).
-    expect(rolled.any((v) => v != 200), isTrue);
-    expect(texts.where((x) => x == '200').length, greaterThanOrEqualTo(1));
-    for (final v in rolled.where((v) => v != 200 && v < 1000)) {
-      // SB / BB seats show their stack minus the blind, others the full value.
-      final shown = texts.contains('$v') ||
-          texts.contains('${v - 1}') ||
-          texts.contains('${v - 2}');
-      expect(shown, isTrue, reason: 'stack $v not on the table');
-    }
   });
 }

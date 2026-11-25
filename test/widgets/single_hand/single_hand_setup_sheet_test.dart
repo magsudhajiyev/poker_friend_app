@@ -113,7 +113,6 @@ void main() {
               smallBlind: 10000,
               bigBlind: 20000));
       expect(tester.takeException(), isNull);
-      expect(find.text('Similar'), findsOneWidget);
       expect(find.byType(AppWheelPicker<BlindLevel>), findsOneWidget);
       expect(find.byType(AppWheelPicker<int>), findsOneWidget);
       expect(find.byType(AppWheelPicker<String>), findsOneWidget);
@@ -145,14 +144,6 @@ void main() {
     await tester.tap(find.text('Cash'));
     await tester.pumpAndSettle();
     expect(setup.bigBlind, 2);
-  });
-
-  testWidgets('spread selector updates the setup', (tester) async {
-    final setup = SingleHandSetup();
-    await pumpHost(tester, setup);
-    await tester.tap(find.text('Near'));
-    await tester.pumpAndSettle();
-    expect(setup.stackSpread, StackSpread.near);
   });
 
   Finder stackField() => find.byType(TextField).first;

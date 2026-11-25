@@ -129,14 +129,6 @@ class _SingleHandSetupSheetState extends State<SingleHandSetupSheet>
             if (_unitTabs.indexIsChanging) return;
             setState(() => _s.stackUnit = StackUnit.values[_unitTabs.index]);
           });
-    _spreadTabs = TabController(
-        length: StackSpread.values.length,
-        vsync: this,
-        initialIndex: _s.stackSpread.index)
-      ..addListener(() {
-        if (_spreadTabs.indexIsChanging) return;
-        setState(() => _s.stackSpread = StackSpread.values[_spreadTabs.index]);
-      });
     if (!_groupLocked && _group == null) _refreshSuggestion();
   }
 
@@ -147,16 +139,12 @@ class _SingleHandSetupSheetState extends State<SingleHandSetupSheet>
   double? get _stackBB => SingleHandSetup.stackToBB(
       parseDecimal(_stackCtl.text), _s.stackUnit, _s.bigBlind);
 
-  /// Same / Near / Similar stack spread tabs.
-  late final TabController _spreadTabs;
-
   /// Cash / Tournament tabs (same component as Session History).
   late final TabController _gameTabs;
 
   @override
   void dispose() {
     _gameTabs.dispose();
-    _spreadTabs.dispose();
     _unitTabs.dispose();
     _stackCtl.dispose();
     super.dispose();
@@ -283,13 +271,12 @@ class _SingleHandSetupSheetState extends State<SingleHandSetupSheet>
     if (stack == null) return;
     _starting = true;
     _s.stackBB = stack;
-    _s.rollStacks();
     try {
       await _s.saveAsLastUsed();
     } catch (e) {
       LoggerService.log('SingleHand save setup: $e', level: LogLevel.WARNING);
     }
-    AnalyticsService.singleHandStarted(newGroup: _group == null);
+    AnalyticsService.singleHandStarted(newGroup: _group == null, variant: 'v1');
     if (mounted) Navigator.pop(context, SingleHandStart(_s, _group));
   }
 
@@ -550,15 +537,6 @@ class _SingleHandSetupSheetState extends State<SingleHandSetupSheet>
                 style: AppTypography.bodySmall(color: AppColors.textSecondary)),
           ),
         if (bb != null) _stackWarning(l10n, bb),
-        const SizedBox(height: AppSpacing.xxs),
-        AnimatedSegmentedTabs(
-          controller: _spreadTabs,
-          labels: [
-            l10n.singleHandSpreadSame,
-            l10n.singleHandSpreadNear,
-            l10n.singleHandSpreadSimilar,
-          ],
-        ),
       ],
     );
   }

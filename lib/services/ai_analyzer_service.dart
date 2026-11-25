@@ -1,3 +1,4 @@
+import '../utils/stack_sources.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:ui' as ui;
@@ -150,6 +151,33 @@ class AIAnalyzerService {
     }
   }
 
+  /// Wording sent to the model for a stack that was never entered (single-hand
+  /// logs, `stackSources[seat] == 'default'`): the number is a placeholder equal
+  /// to the hero stack, not a fact about the opponent.
+  static const String assumedStackNote =
+      'Stack unknown: assumed equal to the hero stack, not a real stack.';
+
+  static Map<String, dynamic> _assumedStackFields(
+          Map<String, dynamic> hand, int seat) =>
+      isAssumedStack(hand, seat)
+          ? {'stackAssumed': true, 'stackNote': assumedStackNote}
+          : const {};
+
+  /// Hand-level note when at least one listed player has an assumed stack.
+  static Map<String, dynamic> _assumedStackNotes(
+      Map<String, dynamic> hand, List<Map<String, dynamic>> players) {
+    final seats = [
+      for (final p in players)
+        if (p['stackAssumed'] == true) p['seat']
+    ];
+    if (seats.isEmpty) return const {};
+    return {
+      'stackNotes':
+          'Seats ${seats.join(', ')}: $assumedStackNote Do not treat those '
+              'stacks as known when judging bet sizing, shoves or SPR.',
+    };
+  }
+
   /// Prepare FULL hand data (all streets) for Claude analysis
   static Map<String, dynamic> prepareFullHandData(Map<String, dynamic> hand) {
     // Extract hero cards
@@ -232,6 +260,7 @@ class AIAnalyzerService {
         'seat': seat,
         'position': position,
         'stackBB': double.parse(((playerStacks[seat] ?? 200.0) / bigBlind).toStringAsFixed(2)),
+        ..._assumedStackFields(hand, seat),
       });
     }
     activePlayers.sort((a, b) => (a['seat'] as int).compareTo(b['seat'] as int));
@@ -293,6 +322,7 @@ class AIAnalyzerService {
       'bigBlind': bigBlind,
       'winnerId': hand['winnerId'],
       'showdownData': hand['showdownData'],
+      ..._assumedStackNotes(hand, activePlayers),
     };
   }
 
@@ -496,6 +526,7 @@ class AIAnalyzerService {
         'seat': seat,
         'position': position,
         'stackBB': double.parse(stackBB.toStringAsFixed(2)),
+        ..._assumedStackFields(hand, seat),
       });
     }
 
@@ -552,6 +583,7 @@ class AIAnalyzerService {
       },
       'activePlayers': activePlayers,
       'preflopActions': preflopActions,
+      ..._assumedStackNotes(hand, activePlayers),
     };
 
     return result;
